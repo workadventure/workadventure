@@ -11,7 +11,7 @@ import {
 import { WebSocket } from "uWebSockets.js";
 import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
-import { CharacterTexture } from "../../Services/AdminApi/CharacterTexture";
+import { CharacterTexture} from "../../Messages/JsonMessages/CharacterTexture";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
