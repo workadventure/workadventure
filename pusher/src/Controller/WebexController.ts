@@ -114,8 +114,9 @@ export class WebexController {
         }
 
         try {
+            console.log(query);
             const tokenResult = await this.fetchAccessToken(query.get("code")!);
-
+            console.log(query.get("code"));
             if (!aborted) {
                 this.handleTokenResult(res, tokenResult);
             }
