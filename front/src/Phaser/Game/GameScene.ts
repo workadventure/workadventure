@@ -1862,6 +1862,7 @@ ${escapedMessage}
         const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
+                localStorage.removeItem(meetingLinkKey); // <- Removes race condition that can occur when getting rid of cached links
                 webexIntegration.startMeetingLinkGenerator().then(() => {
                     const p = setInterval(() => {
                         const meetingLink = localStorage.getItem(meetingLinkKey);
