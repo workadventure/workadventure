@@ -195,11 +195,10 @@ export class WebexController {
             refresh_token: refreshToken,
         };
 
-        const res = await Axios.post(`${api}/access_token`, {
+        const res = await Axios.post(`${api}/access_token`, urlEncode(data), {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
-            body: urlEncode(data),
         });
         const tokenResponse = res?.data;
         if (!tokenResponse.ok) {
