@@ -92,7 +92,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Tileset = Phaser.Tilemaps.Tileset;
-import { webexMeetingLinkKey } from "../../Components/Webex/WebexLinkGenerator.svelte";
+import { meetingLinkKey } from "../../Common/Key";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1864,7 +1864,7 @@ ${escapedMessage}
             webexIntegration.authWithWebex().then((accessToken) => {
                 webexIntegration.startMeetingLinkGenerator().then(() => {
                     const p = setInterval(() => {
-                        const meetingLink = localStorage.getItem(webexMeetingLinkKey);
+                        const meetingLink = localStorage.getItem(meetingLinkKey);
                         if (meetingLink) {
                             this.connection?.emitWebexSessionQuery(roomName, accessToken, meetingLink);
                             clearInterval(p);
