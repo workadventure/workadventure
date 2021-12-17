@@ -174,9 +174,8 @@ export class WebexController {
             // TODO -> better error handling
             throw Error(tokenResponse);
         }
-        const result = await tokenResponse.json();
 
-        return result as {
+        return tokenResponse as {
             access_token: string;
             expires_in: number;
             refresh_token: string;
@@ -198,12 +197,12 @@ export class WebexController {
             },
         });
         const tokenResponse = res?.data;
-        if (!tokenResponse.ok) {
-            throw Error(await tokenResponse.text());
+        if (!tokenResponse) {
+            // TODO -> better error handling
+            throw Error(tokenResponse);
         }
-        const result = await tokenResponse.json();
 
         // @ts-ignore
-        return result;
+        return tokenResponse;
     };
 }
