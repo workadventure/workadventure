@@ -239,7 +239,7 @@ export class GameRoom {
 
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
         user.group?.getUsers().forEach((currentUser: User) => {
-            if (currentUser.name !== user.name) {
+            if (currentUser.id !== user.id) {
                 currentUser.socket.write(message);
             }
         });
