@@ -163,19 +163,16 @@ export class WebexController {
             redirect_uri: redirectUri,
         };
 
-        console.log(data);
-
         const res = await Axios.post(`${api}/access_token`, urlEncode(data), {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
         });
-
-        console.log(res);
         // todo error handling on no res
         const tokenResponse = res?.data;
-        if (!tokenResponse.ok) {
-            throw Error(await tokenResponse.text());
+        if (!tokenResponse) {
+            // TODO -> better error handling
+            throw Error(tokenResponse);
         }
         const result = await tokenResponse.json();
 
