@@ -1864,7 +1864,7 @@ ${escapedMessage}
             webexIntegration.authWithWebex().then((accessToken) => {
                 webexIntegration.startMeetingLinkGenerator().then(() => {
                     const p = setInterval(() => {
-                        let meetingLink = localStorage.getItem(webexMeetingLinkKey);
+                        const meetingLink = localStorage.getItem(webexMeetingLinkKey);
                         if (meetingLink) {
                             this.connection?.emitWebexSessionQuery(roomName, accessToken, meetingLink);
                             clearInterval(p);
