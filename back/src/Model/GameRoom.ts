@@ -154,6 +154,14 @@ export class GameRoom {
         if (userObj !== undefined && typeof userObj.group !== "undefined") {
             this.leaveGroup(userObj);
         }
+
+        if (user.hasFollowers()) {
+            user.stopLeading();
+        }
+        if (user.following) {
+            user.following.delFollower(user);
+        }
+
         this.users.delete(user.id);
         this.usersByUuid.delete(user.uuid);
 
