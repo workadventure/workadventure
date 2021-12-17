@@ -116,7 +116,7 @@ export class WebexController {
         try {
             console.log(query.get("code"));
             const tokenResult = await this.fetchAccessToken(query.get("code")!);
-            console.log(tokenResult); // small change 23
+            console.log(tokenResult); // small change 24
             if (!aborted) {
                 this.handleTokenResult(res, tokenResult);
             }
@@ -163,12 +163,16 @@ export class WebexController {
             redirect_uri: redirectUri,
         };
 
+        console.log(data);
+
         const res = await Axios.post(`${api}/access_token`, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
             },
             body: urlEncode(data),
         });
+
+        console.log(res);
         // todo error handling on no res
         const tokenResponse = res?.data;
         if (!tokenResponse.ok) {
