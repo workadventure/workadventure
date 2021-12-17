@@ -125,7 +125,6 @@ export class GameRoom {
             joinRoomMessage.getIpaddress(),
             position,
             false,
-            [],
             this.positionNotifier,
             socket,
             joinRoomMessage.getTagList(),
@@ -228,7 +227,7 @@ export class GameRoom {
                     this.leaveGroup(user);
                 }
             };
-            const users = user.group.getUsers().filter((u) => u.following.length === 0);
+            const users = user.group.getUsers().filter((u) => !u.hasFollowers() && !u.following);
             users.forEach((foreignUser) => leaveIfOutOfRadius(foreignUser));
         }
     }

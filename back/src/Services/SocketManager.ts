@@ -844,34 +844,28 @@ export class SocketManager {
     }
 
     handleFollowConfirmationMessage(room: GameRoom, user: User, message: FollowConfirmationMessage) {
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowconfirmationmessage(message);
         const leader = room.getUserById(message.getLeader());
-        leader?.socket.write(clientMessage);
+        if (!leader) {
+            console.info('Could not find user "', message.getLeader(), '" while handling a follow confirmation in room "', room.roomUrl,'". Maybe the user just left.');
+            return;
+        }
 
-        leader?.addFollower(user.id);
-        user.addFollower(message.getLeader());
+        // By security, we look at the group leader. If the group leader is NOT the leader in the message, everybody should
+        // stop following the group leader (to avoid having 2 group leaders)
+        if (user?.group?.leader && user?.group?.leader !== leader) {
+            user?.group?.leader?.stopLeading();
+        }
+
+        leader.addFollower(user);
     }
 
     handleFollowAbortMessage(room: GameRoom, user: User, message: FollowAbortMessage) {
-        const clientMessage = new ServerToClientMessage();
-        clientMessage.setFollowabortmessage(message);
         if (user.id === message.getLeader()) {
-            // Forward message
-            room.sendToOthersInGroupIncludingUser(user, clientMessage);
-
-            // Update followers
-            user.group?.getUsers().forEach((user) => {
-                user.following = [];
-            });
+            user?.group?.leader?.stopLeading();
         } else {
             // Forward message
             const leader = room.getUserById(message.getLeader());
-            leader?.socket.write(clientMessage);
-
-            // Update followers
-            leader?.delFollower(user.id);
-            user.following = [];
+            leader?.delFollower(user);
         }
     }
 }

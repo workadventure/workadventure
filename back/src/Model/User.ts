@@ -6,7 +6,7 @@ import { PositionNotifier } from "_Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
     BatchMessage,
-    CompanionMessage,
+    CompanionMessage, FollowAbortMessage, FollowConfirmationMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SubMessage,
@@ -18,6 +18,8 @@ export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientM
 export class User implements Movable {
     public listenedZones: Set<Zone>;
     public group?: Group;
+    private _following: User|undefined;
+    private followedBy: Set<User> = new Set<User>();
 
     public constructor(
         public id: number,
@@ -25,7 +27,6 @@ export class User implements Movable {
         public readonly IPAddress: string,
         private position: PointInterface,
         public silent: boolean,
-        public following: number[],
         private positionNotifier: PositionNotifier,
         public readonly socket: UserSocket,
         public readonly tags: string[],
@@ -49,19 +50,43 @@ export class User implements Movable {
         this.positionNotifier.updatePosition(this, position, oldPosition);
     }
 
-    public addFollower(userId: number): void {
-        if (this.following.includes(userId)) {
-            return;
-        }
-        this.following.push(userId);
+    public addFollower(follower: User): void {
+        this.followedBy.add(follower);
+        follower._following = this;
+
+        const message = new FollowConfirmationMessage();
+        message.setFollower(follower.id);
+        message.setLeader(this.id);
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setFollowconfirmationmessage(message);
+        this.socket.write(clientMessage);
     }
 
-    public delFollower(userId: number): void {
-        const idx = this.following.indexOf(userId);
-        if (idx === -1) {
-            return;
+    public delFollower(follower: User): void {
+        this.followedBy.delete(follower);
+        follower._following = undefined;
+
+        const message = new FollowAbortMessage();
+        message.setFollower(follower.id);
+        message.setLeader(this.id);
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setFollowabortmessage(message);
+        this.socket.write(clientMessage);
+        follower.socket.write(clientMessage);
+    }
+
+    public hasFollowers(): boolean {
+        return this.followedBy.size !== 0;
+    }
+
+    get following(): User | undefined {
+        return this._following;
+    }
+
+    public stopLeading(): void {
+        for (const follower of this.followedBy) {
+            this.delFollower(follower);
         }
-        this.following.splice(idx, 1);
     }
 
     private batchedMessages: BatchMessage = new BatchMessage();

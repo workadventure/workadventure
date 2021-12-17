@@ -152,4 +152,16 @@ export class Group implements Movable {
     get getSize() {
         return this.users.size;
     }
+
+    /**
+     * A group can have at most one person leading the way in it.
+     */
+    get leader(): User|undefined {
+        for (const user of this.users) {
+            if (user.hasFollowers()) {
+                return user;
+            }
+        }
+        return undefined;
+    }
 }
