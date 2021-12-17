@@ -228,12 +228,8 @@ export class GameRoom {
                     this.leaveGroup(user);
                 }
             };
-            if (user.following.length > 0) {
-                const users = user.group.getUsers().filter((u) => u.following.length === 0);
-                users.forEach((foreignUser) => leaveIfOutOfRadius(foreignUser));
-            } else {
-                leaveIfOutOfRadius(user);
-            }
+            const users = user.group.getUsers().filter((u) => u.following.length === 0);
+            users.forEach((foreignUser) => leaveIfOutOfRadius(foreignUser));
         }
     }
 
