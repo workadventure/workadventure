@@ -92,6 +92,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Tileset = Phaser.Tilemaps.Tileset;
+import { webexMeetingLinkKey } from "../../Components/Webex/WebexLinkGenerator.svelte";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1862,10 +1863,13 @@ ${escapedMessage}
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
                 webexIntegration.startMeetingLinkGenerator().then(() => {
-                    // TODO -> Localstorage
-                    setTimeout(() => {
-                        this.connection?.emitWebexSessionQuery(roomName, accessToken, window.webexPersonalMeetingLink);
-                    }, 3000);
+                    const p = setInterval(() => {
+                        let meetingLink = localStorage.getItem(webexMeetingLinkKey);
+                        if (meetingLink) {
+                            this.connection?.emitWebexSessionQuery(roomName, accessToken, meetingLink);
+                            clearInterval(p);
+                        }
+                    }, 10);
                 });
             });
         };

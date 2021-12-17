@@ -5,6 +5,7 @@
   let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
   let webex = null;
   export let accessToken = null
+  export let webexMeetingLinkKey;
 
   function importWebex() {
     return new Promise((resolve, reject) => {
@@ -30,10 +31,13 @@
     });
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
-      // TODO -> Redo
+      // TODO -> Why is the PMR link null?
         let meetingObject = webex.meetings.getPersonalMeetingRoom();
-        window.webexMeetingLinkPassthrough(meetingObject.link);
-        console.log("[Front] Generated and sent webex meeting link", meetingObject)
+        console.log(meetingObject);
+        if (localStorage.getItem(webexMeetingLinkKey)) {
+          localStorage.removeItem(webexMeetingLinkKey)
+        }
+        localStorage.setItem(webexMeetingLinkKey, meetingObject.link)
         if (meetingObject.link !== window.webexPersonalMeetingLink) {
           throw Error("[Front] Meeting link in window ("+ window.webexPersonalMeetingLink+") doesn't match meeting object link ("+meetingObject.link+")")
         }

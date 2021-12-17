@@ -10,6 +10,7 @@ import {
 import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
 import WebexLinkGenerator from "../Components/Webex/WebexLinkGenerator.svelte";
+import { meetingLinkKey } from "../Common/Key";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -19,9 +20,6 @@ interface Webex {
 declare global {
     interface Window {
         webex: Webex;
-        // TODO -> LS
-        webexPersonalMeetingLink: string;
-        webexMeetingLinkPassthrough: (personalMeetingLink: string) => void;
     }
 }
 
@@ -39,12 +37,6 @@ export type SpaceWidgetConfig = {
 
 const accessTokenKey = "@workadventure/webex_access_token";
 const expiryDateKey = "@workadventure/webex_expiry_date";
-
-// TODO -> LS
-window.webexMeetingLinkPassthrough = (token: string) => {
-    // This function should be called by WebexVideoChat.svelte once it's got the personal meeting room information so we can pass it back to the backend.
-    window.webexPersonalMeetingLink = token;
-};
 
 export class WebexIntegration {
     private scriptLoader: Promise<Webex> | null = null;
@@ -142,14 +134,13 @@ export class WebexIntegration {
     public async startMeetingLinkGenerator() {
         await this.stop();
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            const lg = new WebexLinkGenerator({
+            new WebexLinkGenerator({
                 target: cowebsiteDiv,
                 props: {
                     accessToken: this.accessToken,
+                    webexMeetingLinkKey: meetingLinkKey,
                 },
             });
-            // TODO -> There should be a better way around this
-            // TODO -> Wait for resolve using the same logic as waiting for auth
             return Promise.resolve();
         });
     }
