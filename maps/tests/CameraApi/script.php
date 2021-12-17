@@ -4,7 +4,8 @@
     <script src="<?php echo $_SERVER["FRONT_URL"] ?>/iframe_api.js"></script>
     <script>
         window.addEventListener('load', () => {
-            console.log('On load');
+            //@ts-ignore
+            WA.camera.onCameraUpdate((worldView) => console.log(worldView));
             WA.onInit().then(() => {
                 console.log('After WA init');
                 const setPositionButton = document.getElementById('setPositionButton');

@@ -65,7 +65,7 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { CameraManager } from "./CameraManager";
+import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 import type { Character } from "../Entity/Character";
 
@@ -1102,28 +1102,31 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
-                    this.cameras.main.on("followupdate", (camera: Camera) => {
-                        const cameraEvent: WasCameraUpdatedEvent = {
-                            x: camera.worldView.x,
-                            y: camera.worldView.y,
-                            width: camera.worldView.width,
-                            height: camera.worldView.height,
-                            zoom: camera.scaleManager.zoom,
-                        };
-                        if (
-                            this.lastCameraEvent?.x == cameraEvent.x &&
-                            this.lastCameraEvent?.y == cameraEvent.y &&
-                            this.lastCameraEvent?.width == cameraEvent.width &&
-                            this.lastCameraEvent?.height == cameraEvent.height &&
-                            this.lastCameraEvent?.zoom == cameraEvent.zoom
-                        ) {
-                            return;
-                        }
+                    this.cameraManager.on(
+                        CameraManagerEvent.CameraUpdate,
+                        (data: CameraManagerEventCameraUpdateData) => {
+                            const cameraEvent: WasCameraUpdatedEvent = {
+                                x: data.x,
+                                y: data.y,
+                                width: data.width,
+                                height: data.height,
+                                zoom: data.zoom,
+                            };
+                            if (
+                                this.lastCameraEvent?.x == cameraEvent.x &&
+                                this.lastCameraEvent?.y == cameraEvent.y &&
+                                this.lastCameraEvent?.width == cameraEvent.width &&
+                                this.lastCameraEvent?.height == cameraEvent.height &&
+                                this.lastCameraEvent?.zoom == cameraEvent.zoom
+                            ) {
+                                return;
+                            }
 
-                        this.lastCameraEvent = cameraEvent;
-                        iframeListener.sendCameraUpdated(cameraEvent);
-                        this.firstCameraUpdateSent = true;
-                    });
+                            this.lastCameraEvent = cameraEvent;
+                            iframeListener.sendCameraUpdated(cameraEvent);
+                            this.firstCameraUpdateSent = true;
+                        }
+                    );
 
                     iframeListener.sendCameraUpdated(this.cameras.main);
                 }

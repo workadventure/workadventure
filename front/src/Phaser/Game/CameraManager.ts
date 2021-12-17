@@ -20,6 +20,18 @@ export enum CameraMode {
     Focus = "Focus",
 }
 
+export enum CameraManagerEvent {
+    CameraUpdate = "CameraUpdate",
+}
+
+export interface CameraManagerEventCameraUpdateData {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    zoom: number;
+}
+
 export class CameraManager extends Phaser.Events.EventEmitter {
     private scene: GameScene;
     private camera: Phaser.Cameras.Scene2D.Camera;
@@ -78,6 +90,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             (camera, progress, x, y) => {
                 if (this.cameraMode === CameraMode.Positioned) {
                     this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+                    this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
                 }
                 if (progress === 1) {
                     this.playerToFollow?.once(hasMovedEventName, () => {
@@ -125,6 +138,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             true,
             (camera, progress, x, y) => {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             }
         );
     }
@@ -157,6 +171,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 const shiftY =
                     (this.playerToFollow.y - this.camera.worldView.height * 0.5 - oldPos.y) * tween.getValue();
                 this.camera.setScroll(oldPos.x + shiftX, oldPos.y + shiftY);
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
                 this.camera.startFollow(player, true);
@@ -205,6 +220,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ease: Easing.SineEaseOut,
             onUpdate: (tween: Phaser.Tweens.Tween) => {
                 this.waScaleManager.zoomModifier = tween.getValue();
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
         });
     }
@@ -222,7 +238,26 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                     return;
                 }
                 this.camera.centerOn(focusOn.x + focusOn.width * 0.5, focusOn.y + focusOn.height * 0.5);
+                this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             }
         );
+
+        this.camera.on("followupdate", () => {
+            this.sendCameraUpdateEvent();
+        });
+    }
+
+    private sendCameraUpdateEvent(): void {
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+    }
+
+    private getCameraUpdateEventData(): CameraManagerEventCameraUpdateData {
+        return {
+            x: this.camera.worldView.x,
+            y: this.camera.worldView.y,
+            width: this.camera.worldView.width,
+            height: this.camera.worldView.height,
+            zoom: this.camera.scaleManager.zoom,
+        };
     }
 }
