@@ -38,11 +38,11 @@
           localStorage.removeItem(webexMeetingLinkKey)
         }
         localStorage.setItem(webexMeetingLinkKey, meetingObject.link)
-        if (meetingObject.link !== window.webexPersonalMeetingLink) {
-          throw Error("[Front] Meeting link in window ("+ window.webexPersonalMeetingLink+") doesn't match meeting object link ("+meetingObject.link+")")
+        if (meetingObject.link !== localStorage.getItem(webexMeetingLinkKey)) {
+          throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+meetingObject.link+")")
         }
     }).catch(err => {
-      console.error("Error: " + err + "accessToken: " + accessToken);
+      console.error("Error: " + err + "\naccessToken: " + accessToken);
     });
   })
 </script>
