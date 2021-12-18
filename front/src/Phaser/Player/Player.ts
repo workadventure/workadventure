@@ -114,7 +114,7 @@ export class Player extends Character {
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
-        if (activeEvents.get(UserInputEvent.Interact)) {
+        if (activeEvents.get(UserInputEvent.Follow)) {
             if (state === followStates.off && this.scene.groups.size > 0) {
                 followStateStore.set(followStates.requesting);
                 followRoleStore.set(followRoles.leader);

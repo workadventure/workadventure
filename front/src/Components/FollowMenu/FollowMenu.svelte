@@ -95,16 +95,19 @@ vim: ft=typescript
                 <p>Do you want to follow {name(followUsers[0])}?</p>
             </section>
             <section class="interact-menu-action">
-                <button type="button" class="accept" on:click|preventDefault={acceptFollowRequest}>Yes</button>
-                <button type="button" class="deny" on:click|preventDefault={reset}>No</button>
+                <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
+                    >Yes</button
+                >
+                <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
             </section>
         {:else if followRole === followRoles.leader}
             <section class="interact-menu-question">
                 <p>Ask others to follow you?</p>
             </section>
             <section class="interact-menu-action">
-                <button type="button" class="accept" on:click|preventDefault={sendFollowRequest}>Yes</button>
-                <button type="button" class="deny" on:click|preventDefault={reset}>No</button>
+                <button type="button" class="nes-btn is-success" on:click|preventDefault={sendFollowRequest}>Yes</button
+                >
+                <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
             </section>
         {/if}
     </div>
@@ -125,8 +128,8 @@ vim: ft=typescript
             </section>
         {/if}
         <section class="interact-menu-action">
-            <button type="button" class="accept" on:click|preventDefault={reset}>Yes</button>
-            <button type="button" class="deny" on:click|preventDefault={abortEnding}>No</button>
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}>Yes</button>
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}>No</button>
         </section>
     </div>
 {/if}
@@ -205,19 +208,6 @@ vim: ft=typescript
                 border: medium solid black;
                 font-weight: bold;
                 height: 2.5em;
-            }
-
-            .accept {
-                background-color: #00ff0088;
-            }
-            .accept:hover {
-                background-color: #00ff00cc;
-            }
-            .deny {
-                background-color: #ff000088;
-            }
-            .deny:hover {
-                background-color: #ff0000cc;
             }
         }
     }
