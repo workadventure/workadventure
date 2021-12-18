@@ -34,7 +34,6 @@ export class EntryScene extends Scene {
             .loadCurrentLanguageObject(this.cache)
             .catch((e: unknown) => {
                 console.error("Error during language loading!", e);
-                throw e;
             })
             .finally(() => {
                 gameManager

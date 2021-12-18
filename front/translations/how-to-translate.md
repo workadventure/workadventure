@@ -4,7 +4,7 @@
 
 In the translations folder, all json files of the form [namespace].[language code].json are interpreted to create languages by the language code in the file name.
 
-The only mandatory file that is the entry point is the index.[language code].json which must contain the properties language, country and default so that the language can be taken into account.
+The only mandatory file (the entry point) is the `index.[language code].json` which must contain the properties language, country and default so that the language can be taken into account.
 
 Example:
 ```json
