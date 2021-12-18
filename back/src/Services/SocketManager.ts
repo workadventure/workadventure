@@ -846,12 +846,13 @@ export class SocketManager {
     handleFollowConfirmationMessage(room: GameRoom, user: User, message: FollowConfirmationMessage) {
         const leader = room.getUserById(message.getLeader());
         if (!leader) {
-            console.info('Could not find user "', message.getLeader(), '" while handling a follow confirmation in room "', room.roomUrl,'". Maybe the user just left.');
+            const message = `Could not follow user "{message.getLeader()}" in room "{room.roomUrl}".`;
+            console.info(message, "Maybe the user just left.");
             return;
         }
 
-        // By security, we look at the group leader. If the group leader is NOT the leader in the message, everybody should
-        // stop following the group leader (to avoid having 2 group leaders)
+        // By security, we look at the group leader. If the group leader is NOT the leader in the message,
+        // everybody should stop following the group leader (to avoid having 2 group leaders)
         if (user?.group?.leader && user?.group?.leader !== leader) {
             user?.group?.leader?.stopLeading();
         }

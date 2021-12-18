@@ -6,7 +6,9 @@ import { PositionNotifier } from "_Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
     BatchMessage,
-    CompanionMessage, FollowAbortMessage, FollowConfirmationMessage,
+    CompanionMessage,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SubMessage,
@@ -18,7 +20,7 @@ export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientM
 export class User implements Movable {
     public listenedZones: Set<Zone>;
     public group?: Group;
-    private _following: User|undefined;
+    private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
 
     public constructor(

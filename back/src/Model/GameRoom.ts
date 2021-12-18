@@ -224,19 +224,18 @@ export class GameRoom {
         } else {
             // If the user is part of a group:
             //  should he leave the group?
-            const leaveIfOutOfRadius = (user: User) => {
-                if (user.group === undefined) {
+            const users = user.group.getUsers().filter((u) => !u.hasFollowers() && !u.following);
+            users.forEach((foreignUser: User) => {
+                if (foreignUser.group === undefined) {
                     return;
                 }
-                const usrPos = user.getPosition();
-                const grpPos = user.group.getPosition();
+                const usrPos = foreignUser.getPosition();
+                const grpPos = foreignUser.group.getPosition();
                 const distance = GameRoom.computeDistanceBetweenPositions(usrPos, grpPos);
                 if (distance > this.groupRadius) {
-                    this.leaveGroup(user);
+                    this.leaveGroup(foreignUser);
                 }
-            };
-            const users = user.group.getUsers().filter((u) => !u.hasFollowers() && !u.following);
-            users.forEach((foreignUser) => leaveIfOutOfRadius(foreignUser));
+            });
         }
     }
 

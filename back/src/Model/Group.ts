@@ -156,7 +156,7 @@ export class Group implements Movable {
     /**
      * A group can have at most one person leading the way in it.
      */
-    get leader(): User|undefined {
+    get leader(): User | undefined {
         for (const user of this.users) {
             if (user.hasFollowers()) {
                 return user;
