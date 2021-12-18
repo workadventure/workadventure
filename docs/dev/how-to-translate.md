@@ -2,9 +2,9 @@
 
 ## How the translation files work
 
-In the translations folder, all json files of the form [namespace].[language code].json are interpreted to create languages by the language code in the file name.
+In the `front/translations` folder, all json files of the form `[namespace].[language code].json` are interpreted to create languages by the language code in the file name.
 
-The only mandatory file (the entry point) is the `index.[language code].json` which must contain the properties language, country and default so that the language can be taken into account.
+The only mandatory file (the entry point) is the `index.[language code].json` which must contain the properties `language`, `country` and `default` so that the language can be taken into account.
 
 Example:
 ```json
@@ -31,6 +31,8 @@ Example:
         - index.fr-FR.json
         - main-menu.fr-FR.json
         - chat.fr-FR.json
+
+If a key isn't found then it will be searched in the fallback language and if it isn't found then the key will be returned. By default the fallback language is `en-US` but you can set another one with the `FALLBACK_LANGUAGE` environment variable.
 
 ## Add a new language
 
