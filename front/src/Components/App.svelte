@@ -42,7 +42,7 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
-    import { followStateStore, followStates } from "../Stores/FollowStore";
+    import { followStateStore, followRoleStore, followStates, followRoles } from "../Stores/FollowStore";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
 
     export let game: Game;
@@ -104,7 +104,7 @@
             <ReportMenu />
         </div>
     {/if}
-    {#if $followStateStore !== followStates.off}
+    {#if $followStateStore !== followStates.off || $followRoleStore === followRoles.open}
         <div>
             <FollowMenu />
         </div>

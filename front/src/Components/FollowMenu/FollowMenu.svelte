@@ -6,6 +6,7 @@ vim: ft=typescript
     import type { Unsubscriber } from "svelte/store";
     import { get } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import followImg from "../images/follow.svg";
 
     import {
         followStateStore,
@@ -74,6 +75,11 @@ vim: ft=typescript
         followStateStore.set(followStates.off);
         followRoleStore.set(followRoles.leader);
         followUsersStore.set([]);
+    }
+
+    function request() {
+        followStateStore.set(followStates.requesting);
+        followRoleStore.set(followRoles.leader);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -152,6 +158,33 @@ vim: ft=typescript
     </div>
 {/if}
 
+{#if followRole === followRoles.open}
+    <button
+        type="button"
+        class="nes-btn is-primary follow-menu-button"
+        on:click|preventDefault={request}
+        title="Ask others to follow"><img class="background-img" src={followImg} alt="" /></button
+    >
+{/if}
+
+{#if followState === followStates.active || followState === followStates.ending}
+    {#if followRole === followRoles.follower}
+        <button
+            type="button"
+            class="nes-btn is-error follow-menu-button"
+            on:click|preventDefault={reset}
+            title="Stop following"><img class="background-img" src={followImg} alt="" /></button
+        >
+    {:else if followUsers.length > 0}
+        <button
+            type="button"
+            class="nes-btn is-error follow-menu-button"
+            on:click|preventDefault={reset}
+            title="Stop leading the way"><img class="background-img" src={followImg} alt="" /></button
+        >
+    {/if}
+{/if}
+
 <style lang="scss">
     .nes-container {
         padding: 5px;
@@ -210,6 +243,13 @@ vim: ft=typescript
                 height: 2.5em;
             }
         }
+    }
+
+    .follow-menu-button {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        pointer-events: all;
     }
 
     @media only screen and (max-width: 800px) {

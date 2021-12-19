@@ -8,6 +8,7 @@ export const followStates = {
 };
 
 export const followRoles = {
+    open: "open",
     leader: "leader",
     follower: "follower",
 };
