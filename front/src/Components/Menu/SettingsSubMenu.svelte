@@ -4,6 +4,7 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { isMobile } from "../../Enum/EnvironmentVariable";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
+import { translator } from "../../Translator/Translator";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -73,34 +74,64 @@
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
-        <h3>Game quality</h3>
+        <h3>{translator._("menu.settings.game-quality.title")}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueGame}>
-                <option value={120}>{isMobile() ? "High (120 fps)" : "High video quality (120 fps)"}</option>
-                <option value={60}
-                    >{isMobile() ? "Medium (60 fps)" : "Medium video quality (60 fps, recommended)"}</option
+                <option value={120}
+                    >{isMobile()
+                        ? translator._("menu.settings.game-quality.short.high")
+                        : translator._("menu.settings.game-quality.long.high")}</option
                 >
-                <option value={40}>{isMobile() ? "Minimum (40 fps)" : "Minimum video quality (40 fps)"}</option>
-                <option value={20}>{isMobile() ? "Small (20 fps)" : "Small video quality (20 fps)"}</option>
+                <option value={60}
+                    >{isMobile()
+                        ? translator._("menu.settings.game-quality.short.medium")
+                        : translator._("menu.settings.game-quality.long.medium")}</option
+                >
+                <option value={40}
+                    >{isMobile()
+                        ? translator._("menu.settings.game-quality.short.minimum")
+                        : translator._("menu.settings.game-quality.long.minimum")}</option
+                >
+                <option value={20}
+                    >{isMobile()
+                        ? translator._("menu.settings.game-quality.short.small")
+                        : translator._("menu.settings.game-quality.long.small")}</option
+                >
             </select>
         </div>
     </section>
     <section>
-        <h3>Video quality</h3>
+        <h3>{translator._("menu.settings.video-quality.title")}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueVideo}>
-                <option value={30}>{isMobile() ? "High (30 fps)" : "High video quality (30 fps)"}</option>
-                <option value={20}
-                    >{isMobile() ? "Medium (20 fps)" : "Medium video quality (20 fps, recommended)"}</option
+                <option value={30}
+                    >{isMobile()
+                        ? translator._("menu.settings.video-quality.short.high")
+                        : translator._("menu.settings.video-quality.long.high")}</option
                 >
-                <option value={10}>{isMobile() ? "Minimum (10 fps)" : "Minimum video quality (10 fps)"}</option>
-                <option value={5}>{isMobile() ? "Small (5 fps)" : "Small video quality (5 fps)"}</option>
+                <option value={20}
+                    >{isMobile()
+                        ? translator._("menu.settings.video-quality.short.medium")
+                        : translator._("menu.settings.video-quality.long.medium")}</option
+                >
+                <option value={10}
+                    >{isMobile()
+                        ? translator._("menu.settings.video-quality.short.minimum")
+                        : translator._("menu.settings.video-quality.long.minimum")}</option
+                >
+                <option value={5}
+                    >{isMobile()
+                        ? translator._("menu.settings.video-quality.short.small")
+                        : translator._("menu.settings.video-quality.long.small")}</option
+                >
             </select>
         </div>
     </section>
     <section class="settings-section-save">
-        <p>(Saving these settings will restart the game)</p>
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}>Save</button>
+        <p>{translator._("menu.settings.save.warning")}</p>
+        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
+            >{translator._("menu.settings.save.button")}</button
+        >
     </section>
     <section class="settings-section-noSaveOption">
         <label>
@@ -110,7 +141,7 @@
                 bind:checked={fullscreen}
                 on:change={changeFullscreen}
             />
-            <span>Fullscreen</span>
+            <span>{translator._("menu.settings.fullscreen")}</span>
         </label>
         <label>
             <input
@@ -119,7 +150,7 @@
                 bind:checked={notification}
                 on:change={changeNotification}
             />
-            <span>Notifications</span>
+            <span>{translator._("menu.settings.notifications")}</span>
         </label>
         <label>
             <input
@@ -128,7 +159,7 @@
                 bind:checked={forceCowebsiteTrigger}
                 on:change={changeForceCowebsiteTrigger}
             />
-            <span>Always ask before opening websites and Jitsi Meet rooms</span>
+            <span>{translator._("menu.settings.cowebsite-trigger")}</span>
         </label>
         <label>
             <input
@@ -137,7 +168,7 @@
                 bind:checked={ignoreFollowRequests}
                 on:change={changeIgnoreFollowRequests}
             />
-            <span>Ignore requests to follow other users</span>
+            <span>{translator._("menu.settings.ignore-follow-request")}</span>
         </label>
     </section>
 </div>

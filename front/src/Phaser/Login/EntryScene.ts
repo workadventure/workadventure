@@ -13,7 +13,6 @@ export const EntrySceneName = "EntryScene";
  * and to route to the next correct scene.
  */
 export class EntryScene extends Scene {
-
     constructor() {
         super({
             key: EntrySceneName,
@@ -48,20 +47,20 @@ export class EntryScene extends Scene {
                         if (err.response && err.response.status == 404) {
                             ErrorScene.showError(
                                 new WAError(
-                                    "Access link incorrect",
-                                    "Could not find map. Please check your access link.",
-                                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+                                    translator._("error.access-link.title"),
+                                    translator._("error.access-link.sub-title"),
+                                    translator._("error.access-link.details")
                                 ),
                                 this.scene
                             );
                         } else if (err.response && err.response.status == 403) {
                             ErrorScene.showError(
                                 new WAError(
-                                    "Connection rejected",
-                                    "You cannot join the World. Try again later" +
-                                        (err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "") +
-                                        ".",
-                                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+                                    translator._("error.connection-rejected.title"),
+                                    translator._("error.connection-rejected.sub-title", {
+                                        error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
+                                    }),
+                                    translator._("error.connection-rejected.details")
                                 ),
                                 this.scene
                             );

@@ -1,0 +1,19 @@
+{
+    "camera": {
+        "enable": {
+            "title": "Turn on your camera and microphone",
+            "start": "Let's go!"
+        },
+        "help": {
+            "title": "Camera / Microphone access needed",
+            "permission-denied": "Permission denied",
+            "content": "You must allow camera and microphone access in your browser.",
+            "firefox-content": "Please click the \"Remember this decision\" checkbox, if you don't want Firefox to keep asking you the authorization.",
+            "refresh": "Refresh",
+            "continue": "Continue without webcam"
+        },
+        "my": {
+            "silent-zone": "Silent zone"
+        }
+    }
+}

@@ -1,3 +1,4 @@
+import { translator } from "../../Translator/Translator";
 import { TextField } from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
@@ -38,7 +39,7 @@ export class ReconnectingScene extends Phaser.Scene {
             this,
             this.game.renderer.width / 2,
             this.game.renderer.height / 2,
-            "Connection lost. Reconnecting..."
+            translator._("connection-lost")
         );
 
         const cat = this.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat");

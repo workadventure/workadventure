@@ -1,0 +1,16 @@
+{
+    "custom-character": {
+        "title": "Customize your WOKA",
+        "navigation": {
+            "return": "Return",
+            "back": "Back",
+            "finish": "Finish",
+            "next": "Next"
+        }
+    },
+    "select-woka": {
+        "title": "Select your WOKA",
+        "continue": "Continue",
+        "customize": "Customize your WOKA"
+    }
+}

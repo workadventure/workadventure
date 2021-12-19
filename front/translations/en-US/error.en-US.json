@@ -1,0 +1,14 @@
+{
+    "error": {
+        "access-link": {
+            "title": "Access link incorrect",
+            "sub-title": "Could not find map. Please check your access link.",
+            "details": "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+        },
+        "connection-rejected": {
+            "title": "Connection rejected",
+            "sub-title": "You cannot join the World. Try again later {{error}}.",
+            "details": "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+        }
+    }
+}

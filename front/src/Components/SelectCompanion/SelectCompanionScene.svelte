@@ -1,6 +1,7 @@
 <script lang="typescript">
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
+    import { translator } from "../../Translator/Translator";
 
     export let game: Game;
 
@@ -25,7 +26,7 @@
 
 <form class="selectCompanionScene">
     <section class="text-center">
-        <h2>Select your companion</h2>
+        <h2>{translator._("companion.select.title")}</h2>
         <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -35,12 +36,12 @@
     </section>
     <section class="action">
         <button href="/" class="selectCompanionSceneFormBack nes-btn" on:click|preventDefault={noCompanion}
-            >No companion</button
+            >{translator._("companion.select.any")}</button
         >
         <button
             type="submit"
             class="selectCompanionSceneFormSubmit nes-btn is-primary"
-            on:click|preventDefault={selectCompanion}>Continue</button
+            on:click|preventDefault={selectCompanion}>{translator._("companion.select.continue")}</button
         >
     </section>
 </form>

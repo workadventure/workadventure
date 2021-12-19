@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
     import { requestVisitCardsStore } from "../../Stores/GameStore";
+    import { translator } from "../../Translator/Translator";
 
     export let player: PlayerInterface;
 
@@ -12,8 +13,12 @@
 </script>
 
 <ul class="selectMenu" style="border-top: {player.color || 'whitesmoke'} 5px solid">
-    <li><button class="text-btn" disabled={!player.visitCardUrl} on:click={openVisitCard}>Visit card</button></li>
-    <li><button class="text-btn" disabled>Add friend</button></li>
+    <li>
+        <button class="text-btn" disabled={!player.visitCardUrl} on:click={openVisitCard}
+            >{translator._("chat.menu.visit-card")}</button
+        >
+    </li>
+    <li><button class="text-btn" disabled>{translator._("chat.menu.add-friend")}</button></li>
 </ul>
 
 <style lang="scss">

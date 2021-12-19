@@ -224,7 +224,9 @@ class Translator {
             return params ? this.formatStringWithParams(fallbackLanguageValue, params) : fallbackLanguageValue;
         }
 
-        console.warn(`"${key}" key cannot be found in ${this.getStringByLanguage(this.fallbackLanguage)} fallback language`);
+        console.warn(
+            `"${key}" key cannot be found in ${this.getStringByLanguage(this.fallbackLanguage)} fallback language`
+        );
 
         return key;
     }

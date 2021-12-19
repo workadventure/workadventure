@@ -1,6 +1,7 @@
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { onMount } from "svelte";
+    import { translator } from "../../Translator/Translator";
 
     let gameScene = gameManager.getCurrentGameScene();
 
@@ -11,7 +12,7 @@
     let mapName: string = "";
     let mapLink: string = "";
     let mapDescription: string = "";
-    let mapCopyright: string = "The map creator did not declare a copyright for the map.";
+    let mapCopyright: string = translator._("menu.about.copyrights.map.empty");
     let tilesetCopyright: string[] = [];
     let audioCopyright: string[] = [];
 
@@ -62,41 +63,37 @@
 </script>
 
 <div class="about-room-main">
-    <h2>Information on the map</h2>
+    <h2>{translator._("menu.about.map-info")}</h2>
     <section class="container-overflow">
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
         {#if mapLink}
-            <p class="string-HTML">&gt; <a href={mapLink} target="_blank">link to this map</a> &lt;</p>
+            <p class="string-HTML">
+                &gt; <a href={mapLink} target="_blank">{translator._("menu.about.map-link")}</a> &lt;
+            </p>
         {/if}
         <h3 class="nes-pointer hoverable" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
-            Copyrights of the map
+            {translator._("menu.about.copyrights.map.title")}
         </h3>
         <p class="string-HTML" hidden={!expandedMapCopyright}>{mapCopyright}</p>
         <h3 class="nes-pointer hoverable" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
-            Copyrights of the tilesets
+            {translator._("menu.about.copyrights.tileset.title")}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
             {#each tilesetCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
             {:else}
-                <p>
-                    The map creator did not declare a copyright for the tilesets. This doesn't mean that those tilesets
-                    have no license.
-                </p>
+                <p>{translator._("menu.about.copyrights.tileset.empty")}</p>
             {/each}
         </section>
         <h3 class="nes-pointer hoverable" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
-            Copyrights of audio files
+            {translator._("menu.about.copyrights.audio.title")}
         </h3>
         <section hidden={!expandedAudioCopyright}>
             {#each audioCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
             {:else}
-                <p>
-                    The map creator did not declare a copyright for audio files. This doesn't mean that those tilesets
-                    have no license.
-                </p>
+                <p>{translator._("menu.about.copyrights.audio.empty")}</p>
             {/each}
         </section>
     </section>

@@ -1,0 +1,10 @@
+{
+    "chat": {
+        "intro": "Here is your chat history:",
+        "enter": "Enter your message...",
+        "menu": {
+            "visit-card": "Visit card",
+            "add-friend": "Add friend"
+        }
+    }
+}

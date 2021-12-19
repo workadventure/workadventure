@@ -6,11 +6,13 @@ vim: ft=typescript
     import followImg from "../images/follow.svg";
 
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
+    import { translator } from "../../Translator/Translator";
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    function name(userId: number): string | undefined {
-        return gameScene.MapPlayersByKey.get(userId)?.PlayerValue;
+    function name(userId: number): string {
+        const user = gameScene.MapPlayersByKey.get(userId);
+        return user ? user.PlayerValue : "";
     }
 
     function sendFollowRequest() {
@@ -42,11 +44,15 @@ vim: ft=typescript
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div class="interact-menu nes-container is-rounded">
         <section class="interact-menu-title">
-            <h2>Do you want to follow {name($followUsersStore[0])}?</h2>
+            <h2>{translator._("follow.interact-menu.title.follow", { leader: name($followUsersStore[0]) })}</h2>
         </section>
         <section class="interact-menu-action">
-            <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}>Yes</button>
-            <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
+                >{translator._("follow.interact-menu.yes")}</button
+            >
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}
+                >{translator._("follow.interact-menu.no")}</button
+            >
         </section>
     </div>
 {/if}
@@ -54,20 +60,24 @@ vim: ft=typescript
 {#if $followStateStore === "ending"}
     <div class="interact-menu nes-container is-rounded">
         <section class="interact-menu-title">
-            <h2>Interaction</h2>
+            <h2>{translator._("follow.interact-menu.title.interact")}</h2>
         </section>
         {#if $followRoleStore === "follower"}
             <section class="interact-menu-question">
-                <p>Do you want to stop following {name($followUsersStore[0])}?</p>
+                <p>{translator._("follow.interact-menu.stop.follower", { leader: name($followUsersStore[0]) })}</p>
             </section>
         {:else if $followRoleStore === "leader"}
             <section class="interact-menu-question">
-                <p>Do you want to stop leading the way?</p>
+                <p>{translator._("follow.interact-menu.stop.leader")}</p>
             </section>
         {/if}
         <section class="interact-menu-action">
-            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}>Yes</button>
-            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}>No</button>
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}
+                >{translator._("follow.interact-menu.yes")}</button
+            >
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}
+                >{translator._("follow.interact-menu.no")}</button
+            >
         </section>
     </div>
 {/if}
@@ -76,18 +86,24 @@ vim: ft=typescript
     <div class="interact-status nes-container is-rounded">
         <section class="interact-status">
             {#if $followRoleStore === "follower"}
-                <p>Following {name($followUsersStore[0])}</p>
+                <p>{translator._("follow.interact-status.following", { leader: name($followUsersStore[0]) })}</p>
             {:else if $followUsersStore.length === 0}
-                <p>Waiting for followers' confirmation</p>
+                <p>{translator._("follow.interact-status.waiting-followers")}</p>
             {:else if $followUsersStore.length === 1}
-                <p>{name($followUsersStore[0])} is following you</p>
+                <p>{translator._("follow.interact-status.followed.one", { follower: name($followUsersStore[0]) })}</p>
             {:else if $followUsersStore.length === 2}
-                <p>{name($followUsersStore[0])} and {name($followUsersStore[1])} are following you</p>
+                <p>
+                    {translator._("follow.interact-status.followed.one", {
+                        firstFollower: name($followUsersStore[0]),
+                        secondFollower: name($followUsersStore[1]),
+                    })}
+                </p>
             {:else}
                 <p>
-                    {$followUsersStore.slice(0, -1).map(name).join(", ")} and {name(
-                        $followUsersStore[$followUsersStore.length - 1]
-                    )} are following you
+                    {translator._("follow.interact-status.followed.many", {
+                        followers: $followUsersStore.slice(0, -1).map(name).join(", "),
+                        lastFollower: name($followUsersStore[$followUsersStore.length - 1]),
+                    })}
                 </p>
             {/if}
         </section>
