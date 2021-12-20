@@ -51,8 +51,9 @@ export class Player extends Character {
         }
 
         // Compute movement deltas
-        const speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
-        const moveAmount = speedMultiplier * 20;
+        const followMode = get(followStateStore) !== followStates.off;
+        const speedup = activeEvents.get(UserInputEvent.SpeedUp) && !followMode ? 25 : 9;
+        const moveAmount = speedup * 20;
         x = x * moveAmount;
         y = y * moveAmount;
 
