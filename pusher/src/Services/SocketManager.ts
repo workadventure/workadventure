@@ -370,11 +370,18 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public deleteRoomIfEmpty(room: PusherRoom): void {
+    private deleteRoomIfEmpty(room: PusherRoom): void {
         if (room.isEmpty()) {
             room.close();
             this.rooms.delete(room.roomUrl);
             debug("Room %s is empty. Deleting.", room.roomUrl);
+        }
+    }
+
+    public deleteRoomIfEmptyFromId(roomUrl: string): void {
+        const room = this.rooms.get(roomUrl);
+        if (room) {
+            this.deleteRoomIfEmpty(room);
         }
     }
 

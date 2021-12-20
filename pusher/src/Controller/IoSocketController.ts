@@ -273,7 +273,7 @@ export class IoSocketController {
                                                     rejected: true,
                                                     message: err?.response?.data.message,
                                                     status: err?.response?.status,
-                                                    room,
+                                                    roomId,
                                                 },
                                                 websocketKey,
                                                 websocketProtocol,
@@ -368,6 +368,7 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
                                     message: e.message,
+                                    roomId,
                                 },
                                 websocketKey,
                                 websocketProtocol,
@@ -380,6 +381,7 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
+                                    roomId,
                                 },
                                 websocketKey,
                                 websocketProtocol,
@@ -394,9 +396,8 @@ export class IoSocketController {
             open: (ws) => {
                 if (ws.rejected === true) {
                     // If there is a room in the error, let's check if we need to clean it.
-                    if (ws.room) {
-                        const room = ws.room as PusherRoom;
-                        socketManager.deleteRoomIfEmpty(room);
+                    if (ws.roomId) {
+                        socketManager.deleteRoomIfEmptyFromId(ws.roomId as string);
                     }
 
                     //FIX ME to use status code
