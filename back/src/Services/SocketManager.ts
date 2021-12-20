@@ -691,7 +691,7 @@ export class SocketManager {
         }
     }
 
-    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string): Promise<void> {
+    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
@@ -715,7 +715,7 @@ export class SocketManager {
         for (const recipient of recipients) {
             const sendUserMessage = new SendUserMessage();
             sendUserMessage.setMessage(message);
-            sendUserMessage.setType("ban"); //todo: is the type correct?
+            sendUserMessage.setType(type);
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setSendusermessage(sendUserMessage);
