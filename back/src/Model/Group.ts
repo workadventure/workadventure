@@ -109,7 +109,7 @@ export class Group implements Movable {
     includes(user: User): boolean {
         let found = false;
         this.users.forEach((currentUser: User) => {
-            if (currentUser.name === user.name) {
+            if (currentUser.id === user.id) {
                 found = true;
             }
         });
