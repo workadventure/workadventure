@@ -158,7 +158,7 @@ vim: ft=typescript
     </div>
 {/if}
 
-{#if followRole === followRoles.open}
+{#if followState === followStates.off}
     <button
         type="button"
         class="nes-btn is-primary follow-menu-button"
@@ -175,7 +175,7 @@ vim: ft=typescript
             on:click|preventDefault={reset}
             title="Stop following"><img class="background-img" src={followImg} alt="" /></button
         >
-    {:else if followUsers.length > 0}
+    {:else}
         <button
             type="button"
             class="nes-btn is-error follow-menu-button"
