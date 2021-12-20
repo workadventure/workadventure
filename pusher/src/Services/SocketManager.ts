@@ -351,11 +351,7 @@ export class SocketManager implements ZoneEventListener {
                         debug("Leaving room %s.", socket.roomId);
 
                         room.leave(socket);
-                        if (room.isEmpty()) {
-                            room.close();
-                            this.rooms.delete(socket.roomId);
-                            debug("Room %s is empty. Deleting.", socket.roomId);
-                        }
+                        this.deleteRoomIfEmpty(room);
                     } else {
                         console.error("Could not find the GameRoom the user is leaving!");
                     }
@@ -371,6 +367,14 @@ export class SocketManager implements ZoneEventListener {
             if (socket.backConnection) {
                 socket.backConnection.end();
             }
+        }
+    }
+
+    public deleteRoomIfEmpty(room: PusherRoom): void {
+        if (room.isEmpty()) {
+            room.close();
+            this.rooms.delete(room.roomUrl);
+            debug("Room %s is empty. Deleting.", room.roomUrl);
         }
     }
 
