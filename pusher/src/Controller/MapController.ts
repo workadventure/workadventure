@@ -59,11 +59,11 @@ export class MapController extends BaseController {
                     JSON.stringify({
                         mapUrl,
                         policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-                        roomSlug: "", // Deprecated
+                        roomSlug: null, // Deprecated
                         group: null,
                         tags: [],
                         textures: [],
-                        contactPage: undefined,
+                        contactPage: null,
                         authenticationMandatory: DISABLE_ANONYMOUS,
                     } as MapDetailsData)
                 );
