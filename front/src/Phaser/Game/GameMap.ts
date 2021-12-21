@@ -84,10 +84,11 @@ export class GameMap {
                 this.phaserLayers.push(
                     phaserMap
                         .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
-                        .setDepth(depth));
+                        .setDepth(depth)
                         .setAlpha(layer.opacity)
                         .setVisible(layer.visible)
                         .setSize(layer.width, layer.height)
+                    );
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;
