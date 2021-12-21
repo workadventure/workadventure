@@ -1300,6 +1300,18 @@ ${escapedMessage}
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
         });
+
+        iframeListener.registerAnswerer("setPlayerOutline", (message) => {
+            const normalizeColor = (color: number) => Math.min(Math.max(0, Math.round(color)), 255);
+            const red = normalizeColor(message.red);
+            const green = normalizeColor(message.green);
+            const blue = normalizeColor(message.blue);
+            this.CurrentPlayer.setOutlineColor(red, green, blue);
+        });
+
+        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+            this.CurrentPlayer.removeOutlineColor();
+        });
     }
 
     private setPropertyLayer(
@@ -1422,6 +1434,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("removeActionMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("setPlayerOutline");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

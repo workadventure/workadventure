@@ -13,6 +13,7 @@ message PositionMessage {
   }
   Direction direction = 3;
   bool moving = 4;
+  uint32 outlineColor = 5;
 }
 
 message PointMessage {

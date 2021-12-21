@@ -13,7 +13,8 @@ import { isSilentStore } from "../../Stores/MediaStore";
 import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
-import { Writable, writable } from "svelte/store";
+import { Unsubscriber, Writable, writable } from "svelte/store";
+import { createColorStore } from "../../Stores/OutlineColorStore";
 
 const playerNameY = -25;
 
@@ -40,6 +41,8 @@ export abstract class Character extends Container {
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
+    private readonly outlineColorStore = createColorStore();
+    private readonly outlineColorStoreUnsubscribe: Unsubscriber;
 
     constructor(
         scene: GameScene,
@@ -97,17 +100,25 @@ export abstract class Character extends Container {
             });
 
             this.on("pointerover", () => {
-                this.getOutlinePlugin()?.add(this.playerName, {
-                    thickness: 2,
-                    outlineColor: 0xffff00,
-                });
-                this.scene.markDirty();
+                this.outlineColorStore.pointerOver();
             });
             this.on("pointerout", () => {
-                this.getOutlinePlugin()?.remove(this.playerName);
-                this.scene.markDirty();
+                this.outlineColorStore.pointerOut();
             });
         }
+
+        this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
+            if (color === undefined) {
+                this.getOutlinePlugin()?.remove(this.playerName);
+            } else {
+                this.getOutlinePlugin()?.remove(this.playerName);
+                this.getOutlinePlugin()?.add(this.playerName, {
+                    thickness: 2,
+                    outlineColor: color,
+                });
+            }
+            this.scene.markDirty();
+        });
 
         scene.add.existing(this);
 
@@ -315,6 +326,7 @@ export abstract class Character extends Container {
             }
         }
         this.list.forEach((objectContaining) => objectContaining.destroy());
+        this.outlineColorStoreUnsubscribe();
         super.destroy();
     }
 
@@ -400,5 +412,13 @@ export abstract class Character extends Container {
 
     public get pictureStore(): PictureStore {
         return this._pictureStore;
+    }
+
+    public setOutlineColor(red: number, green: number, blue: number): void {
+        this.outlineColorStore.setColor((red << 16) | (green << 8) | blue);
+    }
+
+    public removeOutlineColor(): void {
+        this.outlineColorStore.removeColor();
     }
 }
