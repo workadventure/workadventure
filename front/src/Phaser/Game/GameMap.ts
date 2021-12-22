@@ -88,7 +88,7 @@ export class GameMap {
                         .setAlpha(layer.opacity)
                         .setVisible(layer.visible)
                         .setSize(layer.width, layer.height)
-                    );
+                );
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;
