@@ -414,8 +414,8 @@ export abstract class Character extends Container {
         return this._pictureStore;
     }
 
-    public setOutlineColor(red: number, green: number, blue: number): void {
-        this.outlineColorStore.setColor((red << 16) | (green << 8) | blue);
+    public setOutlineColor(color: number): void {
+        this.outlineColorStore.setColor(color);
     }
 
     public removeOutlineColor(): void {

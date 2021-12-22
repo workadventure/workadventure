@@ -3,12 +3,20 @@ import { PositionInterface } from "_Model/PositionInterface";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
 import { ZoneSocket } from "../RoomManager";
-import { EmoteEventMessage } from "../Messages/generated/messages_pb";
+import {
+    EmoteEventMessage,
+    SetPlayerDetailsMessage,
+    PlayerDetailsUpdatedMessage,
+} from "../Messages/generated/messages_pb";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
 export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
+export type PlayerDetailsUpdatedCallback = (
+    playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
+    listener: ZoneSocket
+) => void;
 
 export class Zone {
     private things: Set<Movable> = new Set<Movable>();
@@ -19,6 +27,7 @@ export class Zone {
         private onMoves: MovesCallback,
         private onLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         public readonly x: number,
         public readonly y: number
     ) {}
@@ -104,6 +113,16 @@ export class Zone {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, listener);
+        }
+    }
+
+    public updatePlayerDetails(user: User, playerDetails: SetPlayerDetailsMessage) {
+        const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
+        playerDetailsUpdatedMessage.setUserid(user.id);
+        playerDetailsUpdatedMessage.setDetails(playerDetails);
+
+        for (const listener of this.listeners) {
+            this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
         }
     }
 }

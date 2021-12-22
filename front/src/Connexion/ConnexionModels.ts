@@ -18,6 +18,7 @@ export enum EventMessage {
     GROUP_DELETE = "group-delete",
     SET_PLAYER_DETAILS = "set-player-details", // Send the name and character to the server (on connect), receive back the id.
     ITEM_EVENT = "item-event",
+    USER_DETAILS_UPDATED = "user-details-updated",
 
     CONNECT_ERROR = "connect_error",
     CONNECTING_ERROR = "connecting_error",
@@ -100,6 +101,12 @@ export interface ItemEventMessageInterface {
     event: string;
     state: unknown;
     parameters: unknown;
+}
+
+export interface PlayerDetailsUpdatedMessageInterface {
+    userId: number;
+    outlineColor: number;
+    removeOutlineColor: boolean;
 }
 
 export interface RoomJoinedMessageInterface {

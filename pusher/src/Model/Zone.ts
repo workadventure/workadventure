@@ -16,6 +16,7 @@ import {
     EmoteEventMessage,
     CompanionMessage,
     ErrorMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
@@ -32,6 +33,7 @@ export interface ZoneEventListener {
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
+    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -219,6 +221,10 @@ export class Zone {
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);
+                } else if (message.hasPlayerdetailsupdatedmessage()) {
+                    const playerDetailsUpdatedMessage =
+                        message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
+                    this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
                     this.notifyError(errorMessage);
@@ -305,6 +311,15 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage) {
+        for (const listener of this.listeners) {
+            if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
+                continue;
+            }
+            this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
         }
     }
 
