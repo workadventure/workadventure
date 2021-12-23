@@ -1,4 +1,4 @@
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
@@ -81,6 +81,24 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             );
         }
         return userRoomToken;
+    }
+
+    public setOutlineColor(red: number, green: number, blue: number): Promise<void> {
+        return queryWorkadventure({
+            type: "setPlayerOutline",
+            data: {
+                red,
+                green,
+                blue,
+            },
+        });
+    }
+
+    public removeOutlineColor(): Promise<void> {
+        return queryWorkadventure({
+            type: "removePlayerOutline",
+            data: undefined,
+        });
     }
 }
 

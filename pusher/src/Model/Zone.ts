@@ -16,6 +16,8 @@ import {
     EmoteEventMessage,
     CompanionMessage,
     ErrorMessage,
+    PlayerDetailsUpdatedMessage,
+    SetPlayerDetailsMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
@@ -32,6 +34,7 @@ export interface ZoneEventListener {
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
+    onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
 }
 
 /*export type EntersCallback = (thing: Movable, listener: User) => void;
@@ -46,7 +49,8 @@ export class UserDescriptor {
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
         private visitCardUrl: string | null,
-        private companion?: CompanionMessage
+        private companion?: CompanionMessage,
+        private outlineColor?: number
     ) {
         if (!Number.isInteger(this.userId)) {
             throw new Error("UserDescriptor.userId is not an integer: " + this.userId);
@@ -65,7 +69,8 @@ export class UserDescriptor {
             message.getCharacterlayersList(),
             position,
             message.getVisitcardurl(),
-            message.getCompanion()
+            message.getCompanion(),
+            message.getHasoutline() ? message.getOutlinecolor() : undefined
         );
     }
 
@@ -75,6 +80,14 @@ export class UserDescriptor {
             throw new Error("Missing position");
         }
         this.position = position;
+    }
+
+    public updateDetails(playerDetails: SetPlayerDetailsMessage) {
+        if (playerDetails.getRemoveoutlinecolor()) {
+            this.outlineColor = undefined;
+        } else {
+            this.outlineColor = playerDetails.getOutlinecolor();
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
@@ -89,6 +102,12 @@ export class UserDescriptor {
         }
         userJoinedMessage.setCompanion(this.companion);
         userJoinedMessage.setUseruuid(this.userUuid);
+        if (this.outlineColor !== undefined) {
+            userJoinedMessage.setOutlinecolor(this.outlineColor);
+            userJoinedMessage.setHasoutline(true);
+        } else {
+            userJoinedMessage.setHasoutline(false);
+        }
 
         return userJoinedMessage;
     }
@@ -209,7 +228,7 @@ export class Zone {
                     const userDescriptor = this.users.get(userId);
 
                     if (userDescriptor === undefined) {
-                        console.error('Unexpected move message received for user "' + userId + '"');
+                        console.error('Unexpected move message received for unknown user "' + userId + '"');
                         return;
                     }
 
@@ -219,6 +238,27 @@ export class Zone {
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);
+                } else if (message.hasPlayerdetailsupdatedmessage()) {
+                    const playerDetailsUpdatedMessage =
+                        message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
+
+                    const userId = playerDetailsUpdatedMessage.getUserid();
+                    const userDescriptor = this.users.get(userId);
+
+                    if (userDescriptor === undefined) {
+                        console.error('Unexpected details message received for unknown user "' + userId + '"');
+                        return;
+                    }
+
+                    const details = playerDetailsUpdatedMessage.getDetails();
+                    if (details === undefined) {
+                        console.error('Unexpected details message without details received for user "' + userId + '"');
+                        return;
+                    }
+
+                    userDescriptor.updateDetails(details);
+
+                    this.notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage);
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
                     this.notifyError(errorMessage);
@@ -305,6 +345,15 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage) {
+        for (const listener of this.listeners) {
+            if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
+                continue;
+            }
+            this.socketListener.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener);
         }
     }
 

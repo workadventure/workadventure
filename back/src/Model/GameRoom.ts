@@ -2,7 +2,13 @@ import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
 import { PositionInterface } from "_Model/PositionInterface";
-import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
+import {
+    EmoteCallback,
+    EntersCallback,
+    LeavesCallback,
+    MovesCallback,
+    PlayerDetailsUpdatedCallback,
+} from "_Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
 import {
@@ -11,6 +17,7 @@ import {
     EmoteEventMessage,
     ErrorMessage,
     JoinRoomMessage,
+    SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     VariableMessage,
     VariableWithTagMessage,
@@ -56,10 +63,19 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves, onEmote);
+        this.positionNotifier = new PositionNotifier(
+            320,
+            320,
+            onEnters,
+            onMoves,
+            onLeaves,
+            onEmote,
+            onPlayerDetailsUpdated
+        );
     }
 
     public static async create(
@@ -71,7 +87,8 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
 
@@ -85,7 +102,8 @@ export class GameRoom {
             onEnters,
             onMoves,
             onLeaves,
-            onEmote
+            onEmote,
+            onPlayerDetailsUpdated
         );
 
         return gameRoom;
@@ -178,6 +196,14 @@ export class GameRoom {
         user.setPosition(userPosition);
 
         this.updateUserGroup(user);
+    }
+
+    updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        if (playerDetailsMessage.getRemoveoutlinecolor()) {
+            user.outlineColor = undefined;
+        } else {
+            user.outlineColor = playerDetailsMessage.getOutlinecolor();
+        }
     }
 
     private updateUserGroup(user: User): void {

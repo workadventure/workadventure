@@ -33,6 +33,8 @@ import {
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
+    SetPlayerDetailsMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -151,20 +153,9 @@ export class SocketManager {
         //room.setViewport(client, client.viewport);
     }
 
-    // Useless now, will be useful again if we allow editing details in game
-    /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const playerDetails = {
-            name: playerDetailsMessage.getName(),
-            characterLayers: playerDetailsMessage.getCharacterlayersList()
-        };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
-        if (!isSetPlayerDetailsMessage(playerDetails)) {
-            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
-            return;
-        }
-        client.name = playerDetails.name;
-        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
-    }*/
+    handleSetPlayerDetails(room: GameRoom, user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        room.updatePlayerDetails(user, playerDetailsMessage);
+    }
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
         room.setSilent(user, silentMessage.getSilent());
@@ -282,7 +273,9 @@ export class SocketManager {
                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
-                    this.onEmote(emoteEventMessage, listener)
+                    this.onEmote(emoteEventMessage, listener),
+                (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -329,6 +322,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
+            if (thing.outlineColor === undefined) {
+                userJoinedZoneMessage.setHasoutline(false);
+            } else {
+                userJoinedZoneMessage.setHasoutline(true);
+                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+            }
 
             const subMessage = new SubToPusherMessage();
             subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
@@ -374,6 +373,13 @@ export class SocketManager {
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
 
         emitZoneMessage(subMessage, client);
     }
@@ -572,7 +578,7 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public handlerSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
+    public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
         const sendUserMessage = new SendUserMessage();
         sendUserMessage.setMessage(sendUserMessageToSend.getMessage());
         sendUserMessage.setType(sendUserMessageToSend.getType());

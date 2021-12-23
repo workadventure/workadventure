@@ -55,6 +55,7 @@ import type {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
+    PlayerDetailsUpdatedMessageInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -88,6 +89,7 @@ import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
+import { SetPlayerDetailsMessage } from "../../Messages/generated/messages_pb";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -123,6 +125,11 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
+interface PlayerDetailsUpdatedInterface {
+    type: "PlayerDetailsUpdated";
+    details: PlayerDetailsUpdatedMessageInterface;
+}
+
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
@@ -135,20 +142,14 @@ export class GameScene extends DirtyScene {
     groups: Map<number, Sprite>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents: Queue<
+    pendingEvents = new Queue<
         | InitUserPositionEventInterface
         | AddPlayerEventInterface
         | RemovePlayerEventInterface
         | UserMovedEventInterface
         | GroupCreatedUpdatedEventInterface
         | DeleteGroupEventInterface
-    > = new Queue<
-        | InitUserPositionEventInterface
-        | AddPlayerEventInterface
-        | RemovePlayerEventInterface
-        | UserMovedEventInterface
-        | GroupCreatedUpdatedEventInterface
-        | DeleteGroupEventInterface
+        | PlayerDetailsUpdatedInterface
     >();
     private initPosition: PositionInterface | null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
@@ -682,6 +683,7 @@ export class GameScene extends DirtyScene {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
+                        outlineColor: message.outlineColor,
                     };
                     this.addPlayer(userMessage);
                 });
@@ -733,6 +735,13 @@ export class GameScene extends DirtyScene {
                         return;
                     }
                     item.fire(message.event, message.state, message.parameters);
+                });
+
+                this.connection.onPlayerDetailsUpdated((message) => {
+                    this.pendingEvents.enqueue({
+                        type: "PlayerDetailsUpdated",
+                        details: message,
+                    });
                 });
 
                 /**
@@ -1300,6 +1309,21 @@ ${escapedMessage}
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
         });
+
+        iframeListener.registerAnswerer("setPlayerOutline", (message) => {
+            const normalizeColor = (color: number) => Math.min(Math.max(0, Math.round(color)), 255);
+            const red = normalizeColor(message.red);
+            const green = normalizeColor(message.green);
+            const blue = normalizeColor(message.blue);
+            const color = (red << 16) | (green << 8) | blue;
+            this.CurrentPlayer.setOutlineColor(color);
+            this.connection?.emitPlayerOutlineColor(color);
+        });
+
+        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+            this.CurrentPlayer.removeOutlineColor();
+            this.connection?.emitPlayerOutlineColor(null);
+        });
     }
 
     private setPropertyLayer(
@@ -1422,6 +1446,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("removeActionMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("setPlayerOutline");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
@@ -1676,6 +1701,12 @@ ${escapedMessage}
                 case "DeleteGroupEvent":
                     this.doDeleteGroup(event.groupId);
                     break;
+                case "PlayerDetailsUpdated":
+                    this.doUpdatePlayerDetails(event.details);
+                    break;
+                default: {
+                    const tmp: never = event;
+                }
             }
         }
         // Let's move all users
@@ -1749,6 +1780,9 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
+        if (addPlayerData.outlineColor !== undefined) {
+            player.setOutlineColor(addPlayerData.outlineColor);
+        }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1850,6 +1884,23 @@ ${escapedMessage}
         }
         group.destroy();
         this.groups.delete(groupId);
+    }
+
+    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+        const character = this.MapPlayersByKey.get(message.userId);
+        if (character === undefined) {
+            console.log(
+                "Could not set new details to character with ID ",
+                message.userId,
+                ". Did he/she left before te message was received?"
+            );
+            return;
+        }
+        if (message.removeOutlineColor) {
+            character.removeOutlineColor();
+        } else {
+            character.setOutlineColor(message.outlineColor);
+        }
     }
 
     /**
