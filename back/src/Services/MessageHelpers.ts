@@ -10,7 +10,16 @@ import {
 import { UserSocket } from "_Model/User";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 
-export function emitError(Client: UserSocket, message: string): void {
+export function emitError(Client: UserSocket, error: unknown): void {
+    let message = "";
+    if (error instanceof Error) {
+        message = error.message;
+    } else if (typeof error === "string") {
+        message = error;
+    } else {
+        message = "Unknown error";
+    }
+
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
 
