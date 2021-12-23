@@ -3,8 +3,11 @@
     import { textMessageContentStore, textMessageVisibleStore } from "../../Stores/TypeMessageStore/TextMessageStore";
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
 
-    const content = JSON.parse($textMessageContentStore);
-    const converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
+    let converter: QuillDeltaToHtmlConverter;
+    $: {
+        const content = JSON.parse($textMessageContentStore);
+        converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
+    }
     const NAME_BUTTON = "Ok";
 
     function closeTextMessage() {

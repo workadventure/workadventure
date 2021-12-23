@@ -34,6 +34,7 @@ import {
     VariableMessage,
     ErrorMessage,
     WorldFullMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -47,14 +48,15 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone"
 import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "./AdminApi/RoomRedirect";
-import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 
 const debug = Debug("socket");
 
 interface AdminSocketRoomsList {
     [index: string]: number;
 }
+
 interface AdminSocketUsersList {
     [index: string]: boolean;
 }
@@ -276,6 +278,16 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
+    onPlayerDetailsUpdated(
+        playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
+        listener: ExSocketInterface
+    ): void {
+        const subMessage = new SubMessage();
+        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setErrormessage(errorMessage);
@@ -351,11 +363,7 @@ export class SocketManager implements ZoneEventListener {
                         debug("Leaving room %s.", socket.roomId);
 
                         room.leave(socket);
-                        if (room.isEmpty()) {
-                            room.close();
-                            this.rooms.delete(socket.roomId);
-                            debug("Room %s is empty. Deleting.", socket.roomId);
-                        }
+                        this.deleteRoomIfEmpty(room);
                     } else {
                         console.error("Could not find the GameRoom the user is leaving!");
                     }
@@ -371,6 +379,21 @@ export class SocketManager implements ZoneEventListener {
             if (socket.backConnection) {
                 socket.backConnection.end();
             }
+        }
+    }
+
+    private deleteRoomIfEmpty(room: PusherRoom): void {
+        if (room.isEmpty()) {
+            room.close();
+            this.rooms.delete(room.roomUrl);
+            debug("Room %s is empty. Deleting.", room.roomUrl);
+        }
+    }
+
+    public deleteRoomIfEmptyFromId(roomUrl: string): void {
+        const room = this.rooms.get(roomUrl);
+        if (room) {
+            this.deleteRoomIfEmpty(room);
         }
     }
 

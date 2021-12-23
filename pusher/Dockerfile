@@ -11,6 +11,7 @@ COPY pusher/yarn.lock pusher/package.json ./
 RUN yarn install
 COPY pusher .
 COPY --from=builder /usr/src/generated src/Messages/generated
+COPY --from=builder /usr/src/JsonMessages src/Messages/JsonMessages
 ENV NODE_ENV=production
 RUN yarn run tsc
 

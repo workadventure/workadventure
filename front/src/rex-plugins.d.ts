@@ -1,6 +1,39 @@
+//import Phaser from "phaser";
+
 declare module "phaser3-rex-plugins/plugins/virtualjoystick.js" {
-    const content: any; // eslint-disable-line
-    export default content;
+    /*const content: any; // eslint-disable-line
+    export default content;*/
+    import GameObject = Phaser.GameObjects.GameObject;
+    import { Scene } from "phaser";
+
+    type CursorKey = {
+        isDown: boolean;
+    };
+
+    export type Direction = "left" | "right" | "up" | "down";
+
+    interface CursorKeys extends Record<Direction, CursorKey> {
+        left: CursorKey;
+        right: CursorKey;
+        up: CursorKey;
+        down: CursorKey;
+    }
+
+    class VirtualJoystick extends GameObject {
+        constructor(scene: Scene, config: unknown);
+        enable: boolean;
+        base: GameObjects.Image;
+        thumb: GameObjects.Image;
+        setRadius: (radius: number) => void;
+        y: number;
+        x: number;
+        forceX: number;
+        forceY: number;
+        visible: boolean;
+        createCursorKeys: () => CursorKeys;
+    }
+
+    export default VirtualJoystick;
 }
 declare module "phaser3-rex-plugins/plugins/gestures-plugin.js" {
     const content: any; // eslint-disable-line

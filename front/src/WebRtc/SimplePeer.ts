@@ -98,7 +98,7 @@ export class SimplePeer {
 
     private receiveWebrtcStart(user: UserSimplePeerInterface): void {
         this.Users.push(user);
-        // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
+        // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
 

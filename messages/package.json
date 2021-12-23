@@ -7,10 +7,16 @@
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
     "copy-to-front": "rm -rf ../front/src/Messages/generated && cp -rf generated/ ../front/src/Messages/generated",
     "copy-to-pusher": "rm -rf ../pusher/src/Messages/generated && cp -rf generated/ ../pusher/src/Messages/generated",
-    "proto-all": "yarn run proto && yarn run copy-to-back && yarn run copy-to-front && yarn run copy-to-pusher",
-    "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write protos/messages.proto | while read -r filename event; do yarn run proto-all; done"
+    "json-copy-to-pusher": "rm -rf ../pusher/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../pusher/src/Messages/JsonMessages/",
+    "json-copy-to-front": "rm -rf ../front/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../front/src/Messages/JsonMessages/",
+    "precommit": "lint-staged",
+    "proto-all": "yarn run proto && yarn run copy-to-back && yarn run copy-to-front && yarn run copy-to-pusher && yarn run json-copy-to-pusher && yarn run json-copy-to-front",
+    "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write protos/messages.proto JsonMessages/ | while read -r filename event; do yarn run proto-all; done",
+    "pretty": "yarn prettier --write 'JsonMessages/**/*.ts'",
+    "pretty-check": "yarn prettier --check 'JsonMessages/**/*.ts'"
   },
   "dependencies": {
+    "generic-type-guard": "^3.5.0",
     "google-protobuf": "^3.13.0",
     "grpc": "^1.24.4"
   },
@@ -26,6 +32,8 @@
     "eslint-plugin-sonarjs": "^0.5.0",
     "grpc-tools": "^1.9.1",
     "grpc_tools_node_protoc_ts": "^5.0.1",
+    "lint-staged": "^11.0.0",
+    "prettier": "^2.3.1",
     "protobufjs": "^6.10.1",
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.4",
@@ -33,14 +41,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CatsMiaow/node-grpc-typescript.git"
+    "url": "https://github.com/CatsMiaow/node-grpc-typescript.git#grpc_tools_node_protoc_ts"
   },
   "keywords": [
     "Node.js",
     "gRPC",
     "TypeScript"
   ],
-  "homepage": "https://github.com/CatsMiaow/node-grpc-typescript#readme",
-  "author": "CatsMiaow",
-  "license": "MIT"
+  "homepage": "https://github.com/thecodingmachine/workadventure",
+  "author": "David Négrier",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "lint-staged": {
+    "*.ts": [
+      "yarn run pretty"
+    ]
+  }
 }

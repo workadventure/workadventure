@@ -39,7 +39,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-front
+        run: yarn run proto && yarn run copy-to-front && yarn run json-copy-to-front
         working-directory: "messages"
 
       - name: "Create index.html"
@@ -97,7 +97,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-pusher
+        run: yarn run proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher
         working-directory: "messages"
 
       - name: "Build"
