@@ -14,6 +14,10 @@ In WorkAdventure you can move around your office and talk to your colleagues (us
 
 See more features for your virtual office: https://workadventu.re/virtual-office
 
+## Community resources
+
+Check out resources developed by the WorkAdventure community at [awesome-workadventure](https://github.com/workadventure/awesome-workadventure)
+
 ## Setting up a development environment
 
 Install Docker.

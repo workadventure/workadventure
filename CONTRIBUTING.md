@@ -10,6 +10,14 @@ We love to receive contributions from our community — you!
 There are many ways to contribute, from writing tutorials or blog posts, improving the documentation, 
 submitting bug reports and feature requests or writing code which can be incorporated into WorkAdventure itself.
 
+## Contributing external resources
+
+You can share your work on maps / articles / videos related to WorkAdventure on our [awesome-workadventure](https://github.com/workadventure/awesome-workadventure) list.
+
+## Developer documentation
+
+Documentation targeted at developers can be found in the [`/docs/dev`](docs/dev/) 
+
 ## Using the issue tracker
 
 First things first: **Do NOT report security vulnerabilities in public issues!**.
@@ -59,9 +67,43 @@ $ docker-compose exec back yarn run pretty
 
 WorkAdventure is based on a video game engine (Phaser), and video games are not the easiest programs to unit test.
 
-Nevertheless, if your code can be unit tested, please provide a unit test (we use Jasmine).
+Nevertheless, if your code can be unit tested, please provide a unit test (we use Jasmine), or an end-to-end test (we use Testcafe).
 
 If you are providing a new feature, you should setup a test map in the `maps/tests` directory. The test map should contain
-some description text describing how to test the feature. Finally, you should modify the `maps/tests/index.html` file
-to add a reference to your newly created test map.
+some description text describing how to test the feature.
 
+* if the features is meant to be manually tested, you should modify the `maps/tests/index.html` file to add a reference  
+  to your newly created test map
+* if the features can be automatically tested, please provide a testcafe test
+
+#### Running testcafe tests
+
+End-to-end tests are available in the "/tests" directory.
+
+To run these tests locally:
+
+```console
+$ LIVE_RELOAD=0 docker-compose up -d
+$ cd tests
+$ npm install
+$ npm run test
+```
+
+Note: If your tests fail on a Javascript error in "sockjs", this is due to the
+Webpack live reload. The Webpack live reload feature is conflicting with testcafe. This is why we recommend starting 
+WorkAdventure with the `LIVE_RELOAD=0` environment variable. 
+
+End-to-end tests can take a while to run. To run only one test, use:
+
+```console
+$ npm run test -- tests/[name of the test file].ts
+```
+
+You can also run the tests inside a container (but you will not have visual feedbacks on your test, so we recommend using
+the local tests).
+
+```console
+$ LIVE_RELOAD=0 docker-compose up -d
+# Wait 2-3 minutes for the environment to start, then:
+$ PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up
+```

@@ -34,6 +34,7 @@ import {
     BanUserMessage,
     VariableMessage,
     ErrorMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -45,6 +46,7 @@ import {
     ItemEventMessageInterface,
     MessageUserJoined,
     OnConnectInterface,
+    PlayerDetailsUpdatedMessageInterface,
     PlayGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -68,6 +70,7 @@ export class RoomConnection implements RoomConnection {
     private static websocketFactory: null | ((url: string) => any) = null; // eslint-disable-line @typescript-eslint/no-explicit-any
     private closed: boolean = false;
     private tags: string[] = [];
+    private _userRoomToken: string | undefined;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -171,6 +174,9 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasEmoteeventmessage()) {
                         const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
                         emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
+                    } else if (subMessage.hasPlayerdetailsupdatedmessage()) {
+                        event = EventMessage.USER_DETAILS_UPDATED;
+                        payload = subMessage.getPlayerdetailsupdatedmessage();
                     } else if (subMessage.hasErrormessage()) {
                         const errorMessage = subMessage.getErrormessage() as ErrorMessage;
                         console.error("An error occurred server side: " + errorMessage.getMessage());
@@ -211,6 +217,7 @@ export class RoomConnection implements RoomConnection {
 
                 this.userId = roomJoinedMessage.getCurrentuserid();
                 this.tags = roomJoinedMessage.getTagList();
+                this._userRoomToken = roomJoinedMessage.getUserroomtoken();
 
                 this.dispatch(EventMessage.CONNECT, {
                     connection: this,
@@ -255,6 +262,9 @@ export class RoomConnection implements RoomConnection {
                 warningContainerStore.activateWarningContainer();
             } else if (message.hasRefreshroommessage()) {
                 //todo: implement a way to notify the user the room was refreshed.
+            } else if (message.hasErrormessage()) {
+                const errorMessage = message.getErrormessage() as ErrorMessage;
+                console.error("An error occurred server side: " + errorMessage.getMessage());
             } else {
                 throw new Error("Unknown message received");
             }
@@ -271,10 +281,24 @@ export class RoomConnection implements RoomConnection {
         }
     }
 
-    public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
+    /*public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
         const message = new SetPlayerDetailsMessage();
         message.setName(userName);
         message.setCharacterlayersList(characterLayersSelected.map((characterLayer) => characterLayer.name));
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setSetplayerdetailsmessage(message);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }*/
+
+    public emitPlayerOutlineColor(color: number | null) {
+        const message = new SetPlayerDetailsMessage();
+        if (color === null) {
+            message.setRemoveoutlinecolor(true);
+        } else {
+            message.setOutlinecolor(color);
+        }
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setSetplayerdetailsmessage(message);
@@ -399,6 +423,7 @@ export class RoomConnection implements RoomConnection {
             position: ProtobufClientUtils.toPointInterface(position),
             companion: companion ? companion.getName() : null,
             userUuid: message.getUseruuid(),
+            outlineColor: message.getHasoutline() ? message.getOutlinecolor() : undefined,
         };
     }
 
@@ -591,6 +616,20 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    onPlayerDetailsUpdated(callback: (message: PlayerDetailsUpdatedMessageInterface) => void): void {
+        this.onMessage(EventMessage.USER_DETAILS_UPDATED, (message: PlayerDetailsUpdatedMessage) => {
+            const details = message.getDetails();
+            if (details === undefined) {
+                throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
+            }
+            callback({
+                userId: message.getUserid(),
+                outlineColor: details.getOutlinecolor(),
+                removeOutlineColor: details.getRemoveoutlinecolor(),
+            });
+        });
+    }
+
     public uploadAudio(file: FormData) {
         return Axios.post(`${UPLOADER_URL}/upload-audio-message`, file)
             .then((res: { data: {} }) => {
@@ -709,5 +748,9 @@ export class RoomConnection implements RoomConnection {
 
     public getAllTags(): string[] {
         return this.tags;
+    }
+
+    public get userRoomToken(): string | undefined {
+        return this._userRoomToken;
     }
 }

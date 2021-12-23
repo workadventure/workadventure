@@ -8,6 +8,7 @@ FROM thecodingmachine/nodejs:14-apache
 
 COPY --chown=docker:docker front .
 COPY --from=builder --chown=docker:docker /usr/src/generated /var/www/html/src/Messages/generated
+COPY --from=builder --chown=docker:docker /usr/src/JsonMessages /var/www/html/src/Messages/JsonMessages
 
 # Removing the iframe.html file from the final image as this adds a XSS attack.
 # iframe.html is only in dev mode to circumvent a limitation

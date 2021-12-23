@@ -1,7 +1,7 @@
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
-import type { ITiledMapLayer, ITiledMapObject, ITiledMapObjectLayer } from "../Map/ITiledMap";
+import type { ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 
 interface Variable {

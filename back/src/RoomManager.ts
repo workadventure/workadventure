@@ -5,6 +5,7 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
+    BanUserMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
@@ -16,7 +17,9 @@ import {
     QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
+    SendUserMessage,
     ServerToAdminClientMessage,
+    SetPlayerDetailsMessage,
     SilentMessage,
     UserMovesMessage,
     VariableMessage,
@@ -118,14 +121,17 @@ const roomManager: IRoomManagerServer = {
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
-                            if (sendUserMessage !== undefined) {
-                                socketManager.handlerSendUserMessage(user, sendUserMessage);
-                            }
+                            socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
                         } else if (message.hasBanusermessage()) {
                             const banUserMessage = message.getBanusermessage();
-                            if (banUserMessage !== undefined) {
-                                socketManager.handlerBanUserMessage(room, user, banUserMessage);
-                            }
+                            socketManager.handlerBanUserMessage(room, user, banUserMessage as BanUserMessage);
+                        } else if (message.hasSetplayerdetailsmessage()) {
+                            const setPlayerDetailsMessage = message.getSetplayerdetailsmessage();
+                            socketManager.handleSetPlayerDetails(
+                                room,
+                                user,
+                                setPlayerDetailsMessage as SetPlayerDetailsMessage
+                            );
                         } else {
                             throw new Error("Unhandled message type");
                         }
@@ -251,7 +257,12 @@ const roomManager: IRoomManagerServer = {
     },
     sendAdminMessage(call: ServerUnaryCall<AdminMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager
-            .sendAdminMessage(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage())
+            .sendAdminMessage(
+                call.request.getRoomid(),
+                call.request.getRecipientuuid(),
+                call.request.getMessage(),
+                call.request.getType()
+            )
             .catch((e) => console.error(e));
 
         callback(null, new EmptyMessage());

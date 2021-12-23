@@ -12,8 +12,8 @@
                 {
                  "name":"openWebsite",
                  "type":"string",
-                 "value":"shared_variables.html"
-                }, 
+                 "value":"shared_variables.php"
+                },
                 {
                  "name":"openWebsiteAllowApi",
                  "type":"bool",
@@ -24,7 +24,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
@@ -36,7 +36,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "draworder":"topdown",
          "id":3,
@@ -59,7 +59,7 @@
                  "width":252.4375,
                  "x":2.78125,
                  "y":2.5
-                }, 
+                },
                 {
                  "height":0,
                  "id":5,
@@ -70,22 +70,22 @@
                          "name":"default",
                          "type":"string",
                          "value":"default value"
-                        }, 
+                        },
                         {
                          "name":"jsonSchema",
                          "type":"string",
                          "value":"{}"
-                        }, 
+                        },
                         {
                          "name":"persist",
                          "type":"bool",
                          "value":true
-                        }, 
+                        },
                         {
                          "name":"readableBy",
                          "type":"string",
                          "value":""
-                        }, 
+                        },
                         {
                          "name":"writableBy",
                          "type":"string",

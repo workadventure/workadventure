@@ -3,6 +3,7 @@ import { Scene } from "phaser";
 import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
+import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 
 export const EntrySceneName = "EntryScene";
 
@@ -15,6 +16,14 @@ export class EntryScene extends Scene {
         super({
             key: EntrySceneName,
         });
+    }
+
+    // From the very start, let's preload images used in the ReconnectingScene.
+    preload() {
+        this.load.image(ReconnectingTextures.icon, "static/images/favicons/favicon-32x32.png");
+        // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
+        this.load.bitmapFont(ReconnectingTextures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
+        this.load.spritesheet("cat", "resources/characters/pipoya/Cat 01-1.png", { frameWidth: 32, frameHeight: 32 });
     }
 
     create() {

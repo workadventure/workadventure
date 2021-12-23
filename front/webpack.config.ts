@@ -32,6 +32,7 @@ module.exports = {
             rewrites: [{ from: /^_\/.*$/, to: "/index.html" }],
             disableDotRule: true,
         },
+        liveReload: process.env.LIVE_RELOAD != "0" && process.env.LIVE_RELOAD != "false",
     },
     module: {
         rules: [

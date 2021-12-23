@@ -6,6 +6,7 @@ import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 
 export interface TokenInterface {
     userUuid: string;
@@ -83,7 +84,7 @@ export class AuthenticateController extends BaseController {
                             console.error("Token cannot to be check on OpenId provider");
                             res.writeStatus("500");
                             res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                            res.end("User cannot to be connected on openid provier");
+                            res.end("User cannot to be connected on openid provider");
                             return;
                         }
 
@@ -105,7 +106,7 @@ export class AuthenticateController extends BaseController {
                     console.error("User cannot to be connected on OpenId provider => ", err);
                     res.writeStatus("500");
                     res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                    res.end("User cannot to be connected on openid provier");
+                    res.end("User cannot to be connected on openid provider");
                     return;
                 }
                 const email = userInfo.email || userInfo.sub;
@@ -191,7 +192,7 @@ export class AuthenticateController extends BaseController {
                             mapUrlStart,
                             organizationMemberToken,
                             textures,
-                        })
+                        } as RegisterData)
                     );
                 } catch (e) {
                     console.error("register => ERROR", e);
@@ -287,6 +288,7 @@ export class AuthenticateController extends BaseController {
             messages: [],
             visitCardUrl: null,
             textures: [],
+            userRoomToken: undefined,
         };
         try {
             data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);

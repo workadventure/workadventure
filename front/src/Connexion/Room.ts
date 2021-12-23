@@ -1,7 +1,12 @@
+import * as rax from "retry-axios";
 import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
+import axios from "axios";
+import { axiosWithRetry } from "./AxiosUtils";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -90,7 +95,7 @@ export class Room {
 
     private async getMapDetail(): Promise<MapDetail | RoomRedirect> {
         try {
-            const result = await Axios.get(`${PUSHER_URL}/map`, {
+            const result = await axiosWithRetry.get(`${PUSHER_URL}/map`, {
                 params: {
                     playUri: this.roomUrl.toString(),
                     authToken: localUserStore.getAuthToken(),
@@ -98,26 +103,33 @@ export class Room {
             });
 
             const data = result.data;
-            if (data.redirectUrl) {
+
+            if (isRoomRedirect(data.redirectUrl)) {
                 return {
                     redirectUrl: data.redirectUrl as string,
                 };
+            } else if (isMapDetailsData(data)) {
+                console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
+                this._mapUrl = data.mapUrl;
+                this._textures = data.textures;
+                this._group = data.group;
+                this._authenticationMandatory =
+                    data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
+                this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+                this._contactPage = data.contactPage || CONTACT_URL;
+                return new MapDetail(data.mapUrl, data.textures);
+            } else {
+                throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
-            console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
-            this._mapUrl = data.mapUrl;
-            this._textures = data.textures;
-            this._group = data.group;
-            this._authenticationMandatory =
-                data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-            this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
-            this._contactPage = data.contactPage || CONTACT_URL;
-            return new MapDetail(data.mapUrl, data.textures);
         } catch (e) {
-            console.error("Error => getMapDetail", e, e.response);
-            //TODO fix me and manage Error class
-            if (e.response?.data === "Token decrypted error") {
+            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "Token decrypted error") {
+                console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
                 window.location.assign("/login");
+            } else if (axios.isAxiosError(e)) {
+                console.error("Error => getMapDetail", e, e.response);
+            } else {
+                console.error("Error => getMapDetail", e);
             }
             throw e;
         }

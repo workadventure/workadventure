@@ -92,11 +92,12 @@ services:
       - "traefik.http.routers.pusher-ssl.service=pusher"
 
   maps:
-    image: thecodingmachine/nodejs:12-apache
+    image: thecodingmachine/php:8.1-v4-apache-node12
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
+      FRONT_URL: http://play.workadventure.localhost
       #APACHE_DOCUMENT_ROOT: dist/
       #APACHE_EXTENSIONS: headers
       #APACHE_EXTENSION_HEADERS: 1

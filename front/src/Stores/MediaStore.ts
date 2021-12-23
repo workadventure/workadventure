@@ -365,7 +365,9 @@ function applyCameraConstraints(currentStream: MediaStream | null, constraints: 
         return;
     }
     for (const track of currentStream.getVideoTracks()) {
-        toggleConstraints(track, constraints);
+        toggleConstraints(track, constraints).catch((e) =>
+            console.error("Error while setting new camera constraints:", e)
+        );
     }
 }
 
@@ -380,19 +382,21 @@ function applyMicrophoneConstraints(
         return;
     }
     for (const track of currentStream.getAudioTracks()) {
-        toggleConstraints(track, constraints);
+        toggleConstraints(track, constraints).catch((e) =>
+            console.error("Error while setting new audio constraints:", e)
+        );
     }
 }
 
-function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConstraints | boolean): void {
+async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConstraints | boolean): Promise<void> {
     if (implementCorrectTrackBehavior) {
         track.enabled = constraints !== false;
     } else if (constraints === false) {
         track.stop();
     }
-    // @ts-ignore
+
     if (typeof constraints !== "boolean" && constraints !== true) {
-        track.applyConstraints(constraints);
+        return track.applyConstraints(constraints);
     }
 }
 
@@ -426,7 +430,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     // TODO: does it make sense to pop this error when retrying?
                     set({
                         type: "error",
-                        error: e,
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
                     });
                     // Let's try without video constraints
                     if (constraints.video !== false) {
@@ -444,7 +448,7 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
                     set({
                         type: "error",
-                        error: e,
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
                     });
                 }
             }
@@ -484,7 +488,12 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                     type: "success",
                     stream: null,
                 });
-                initStream(constraints);
+                initStream(constraints).catch((e) => {
+                    set({
+                        type: "error",
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
+                    });
+                });
             }
         } else {
             //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
@@ -496,7 +505,12 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
                 });
             } //we reemit the stream if it was muted just to be sure
             else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
-                initStream(constraints);
+                initStream(constraints).catch((e) => {
+                    set({
+                        type: "error",
+                        error: e instanceof Error ? e : new Error("An unknown error happened"),
+                    });
+                });
             }
             oldConstraints = {
                 video: !!constraints.video,

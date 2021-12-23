@@ -1,20 +1,10 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
-import { CharacterTexture } from "./AdminApi/CharacterTexture";
-import { MapDetailsData } from "./AdminApi/MapDetailsData";
-import { RoomRedirect } from "./AdminApi/RoomRedirect";
-
-export interface AdminApiData {
-    roomUrl: string;
-    email: string | null;
-    mapUrlStart: string;
-    tags: string[];
-    policy_type: number;
-    userUuid: string;
-    messages?: unknown[];
-    textures: CharacterTexture[];
-}
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -29,6 +19,7 @@ export interface FetchMemberDataByUuidResponse {
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;
+    userRoomToken: string | undefined;
 }
 
 class AdminApi {
@@ -77,6 +68,10 @@ class AdminApi {
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
+        if (!isAdminApiData(res.data)) {
+            console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+            throw new Error("Message received from /api/login-url is not in the expected format.");
+        }
         return res.data;
     }
 
@@ -88,6 +83,10 @@ class AdminApi {
         const res = await Axios.get(ADMIN_API_URL + "/api/check-user/" + organizationMemberToken, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
+        if (!isAdminApiData(res.data)) {
+            console.error("Message received from /api/check-user is not in the expected format. Message: ", res.data);
+            throw new Error("Message received from /api/check-user is not in the expected format.");
+        }
         return res.data;
     }
 
