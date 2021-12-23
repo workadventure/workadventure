@@ -34,6 +34,7 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
+import { isRoomRedirect } from "../Services/AdminApi/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -282,9 +283,7 @@ export class GameRoom {
             this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
-                throw new Error(
-                    "Could not find group " + group.getId() + " referenced by user " + user.id + " in World."
-                );
+                throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
             this.groups.delete(group);
             //todo: is the group garbage collected?
@@ -485,9 +484,9 @@ export class GameRoom {
         }
 
         const result = await adminApi.fetchMapDetails(roomUrl);
-        if (!isMapDetailsData(result)) {
-            console.error("Unexpected room details received from server", result);
-            throw new Error("Unexpected room details received from server");
+        if (isRoomRedirect(result)) {
+            console.error("Unexpected room redirect received while querying map details", result);
+            throw new Error("Unexpected room redirect received while querying map details");
         }
         return result;
     }

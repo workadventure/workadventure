@@ -166,7 +166,7 @@ const roomManager: IRoomManagerServer = {
         socketManager
             .addZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
             .catch((e) => {
-                emitErrorOnZoneSocket(call, e.toString());
+                emitErrorOnZoneSocket(call, e);
             });
 
         call.on("cancelled", () => {
@@ -196,7 +196,7 @@ const roomManager: IRoomManagerServer = {
         const roomMessage = call.request;
 
         socketManager.addRoomListener(call, roomMessage.getRoomid()).catch((e) => {
-            emitErrorOnRoomSocket(call, e.toString());
+            emitErrorOnRoomSocket(call, e);
         });
 
         call.on("cancelled", () => {

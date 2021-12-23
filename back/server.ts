@@ -10,6 +10,6 @@ App.listen(HTTP_PORT, () => console.log(`WorkAdventure HTTP API starting on port
 const server = new grpc.Server();
 server.addService<IRoomManagerServer>(RoomManagerService, roomManager);
 
-server.bind('0.0.0.0:'+GRPC_PORT, grpc.ServerCredentials.createInsecure());
+server.bind(`0.0.0.0:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure());
 server.start();
 console.log('WorkAdventure HTTP/2 API starting on port %d!', GRPC_PORT);

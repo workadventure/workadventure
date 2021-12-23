@@ -1,7 +1,7 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import { MapDetailsData } from "./AdminApi/MapDetailsData";
-import { RoomRedirect } from "./AdminApi/RoomRedirect";
+import { isMapDetailsData, MapDetailsData } from "./AdminApi/MapDetailsData";
+import { isRoomRedirect, RoomRedirect } from "./AdminApi/RoomRedirect";
 
 class AdminApi {
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
@@ -17,6 +17,12 @@ class AdminApi {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params,
         });
+
+        if (!isMapDetailsData(res.data) && !isRoomRedirect(res.data)) {
+            console.error("Unexpected answer from the /api/map admin endpoint.", res.data);
+            throw new Error("Unexpected answer from the /api/map admin endpoint.");
+        }
+
         return res.data;
     }
 }
