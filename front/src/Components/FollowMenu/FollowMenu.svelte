@@ -72,9 +72,7 @@ vim: ft=typescript
 
     function reset() {
         gameScene.connection?.emitFollowAbort();
-        followStateStore.set(followStates.off);
-        followRoleStore.set(followRoles.leader);
-        followUsersStore.set([]);
+        followUsersStore.stopFollowing();
     }
 
     function request() {

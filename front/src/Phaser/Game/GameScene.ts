@@ -1,7 +1,7 @@
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -91,6 +91,8 @@ import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { SetPlayerDetailsMessage } from "../../Messages/generated/messages_pb";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
+import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -165,9 +167,11 @@ export class GameScene extends DirtyScene {
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
-    private peerStoreUnsubscribe!: () => void;
-    private emoteUnsubscribe!: () => void;
-    private emoteMenuUnsubscribe!: () => void;
+    private peerStoreUnsubscribe!: Unsubscriber;
+    private emoteUnsubscribe!: Unsubscriber;
+    private emoteMenuUnsubscribe!: Unsubscriber;
+    private followUsersColorStoreUnsubscribe!: Unsubscriber;
+
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
@@ -643,6 +647,16 @@ export class GameScene extends DirtyScene {
                 this.userInputManager.disableControls();
             } else {
                 this.userInputManager.restoreControls();
+            }
+        });
+
+        this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
+            if (color !== undefined) {
+                this.CurrentPlayer.setOutlineColor(color);
+                this.connection?.emitPlayerOutlineColor(color);
+            } else {
+                this.CurrentPlayer.removeOutlineColor();
+                this.connection?.emitPlayerOutlineColor(null);
             }
         });
 
@@ -1443,6 +1457,7 @@ ${escapedMessage}
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
+        this.followUsersColorStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");

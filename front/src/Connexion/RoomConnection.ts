@@ -271,28 +271,17 @@ export class RoomConnection implements RoomConnection {
             } else if (message.hasFollowrequestmessage()) {
                 const requestMessage = message.getFollowrequestmessage() as FollowRequestMessage;
                 if (!localUserStore.getIgnoreFollowRequests()) {
-                    followStateStore.set(followStates.requesting);
-                    followRoleStore.set(followRoles.follower);
-                    followUsersStore.set([requestMessage.getLeader()]);
+                    followUsersStore.addFollowRequest(requestMessage.getLeader());
                 }
             } else if (message.hasFollowconfirmationmessage()) {
                 const responseMessage = message.getFollowconfirmationmessage() as FollowConfirmationMessage;
-                followUsersStore.set([...get(followUsersStore), responseMessage.getFollower()]);
+                followUsersStore.addFollower(responseMessage.getFollower());
             } else if (message.hasFollowabortmessage()) {
                 const abortMessage = message.getFollowabortmessage() as FollowAbortMessage;
                 if (get(followRoleStore) === followRoles.follower) {
-                    followStateStore.set(followStates.off);
-                    followRoleStore.set(followRoles.leader);
-                    followUsersStore.set([]);
+                    followUsersStore.stopFollowing();
                 } else {
-                    let followers = get(followUsersStore);
-                    const oldFollowerCount = followers.length;
-                    followers = followers.filter((name) => name !== abortMessage.getFollower());
-                    followUsersStore.set(followers);
-                    if (followers.length === 0 && oldFollowerCount > 0) {
-                        followStateStore.set(followStates.off);
-                        followRoleStore.set(followRoles.leader);
-                    }
+                    followUsersStore.removeFollower(abortMessage.getFollower());
                 }
             } else if (message.hasErrormessage()) {
                 const errorMessage = message.getErrormessage() as ErrorMessage;
