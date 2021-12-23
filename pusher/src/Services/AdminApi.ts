@@ -29,6 +29,7 @@ export interface FetchMemberDataByUuidResponse {
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;
+    userRoomToken: string | undefined;
 }
 
 class AdminApi {

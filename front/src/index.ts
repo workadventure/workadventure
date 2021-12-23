@@ -144,10 +144,12 @@ window.addEventListener("resize", function (event) {
     coWebsiteManager.resetStyleMain();
 
     waScaleManager.applyNewSize();
+    waScaleManager.refreshFocusOnTarget();
 });
 
 coWebsiteManager.onResize.subscribe(() => {
     waScaleManager.applyNewSize();
+    waScaleManager.refreshFocusOnTarget();
 });
 
 iframeListener.init();

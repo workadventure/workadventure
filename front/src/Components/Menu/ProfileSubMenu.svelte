@@ -15,7 +15,8 @@
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
     import btnProfileSubMenuIdentity from "../images/btn-menu-profile-identity.svg";
     import btnProfileSubMenuCompanion from "../images/btn-menu-profile-companion.svg";
-    import btnProfileSubMenuWoka from "../images/btn-menu-profile-woka.svg";
+    import Woka from "../Woka/Woka.svelte";
+    import Companion from "../Companion/Companion.svelte";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -65,11 +66,11 @@
                 <span class="btn-hover">Edit your name</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>
-                <img src={btnProfileSubMenuWoka} alt="Edit your WOKA" />
+                <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
                 <span class="btn-hover">Edit your WOKA</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>
-                <img src={btnProfileSubMenuCompanion} alt="Edit your companion" />
+                <Companion userId={-1} placeholderSrc={btnProfileSubMenuCompanion} width="26px" height="26px" />
                 <span class="btn-hover">Edit your companion</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>

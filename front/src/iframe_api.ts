@@ -15,11 +15,11 @@ import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
 import state, { initVariables } from "./Api/iframe/state";
-import player, { setPlayerName, setTags, setUuid } from "./Api/iframe/player";
+import player, { setPlayerName, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
-import { answerPromises, queryWorkadventure, sendToWorkadventure } from "./Api/iframe/IframeApiContribution";
+import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
 
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
@@ -32,6 +32,7 @@ const initPromise = queryWorkadventure({
     setTags(state.tags);
     setUuid(state.uuid);
     initVariables(state.variables as Map<string, unknown>);
+    setUserRoomToken(state.userRoomToken);
 });
 
 const wa = {

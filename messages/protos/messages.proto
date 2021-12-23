@@ -198,6 +198,7 @@ message RoomJoinedMessage {
   int32 currentUserId = 4;
   repeated string tag = 5;
   repeated VariableMessage variable = 6;
+  string userRoomToken = 7;
 }
 
 message WebRtcStartMessage {
@@ -300,6 +301,7 @@ message JoinRoomMessage {
   string IPAddress = 7;
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
+  string userRoomToken = 10;
 }
 
 message UserJoinedZoneMessage {

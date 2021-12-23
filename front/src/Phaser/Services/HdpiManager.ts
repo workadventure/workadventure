@@ -94,7 +94,7 @@ export class HdpiManager {
     /**
      * We only accept integer but we make an exception for 1.5
      */
-    private getOptimalZoomLevel(realPixelNumber: number): number {
+    public getOptimalZoomLevel(realPixelNumber: number): number {
         const result = Math.sqrt(realPixelNumber / this.minRecommendedGamePixelsNumber);
         if (1.5 <= result && result < 2) {
             return 1.5;

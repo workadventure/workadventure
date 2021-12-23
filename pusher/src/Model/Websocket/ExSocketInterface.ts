@@ -44,4 +44,5 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     textures: CharacterTexture[];
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
+    userRoomToken: string | undefined;
 }
