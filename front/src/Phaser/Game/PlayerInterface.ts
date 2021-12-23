@@ -8,4 +8,5 @@ export interface PlayerInterface {
     companion: string | null;
     userUuid: string;
     color?: string;
+    outlineColor?: number;
 }

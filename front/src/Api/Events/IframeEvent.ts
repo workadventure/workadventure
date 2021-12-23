@@ -29,6 +29,7 @@ import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/Trigg
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
+import { isColorEvent } from "./ColorEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -150,6 +151,14 @@ export const iframeQueryMapTypeGuards = {
     },
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
+        answer: tg.isUndefined,
+    },
+    setPlayerOutline: {
+        query: isColorEvent,
+        answer: tg.isUndefined,
+    },
+    removePlayerOutline: {
+        query: tg.isUndefined,
         answer: tg.isUndefined,
     },
 };

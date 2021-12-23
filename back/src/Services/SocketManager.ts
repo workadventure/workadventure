@@ -36,6 +36,8 @@ import {
     VariableMessage,
     BatchToPusherRoomMessage,
     SubToPusherRoomMessage,
+    SetPlayerDetailsMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -154,20 +156,9 @@ export class SocketManager {
         //room.setViewport(client, client.viewport);
     }
 
-    // Useless now, will be useful again if we allow editing details in game
-    /*handleSetPlayerDetails(client: UserSocket, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const playerDetails = {
-            name: playerDetailsMessage.getName(),
-            characterLayers: playerDetailsMessage.getCharacterlayersList()
-        };
-        //console.log(SocketIoEvent.SET_PLAYER_DETAILS, playerDetails);
-        if (!isSetPlayerDetailsMessage(playerDetails)) {
-            emitError(client, 'Invalid SET_PLAYER_DETAILS message received: ');
-            return;
-        }
-        client.name = playerDetails.name;
-        client.characterLayers = SocketManager.mergeCharacterLayersAndCustomTextures(playerDetails.characterLayers, client.textures);
-    }*/
+    handleSetPlayerDetails(room: GameRoom, user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        room.updatePlayerDetails(user, playerDetailsMessage);
+    }
 
     handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
         room.setSilent(user, silentMessage.getSilent());
@@ -209,7 +200,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -239,7 +230,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -285,7 +276,9 @@ export class SocketManager {
                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
-                    this.onEmote(emoteEventMessage, listener)
+                    this.onEmote(emoteEventMessage, listener),
+                (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -320,7 +313,7 @@ export class SocketManager {
         if (thing instanceof User) {
             const userJoinedZoneMessage = new UserJoinedZoneMessage();
             if (!Number.isInteger(thing.id)) {
-                throw new Error("clientUser.userId is not an integer " + thing.id);
+                throw new Error(`clientUser.userId is not an integer ${thing.id}`);
             }
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
@@ -332,6 +325,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
+            if (thing.outlineColor === undefined) {
+                userJoinedZoneMessage.setHasoutline(false);
+            } else {
+                userJoinedZoneMessage.setHasoutline(true);
+                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+            }
 
             const subMessage = new SubToPusherMessage();
             subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
@@ -377,6 +376,13 @@ export class SocketManager {
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
 
         emitZoneMessage(subMessage, client);
     }
@@ -443,7 +449,10 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials(
+                    otherUser.id.toString(),
+                    TURN_STATIC_AUTH_SECRET
+                );
                 webrtcStartMessage1.setWebrtcusername(username);
                 webrtcStartMessage1.setWebrtcpassword(password);
             }
@@ -457,7 +466,7 @@ export class SocketManager {
             webrtcStartMessage2.setUserid(user.id);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
                 webrtcStartMessage2.setWebrtcusername(username);
                 webrtcStartMessage2.setWebrtcpassword(password);
             }
@@ -481,7 +490,7 @@ export class SocketManager {
         hmac.setEncoding("base64");
         hmac.write(username);
         hmac.end();
-        const password = hmac.read();
+        const password = hmac.read() as string;
         return {
             username: username,
             password: password,
@@ -575,7 +584,7 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public handlerSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
+    public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
         const sendUserMessage = new SendUserMessage();
         sendUserMessage.setMessage(sendUserMessageToSend.getMessage());
         sendUserMessage.setType(sendUserMessageToSend.getType());
@@ -694,7 +703,7 @@ export class SocketManager {
         }
     }
 
-    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string): Promise<void> {
+    public async sendAdminMessage(roomId: string, recipientUuid: string, message: string, type: string): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             console.error(
@@ -718,7 +727,7 @@ export class SocketManager {
         for (const recipient of recipients) {
             const sendUserMessage = new SendUserMessage();
             sendUserMessage.setMessage(message);
-            sendUserMessage.setType("ban"); //todo: is the type correct?
+            sendUserMessage.setType(type);
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setSendusermessage(sendUserMessage);

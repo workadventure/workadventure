@@ -11,6 +11,7 @@ import {
     FollowConfirmationMessage,
     PusherToBackMessage,
     ServerToClientMessage,
+    SetPlayerDetailsMessage,
     SubMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
@@ -35,7 +36,8 @@ export class User implements Movable {
         public readonly visitCardUrl: string | null,
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
-        public readonly companion?: CompanionMessage
+        public readonly companion?: CompanionMessage,
+        private _outlineColor?: number | undefined
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -111,5 +113,18 @@ export class User implements Movable {
                 this.batchTimeout = null;
             }, 100);
         }
+    }
+
+    public set outlineColor(value: number | undefined) {
+        this._outlineColor = value;
+
+        const playerDetails = new SetPlayerDetailsMessage();
+        if (value === undefined) {
+            playerDetails.setRemoveoutlinecolor(true);
+        } else {
+            playerDetails.setOutlinecolor(value);
+        }
+
+        this.positionNotifier.updatePlayerDetails(this, playerDetails);
     }
 }

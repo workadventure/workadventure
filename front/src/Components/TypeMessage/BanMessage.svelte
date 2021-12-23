@@ -3,7 +3,10 @@
     import { banMessageVisibleStore, banMessageContentStore } from "../../Stores/TypeMessageStore/BanMessageStore";
     import { onMount } from "svelte";
 
-    const text = $banMessageContentStore;
+    let text: string;
+    $: {
+        text = $banMessageContentStore;
+    }
     const NAME_BUTTON = "Ok";
     let nbSeconds = 10;
     let nameButton = "";

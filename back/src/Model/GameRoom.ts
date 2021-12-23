@@ -2,7 +2,13 @@ import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
 import { PositionInterface } from "_Model/PositionInterface";
-import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
+import {
+    EmoteCallback,
+    EntersCallback,
+    LeavesCallback,
+    MovesCallback,
+    PlayerDetailsUpdatedCallback,
+} from "_Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
 import {
@@ -11,6 +17,7 @@ import {
     EmoteEventMessage,
     ErrorMessage,
     JoinRoomMessage,
+    SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     VariableMessage,
     VariableWithTagMessage,
@@ -28,6 +35,7 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
+import { isRoomRedirect } from "../Services/AdminApi/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -57,10 +65,19 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves, onEmote);
+        this.positionNotifier = new PositionNotifier(
+            320,
+            320,
+            onEnters,
+            onMoves,
+            onLeaves,
+            onEmote,
+            onPlayerDetailsUpdated
+        );
     }
 
     public static async create(
@@ -72,7 +89,8 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
 
@@ -86,7 +104,8 @@ export class GameRoom {
             onEnters,
             onMoves,
             onLeaves,
-            onEmote
+            onEmote,
+            onPlayerDetailsUpdated
         );
 
         return gameRoom;
@@ -185,6 +204,14 @@ export class GameRoom {
         this.updateUserGroup(user);
     }
 
+    updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        if (playerDetailsMessage.getRemoveoutlinecolor()) {
+            user.outlineColor = undefined;
+        } else {
+            user.outlineColor = playerDetailsMessage.getOutlinecolor();
+        }
+    }
+
     private updateUserGroup(user: User): void {
         user.group?.updatePosition();
         user.group?.searchForNearbyUsers();
@@ -277,9 +304,7 @@ export class GameRoom {
             this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
-                throw new Error(
-                    "Could not find group " + group.getId() + " referenced by user " + user.id + " in World."
-                );
+                throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
             this.groups.delete(group);
             //todo: is the group garbage collected?
@@ -480,9 +505,9 @@ export class GameRoom {
         }
 
         const result = await adminApi.fetchMapDetails(roomUrl);
-        if (!isMapDetailsData(result)) {
-            console.error("Unexpected room details received from server", result);
-            throw new Error("Unexpected room details received from server");
+        if (isRoomRedirect(result)) {
+            console.error("Unexpected room redirect received while querying map details", result);
+            throw new Error("Unexpected room redirect received while querying map details");
         }
         return result;
     }

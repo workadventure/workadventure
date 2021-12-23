@@ -116,7 +116,7 @@ export class Group implements Movable {
     leave(user: User): void {
         const success = this.users.delete(user);
         if (success === false) {
-            throw new Error("Could not find user " + user.id + " in the group " + this.id);
+            throw new Error(`Could not find user ${user.id} in the group ${this.id}`);
         }
         user.group = undefined;
 
