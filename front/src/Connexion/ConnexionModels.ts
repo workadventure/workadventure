@@ -65,6 +65,7 @@ export interface MessageUserJoined {
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
+    outlineColor: number | undefined;
 }
 
 export interface PositionInterface {

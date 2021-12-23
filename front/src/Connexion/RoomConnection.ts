@@ -423,6 +423,7 @@ export class RoomConnection implements RoomConnection {
             position: ProtobufClientUtils.toPointInterface(position),
             companion: companion ? companion.getName() : null,
             userUuid: message.getUseruuid(),
+            outlineColor: message.getHasoutline() ? message.getOutlinecolor() : undefined,
         };
     }
 

@@ -322,6 +322,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
+            if (thing.outlineColor === undefined) {
+                userJoinedZoneMessage.setHasoutline(false);
+            } else {
+                userJoinedZoneMessage.setHasoutline(true);
+                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+            }
 
             const subMessage = new SubToPusherMessage();
             subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
