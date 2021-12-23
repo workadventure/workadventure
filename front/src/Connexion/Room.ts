@@ -104,9 +104,9 @@ export class Room {
 
             const data = result.data;
 
-            if (isRoomRedirect(data.redirectUrl)) {
+            if (isRoomRedirect(data)) {
                 return {
-                    redirectUrl: data.redirectUrl as string,
+                    redirectUrl: data.redirectUrl,
                 };
             } else if (isMapDetailsData(data)) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
