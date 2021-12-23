@@ -7,9 +7,9 @@
     }
 
     const myNavigator : ExtNavigator = window.navigator;
-    const haveNavigatorSharingFeature = myNavigator && myNavigator.canShare && myNavigator.share;
+    const haveNavigatorSharingFeature:boolean = myNavigator && myNavigator.canShare != null && myNavigator.share != null;
 
-    let copied = false;
+    let copied:boolean = false;
 
     function copyLink() {
         try {
@@ -48,14 +48,14 @@
         <p>Share the link of the room!</p>
     </section>
     <section>
-        {#if $haveNavigatorSharingFeature}
+        {#if haveNavigatorSharingFeature}
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
             <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
         {:else}
             <input type="text" readonly id="input-share-link" value={location.toString()} />
             <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
         {/if}
-        {#if $copied}
+        {#if copied}
             <p>Copied!</p>
         {/if}
     </section>
