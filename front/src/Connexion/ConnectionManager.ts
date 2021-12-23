@@ -11,7 +11,8 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import { limitMap } from "../Stores/GameStore";
+import {limitMapStore} from "../Stores/GameStore";
+import {showLimitRoomModalStore} from "../Stores/ModalStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -233,7 +234,12 @@ class ConnectionManager {
         //if limit room active test headband
         if (connexionType === GameConnexionTypes.limit) {
             warningContainerStore.activateWarningContainer();
-            limitMap.set(true);
+            limitMapStore.set(true);
+
+            //check time of map
+            if(!urlManager.isActiveLimitRoom){
+                showLimitRoomModalStore.set(true);
+            }
         }
 
         this.serviceWorker = new _ServiceWorker();

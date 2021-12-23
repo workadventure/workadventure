@@ -58,6 +58,15 @@ class UrlManager {
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
     }
+
+    get isActiveLimitRoom(): boolean {
+        const match = /\*\/(\w+)\/(?:\w+)/.exec(window.location.pathname.toString());
+        const timestamp = match ? Number.parseInt(match[1]) : null;
+        if(!timestamp){
+            return false;
+        }
+        return ((new Date()).getTime() - 48*60*60*1000) < timestamp;
+    }
 }
 
 export const urlManager = new UrlManager();

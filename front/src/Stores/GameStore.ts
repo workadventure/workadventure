@@ -6,4 +6,4 @@ export const requestVisitCardsStore = writable<string | null>(null);
 
 export const userIsAdminStore = writable(false);
 
-export const limitMap = writable(false);
+export const limitMapStore = writable(false);
