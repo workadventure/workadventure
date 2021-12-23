@@ -62,10 +62,10 @@ class UrlManager {
     get isActiveLimitRoom(): boolean {
         const match = /\*\/(\w+)\/(?:\w+)/.exec(window.location.pathname.toString());
         const timestamp = match ? Number.parseInt(match[1]) : null;
-        if(!timestamp){
+        if (!timestamp) {
             return false;
         }
-        return ((new Date()).getTime() - 48*60*60*1000) < timestamp;
+        return new Date().getTime() - 48 * 60 * 60 * 1000 < timestamp;
     }
 }
 

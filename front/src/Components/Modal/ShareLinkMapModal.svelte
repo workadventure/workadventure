@@ -1,15 +1,16 @@
 <script lang="typescript">
     import { fly } from "svelte/transition";
-    import {showShareLinkMapModalStore} from "../../Stores/ModalStore";
+    import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
-    interface ExtNavigator extends Navigator{
+    interface ExtNavigator extends Navigator {
         canShare?(data?: ShareData): Promise<boolean>;
     }
 
-    const myNavigator : ExtNavigator = window.navigator;
-    const haveNavigatorSharingFeature:boolean = myNavigator && myNavigator.canShare != null && myNavigator.share != null;
+    const myNavigator: ExtNavigator = window.navigator;
+    const haveNavigatorSharingFeature: boolean =
+        myNavigator && myNavigator.canShare != null && myNavigator.share != null;
 
-    let copied:boolean = false;
+    let copied: boolean = false;
 
     function copyLink() {
         try {
@@ -18,7 +19,7 @@
             input.select();
             document.execCommand("copy");
             copied = true;
-        }catch (e){
+        } catch (e) {
             console.error(e);
             copied = false;
         }
@@ -41,8 +42,7 @@
     }
 </script>
 
-<div class="share-link-map nes-container"
-     transition:fly={{ y: -900, duration: 500 }}>
+<div class="share-link-map nes-container" transition:fly={{ y: -900, duration: 500 }}>
     <section>
         <h2>Invite your friends or colleagues</h2>
         <p>Share the link of the room!</p>
@@ -65,26 +65,26 @@
 </div>
 
 <style lang="scss">
-  div.share-link-map {
-    pointer-events: auto;
-    background: #eceeee;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 10vh;
-    max-height: 80vh;
-    max-width: 80vw;
-    overflow: auto;
-    text-align: center;
+    div.share-link-map {
+        pointer-events: auto;
+        background: #eceeee;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10vh;
+        max-height: 80vh;
+        max-width: 80vw;
+        overflow: auto;
+        text-align: center;
 
-    h2 {
-      font-family: "Press Start 2P";
-    }
+        h2 {
+            font-family: "Press Start 2P";
+        }
 
-    section {
-      p {
-        margin: 15px;
-        font-family: "Press Start 2P";
-      }
+        section {
+            p {
+                margin: 15px;
+                font-family: "Press Start 2P";
+            }
+        }
     }
-  }
 </style>

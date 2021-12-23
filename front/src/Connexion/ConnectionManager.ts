@@ -14,8 +14,8 @@ import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
-import {limitMapStore} from "../Stores/GameStore";
-import {showLimitRoomModalStore} from "../Stores/ModalStore";
+import { limitMapStore } from "../Stores/GameStore";
+import { showLimitRoomModalStore } from "../Stores/ModalStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -246,7 +246,7 @@ class ConnectionManager {
             limitMapStore.set(true);
 
             //check time of map
-            if(!urlManager.isActiveLimitRoom){
+            if (!urlManager.isActiveLimitRoom) {
                 showLimitRoomModalStore.set(true);
             }
         }

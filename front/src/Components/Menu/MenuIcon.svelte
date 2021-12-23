@@ -7,8 +7,8 @@
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { limitMapStore } from "../../Stores/GameStore";
     import { get } from "svelte/store";
-    import {ADMIN_URL} from "../../Enum/EnvironmentVariable";
-    import {showShareLinkMapModalStore} from "../../Stores/ModalStore";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -18,7 +18,7 @@
     }
 
     function register() {
-        window.open(`${ADMIN_URL}/second-step-register`, '_self');
+        window.open(`${ADMIN_URL}/second-step-register`, "_self");
     }
     function showInvite() {
         showShareLinkMapModalStore.set(true);

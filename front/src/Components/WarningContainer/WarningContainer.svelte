@@ -11,7 +11,8 @@
     {#if $userIsAdminStore}
         <h2>Warning!</h2>
         <p>
-            This world is close to its limit!. You can upgrade its capacity <a href={upgradeLink} target="_blank">here</a
+            This world is close to its limit!. You can upgrade its capacity <a href={upgradeLink} target="_blank"
+                >here</a
             >
         </p>
     {:else if $limitMapStore}
