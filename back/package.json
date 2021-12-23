@@ -74,7 +74,7 @@
     "jasmine": "^3.5.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
-    "ts-node-dev": "^1.0.0-pre.44",
+    "ts-node-dev": "^1.1.8",
     "typescript": "^3.8.3"
   },
   "lint-staged": {
