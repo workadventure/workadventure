@@ -197,7 +197,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -227,7 +227,7 @@ export class SocketManager {
         webrtcSignalToClient.setSignal(data.getSignal());
         // TODO: only compute credentials if data.signal.type === "offer"
         if (TURN_STATIC_AUTH_SECRET !== "") {
-            const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+            const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
             webrtcSignalToClient.setWebrtcusername(username);
             webrtcSignalToClient.setWebrtcpassword(password);
         }
@@ -310,7 +310,7 @@ export class SocketManager {
         if (thing instanceof User) {
             const userJoinedZoneMessage = new UserJoinedZoneMessage();
             if (!Number.isInteger(thing.id)) {
-                throw new Error("clientUser.userId is not an integer " + thing.id);
+                throw new Error(`clientUser.userId is not an integer ${thing.id}`);
             }
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
@@ -446,7 +446,10 @@ export class SocketManager {
             webrtcStartMessage1.setUserid(otherUser.id);
             webrtcStartMessage1.setInitiator(true);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + otherUser.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials(
+                    otherUser.id.toString(),
+                    TURN_STATIC_AUTH_SECRET
+                );
                 webrtcStartMessage1.setWebrtcusername(username);
                 webrtcStartMessage1.setWebrtcpassword(password);
             }
@@ -460,7 +463,7 @@ export class SocketManager {
             webrtcStartMessage2.setUserid(user.id);
             webrtcStartMessage2.setInitiator(false);
             if (TURN_STATIC_AUTH_SECRET !== "") {
-                const { username, password } = this.getTURNCredentials("" + user.id, TURN_STATIC_AUTH_SECRET);
+                const { username, password } = this.getTURNCredentials(user.id.toString(), TURN_STATIC_AUTH_SECRET);
                 webrtcStartMessage2.setWebrtcusername(username);
                 webrtcStartMessage2.setWebrtcpassword(password);
             }
@@ -484,7 +487,7 @@ export class SocketManager {
         hmac.setEncoding("base64");
         hmac.write(username);
         hmac.end();
-        const password = hmac.read();
+        const password = hmac.read() as string;
         return {
             username: username,
             password: password,

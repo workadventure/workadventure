@@ -32,7 +32,7 @@ class MapFetcher {
             //throw new Error("Invalid map format for map " + mapUrl);
             console.error("Invalid map format for map " + mapUrl);
         }
-
+        /* eslint-disable-next-line @typescript-eslint/no-unsafe-return */
         return res.data;
     }
 
