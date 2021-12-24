@@ -30,10 +30,10 @@
     import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
-    import AdminMessage from "./TypeMessage/BanMessage.svelte";
-    import TextMessage from "./TypeMessage/TextMessage.svelte";
-    import { banMessageVisibleStore } from "../Stores/TypeMessageStore/BanMessageStore";
-    import { textMessageVisibleStore } from "../Stores/TypeMessageStore/TextMessageStore";
+    import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
+    import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
+    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
+    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { warningContainerStore } from "../Stores/MenuStore";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
     import { layoutManagerVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -72,14 +72,13 @@
             <EnableCameraScene {game} />
         </div>
     {/if}
-    {#if $banMessageVisibleStore}
+    {#if $banMessageStore.length > 0}
         <div>
-            <AdminMessage />
+            <BanMessageContainer />
         </div>
-    {/if}
-    {#if $textMessageVisibleStore}
+    {:else if $textMessageStore.length > 0}
         <div>
-            <TextMessage />
+            <TextMessageContainer />
         </div>
     {/if}
     {#if $soundPlayingStore}
