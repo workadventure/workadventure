@@ -16,7 +16,6 @@ export const followRoles = {
 
 export const followStateStore = writable(followStates.off);
 export const followRoleStore = writable(followRoles.leader);
-//export const followUsersStore = writable<number[]>([]);
 
 function createFollowUsersStore() {
     const { subscribe, update, set } = writable<number[]>([]);

@@ -18,40 +18,6 @@ vim: ft=typescript
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    let followState: string;
-    let followRole: string;
-    let followUsers: number[];
-    let stateUnsubscriber: Unsubscriber;
-    let roleUnsubscriber: Unsubscriber;
-    let nameUnsubscriber: Unsubscriber;
-
-    onMount(() => {
-        followState = get(followStateStore);
-        followRole = get(followRoleStore);
-        followUsers = get(followUsersStore);
-        stateUnsubscriber = followStateStore.subscribe((state) => {
-            followState = state;
-        });
-        roleUnsubscriber = followRoleStore.subscribe((role) => {
-            followRole = role;
-        });
-        nameUnsubscriber = followUsersStore.subscribe((users) => {
-            followUsers = users;
-        });
-    });
-
-    onDestroy(() => {
-        if (stateUnsubscriber) {
-            stateUnsubscriber();
-        }
-        if (roleUnsubscriber) {
-            roleUnsubscriber();
-        }
-        if (nameUnsubscriber) {
-            nameUnsubscriber();
-        }
-    });
-
     function name(userId: number): string | undefined {
         return gameScene.MapPlayersByKey.get(userId)?.PlayerValue;
     }
@@ -85,11 +51,11 @@ vim: ft=typescript
 
 <svelte:window on:keydown={onKeyDown} />
 
-{#if followState === followStates.requesting}
+{#if $followStateStore === followStates.requesting}
     <div class="interact-menu nes-container is-rounded">
-        {#if followRole === followRoles.follower}
+        {#if $followRoleStore === followRoles.follower}
             <section class="interact-menu-title">
-                <h2>Do you want to follow {name(followUsers[0])}?</h2>
+                <h2>Do you want to follow {name($followUsersStore[0])}?</h2>
             </section>
             <section class="interact-menu-action">
                 <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
@@ -97,7 +63,7 @@ vim: ft=typescript
                 >
                 <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
             </section>
-        {:else if followRole === followRoles.leader}
+        {:else if $followRoleStore === followRoles.leader}
             <section class="interact-menu-question">
                 <p>Should never be displayed</p>
             </section>
@@ -105,16 +71,16 @@ vim: ft=typescript
     </div>
 {/if}
 
-{#if followState === followStates.ending}
+{#if $followStateStore === followStates.ending}
     <div class="interact-menu nes-container is-rounded">
         <section class="interact-menu-title">
             <h2>Interaction</h2>
         </section>
-        {#if followRole === followRoles.follower}
+        {#if $followRoleStore === followRoles.follower}
             <section class="interact-menu-question">
-                <p>Do you want to stop following {name(followUsers[0])}?</p>
+                <p>Do you want to stop following {name($followUsersStore[0])}?</p>
             </section>
-        {:else if followRole === followRoles.leader}
+        {:else if $followRoleStore === followRoles.leader}
             <section class="interact-menu-question">
                 <p>Do you want to stop leading the way?</p>
             </section>
@@ -126,20 +92,20 @@ vim: ft=typescript
     </div>
 {/if}
 
-{#if followState === followStates.active || followState === followStates.ending}
+{#if $followStateStore === followStates.active || $followStateStore === followStates.ending}
     <div class="interact-status nes-container is-rounded">
         <section class="interact-status">
-            {#if followRole === followRoles.follower}
-                <p>Following {name(followUsers[0])}</p>
-            {:else if followUsers.length === 0}
+            {#if $followRoleStore === followRoles.follower}
+                <p>Following {name($followUsersStore[0])}</p>
+            {:else if $followUsersStore.length === 0}
                 <p>Waiting for followers' confirmation</p>
-            {:else if followUsers.length === 1}
-                <p>{name(followUsers[0])} is following you</p>
-            {:else if followUsers.length === 2}
-                <p>{name(followUsers[0])} and {name(followUsers[1])} are following you</p>
+            {:else if $followUsersStore.length === 1}
+                <p>{name($followUsersStore[0])} is following you</p>
+            {:else if $followUsersStore.length === 2}
+                <p>{name($followUsersStore[0])} and {name($followUsersStore[1])} are following you</p>
             {:else}
                 <p>
-                    {followUsers.slice(0, -1).map(name).join(", ")} and {name(followUsers[followUsers.length - 1])} are following
+                    {$followUsersStore.slice(0, -1).map(name).join(", ")} and {name($followUsersStore[$followUsersStore.length - 1])} are following
                     you
                 </p>
             {/if}
@@ -147,7 +113,7 @@ vim: ft=typescript
     </div>
 {/if}
 
-{#if followState === followStates.off}
+{#if $followStateStore === followStates.off}
     <button
         type="button"
         class="nes-btn is-primary follow-menu-button"
@@ -156,8 +122,8 @@ vim: ft=typescript
     >
 {/if}
 
-{#if followState === followStates.active || followState === followStates.ending}
-    {#if followRole === followRoles.follower}
+{#if $followStateStore === followStates.active || $followStateStore === followStates.ending}
+    {#if $followRoleStore === followRoles.follower}
         <button
             type="button"
             class="nes-btn is-error follow-menu-button"
