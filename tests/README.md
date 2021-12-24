@@ -6,8 +6,10 @@ To run them locally:
 
 ```console
 $ npm install
-$ npm test
+$ ADMIN_API_TOKEN=123 npm test
 ```
+
+You'll need to adapt the `ADMIN_API_TOKEN` to the value you use in your `.env` file.
 
 Alternatively, you can use docker-compose to run the tests:
 

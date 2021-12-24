@@ -34,6 +34,7 @@ import {
     VariableMessage,
     ErrorMessage,
     WorldFullMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -55,6 +56,7 @@ const debug = Debug("socket");
 interface AdminSocketRoomsList {
     [index: string]: number;
 }
+
 interface AdminSocketUsersList {
     [index: string]: boolean;
 }
@@ -272,6 +274,16 @@ export class SocketManager implements ZoneEventListener {
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setEmoteeventmessage(emoteMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
+    onPlayerDetailsUpdated(
+        playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
+        listener: ExSocketInterface
+    ): void {
+        const subMessage = new SubMessage();
+        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
 
         emitInBatch(listener, subMessage);
     }

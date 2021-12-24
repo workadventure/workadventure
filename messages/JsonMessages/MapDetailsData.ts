@@ -9,13 +9,13 @@ import { isNumber } from "generic-type-guard";
 
 export const isMapDetailsData = new tg.IsInterface()
     .withProperties({
-        roomSlug: tg.isOptional(tg.isString), // deprecated
         mapUrl: tg.isString,
         policy_type: isNumber, //isNumericEnum(GameRoomPolicyTypes),
         tags: tg.isArray(tg.isString),
         textures: tg.isArray(isCharacterTexture),
-        contactPage: tg.isUnion(tg.isString, tg.isUndefined),
-        authenticationMandatory: tg.isUnion(tg.isBoolean, tg.isUndefined),
+        authenticationMandatory: tg.isUnion(tg.isNullable(tg.isBoolean), tg.isUndefined),
+        roomSlug: tg.isNullable(tg.isString), // deprecated
+        contactPage: tg.isNullable(tg.isString),
         group: tg.isNullable(tg.isString),
     })
     .withOptionalProperties({

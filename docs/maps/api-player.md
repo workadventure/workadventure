@@ -106,3 +106,25 @@ Example :
 ```javascript
 WA.player.onPlayerMove(console.log);
 ```
+
+### Set the outline color of the player
+```
+WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
+WA.player.removeOutlineColor(): Promise<void>;
+```
+
+You can display a thin line around your player's name (the "outline").
+
+Use `setOutlineColor` to set the outline and `removeOutlineColor` to remove it.
+
+Colors are expressed in RGB. Each parameter is an integer between 0 and 255.
+
+```typescript
+// Let's add a red outline to our player
+WA.player.setOutlineColor(255, 0, 0);
+```
+
+When you set the outline on your player, other players will see the outline too (the outline color is shared across
+browsers automatically).
+
+![](images/outlines.png)

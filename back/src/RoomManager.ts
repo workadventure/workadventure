@@ -5,6 +5,7 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
+    BanUserMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
@@ -16,7 +17,9 @@ import {
     QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
+    SendUserMessage,
     ServerToAdminClientMessage,
+    SetPlayerDetailsMessage,
     SilentMessage,
     UserMovesMessage,
     VariableMessage,
@@ -118,14 +121,17 @@ const roomManager: IRoomManagerServer = {
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
-                            if (sendUserMessage !== undefined) {
-                                socketManager.handlerSendUserMessage(user, sendUserMessage);
-                            }
+                            socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
                         } else if (message.hasBanusermessage()) {
                             const banUserMessage = message.getBanusermessage();
-                            if (banUserMessage !== undefined) {
-                                socketManager.handlerBanUserMessage(room, user, banUserMessage);
-                            }
+                            socketManager.handlerBanUserMessage(room, user, banUserMessage as BanUserMessage);
+                        } else if (message.hasSetplayerdetailsmessage()) {
+                            const setPlayerDetailsMessage = message.getSetplayerdetailsmessage();
+                            socketManager.handleSetPlayerDetails(
+                                room,
+                                user,
+                                setPlayerDetailsMessage as SetPlayerDetailsMessage
+                            );
                         } else {
                             throw new Error("Unhandled message type");
                         }
@@ -160,7 +166,7 @@ const roomManager: IRoomManagerServer = {
         socketManager
             .addZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
             .catch((e) => {
-                emitErrorOnZoneSocket(call, e.toString());
+                emitErrorOnZoneSocket(call, e);
             });
 
         call.on("cancelled", () => {
@@ -190,7 +196,7 @@ const roomManager: IRoomManagerServer = {
         const roomMessage = call.request;
 
         socketManager.addRoomListener(call, roomMessage.getRoomid()).catch((e) => {
-            emitErrorOnRoomSocket(call, e.toString());
+            emitErrorOnRoomSocket(call, e);
         });
 
         call.on("cancelled", () => {

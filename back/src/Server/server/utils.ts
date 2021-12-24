@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { ReadStream } from "fs";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

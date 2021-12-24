@@ -82,7 +82,7 @@ export class Room {
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
         if (currentRoom.isPublic) {
-            instance = currentRoom.instance as string;
+            instance = currentRoom.getInstance();
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
@@ -104,9 +104,9 @@ export class Room {
 
             const data = result.data;
 
-            if (isRoomRedirect(data.redirectUrl)) {
+            if (isRoomRedirect(data)) {
                 return {
-                    redirectUrl: data.redirectUrl as string,
+                    redirectUrl: data.redirectUrl,
                 };
             } else if (isMapDetailsData(data)) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);

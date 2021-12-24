@@ -34,6 +34,7 @@ import {
     BanUserMessage,
     VariableMessage,
     ErrorMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
@@ -45,6 +46,7 @@ import {
     ItemEventMessageInterface,
     MessageUserJoined,
     OnConnectInterface,
+    PlayerDetailsUpdatedMessageInterface,
     PlayGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -172,6 +174,9 @@ export class RoomConnection implements RoomConnection {
                     } else if (subMessage.hasEmoteeventmessage()) {
                         const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
                         emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
+                    } else if (subMessage.hasPlayerdetailsupdatedmessage()) {
+                        event = EventMessage.USER_DETAILS_UPDATED;
+                        payload = subMessage.getPlayerdetailsupdatedmessage();
                     } else if (subMessage.hasErrormessage()) {
                         const errorMessage = subMessage.getErrormessage() as ErrorMessage;
                         console.error("An error occurred server side: " + errorMessage.getMessage());
@@ -276,10 +281,24 @@ export class RoomConnection implements RoomConnection {
         }
     }
 
-    public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
+    /*public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
         const message = new SetPlayerDetailsMessage();
         message.setName(userName);
         message.setCharacterlayersList(characterLayersSelected.map((characterLayer) => characterLayer.name));
+
+        const clientToServerMessage = new ClientToServerMessage();
+        clientToServerMessage.setSetplayerdetailsmessage(message);
+
+        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }*/
+
+    public emitPlayerOutlineColor(color: number | null) {
+        const message = new SetPlayerDetailsMessage();
+        if (color === null) {
+            message.setRemoveoutlinecolor(true);
+        } else {
+            message.setOutlinecolor(color);
+        }
 
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setSetplayerdetailsmessage(message);
@@ -404,6 +423,7 @@ export class RoomConnection implements RoomConnection {
             position: ProtobufClientUtils.toPointInterface(position),
             companion: companion ? companion.getName() : null,
             userUuid: message.getUseruuid(),
+            outlineColor: message.getHasoutline() ? message.getOutlinecolor() : undefined,
         };
     }
 
@@ -592,6 +612,20 @@ export class RoomConnection implements RoomConnection {
                 event: message.getEvent(),
                 parameters: JSON.parse(message.getParametersjson()),
                 state: JSON.parse(message.getStatejson()),
+            });
+        });
+    }
+
+    onPlayerDetailsUpdated(callback: (message: PlayerDetailsUpdatedMessageInterface) => void): void {
+        this.onMessage(EventMessage.USER_DETAILS_UPDATED, (message: PlayerDetailsUpdatedMessage) => {
+            const details = message.getDetails();
+            if (details === undefined) {
+                throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
+            }
+            callback({
+                userId: message.getUserid(),
+                outlineColor: details.getOutlinecolor(),
+                removeOutlineColor: details.getRemoveoutlinecolor(),
             });
         });
     }
