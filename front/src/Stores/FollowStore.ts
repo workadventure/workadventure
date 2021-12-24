@@ -2,20 +2,11 @@ import { derived, writable } from "svelte/store";
 import { getColorRgbFromHue } from "../WebRtc/ColorGenerator";
 import { gameManager } from "../Phaser/Game/GameManager";
 
-export const followStates = {
-    off: "off",
-    requesting: "requesting",
-    active: "active",
-    ending: "ending",
-};
+type FollowState = "off" | "requesting" | "active" | "ending";
+type FollowRole = "leader" | "follower";
 
-export const followRoles = {
-    leader: "leader",
-    follower: "follower",
-};
-
-export const followStateStore = writable(followStates.off);
-export const followRoleStore = writable(followRoles.leader);
+export const followStateStore = writable<FollowState>("off");
+export const followRoleStore = writable<FollowRole>("leader");
 
 function createFollowUsersStore() {
     const { subscribe, update, set } = writable<number[]>([]);
@@ -23,8 +14,8 @@ function createFollowUsersStore() {
     return {
         subscribe,
         addFollowRequest(leader: number): void {
-            followStateStore.set(followStates.requesting);
-            followRoleStore.set(followRoles.follower);
+            followStateStore.set("requesting");
+            followRoleStore.set("follower");
             set([leader]);
         },
         addFollower(user: number): void {
@@ -44,8 +35,8 @@ function createFollowUsersStore() {
                 followers = followers.filter((id) => id !== user);
 
                 if (followers.length === 0 && oldFollowerCount > 0) {
-                    followStateStore.set(followStates.off);
-                    followRoleStore.set(followRoles.leader);
+                    followStateStore.set("off");
+                    followRoleStore.set("leader");
                 }
 
                 return followers;
@@ -53,8 +44,8 @@ function createFollowUsersStore() {
         },
         stopFollowing(): void {
             set([]);
-            followStateStore.set(followStates.off);
-            followRoleStore.set(followRoles.leader);
+            followStateStore.set("off");
+            followRoleStore.set("leader");
         },
     };
 }
@@ -68,7 +59,7 @@ export const followUsersColorStore = derived(
     [followStateStore, followRoleStore, followUsersStore],
     ([$followStateStore, $followRoleStore, $followUsersStore]) => {
         console.log($followStateStore);
-        if ($followStateStore !== followStates.active) {
+        if ($followStateStore !== "active") {
             return undefined;
         }
 
@@ -77,7 +68,7 @@ export const followUsersColorStore = derived(
         }
 
         let leaderId: number;
-        if ($followRoleStore === followRoles.leader) {
+        if ($followRoleStore === "leader") {
             // Let's get my ID by a quite complicated way....
             leaderId = gameManager.getCurrentGameScene().connection?.getUserId() ?? 0;
         } else {
@@ -88,7 +79,7 @@ export const followUsersColorStore = derived(
         const hue = ((leaderId * 197) % 255) / 255;
 
         let { r, g, b } = getColorRgbFromHue(hue);
-        if ($followRoleStore === followRoles.follower) {
+        if ($followRoleStore === "follower") {
             // Let's make the followers very slightly darker
             r *= 0.9;
             g *= 0.9;

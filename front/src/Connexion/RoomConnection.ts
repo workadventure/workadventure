@@ -64,7 +64,7 @@ import { connectionManager } from "./ConnectionManager";
 import { emoteEventStream } from "./EmoteEventStream";
 import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
-import { followStateStore, followRoleStore, followUsersStore, followRoles, followStates } from "../Stores/FollowStore";
+import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { localUserStore } from "./LocalUserStore";
 
 const manualPingDelay = 20000;
@@ -278,7 +278,7 @@ export class RoomConnection implements RoomConnection {
                 followUsersStore.addFollower(responseMessage.getFollower());
             } else if (message.hasFollowabortmessage()) {
                 const abortMessage = message.getFollowabortmessage() as FollowAbortMessage;
-                if (get(followRoleStore) === followRoles.follower) {
+                if (get(followRoleStore) === "follower") {
                     followUsersStore.stopFollowing();
                 } else {
                     followUsersStore.removeFollower(abortMessage.getFollower());
@@ -791,7 +791,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitFollowAbort(): void {
-        const isLeader = get(followRoleStore) === followRoles.leader;
+        const isLeader = get(followRoleStore) === "leader";
         const hasFollowers = get(followUsersStore).length > 0;
         if (!this.userId || (isLeader && !hasFollowers)) {
             return;

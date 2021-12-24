@@ -6,13 +6,7 @@ import type { RemotePlayer } from "../Entity/RemotePlayer";
 
 import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
-import {
-    followStateStore,
-    followRoleStore,
-    followUsersStore,
-    followRoles,
-    followStates,
-} from "../../Stores/FollowStore";
+import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -51,7 +45,7 @@ export class Player extends Character {
         }
 
         // Compute movement deltas
-        const followMode = get(followStateStore) !== followStates.off;
+        const followMode = get(followStateStore) !== "off";
         const speedup = activeEvents.get(UserInputEvent.SpeedUp) && !followMode ? 25 : 9;
         const moveAmount = speedup * 20;
         x = x * moveAmount;
@@ -90,7 +84,7 @@ export class Player extends Character {
         const player = this.scene.MapPlayersByKey.get(get(followUsersStore)[0]);
         if (!player) {
             this.scene.connection?.emitFollowAbort();
-            followStateStore.set(followStates.off);
+            followStateStore.set("off");
             return [0, 0];
         }
 
@@ -107,7 +101,7 @@ export class Player extends Character {
     }
 
     public enableFollowing() {
-        followStateStore.set(followStates.active);
+        followStateStore.set("active");
     }
 
     public moveUser(delta: number): void {
@@ -116,17 +110,17 @@ export class Player extends Character {
         const role = get(followRoleStore);
 
         if (activeEvents.get(UserInputEvent.Follow)) {
-            if (state === followStates.off && this.scene.groups.size > 0) {
-                followStateStore.set(followStates.requesting);
-                followRoleStore.set(followRoles.leader);
-            } else if (state === followStates.active) {
-                followStateStore.set(followStates.ending);
+            if (state === "off" && this.scene.groups.size > 0) {
+                followStateStore.set("requesting");
+                followRoleStore.set("leader");
+            } else if (state === "active") {
+                followStateStore.set("ending");
             }
         }
 
         let x = 0;
         let y = 0;
-        if ((state === followStates.active || state === followStates.ending) && role === followRoles.follower) {
+        if ((state === "active" || state === "ending") && role === "follower") {
             [x, y] = this.computeFollowMovement();
         }
         this.inputStep(activeEvents, x, y);
