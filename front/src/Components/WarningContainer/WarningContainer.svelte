@@ -17,7 +17,7 @@
         </p>
     {:else if $limitMapStore}
         <p>
-            Your are une test mode. This map will be opened during 2 days. You can register your domain <a
+            This map is available for 2 days. You can register your domain <a
                 href={registerLink}>here</a
             >!
         </p>
