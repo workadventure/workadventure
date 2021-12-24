@@ -25,6 +25,54 @@
             {
                 "name": "cat3",
                 "img": "resources/characters/pipoya/Cat 01-3.png"
+            },
+            {
+                "name": "Drone",
+                "img": "resources/companions/Drone.png"
+            },
+            {
+                "name": "Penguin",
+                "img": "resources/companions/Penguin.png"
+            },
+            {
+                "name": "RobotVacuum",
+                "img": "resources/companions/RobotVacuum.png"
+            },
+            {
+                "name": "Roomba",
+                "img": "resources/companions/Roomba.png"
+            },
+            {
+                "name": "ClaymoreRoomba",
+                "img": "resources/companions/Claymore_Roomba.png"
+            },
+            {
+                "name": "Smiley",
+                "img": "resources/companions/Smiley.png"
+            },
+            {
+                "name": "blauhai",
+                "img": "resources/companions/blauhai3.png"
+            },
+            {
+                "name": "champ1",
+                "img": "resources/companions/littlechamp.png"
+            },
+            {
+                "name": "champ2",
+                "img": "resources/companions/littlechamp2.png"
+            },
+            {
+                "name": "champ3",
+                "img": "resources/companions/littlechamp3.png"
+            },
+            {
+                "name": "champ4",
+                "img": "resources/companions/littlechamp4.png"
+            },
+            {
+                "name": "fairydust",
+                "img": "resources/companions/fairydust.png"
             }
         ]
     }
