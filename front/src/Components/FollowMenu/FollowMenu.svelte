@@ -87,12 +87,9 @@ vim: ft=typescript
 
 {#if followState === followStates.requesting}
     <div class="interact-menu nes-container is-rounded">
-        <section class="interact-menu-title">
-            <h2>Interaction</h2>
-        </section>
         {#if followRole === followRoles.follower}
-            <section class="interact-menu-question">
-                <p>Do you want to follow {name(followUsers[0])}?</p>
+            <section class="interact-menu-title">
+                <h2>Do you want to follow {name(followUsers[0])}?</h2>
             </section>
             <section class="interact-menu-action">
                 <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
@@ -141,7 +138,10 @@ vim: ft=typescript
             {:else if followUsers.length === 2}
                 <p>{name(followUsers[0])} and {name(followUsers[1])} are following you</p>
             {:else}
-                <p>{name(followUsers[0])}, {name(followUsers[1])} and {name(followUsers[2])} are following you</p>
+                <p>
+                    {followUsers.slice(0, -1).map(name).join(", ")} and {name(followUsers[followUsers.length - 1])} are following
+                    you
+                </p>
             {/if}
         </section>
     </div>
@@ -197,7 +197,6 @@ vim: ft=typescript
         color: whitesmoke;
 
         position: relative;
-        height: 19vh;
         width: 60vw;
         top: 60vh;
         margin: auto;
@@ -220,17 +219,11 @@ vim: ft=typescript
 
         section.interact-menu-action {
             display: grid;
-            grid-template-columns: 50% 50%;
+            grid-gap: 10%;
+            grid-template-columns: 45% 45%;
             margin-bottom: 20px;
-
-            button {
-                display: inline-block;
-                margin: 4px;
-                padding: 0px;
-                border: medium solid black;
-                font-weight: bold;
-                height: 2.5em;
-            }
+            margin-left: 5%;
+            margin-right: 5%;
         }
     }
 
