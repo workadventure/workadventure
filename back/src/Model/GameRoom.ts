@@ -219,8 +219,8 @@ export class GameRoom {
         if (user.silent) {
             return;
         }
-
-        if (user.group === undefined) {
+        const group = user.group;
+        if (group === undefined) {
             // If the user is not part of a group:
             //  should he join a group?
 
@@ -251,18 +251,29 @@ export class GameRoom {
         } else {
             // If the user is part of a group:
             //  should he leave the group?
-            const users = user.group.getUsers().filter((u) => !u.hasFollowers() && !u.following);
-            users.forEach((foreignUser: User) => {
+            let noOneOutOfBounds = true;
+            group.getUsers().forEach((foreignUser: User) => {
                 if (foreignUser.group === undefined) {
                     return;
                 }
                 const usrPos = foreignUser.getPosition();
                 const grpPos = foreignUser.group.getPosition();
                 const distance = GameRoom.computeDistanceBetweenPositions(usrPos, grpPos);
+
                 if (distance > this.groupRadius) {
-                    this.leaveGroup(foreignUser);
+                    if (foreignUser.hasFollowers() || foreignUser.following) {
+                        // If one user is out of the group bounds BUT following, the group still exists... but should be hidden.
+                        // We put it in 'outOfBounds' mode
+                        group.setOutOfBounds(true);
+                        noOneOutOfBounds = false;
+                    } else {
+                        this.leaveGroup(foreignUser);
+                    }
                 }
             });
+            if (noOneOutOfBounds && !user.group?.isEmpty()) {
+                group.setOutOfBounds(false);
+            }
         }
     }
 
