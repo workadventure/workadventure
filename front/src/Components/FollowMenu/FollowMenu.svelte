@@ -58,6 +58,7 @@ vim: ft=typescript
 
     function sendFollowRequest() {
         gameScene.connection?.emitFollowRequest();
+        followRoleStore.set(followRoles.leader);
         followStateStore.set(followStates.active);
     }
 
@@ -73,11 +74,6 @@ vim: ft=typescript
     function reset() {
         gameScene.connection?.emitFollowAbort();
         followUsersStore.stopFollowing();
-    }
-
-    function request() {
-        followStateStore.set(followStates.requesting);
-        followRoleStore.set(followRoles.leader);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -106,12 +102,7 @@ vim: ft=typescript
             </section>
         {:else if followRole === followRoles.leader}
             <section class="interact-menu-question">
-                <p>Ask others to follow you?</p>
-            </section>
-            <section class="interact-menu-action">
-                <button type="button" class="nes-btn is-success" on:click|preventDefault={sendFollowRequest}>Yes</button
-                >
-                <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
+                <p>Should never be displayed</p>
             </section>
         {/if}
     </div>
@@ -160,7 +151,7 @@ vim: ft=typescript
     <button
         type="button"
         class="nes-btn is-primary follow-menu-button"
-        on:click|preventDefault={request}
+        on:click|preventDefault={sendFollowRequest}
         title="Ask others to follow"><img class="background-img" src={followImg} alt="" /></button
     >
 {/if}
