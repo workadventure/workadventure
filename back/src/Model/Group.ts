@@ -16,6 +16,10 @@ export class Group implements Movable {
     private wasDestroyed: boolean = false;
     private roomId: string;
     private currentZone: Zone | null = null;
+    /**
+     * When outOfBounds = true, a user if out of the bounds of the group BUT still considered inside it (because we are in following mode)
+     */
+    private outOfBounds = false;
 
     constructor(
         roomId: string,
@@ -78,6 +82,10 @@ export class Group implements Movable {
         this.x = x;
         this.y = y;
 
+        if (this.outOfBounds) {
+            return;
+        }
+
         if (oldX === undefined) {
             this.currentZone = this.positionNotifier.enter(this);
         } else {
@@ -133,6 +141,10 @@ export class Group implements Movable {
      * Usually used when there is only one user left.
      */
     destroy(): void {
+        if (!this.outOfBounds) {
+            this.positionNotifier.leave(this);
+        }
+
         for (const user of this.users) {
             this.leave(user);
         }
@@ -141,5 +153,27 @@ export class Group implements Movable {
 
     get getSize() {
         return this.users.size;
+    }
+
+    /**
+     * A group can have at most one person leading the way in it.
+     */
+    get leader(): User | undefined {
+        for (const user of this.users) {
+            if (user.hasFollowers()) {
+                return user;
+            }
+        }
+        return undefined;
+    }
+
+    setOutOfBounds(outOfBounds: boolean): void {
+        if (this.outOfBounds === true && outOfBounds === false) {
+            this.positionNotifier.enter(this);
+            this.outOfBounds = false;
+        } else if (this.outOfBounds === false && outOfBounds === true) {
+            this.positionNotifier.leave(this);
+            this.outOfBounds = true;
+        }
     }
 }

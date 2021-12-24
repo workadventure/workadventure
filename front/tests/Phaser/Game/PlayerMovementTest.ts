@@ -74,7 +74,7 @@ describe("Interpolation / Extrapolation", () => {
         });
     });
 
-    it("should should keep moving until it stops", () => {
+    it("should keep moving until it stops", () => {
         const playerMovement = new PlayerMovement({
                 x: 100, y: 200
             }, 42000,
@@ -95,7 +95,7 @@ describe("Interpolation / Extrapolation", () => {
             oldX: 100,
             oldY: 200,
             direction: 'up',
-            moving: true
+            moving: false
         });
     });
 })
