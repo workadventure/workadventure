@@ -312,7 +312,6 @@ export class GameRoom {
         }
         group.leave(user);
         if (group.isEmpty()) {
-            this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
                 throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);

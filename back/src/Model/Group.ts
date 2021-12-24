@@ -141,6 +141,10 @@ export class Group implements Movable {
      * Usually used when there is only one user left.
      */
     destroy(): void {
+        if (!this.outOfBounds) {
+            this.positionNotifier.leave(this);
+        }
+
         for (const user of this.users) {
             this.leave(user);
         }
