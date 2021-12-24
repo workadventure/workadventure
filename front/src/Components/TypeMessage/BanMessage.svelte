@@ -1,12 +1,11 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { banMessageVisibleStore, banMessageContentStore } from "../../Stores/TypeMessageStore/BanMessageStore";
+    import { fly, fade } from "svelte/transition";
     import { onMount } from "svelte";
+    import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
+    import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
 
-    let text: string;
-    $: {
-        text = $banMessageContentStore;
-    }
+    export let message: Message;
+
     const NAME_BUTTON = "Ok";
     let nbSeconds = 10;
     let nameButton = "";
@@ -28,17 +27,21 @@
     }
 
     function closeBanMessage() {
-        banMessageVisibleStore.set(false);
+        banMessageStore.clearMessageById(message.id);
     }
 </script>
 
-<div class="main-ban-message nes-container is-rounded" transition:fly={{ y: -1000, duration: 500 }}>
+<div
+    class="main-ban-message nes-container is-rounded"
+    in:fly={{ y: -1000, duration: 500, delay: 250 }}
+    out:fade={{ duration: 200 }}
+>
     <h2 class="title-ban-message">
         <img src="resources/logos/report.svg" alt="***" /> Important message
         <img src="resources/logos/report.svg" alt="***" />
     </h2>
     <div class="content-ban-message">
-        <p>{text}</p>
+        <p>{message.text}</p>
     </div>
     <div class="footer-ban-message">
         <button
