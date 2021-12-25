@@ -1647,202 +1647,40 @@
                         "position": 0
                     },
                     {
-                        "id": "accessory2",
-                        "name": "accessory2",
-                        "url": "resources/customisation/character_accessories/character_accessories2.png",
-                        "position": 1
-                    },
-                    {
-                        "id": "accessory3",
-                        "name": "accessory3",
-                        "url": "resources/customisation/character_accessories/character_accessories3.png",
-                        "position": 2
-                    },
-                    {
-                        "id": "accessory4",
-                        "name": "accessory4",
-                        "url": "resources/customisation/character_accessories/character_accessories4.png",
-                        "position": 3
-                    },
-                    {
-                        "id": "accessory5",
-                        "name": "accessory5",
-                        "url": "resources/customisation/character_accessories/character_accessories5.png",
-                        "position": 4
-                    },
-                    {
-                        "id": "accessory6",
-                        "name": "accessory6",
-                        "url": "resources/customisation/character_accessories/character_accessories6.png",
-                        "position": 5
-                    },
-                    {
-                        "id": "accessory7",
-                        "name": "accessory7",
-                        "url": "resources/customisation/character_accessories/character_accessories7.png",
-                        "position": 6
-                    },
-                    {
-                        "id": "accessory8",
-                        "name": "accessory8",
-                        "url": "resources/customisation/character_accessories/character_accessories8.png",
-                        "position": 7
-                    },
-                    {
-                        "id": "accessory9",
-                        "name": "accessory9",
-                        "url": "resources/customisation/character_accessories/character_accessories9.png",
-                        "position": 8
-                    },
-                    {
-                        "id": "accessory10",
-                        "name": "accessory10",
-                        "url": "resources/customisation/character_accessories/character_accessories10.png",
-                        "position": 9
-                    },
-                    {
-                        "id": "accessory11",
-                        "name": "accessory11",
-                        "url": "resources/customisation/character_accessories/character_accessories11.png",
-                        "position": 10
-                    },
-                    {
-                        "id": "accessory12",
-                        "name": "accessory12",
-                        "url": "resources/customisation/character_accessories/character_accessories12.png",
-                        "position": 11
-                    },
-                    {
-                        "id": "accessory13",
-                        "name": "accessory13",
-                        "url": "resources/customisation/character_accessories/character_accessories13.png",
-                        "position": 12
-                    },
-                    {
-                        "id": "accessory14",
-                        "name": "accessory14",
-                        "url": "resources/customisation/character_accessories/character_accessories14.png",
-                        "position": 13
-                    },
-                    {
-                        "id": "accessory15",
-                        "name": "accessory15",
-                        "url": "resources/customisation/character_accessories/character_accessories15.png",
-                        "position": 14
-                    },
-                    {
-                        "id": "accessory16",
-                        "name": "accessory16",
-                        "url": "resources/customisation/character_accessories/character_accessories16.png",
-                        "position": 15
-                    },
-                    {
-                        "id": "accessory17",
-                        "name": "accessory17",
-                        "url": "resources/customisation/character_accessories/character_accessories17.png",
-                        "position": 16
-                    },
-                    {
-                        "id": "accessory18",
-                        "name": "accessory18",
-                        "url": "resources/customisation/character_accessories/character_accessories18.png",
-                        "position": 17
-                    },
-                    {
-                        "id": "accessory19",
-                        "name": "accessory19",
-                        "url": "resources/customisation/character_accessories/character_accessories19.png",
-                        "position": 18
-                    },
-                    {
-                        "id": "accessory20",
-                        "name": "accessory20",
-                        "url": "resources/customisation/character_accessories/character_accessories20.png",
-                        "position": 19
-                    },
-                    {
-                        "id": "accessory21",
-                        "name": "accessory21",
-                        "url": "resources/customisation/character_accessories/character_accessories21.png",
-                        "position": 20
-                    },
-                    {
                         "id": "accessory22",
                         "name": "accessory22",
                         "url": "resources/customisation/character_accessories/character_accessories22.png",
-                        "position": 21
+                        "position": 1
                     },
                     {
                         "id": "accessory23",
                         "name": "accessory23",
                         "url": "resources/customisation/character_accessories/character_accessories23.png",
-                        "position": 22
+                        "position": 2
                     },
                     {
                         "id": "accessory24",
                         "name": "accessory24",
                         "url": "resources/customisation/character_accessories/character_accessories24.png",
-                        "position": 23
+                        "position": 3
                     },
                     {
                         "id": "accessory25",
                         "name": "accessory25",
                         "url": "resources/customisation/character_accessories/character_accessories25.png",
-                        "position": 24
-                    },
-                    {
-                        "id": "accessory26",
-                        "name": "accessory26",
-                        "url": "resources/customisation/character_accessories/character_accessories26.png",
-                        "position": 25
-                    },
-                    {
-                        "id": "accessory27",
-                        "name": "accessory27",
-                        "url": "resources/customisation/character_accessories/character_accessories27.png",
-                        "position": 26
-                    },
-                    {
-                        "id": "accessory28",
-                        "name": "accessory28",
-                        "url": "resources/customisation/character_accessories/character_accessories28.png",
-                        "position": 27
-                    },
-                    {
-                        "id": "accessory29",
-                        "name": "accessory29",
-                        "url": "resources/customisation/character_accessories/character_accessories29.png",
-                        "position": 28
-                    },
-                    {
-                        "id": "accessory30",
-                        "name": "accessory30",
-                        "url": "resources/customisation/character_accessories/character_accessories30.png",
-                        "position": 29
-                    },
-                    {
-                        "id": "accessory31",
-                        "name": "accessory31",
-                        "url": "resources/customisation/character_accessories/character_accessories31.png",
-                        "position": 30
-                    },
-                    {
-                        "id": "accessory32",
-                        "name": "accessory32",
-                        "url": "resources/customisation/character_accessories/character_accessories32.png",
-                        "position": 31
+                        "position": 4
                     },
                     {
                         "id": "accessory_mate_bottle",
                         "name": "accessory_mate_bottle",
                         "url": "resources/customisation/character_accessories/mate_bottle1.png",
-                        "position": 32
+                        "position": 5
                     },
                     {
                         "id": "accessory_mask",
                         "name": "accessory_mask",
                         "url": "resources/customisation/character_accessories/mask.png",
-                        "position": 33
+                        "position": 6
                     }
                 ]
             }
