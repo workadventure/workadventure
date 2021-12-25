@@ -70,6 +70,7 @@ const menu: BaseTranslation = {
         },
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        blockAudio: "Block ambient sounds and music",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
         silentMode: "Silent mode (disable proximity chat)",

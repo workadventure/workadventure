@@ -1,6 +1,7 @@
 <script lang="ts">
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { isSilentStore, videoConstraintStore } from "../../Stores/MediaStore";
+    import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../i18n/i18n-svelte";
@@ -12,6 +13,7 @@
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
+    let blockAudio: boolean = localUserStore.getBlockAudio();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
@@ -93,6 +95,14 @@
                 })
                 .catch((e) => console.error(e));
         }
+    }
+
+    function changeBlockAudio() {
+        if (blockAudio) {
+            audioManagerFileStore.unloadAudio();
+            audioManagerVisibilityStore.set(false);
+        }
+        localUserStore.setBlockAudio(blockAudio);
     }
 
     function changeForceCowebsiteTrigger() {
@@ -227,6 +237,15 @@
                 on:change={changeNotification}
             />
             <span>{$LL.menu.settings.notifications()}</span>
+        </label>
+        <label>
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={blockAudio}
+                on:change={changeBlockAudio}
+            />
+            <span>{$LL.menu.settings.blockAudio()}</span>
         </label>
         <label>
             <input

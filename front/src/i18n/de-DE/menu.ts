@@ -70,6 +70,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
         fullscreen: "Vollbild",
         notifications: "Benachrichtigungen",
+        blockAudio: "Musik und Hintergrund-Geräusche deaktivieren",
         cowebsiteTrigger: "Jedes mal nachfragen bevor Webseiten oder Jitsi Meet Räume geöffnet werden",
         ignoreFollowRequest: "Ignoriere Folgen-Anfragen anderer Nutzer",
         silentMode: "Siller Modus (deaktiviert Audio-/Video-Chat)",
