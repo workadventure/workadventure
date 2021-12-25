@@ -964,6 +964,9 @@ export class GameScene extends DirtyScene {
             this.CurrentPlayer.setSilent(silent);
         });
         this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
+            if (localUserStore.getBlockAudio()) {
+                return;
+            }
             const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
             const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
             newValue === undefined
