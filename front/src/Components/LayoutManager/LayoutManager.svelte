@@ -17,6 +17,7 @@
 <style lang="scss">
     div.layout-manager-list {
         pointer-events: auto;
+        user-select: none;
         position: absolute;
         left: 0;
         right: 0;

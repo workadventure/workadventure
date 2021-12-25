@@ -123,6 +123,7 @@
 
         font-family: "Press Start 2P";
         pointer-events: auto;
+        user-select: none;
         height: 80%;
         width: 75%;
         top: 10%;

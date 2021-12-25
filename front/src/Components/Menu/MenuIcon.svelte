@@ -24,6 +24,7 @@
     .menuIcon {
         display: inline-grid;
         z-index: 90;
+        user-select: none;
         position: relative;
         margin: 25px;
         img {

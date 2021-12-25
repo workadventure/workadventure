@@ -213,6 +213,7 @@ video.myCamVideo{
 
 .btn-cam-action {
     pointer-events: all;
+    user-select: none;
     position: absolute;
     display: inline-flex;
     bottom: 10px;

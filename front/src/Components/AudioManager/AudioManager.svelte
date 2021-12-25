@@ -171,6 +171,7 @@
         color: whitesmoke;
         text-align: center;
         pointer-events: auto;
+        user-select: none;
 
         div.audio-manager-player-volume {
             display: grid;
