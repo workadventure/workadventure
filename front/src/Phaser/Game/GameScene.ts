@@ -971,13 +971,6 @@ export class GameScene extends DirtyScene {
                 : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), volume, loop);
             audioManagerVisibilityStore.set(!(newValue === undefined));
         });
-        // TODO: This legacy property should be removed at some point
-        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue, oldValue) => {
-            newValue === undefined
-                ? audioManagerFileStore.unloadAudio()
-                : audioManagerFileStore.playAudio(newValue, this.getMapDirUrl(), undefined, true);
-            audioManagerVisibilityStore.set(!(newValue === undefined));
-        });
 
         // TODO: Legacy functionnality replace by layer change
         this.gameMap.onPropertyChange(GameMapProperties.ZONE, (newValue, oldValue) => {
