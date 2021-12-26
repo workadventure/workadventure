@@ -31,16 +31,39 @@
     });
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
-      // TODO -> Why is the PMR link null?
-        let meetingObject = webex.meetings.getPersonalMeetingRoom();
-        console.log(meetingObject);
+
+      let now = new Date(new Date().setMinutes(new Date().getMinutes() + 5));
+      let later = new Date(new Date().setHours(now.getHours() + 4));
+      console.log(`Meeting going from ${now} to ${later}`);
+      fetch("https://api.ciscospark.com/v1/meetings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ZmM4NDQyNmQtMWE3Mi00MDY1LWJmM2QtZDk5YzEzZGNhNGEwZTk4MzFhNDctMjI5_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b"
+        },
+        body: JSON.stringify({
+          "title": "Example Daily Meeting3whydoesntthisworkaaaaaa",
+          "start": now.toISOString(),
+          "end": later.toISOString(),
+          "allowAnyUserToBeCoHost": true,
+          "enabledJoinBeforeHost": true,
+          "enableConnectAudioBeforeHost": true,
+          //"allowFirstUserToBeCoHost": true,
+          "sendEmail": false,
+          //"publicMeeting": true,
+          "integrationTags": ["workadventure-roomid"]
+        })}).then(resp => resp.json()).then(data => {
+        console.log("[Front] (Link Generator) ", data);
         if (localStorage.getItem(webexMeetingLinkKey)) {
           localStorage.removeItem(webexMeetingLinkKey)
         }
-        localStorage.setItem(webexMeetingLinkKey, meetingObject.link)
-        if (meetingObject.link !== localStorage.getItem(webexMeetingLinkKey)) {
-          throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+meetingObject.link+")")
+        localStorage.setItem(webexMeetingLinkKey, data.webLink)
+        if (data.webLink !== localStorage.getItem(webexMeetingLinkKey)) {
+          throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+data.webLink+")")
         }
+      })
+
+
     }).catch(err => {
       console.error("Error: " + err + "\naccessToken: " + accessToken);
     });
