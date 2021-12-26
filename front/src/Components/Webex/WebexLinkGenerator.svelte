@@ -4,8 +4,10 @@
 
   let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
   let webex = null;
-  export let accessToken = null
+  export let accessToken = null;
   export let webexMeetingLinkKey;
+  export let roomName = "WorkAdventure Meeting Room";
+  export let roomID = null;
 
   function importWebex() {
     return new Promise((resolve, reject) => {
@@ -43,7 +45,7 @@
           "Authorization": "Bearer ZmM4NDQyNmQtMWE3Mi00MDY1LWJmM2QtZDk5YzEzZGNhNGEwZTk4MzFhNDctMjI5_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b"
         },
         body: JSON.stringify({
-          "title": "Example Daily Meeting3whydoesntthisworkaaaaaa",
+          "title": roomName,
           "start": now.toISOString(),
           "end": later.toISOString(),
           "allowAnyUserToBeCoHost": true,
@@ -52,7 +54,7 @@
           //"allowFirstUserToBeCoHost": true,
           "sendEmail": false,
           //"publicMeeting": true,
-          "integrationTags": ["workadventure-roomid"]
+          "integrationTags": ["workadventure-"+roomID]
         })}).then(resp => resp.json()).then(data => {
         console.log("[Front] (Link Generator) ", data);
         if (localStorage.getItem(webexMeetingLinkKey)) {

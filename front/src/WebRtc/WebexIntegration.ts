@@ -131,7 +131,7 @@ export class WebexIntegration {
         return this.accessToken;
     }
 
-    public async startMeetingLinkGenerator() {
+    public async startMeetingLinkGenerator(roomName: string = "WorkAdventure Meeting Room", roomID: string) {
         await this.stop();
         coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
             new WebexLinkGenerator({
@@ -139,6 +139,8 @@ export class WebexIntegration {
                 props: {
                     accessToken: this.accessToken,
                     webexMeetingLinkKey: meetingLinkKey,
+                    roomName: roomName,
+                    integrationTag: roomID,
                 },
             });
             return Promise.resolve();
