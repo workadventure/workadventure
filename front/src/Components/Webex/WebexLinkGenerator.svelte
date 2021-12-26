@@ -45,7 +45,7 @@
           "Authorization": "Bearer ZmM4NDQyNmQtMWE3Mi00MDY1LWJmM2QtZDk5YzEzZGNhNGEwZTk4MzFhNDctMjI5_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b"
         },
         body: JSON.stringify({
-          "title": roomName,
+          "title": `WorkAdventure - ${roomName}`,
           "start": now.toISOString(),
           "end": later.toISOString(),
           "allowAnyUserToBeCoHost": true,
