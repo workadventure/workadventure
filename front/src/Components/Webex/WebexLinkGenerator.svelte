@@ -62,11 +62,11 @@
         }
         // TODO -> This is bad, I shouldn't need to burn time to wait for the meeting to start to make sure the backend isn't too fast
         setTimeout(()=>{
-          localStorage.setItem(webexMeetingLinkKey, data.webLink)
-          if (data.webLink !== localStorage.getItem(webexMeetingLinkKey)) {
-            throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+data.webLink+")")
+          localStorage.setItem(webexMeetingLinkKey, data.sipAddress)
+          if (data.sipAddress !== localStorage.getItem(webexMeetingLinkKey)) {
+            throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+data.sipAddress+")")
           }
-        }, 20000)
+        }, 5000)
       })
 
 
