@@ -363,7 +363,7 @@ export class SocketManager {
 
         this.webexMeetings.set(roomId, meet);
 
-        response.setMeetingLink(meet.meetingLink);
+        response.setMeetinglink(meet.meetingLink);
 
         console.log(
             `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
