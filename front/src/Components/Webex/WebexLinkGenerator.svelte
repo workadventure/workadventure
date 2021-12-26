@@ -34,7 +34,7 @@
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
 
-      let now = new Date(new Date().setMinutes(new Date().getSeconds() + 10));
+      let now = new Date(new Date().setMinutes(new Date().getSeconds() + 20));
       let later = new Date(new Date().setHours(now.getHours() + 4));
       console.log(`Meeting going from ${now} to ${later}`);
       fetch("https://api.ciscospark.com/v1/meetings", {
