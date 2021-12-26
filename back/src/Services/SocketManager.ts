@@ -358,7 +358,7 @@ export class SocketManager {
         }
 
         if (meet === null || meet.meetingLink === "") {
-            meet.meetingLink = webexSessionQuery.getPersonalMeetingLink();
+            meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
         }
 
         this.webexMeetings.set(roomId, meet);
