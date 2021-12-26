@@ -348,7 +348,7 @@ export class SocketManager {
         response.setRoomid(roomId);
 
         const meet = this.webexMeetings.get(roomId);
-        if (meet !== undefined) {
+        if (meet !== undefined && meet !== null && meet.meetingLink !== "") {
             response.setMeetinglink(meet.meetingLink);
         } else {
             try {
@@ -373,14 +373,9 @@ export class SocketManager {
                 console.error("[Error] " + e.message);
             }
         }
-        // TODO -> No.
-        try {
-            console.log(
-                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
-            );
-        } catch (e) {
-            console.log(`[Back] Responding with response object containing meeting link: ${response.getMeetinglink()}`);
-        }
+        console.log(
+            `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+        );
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebexsessionresponse(response);
         console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
