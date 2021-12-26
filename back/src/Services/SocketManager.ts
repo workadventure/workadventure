@@ -61,6 +61,7 @@ import { Zone } from "_Model/Zone";
 import Debug from "debug";
 import { Admin } from "_Model/Admin";
 import crypto from "crypto";
+import { isUndefined } from "generic-type-guard";
 
 const debug = Debug("sockermanager");
 
@@ -347,32 +348,23 @@ export class SocketManager {
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
 
-        const meet = this.webexMeetings.get(roomId);
-        if (meet !== undefined && meet !== null && meet.meetingLink !== "") {
-            response.setMeetinglink(meet.meetingLink);
-        } else {
-            try {
-                if (
-                    webexSessionQuery.getPersonalmeetinglink() === null ||
-                    webexSessionQuery.getPersonalmeetinglink() === ""
-                ) {
-                    throw Error("[Back] Personal Meeting Link is empty!");
-                }
-                const meetToStore: MeetingData = {
-                    meetingLink: webexSessionQuery.getPersonalmeetinglink(),
-                    userId: user.id,
-                };
-                this.webexMeetings.set("roomId", meetToStore);
-                const meet = this.webexMeetings.get(roomId);
-                if (meet) {
-                    response.setMeetinglink(meet.meetingLink);
-                }
-            } catch (e) {
-                // TODO -> make message for errors
-                response.setMeetinglink("[Error] " + e.message);
-                console.error("[Error] " + e.message);
-            }
+        let meet = this.webexMeetings.get(roomId);
+
+        if (isUndefined(meet)) {
+            meet = {
+                userId: user.id,
+                meetingLink: "",
+            };
         }
+
+        if (meet === null || meet.meetingLink === "") {
+            meet.meetingLink = webexSessionQuery.getPersonalMeetingLink();
+        }
+
+        this.webexMeetings.set(roomId, meet);
+
+        response.setMeetingLink(meet.meetingLink);
+
         console.log(
             `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
         );
