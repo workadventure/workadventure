@@ -340,7 +340,7 @@ export class SocketManager {
     }
 
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
-        console.log("[Back] Got Webex Session Query");
+        console.log("[Back] Got Webex Session Query", webexSessionQuery);
         const roomId = webexSessionQuery.getRoomid();
         // TODO -> Remove?
         const accessToken = webexSessionQuery.getAccesstoken();
@@ -373,7 +373,14 @@ export class SocketManager {
                 console.error("[Error] " + e.message);
             }
         }
-        console.log(response);
+        // TODO -> No.
+        try {
+            console.log(
+                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+            );
+        } catch (e) {
+            console.log(`[Back] Responding with response object containing meeting link: ${response.getMeetinglink()}`);
+        }
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setWebexsessionresponse(response);
         console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
