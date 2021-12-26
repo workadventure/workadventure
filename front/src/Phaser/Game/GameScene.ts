@@ -1868,6 +1868,7 @@ ${escapedMessage}
                     const p = setInterval(() => {
                         const meetingLink = localStorage.getItem(meetingLinkKey);
                         if (meetingLink) {
+                            console.log(`[Front] Got meeting link from local storage!`, meetingLink);
                             this.connection?.emitWebexSessionQuery(roomName, accessToken, meetingLink);
                             clearInterval(p);
                         }
