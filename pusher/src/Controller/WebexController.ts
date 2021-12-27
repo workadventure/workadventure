@@ -8,7 +8,8 @@ const clientId = process.env.WEBEX_CLIENT_ID ?? "";
 const clientSecret = process.env.WEBEX_CLIENT_SECRET ?? "";
 const redirectUri = process.env.WEBEX_REDIRECT_URL ?? "/pusher/webex/callback";
 const tokenRedirectUri = process.env.WEBEX_TOKEN_REDIRECT_URL ?? "/";
-const scopes = "spark:all";
+const scopeSparkAll = "spark:all";
+const scopeWriteMeeting = "meeting:schedules_write";
 const state = "workadventure-webex";
 const api = "https://webexapis.com/v1";
 
@@ -20,7 +21,10 @@ const authorizeUrl =
     "&redirect_uri=" +
     encodeURIComponent(redirectUri) +
     "&scope=" +
-    encodeURIComponent(scopes) +
+    encodeURIComponent(scopeSparkAll) +
+    // TODO -> Is this an ok way to pass the new scope needed?
+    "&scope=" +
+    encodeURIComponent(scopeWriteMeeting) +
     "&state=" +
     state;
 
