@@ -42,7 +42,7 @@
         headers: {
           "Content-Type": "application/json",
           // TODO -> Use the key in localStorage
-          "Authorization": "Bearer ZmM4NDQyNmQtMWE3Mi00MDY1LWJmM2QtZDk5YzEzZGNhNGEwZTk4MzFhNDctMjI5_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b"
+          "Authorization": `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           "title": `WorkAdventure - ${roomName}`,
