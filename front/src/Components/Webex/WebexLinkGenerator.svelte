@@ -24,6 +24,7 @@
   }
 
   onMount(async () => {
+    // TODO -> Do we really need the SDK loaded for this?
     await importWebex();
     console.log("[Webex] Webex onMount Access token", accessToken)
     webex = window.Webex.init({

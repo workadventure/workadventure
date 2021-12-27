@@ -337,6 +337,9 @@
         webex = window.Webex.init({
             credentials: {
                 access_token: accessToken //
+            },
+            logger: {
+                level: 'info'
             }
         });
         webex.config.logger.level = 'debug';
