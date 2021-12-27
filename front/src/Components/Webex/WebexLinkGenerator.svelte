@@ -34,7 +34,7 @@
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
 
-      let now = new Date(new Date().setSeconds(new Date().getSeconds() + 20));
+      let now = new Date(new Date().setSeconds(new Date().getSeconds() + 10));
       let later = new Date(new Date().setHours(now.getHours() + 4));
       console.log(`[Front] Meeting going from ${now} to ${later}`);
       fetch("https://api.ciscospark.com/v1/meetings", {
@@ -60,13 +60,11 @@
         if (localStorage.getItem(webexMeetingLinkKey)) {
           localStorage.removeItem(webexMeetingLinkKey)
         }
-        // TODO -> This is bad, I shouldn't need to burn time to wait for the meeting to start to make sure the backend isn't too fast
-        setTimeout(()=>{
           localStorage.setItem(webexMeetingLinkKey, data.sipAddress)
           if (data.sipAddress !== localStorage.getItem(webexMeetingLinkKey)) {
             throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+data.sipAddress+")")
           }
-        }, 1000)
+
       })
 
 
