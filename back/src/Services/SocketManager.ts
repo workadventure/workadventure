@@ -361,6 +361,8 @@ export class SocketManager {
             meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
         }
 
+        // TODO -> Check to see if meeting is over using access token above
+
         this.webexMeetings.set(roomId, meet);
 
         response.setMeetinglink(meet.meetingLink);
