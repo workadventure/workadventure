@@ -100,10 +100,6 @@ export class Player extends Character {
         return [xMovement, yMovement];
     }
 
-    public enableFollowing() {
-        followStateStore.set("active");
-    }
-
     public moveUser(delta: number): void {
         const activeEvents = this.userInputManager.getEventListForGameTick();
         const state = get(followStateStore);
@@ -111,8 +107,7 @@ export class Player extends Character {
 
         if (activeEvents.get(UserInputEvent.Follow)) {
             if (state === "off" && this.scene.groups.size > 0) {
-                followStateStore.set("requesting");
-                followRoleStore.set("leader");
+                this.sendFollowRequest();
             } else if (state === "active") {
                 followStateStore.set("ending");
             }
@@ -124,5 +119,16 @@ export class Player extends Character {
             [x, y] = this.computeFollowMovement();
         }
         this.inputStep(activeEvents, x, y);
+    }
+
+    public sendFollowRequest() {
+        this.scene.connection?.emitFollowRequest();
+        followRoleStore.set("leader");
+        followStateStore.set("active");
+    }
+
+    public startFollowing() {
+        followStateStore.set("active");
+        this.scene.connection?.emitFollowConfirmation();
     }
 }
