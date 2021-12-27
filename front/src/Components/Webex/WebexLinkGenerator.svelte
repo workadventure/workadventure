@@ -66,7 +66,7 @@
           if (data.sipAddress !== localStorage.getItem(webexMeetingLinkKey)) {
             throw Error("[Front] Meeting link in window ("+ localStorage.getItem(webexMeetingLinkKey) +") doesn't match meeting object link ("+data.sipAddress+")")
           }
-        }, 5000)
+        }, 1000)
       })
 
 
