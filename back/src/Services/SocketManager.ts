@@ -366,24 +366,24 @@ export class SocketManager {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
-            }).then((resp) => {
-                console.log("[Back] Looked up meeting. Got: ", resp.data);
+            }).then((res) => {
+                console.log("[Back] Looking up meeting, got: ", res.data);
             });
         } catch (e) {
             console.log("[Back] While looking up meeting, got error: ", e);
+        } finally {
+            this.webexMeetings.set(roomId, meet);
+
+            response.setMeetinglink(meet.meetingLink);
+
+            console.log(
+                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+            );
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setWebexsessionresponse(response);
+            console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
+            user.socket.write(serverToClientMessage);
         }
-
-        this.webexMeetings.set(roomId, meet);
-
-        response.setMeetinglink(meet.meetingLink);
-
-        console.log(
-            `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
-        );
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebexsessionresponse(response);
-        console.log("[Back] Responding to query for room " + roomId + " with" + response.getMeetinglink());
-        user.socket.write(serverToClientMessage);
     }
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
