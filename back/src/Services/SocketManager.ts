@@ -79,6 +79,36 @@ interface MeetingData {
     meetingLink: string;
 }
 
+interface WebexMeeting {
+    allowAuthenticatedDevices: boolean;
+    dialInIpAddress: string;
+    enableAutomaticLock: boolean;
+    enableConnectAudioBeforeHost: boolean;
+    enabledAutoRecordMeeting: boolean;
+    enabledJoinBeforeHost: boolean;
+    end: string;
+    excludePassword: boolean;
+    hostDisplayName: string;
+    hostEmail: string;
+    hostKey: string;
+    hostUserId: string;
+    id: string;
+    integrationTags: Array<string>;
+    joinBeforeHostMinutes: number;
+    meetingNumber: string;
+    meetingType: string;
+    password: string;
+    phoneAndVideoSystemPassword: string;
+    publicMeeting: boolean;
+    sipAddress: string;
+    siteUrl: string;
+    start: string;
+    state: string;
+    timezone: string;
+    title: string;
+    webLink: string;
+}
+
 export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
@@ -356,18 +386,27 @@ export class SocketManager {
         }
 
         if (meet === null || meet.meetingLink === "") {
-            meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
+            // Check to see if there's an active meeting for this room set up already that we don't know about yet
+            // Only accept this meet if it hasn't ended yet (TODO -> and won't end for x minutes)
+            const res = await Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization:
+                        "Bearer MzY0YjRlYzEtNWVmYy00NzhkLWFkMWMtMjc2ZjhkYTM1M2Q2NzkzZWQ3NzMtNWFi_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b", // TODO -> `Bearer ${accessToken}`,
+                },
+            });
+            console.log("[Back] Looking up meeting, got: ", res.data);
+            const legalMeets = res.data.items.filter((meeting: WebexMeeting) => {
+                const endTime = Date.parse(meeting.end);
+                return endTime <= Date.now();
+            });
+            console.log("[Back] Legal meetings to choose from: ", legalMeets);
+            if (legalMeets.length > 0) {
+                meet.meetingLink = legalMeets[0];
+            } else {
+                meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
+            }
         }
-
-        const res = await Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
-            headers: {
-                "Content-Type": "application/json",
-                Authorization:
-                    "Bearer MzY0YjRlYzEtNWVmYy00NzhkLWFkMWMtMjc2ZjhkYTM1M2Q2NzkzZWQ3NzMtNWFi_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b", // TODO -> `Bearer ${accessToken}`,
-            },
-        });
-
-        console.log("[Back] Looking up meeting, got: ", res.data);
 
         this.webexMeetings.set(roomId, meet);
 
