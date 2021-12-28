@@ -84,6 +84,8 @@ export class SocketManager {
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
     private webexMeetings = new Map<string, MeetingData>();
+    // TODO -> Remove
+    private webex = require("webex");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
