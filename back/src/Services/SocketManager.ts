@@ -1,4 +1,5 @@
 import { GameRoom } from "../Model/GameRoom";
+import Axios from "axios";
 import {
     BanUserMessage,
     BatchToPusherMessage,
@@ -83,8 +84,6 @@ export class SocketManager {
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
     private webexMeetings = new Map<string, MeetingData>();
-    // TODO -> Remove
-    private webex = require("webex");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -343,7 +342,6 @@ export class SocketManager {
     public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         console.log("[Back] Got Webex Session Query", webexSessionQuery);
         const roomId = webexSessionQuery.getRoomid();
-        // TODO -> Remove?
         const accessToken = webexSessionQuery.getAccesstoken();
         const response = new WebexSessionResponse();
         response.setRoomid(roomId);
@@ -361,7 +359,19 @@ export class SocketManager {
             meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
         }
 
-        // TODO -> Check to see if meeting is over using access token above
+        try {
+            // TODO -> Check to see if meeting is over using access token above
+            Axios.get(`"https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            }).then((resp) => {
+                console.log("[Back] Looked up meeting. Got: ", resp.data);
+            });
+        } catch (e) {
+            console.log("[Back] While looking up meeting, got error: ", e);
+        }
 
         this.webexMeetings.set(roomId, meet);
 
