@@ -84,8 +84,6 @@ export class SocketManager {
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
     private webexMeetings = new Map<string, MeetingData>();
-    // TODO -> Remove
-    private webex = require("webex");
 
     constructor() {
         clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
@@ -366,7 +364,7 @@ export class SocketManager {
             Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessToken}`,
                 },
             }).then((resp) => {
                 console.log("[Back] Looked up meeting. Got: ", resp.data);
