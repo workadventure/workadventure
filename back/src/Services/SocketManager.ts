@@ -366,7 +366,7 @@ export class SocketManager {
             Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`, // I added quotes around the word auth in this line and added this comment so prettier would let me commit it
+                    "Authorization": `Bearer ${accessToken}`, // I added quotes around the word auth in this line and added this comment so prettier would let me commit it
                 },
             }).then((resp) => {
                 console.log("[Back] Looked up meeting. Got: ", resp.data);
