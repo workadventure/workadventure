@@ -1,4 +1,6 @@
 index.html
 index.tmpl.html.tmp
 /js/
+/fonts/
 style.*.css
+*.png
