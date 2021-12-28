@@ -339,7 +339,7 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    public handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
+    public async handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         console.log("[Back] Got Webex Session Query", webexSessionQuery);
         const roomId = webexSessionQuery.getRoomid();
         const accessToken = webexSessionQuery.getAccesstoken();
@@ -359,31 +359,26 @@ export class SocketManager {
             meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
         }
 
-        try {
-            // TODO -> Check to see if meeting is over using access token above
-            Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            }).then((res) => {
-                console.log("[Back] Looking up meeting, got: ", res.data);
-            });
-        } catch (e) {
-            console.log("[Back] While looking up meeting, got error: ", e);
-        } finally {
-            this.webexMeetings.set(roomId, meet);
+        const res = await Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+            },
+        });
 
-            response.setMeetinglink(meet.meetingLink);
+        console.log("[Back] Looking up meeting, got: ", res.data);
 
-            console.log(
-                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
-            );
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setWebexsessionresponse(response);
-            console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
-            user.socket.write(serverToClientMessage);
-        }
+        this.webexMeetings.set(roomId, meet);
+
+        response.setMeetinglink(meet.meetingLink);
+
+        console.log(
+            `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+        );
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setWebexsessionresponse(response);
+        console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
+        user.socket.write(serverToClientMessage);
     }
 
     public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
