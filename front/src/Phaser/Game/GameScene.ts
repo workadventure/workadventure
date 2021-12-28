@@ -502,7 +502,7 @@ export class GameScene extends DirtyScene {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
                     }
-                    if (object.type === "website") {
+                    if (object.type === "website" && !localUserStore.getBlockExternalContent()) {
                         // Let's load iframes in the map
                         const url = PropertyUtils.mustFindStringProperty(
                             GameMapProperties.URL,
@@ -841,6 +841,9 @@ export class GameScene extends DirtyScene {
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
                 this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
+                    if (localUserStore.getBlockExternalContent()) {
+                        return;
+                    }
                     if (!JITSI_URL) {
                         throw new Error("Missing JITSI_URL environment variable.");
                     }

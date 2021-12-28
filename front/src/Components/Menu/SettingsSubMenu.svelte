@@ -24,12 +24,14 @@
     let valueLocale: string = $locale;
     let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
     let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+    let blockExternalContent: boolean = localUserStore.getBlockExternalContent();
 
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+    let previousBlockExternalContent = blockExternalContent;
 
     function saveSetting() {
         let change = false;
@@ -61,6 +63,12 @@
         }
 
         audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+
+        if (blockExternalContent !== previousBlockExternalContent) {
+            previousBlockExternalContent = blockExternalContent;
+            localUserStore.setBlockExternalContent(blockExternalContent);
+            change = true;
+        }
 
         if (change) {
             window.location.reload();
@@ -210,7 +218,6 @@
             </select>
         </div>
     </section>
-
     <section>
         <h3>{$LL.menu.settings.privacySettings.title()}</h3>
         <p>{$LL.menu.settings.privacySettings.explanation()}</p>
@@ -221,6 +228,12 @@
         <label>
             <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueMicrophonePrivacySettings} />
             <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
+        </label>
+    </section>
+    <section>
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={blockExternalContent} />
+            <span>{$LL.menu.settings.blockExternalContent()}</span>
         </label>
     </section>
     <section class="settings-section-save">

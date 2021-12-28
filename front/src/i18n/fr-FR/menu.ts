@@ -70,6 +70,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
         fullscreen: "Plein écran",
         notifications: "Notifications",
+        blockExternalContent: "Bloquer les contenus externes (sites web, vidéoconférences, ...)",
         blockAudio: "Désactiver bruits ambiants et musique",
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
