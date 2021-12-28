@@ -38,6 +38,9 @@
       let now = new Date(new Date().setSeconds(new Date().getSeconds() + 10));
       let later = new Date(new Date().setHours(now.getHours() + 4));
       console.log(`[Front] Meeting going from ${now} to ${later}`);
+
+      // TODO -> Remove
+      accessToken = "MzY0YjRlYzEtNWVmYy00NzhkLWFkMWMtMjc2ZjhkYTM1M2Q2NzkzZWQ3NzMtNWFi_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b"
       fetch("https://api.ciscospark.com/v1/meetings", {
         method: "POST",
         headers: {
