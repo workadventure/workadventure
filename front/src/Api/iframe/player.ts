@@ -110,20 +110,6 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             data: undefined,
         });
     }
-
-    getPlayerProperty(name: string): Promise<PlayerPropertyEvent> {
-        return queryWorkadventure({
-            type: "getPlayerProperty",
-            data: name,
-        });
-    }
-
-    setPlayerProperty(property: PlayerPropertyEvent) {
-        queryWorkadventure({
-            type: "setPlayerProperty",
-            data: property,
-        }).catch((e) => console.error(e));
-    }
 }
 
 export type Position = {

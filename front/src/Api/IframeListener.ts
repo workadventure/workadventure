@@ -32,7 +32,6 @@ import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/Emb
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { HasCameraMovedEvent } from "./Events/HasCameraMovedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
