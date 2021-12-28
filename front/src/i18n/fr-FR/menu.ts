@@ -74,6 +74,7 @@ const menu: NonNullable<Translation["menu"]> = {
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
         silentMode: "Moyen silencieuse (désactiver chatter)",
+        disableAnimations: "Désactiver les animations de la carte",
     },
     invite: {
         description: "Partager le lien de la salle!",
