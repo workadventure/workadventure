@@ -363,7 +363,7 @@ export class SocketManager {
 
         try {
             // TODO -> Check to see if meeting is over using access token above
-            Axios.get(`"https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
+            Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
