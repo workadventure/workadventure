@@ -4847,7 +4847,7 @@
     "uuid" "8.3.0"
 
 "uWebSockets.js@uNetworking/uWebSockets.js#v18.5.0":
-  "resolved" "git+ssh://git@github.com/uNetworking/uWebSockets.js.git#9b1605d2db82981cafe69dbe356e10ce412f5805"
+  "resolved" "git@github.com:uNetworking/uWebSockets.js.git#9b1605d2db82981cafe69dbe356e10ce412f5805"
   "version" "18.5.0"
 
 "v8-compile-cache@^2.0.3":
