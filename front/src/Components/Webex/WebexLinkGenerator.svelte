@@ -34,7 +34,7 @@
     });
     webex.config.logger.level = 'debug';
     webex.meetings.register().then(() => {
-      let now = new Date(Date.now() + 20*1000);
+      let now = new Date(Date.now() + 45*1000);
       let later = new Date(Date.now()+ 4*60*60*1000);
       console.log(`[Front] Meeting going from ${now} to ${later}`);
 
