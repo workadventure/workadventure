@@ -1,14 +1,5 @@
 syntax = "proto3";
 
-message WebexSessionStart {
-  string roomId = 1;
-  string meetingLink = 2;
-}
-
-message WebexSessionStop {
-  string roomId = 1;
-}
-
 message WebexSessionQuery {
   string roomId = 1;
   string accessToken = 2;

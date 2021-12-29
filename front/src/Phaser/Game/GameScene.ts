@@ -730,7 +730,6 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
-                // TODO -> test webex session response handling
                 this.connection.onWebexSessionResponse((roomId, meetingLink) => {
                     console.log("[Front] Got Webex callback! (" + roomId + "," + meetingLink + ")");
                     this.startWebex(roomId, meetingLink);
@@ -1880,7 +1879,7 @@ ${escapedMessage}
         if (webexAdHoc) {
             startAdHoc();
         } else if (webexMeetingUrl) {
-            // TODO - Remove
+            // TODO -> Remove
             startAdHoc();
             console.log("Found webex meeting url, ignoring");
             /*
