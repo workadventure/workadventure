@@ -12,7 +12,6 @@ message WebexSessionResponse {
 }
 
 /*********** PARTIAL MESSAGES **************/
-
 message PositionMessage {
   int32 x = 1;
   int32 y = 2;
