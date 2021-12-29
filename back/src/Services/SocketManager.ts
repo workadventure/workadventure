@@ -391,8 +391,7 @@ export class SocketManager {
             const res = await Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization:
-                        "Bearer MzY0YjRlYzEtNWVmYy00NzhkLWFkMWMtMjc2ZjhkYTM1M2Q2NzkzZWQ3NzMtNWFi_PE93_2dc7171a-e3cc-4b0b-8046-94a26d37b60b", // TODO -> `Bearer ${accessToken}`,
+                    Authorization: `Bearer ${accessToken}`,
                 },
             });
             console.log("[Back] Looking up meeting, got: ", res.data);
