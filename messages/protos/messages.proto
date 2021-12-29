@@ -303,10 +303,7 @@ message ServerToClientMessage {
     EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
     UserListMessage userListMessage = 30;
-
-    WebexSessionStart webexSessionStart = 31;
-    WebexSessionStop webexSessionStop = 32;
-    WebexSessionResponse webexSessionResponse = 33;
+    WebexSessionResponse webexSessionResponse = 31;
   }
 }
 

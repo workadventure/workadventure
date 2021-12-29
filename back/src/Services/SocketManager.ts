@@ -31,8 +31,6 @@ import {
     VariableMessage,
     WebexSessionQuery,
     WebexSessionResponse,
-    WebexSessionStart,
-    WebexSessionStop,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
@@ -732,18 +730,20 @@ export class SocketManager {
     private notifyNewMeetOnRoomJoin(room: GameRoom, meetingLink: string) {
         const peopleInRoom = [...room.getUsers().values()];
 
-        const webexSessionStart = new WebexSessionStart();
-        webexSessionStart.setMeetinglink(meetingLink);
-        webexSessionStart.setRoomid(room.roomUrl);
-        const message = new ServerToClientMessage();
-        message.setWebexsessionstart(webexSessionStart);
+        // TODO -> This uses the wrong type of message anyway, should it just be removed?
+        //const webexSessionStart = new WebexSessionStart();
+        //webexSessionStart.setMeetinglink(meetingLink);
+        //webexSessionStart.setRoomid(room.roomUrl);
+        //const message = new ServerToClientMessage();
+        //message.setWebexsessionstart(webexSessionStart);
 
         for (const person of peopleInRoom) {
             if (person.socket.writable) {
                 try {
-                    person.socket.write(message);
+                    //person.socket.write(message);
+                    console.log(`[Back] Noticed that a meet has started but choosing not to notify users`);
                 } catch (err) {
-                    console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
+                    console.warn(`[Back] Error sending webex join to user ${person.id}. Error: ${err}`);
                 }
             }
         }
