@@ -22,6 +22,10 @@ const camera: BaseTranslation = {
         silentMode: "Silent mode",
         silentZone: "Silent zone",
     },
+    disabledInUserSettings:
+        "You have disabled your camera in game settings. Do you want to override this and enable your camera?",
+    yes: "Yes",
+    no: "No",
 };
 
 export default camera;

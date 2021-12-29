@@ -1,6 +1,8 @@
 <script lang="ts">
     import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
     import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+    import { localUserStore } from "../Connexion/LocalUserStore";
+    import LL from "../i18n/i18n-svelte";
     import monitorImg from "./images/monitor.svg";
     import monitorCloseImg from "./images/monitor-close.svg";
     import cinemaImg from "./images/cinema.svg";
@@ -21,6 +23,8 @@
 
     const gameScene = gameManager.getCurrentGameScene();
 
+    let camInstructionsVisible = false;
+
     function screenSharingClick(): void {
         if (isSilent) return;
         if ($requestedScreenSharingState === true) {
@@ -32,6 +36,10 @@
 
     function cameraClick(): void {
         if (isSilent) return;
+        if (localUserStore.getNoVideo()) {
+            camInstructionsVisible = true;
+            return;
+        }
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
         } else {
@@ -76,12 +84,32 @@
         gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
 
+    function unblockCamera() {
+        localUserStore.setNoVideo(false);
+        requestedCameraState.enableWebcam();
+        camInstructionsVisible = false;
+    }
+
     let isSilent: boolean;
     const unsubscribeIsSilent = isSilentStore.subscribe((value) => {
         isSilent = value;
     });
     onDestroy(unsubscribeIsSilent);
 </script>
+
+<div class="interact-menu nes-container is-rounded" hidden={!camInstructionsVisible}>
+    <section class="interact-menu-question">
+        <p>{$LL.camera.disabledInUserSettings()}</p>
+    </section>
+    <section class="interact-menu-action">
+        <button type="button" class="nes-btn is-success" on:click|preventDefault={unblockCamera}>
+            {$LL.camera.yes()}
+        </button>
+        <button type="button" class="nes-btn is-error" on:click|preventDefault={() => (camInstructionsVisible = false)}>
+            {$LL.camera.no()}
+        </button>
+    </section>
+</div>
 
 <div class="btn-cam-action">
     <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
@@ -256,6 +284,37 @@
                 width: 20%;
                 max-height: 44px;
             }
+        }
+    }
+
+    div.interact-menu {
+        pointer-events: auto;
+        user-select: none;
+        background-color: #333333;
+        color: whitesmoke;
+
+        position: absolute;
+        left: 20vw;
+        width: 60vw;
+        top: 60vh;
+        margin: auto;
+
+        section.interact-menu-question {
+            margin: 4px;
+            margin-bottom: 20px;
+
+            p {
+                font-size: 1.05em;
+                font-weight: bold;
+            }
+        }
+
+        section.interact-menu-action {
+            display: grid;
+            grid-gap: 10%;
+            grid-template-columns: 45% 45%;
+            margin-left: 5%;
+            margin-right: 5%;
         }
     }
 </style>

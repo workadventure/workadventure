@@ -2,6 +2,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { isSilentStore, videoConstraintStore } from "../../Stores/MediaStore";
     import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+    import { requestedCameraState } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../i18n/i18n-svelte";
@@ -18,6 +19,7 @@
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
     let alwaysSilent: boolean = localUserStore.getAlwaysSilent();
+    let noVideo: boolean = localUserStore.getNoVideo();
     let disableAnimations: boolean = localUserStore.getDisableAnimations();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
@@ -135,6 +137,13 @@
         // We need to make sure this flag toggles at least once to update UI
         isSilentStore.set(!silent);
         isSilentStore.set(silent);
+    }
+
+    function changeNoVideo() {
+        localUserStore.setNoVideo(noVideo);
+        if (noVideo) {
+            requestedCameraState.disableWebcam();
+        }
     }
 
     function changeDisableAnimations() {
@@ -305,6 +314,10 @@
                 on:change={changeAlwaysSilent}
             />
             <span>{$LL.menu.settings.silentMode()}</span>
+        </label>
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={noVideo} on:change={changeNoVideo} />
+            <span>{$LL.menu.settings.noVideo()}</span>
         </label>
         <label>
             <input

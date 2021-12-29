@@ -17,8 +17,9 @@ import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTe
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+import { requestedCameraState } from "../Stores/MediaStore";
 import { localUserStore } from "./LocalUserStore";
 import {
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -350,6 +351,11 @@ export class RoomConnection implements RoomConnection {
                     );
 
                     this.setSilent(localUserStore.getAlwaysSilent());
+                    if (localUserStore.getNoVideo()) {
+                        requestedCameraState.disableWebcam();
+                    } else {
+                        requestedCameraState.enableWebcam();
+                    }
 
                     this._roomJoinedMessageStream.next({
                         connection: this,

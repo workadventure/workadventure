@@ -22,6 +22,10 @@ const camera: NonNullable<Translation["camera"]> = {
         silentMode: "Stiller Modus",
         silentZone: "Stiller Bereich",
     },
+    disabledInUserSettings:
+        "Deine Kamera ist in den Spiel-Einstellungen deaktiviert. Möchtest du das ändern und deine Kamera einschalten?",
+    yes: "Ja",
+    no: "Nein",
 };
 
 export default camera;
