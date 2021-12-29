@@ -752,15 +752,17 @@ export class SocketManager {
     private notifyStopMeetOnRoomLeave(room: GameRoom) {
         const peopleInRoom = [...room.getUsers().values()];
 
-        const webexSessionStop = new WebexSessionStop();
-        webexSessionStop.setRoomid(room.roomUrl);
-        const message = new ServerToClientMessage();
-        message.setWebexsessionstop(webexSessionStop);
+        // TODO -> Remove?
+        //const webexSessionStop = new WebexSessionStop();
+        //webexSessionStop.setRoomid(room.roomUrl);
+        //const message = new ServerToClientMessage();
+        //message.setWebexsessionstop(webexSessionStop);
 
         for (const person of peopleInRoom) {
             if (person.socket.writable) {
                 try {
-                    person.socket.write(message);
+                    //person.socket.write(message);
+                    console.log(`[Back] Noticed that a meet has stopped but choosing not to notify users`);
                 } catch (err) {
                     console.warn(`Error sending webex join to user ${person.id}. Error: ${err}`);
                 }
