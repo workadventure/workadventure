@@ -31,6 +31,7 @@ export enum GameMapProperties {
     SILENT = "silent",
     START = "start",
     START_LAYER = "startLayer",
+    TUTORIAL = "tutorial",
     URL = "url",
     WRITABLE_BY = "writableBy",
     ZONE = "zone",
