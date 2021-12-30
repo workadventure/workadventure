@@ -11,6 +11,11 @@ message WebexSessionResponse {
   string meetingLink = 2;
 }
 
+message WebexSessionError {
+  string message = 1;
+  string location = 2;
+}
+
 /*********** PARTIAL MESSAGES **************/
 message PositionMessage {
   int32 x = 1;
@@ -303,6 +308,7 @@ message ServerToClientMessage {
     TokenExpiredMessage tokenExpiredMessage = 20;
     UserListMessage userListMessage = 30;
     WebexSessionResponse webexSessionResponse = 31;
+    WebexSessionError webexSessionError = 32;
   }
 }
 
