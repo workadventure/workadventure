@@ -41,10 +41,12 @@
                                     <div class="widget-demo--callInactiveContainer--pCOsm call-inactive-container">
                                         <div class="widget-demo--personName--3fVsV call-person-name">
                                            Something went wrong here. <br>Please walk out of the room and come back in.<br>
-                                            <pre>{errorMessage}</pre>
-                                            {#if (errorLocation != null)}
+                                            <div style="font-size: 50%">
+                                                <pre style="background-color: rgba(50,50,50,.4)">{errorMessage}</pre>
+                                                {#if (errorLocation != null)}
                                                 <small><i>{errorLocation}</i></small>
-                                            {/if}
+                                                {/if}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
