@@ -730,6 +730,10 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
+                this.connection.onWebexSessionError((message, location) => {
+                    this.startWebexErrorComponent(message, location);
+                });
+
                 this.connection.onWebexSessionResponse((roomId, meetingLink) => {
                     console.log("[Front] Got Webex callback! (" + roomId + "," + meetingLink + ")");
                     this.startWebex(roomId, meetingLink);
@@ -1811,6 +1815,15 @@ ${escapedMessage}
         );
     }
 
+    public startWebexErrorComponent(message: string, location: string) {
+        webexIntegration.showWebexError(message, location);
+        this.connection?.setSilent(true);
+        mediaManager.hideGameOverlay();
+        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
+            this.stopWebex();
+        });
+    }
+
     public startWebex(roomId: string, meetingLink: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const webexMeetingRoomName = allProps.get("webexMeetingRoomName");
@@ -1863,7 +1876,8 @@ ${escapedMessage}
             webexIntegration.authWithWebex().then((accessToken) => {
                 localStorage.removeItem(meetingLinkKey); // <- Removes race condition that can occur when getting rid of cached links
                 webexIntegration.startMeetingLinkGenerator(roomName, roomName).then(() => {
-                    // TODO are room names mutually exclusive?
+                    // TODO -> are room names mutually exclusive?
+                    // TODO -> Should we add an ID to every room as a prop?
                     const p = setInterval(() => {
                         const meetingLink = localStorage.getItem(meetingLinkKey);
                         if (meetingLink) {

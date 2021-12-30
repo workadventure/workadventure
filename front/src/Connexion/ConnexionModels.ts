@@ -34,6 +34,7 @@ export enum EventMessage {
     SET_VARIABLE = "set-variable",
     USER_LIST = "user-list",
     WEBEX_SESSION_RESPONSE = "webex-session-response",
+    WEBEX_SESSION_ERROR = "webex-session-error",
 }
 
 export interface PointInterface {

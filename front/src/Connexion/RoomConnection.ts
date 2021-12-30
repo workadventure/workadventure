@@ -31,6 +31,7 @@ import {
     UserMovesMessage,
     VariableMessage,
     ViewportMessage,
+    WebexSessionError,
     WebexSessionQuery,
     WebexSessionResponse,
     WebRtcDisconnectMessage,
@@ -578,6 +579,13 @@ export class RoomConnection implements RoomConnection {
         clientToServerMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    }
+
+    public onWebexSessionError(callback: (message: string, location: string) => void): void {
+        console.error("[Front] Got an error from the backend. Passing it to GameScene.ts");
+        this.onMessage(EventMessage.WEBEX_SESSION_ERROR, (message: WebexSessionError) => {
+            callback(message.getMessage(), message.getLocation());
+        });
     }
 
     public onWebexSessionResponse(callback: (roomId: string, meetingLink: string) => void): void {

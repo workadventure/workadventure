@@ -11,6 +11,7 @@ import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
 import WebexLinkGenerator from "../Components/Webex/WebexLinkGenerator.svelte";
 import { meetingLinkKey } from "../Common/Key";
+import WebexErrorPage from "../Components/Webex/WebexErrorPage.svelte";
 
 interface Webex {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,6 +144,20 @@ export class WebexIntegration {
                     integrationTag: roomID,
                 },
             });
+            return Promise.resolve();
+        });
+    }
+
+    public showWebexError(message: string, location: string) {
+        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
+            new WebexErrorPage({
+                target: cowebsiteDiv,
+                props: {
+                    errorMessage: message,
+                    errorLocation: location,
+                },
+            });
+
             return Promise.resolve();
         });
     }
