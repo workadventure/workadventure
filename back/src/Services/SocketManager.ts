@@ -371,14 +371,15 @@ export class SocketManager {
     public async handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         const serverToClientMessage = new ServerToClientMessage();
         const response = new WebexSessionResponse();
-        const hasNoPersonalMeetingLink =
-            webexSessionQuery.getPersonalmeetinglink() === undefined ||
-            webexSessionQuery.getPersonalmeetinglink() === null ||
-            webexSessionQuery.getPersonalmeetinglink() === "" ||
-            webexSessionQuery.getPersonalmeetinglink() === "undefined";
+        const hasPersonalMeetingLink =
+            webexSessionQuery.getPersonalmeetinglink() !== undefined ||
+            webexSessionQuery.getPersonalmeetinglink() !== null ||
+            webexSessionQuery.getPersonalmeetinglink() !== "" ||
+            webexSessionQuery.getPersonalmeetinglink() !== "undefined";
         try {
             console.log("[Back] Got Webex Session Query", webexSessionQuery);
-            if (hasNoPersonalMeetingLink) {
+            if (!hasPersonalMeetingLink) {
+                console.log("[Back] Meeting link not valid");
                 throw Error("The link to the meeting that should be started is not valid.");
             }
             const roomId = webexSessionQuery.getRoomid();
@@ -432,14 +433,13 @@ export class SocketManager {
             );
 
             serverToClientMessage.setWebexsessionresponse(response);
-            console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
         } catch (err) {
             const errMsg = new WebexSessionError();
             errMsg.setMessage(err);
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery");
             serverToClientMessage.setWebexsessionerror(errMsg);
         }
-
+        console.log("[Back] Sending message", serverToClientMessage);
         user.socket.write(serverToClientMessage);
     }
 
