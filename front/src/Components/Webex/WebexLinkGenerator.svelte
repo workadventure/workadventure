@@ -34,11 +34,11 @@
                 localStorage.removeItem(webexMeetingLinkKey)
             }
             localStorage.setItem(webexMeetingLinkKey, data.sipAddress)
-            if (data.sipAddress !== localStorage.getItem(webexMeetingLinkKey)) {
+            if (data.sipAddress !== localStorage.getItem(webexMeetingLinkKey) && localStorage.getItem(webexMeetingLinkKey) !== undefined) {
                 throw Error("[Front] Meeting link in window (" + localStorage.getItem(webexMeetingLinkKey) + ") doesn't match meeting object link (" + data.sipAddress + ")")
             }
         }).catch(err => {
-            throw Error(err);
+            console.error(err);
         })
     })
 </script>
