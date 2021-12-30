@@ -29,6 +29,7 @@ import {
     UserMovedMessage,
     UserMovesMessage,
     VariableMessage,
+    WebexSessionError,
     WebexSessionQuery,
     WebexSessionResponse,
     WebRtcDisconnectMessage,
@@ -368,57 +369,68 @@ export class SocketManager {
     }
 
     public async handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
-        console.log("[Back] Got Webex Session Query", webexSessionQuery);
-        const roomId = webexSessionQuery.getRoomid();
-        const accessToken = webexSessionQuery.getAccesstoken();
-        const response = new WebexSessionResponse();
-        response.setRoomid(roomId);
-
-        let meet = this.webexMeetings.get(roomId);
-
-        if (isUndefined(meet)) {
-            meet = {
-                userId: user.id,
-                meetingLink: "",
-            };
-        }
-
-        if (meet === null || meet.meetingLink === "") {
-            // Check to see if there's an active meeting for this room set up already that we don't know about yet
-            // Only accept this meet if it hasn't ended yet and won't end for at least 10 seconds
-            const res = await Axios.get(`https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            });
-            console.log("[Back] Looking up meeting, got: ", res.data);
-            const legalMeets = res.data.items.filter((meeting: WebexMeeting) => {
-                const endTime = Date.parse(meeting.end);
-                return endTime <= Date.now() + 10 * 1000;
-            });
-
-            console.log("[Back] Legal meetings to choose from: ", legalMeets);
-            if (legalMeets.length > 0) {
-                meet.meetingLink = legalMeets[0];
-            }
-
-            if (meet.meetingLink === undefined || meet.meetingLink === null || meet.meetingLink === "") {
-                console.log("[Back] Choosing link that came with the request");
-                meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
-            }
-        }
-
-        this.webexMeetings.set(roomId, meet);
-
-        response.setMeetinglink(meet.meetingLink);
-
-        console.log(
-            `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
-        );
         const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setWebexsessionresponse(response);
-        console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
+        const response = new WebexSessionResponse();
+        try {
+            console.log("[Back] Got Webex Session Query", webexSessionQuery);
+            const roomId = webexSessionQuery.getRoomid();
+            const accessToken = webexSessionQuery.getAccesstoken();
+            response.setRoomid(roomId);
+
+            let meet = this.webexMeetings.get(roomId);
+
+            if (isUndefined(meet)) {
+                meet = {
+                    userId: user.id,
+                    meetingLink: "",
+                };
+            }
+
+            if (meet === null || meet.meetingLink === "") {
+                // Check to see if there's an active meeting for this room set up already that we don't know about yet
+                // Only accept this meet if it hasn't ended yet and won't end for at least 10 seconds
+                const res = await Axios.get(
+                    `https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`,
+                    {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    }
+                );
+                console.log("[Back] Looking up meeting, got: ", res.data);
+                const legalMeets = res.data.items.filter((meeting: WebexMeeting) => {
+                    const endTime = Date.parse(meeting.end);
+                    return endTime <= Date.now() + 10 * 1000;
+                });
+
+                console.log("[Back] Legal meetings to choose from: ", legalMeets);
+                if (legalMeets.length > 0) {
+                    meet.meetingLink = legalMeets[0];
+                }
+
+                if (meet.meetingLink === undefined || meet.meetingLink === null || meet.meetingLink === "") {
+                    console.log("[Back] Choosing link that came with the request");
+                    meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
+                }
+            }
+
+            this.webexMeetings.set(roomId, meet);
+
+            response.setMeetinglink(meet.meetingLink);
+
+            console.log(
+                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+            );
+            serverToClientMessage.setWebexsessionresponse(response);
+            console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
+        } catch (err) {
+            const errMsg = new WebexSessionError();
+            errMsg.setMessage(err);
+            errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery");
+            serverToClientMessage.setWebexsessionerror(errMsg);
+        }
+
         user.socket.write(serverToClientMessage);
     }
 

@@ -26,7 +26,7 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-sonarjs": "^0.5.0",
     "grpc_tools_node_protoc_ts": "^5.0.1",
-    "grpc-tools": "^1.9.1",
+    "grpc-tools": "^1.11.2",
     "protobufjs": "^6.10.1",
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.4",
