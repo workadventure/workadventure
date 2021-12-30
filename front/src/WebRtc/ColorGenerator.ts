@@ -1,13 +1,29 @@
 export function getRandomColor(): string {
+    const { r, g, b } = getColorRgbFromHue(Math.random());
+    return toHexa(r, g, b);
+}
+
+function toHexa(r: number, g: number, b: number): string {
+    return "#" + Math.floor(r * 256).toString(16) + Math.floor(g * 256).toString(16) + Math.floor(b * 256).toString(16);
+}
+
+export function getColorRgbFromHue(hue: number): { r: number; g: number; b: number } {
     const golden_ratio_conjugate = 0.618033988749895;
-    let hue = Math.random();
     hue += golden_ratio_conjugate;
     hue %= 1;
     return hsv_to_rgb(hue, 0.5, 0.95);
 }
 
+function stringToDouble(string: string): number {
+    let num = 1;
+    for (const char of string.split("")) {
+        num *= char.charCodeAt(0);
+    }
+    return (num % 255) / 255;
+}
+
 //todo: test this.
-function hsv_to_rgb(hue: number, saturation: number, brightness: number): string {
+function hsv_to_rgb(hue: number, saturation: number, brightness: number): { r: number; g: number; b: number } {
     const h_i = Math.floor(hue * 6);
     const f = hue * 6 - h_i;
     const p = brightness * (1 - saturation);
@@ -48,5 +64,9 @@ function hsv_to_rgb(hue: number, saturation: number, brightness: number): string
         default:
             throw "h_i cannot be " + h_i;
     }
-    return "#" + Math.floor(r * 256).toString(16) + Math.floor(g * 256).toString(16) + Math.floor(b * 256).toString(16);
+    return {
+        r,
+        g,
+        b,
+    };
 }

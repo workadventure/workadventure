@@ -17,6 +17,9 @@ import {
     ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
@@ -477,6 +480,18 @@ export class IoSocketController {
                         client,
                         message.getEmotepromptmessage() as EmotePromptMessage
                     );
+                } else if (message.hasFollowrequestmessage()) {
+                    socketManager.handleFollowRequest(
+                        client,
+                        message.getFollowrequestmessage() as FollowRequestMessage
+                    );
+                } else if (message.hasFollowconfirmationmessage()) {
+                    socketManager.handleFollowConfirmation(
+                        client,
+                        message.getFollowconfirmationmessage() as FollowConfirmationMessage
+                    );
+                } else if (message.hasFollowabortmessage()) {
+                    socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

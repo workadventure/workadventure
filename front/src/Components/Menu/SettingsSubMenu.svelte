@@ -8,6 +8,7 @@
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
+    let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let previewValueGame = valueGame;
@@ -57,6 +58,10 @@
 
     function changeForceCowebsiteTrigger() {
         localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
+    }
+
+    function changeIgnoreFollowRequests() {
+        localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
     }
 
     function closeMenu() {
@@ -122,6 +127,15 @@
                 on:change={changeForceCowebsiteTrigger}
             />
             <span>Always ask before opening websites and Jitsi Meet rooms</span>
+        </label>
+        <label>
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={ignoreFollowRequests}
+                on:change={changeIgnoreFollowRequests}
+            />
+            <span>Ignore requests to follow other users</span>
         </label>
     </section>
 </div>
