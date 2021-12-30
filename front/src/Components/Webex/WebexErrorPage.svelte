@@ -40,9 +40,12 @@
                                 <div class="widget-demo--meetWidgetContainer--1fog_ meet-widget-container">
                                     <div class="widget-demo--callInactiveContainer--pCOsm call-inactive-container">
                                         <div class="widget-demo--personName--3fVsV call-person-name">
-                                           Something went wrong here. <br>Please walk out of the room and come back in.<br>
-                                            <div style="font-size: 50%">
-                                                <pre style="background-color: rgba(50,50,50,.4)">{errorMessage}</pre>
+                                           Something went wrong here. <br>Please walk out of the room and come back in.
+                                            <br>
+                                            <br>
+                                            <br>
+                                            <div style="font-size: 50%; width: 80%; margin: auto;">
+                                                <pre style="background-color: rgba(50,50,50,.1)">{errorMessage}</pre>
                                                 {#if (errorLocation != null)}
                                                 <small><i>{errorLocation}</i></small>
                                                 {/if}
