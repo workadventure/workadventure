@@ -731,6 +731,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.onWebexSessionError((message, location) => {
+                    console.log("[Front] Got error callback!");
                     this.startWebexErrorComponent(message, location);
                 });
 
@@ -1816,6 +1817,7 @@ ${escapedMessage}
     }
 
     public startWebexErrorComponent(message: string, location: string) {
+        console.log("[Front] Got error, starting component");
         webexIntegration.showWebexError(message, location);
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();

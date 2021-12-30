@@ -157,7 +157,7 @@ export class WebexIntegration {
                     errorLocation: location,
                 },
             });
-
+            console.log("[Front] Started error component");
             return Promise.resolve();
         });
     }
