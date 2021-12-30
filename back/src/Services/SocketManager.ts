@@ -373,6 +373,14 @@ export class SocketManager {
         const response = new WebexSessionResponse();
         try {
             console.log("[Back] Got Webex Session Query", webexSessionQuery);
+            if (
+                webexSessionQuery.getPersonalmeetinglink() === undefined ||
+                webexSessionQuery.getPersonalmeetinglink() === null ||
+                webexSessionQuery.getPersonalmeetinglink() === "" ||
+                webexSessionQuery.getPersonalmeetinglink() === "undefined"
+            ) {
+                throw Error("The link to the meeting that should be started is not valid.");
+            }
             const roomId = webexSessionQuery.getRoomid();
             const accessToken = webexSessionQuery.getAccesstoken();
             response.setRoomid(roomId);
@@ -422,6 +430,7 @@ export class SocketManager {
             console.log(
                 `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
             );
+
             serverToClientMessage.setWebexsessionresponse(response);
             console.log("[Back] Responding to query for room " + roomId + " with " + response.getMeetinglink());
         } catch (err) {
