@@ -582,7 +582,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public onWebexSessionError(callback: (message: string, location: string) => void): void {
-        console.error("[Front] Got an error from the backend. Passing it to GameScene.ts");
+        console.log("[Front] Got an error from the backend. Passing it to GameScene.ts");
         this.onMessage(EventMessage.WEBEX_SESSION_ERROR, (message: WebexSessionError) => {
             callback(message.getMessage(), message.getLocation());
         });
