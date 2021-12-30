@@ -371,14 +371,14 @@ export class SocketManager {
     public async handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         const serverToClientMessage = new ServerToClientMessage();
         const response = new WebexSessionResponse();
+        const hasNoPersonalMeetingLink =
+            webexSessionQuery.getPersonalmeetinglink() === undefined ||
+            webexSessionQuery.getPersonalmeetinglink() === null ||
+            webexSessionQuery.getPersonalmeetinglink() === "" ||
+            webexSessionQuery.getPersonalmeetinglink() === "undefined";
         try {
             console.log("[Back] Got Webex Session Query", webexSessionQuery);
-            if (
-                webexSessionQuery.getPersonalmeetinglink() === undefined ||
-                webexSessionQuery.getPersonalmeetinglink() === null ||
-                webexSessionQuery.getPersonalmeetinglink() === "" ||
-                webexSessionQuery.getPersonalmeetinglink() === "undefined"
-            ) {
+            if (hasNoPersonalMeetingLink) {
                 throw Error("The link to the meeting that should be started is not valid.");
             }
             const roomId = webexSessionQuery.getRoomid();
