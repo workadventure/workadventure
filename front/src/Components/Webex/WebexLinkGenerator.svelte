@@ -10,7 +10,7 @@
         let now = new Date(Date.now() + 45 * 1000);
         let later = new Date(Date.now() + 4 * 60 * 60 * 1000);
         console.log(`[Front] Meeting going from ${now} to ${later}`);
-        fetch("https://api.ciscospark.com/v1/meetings", {
+        fetch("https://webexapis.com/v1/meetings", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
