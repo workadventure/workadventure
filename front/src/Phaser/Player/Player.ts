@@ -79,6 +79,28 @@ export class Player extends Character {
         userMovingStore.set(moving);
     }
 
+    private dancing = false;
+    private dancingDebounced = true;
+    private danceCounter = 0;
+    private danceMovementX = 0;
+    private danceMovementY = 0;
+
+    private danceStep(x: number, y: number) {
+        // Some magic numbers in here, sorry
+        const randomMovement = () => (Math.random() - 0.5) * 0.3;
+        this.danceCounter++;
+        if (this.danceCounter < 15) {
+            return [this.danceMovementX / this.danceCounter, this.danceMovementY / this.danceCounter];
+        }
+        if (this.danceCounter < 25) {
+            return [0, 0];
+        }
+        this.danceCounter = 0;
+        this.danceMovementX = randomMovement();
+        this.danceMovementY = randomMovement();
+        return [this.danceMovementX, this.danceMovementY];
+    }
+
     private computeFollowMovement(): number[] {
         // Find followed WOKA and abort following if we lost it
         const player = this.scene.MapPlayersByKey.get(get(followUsersStore)[0]);
@@ -118,10 +140,22 @@ export class Player extends Character {
             }
         }
 
+        if (activeEvents.get(UserInputEvent.Interact)) {
+            if (this.dancingDebounced) {
+                this.dancing = !this.dancing;
+                this.dancingDebounced = false;
+            }
+        } else {
+            this.dancingDebounced = true;
+        }
+
         let x = 0;
         let y = 0;
         if ((state === "active" || state === "ending") && role === "follower") {
             [x, y] = this.computeFollowMovement();
+        }
+        if (this.dancing) {
+            [x, y] = this.danceStep(x, y);
         }
         this.inputStep(activeEvents, x, y);
     }
