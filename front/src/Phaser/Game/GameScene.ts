@@ -40,7 +40,6 @@ import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { DirtyScene } from "./DirtyScene";
 import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
@@ -60,7 +59,6 @@ import type {
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
@@ -90,7 +88,6 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { SetPlayerDetailsMessage } from "../../Messages/generated/messages_pb";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 
@@ -448,10 +445,6 @@ export class GameScene extends DirtyScene {
             this.pinchManager = new PinchManager(this);
         }
 
-        this.messageSubscription = worldFullMessageStream.stream.subscribe((message) =>
-            this.showWorldFullError(message)
-        );
-
         const playerName = gameManager.getPlayerName();
         if (!playerName) {
             throw "playerName is not set";
@@ -617,8 +610,6 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
-        this.emoteManager = new EmoteManager(this);
-
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
@@ -693,7 +684,7 @@ export class GameScene extends DirtyScene {
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
-                this.connection.onUserJoins((message: MessageUserJoined) => {
+                this.connection.userJoinedMessageStream.subscribe((message) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
                         characterLayers: message.characterLayers,
@@ -707,31 +698,33 @@ export class GameScene extends DirtyScene {
                     this.addPlayer(userMessage);
                 });
 
-                this.connection.onUserMoved((message: UserMovedMessage) => {
-                    const position = message.getPosition();
+                this.connection.userMovedMessageStream.subscribe((message) => {
+                    const position = message.position;
                     if (position === undefined) {
                         throw new Error("Position missing from UserMovedMessage");
                     }
 
                     const messageUserMoved: MessageUserMovedInterface = {
-                        userId: message.getUserid(),
+                        userId: message.userId,
                         position: ProtobufClientUtils.toPointInterface(position),
                     };
 
                     this.updatePlayerPosition(messageUserMoved);
                 });
 
-                this.connection.onUserLeft((userId: number) => {
-                    this.removePlayer(userId);
+                this.connection.userLeftMessageStream.subscribe((message) => {
+                    this.removePlayer(message.userId);
                 });
 
-                this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                    this.shareGroupPosition(groupPositionMessage);
-                });
+                this.connection.groupUpdateMessageStream.subscribe(
+                    (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                        this.shareGroupPosition(groupPositionMessage);
+                    }
+                );
 
-                this.connection.onGroupDeleted((groupId: number) => {
+                this.connection.groupDeleteMessageStream.subscribe((message) => {
                     try {
-                        this.deleteGroup(groupId);
+                        this.deleteGroup(message.groupId);
                     } catch (e) {
                         console.error(e);
                     }
@@ -743,7 +736,7 @@ export class GameScene extends DirtyScene {
                     this.createSuccessorGameScene(true, true);
                 });
 
-                this.connection.onActionableEvent((message) => {
+                this.connection.itemEventMessageStream.subscribe((message) => {
                     const item = this.actionableItems.get(message.itemId);
                     if (item === undefined) {
                         console.warn(
@@ -756,18 +749,29 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
-                this.connection.onPlayerDetailsUpdated((message) => {
+                this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
+                    if (message.details === undefined) {
+                        throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
+                    }
                     this.pendingEvents.enqueue({
                         type: "PlayerDetailsUpdated",
-                        details: message,
+                        details: {
+                            userId: message.userId,
+                            outlineColor: message.details.outlineColor,
+                            removeOutlineColor: message.details.removeOutlineColor,
+                        },
                     });
                 });
 
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
-                this.connection.onStartJitsiRoom((jwt, room) => {
-                    this.startJitsi(room, jwt);
+                this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
+                    this.startJitsi(message.jitsiRoom, message.jwt);
+                });
+
+                this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
+                    this.showWorldFullError(message);
                 });
 
                 // When connection is performed, let's connect SimplePeer
@@ -841,6 +845,8 @@ export class GameScene extends DirtyScene {
                         iframeListener.sendLeaveZoneEvent(zone.name);
                     });
                 });
+
+                this.emoteManager = new EmoteManager(this, this.connection);
 
                 // this.gameMap.onLeaveLayer((layers) => {
                 //     layers.forEach((layer) => {
