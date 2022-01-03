@@ -280,7 +280,7 @@ class ConnectionManager {
                 reject(error);
             });
 
-            connection.onConnectingError((event: CloseEvent) => {
+            connection.connectionErrorStream.subscribe((event: CloseEvent) => {
                 console.log("An error occurred while connecting to socket server. Retrying");
                 reject(
                     new Error(
@@ -292,7 +292,7 @@ class ConnectionManager {
                 );
             });
 
-            connection.onConnect((connect: OnConnectInterface) => {
+            connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
         }).catch((err) => {

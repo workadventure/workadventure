@@ -42,7 +42,7 @@ export class SharedVariablesManager {
             this._variables.set(name, value);
         }
 
-        roomConnection.onSetVariable((name, value) => {
+        roomConnection.variableMessageStream.subscribe(({ name, value }) => {
             this._variables.set(name, value);
 
             // On server change, let's notify the iframes

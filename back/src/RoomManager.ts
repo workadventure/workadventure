@@ -106,11 +106,6 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasPlayglobalmessage()) {
-                            socketManager.emitPlayGlobalMessage(
-                                room,
-                                message.getPlayglobalmessage() as PlayGlobalMessage
-                            );
                         } else if (message.hasQueryjitsijwtmessage()) {
                             socketManager.handleQueryJitsiJwtMessage(
                                 user,
