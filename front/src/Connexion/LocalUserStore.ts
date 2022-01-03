@@ -22,8 +22,8 @@ const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
-
 const cacheAPIIndex = "workavdenture-cache";
+const userProperties = "user-properties";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -219,6 +219,27 @@ class LocalUserStore {
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    getAllUserProperties(): Map<string, unknown> {
+        const result = new Map<string, string>();
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+                if (key.startsWith(userProperties + "_")) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        const userKey = key.substr((userProperties + "_").length);
+                        result.set(userKey, JSON.parse(value));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    setUserProperty(name: string, value: unknown): void {
+        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
     }
 }
 

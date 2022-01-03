@@ -93,6 +93,8 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { SetPlayerDetailsMessage } from "../../Messages/generated/messages_pb";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
+import Camera = Phaser.Cameras.Scene2D.Camera;
+import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -210,6 +212,8 @@ export class GameScene extends DirtyScene {
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private loader: Loader;
+    private lastCameraEvent: WasCameraUpdatedEvent | undefined;
+    private firstCameraUpdateSent: boolean = false;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -523,7 +527,9 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            ""
+                            "",
+                            "map",
+                            1
                         );
                     }
                 }
@@ -1100,9 +1106,33 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
-                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
-                soundManager.stopSound(this.sound, url.toString());
+            iframeListener.trackCameraUpdateStream.subscribe(() => {
+                if (!this.firstCameraUpdateSent) {
+                    this.cameras.main.on("followupdate", (camera: Camera) => {
+                        const cameraEvent: WasCameraUpdatedEvent = {
+                            x: camera.worldView.x,
+                            y: camera.worldView.y,
+                            width: camera.worldView.width,
+                            height: camera.worldView.height,
+                            zoom: camera.scaleManager.zoom,
+                        };
+                        if (
+                            this.lastCameraEvent?.x == cameraEvent.x &&
+                            this.lastCameraEvent?.y == cameraEvent.y &&
+                            this.lastCameraEvent?.width == cameraEvent.width &&
+                            this.lastCameraEvent?.height == cameraEvent.height &&
+                            this.lastCameraEvent?.zoom == cameraEvent.zoom
+                        ) {
+                            return;
+                        }
+
+                        this.lastCameraEvent = cameraEvent;
+                        iframeListener.sendCameraUpdated(cameraEvent);
+                        this.firstCameraUpdateSent = true;
+                    });
+
+                    iframeListener.sendCameraUpdated(this.cameras.main);
+                }
             })
         );
 
@@ -1156,6 +1186,12 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
                 this.setLayerVisibility(layerEvent.name, false);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.setPropertyStream.subscribe((setProperty) => {
+                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1235,6 +1271,7 @@ ${escapedMessage}
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
+                playerVariables: localUserStore.getAllUserProperties(),
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
             };
         });
@@ -1325,6 +1362,22 @@ ${escapedMessage}
             })
         );
 
+        iframeListener.registerAnswerer("setVariable", (event, source) => {
+            switch (event.target) {
+                case "global": {
+                    this.sharedVariablesManager.setVariable(event, source);
+                    break;
+                }
+                case "player": {
+                    localUserStore.setUserProperty(event.key, event.value);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = event.target;
+                }
+            }
+        });
+
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
             layoutManagerActionStore.removeAction(message.uuid);
         });
@@ -1342,6 +1395,13 @@ ${escapedMessage}
         iframeListener.registerAnswerer("removePlayerOutline", (message) => {
             this.CurrentPlayer.removeOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
+        });
+
+        iframeListener.registerAnswerer("getPlayerPosition", () => {
+            return {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            };
         });
     }
 
@@ -1467,6 +1527,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
+        iframeListener.unregisterAnswerer("setVariable");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
@@ -1945,6 +2006,7 @@ ${escapedMessage}
 
         this.loader.resize();
     }
+
     private getObjectLayerData(objectName: string): ITiledMapObject | undefined {
         for (const layer of this.mapFile.layers) {
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
@@ -1957,6 +2019,7 @@ ${escapedMessage}
         }
         return undefined;
     }
+
     private reposition(): void {
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();
