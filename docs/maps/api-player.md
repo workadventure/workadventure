@@ -101,8 +101,8 @@ The player's current position is available using the `WA.player.getPosition()` f
 You need to wait for the end of the initialization before calling `WA.player.getPosition()`
 
 ```typescript
-WA.onInit().then(() => {
-    console.log('Position: ', WA.player.getPosition());
+WA.onInit().then(async () => {
+    console.log('Position: ', await WA.player.getPosition());
 })
 ```
 

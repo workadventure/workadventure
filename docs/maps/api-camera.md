@@ -19,7 +19,6 @@ The event has the following attributes :
 
 Example :
 ```javascript
-WA.camera.onCameraUpdate.subscribe((worldView) => console.log(worldView));
+const subscription = WA.camera.onCameraUpdate().subscribe((worldView) => console.log(worldView));
 //later...
-WA.camera.onCameraUpdate().unsubscribe();
-```
+subscription.unsubscribe();

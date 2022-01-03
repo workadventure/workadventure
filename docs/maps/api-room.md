@@ -215,16 +215,16 @@ interface CreateEmbeddedWebsiteEvent {
     name: string;       // A unique name for this iframe
     url: string;        // The URL the iframe points to.
     position: {
-        x: number,      // relative to the map or player coordinates, depending on origin
-        y: number,      // relative to the map or player coordinates, depending on origin
-        width: number,  // In pixels, sensitive to zoom level and scale
-        height: number, // In pixels, sensitive to zoom level and scale
+        x: number,      // In "game" pixels, relative to the map or player coordinates, depending on origin
+        y: number,      // In "game" pixels, relative to the map or player coordinates, depending on origin
+        width: number,  // In "game" pixels
+        height: number, // In "game" pixels
     },
     visible?: boolean,  // Whether to display the iframe or not
     allowApi?: boolean, // Whether the scripting API should be available to the iframe
     allow?: string,     // The list of feature policies allowed
-    origin: "player" | "map" // The origin used to place the x and y coordinates of the iframe's top-left corner
-    scale: number, // A ratio used to resize the iframe (will affect the iframe's width and height when it is rendered
+    origin: "player" | "map" // The origin used to place the x and y coordinates of the iframe's top-left corner, defaults to "map"
+    scale: number, // A ratio used to resize the iframe
 }
 ```
 
@@ -269,10 +269,10 @@ class EmbeddedWebsite {
   visible: boolean;
   allow: string;
   allowApi: boolean;
-  x: number;         // In pixels, relative to the map or player coordinates, depending on origin
-  y: number;         // In pixels, relative to the map or player coordinates, depending on origin
-  width: number;     // In pixels, sensitive to zoom level and scale
-  height: number;    // In pixels, sensitive to zoom level and scale
+  x: number;         // In "game" pixels, relative to the map or player coordinates, depending on origin
+  y: number;         // In "game" pixels, relative to the map or player coordinates, depending on origin
+  width: number;     // In "game" pixels
+  height: number;    // In "game" pixels
   origin: "player" | "map";
   scale: number;
 }
