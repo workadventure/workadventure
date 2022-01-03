@@ -603,10 +603,6 @@ export class GameScene extends DirtyScene {
         for (const script of scripts) {
             scriptPromises.push(iframeListener.registerScript(script));
         }
-        if (this.isTutorialEnabled()) {
-            //TODO: split tutorial and bundle scripts
-            scriptPromises.push(iframeListener.registerScript(new URL("bundle.js", this.MapUrlFile).toString()));
-        }
 
         this.userInputManager.spaceEvent(() => {
             this.outlinedItem?.activate();
@@ -1570,10 +1566,6 @@ ${escapedMessage}
         return (this.getProperties(map, GameMapProperties.SCRIPT) as string[]).map((script) =>
             new URL(script, this.MapUrlFile).toString()
         );
-    }
-
-    private isTutorialEnabled(): boolean {
-        return this.getProperty(this.mapFile, GameMapProperties.TUTORIAL) as boolean;
     }
 
     private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
