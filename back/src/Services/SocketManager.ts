@@ -434,9 +434,16 @@ export class SocketManager {
 
             serverToClientMessage.setWebexsessionresponse(response);
         } catch (err) {
-            console.log("[Back] ", err);
             const errMsg = new WebexSessionError();
-            errMsg.setMessage(err.message);
+
+            if (err.response && err.response.data && err.response.data.message && err.response.data.errors) {
+                console.log("[Back] ", err.response.data, err.response.data.errors);
+                errMsg.setMessage(err.response.data.message);
+            } else {
+                console.log("[Back] ", err);
+                errMsg.setMessage(err.message);
+            }
+
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery()");
             serverToClientMessage.setWebexsessionerror(errMsg);
         }
