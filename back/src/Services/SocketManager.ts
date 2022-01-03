@@ -434,6 +434,7 @@ export class SocketManager {
 
             serverToClientMessage.setWebexsessionresponse(response);
         } catch (err) {
+            console.log("[Back] ", err);
             const errMsg = new WebexSessionError();
             errMsg.setMessage(err.message);
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery()");

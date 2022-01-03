@@ -13,16 +13,12 @@ const state = "workadventure-webex";
 const api = "https://webexapis.com/v1";
 
 const authorizeUrl =
-    `${api}/authorize?` +
-    "client_id=" +
-    clientId +
+    `${api}/authorize` +
+    `?client_id=${clientId}` +
     "&response_type=code" +
-    "&redirect_uri=" +
-    encodeURIComponent(redirectUri) +
-    "&scope=" +
-    encodeURIComponent(scopeSparkAll) +
-    "&state=" +
-    state;
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&scope=${encodeURIComponent(scopeSparkAll)}` +
+    `&state=${state}`;
 
 type TokenResult = {
     access_token: string;
