@@ -45,7 +45,7 @@
                                             <br>
                                             <br>
                                             <div style="font-size: 50%; width: 80%; margin: auto;">
-                                                <pre style="background-color: rgba(50,50,50,.1)">{errorMessage}</pre>
+                                                <pre style="padding: 1%; white-space: break-spaces; background-color: rgba(50,50,50,.1)">{errorMessage}</pre>
                                                 {#if (errorLocation != null)}
                                                 <small><i>{errorLocation}</i></small>
                                                 {/if}
