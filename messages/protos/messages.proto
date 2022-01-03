@@ -296,8 +296,6 @@ message ServerToClientMessage {
     WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
     WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
-    PlayGlobalMessage playGlobalMessage = 8;
-    StopGlobalMessage stopGlobalMessage = 9;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
@@ -390,8 +388,6 @@ message PusherToBackMessage {
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
-    PlayGlobalMessage playGlobalMessage = 8;
-    StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;

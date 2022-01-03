@@ -91,12 +91,6 @@ export class RoomConnection implements RoomConnection {
     private readonly _webRtcDisconnectMessageStream = new Subject<WebRtcDisconnectMessageTsProto>();
     public readonly webRtcDisconnectMessageStream = this._webRtcDisconnectMessageStream.asObservable();
 
-    private readonly _playGlobalMessageStream = new Subject<PlayGlobalMessageTsProto>();
-    public readonly playGlobalMessageStream = this._playGlobalMessageStream.asObservable();
-
-    private readonly _stopGlobalMessageStream = new Subject<StopGlobalMessageTsProto>();
-    public readonly stopGlobalMessageStream = this._stopGlobalMessageStream.asObservable();
-
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
 
@@ -408,18 +402,6 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "webRtcDisconnectMessage": {
                     this._webRtcDisconnectMessageStream.next(message.webRtcDisconnectMessage);
-                    break;
-                }
-                case "playGlobalMessage": {
-                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
-                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
-                    this._playGlobalMessageStream.next(message.playGlobalMessage);
-                    break;
-                }
-                case "stopGlobalMessage": {
-                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
-                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
-                    this._stopGlobalMessageStream.next(message.stopGlobalMessage);
                     break;
                 }
                 case "teleportMessageMessage": {
