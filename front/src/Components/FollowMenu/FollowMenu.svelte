@@ -14,14 +14,11 @@ vim: ft=typescript
     }
 
     function sendFollowRequest() {
-        gameScene.connection?.emitFollowRequest();
-        followRoleStore.set("leader");
-        followStateStore.set("active");
+        gameScene.CurrentPlayer.sendFollowRequest();
     }
 
     function acceptFollowRequest() {
-        gameScene.CurrentPlayer.enableFollowing();
-        gameScene.connection?.emitFollowConfirmation();
+        gameScene.CurrentPlayer.startFollowing();
     }
 
     function abortEnding() {
@@ -42,23 +39,15 @@ vim: ft=typescript
 
 <svelte:window on:keydown={onKeyDown} />
 
-{#if $followStateStore === "requesting"}
+{#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div class="interact-menu nes-container is-rounded">
-        {#if $followRoleStore === "follower"}
-            <section class="interact-menu-title">
-                <h2>Do you want to follow {name($followUsersStore[0])}?</h2>
-            </section>
-            <section class="interact-menu-action">
-                <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
-                    >Yes</button
-                >
-                <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
-            </section>
-        {:else if $followRoleStore === "leader"}
-            <section class="interact-menu-question">
-                <p>Should never be displayed</p>
-            </section>
-        {/if}
+        <section class="interact-menu-title">
+            <h2>Do you want to follow {name($followUsersStore[0])}?</h2>
+        </section>
+        <section class="interact-menu-action">
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}>Yes</button>
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
+        </section>
     </div>
 {/if}
 
