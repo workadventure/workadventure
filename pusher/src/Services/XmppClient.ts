@@ -7,7 +7,7 @@ import {
     XmppMessage,
     XmppSettingsMessage
 } from "../Messages/generated/messages_pb";
-import {MucRoomDefinitionInterface} from "./AdminApi/MucRoomDefinitionInterface";
+import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 const { client, xml, jid } = require("@xmpp/client");
 const debug = require("@xmpp/debug");
@@ -41,7 +41,7 @@ export class XmppClient {
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
 
-    private createClient(res: (value?: (XmppSocket | PromiseLike<XmppSocket> | undefined)) => void, rej: (reason?: any) => void): void {
+    private createClient(res: (value: (XmppSocket | PromiseLike<XmppSocket>)) => void, rej: (reason?: any) => void): void {
         let status: "disconnected"|"connected" = "disconnected";
         const xmpp = client({
             service: "ws://ejabberd:5443/ws",

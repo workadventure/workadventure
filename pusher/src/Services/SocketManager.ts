@@ -54,7 +54,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
-import {isMapDetailsData} from "./AdminApi/MapDetailsData";
+import {isMapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
 
 const debug = Debug("socket");
 
@@ -442,7 +442,7 @@ export class SocketManager implements ZoneEventListener {
         } else if (isMapDetailsData(data)) {
             room.tags = data.tags;
             room.policyType = Number(data.policy_type);
-            room.groupId = data.groupId as unknown as string;
+            room.groupId = data.group;
             room.mucRooms = data.mucRooms;
         } else {
             const _exhaustiveCheck: never = data;

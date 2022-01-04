@@ -93,8 +93,7 @@ import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import xml from "@xmpp/xml";
-import {XmppClient} from "../../Xmpp/XmppClient";
-
+import { XmppClient } from "../../Xmpp/XmppClient";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;

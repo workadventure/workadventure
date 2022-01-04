@@ -1,18 +1,18 @@
 import type xml from "@xmpp/xml";
 import jid from "@xmpp/jid";
-import {Observable, Subject} from "rxjs";
-import {MucRoom} from "./MucRoom";
-import type {RoomConnection} from "../Connexion/RoomConnection";
-import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
-import type {MucRoomDefinitionInterface} from "../Network/ProtobufClientUtils";
+import { Observable, Subject } from "rxjs";
+import { MucRoom } from "./MucRoom";
+import type { RoomConnection } from "../Connexion/RoomConnection";
+import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
+import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
 import {
     XmppConnectionStatusChangeMessage,
-    XmppConnectionStatusChangeMessage_Status as Status
+    XmppConnectionStatusChangeMessage_Status as Status,
 } from "../Messages/ts-proto-generated/messages";
 
 export class XmppClient {
-    private jid: string|undefined;
-    private conferenceDomain: string|undefined;
+    private jid: string | undefined;
+    private conferenceDomain: string | undefined;
     private subscriptions = new Map<string, Subject<xml.Element>>();
     private rooms = new Map<string, MucRoom>();
 
@@ -29,13 +29,13 @@ export class XmppClient {
 
         connection.xmppMessageStream.subscribe((xml) => {
             let handledMessage = false;
-            const id = xml.getAttr('id');
+            const id = xml.getAttr("id");
             if (id) {
                 this.subscriptions.get(id)?.next(xml);
                 handledMessage = true;
             }
 
-            const from = xml.getAttr('from');
+            const from = xml.getAttr("from");
 
             if (from) {
                 const fromJid = jid(from);
@@ -48,7 +48,7 @@ export class XmppClient {
                 }
             }
             if (!handledMessage) {
-                console.log('Unhandled XMPP message: ', xml.toString());
+                console.log("Unhandled XMPP message: ", xml.toString());
             }
         });
 
@@ -60,7 +60,7 @@ export class XmppClient {
                     break;
                 }
                 case Status.UNRECOGNIZED: {
-                    throw new Error('Unexpected status received');
+                    throw new Error("Unexpected status received");
                 }
                 default: {
                     const _exhaustiveCheck: never = status;
@@ -70,10 +70,10 @@ export class XmppClient {
     }
 
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
-console.log("CONNECTION TO STATUS STORE!");
+        console.log("CONNECTION TO STATUS STORE!");
         xmppServerConnectionStatusStore.set(true);
 
-        for (const {name, url} of initialRoomDefinitions) {
+        for (const { name, url } of initialRoomDefinitions) {
             this.joinMuc(name, url);
         }
     }
@@ -85,11 +85,11 @@ console.log("CONNECTION TO STATUS STORE!");
      * IMPORTANT: it is the responsibility of the caller to free the subscription later.
      */
     private sendMessage(message: xml.Element): Observable<xml.Element> {
-        let id = message.getAttr('id');
+        let id = message.getAttr("id");
         if (!id) {
             id = this.generateId();
             message.setAttrs({
-                id
+                id,
             });
         }
 
@@ -108,16 +108,18 @@ console.log("CONNECTION TO STATUS STORE!");
 
     private generateId(): string {
         const length = 8;
-        const arr = new Uint8Array((length) / 2)
-        window.crypto.getRandomValues(arr)
+        const arr = new Uint8Array(length / 2);
+        window.crypto.getRandomValues(arr);
         return Array.from(arr, (dec: number) => {
             return dec.toString(16).padStart(2, "0");
-        }).join('')
+        }).join("");
     }
 
     public joinMuc(name: string, waRoomUrl: string): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
-            throw new Error('joinRoom called before we received the XMPP connection details. There is a race condition.');
+            throw new Error(
+                "joinRoom called before we received the XMPP connection details. There is a race condition."
+            );
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
@@ -132,13 +134,15 @@ console.log("CONNECTION TO STATUS STORE!");
 
     public leaveMuc(name: string): void {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
-            throw new Error('leaveMuc called before we received the XMPP connection details. There is a race condition.');
+            throw new Error(
+                "leaveMuc called before we received the XMPP connection details. There is a race condition."
+            );
         }
 
         const roomUrl = jid(name, this.conferenceDomain);
         const room = this.rooms.get(roomUrl.toString());
         if (room === undefined) {
-            console.error('Cannot leave MUC room "'+name+'", room does not exist.');
+            console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
         room.disconnect();

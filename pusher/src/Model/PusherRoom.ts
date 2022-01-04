@@ -14,7 +14,7 @@ import {
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
 import {XmppClient} from "../Services/XmppClient";
-import {MucRoomDefinitionInterface} from "../Services/AdminApi/MucRoomDefinitionInterface";
+import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 const debug = Debug("room");
 

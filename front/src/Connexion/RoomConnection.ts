@@ -2,7 +2,7 @@ import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import {MucRoomDefinitionInterface, ProtobufClientUtils} from "../Network/ProtobufClientUtils";
+import { MucRoomDefinitionInterface, ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
     ItemEventMessageInterface,
@@ -54,9 +54,10 @@ import {
     PingMessage as PingMessageTsProto,
     XmppMessage,
     XmppSettingsMessage,
-    XmppConnectionStatusChangeMessage, XmppConnectionStatusChangeMessage_Status,
+    XmppConnectionStatusChangeMessage,
+    XmppConnectionStatusChangeMessage_Status,
 } from "../Messages/ts-proto-generated/messages";
-import {BehaviorSubject, Subject} from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
 import { match } from "assert";
 import type xml from "@xmpp/xml";
@@ -147,12 +148,13 @@ export class RoomConnection implements RoomConnection {
     public readonly xmppMessageStream = this._xmppMessageStream.asObservable();
 
     // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
-    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage|undefined>(undefined);
+    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
     public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
 
     // Question: should this not be a BehaviorSubject?
     private readonly _xmppConnectionStatusChangeMessageStream = new Subject<XmppConnectionStatusChangeMessage_Status>();
-    public readonly xmppConnectionStatusChangeMessageStream = this._xmppConnectionStatusChangeMessageStream.asObservable();
+    public readonly xmppConnectionStatusChangeMessageStream =
+        this._xmppConnectionStatusChangeMessageStream.asObservable();
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -318,7 +320,7 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "xmppMessage": {
-                                this._xmppMessageStream.next(parse(subMessage.xmppMessage));
+                                this._xmppMessageStream.next(parse(subMessage.xmppMessage.stanza));
                                 break;
                             }
                             default: {
@@ -472,7 +474,9 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "xmppConnectionStatusChangeMessage": {
-                    this._xmppConnectionStatusChangeMessageStream.next(message.xmppConnectionStatusChangeMessage.status);
+                    this._xmppConnectionStatusChangeMessageStream.next(
+                        message.xmppConnectionStatusChangeMessage.status
+                    );
                     break;
                 }
                 case "errorMessage": {

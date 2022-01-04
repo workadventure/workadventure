@@ -35,5 +35,4 @@ export class ProtobufClientUtils {
             moving: position.moving,
         };
     }
-
 }

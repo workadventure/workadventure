@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type {MucRoom} from "../Xmpp/MucRoom";
+import type { MucRoom } from "../Xmpp/MucRoom";
 
 export const mucRoomsVisibilityStore = writable(false);
 
@@ -27,7 +27,7 @@ function createMucRoomsStore() {
         },
         reset() {
             set(new Set<MucRoom>());
-        }
+        },
     };
 }
 export const mucRoomsStore = createMucRoomsStore();
