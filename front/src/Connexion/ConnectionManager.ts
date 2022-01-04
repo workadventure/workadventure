@@ -188,7 +188,7 @@ class ConnectionManager {
 
             //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
             //use href to keep # value
-            localUserStore.setLastRoomUrl(this._currentRoom.href);
+            await localUserStore.setLastRoomUrl(this._currentRoom.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -301,7 +301,7 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
+                    void this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
                         (connection) => resolve(connection)
                     );
                 }, 4000 + Math.floor(Math.random() * 2000));

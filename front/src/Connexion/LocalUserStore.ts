@@ -136,13 +136,12 @@ class LocalUserStore {
         return localStorage.getItem(ignoreFollowRequests) === "true";
     }
 
-    setLastRoomUrl(roomUrl: string): void {
+    async setLastRoomUrl(roomUrl: string): Promise<void> {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
         if ("caches" in window) {
-            caches.open(cacheAPIIndex).then((cache) => {
-                const stringResponse = new Response(JSON.stringify({ roomUrl }));
-                cache.put(`/${lastRoomUrl}`, stringResponse);
-            });
+            const cache = await caches.open(cacheAPIIndex);
+            const stringResponse = new Response(JSON.stringify({ roomUrl }));
+            await cache.put(`/${lastRoomUrl}`, stringResponse);
         }
     }
     getLastRoomUrl(): string {

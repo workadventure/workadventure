@@ -25,7 +25,7 @@
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
             HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
             HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
-            HTMLAudioPlayer.play();
+            void HTMLAudioPlayer.play();
         });
         unsubscriberVolumeStore = audioManagerVolumeStore.subscribe((audioManager: audioManagerVolume) => {
             const reduceVolume = audioManager.talking && audioManager.decreaseWhileTalking;

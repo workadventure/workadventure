@@ -123,7 +123,7 @@ export class GameMapPropertiesListener {
                             .then((coWebsite) => {
                                 const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
                                 if (coWebsiteOpen && coWebsiteOpen.state === OpenCoWebsiteState.MUST_BE_CLOSE) {
-                                    coWebsiteManager.closeCoWebsite(coWebsite);
+                                    coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => console.error(e));
                                     this.coWebsitesOpenByLayer.delete(layer);
                                     this.coWebsitesActionTriggerByLayer.delete(layer);
                                 } else {
@@ -132,7 +132,8 @@ export class GameMapPropertiesListener {
                                         state: OpenCoWebsiteState.OPENED,
                                     });
                                 }
-                            });
+                            })
+                            .catch((e) => console.error(e));
 
                         layoutManagerActionStore.removeAction(actionUuid);
                     };
@@ -198,7 +199,7 @@ export class GameMapPropertiesListener {
                     }
 
                     if (coWebsiteOpen.coWebsite !== undefined) {
-                        coWebsiteManager.closeCoWebsite(coWebsiteOpen.coWebsite);
+                        coWebsiteManager.closeCoWebsite(coWebsiteOpen.coWebsite).catch((e) => console.error(e));
                     }
 
                     this.coWebsitesOpenByLayer.delete(layer);

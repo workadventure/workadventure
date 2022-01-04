@@ -12,7 +12,7 @@
     }
 
     afterUpdate(() => {
-        audio.play();
+        audio.play().catch((e) => console.error(e));
     });
 </script>
 
