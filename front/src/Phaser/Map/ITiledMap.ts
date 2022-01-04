@@ -162,6 +162,7 @@ export interface ITiledTileSet {
 
     imageheight: number;
     imagewidth: number;
+    columns: number;
     margin: number;
     name: string;
     properties?: ITiledMapProperty[];
