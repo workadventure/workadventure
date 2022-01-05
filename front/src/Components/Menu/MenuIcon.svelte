@@ -23,7 +23,7 @@
 <main class="menuIcon">
     <img src={logoWA} alt="open menu" class="nes-pointer" on:click|preventDefault={showMenu} />
     <img src={logoTalk} alt="open chat" class="nes-pointer" on:click|preventDefault={showChat} />
-    <img src={logoUser} alt="open chat" class="nes-pointer" on:click|preventDefault={showMucRooms} />
+    <img src={logoUser} alt="open user list" class="nes-pointer user-list-btn" on:click|preventDefault={showMucRooms} />
 </main>
 
 <style lang="scss">
