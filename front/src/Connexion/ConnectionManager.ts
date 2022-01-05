@@ -154,12 +154,7 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (
-            connexionType === GameConnexionTypes.organization ||
-            connexionType === GameConnexionTypes.anonymous ||
-            connexionType === GameConnexionTypes.limit ||
-            connexionType === GameConnexionTypes.empty
-        ) {
+        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
@@ -241,12 +236,12 @@ class ConnectionManager {
         }
 
         //if limit room active test headband
-        if (connexionType === GameConnexionTypes.limit) {
+        if (this._currentRoom.expireOn !== undefined) {
             warningContainerStore.activateWarningContainer();
             limitMapStore.set(true);
 
             //check time of map
-            if (!urlManager.isActiveLimitRoom) {
+            if (new Date() > this._currentRoom.expireOn) {
                 showLimitRoomModalStore.set(true);
             }
         }

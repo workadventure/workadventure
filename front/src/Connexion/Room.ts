@@ -27,6 +27,8 @@ export class Room {
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
+    private _expireOn: Date | undefined;
+    private _canReport: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -121,6 +123,10 @@ export class Room {
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
                 this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
                 this._contactPage = data.contactPage || CONTACT_URL;
+                if (data.expireOn) {
+                    this._expireOn = new Date(data.expireOn);
+                }
+                this._canReport = data.canReport ?? false;
                 return new MapDetail(data.mapUrl, data.textures);
             } else {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
@@ -221,5 +227,13 @@ export class Room {
 
     get group(): string | null {
         return this._group;
+    }
+
+    get expireOn(): Date | undefined {
+        return this._expireOn;
+    }
+
+    get canReport(): boolean {
+        return this._canReport;
     }
 }
