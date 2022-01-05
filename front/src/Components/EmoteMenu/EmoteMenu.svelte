@@ -87,7 +87,7 @@
         justify-content: center;
         align-items: center;
         position: absolute;
-        z-index: 101;
+        z-index: 300;
     }
 
     .emote-menu {

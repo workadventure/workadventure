@@ -42,7 +42,7 @@
         font-family: Lato;
         min-width: 300px;
         opacity: 0.9;
-        z-index: 270;
+        z-index: 700;
         h2 {
             padding: 5px;
         }

@@ -1,7 +1,7 @@
 <script lang="typescript">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    import { hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import { embedScreenLayout, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
     import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
     import { requestVisitCardsStore } from "../Stores/GameStore";
@@ -30,11 +30,12 @@
     import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
-import { soundPlayingStore } from "../Stores/SoundPlayingStore";
-import AudioPlaying from "./UI/AudioPlaying.svelte";
-import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
-import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
-import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
+    import { soundPlayingStore } from "../Stores/SoundPlayingStore";
+    import AudioPlaying from "./UI/AudioPlaying.svelte";
+    import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
+    import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
+    import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
+    import { LayoutMode } from "../WebRtc/LayoutManager";
 
     let mainLayout: HTMLDivElement;
 
@@ -55,7 +56,7 @@ import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
             <MenuIcon />
         {/if}
 
-        {#if displayCoWebsiteContainer}
+        {#if $embedScreenLayout === LayoutMode.VideoChat || displayCoWebsiteContainer}
             <CoWebsitesContainer vertical={true} />
         {/if}
     </aside>
@@ -75,12 +76,12 @@ import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
             <AudioPlaying url={$soundPlayingStore} />
         {/if}
 
-        {#if $showReportScreenStore !== userReportEmpty}
-            <ReportMenu />
-        {/if}
-
         {#if $warningContainerStore}
             <WarningContainer />
+        {/if}
+
+        {#if $showReportScreenStore !== userReportEmpty}
+            <ReportMenu />
         {/if}
 
         {#if $helpCameraSettingsVisibleStore}
@@ -133,7 +134,7 @@ import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
 
     #main-layout {
         display: grid;
-        grid-template-columns: 7% 93%;
+        grid-template-columns: 120px calc(100% - 120px);
         grid-template-rows: 80% 20%;
 
         &-left-aside {

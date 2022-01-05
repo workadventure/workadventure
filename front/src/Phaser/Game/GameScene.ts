@@ -2145,8 +2145,8 @@ ${escapedMessage}
     public stopJitsi(): void {
         const coWebsite = coWebsiteManager.searchJitsi();
         if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
-                console.error("Error during Jitsi co-website closing");
+            coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => {
+                console.error("Error during Jitsi co-website closing", e);
             });
         }
     }

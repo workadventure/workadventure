@@ -8,16 +8,23 @@
 
     export let streamable: Streamable;
     export let isHightlighted = false;
-    export let clickable = false;
+    export let isClickable = false;
+    export let mozaicFullWidth = false;
+    export let mozaicQuarter = false;
 </script>
 
-<div class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}" class:clickable>
+<div
+    class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
+    class:clickable={isClickable}
+    class:mozaic-full-width={mozaicFullWidth}
+    class:mozaic-quarter={mozaicQuarter}
+>
     {#if streamable instanceof VideoPeer}
-        <VideoMediaBox peer={streamable} {clickable} />
+        <VideoMediaBox peer={streamable} clickable={isClickable} />
     {:else if streamable instanceof ScreenSharingPeer}
-        <ScreenSharingMediaBox peer={streamable} {clickable} />
+        <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
     {:else}
-        <LocalStreamMediaBox peer={streamable} {clickable} cssClass="" />
+        <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
     {/if}
 </div>
 
@@ -54,6 +61,32 @@
             &:hover {
                 margin-top: 0% !important;
                 margin-bottom: 0% !important;
+            }
+        }
+
+        &.mozaic-full-width {
+            width: 95%;
+            max-width: 95%;
+            margin-left: 3%;
+            margin-right: 3%;
+            margin-top: auto;
+            margin-bottom: auto;
+
+            &:hover {
+                margin-top: auto;
+                margin-bottom: auto;
+            }
+        }
+
+        &.mozaic-quarter {
+            width: 95%;
+            max-width: 95%;
+            margin-top: auto;
+            margin-bottom: auto;
+
+            &:hover {
+                margin-top: auto;
+                margin-bottom: auto;
             }
         }
 
