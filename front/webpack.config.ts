@@ -2,6 +2,7 @@ import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import fs from 'fs/promises';
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
+import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
 import path from "path";
 import sveltePreprocess from "svelte-preprocess";
@@ -79,33 +80,9 @@ module.exports = {
                 },
             },
             {
-                test: /\.scss$/,
+                test: /\.(sc|c)ss$/,
                 exclude: /node_modules/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: "css-loader",
-                        options: {
-                            //url: false,
-                            sourceMap: true,
-                        },
-                    },
-                    "sass-loader",
-                ],
-            },
-            {
-                test: /\.css$/,
-                exclude: /node_modules/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: "css-loader",
-                        options: {
-                            //url: false,
-                            sourceMap: true,
-                        },
-                    },
-                ],
+                use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
             },
             {
                 test: /\.(html|svelte)$/,
@@ -184,6 +161,10 @@ module.exports = {
         },
         extensions: [".tsx", ".ts", ".js", ".svelte"],
         mainFields: ["svelte", "browser", "module", "main"],
+    },
+    optimization: {
+        minimize: true,
+        minimizer: [new CssMinimizerPlugin(), "..."],
     },
     output: {
         filename: (pathData) => {
