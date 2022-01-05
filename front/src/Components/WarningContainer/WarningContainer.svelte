@@ -17,9 +17,7 @@
         </p>
     {:else if $limitMapStore}
         <p>
-            This map is available for 2 days. You can register your domain <a
-                href={registerLink}>here</a
-            >!
+            This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
         </p>
     {:else}
         <h2>Warning!</h2>
