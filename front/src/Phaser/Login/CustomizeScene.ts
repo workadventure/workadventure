@@ -40,19 +40,21 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
-            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                if (
-                    bodyResourceDescription.level == undefined ||
-                    bodyResourceDescription.level < 0 ||
-                    bodyResourceDescription.level > 5
-                ) {
-                    throw "Texture level is null";
-                }
-                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
-            });
-            this.lazyloadingAttempt = true;
-        });
+        this.loadCustomSceneSelectCharacters()
+            .then((bodyResourceDescriptions) => {
+                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                    if (
+                        bodyResourceDescription.level == undefined ||
+                        bodyResourceDescription.level < 0 ||
+                        bodyResourceDescription.level > 5
+                    ) {
+                        throw "Texture level is null";
+                    }
+                    this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+                });
+                this.lazyloadingAttempt = true;
+            })
+            .catch((e) => console.error(e));
 
         this.layers = loadAllLayers(this.load);
         this.lazyloadingAttempt = false;

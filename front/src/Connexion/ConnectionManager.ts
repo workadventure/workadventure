@@ -8,12 +8,14 @@ import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected } from "../Stores/MenuStore";
+import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { limitMapStore } from "../Stores/GameStore";
+import { showLimitRoomModalStore } from "../Stores/ModalStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -152,11 +154,7 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (
-            connexionType === GameConnexionTypes.organization ||
-            connexionType === GameConnexionTypes.anonymous ||
-            connexionType === GameConnexionTypes.empty
-        ) {
+        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
@@ -188,7 +186,7 @@ class ConnectionManager {
 
             //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
             //use href to keep # value
-            localUserStore.setLastRoomUrl(this._currentRoom.href);
+            await localUserStore.setLastRoomUrl(this._currentRoom.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -237,6 +235,17 @@ class ConnectionManager {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
         }
 
+        //if limit room active test headband
+        if (this._currentRoom.expireOn !== undefined) {
+            warningContainerStore.activateWarningContainer();
+            limitMapStore.set(true);
+
+            //check time of map
+            if (new Date() > this._currentRoom.expireOn) {
+                showLimitRoomModalStore.set(true);
+            }
+        }
+
         this.serviceWorker = new _ServiceWorker();
         return Promise.resolve(this._currentRoom);
     }
@@ -280,7 +289,7 @@ class ConnectionManager {
                 reject(error);
             });
 
-            connection.onConnectingError((event: CloseEvent) => {
+            connection.connectionErrorStream.subscribe((event: CloseEvent) => {
                 console.log("An error occurred while connecting to socket server. Retrying");
                 reject(
                     new Error(
@@ -292,7 +301,7 @@ class ConnectionManager {
                 );
             });
 
-            connection.onConnect((connect: OnConnectInterface) => {
+            connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
         }).catch((err) => {
@@ -301,7 +310,7 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
+                    void this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
                         (connection) => resolve(connection)
                     );
                 }, 4000 + Math.floor(Math.random() * 2000));

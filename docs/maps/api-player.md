@@ -86,6 +86,27 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the position of the player
+```
+WA.player.getPosition(): Promise<Position>
+```
+The player's current position is available using the `WA.player.getPosition()` function.
+
+`Position` has the following attributes :
+* **x (number) :** The coordinate x of the current player's position.
+* **y (number) :** The coordinate y of the current player's position.
+
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before calling `WA.player.getPosition()`
+
+```typescript
+WA.onInit().then(async () => {
+    console.log('Position: ', await WA.player.getPosition());
+})
+```
+
+
 ### Listen to player movement
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;
@@ -105,6 +126,30 @@ The event has the following attributes :
 Example :
 ```javascript
 WA.player.onPlayerMove(console.log);
+```
+
+## Player specific variables
+Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser. Any value that is serializable in JSON can be stored.
+
+{.alert.alert-info}
+In the future, player-related variables will be stored on the WorkAdventure server if the current player is logged.
+
+Any value that is serializable in JSON can be stored.
+
+### Setting a property
+A player property can be set simply by assigning a value.
+
+Example:
+```javascript
+WA.player.state.toto = "value" //will set the "toto" key to "value"
+```
+
+### Reading a variable 
+A player variable can be read by calling its key from the player's state. 
+
+Example:
+```javascript
+WA.player.state.toto //will retrieve the variable
 ```
 
 ### Set the outline color of the player

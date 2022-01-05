@@ -41,12 +41,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
-            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                this.playerModels.push(bodyResourceDescription);
-            });
-            this.lazyloadingAttempt = true;
-        });
+        this.loadSelectSceneCharacters()
+            .then((bodyResourceDescriptions) => {
+                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                    this.playerModels.push(bodyResourceDescription);
+                });
+                this.lazyloadingAttempt = true;
+            })
+            .catch((e) => console.error(e));
         this.playerModels = loadAllDefaultModels(this.load);
         this.lazyloadingAttempt = false;
 

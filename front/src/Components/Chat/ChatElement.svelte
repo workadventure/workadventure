@@ -67,6 +67,7 @@
         .messagePart {
             flex-grow: 1;
             max-width: 100%;
+            user-select: text;
 
             span.date {
                 font-size: 80%;

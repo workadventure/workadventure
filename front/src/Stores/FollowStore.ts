@@ -58,7 +58,6 @@ export const followUsersStore = createFollowUsersStore();
 export const followUsersColorStore = derived(
     [followStateStore, followRoleStore, followUsersStore],
     ([$followStateStore, $followRoleStore, $followUsersStore]) => {
-        console.log($followStateStore);
         if ($followStateStore !== "active") {
             return undefined;
         }

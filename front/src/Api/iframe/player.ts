@@ -3,6 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
+import { createState } from "./state";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -31,6 +32,8 @@ export const setUuid = (_uuid: string | undefined) => {
 };
 
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
+    readonly state = createState("player");
+
     callbacks = [
         apiCallback({
             type: "hasPlayerMoved",
@@ -74,6 +77,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return uuid;
     }
 
+    async getPosition(): Promise<Position> {
+        return await queryWorkadventure({
+            type: "getPlayerPosition",
+            data: undefined,
+        });
+    }
+
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
             throw new Error(
@@ -101,5 +111,10 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         });
     }
 }
+
+export type Position = {
+    x: number;
+    y: number;
+};
 
 export default new WorkadventurePlayerCommands();

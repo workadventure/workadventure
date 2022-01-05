@@ -1,22 +1,24 @@
 import "jasmine";
-import {PlayerMovement} from "../../../src/Phaser/Game/PlayerMovement";
+import { PlayerMovement } from "../../../src/Phaser/Game/PlayerMovement";
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {
-        const playerMovement = new PlayerMovement({
-            x: 100, y: 200
-        }, 42000,
+        const playerMovement = new PlayerMovement(
+            {
+                x: 100,
+                y: 200,
+            },
+            42000,
             {
                 x: 200,
                 y: 100,
                 oldX: 100,
                 oldY: 200,
                 moving: true,
-                direction: "up"
+                direction: "up",
             },
             42200
-            );
-
+        );
 
         expect(playerMovement.isOutdated(42100)).toBe(false);
         expect(playerMovement.isOutdated(43000)).toBe(true);
@@ -26,8 +28,8 @@ describe("Interpolation / Extrapolation", () => {
             y: 150,
             oldX: 100,
             oldY: 200,
-            direction: 'up',
-            moving: true
+            direction: "up",
+            moving: true,
         });
 
         expect(playerMovement.getPosition(42200)).toEqual({
@@ -35,8 +37,8 @@ describe("Interpolation / Extrapolation", () => {
             y: 100,
             oldX: 100,
             oldY: 200,
-            direction: 'up',
-            moving: true
+            direction: "up",
+            moving: true,
         });
 
         expect(playerMovement.getPosition(42300)).toEqual({
@@ -44,22 +46,25 @@ describe("Interpolation / Extrapolation", () => {
             y: 50,
             oldX: 100,
             oldY: 200,
-            direction: 'up',
-            moving: true
+            direction: "up",
+            moving: true,
         });
     });
 
     it("should not extrapolate if we stop", () => {
-        const playerMovement = new PlayerMovement({
-                x: 100, y: 200
-            }, 42000,
+        const playerMovement = new PlayerMovement(
+            {
+                x: 100,
+                y: 200,
+            },
+            42000,
             {
                 x: 200,
                 y: 100,
                 oldX: 100,
                 oldY: 200,
                 moving: false,
-                direction: "up"
+                direction: "up",
             },
             42200
         );
@@ -69,22 +74,25 @@ describe("Interpolation / Extrapolation", () => {
             y: 100,
             oldX: 100,
             oldY: 200,
-            direction: 'up',
-            moving: false
+            direction: "up",
+            moving: false,
         });
     });
 
     it("should keep moving until it stops", () => {
-        const playerMovement = new PlayerMovement({
-                x: 100, y: 200
-            }, 42000,
+        const playerMovement = new PlayerMovement(
+            {
+                x: 100,
+                y: 200,
+            },
+            42000,
             {
                 x: 200,
                 y: 100,
                 oldX: 100,
                 oldY: 200,
                 moving: false,
-                direction: "up"
+                direction: "up",
             },
             42200
         );
@@ -94,8 +102,8 @@ describe("Interpolation / Extrapolation", () => {
             y: 150,
             oldX: 100,
             oldY: 200,
-            direction: 'up',
-            moving: false
+            direction: "up",
+            moving: false,
         });
     });
-})
+});
