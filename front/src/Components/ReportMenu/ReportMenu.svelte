@@ -108,12 +108,16 @@
         pointer-events: auto;
         background-color: #333333;
         color: whitesmoke;
-
-        position: relative;
+        z-index: 300;
+        position: absolute;
         height: 70vh;
         width: 50vw;
-        top: 10vh;
-        margin: auto;
+        top: 4%;
+
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
 
         section.report-menu-title {
             display: grid;
@@ -135,15 +139,6 @@
 
         section.report-menu-action.hidden {
             display: none;
-        }
-    }
-
-    @media only screen and (max-width: 800px) {
-        div.report-menu-main {
-            top: 21vh;
-            height: 60vh;
-            width: 100vw;
-            font-size: 0.5em;
         }
     }
 </style>

@@ -9,7 +9,7 @@ import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamCons
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
-import { isMobile } from "../Enum/EnvironmentVariable";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -202,7 +202,7 @@ export class VideoPeer extends Peer {
                     JSON.stringify({
                         type: MESSAGE_TYPE_CONSTRAINT,
                         ...constraints,
-                        isMobile: isMobile(),
+                        isMobile: isMediaBreakpointUp("md"),
                     })
                 )
             );

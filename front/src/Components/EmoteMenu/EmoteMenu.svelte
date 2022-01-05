@@ -3,8 +3,8 @@
     import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
     import { onDestroy, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
-    import { isMobile } from "../../Enum/EnvironmentVariable";
     import LL from "../../i18n/i18n-svelte";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
@@ -20,7 +20,7 @@
                 "--secondary-text-color": "whitesmoke",
                 "--category-button-color": "whitesmoke",
             },
-            emojisPerRow: isMobile() ? 6 : 8,
+            emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,
             style: "twemoji",
             showPreview: false,
@@ -86,6 +86,8 @@
         height: 100%;
         justify-content: center;
         align-items: center;
+        position: absolute;
+        z-index: 101;
     }
 
     .emote-menu {

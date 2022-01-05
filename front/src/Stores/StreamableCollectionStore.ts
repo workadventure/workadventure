@@ -1,12 +1,9 @@
-import { derived, get, Readable, writable } from "svelte/store";
+import { derived, get, Readable } from "svelte/store";
 import { ScreenSharingLocalMedia, screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
-import { LayoutMode } from "../WebRtc/LayoutManager";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia;
-
-export const layoutModeStore = writable<LayoutMode>(LayoutMode.Presentation);
 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)

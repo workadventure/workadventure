@@ -102,6 +102,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     div.customize-main {
         width: 100%;
         display: inline-flex;
@@ -161,7 +163,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px) {
+    @include media-breakpoint-up(md) {
         div.customize-main.content section button {
             width: 130px;
         }

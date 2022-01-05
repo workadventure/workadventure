@@ -36,15 +36,22 @@ body .message-info.warning{
 }
 
 .video-container {
-    position: relative;
+    display: flex;
     transition: all 0.2s ease;
-    background-color: #00000099;
     cursor: url('./images/cursor_pointer.png'), pointer;
+    width: 100%;
+
+    &.no-clikable {
+        video {
+            cursor: url('./images/cursor_normal.png'), pointer;
+        }
+    }
 
     video {
+        height: fit-content;
+        max-height: 100%;
+        max-width: 100%;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
         cursor: url('./images/cursor_pointer.png'), pointer;
 
         &.mobile{
@@ -146,35 +153,6 @@ body .message-info.warning{
     }
 }
 
-.video-container.div-myCamVideo{
-    border: none;
-    background-color: transparent;
-}
-
-.div-myCamVideo {
-    position: absolute;
-    right: 15px;
-    bottom: 30px;
-    border-radius: 15px 15px 15px 15px;
-    max-height: 20%;
-    transition: right 350ms;
-}
-
-.div-myCamVideo.hide {
-    right: -20vw;
-}
-
-video.myCamVideo{
-    background-color: #00000099;
-    max-height: 20vh;
-    width: 15vw;
-    -webkit-transform: scaleX(-1);
-    transform: scaleX(-1);
-    border-radius: 15px 15px 15px 15px;
-    /*width: 200px;*/
-    /*height: 113px;*/
-}
-
 .sound-progress{
     display: none;
     position: absolute;
@@ -209,94 +187,6 @@ video.myCamVideo{
 }
 .sound-progress span:nth-child(5){
     top: calc(50% - 20px);
-}
-
-.btn-cam-action {
-    pointer-events: all;
-    position: absolute;
-    display: inline-flex;
-    bottom: 10px;
-    right: 15px;
-    width: 240px;
-    height: 40px;
-    text-align: center;
-    align-content: center;
-    align-items: center;
-    justify-content: flex-end;
-    justify-items: center;
-}
-/*btn animation*/
-.btn-cam-action div{
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: solid 0px black;
-    width: 44px;
-    height: 44px;
-    background: #666;
-    box-shadow: 2px 2px 24px #444;
-    border-radius: 48px;
-    transform: translateY(15px);
-    transition-timing-function: ease-in-out;
-    margin: 0 4%;
-}
-.btn-cam-action div.disabled {
-    background: #d75555;
-}
-.btn-cam-action div.enabled {
-    background: #73c973;
-}
-.btn-cam-action:hover div{
-    transform: translateY(0);
-}
-.btn-cam-action div:hover{
-    background: #407cf7;
-    box-shadow: 4px 4px 48px #666;
-    transition: 120ms;
-}
-.btn-micro{
-    pointer-events: auto;
-    transition: all .3s;
-    /*right: 44px;*/
-}
-.btn-video{
-    pointer-events: auto;
-    transition: all .25s;
-    /*right: 134px;*/
-}
-.btn-monitor{
-    pointer-events: auto;
-    transition: all .2s;
-    /*right: 224px;*/
-}
-.btn-monitor.hide {
-    transform: translateY(60px);
-}
-.btn-cam-action:hover .btn-monitor.hide{
-    transform: translateY(60px);
-}
-.btn-layout{
-    pointer-events: auto;
-    transition: all .15s;
-}
-.btn-layout.hide {
-    transform: translateY(60px);
-}
-.btn-cam-action:hover .btn-layout.hide{
-    transform: translateY(60px);
-}
-.btn-copy{
-    pointer-events: auto;
-    transition: all .3s;
-    right: 44px;
-    opacity: 1;
-}
-.btn-cam-action div img{
-    height: 22px;
-    width: 30px;
-    position: relative;
-    cursor: url('./images/cursor_pointer.png'), pointer;
 }
 
 /* Spinner */
@@ -367,26 +257,6 @@ body {
     height: 100%;
     width: 100%;
     position: absolute;
-}
-
-@media (min-aspect-ratio: 1/1) {
-    .game-overlay {
-        flex-direction: row;
-    }
-
-    .sidebar {
-        flex-direction: column;
-    }
-
-    .sidebar > div {
-        max-height: 21%;
-    }
-
-    .sidebar > div:hover {
-        max-height: 25%;
-    }
-
-
 }
 
 #game {
@@ -484,96 +354,6 @@ input[type=range]:focus::-ms-fill-lower {
 }
 input[type=range]:focus::-ms-fill-upper {
     background: #FFFFFF;
-}
-
-
-.game-overlay {
-    display: none;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    /* TODO: DO WE NEED FLEX HERE???? WE WANT A SIDEBAR OF EXACTLY 25% (note: flex useful for direction!!!) */
-}
-
-.game-overlay + div {
-    pointer-events: none;
-}
-
-.game-overlay + div > div {
-    pointer-events: auto;
-}
-
-.game-overlay.active {
-    display: flex;
-}
-
-.game-overlay video {
-    width: 100%;
-}
-
-.main-section {
-    flex: 0 0 75%;
-    display: flex;
-    justify-content: start;
-    align-items: flex-start;
-    flex-wrap: wrap;
-}
-
-.main-section > div {
-    margin: 2%;
-    flex-basis: 96%;
-    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, flex-basis 0.2s;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    pointer-events: auto;
-    /*flex-shrink: 2;*/
-}
-
-.main-section > div:hover {
-    margin: 0%;
-    flex-basis: 100%;
-}
-
-.sidebar {
-    flex: 0 0 25%;
-    display: flex;
-}
-
-.sidebar > div {
-    margin: 2%;
-    transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s, max-width 0.2s;
-    cursor: url('./images/cursor_pointer.png'), pointer;
-    border-radius: 15px 15px 15px 15px;
-    pointer-events: auto;
-
-    video {
-        max-height: 21vh;
-    }
-}
-
-.sidebar > div:hover {
-    margin: 0%;
-}
-
-.sidebar > div video {
-    cursor: url('./images/cursor_pointer.png'), pointer;
-}
-
-/* Let's make sure videos are vertically centered if they need to be cropped */
-.media-container {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-radius: 15px;
-}
-
-.chat-mode {
-    display: grid;
-    width: 100%;
-
-    align-items: flex-start;
-
-    padding: 1%;
 }
 
 .chat-mode > div {
@@ -1061,12 +841,21 @@ div.action.danger p.action-body{
 }
 
 
-#svelte-overlay {
+#game-overlay {
     position: absolute;
     width: 100%;
     height: 100%;
     pointer-events: none;
     user-select: none;
+
+    & + div {
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    & + div > div {
+        pointer-events: auto;
+    }
 
     & > div {
         position: relative;
@@ -1085,22 +874,10 @@ div.action.danger p.action-body{
             pointer-events: auto;
         }
     }
-}
 
-div.is-silent {
-    position: absolute;
-    bottom: 40px;
-    border-radius: 15px 15px 15px 15px;
-    max-height: 20%;
-    transition: right 350ms;
-    right: -300px;
-    background-color: black;
-    font-size: 20px;
-    color: white;
-    padding: 30px 20px;
-}
-div.is-silent.hide {
-    right: 15px;
+    &.hide {
+        visibility: hidden;
+    }
 }
 
 div.emoji-picker {
@@ -1120,9 +897,4 @@ div.emoji-picker {
           -ms-user-select: none; /* Internet Explorer/Edge */
               user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
-}
-
-.pixel {
-    height: 1px !important;
-    width: 1px !important;
 }

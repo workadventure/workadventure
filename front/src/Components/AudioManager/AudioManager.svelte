@@ -157,13 +157,16 @@
 
 <style lang="scss">
     div.main-audio-manager.nes-container.is-rounded {
-        position: relative;
-        top: 0.5rem;
+        position: absolute;
+        top: 1%;
         max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
         width: clamp(200px, 15vw, 15vw);
         padding: 3px 3px;
         margin-left: auto;
         margin-right: auto;
+        left: 0;
+        right: 0;
+        z-index: 200;
 
         background-color: rgb(0, 0, 0, 0.5);
         display: grid;

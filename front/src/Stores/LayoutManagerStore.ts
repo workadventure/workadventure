@@ -51,6 +51,6 @@ function createLayoutManagerAction() {
 
 export const layoutManagerActionStore = createLayoutManagerAction();
 
-export const layoutManagerVisibilityStore = derived(layoutManagerActionStore, ($layoutManagerActionStore) => {
+export const layoutManagerActionVisibilityStore = derived(layoutManagerActionStore, ($layoutManagerActionStore) => {
     return !!$layoutManagerActionStore.length;
 });

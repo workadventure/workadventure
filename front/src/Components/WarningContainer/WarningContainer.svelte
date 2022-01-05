@@ -27,18 +27,22 @@
 <style lang="scss">
     main.warningMain {
         pointer-events: auto;
-        width: 100vw;
-        background-color: #f9e81e;
-        color: #14304c;
+        width: 80%;
+        background-color: #F9E81E;
+        color: #14304C;
         text-align: center;
         position: absolute;
-        left: 50%;
+
+        top: 4%;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
         transform: translate(-50%, 0);
         font-family: Lato;
         min-width: 300px;
         opacity: 0.9;
-        z-index: 2;
-
+        z-index: 270;
         h2 {
             padding: 5px;
         }
