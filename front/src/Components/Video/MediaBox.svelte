@@ -7,14 +7,65 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     export let streamable: Streamable;
+    export let isHightlighted = false;
+    export let clickable = false;
 </script>
 
-<div class="media-container">
+<div class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}" class:clickable>
     {#if streamable instanceof VideoPeer}
-        <VideoMediaBox peer={streamable} />
+        <VideoMediaBox peer={streamable} {clickable} />
     {:else if streamable instanceof ScreenSharingPeer}
-        <ScreenSharingMediaBox peer={streamable} />
+        <ScreenSharingMediaBox peer={streamable} {clickable} />
     {:else}
-        <LocalStreamMediaBox peer={streamable} cssClass="" />
+        <LocalStreamMediaBox peer={streamable} {clickable} cssClass="" />
     {/if}
 </div>
+
+<style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
+    .media-container {
+        display: flex;
+        margin-top: 4%;
+        margin-bottom: 4%;
+        margin-left: auto;
+        margin-right: auto;
+        transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
+            max-width 0.2s;
+        pointer-events: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 0;
+        max-height: 85%;
+        max-width: 85%;
+
+        &:hover {
+            margin-top: 2%;
+            margin-bottom: 2%;
+        }
+
+        &.hightlighted {
+            margin-top: 0% !important;
+            margin-bottom: 0% !important;
+            margin-left: 0% !important;
+
+            max-height: 100% !important;
+            max-width: 96% !important;
+
+            &:hover {
+                margin-top: 0% !important;
+                margin-bottom: 0% !important;
+            }
+        }
+
+        &.clickable {
+            cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+        }
+    }
+
+    @include media-breakpoint-only(md) {
+        .media-container {
+            margin-top: 10%;
+            margin-bottom: 10%;
+        }
+    }
+</style>

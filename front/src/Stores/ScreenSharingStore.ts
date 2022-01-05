@@ -1,7 +1,7 @@
 import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
-import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
+import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -41,8 +41,8 @@ let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [requestedScreenSharingState, gameOverlayVisibilityStore, peerStore],
-    ([$requestedScreenSharingState, $gameOverlayVisibilityStore, $peerStore], set) => {
+    [requestedScreenSharingState, myCameraVisibilityStore, peerStore],
+    ([$requestedScreenSharingState, $myCameraVisibilityStore, $peerStore], set) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         let currentAudioConstraint: boolean | MediaTrackConstraints = false;
 
@@ -53,7 +53,7 @@ export const screenSharingConstraintsStore = derived(
         }
 
         // Disable screen sharing when in a Jitsi
-        if (!$gameOverlayVisibilityStore) {
+        if (!$myCameraVisibilityStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

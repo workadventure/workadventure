@@ -11,10 +11,10 @@ import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { activeRowStore, customCharacterSceneVisibleStore } from "../../Stores/CustomCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { isMobile } from "../../Enum/EnvironmentVariable";
 import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -67,12 +67,12 @@ export class CustomizeScene extends AbstractCharacterScene {
         customCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
             customCharacterSceneVisibleStore.set(true);
         });
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
 
         this.Rectangle = this.add.rectangle(
             this.cameras.main.worldView.x + this.cameras.main.width / 2,

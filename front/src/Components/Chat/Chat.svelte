@@ -43,7 +43,7 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
-    <p class="close-icon" on:click={closeChat}>&times</p>
+    <p class="close-icon noselect" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
             <li><p class="system-text">{$LL.chat.intro()}</p></li>
@@ -78,7 +78,7 @@
     }
 
     aside.chatWindow {
-        z-index: 100;
+        z-index: 1000;
         pointer-events: auto;
         position: absolute;
         top: 0;
