@@ -166,7 +166,7 @@
         margin-right: auto;
         left: 0;
         right: 0;
-        z-index: 200;
+        z-index: 550;
 
         background-color: rgb(0, 0, 0, 0.5);
         display: grid;

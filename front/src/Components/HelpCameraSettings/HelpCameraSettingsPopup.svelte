@@ -60,7 +60,7 @@
         margin-top: 4%;
         max-height: 80vh;
         max-width: 80vw;
-        z-index: 250;
+        z-index: 600;
         overflow: auto;
         text-align: center;
 
