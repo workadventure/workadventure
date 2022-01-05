@@ -1,5 +1,3 @@
-import { writable } from "svelte/store";
+import { createMessageStore } from "./MessageStore";
 
-export const textMessageVisibleStore = writable(false);
-
-export const textMessageContentStore = writable("");
+export const textMessageStore = createMessageStore();

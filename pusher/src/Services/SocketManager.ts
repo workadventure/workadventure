@@ -8,6 +8,9 @@ import {
     CharacterLayerMessage,
     EmoteEventMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -269,6 +272,24 @@ export class SocketManager implements ZoneEventListener {
 
         // Now, we need to listen to the correct viewport.
         this.handleViewport(client, viewport.toObject());
+    }
+
+    handleFollowRequest(client: ExSocketInterface, message: FollowRequestMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowrequestmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleFollowConfirmation(client: ExSocketInterface, message: FollowConfirmationMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowconfirmationmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleFollowAbort(client: ExSocketInterface, message: FollowAbortMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowabortmessage(message);
+        client.backConnection.write(pusherToBackMessage);
     }
 
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {

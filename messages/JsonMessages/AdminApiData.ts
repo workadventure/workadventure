@@ -8,12 +8,10 @@ import { isCharacterTexture } from "./CharacterTexture";
 
 export const isAdminApiData = new tg.IsInterface()
     .withProperties({
-        roomUrl: tg.isString,
-        email: tg.isNullable(tg.isString),
-        mapUrlStart: tg.isString,
-        tags: tg.isArray(tg.isString),
-        policy_type: tg.isNumber,
         userUuid: tg.isString,
+        email: tg.isNullable(tg.isString),
+        roomUrl: tg.isString,
+        mapUrlStart: tg.isString,
         textures: tg.isArray(isCharacterTexture),
     })
     .withOptionalProperties({

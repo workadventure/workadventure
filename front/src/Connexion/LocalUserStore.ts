@@ -14,6 +14,7 @@ const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
+const ignoreFollowRequests = "ignoreFollowRequests";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -126,6 +127,13 @@ class LocalUserStore {
     }
     getForceCowebsiteTrigger(): boolean {
         return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
+    }
+
+    setIgnoreFollowRequests(value: boolean): void {
+        localStorage.setItem(ignoreFollowRequests, value.toString());
+    }
+    getIgnoreFollowRequests(): boolean {
+        return localStorage.getItem(ignoreFollowRequests) === "true";
     }
 
     setLastRoomUrl(roomUrl: string): void {
