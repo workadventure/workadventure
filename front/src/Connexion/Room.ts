@@ -18,7 +18,10 @@ export interface RoomRedirect {
 
 export class Room {
     public readonly id: string;
-    public readonly isPublic: boolean;
+    /**
+     * @deprecated
+     */
+    private readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
@@ -27,6 +30,8 @@ export class Room {
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
+    private _expireOn: Date | undefined;
+    private _canReport: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -34,7 +39,7 @@ export class Room {
         if (this.id.startsWith("/")) {
             this.id = this.id.substr(1);
         }
-        if (this.id.startsWith("_/")) {
+        if (this.id.startsWith("_/") || this.id.startsWith("*/")) {
             this.isPublic = true;
         } else if (this.id.startsWith("@/")) {
             this.isPublic = false;
@@ -121,6 +126,10 @@ export class Room {
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
                 this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
                 this._contactPage = data.contactPage || CONTACT_URL;
+                if (data.expireOn) {
+                    this._expireOn = new Date(data.expireOn);
+                }
+                this._canReport = data.canReport ?? false;
                 return new MapDetail(data.mapUrl, data.textures);
             } else {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
@@ -143,6 +152,8 @@ export class Room {
      * Instance name is:
      * - In a public URL: the second part of the URL ( _/[instance]/map.json)
      * - In a private URL: [organizationId/worldId]
+     *
+     * @deprecated
      */
     public getInstance(): string {
         if (this.instance !== undefined) {
@@ -150,7 +161,7 @@ export class Room {
         }
 
         if (this.isPublic) {
-            const match = /_\/([^/]+)\/.+/.exec(this.id);
+            const match = /[_*]\/([^/]+)\/.+/.exec(this.id);
             if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
             this.instance = match[1];
             return this.instance;
@@ -221,5 +232,13 @@ export class Room {
 
     get group(): string | null {
         return this._group;
+    }
+
+    get expireOn(): Date | undefined {
+        return this._expireOn;
+    }
+
+    get canReport(): boolean {
+        return this._canReport;
     }
 }

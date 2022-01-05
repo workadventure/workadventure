@@ -2,8 +2,7 @@ import type { Room } from "../Connexion/Room";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
-    anonymous = 1,
-    organization,
+    room = 1,
     register,
     empty,
     unknown,
@@ -19,10 +18,8 @@ class UrlManager {
             return GameConnexionTypes.login;
         } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
-        } else if (url.includes("_/")) {
-            return GameConnexionTypes.anonymous;
-        } else if (url.includes("@/")) {
-            return GameConnexionTypes.organization;
+        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
+            return GameConnexionTypes.room;
         } else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
