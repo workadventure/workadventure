@@ -6,12 +6,11 @@
     import type { Unsubscriber } from "svelte/store";
     import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { GameConnexionTypes } from "../../Url/UrlManager";
     import { get } from "svelte/store";
 
     let blockActive = true;
     let reportActive = !blockActive;
-    let anonymous: boolean = false;
+    let disableReport: boolean = false;
     let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
     let unsubscriber: Unsubscriber;
@@ -26,7 +25,7 @@
                 }
             }
         });
-        anonymous = connectionManager.getConnexionType === GameConnexionTypes.anonymous;
+        disableReport = !connectionManager.currentRoom?.canReport ?? true;
     });
 
     onDestroy(() => {
@@ -65,7 +64,7 @@
             <button type="button" class="nes-btn" on:click|preventDefault={close}>X</button>
         </section>
     </section>
-    <section class="report-menu-action {anonymous ? 'hidden' : ''}">
+    <section class="report-menu-action {disableReport ? 'hidden' : ''}">
         <section class="justify-center">
             <button
                 type="button"

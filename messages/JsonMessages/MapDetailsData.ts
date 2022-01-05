@@ -20,6 +20,10 @@ export const isMapDetailsData = new tg.IsInterface()
     })
     .withOptionalProperties({
         iframeAuthentication: tg.isNullable(tg.isString),
+        // The date (in ISO 8601 format) at which the room will expire
+        expireOn: tg.isString,
+        // Whether the "report" feature is enabled or not on this room
+        canReport: tg.isBoolean,
     })
     .get();
 
