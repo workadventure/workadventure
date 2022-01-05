@@ -18,7 +18,10 @@ export interface RoomRedirect {
 
 export class Room {
     public readonly id: string;
-    public readonly isPublic: boolean;
+    /**
+     * @deprecated
+     */
+    private readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
@@ -149,6 +152,8 @@ export class Room {
      * Instance name is:
      * - In a public URL: the second part of the URL ( _/[instance]/map.json)
      * - In a private URL: [organizationId/worldId]
+     *
+     * @deprecated
      */
     public getInstance(): string {
         if (this.instance !== undefined) {
