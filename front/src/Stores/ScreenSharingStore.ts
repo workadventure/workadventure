@@ -156,7 +156,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                     error: e instanceof Error ? e : new Error("An unknown error happened"),
                 });
             }
-        })();
+        })().catch((e) => console.error(e));
     }
 );
 

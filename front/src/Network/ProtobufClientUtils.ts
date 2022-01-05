@@ -1,21 +1,21 @@
-import { PositionMessage } from "../Messages/generated/messages_pb";
-import Direction = PositionMessage.Direction;
+import { PositionMessage, PositionMessage_Direction } from "../Messages/ts-proto-generated/messages";
+
 import type { PointInterface } from "../Connexion/ConnexionModels";
 
 export class ProtobufClientUtils {
     public static toPointInterface(position: PositionMessage): PointInterface {
         let direction: string;
-        switch (position.getDirection()) {
-            case Direction.UP:
+        switch (position.direction) {
+            case PositionMessage_Direction.UP:
                 direction = "up";
                 break;
-            case Direction.DOWN:
+            case PositionMessage_Direction.DOWN:
                 direction = "down";
                 break;
-            case Direction.LEFT:
+            case PositionMessage_Direction.LEFT:
                 direction = "left";
                 break;
-            case Direction.RIGHT:
+            case PositionMessage_Direction.RIGHT:
                 direction = "right";
                 break;
             default:
@@ -24,10 +24,10 @@ export class ProtobufClientUtils {
 
         // sending to all clients in room except sender
         return {
-            x: position.getX(),
-            y: position.getY(),
+            x: position.x,
+            y: position.y,
             direction,
-            moving: position.getMoving(),
+            moving: position.moving,
         };
     }
 }

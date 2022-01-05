@@ -360,32 +360,27 @@ const implementCorrectTrackBehavior = getNavigatorType() === NavigatorType.firef
 /**
  * Stops the camera from filming
  */
-function applyCameraConstraints(currentStream: MediaStream | null, constraints: MediaTrackConstraints | boolean): void {
+async function applyCameraConstraints(
+    currentStream: MediaStream | null,
+    constraints: MediaTrackConstraints | boolean
+): Promise<void[]> {
     if (!currentStream) {
-        return;
+        return [];
     }
-    for (const track of currentStream.getVideoTracks()) {
-        toggleConstraints(track, constraints).catch((e) =>
-            console.error("Error while setting new camera constraints:", e)
-        );
-    }
+    return Promise.all(currentStream.getVideoTracks().map((track) => toggleConstraints(track, constraints)));
 }
 
 /**
  * Stops the microphone from listening
  */
-function applyMicrophoneConstraints(
+async function applyMicrophoneConstraints(
     currentStream: MediaStream | null,
     constraints: MediaTrackConstraints | boolean
-): void {
+): Promise<void[]> {
     if (!currentStream) {
-        return;
+        return [];
     }
-    for (const track of currentStream.getAudioTracks()) {
-        toggleConstraints(track, constraints).catch((e) =>
-            console.error("Error while setting new audio constraints:", e)
-        );
-    }
+    return Promise.all(currentStream.getAudioTracks().map((track) => toggleConstraints(track, constraints)));
 }
 
 async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrackConstraints | boolean): Promise<void> {
@@ -477,8 +472,8 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             }
         }
 
-        applyMicrophoneConstraints(currentStream, constraints.audio || false);
-        applyCameraConstraints(currentStream, constraints.video || false);
+        applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
+        applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
 
         if (implementCorrectTrackBehavior) {
             //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed

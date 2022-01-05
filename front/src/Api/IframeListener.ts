@@ -31,6 +31,7 @@ import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
+import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -84,6 +85,9 @@ class IframeListener {
 
     private readonly _loadSoundStream: Subject<LoadSoundEvent> = new Subject();
     public readonly loadSoundStream = this._loadSoundStream.asObservable();
+
+    private readonly _trackCameraUpdateStream: Subject<LoadSoundEvent> = new Subject();
+    public readonly trackCameraUpdateStream = this._trackCameraUpdateStream.asObservable();
 
     private readonly _setTilesStream: Subject<SetTilesEvent> = new Subject();
     public readonly setTilesStream = this._setTilesStream.asObservable();
@@ -226,6 +230,8 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
+                    } else if (payload.type == "onCameraUpdate") {
+                        this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
                         this._setTilesStream.next(payload.data);
                     } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
@@ -440,6 +446,13 @@ class IframeListener {
                 data: event,
             });
         }
+    }
+
+    sendCameraUpdated(event: WasCameraUpdatedEvent) {
+        this.postMessage({
+            type: "wasCameraUpdated",
+            data: event,
+        });
     }
 
     sendButtonClickedEvent(popupId: number, buttonId: number): void {

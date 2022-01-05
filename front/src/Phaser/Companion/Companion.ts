@@ -41,13 +41,15 @@ export class Companion extends Container {
         this.companionName = name;
         this._pictureStore = writable(undefined);
 
-        texturePromise.then((resource) => {
-            this.addResource(resource);
-            this.invisible = false;
-            return this.getSnapshot().then((htmlImageElementSrc) => {
-                this._pictureStore.set(htmlImageElementSrc);
-            });
-        });
+        texturePromise
+            .then((resource) => {
+                this.addResource(resource);
+                this.invisible = false;
+                return this.getSnapshot().then((htmlImageElementSrc) => {
+                    this._pictureStore.set(htmlImageElementSrc);
+                });
+            })
+            .catch((e) => console.error(e));
 
         this.scene.physics.world.enableBody(this);
 

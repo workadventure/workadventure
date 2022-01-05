@@ -44,7 +44,7 @@ class UrlManager {
         if (window.location.pathname === room.id) return;
         //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
         //use href to keep # value
-        localUserStore.setLastRoomUrl(room.href);
+        localUserStore.setLastRoomUrl(room.href).catch((e) => console.error(e));
         const hash = window.location.hash;
         const search = room.search.toString();
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);

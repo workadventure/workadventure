@@ -531,15 +531,6 @@ export class SocketManager {
         }
     }
 
-    emitPlayGlobalMessage(room: GameRoom, playGlobalMessage: PlayGlobalMessage) {
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setPlayglobalmessage(playGlobalMessage);
-
-        for (const [id, user] of room.getUsers().entries()) {
-            user.socket.write(serverToClientMessage);
-        }
-    }
-
     public getWorlds(): Map<string, PromiseLike<GameRoom>> {
         return this.roomsPromises;
     }

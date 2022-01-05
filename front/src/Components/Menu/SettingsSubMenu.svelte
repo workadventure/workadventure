@@ -33,9 +33,9 @@
         const body = HtmlUtils.querySelectorOrFail("body");
         if (body) {
             if (document.fullscreenElement !== null && !fullscreen) {
-                document.exitFullscreen();
+                document.exitFullscreen().catch((e) => console.error(e));
             } else {
-                body.requestFullscreen();
+                body.requestFullscreen().catch((e) => console.error(e));
             }
             localUserStore.setFullscreen(fullscreen);
         }
@@ -45,14 +45,16 @@
         if (Notification.permission === "granted") {
             localUserStore.setNotification(notification ? "granted" : "denied");
         } else {
-            Notification.requestPermission().then((response) => {
-                if (response === "granted") {
-                    localUserStore.setNotification(notification ? "granted" : "denied");
-                } else {
-                    localUserStore.setNotification("denied");
-                    notification = false;
-                }
-            });
+            Notification.requestPermission()
+                .then((response) => {
+                    if (response === "granted") {
+                        localUserStore.setNotification(notification ? "granted" : "denied");
+                    } else {
+                        localUserStore.setNotification("denied");
+                        notification = false;
+                    }
+                })
+                .catch((e) => console.error(e));
         }
     }
 

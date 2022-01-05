@@ -22,6 +22,8 @@ export const isEmbeddedWebsiteEvent = new tg.IsInterface()
         y: tg.isNumber,
         width: tg.isNumber,
         height: tg.isNumber,
+        origin: tg.isSingletonStringUnion("player", "map"),
+        scale: tg.isNumber,
     })
     .get();
 
@@ -35,6 +37,8 @@ export const isCreateEmbeddedWebsiteEvent = new tg.IsInterface()
         visible: tg.isBoolean,
         allowApi: tg.isBoolean,
         allow: tg.isString,
+        origin: tg.isSingletonStringUnion("player", "map"),
+        scale: tg.isNumber,
     })
     .get();
 

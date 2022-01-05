@@ -16,7 +16,8 @@ export class EmbeddedWebsiteManager {
             if (website === undefined) {
                 throw new Error('Cannot find embedded website with name "' + name + '"');
             }
-            const rect = website.iframe.getBoundingClientRect();
+
+            const scale = website.scale ?? 1;
             return {
                 url: website.url,
                 name: website.name,
@@ -26,9 +27,11 @@ export class EmbeddedWebsiteManager {
                 position: {
                     x: website.phaserObject.x,
                     y: website.phaserObject.y,
-                    width: rect["width"],
-                    height: rect["height"],
+                    width: website.phaserObject.width * scale,
+                    height: website.phaserObject.height * scale,
                 },
+                origin: website.origin,
+                scale: website.scale,
             };
         });
 
@@ -59,7 +62,9 @@ export class EmbeddedWebsiteManager {
                     createEmbeddedWebsiteEvent.position.height,
                     createEmbeddedWebsiteEvent.visible ?? true,
                     createEmbeddedWebsiteEvent.allowApi ?? false,
-                    createEmbeddedWebsiteEvent.allow ?? ""
+                    createEmbeddedWebsiteEvent.allow ?? "",
+                    createEmbeddedWebsiteEvent.origin ?? "map",
+                    createEmbeddedWebsiteEvent.scale ?? 1
                 );
             }
         );
@@ -107,10 +112,18 @@ export class EmbeddedWebsiteManager {
                     website.phaserObject.y = embeddedWebsiteEvent.y;
                 }
                 if (embeddedWebsiteEvent?.width !== undefined) {
-                    website.iframe.style.width = embeddedWebsiteEvent.width + "px";
+                    website.position.width = embeddedWebsiteEvent.width;
+                    website.iframe.style.width = embeddedWebsiteEvent.width / website.phaserObject.scale + "px";
                 }
                 if (embeddedWebsiteEvent?.height !== undefined) {
-                    website.iframe.style.height = embeddedWebsiteEvent.height + "px";
+                    website.position.height = embeddedWebsiteEvent.height;
+                    website.iframe.style.height = embeddedWebsiteEvent.height / website.phaserObject.scale + "px";
+                }
+
+                if (embeddedWebsiteEvent?.scale !== undefined) {
+                    website.phaserObject.scale = embeddedWebsiteEvent.scale;
+                    website.iframe.style.width = website.position.width / embeddedWebsiteEvent.scale + "px";
+                    website.iframe.style.height = website.position.height / embeddedWebsiteEvent.scale + "px";
                 }
             }
         );
@@ -125,7 +138,9 @@ export class EmbeddedWebsiteManager {
         height: number,
         visible: boolean,
         allowApi: boolean,
-        allow: string
+        allow: string,
+        origin: "map" | "player" | undefined,
+        scale: number | undefined
     ): void {
         if (this.embeddedWebsites.has(name)) {
             throw new Error('An embedded website with the name "' + name + '" already exists in your map');
@@ -135,9 +150,9 @@ export class EmbeddedWebsiteManager {
             name,
             url,
             /*x,
-            y,
-            width,
-            height,*/
+y,
+width,
+height,*/
             allow,
             allowApi,
             visible,
@@ -147,6 +162,8 @@ export class EmbeddedWebsiteManager {
                 width,
                 height,
             },
+            origin,
+            scale,
         };
 
         const embeddedWebsite = this.doCreateEmbeddedWebsite(embeddedWebsiteEvent, visible);
@@ -161,22 +178,43 @@ export class EmbeddedWebsiteManager {
         const absoluteUrl = new URL(embeddedWebsiteEvent.url, this.gameScene.MapUrlFile).toString();
 
         const iframe = document.createElement("iframe");
+        const scale = embeddedWebsiteEvent.scale ?? 1;
+
         iframe.src = absoluteUrl;
         iframe.tabIndex = -1;
-        iframe.style.width = embeddedWebsiteEvent.position.width + "px";
-        iframe.style.height = embeddedWebsiteEvent.position.height + "px";
+        iframe.style.width = embeddedWebsiteEvent.position.width / scale + "px";
+        iframe.style.height = embeddedWebsiteEvent.position.height / scale + "px";
         iframe.style.margin = "0";
         iframe.style.padding = "0";
         iframe.style.border = "none";
 
+        const domElement = new DOMElement(
+            this.gameScene,
+            embeddedWebsiteEvent.position.x,
+            embeddedWebsiteEvent.position.y,
+            iframe
+        );
+        domElement.setOrigin(0, 0);
+        if (embeddedWebsiteEvent.scale) {
+            domElement.scale = embeddedWebsiteEvent.scale;
+        }
+        domElement.setVisible(visible);
+
+        switch (embeddedWebsiteEvent.origin) {
+            case "player":
+                this.gameScene.CurrentPlayer.add(domElement);
+                break;
+            case "map":
+            default:
+                this.gameScene.add.existing(domElement);
+        }
+
         const embeddedWebsite = {
             ...embeddedWebsiteEvent,
-            phaserObject: this.gameScene.add
-                .dom(embeddedWebsiteEvent.position.x, embeddedWebsiteEvent.position.y, iframe)
-                .setVisible(visible)
-                .setOrigin(0, 0),
+            phaserObject: domElement,
             iframe: iframe,
         };
+
         if (embeddedWebsiteEvent.allowApi) {
             iframeListener.registerIframe(iframe);
         }

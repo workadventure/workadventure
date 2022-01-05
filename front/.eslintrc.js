@@ -35,7 +35,6 @@ module.exports = {
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error",
         // TODO: remove those ignored rules and write a stronger code!
-        "@typescript-eslint/no-floating-promises": "off",
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/restrict-plus-operands": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
