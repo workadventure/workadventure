@@ -41,10 +41,10 @@
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
-    function logOut() {
+    async function logOut() {
         disableMenuStores();
         loginSceneVisibleStore.set(true);
-        connectionManager.logout();
+        return connectionManager.logout();
     }
 
     function getProfileUrl() {

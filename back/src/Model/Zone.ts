@@ -39,21 +39,13 @@ export class Zone {
         const result = this.things.delete(thing);
         if (!result) {
             if (thing instanceof User) {
-                throw new Error("Could not find user in zone " + thing.id);
+                throw new Error(`Could not find user in zone ${thing.id}`);
             }
             if (thing instanceof Group) {
                 throw new Error(
-                    "Could not find group " +
-                        thing.getId() +
-                        " in zone (" +
-                        this.x +
-                        "," +
-                        this.y +
-                        "). Position of group: (" +
-                        thing.getPosition().x +
-                        "," +
-                        thing.getPosition().y +
-                        ")"
+                    `Could not find group ${thing.getId()} in zone (${this.x},${this.y}). Position of group: (${
+                        thing.getPosition().x
+                    },${thing.getPosition().y})`
                 );
             }
         }

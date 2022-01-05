@@ -72,9 +72,11 @@ export class Loader {
             if (this.loadingText) {
                 this.loadingText.destroy();
             }
-            promiseLoadLogoTexture.then((resLoadingImage: Phaser.GameObjects.Image) => {
-                resLoadingImage.destroy();
-            });
+            promiseLoadLogoTexture
+                .then((resLoadingImage: Phaser.GameObjects.Image) => {
+                    resLoadingImage.destroy();
+                })
+                .catch((e) => console.error(e));
             this.progress.destroy();
             this.progressContainer.destroy();
             if (this.scene instanceof DirtyScene) {

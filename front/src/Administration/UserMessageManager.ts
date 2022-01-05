@@ -1,27 +1,22 @@
 import { AdminMessageEventTypes, adminMessagesService } from "../Connexion/AdminMessagesService";
-import { textMessageContentStore, textMessageVisibleStore } from "../Stores/TypeMessageStore/TextMessageStore";
+import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
 import { soundPlayingStore } from "../Stores/SoundPlayingStore";
 import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
-import { banMessageContentStore, banMessageVisibleStore } from "../Stores/TypeMessageStore/BanMessageStore";
+import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
 
 class UserMessageManager {
     receiveBannedMessageListener!: Function;
 
     constructor() {
         adminMessagesService.messageStream.subscribe((event) => {
-            textMessageVisibleStore.set(false);
-            banMessageVisibleStore.set(false);
             if (event.type === AdminMessageEventTypes.admin) {
-                textMessageContentStore.set(event.text);
-                textMessageVisibleStore.set(true);
+                textMessageStore.addMessage(event.text);
             } else if (event.type === AdminMessageEventTypes.audio) {
                 soundPlayingStore.playSound(UPLOADER_URL + event.text);
             } else if (event.type === AdminMessageEventTypes.ban) {
-                banMessageContentStore.set(event.text);
-                banMessageVisibleStore.set(true);
+                banMessageStore.addMessage(event.text);
             } else if (event.type === AdminMessageEventTypes.banned) {
-                banMessageContentStore.set(event.text);
-                banMessageVisibleStore.set(true);
+                banMessageStore.addMessage(event.text);
                 this.receiveBannedMessageListener();
             }
         });

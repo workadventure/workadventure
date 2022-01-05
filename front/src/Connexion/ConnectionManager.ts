@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -191,7 +191,7 @@ class ConnectionManager {
 
             //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
             //use href to keep # value
-            localUserStore.setLastRoomUrl(this._currentRoom.href);
+            await localUserStore.setLastRoomUrl(this._currentRoom.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -294,7 +294,7 @@ class ConnectionManager {
                 reject(error);
             });
 
-            connection.onConnectingError((event: CloseEvent) => {
+            connection.connectionErrorStream.subscribe((event: CloseEvent) => {
                 console.log("An error occurred while connecting to socket server. Retrying");
                 reject(
                     new Error(
@@ -306,7 +306,7 @@ class ConnectionManager {
                 );
             });
 
-            connection.onConnect((connect: OnConnectInterface) => {
+            connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
         }).catch((err) => {
@@ -315,7 +315,7 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
+                    void this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
                         (connection) => resolve(connection)
                     );
                 }, 4000 + Math.floor(Math.random() * 2000));

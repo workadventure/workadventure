@@ -3,7 +3,7 @@ import { COMPANION_RESOURCES, CompanionResourceDescriptionInterface } from "./Co
 
 export const getAllCompanionResources = (loader: LoaderPlugin): CompanionResourceDescriptionInterface[] => {
     COMPANION_RESOURCES.forEach((resource: CompanionResourceDescriptionInterface) => {
-        lazyLoadCompanionResource(loader, resource.name);
+        lazyLoadCompanionResource(loader, resource.name).catch((e) => console.error(e));
     });
 
     return COMPANION_RESOURCES;

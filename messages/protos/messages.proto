@@ -71,17 +71,31 @@ message ReportPlayerMessage {
 }
 
 message EmotePromptMessage {
-    string emote = 2;
+  string emote = 2;
 }
 
 message EmoteEventMessage {
-    int32 actorUserId = 1;
-    string emote = 2;
+  int32 actorUserId = 1;
+  string emote = 2;
 }
 
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
+}
+
+message FollowRequestMessage {
+  int32 leader = 1;
+}
+
+message FollowConfirmationMessage {
+  int32 leader = 1;
+  int32 follower = 2;
+}
+
+message FollowAbortMessage {
+  int32 leader = 1;
+  int32 follower = 2;
 }
 
 message ClientToServerMessage {
@@ -99,6 +113,9 @@ message ClientToServerMessage {
     QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
+    FollowRequestMessage followRequestMessage = 15;
+    FollowConfirmationMessage followConfirmationMessage = 16;
+    FollowAbortMessage followAbortMessage = 17;
   }
 }
 
@@ -243,14 +260,14 @@ message SendUserMessage{
 message WorldFullWarningMessage{
 }
 message WorldFullWarningToRoomMessage{
-    string roomId = 1;
+  string roomId = 1;
 }
 message RefreshRoomPromptMessage{
-    string roomId = 1;
+  string roomId = 1;
 }
 message RefreshRoomMessage{
-    string roomId = 1;
-    int32 versionNumber = 2;
+  string roomId = 1;
+  int32 versionNumber = 2;
 }
 
 message WorldFullMessage{
@@ -279,8 +296,6 @@ message ServerToClientMessage {
     WebRtcSignalToClientMessage webRtcSignalToClientMessage = 5;
     WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
-    PlayGlobalMessage playGlobalMessage = 8;
-    StopGlobalMessage stopGlobalMessage = 9;
     TeleportMessageMessage teleportMessageMessage = 10;
     SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
@@ -292,6 +307,9 @@ message ServerToClientMessage {
     WorldConnexionMessage worldConnexionMessage = 18;
     //EmoteEventMessage emoteEventMessage = 19;
     TokenExpiredMessage tokenExpiredMessage = 20;
+    FollowRequestMessage followRequestMessage = 21;
+    FollowConfirmationMessage followConfirmationMessage = 22;
+    FollowAbortMessage followAbortMessage = 23;
   }
 }
 
@@ -370,14 +388,15 @@ message PusherToBackMessage {
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
-    PlayGlobalMessage playGlobalMessage = 8;
-    StopGlobalMessage stopGlobalMessage = 9;
     ReportPlayerMessage reportPlayerMessage = 10;
     QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
     VariableMessage variableMessage = 15;
+    FollowRequestMessage followRequestMessage = 16;
+    FollowConfirmationMessage followConfirmationMessage = 17;
+    FollowAbortMessage followAbortMessage = 18;
   }
 }
 

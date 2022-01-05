@@ -31,6 +31,10 @@ export class WaScaleManager {
             height: height * devicePixelRatio,
         });
 
+        if (gameSize.width == 0) {
+            return;
+        }
+
         this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
 
         this.scaleManager.setZoom(realSize.width / gameSize.width / devicePixelRatio);

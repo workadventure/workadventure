@@ -30,6 +30,8 @@ import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEv
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import { isColorEvent } from "./ColorEvent";
+import { isPlayerPosition } from "./PlayerPosition";
+import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -50,6 +52,7 @@ export type IframeEventMap = {
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
+    onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
@@ -82,6 +85,7 @@ export interface IframeResponseEventMap {
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
+    wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
     messageTriggered: MessageReferenceEvent;
@@ -160,6 +164,10 @@ export const iframeQueryMapTypeGuards = {
     removePlayerOutline: {
         query: tg.isUndefined,
         answer: tg.isUndefined,
+    },
+    getPlayerPosition: {
+        query: tg.isUndefined,
+        answer: isPlayerPosition,
     },
 };
 

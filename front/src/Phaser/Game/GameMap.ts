@@ -81,7 +81,14 @@ export class GameMap {
         let depth = -2;
         for (const layer of this.flatLayers) {
             if (layer.type === "tilelayer") {
-                this.phaserLayers.push(phaserMap.createLayer(layer.name, terrains, 0, 0).setDepth(depth));
+                this.phaserLayers.push(
+                    phaserMap
+                        .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
+                        .setDepth(depth)
+                        .setAlpha(layer.opacity)
+                        .setVisible(layer.visible)
+                        .setSize(layer.width, layer.height)
+                );
             }
             if (layer.type === "objectgroup" && layer.name === "floorLayer") {
                 depth = DEPTH_OVERLAY_INDEX;

@@ -15,6 +15,8 @@
                 const heightField = document.getElementById('height');
                 const urlField = document.getElementById('url');
                 const visibleField = document.getElementById('visible');
+                const originField = document.getElementById('origin');
+                const scaleField = document.getElementById('scale');
 
                 createButton.addEventListener('click', () => {
                     console.log('CREATING NEW EMBEDDED IFRAME');
@@ -28,6 +30,8 @@
                             height: parseInt(heightField.value),
                         },
                         visible: !!visibleField.value,
+                        origin: originField.value,
+                        scale: parseFloat(scaleField.value),
                     });
                 });
 
@@ -61,6 +65,16 @@
                     const website = await WA.room.website.get('test');
                     website.visible = this.checked;
                 });
+
+                originField.addEventListener('change', async function() {
+                    const website = await WA.room.website.get('test');
+                    website.origin = this.value;
+                });
+
+                scaleField.addEventListener('change', async function() {
+                    const website = await WA.room.website.get('test');
+                    website.scale = parseFloat(this.value);
+                });
             });
         })
     </script>
@@ -72,6 +86,8 @@ width: <input type="text" id="width" value="600" /><br/>
 height: <input type="text" id="height" value="400" /><br/>
 URL: <input type="text" id="url" value="https://mensuel.framapad.org/p/rt6c904745-9oxm?lang=en" /><br/>
 Visible: <input type="checkbox" id="visible" value=1 /><br/>
+Origin: <input type="text" id="origin" value="map" /><br/>
+Scale: <input type="text" id="scale" value=1 /><br/>
 
 <button id="createEmbeddedWebsite">Create embedded website</button>
 

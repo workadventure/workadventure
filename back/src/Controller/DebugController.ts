@@ -36,9 +36,11 @@ export class DebugController {
                                     return "BatchedMessages";
                                 }
                                 if (value instanceof Map) {
-                                    const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
+                                    const obj: { [key: string | number]: unknown } = {};
                                     for (const [mapKey, mapValue] of value.entries()) {
-                                        obj[mapKey] = mapValue;
+                                        if (typeof mapKey === "number" || typeof mapKey === "string") {
+                                            obj[mapKey] = mapValue;
+                                        }
                                     }
                                     return obj;
                                 } else if (value instanceof Set) {

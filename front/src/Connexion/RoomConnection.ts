@@ -1,47 +1,9 @@
 import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import {
-    BatchMessage,
-    ClientToServerMessage,
-    GroupDeleteMessage,
-    GroupUpdateMessage,
-    ItemEventMessage,
-    PlayGlobalMessage,
-    PositionMessage,
-    RoomJoinedMessage,
-    ServerToClientMessage,
-    SetPlayerDetailsMessage,
-    SilentMessage,
-    StopGlobalMessage,
-    UserJoinedMessage,
-    UserLeftMessage,
-    UserMovedMessage,
-    UserMovesMessage,
-    ViewportMessage,
-    WebRtcDisconnectMessage,
-    WebRtcSignalToClientMessage,
-    WebRtcSignalToServerMessage,
-    WebRtcStartMessage,
-    ReportPlayerMessage,
-    TeleportMessageMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    CharacterLayerMessage,
-    PingMessage,
-    EmoteEventMessage,
-    EmotePromptMessage,
-    SendUserMessage,
-    BanUserMessage,
-    VariableMessage,
-    ErrorMessage,
-    PlayerDetailsUpdatedMessage,
-} from "../Messages/generated/messages_pb";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import Direction = PositionMessage.Direction;
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
-import {
-    EventMessage,
+import type {
     GroupCreatedUpdatedMessageInterface,
     ItemEventMessageInterface,
     MessageUserJoined,
@@ -56,10 +18,44 @@ import {
 } from "./ConnexionModels";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { adminMessagesService } from "./AdminMessagesService";
-import { worldFullMessageStream } from "./WorldFullMessageStream";
 import { connectionManager } from "./ConnectionManager";
-import { emoteEventStream } from "./EmoteEventStream";
+import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
+import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { localUserStore } from "./LocalUserStore";
+import {
+    RefreshRoomMessage,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    TokenExpiredMessage,
+    WorldConnexionMessage,
+    WorldFullMessage,
+    ErrorMessage as ErrorMessageTsProto,
+    UserMovedMessage as UserMovedMessageTsProto,
+    GroupUpdateMessage as GroupUpdateMessageTsProto,
+    GroupDeleteMessage as GroupDeleteMessageTsProto,
+    UserJoinedMessage as UserJoinedMessageTsProto,
+    UserLeftMessage as UserLeftMessageTsProto,
+    ItemEventMessage as ItemEventMessageTsProto,
+    EmoteEventMessage as EmoteEventMessageTsProto,
+    VariableMessage as VariableMessageTsProto,
+    PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
+    WorldFullWarningMessage,
+    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
+    PlayGlobalMessage as PlayGlobalMessageTsProto,
+    StopGlobalMessage as StopGlobalMessageTsProto,
+    SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
+    SendUserMessage as SendUserMessageTsProto,
+    BanUserMessage as BanUserMessageTsProto,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    PositionMessage as PositionMessageTsProto,
+    ViewportMessage as ViewportMessageTsProto,
+    PositionMessage_Direction,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    PingMessage as PingMessageTsProto,
+} from "../Messages/ts-proto-generated/messages";
+import { Subject } from "rxjs";
+import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
+import { match } from "assert";
 
 const manualPingDelay = 20000;
 
@@ -71,6 +67,79 @@ export class RoomConnection implements RoomConnection {
     private closed: boolean = false;
     private tags: string[] = [];
     private _userRoomToken: string | undefined;
+
+    private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
+    public readonly errorMessageStream = this._errorMessageStream.asObservable();
+
+    private readonly _roomJoinedMessageStream = new Subject<{
+        connection: RoomConnection;
+        room: RoomJoinedMessageInterface;
+    }>();
+    public readonly roomJoinedMessageStream = this._roomJoinedMessageStream.asObservable();
+
+    private readonly _webRtcStartMessageStream = new Subject<UserSimplePeerInterface>();
+    public readonly webRtcStartMessageStream = this._webRtcStartMessageStream.asObservable();
+
+    private readonly _webRtcSignalToClientMessageStream = new Subject<WebRtcSignalReceivedMessageInterface>();
+    public readonly webRtcSignalToClientMessageStream = this._webRtcSignalToClientMessageStream.asObservable();
+
+    private readonly _webRtcScreenSharingSignalToClientMessageStream =
+        new Subject<WebRtcSignalReceivedMessageInterface>();
+    public readonly webRtcScreenSharingSignalToClientMessageStream =
+        this._webRtcScreenSharingSignalToClientMessageStream.asObservable();
+
+    private readonly _webRtcDisconnectMessageStream = new Subject<WebRtcDisconnectMessageTsProto>();
+    public readonly webRtcDisconnectMessageStream = this._webRtcDisconnectMessageStream.asObservable();
+
+    private readonly _teleportMessageMessageStream = new Subject<string>();
+    public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
+
+    private readonly _sendJitsiJwtMessageStream = new Subject<SendJitsiJwtMessageTsProto>();
+    public readonly sendJitsiJwtMessageStream = this._sendJitsiJwtMessageStream.asObservable();
+
+    private readonly _worldFullMessageStream = new Subject<string | null>();
+    public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
+
+    private readonly _worldConnexionMessageStream = new Subject<WorldConnexionMessage>();
+    public readonly worldConnexionMessageStream = this._worldConnexionMessageStream.asObservable();
+
+    private readonly _tokenExpiredMessageStream = new Subject<TokenExpiredMessage>();
+    public readonly tokenExpiredMessageStream = this._tokenExpiredMessageStream.asObservable();
+
+    private readonly _userMovedMessageStream = new Subject<UserMovedMessageTsProto>();
+    public readonly userMovedMessageStream = this._userMovedMessageStream.asObservable();
+
+    private readonly _groupUpdateMessageStream = new Subject<GroupCreatedUpdatedMessageInterface>();
+    public readonly groupUpdateMessageStream = this._groupUpdateMessageStream.asObservable();
+
+    private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
+    public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
+
+    private readonly _userJoinedMessageStream = new Subject<MessageUserJoined>();
+    public readonly userJoinedMessageStream = this._userJoinedMessageStream.asObservable();
+
+    private readonly _userLeftMessageStream = new Subject<UserLeftMessageTsProto>();
+    public readonly userLeftMessageStream = this._userLeftMessageStream.asObservable();
+
+    private readonly _itemEventMessageStream = new Subject<{
+        itemId: number;
+        event: string;
+        parameters: unknown;
+        state: unknown;
+    }>();
+    public readonly itemEventMessageStream = this._itemEventMessageStream.asObservable();
+
+    private readonly _emoteEventMessageStream = new Subject<EmoteEventMessageTsProto>();
+    public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
+
+    private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
+    public readonly variableMessageStream = this._variableMessageStream.asObservable();
+
+    private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
+    public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
+
+    private readonly _connectionErrorStream = new Subject<CloseEvent>();
+    public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -130,8 +199,8 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onopen = (ev) => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
-            const pingMessage = new PingMessage();
-            interval = setInterval(() => this.socket.send(pingMessage.serializeBinary().buffer), manualPingDelay);
+            const pingMessage = PingMessageTsProto.encode({}).finish();
+            interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
         };
 
         this.socket.addEventListener("close", (event) => {
@@ -141,132 +210,252 @@ export class RoomConnection implements RoomConnection {
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {
-                this.dispatch(EventMessage.CONNECTING_ERROR, event);
+                this._connectionErrorStream.next(event);
             }
         });
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
-            const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
-            if (message.hasBatchmessage()) {
-                for (const subMessage of (message.getBatchmessage() as BatchMessage).getPayloadList()) {
-                    let event: string | null = null;
-                    let payload;
-                    if (subMessage.hasUsermovedmessage()) {
-                        event = EventMessage.USER_MOVED;
-                        payload = subMessage.getUsermovedmessage();
-                    } else if (subMessage.hasGroupupdatemessage()) {
-                        event = EventMessage.GROUP_CREATE_UPDATE;
-                        payload = subMessage.getGroupupdatemessage();
-                    } else if (subMessage.hasGroupdeletemessage()) {
-                        event = EventMessage.GROUP_DELETE;
-                        payload = subMessage.getGroupdeletemessage();
-                    } else if (subMessage.hasUserjoinedmessage()) {
-                        event = EventMessage.JOIN_ROOM;
-                        payload = subMessage.getUserjoinedmessage();
-                    } else if (subMessage.hasUserleftmessage()) {
-                        event = EventMessage.USER_LEFT;
-                        payload = subMessage.getUserleftmessage();
-                    } else if (subMessage.hasItemeventmessage()) {
-                        event = EventMessage.ITEM_EVENT;
-                        payload = subMessage.getItemeventmessage();
-                    } else if (subMessage.hasEmoteeventmessage()) {
-                        const emoteMessage = subMessage.getEmoteeventmessage() as EmoteEventMessage;
-                        emoteEventStream.fire(emoteMessage.getActoruserid(), emoteMessage.getEmote());
-                    } else if (subMessage.hasPlayerdetailsupdatedmessage()) {
-                        event = EventMessage.USER_DETAILS_UPDATED;
-                        payload = subMessage.getPlayerdetailsupdatedmessage();
-                    } else if (subMessage.hasErrormessage()) {
-                        const errorMessage = subMessage.getErrormessage() as ErrorMessage;
-                        console.error("An error occurred server side: " + errorMessage.getMessage());
-                    } else if (subMessage.hasVariablemessage()) {
-                        event = EventMessage.SET_VARIABLE;
-                        payload = subMessage.getVariablemessage();
+            const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
+            //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+            const message = serverToClientMessage.message;
+            if (message === undefined) {
+                return;
+            }
+
+            switch (message.$case) {
+                case "batchMessage": {
+                    for (const subMessageWrapper of message.batchMessage.payload) {
+                        const subMessage = subMessageWrapper.message;
+                        if (subMessage === undefined) {
+                            return;
+                        }
+                        switch (subMessage.$case) {
+                            case "errorMessage": {
+                                this._errorMessageStream.next(subMessage.errorMessage);
+                                console.error("An error occurred server side: " + subMessage.errorMessage.message);
+                                break;
+                            }
+                            case "userJoinedMessage": {
+                                this._userJoinedMessageStream.next(
+                                    this.toMessageUserJoined(subMessage.userJoinedMessage)
+                                );
+                                break;
+                            }
+                            case "userLeftMessage": {
+                                this._userLeftMessageStream.next(subMessage.userLeftMessage);
+                                break;
+                            }
+                            case "userMovedMessage": {
+                                this._userMovedMessageStream.next(subMessage.userMovedMessage);
+                                break;
+                            }
+                            case "groupUpdateMessage": {
+                                this._groupUpdateMessageStream.next(
+                                    this.toGroupCreatedUpdatedMessage(subMessage.groupUpdateMessage)
+                                );
+                                break;
+                            }
+                            case "groupDeleteMessage": {
+                                this._groupDeleteMessageStream.next(subMessage.groupDeleteMessage);
+                                break;
+                            }
+                            case "itemEventMessage": {
+                                this._itemEventMessageStream.next({
+                                    itemId: subMessage.itemEventMessage.itemId,
+                                    event: subMessage.itemEventMessage.event,
+                                    parameters: JSON.parse(subMessage.itemEventMessage.parametersJson),
+                                    state: JSON.parse(subMessage.itemEventMessage.stateJson),
+                                });
+                                break;
+                            }
+                            case "emoteEventMessage": {
+                                this._emoteEventMessageStream.next(subMessage.emoteEventMessage);
+                                break;
+                            }
+                            case "playerDetailsUpdatedMessage": {
+                                this._playerDetailsUpdatedMessageStream.next(subMessage.playerDetailsUpdatedMessage);
+                                break;
+                            }
+                            case "variableMessage": {
+                                const name = subMessage.variableMessage.name;
+                                const serializedValue = subMessage.variableMessage.value;
+                                let value: unknown = undefined;
+                                if (serializedValue) {
+                                    try {
+                                        value = JSON.parse(serializedValue);
+                                    } catch (e) {
+                                        console.error(
+                                            'Unable to unserialize value received from server for variable "' +
+                                                name +
+                                                '". Value received: "' +
+                                                serializedValue +
+                                                '". Error: ',
+                                            e
+                                        );
+                                    }
+                                }
+
+                                this._variableMessageStream.next({ name, value });
+                                break;
+                            }
+                            default: {
+                                // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                const tmp: never = subMessage;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case "roomJoinedMessage": {
+                    const roomJoinedMessage = message.roomJoinedMessage;
+
+                    const items: { [itemId: number]: unknown } = {};
+                    for (const item of roomJoinedMessage.item) {
+                        items[item.itemId] = JSON.parse(item.stateJson);
+                    }
+
+                    const variables = new Map<string, unknown>();
+                    for (const variable of roomJoinedMessage.variable) {
+                        try {
+                            variables.set(variable.name, JSON.parse(variable.value));
+                        } catch (e) {
+                            console.error(
+                                'Unable to unserialize value received from server for variable "' +
+                                    variable.name +
+                                    '". Value received: "' +
+                                    variable.value +
+                                    '". Error: ',
+                                e
+                            );
+                        }
+                    }
+
+                    this.userId = roomJoinedMessage.currentUserId;
+                    this.tags = roomJoinedMessage.tag;
+                    this._userRoomToken = roomJoinedMessage.userRoomToken;
+
+                    this._roomJoinedMessageStream.next({
+                        connection: this,
+                        room: {
+                            items,
+                            variables,
+                        } as RoomJoinedMessageInterface,
+                    });
+                    break;
+                }
+                case "worldFullMessage": {
+                    this._worldFullMessageStream.next(null);
+                    this.closed = true;
+                    break;
+                }
+                case "tokenExpiredMessage": {
+                    connectionManager.logout().catch((e) => console.error(e));
+                    this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
+                    break;
+                }
+                case "worldConnexionMessage": {
+                    this._worldFullMessageStream.next(message.worldConnexionMessage.message);
+                    this.closed = true;
+                    break;
+                }
+                case "webRtcSignalToClientMessage": {
+                    this._webRtcSignalToClientMessageStream.next({
+                        userId: message.webRtcSignalToClientMessage.userId,
+                        signal: JSON.parse(message.webRtcSignalToClientMessage.signal),
+                        webRtcUser: message.webRtcSignalToClientMessage.webrtcUserName
+                            ? message.webRtcSignalToClientMessage.webrtcUserName
+                            : undefined,
+                        webRtcPassword: message.webRtcSignalToClientMessage.webrtcPassword
+                            ? message.webRtcSignalToClientMessage.webrtcPassword
+                            : undefined,
+                    });
+                    break;
+                }
+                case "webRtcScreenSharingSignalToClientMessage": {
+                    this._webRtcScreenSharingSignalToClientMessageStream.next({
+                        userId: message.webRtcScreenSharingSignalToClientMessage.userId,
+                        signal: JSON.parse(message.webRtcScreenSharingSignalToClientMessage.signal),
+                        webRtcUser: message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
+                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcUserName
+                            : undefined,
+                        webRtcPassword: message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
+                            ? message.webRtcScreenSharingSignalToClientMessage.webrtcPassword
+                            : undefined,
+                    });
+                    break;
+                }
+                case "webRtcStartMessage": {
+                    this._webRtcStartMessageStream.next({
+                        userId: message.webRtcStartMessage.userId,
+                        initiator: message.webRtcStartMessage.initiator,
+                        webRtcUser: message.webRtcStartMessage.webrtcUserName
+                            ? message.webRtcStartMessage.webrtcUserName
+                            : undefined,
+                        webRtcPassword: message.webRtcStartMessage.webrtcPassword
+                            ? message.webRtcStartMessage.webrtcPassword
+                            : undefined,
+                    });
+                    break;
+                }
+                case "webRtcDisconnectMessage": {
+                    this._webRtcDisconnectMessageStream.next(message.webRtcDisconnectMessage);
+                    break;
+                }
+                case "teleportMessageMessage": {
+                    // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
+                    this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
+                    break;
+                }
+                case "sendJitsiJwtMessage": {
+                    this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
+                    break;
+                }
+                case "sendUserMessage": {
+                    adminMessagesService.onSendusermessage(message.sendUserMessage);
+                    break;
+                }
+                case "banUserMessage": {
+                    adminMessagesService.onSendusermessage(message.banUserMessage);
+                    break;
+                }
+                case "worldFullWarningMessage": {
+                    warningContainerStore.activateWarningContainer();
+                    break;
+                }
+                case "refreshRoomMessage": {
+                    //todo: implement a way to notify the user the room was refreshed.
+                    break;
+                }
+                case "followRequestMessage": {
+                    if (!localUserStore.getIgnoreFollowRequests()) {
+                        followUsersStore.addFollowRequest(message.followRequestMessage.leader);
+                    }
+                    break;
+                }
+                case "followConfirmationMessage": {
+                    followUsersStore.addFollower(message.followConfirmationMessage.follower);
+                    break;
+                }
+                case "followAbortMessage": {
+                    if (get(followRoleStore) === "follower") {
+                        followUsersStore.stopFollowing();
                     } else {
-                        throw new Error("Unexpected batch message type");
+                        followUsersStore.removeFollower(message.followAbortMessage.follower);
                     }
-
-                    if (event) {
-                        this.dispatch(event, payload);
-                    }
+                    break;
                 }
-            } else if (message.hasRoomjoinedmessage()) {
-                const roomJoinedMessage = message.getRoomjoinedmessage() as RoomJoinedMessage;
-
-                const items: { [itemId: number]: unknown } = {};
-                for (const item of roomJoinedMessage.getItemList()) {
-                    items[item.getItemid()] = JSON.parse(item.getStatejson());
+                case "errorMessage": {
+                    this._errorMessageStream.next(message.errorMessage);
+                    console.error("An error occurred server side: " + message.errorMessage.message);
+                    break;
                 }
-
-                const variables = new Map<string, unknown>();
-                for (const variable of roomJoinedMessage.getVariableList()) {
-                    try {
-                        variables.set(variable.getName(), JSON.parse(variable.getValue()));
-                    } catch (e) {
-                        console.error(
-                            'Unable to unserialize value received from server for variable "' +
-                                variable.getName() +
-                                '". Value received: "' +
-                                variable.getValue() +
-                                '". Error: ',
-                            e
-                        );
-                    }
+                default: {
+                    // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                    const tmp: never = message;
                 }
-
-                this.userId = roomJoinedMessage.getCurrentuserid();
-                this.tags = roomJoinedMessage.getTagList();
-                this._userRoomToken = roomJoinedMessage.getUserroomtoken();
-
-                this.dispatch(EventMessage.CONNECT, {
-                    connection: this,
-                    room: {
-                        items,
-                        variables,
-                    } as RoomJoinedMessageInterface,
-                });
-            } else if (message.hasWorldfullmessage()) {
-                worldFullMessageStream.onMessage();
-                this.closed = true;
-            } else if (message.hasTokenexpiredmessage()) {
-                connectionManager.logout();
-                this.closed = true; //technically, this isn't needed since loadOpenIDScreen() will do window.location.assign() but I prefer to leave it for consistency
-            } else if (message.hasWorldconnexionmessage()) {
-                worldFullMessageStream.onMessage(message.getWorldconnexionmessage()?.getMessage());
-                this.closed = true;
-            } else if (message.hasWebrtcsignaltoclientmessage()) {
-                this.dispatch(EventMessage.WEBRTC_SIGNAL, message.getWebrtcsignaltoclientmessage());
-            } else if (message.hasWebrtcscreensharingsignaltoclientmessage()) {
-                this.dispatch(
-                    EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL,
-                    message.getWebrtcscreensharingsignaltoclientmessage()
-                );
-            } else if (message.hasWebrtcstartmessage()) {
-                this.dispatch(EventMessage.WEBRTC_START, message.getWebrtcstartmessage());
-            } else if (message.hasWebrtcdisconnectmessage()) {
-                this.dispatch(EventMessage.WEBRTC_DISCONNECT, message.getWebrtcdisconnectmessage());
-            } else if (message.hasPlayglobalmessage()) {
-                this.dispatch(EventMessage.PLAY_GLOBAL_MESSAGE, message.getPlayglobalmessage());
-            } else if (message.hasStopglobalmessage()) {
-                this.dispatch(EventMessage.STOP_GLOBAL_MESSAGE, message.getStopglobalmessage());
-            } else if (message.hasTeleportmessagemessage()) {
-                this.dispatch(EventMessage.TELEPORT, message.getTeleportmessagemessage());
-            } else if (message.hasSendjitsijwtmessage()) {
-                this.dispatch(EventMessage.START_JITSI_ROOM, message.getSendjitsijwtmessage());
-            } else if (message.hasSendusermessage()) {
-                adminMessagesService.onSendusermessage(message.getSendusermessage() as SendUserMessage);
-            } else if (message.hasBanusermessage()) {
-                adminMessagesService.onSendusermessage(message.getBanusermessage() as BanUserMessage);
-            } else if (message.hasWorldfullwarningmessage()) {
-                warningContainerStore.activateWarningContainer();
-            } else if (message.hasRefreshroommessage()) {
-                //todo: implement a way to notify the user the room was refreshed.
-            } else if (message.hasErrormessage()) {
-                const errorMessage = message.getErrormessage() as ErrorMessage;
-                console.error("An error occurred server side: " + errorMessage.getMessage());
-            } else {
-                throw new Error("Unknown message received");
             }
         };
     }
@@ -293,17 +482,25 @@ export class RoomConnection implements RoomConnection {
     }*/
 
     public emitPlayerOutlineColor(color: number | null) {
-        const message = new SetPlayerDetailsMessage();
+        let message: SetPlayerDetailsMessageTsProto;
         if (color === null) {
-            message.setRemoveoutlinecolor(true);
+            message = SetPlayerDetailsMessageTsProto.fromPartial({
+                removeOutlineColor: true,
+            });
         } else {
-            message.setOutlinecolor(color);
+            message = SetPlayerDetailsMessageTsProto.fromPartial({
+                outlineColor: color,
+            });
         }
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setSetplayerdetailsmessage(message);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        }).finish();
 
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public closeConnection(): void {
@@ -311,41 +508,35 @@ export class RoomConnection implements RoomConnection {
         this.closed = true;
     }
 
-    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessage {
-        const positionMessage = new PositionMessage();
-        positionMessage.setX(Math.floor(x));
-        positionMessage.setY(Math.floor(y));
-        let directionEnum: Direction;
-        switch (direction) {
-            case "up":
-                directionEnum = Direction.UP;
-                break;
-            case "down":
-                directionEnum = Direction.DOWN;
-                break;
-            case "left":
-                directionEnum = Direction.LEFT;
-                break;
-            case "right":
-                directionEnum = Direction.RIGHT;
-                break;
-            default:
-                throw new Error("Unexpected direction");
-        }
-        positionMessage.setDirection(directionEnum);
-        positionMessage.setMoving(moving);
-
-        return positionMessage;
+    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessageTsProto {
+        return {
+            x: Math.floor(x),
+            y: Math.floor(y),
+            moving,
+            direction: (() => {
+                switch (direction) {
+                    case "up":
+                        return PositionMessage_Direction.UP;
+                    case "down":
+                        return PositionMessage_Direction.DOWN;
+                    case "left":
+                        return PositionMessage_Direction.LEFT;
+                    case "right":
+                        return PositionMessage_Direction.RIGHT;
+                    default:
+                        throw new Error("Unexpected direction");
+                }
+            })(),
+        };
     }
 
-    private toViewportMessage(viewport: ViewportInterface): ViewportMessage {
-        const viewportMessage = new ViewportMessage();
-        viewportMessage.setLeft(Math.floor(viewport.left));
-        viewportMessage.setRight(Math.floor(viewport.right));
-        viewportMessage.setTop(Math.floor(viewport.top));
-        viewportMessage.setBottom(Math.floor(viewport.bottom));
-
-        return viewportMessage;
+    private toViewportMessage(viewport: ViewportInterface): ViewportMessageTsProto {
+        return {
+            left: Math.floor(viewport.left),
+            right: Math.floor(viewport.right),
+            top: Math.floor(viewport.top),
+            bottom: Math.floor(viewport.bottom),
+        };
     }
 
     public sharePosition(x: number, y: number, direction: string, moving: boolean, viewport: ViewportInterface): void {
@@ -357,79 +548,75 @@ export class RoomConnection implements RoomConnection {
 
         const viewportMessage = this.toViewportMessage(viewport);
 
-        const userMovesMessage = new UserMovesMessage();
-        userMovesMessage.setPosition(positionMessage);
-        userMovesMessage.setViewport(viewportMessage);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "userMovesMessage",
+                userMovesMessage: {
+                    position: positionMessage,
+                    viewport: viewportMessage,
+                },
+            },
+        }).finish();
 
-        //console.log('Sending position ', positionMessage.getX(), positionMessage.getY());
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setUsermovesmessage(userMovesMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public setSilent(silent: boolean): void {
-        const silentMessage = new SilentMessage();
-        silentMessage.setSilent(silent);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "silentMessage",
+                silentMessage: {
+                    silent,
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setSilentmessage(silentMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public setViewport(viewport: ViewportInterface): void {
-        const viewportMessage = new ViewportMessage();
-        viewportMessage.setTop(Math.round(viewport.top));
-        viewportMessage.setBottom(Math.round(viewport.bottom));
-        viewportMessage.setLeft(Math.round(viewport.left));
-        viewportMessage.setRight(Math.round(viewport.right));
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "viewportMessage",
+                viewportMessage: this.toViewportMessage(viewport),
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setViewportmessage(viewportMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
-    public onUserJoins(callback: (message: MessageUserJoined) => void): void {
+    /*    public onUserJoins(callback: (message: MessageUserJoined) => void): void {
         this.onMessage(EventMessage.JOIN_ROOM, (message: UserJoinedMessage) => {
             callback(this.toMessageUserJoined(message));
         });
-    }
+    }*/
 
     // TODO: move this to protobuf utils
-    private toMessageUserJoined(message: UserJoinedMessage): MessageUserJoined {
-        const position = message.getPosition();
+    private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
+        const position = message.position;
         if (position === undefined) {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message
-            .getCharacterlayersList()
-            .map((characterLayer: CharacterLayerMessage): BodyResourceDescriptionInterface => {
-                return {
-                    name: characterLayer.getName(),
-                    img: characterLayer.getUrl(),
-                };
-            });
+        const characterLayers = message.characterLayers.map((characterLayer): BodyResourceDescriptionInterface => {
+            return {
+                name: characterLayer.name,
+                img: characterLayer.url,
+            };
+        });
 
-        const companion = message.getCompanion();
+        const companion = message.companion;
 
         return {
-            userId: message.getUserid(),
-            name: message.getName(),
+            userId: message.userId,
+            name: message.name,
             characterLayers,
-            visitCardUrl: message.getVisitcardurl(),
+            visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            companion: companion ? companion.getName() : null,
-            userUuid: message.getUseruuid(),
-            outlineColor: message.getHasoutline() ? message.getOutlinecolor() : undefined,
+            companion: companion ? companion.name : null,
+            userUuid: message.userUuid,
+            outlineColor: message.hasOutline ? message.outlineColor : undefined,
         };
-    }
-
-    public onUserMoved(callback: (message: UserMovedMessage) => void): void {
-        this.onMessage(EventMessage.USER_MOVED, callback);
-        //this.socket.on(EventMessage.USER_MOVED, callback);
     }
 
     /**
@@ -444,114 +631,49 @@ export class RoomConnection implements RoomConnection {
         callbacks.push(callback);
     }
 
-    public onUserLeft(callback: (userId: number) => void): void {
-        this.onMessage(EventMessage.USER_LEFT, (message: UserLeftMessage) => {
-            callback(message.getUserid());
-        });
-    }
-
-    public onGroupUpdatedOrCreated(
-        callback: (groupCreateUpdateMessage: GroupCreatedUpdatedMessageInterface) => void
-    ): void {
-        this.onMessage(EventMessage.GROUP_CREATE_UPDATE, (message: GroupUpdateMessage) => {
-            callback(this.toGroupCreatedUpdatedMessage(message));
-        });
-    }
-
-    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessage): GroupCreatedUpdatedMessageInterface {
-        const position = message.getPosition();
+    private toGroupCreatedUpdatedMessage(message: GroupUpdateMessageTsProto): GroupCreatedUpdatedMessageInterface {
+        const position = message.position;
         if (position === undefined) {
             throw new Error("Missing position in GROUP_CREATE_UPDATE");
         }
 
         return {
-            groupId: message.getGroupid(),
-            position: position.toObject(),
-            groupSize: message.getGroupsize(),
+            groupId: message.groupId,
+            position: position,
+            groupSize: message.groupSize,
         };
-    }
-
-    public onGroupDeleted(callback: (groupId: number) => void): void {
-        this.onMessage(EventMessage.GROUP_DELETE, (message: GroupDeleteMessage) => {
-            callback(message.getGroupid());
-        });
-    }
-
-    public onConnectingError(callback: (event: CloseEvent) => void): void {
-        this.onMessage(EventMessage.CONNECTING_ERROR, (event: CloseEvent) => {
-            callback(event);
-        });
     }
 
     public onConnectError(callback: (error: Event) => void): void {
         this.socket.addEventListener("error", callback);
     }
 
-    public onConnect(callback: (roomConnection: OnConnectInterface) => void): void {
-        //this.socket.addEventListener('open', callback)
-        this.onMessage(EventMessage.CONNECT, callback);
-    }
-
-    /**
-     * Triggered when we receive all the details of a room (users, groups, ...)
-     */
-    /*public onStartRoom(callback: (event: RoomJoinedMessageInterface) => void): void {
-        this.onMessage(EventMessage.START_ROOM, callback);
-    }*/
-
     public sendWebrtcSignal(signal: unknown, receiverId: number) {
-        const webRtcSignal = new WebRtcSignalToServerMessage();
-        webRtcSignal.setReceiverid(receiverId);
-        webRtcSignal.setSignal(JSON.stringify(signal));
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "webRtcSignalToServerMessage",
+                webRtcSignalToServerMessage: {
+                    receiverId,
+                    signal: JSON.stringify(signal),
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setWebrtcsignaltoservermessage(webRtcSignal);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public sendWebrtcScreenSharingSignal(signal: unknown, receiverId: number) {
-        const webRtcSignal = new WebRtcSignalToServerMessage();
-        webRtcSignal.setReceiverid(receiverId);
-        webRtcSignal.setSignal(JSON.stringify(signal));
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "webRtcScreenSharingSignalToServerMessage",
+                webRtcScreenSharingSignalToServerMessage: {
+                    receiverId,
+                    signal: JSON.stringify(signal),
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setWebrtcscreensharingsignaltoservermessage(webRtcSignal);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
-    }
-
-    public receiveWebrtcStart(callback: (message: UserSimplePeerInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_START, (message: WebRtcStartMessage) => {
-            callback({
-                userId: message.getUserid(),
-                initiator: message.getInitiator(),
-                webRtcUser: message.getWebrtcusername() ?? undefined,
-                webRtcPassword: message.getWebrtcpassword() ?? undefined,
-            });
-        });
-    }
-
-    public receiveWebrtcSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_SIGNAL, (message: WebRtcSignalToClientMessage) => {
-            callback({
-                userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal()),
-                webRtcUser: message.getWebrtcusername() ?? undefined,
-                webRtcPassword: message.getWebrtcpassword() ?? undefined,
-            });
-        });
-    }
-
-    public receiveWebrtcScreenSharingSignal(callback: (message: WebRtcSignalReceivedMessageInterface) => void) {
-        this.onMessage(EventMessage.WEBRTC_SCREEN_SHARING_SIGNAL, (message: WebRtcSignalToClientMessage) => {
-            callback({
-                userId: message.getUserid(),
-                signal: JSON.parse(message.getSignal()),
-                webRtcUser: message.getWebrtcusername() ?? undefined,
-                webRtcPassword: message.getWebrtcpassword() ?? undefined,
-            });
-        });
+        this.socket.send(bytes);
     }
 
     public onServerDisconnected(callback: () => void): void {
@@ -573,61 +695,34 @@ export class RoomConnection implements RoomConnection {
         return this.userId;
     }
 
-    disconnectMessage(callback: (message: WebRtcDisconnectMessageInterface) => void): void {
-        this.onMessage(EventMessage.WEBRTC_DISCONNECT, (message: WebRtcDisconnectMessage) => {
-            callback({
-                userId: message.getUserid(),
-            });
-        });
-    }
-
     emitActionableEvent(itemId: number, event: string, state: unknown, parameters: unknown): void {
-        const itemEventMessage = new ItemEventMessage();
-        itemEventMessage.setItemid(itemId);
-        itemEventMessage.setEvent(event);
-        itemEventMessage.setStatejson(JSON.stringify(state));
-        itemEventMessage.setParametersjson(JSON.stringify(parameters));
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "itemEventMessage",
+                itemEventMessage: {
+                    itemId,
+                    event,
+                    stateJson: JSON.stringify(state),
+                    parametersJson: JSON.stringify(parameters),
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setItemeventmessage(itemEventMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     emitSetVariableEvent(name: string, value: unknown): void {
-        const variableMessage = new VariableMessage();
-        variableMessage.setName(name);
-        variableMessage.setValue(JSON.stringify(value));
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "variableMessage",
+                variableMessage: {
+                    name,
+                    value: JSON.stringify(value),
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setVariablemessage(variableMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
-    }
-
-    onActionableEvent(callback: (message: ItemEventMessageInterface) => void): void {
-        this.onMessage(EventMessage.ITEM_EVENT, (message: ItemEventMessage) => {
-            callback({
-                itemId: message.getItemid(),
-                event: message.getEvent(),
-                parameters: JSON.parse(message.getParametersjson()),
-                state: JSON.parse(message.getStatejson()),
-            });
-        });
-    }
-
-    onPlayerDetailsUpdated(callback: (message: PlayerDetailsUpdatedMessageInterface) => void): void {
-        this.onMessage(EventMessage.USER_DETAILS_UPDATED, (message: PlayerDetailsUpdatedMessage) => {
-            const details = message.getDetails();
-            if (details === undefined) {
-                throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
-            }
-            callback({
-                userId: message.getUserid(),
-                outlineColor: details.getOutlinecolor(),
-                removeOutlineColor: details.getRemoveoutlinecolor(),
-            });
-        });
+        this.socket.send(bytes);
     }
 
     public uploadAudio(file: FormData) {
@@ -641,91 +736,48 @@ export class RoomConnection implements RoomConnection {
             });
     }
 
-    /*    public receivePlayGlobalMessage(callback: (message: PlayGlobalMessageInterface) => void) {
-        return this.onMessage(EventMessage.PLAY_GLOBAL_MESSAGE, (message: PlayGlobalMessage) => {
-            callback({
-                id: message.getId(),
-                type: message.getType(),
-                message: message.getMessage(),
-            });
-        });
-    }*/
-
-    public receiveStopGlobalMessage(callback: (messageId: string) => void) {
-        return this.onMessage(EventMessage.STOP_GLOBAL_MESSAGE, (message: StopGlobalMessage) => {
-            callback(message.getId());
-        });
-    }
-
-    public receiveTeleportMessage(callback: (messageId: string) => void) {
-        return this.onMessage(EventMessage.TELEPORT, (message: TeleportMessageMessage) => {
-            callback(message.getMap());
-        });
-    }
-
     public emitGlobalMessage(message: PlayGlobalMessageInterface): void {
-        const playGlobalMessage = new PlayGlobalMessage();
-        playGlobalMessage.setType(message.type);
-        playGlobalMessage.setContent(message.content);
-        playGlobalMessage.setBroadcasttoworld(message.broadcastToWorld);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "playGlobalMessage",
+                playGlobalMessage: {
+                    type: message.type,
+                    content: message.content,
+                    broadcastToWorld: message.broadcastToWorld,
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setPlayglobalmessage(playGlobalMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public emitReportPlayerMessage(reportedUserUuid: string, reportComment: string): void {
-        const reportPlayerMessage = new ReportPlayerMessage();
-        reportPlayerMessage.setReporteduseruuid(reportedUserUuid);
-        reportPlayerMessage.setReportcomment(reportComment);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "reportPlayerMessage",
+                reportPlayerMessage: {
+                    reportedUserUuid,
+                    reportComment,
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setReportplayermessage(reportPlayerMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+        this.socket.send(bytes);
     }
 
     public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string | undefined): void {
-        const queryJitsiJwtMessage = new QueryJitsiJwtMessage();
-        queryJitsiJwtMessage.setJitsiroom(jitsiRoom);
-        if (tag !== undefined) {
-            queryJitsiJwtMessage.setTag(tag);
-        }
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "queryJitsiJwtMessage",
+                queryJitsiJwtMessage: {
+                    jitsiRoom,
+                    tag: tag ?? "", // empty string is sent as "undefined" by ts-proto
+                    // TODO: when we migrated "pusher" to ts-proto, migrate this to a StringValue
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
-
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
-    }
-
-    public onStartJitsiRoom(callback: (jwt: string, room: string) => void): void {
-        this.onMessage(EventMessage.START_JITSI_ROOM, (message: SendJitsiJwtMessage) => {
-            callback(message.getJwt(), message.getJitsiroom());
-        });
-    }
-
-    public onSetVariable(callback: (name: string, value: unknown) => void): void {
-        this.onMessage(EventMessage.SET_VARIABLE, (message: VariableMessage) => {
-            const name = message.getName();
-            const serializedValue = message.getValue();
-            let value: unknown = undefined;
-            if (serializedValue) {
-                try {
-                    value = JSON.parse(serializedValue);
-                } catch (e) {
-                    console.error(
-                        'Unable to unserialize value received from server for variable "' +
-                            name +
-                            '". Value received: "' +
-                            serializedValue +
-                            '". Error: ',
-                        e
-                    );
-                }
-            }
-            callback(name, value);
-        });
+        this.socket.send(bytes);
     }
 
     public hasTag(tag: string): boolean {
@@ -737,13 +789,71 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitEmoteEvent(emoteName: string): void {
-        const emoteMessage = new EmotePromptMessage();
-        emoteMessage.setEmote(emoteName);
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "emotePromptMessage",
+                emotePromptMessage: {
+                    emote: emoteName,
+                },
+            },
+        }).finish();
 
-        const clientToServerMessage = new ClientToServerMessage();
-        clientToServerMessage.setEmotepromptmessage(emoteMessage);
+        this.socket.send(bytes);
+    }
 
-        this.socket.send(clientToServerMessage.serializeBinary().buffer);
+    public emitFollowRequest(): void {
+        if (!this.userId) {
+            return;
+        }
+
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "followRequestMessage",
+                followRequestMessage: {
+                    leader: this.userId,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitFollowConfirmation(): void {
+        if (!this.userId) {
+            return;
+        }
+
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "followConfirmationMessage",
+                followConfirmationMessage: {
+                    leader: get(followUsersStore)[0],
+                    follower: this.userId,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitFollowAbort(): void {
+        const isLeader = get(followRoleStore) === "leader";
+        const hasFollowers = get(followUsersStore).length > 0;
+        if (!this.userId || (isLeader && !hasFollowers)) {
+            return;
+        }
+
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "followAbortMessage",
+                followAbortMessage: {
+                    leader: isLeader ? this.userId : get(followUsersStore)[0],
+                    follower: isLeader ? 0 : this.userId,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
     }
 
     public getAllTags(): string[] {

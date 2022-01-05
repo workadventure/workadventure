@@ -1,17 +1,17 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { textMessageContentStore, textMessageVisibleStore } from "../../Stores/TypeMessageStore/TextMessageStore";
+    import { fly, fade } from "svelte/transition";
     import { QuillDeltaToHtmlConverter } from "quill-delta-to-html";
+    import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
+    import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
 
-    let converter: QuillDeltaToHtmlConverter;
-    $: {
-        const content = JSON.parse($textMessageContentStore);
-        converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
-    }
+    export let message: Message;
+
+    const content = JSON.parse(message.text);
+    const converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
     const NAME_BUTTON = "Ok";
 
     function closeTextMessage() {
-        textMessageVisibleStore.set(false);
+        textMessageStore.clearMessageById(message.id);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -23,7 +23,11 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="main-text-message nes-container is-rounded" transition:fly={{ x: -1000, duration: 500 }}>
+<div
+    class="main-text-message nes-container is-rounded"
+    in:fly={{ x: -1000, duration: 500, delay: 250 }}
+    out:fade={{ duration: 250 }}
+>
     <div class="content-text-message">
         {@html converter.convert()}
     </div>
@@ -43,6 +47,8 @@
         width: 80vw;
         margin-right: auto;
         margin-left: auto;
+        margin-bottom: 16px;
+        margin-top: 0;
         padding-bottom: 0;
 
         pointer-events: auto;

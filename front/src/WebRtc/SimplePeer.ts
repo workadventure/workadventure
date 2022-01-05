@@ -75,23 +75,25 @@ export class SimplePeer {
      */
     private initialise() {
         //receive signal by gemer
-        this.Connection.receiveWebrtcSignal((message: WebRtcSignalReceivedMessageInterface) => {
+        this.Connection.webRtcSignalToClientMessageStream.subscribe((message: WebRtcSignalReceivedMessageInterface) => {
             this.receiveWebrtcSignal(message);
         });
 
         //receive signal by gemer
-        this.Connection.receiveWebrtcScreenSharingSignal((message: WebRtcSignalReceivedMessageInterface) => {
-            this.receiveWebrtcScreenSharingSignal(message);
-        });
+        this.Connection.webRtcScreenSharingSignalToClientMessageStream.subscribe(
+            (message: WebRtcSignalReceivedMessageInterface) => {
+                this.receiveWebrtcScreenSharingSignal(message);
+            }
+        );
 
         mediaManager.showGameOverlay();
 
         //receive message start
-        this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
+        this.Connection.webRtcStartMessageStream.subscribe((message: UserSimplePeerInterface) => {
             this.receiveWebrtcStart(message);
         });
 
-        this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
+        this.Connection.webRtcDisconnectMessageStream.subscribe((data: WebRtcDisconnectMessageInterface): void => {
             this.closeConnection(data.userId);
         });
     }

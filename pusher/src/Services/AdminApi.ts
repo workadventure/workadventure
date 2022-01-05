@@ -75,21 +75,6 @@ class AdminApi {
         return res.data;
     }
 
-    async fetchCheckUserByToken(organizationMemberToken: string): Promise<AdminApiData> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
-        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await Axios.get(ADMIN_API_URL + "/api/check-user/" + organizationMemberToken, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-        });
-        if (!isAdminApiData(res.data)) {
-            console.error("Message received from /api/check-user is not in the expected format. Message: ", res.data);
-            throw new Error("Message received from /api/check-user is not in the expected format.");
-        }
-        return res.data;
-    }
-
     reportPlayer(
         reportedUserUuid: string,
         reportedUserComment: string,

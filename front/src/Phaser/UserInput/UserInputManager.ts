@@ -16,6 +16,7 @@ export enum UserInputEvent {
     MoveDown,
     SpeedUp,
     Interact,
+    Follow,
     Shout,
     JoystickMove,
 }
@@ -146,6 +147,10 @@ export class UserInputManager {
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
+            },
+            {
+                event: UserInputEvent.Follow,
+                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
             {
                 event: UserInputEvent.Shout,

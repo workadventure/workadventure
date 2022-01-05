@@ -1,16 +1,17 @@
 import { PlayerAnimationDirections } from "./Animation";
 import type { GameScene } from "../Game/GameScene";
-import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
+import type { RemotePlayer } from "../Entity/RemotePlayer";
+
+import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
+import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
-    private previousDirection: string = PlayerAnimationDirections.Down;
-    private wasMoving: boolean = false;
-
     constructor(
         Scene: GameScene,
         x: number,
@@ -29,71 +30,105 @@ export class Player extends Character {
         this.getBody().setImmovable(false);
     }
 
-    moveUser(delta: number): void {
-        //if user client on shift, camera and player speed
-        let direction = null;
-        let moving = false;
-
-        const activeEvents = this.userInputManager.getEventListForGameTick();
-        const speedMultiplier = activeEvents.get(UserInputEvent.SpeedUp) ? 25 : 9;
-        const moveAmount = speedMultiplier * 20;
-
-        let x = 0;
-        let y = 0;
+    private inputStep(activeEvents: ActiveEventList, x: number, y: number) {
+        // Process input events
         if (activeEvents.get(UserInputEvent.MoveUp)) {
-            y = -moveAmount;
-            direction = PlayerAnimationDirections.Up;
-            moving = true;
+            y = y - 1;
         } else if (activeEvents.get(UserInputEvent.MoveDown)) {
-            y = moveAmount;
-            direction = PlayerAnimationDirections.Down;
-            moving = true;
+            y = y + 1;
         }
+
         if (activeEvents.get(UserInputEvent.MoveLeft)) {
-            x = -moveAmount;
-            direction = PlayerAnimationDirections.Left;
-            moving = true;
+            x = x - 1;
         } else if (activeEvents.get(UserInputEvent.MoveRight)) {
-            x = moveAmount;
-            direction = PlayerAnimationDirections.Right;
-            moving = true;
+            x = x + 1;
         }
-        moving = moving || activeEvents.get(UserInputEvent.JoystickMove);
 
-        if (x !== 0 || y !== 0) {
+        // Compute movement deltas
+        const followMode = get(followStateStore) !== "off";
+        const speedup = activeEvents.get(UserInputEvent.SpeedUp) && !followMode ? 25 : 9;
+        const moveAmount = speedup * 20;
+        x = x * moveAmount;
+        y = y * moveAmount;
+
+        // Compute moving state
+        const joystickMovement = activeEvents.get(UserInputEvent.JoystickMove);
+        const moving = x !== 0 || y !== 0 || joystickMovement;
+
+        // Compute direction
+        let direction = this.lastDirection;
+        if (moving && !joystickMovement) {
+            if (Math.abs(x) > Math.abs(y)) {
+                direction = x < 0 ? PlayerAnimationDirections.Left : PlayerAnimationDirections.Right;
+            } else {
+                direction = y < 0 ? PlayerAnimationDirections.Up : PlayerAnimationDirections.Down;
+            }
+        }
+
+        // Send movement events
+        const emit = () => this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
+        if (moving) {
             this.move(x, y);
-            this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y, oldX: x, oldY: y });
-        } else if (this.wasMoving && moving) {
-            // slow joystick movement
-            this.move(0, 0);
-            this.emit(hasMovedEventName, {
-                moving,
-                direction: this.previousDirection,
-                x: this.x,
-                y: this.y,
-                oldX: x,
-                oldY: y,
-            });
-        } else if (this.wasMoving && !moving) {
+            emit();
+        } else if (get(userMovingStore)) {
             this.stop();
-            this.emit(hasMovedEventName, {
-                moving,
-                direction: this.previousDirection,
-                x: this.x,
-                y: this.y,
-                oldX: x,
-                oldY: y,
-            });
+            emit();
         }
 
-        if (direction !== null) {
-            this.previousDirection = direction;
-        }
-        this.wasMoving = moving;
+        // Update state
         userMovingStore.set(moving);
     }
 
-    public isMoving(): boolean {
-        return this.wasMoving;
+    private computeFollowMovement(): number[] {
+        // Find followed WOKA and abort following if we lost it
+        const player = this.scene.MapPlayersByKey.get(get(followUsersStore)[0]);
+        if (!player) {
+            this.scene.connection?.emitFollowAbort();
+            followStateStore.set("off");
+            return [0, 0];
+        }
+
+        // Compute movement direction
+        const xDistance = player.x - this.x;
+        const yDistance = player.y - this.y;
+        const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
+        if (distance < 2000) {
+            return [0, 0];
+        }
+        const xMovement = xDistance / Math.sqrt(distance);
+        const yMovement = yDistance / Math.sqrt(distance);
+        return [xMovement, yMovement];
+    }
+
+    public moveUser(delta: number): void {
+        const activeEvents = this.userInputManager.getEventListForGameTick();
+        const state = get(followStateStore);
+        const role = get(followRoleStore);
+
+        if (activeEvents.get(UserInputEvent.Follow)) {
+            if (state === "off" && this.scene.groups.size > 0) {
+                this.sendFollowRequest();
+            } else if (state === "active") {
+                followStateStore.set("ending");
+            }
+        }
+
+        let x = 0;
+        let y = 0;
+        if ((state === "active" || state === "ending") && role === "follower") {
+            [x, y] = this.computeFollowMovement();
+        }
+        this.inputStep(activeEvents, x, y);
+    }
+
+    public sendFollowRequest() {
+        this.scene.connection?.emitFollowRequest();
+        followRoleStore.set("leader");
+        followStateStore.set("active");
+    }
+
+    public startFollowing() {
+        followStateStore.set("active");
+        this.scene.connection?.emitFollowConfirmation();
     }
 }

@@ -14,6 +14,7 @@ const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
+const ignoreFollowRequests = "ignoreFollowRequests";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -21,8 +22,8 @@ const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
-
 const cacheAPIIndex = "workavdenture-cache";
+const userProperties = "user-properties";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -128,13 +129,19 @@ class LocalUserStore {
         return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
     }
 
-    setLastRoomUrl(roomUrl: string): void {
+    setIgnoreFollowRequests(value: boolean): void {
+        localStorage.setItem(ignoreFollowRequests, value.toString());
+    }
+    getIgnoreFollowRequests(): boolean {
+        return localStorage.getItem(ignoreFollowRequests) === "true";
+    }
+
+    async setLastRoomUrl(roomUrl: string): Promise<void> {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
         if ("caches" in window) {
-            caches.open(cacheAPIIndex).then((cache) => {
-                const stringResponse = new Response(JSON.stringify({ roomUrl }));
-                cache.put(`/${lastRoomUrl}`, stringResponse);
-            });
+            const cache = await caches.open(cacheAPIIndex);
+            const stringResponse = new Response(JSON.stringify({ roomUrl }));
+            await cache.put(`/${lastRoomUrl}`, stringResponse);
         }
     }
     getLastRoomUrl(): string {
@@ -211,6 +218,27 @@ class LocalUserStore {
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    getAllUserProperties(): Map<string, unknown> {
+        const result = new Map<string, string>();
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+                if (key.startsWith(userProperties + "_")) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        const userKey = key.substr((userProperties + "_").length);
+                        result.set(userKey, JSON.parse(value));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    setUserProperty(name: string, value: unknown): void {
+        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
     }
 }
 

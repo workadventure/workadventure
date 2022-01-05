@@ -10,5 +10,6 @@
 - [UI functions](api-ui.md)
 - [Sound functions](api-sound.md)
 - [Controls functions](api-controls.md)
+- [Camera functions](api-camera.md)
 
 - [List of deprecated functions](api-deprecated.md)

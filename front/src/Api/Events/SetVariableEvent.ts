@@ -4,6 +4,7 @@ export const isSetVariableEvent = new tg.IsInterface()
     .withProperties({
         key: tg.isString,
         value: tg.isUnknown,
+        target: tg.isSingletonStringUnion("global", "player"),
     })
     .get();
 /**

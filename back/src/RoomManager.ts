@@ -9,6 +9,9 @@ import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -103,11 +106,6 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasPlayglobalmessage()) {
-                            socketManager.emitPlayGlobalMessage(
-                                room,
-                                message.getPlayglobalmessage() as PlayGlobalMessage
-                            );
                         } else if (message.hasQueryjitsijwtmessage()) {
                             socketManager.handleQueryJitsiJwtMessage(
                                 user,
@@ -118,6 +116,24 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 message.getEmotepromptmessage() as EmotePromptMessage
+                            );
+                        } else if (message.hasFollowrequestmessage()) {
+                            socketManager.handleFollowRequestMessage(
+                                room,
+                                user,
+                                message.getFollowrequestmessage() as FollowRequestMessage
+                            );
+                        } else if (message.hasFollowconfirmationmessage()) {
+                            socketManager.handleFollowConfirmationMessage(
+                                room,
+                                user,
+                                message.getFollowconfirmationmessage() as FollowConfirmationMessage
+                            );
+                        } else if (message.hasFollowabortmessage()) {
+                            socketManager.handleFollowAbortMessage(
+                                room,
+                                user,
+                                message.getFollowabortmessage() as FollowAbortMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
@@ -166,7 +182,7 @@ const roomManager: IRoomManagerServer = {
         socketManager
             .addZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
             .catch((e) => {
-                emitErrorOnZoneSocket(call, e.toString());
+                emitErrorOnZoneSocket(call, e);
             });
 
         call.on("cancelled", () => {
@@ -196,7 +212,7 @@ const roomManager: IRoomManagerServer = {
         const roomMessage = call.request;
 
         socketManager.addRoomListener(call, roomMessage.getRoomid()).catch((e) => {
-            emitErrorOnRoomSocket(call, e.toString());
+            emitErrorOnRoomSocket(call, e);
         });
 
         call.on("cancelled", () => {
