@@ -612,17 +612,16 @@ class CoWebsiteManager {
         }
     }
 
-    public closeCoWebsites(): Promise<void> {
-        this.currentOperationPromise = this.currentOperationPromise.then(() => {
-            const promises: Promise<void>[] = [];
-            this.coWebsites.forEach((coWebsite: CoWebsite) => {
-                promises.push(this.closeCoWebsite(coWebsite));
-            });
-            return Promise.all(promises).then(() => {
-                return;
-            });
+    public async closeCoWebsites(): Promise<void> {
+        await this.currentOperationPromise;
+
+        const promises: Promise<void>[] = [];
+        this.coWebsites.forEach((coWebsite: CoWebsite) => {
+            promises.push(this.closeCoWebsite(coWebsite));
         });
-        return this.currentOperationPromise;
+        await Promise.all(promises);
+        // TODO: this.currentOperationPromise does not point any more on the last promise
+        return;
     }
 
     public getGameSize(): { width: number; height: number } {
