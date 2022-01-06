@@ -168,6 +168,9 @@ class ConnectionManager {
                     }
                 } catch (err) {
                     console.error(err);
+                    if (err instanceof Error) {
+                        console.error(err.stack);
+                    }
                 }
             } else {
                 const query = urlParams.toString();
