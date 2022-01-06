@@ -1,0 +1,6 @@
+{
+    "kty": "oct",
+    "use": "sig",
+    "k": "yourSecretKey",
+    "alg": "HS256"
+}
