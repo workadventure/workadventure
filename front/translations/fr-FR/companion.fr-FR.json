@@ -1,0 +1,9 @@
+{
+    "companion": {
+        "select": {
+            "title": "Sélectionnez votre compagnon",
+            "any": "Pas de compagnon",
+            "continue": "Continuer"
+        }
+    }
+}
