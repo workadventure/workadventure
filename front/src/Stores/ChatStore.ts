@@ -26,7 +26,7 @@ export interface ChatMessage {
 function getAuthor(authorId: number): PlayerInterface {
     const author = playersStore.getPlayerById(authorId);
     if (!author) {
-        throw "Could not find data for author " + authorId;
+        throw new Error("Could not find data for author " + authorId);
     }
     return author;
 }

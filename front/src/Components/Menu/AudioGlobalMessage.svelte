@@ -26,7 +26,7 @@
             const selectedFile = inputAudio.files ? inputAudio.files[0] : null;
             if (!selectedFile) {
                 errorFile = true;
-                throw "no file selected";
+                throw new Error("no file selected");
             }
 
             const fd = new FormData();

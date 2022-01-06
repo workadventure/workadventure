@@ -671,7 +671,7 @@ export class SocketManager implements ZoneEventListener {
         playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
         if (!client.tags.includes("admin")) {
-            throw "Client is not an admin!";
+            throw new Error("Client is not an admin!");
         }
 
         const clientRoomUrl = client.roomId;
