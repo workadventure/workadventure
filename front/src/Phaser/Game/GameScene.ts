@@ -453,7 +453,7 @@ export class GameScene extends DirtyScene {
 
         const playerName = gameManager.getPlayerName();
         if (!playerName) {
-            throw "playerName is not set";
+            throw new Error("playerName is not set");
         }
         this.playerName = playerName;
         this.characterLayers = gameManager.getCharacterLayers();

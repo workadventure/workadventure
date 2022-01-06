@@ -90,7 +90,7 @@ export const getRessourceDescriptor = (
         const playerResource = LAYERS[i][textureName];
         if (playerResource !== undefined) return playerResource;
     }
-    throw "Could not find a data for texture " + textureName;
+    throw new Error("Could not find a data for texture " + textureName);
 };
 
 export const createLoadingPromise = (

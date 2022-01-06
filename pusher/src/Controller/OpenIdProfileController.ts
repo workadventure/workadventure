@@ -27,7 +27,7 @@ export class OpenIdProfileController extends BaseController {
             try {
                 const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken as string);
                 if (!resCheckTokenAuth.email) {
-                    throw "Email was not found";
+                    throw new Error("Email was not found");
                 }
                 res.end(
                     this.buildHtml(

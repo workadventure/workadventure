@@ -22,7 +22,7 @@ export function getNavigatorType(): NavigatorType {
     } else if (window.navigator.userAgent.includes("Safari")) {
         return NavigatorType.safari;
     }
-    throw "Couldn't detect navigator type";
+    throw new Error("Couldn't detect navigator type");
 }
 export function isAndroid(): boolean {
     return window.navigator.userAgent.includes("Android");

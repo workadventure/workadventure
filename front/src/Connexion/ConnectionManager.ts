@@ -106,10 +106,10 @@ class ConnectionManager {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
                 if (!state || !localUserStore.verifyState(state)) {
-                    throw "Could not validate state!";
+                    throw new Error("Could not validate state!");
                 }
                 if (!code) {
-                    throw "No Auth code provided";
+                    throw new Error("No Auth code provided");
                 }
                 localUserStore.setCode(code);
             }
@@ -333,10 +333,10 @@ class ConnectionManager {
 
         if (!token) {
             if (!state || !localUserStore.verifyState(state)) {
-                throw "Could not validate state!";
+                throw new Error("Could not validate state!");
             }
             if (!code) {
-                throw "No Auth code provided";
+                throw new Error("No Auth code provided");
             }
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {

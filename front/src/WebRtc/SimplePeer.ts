@@ -123,7 +123,7 @@ export class SimplePeer {
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw "Error to delete peer connection";
+                    throw new Error("Error to delete peer connection");
                 }
                 //return this.createPeerConnection(user, localStream);
             } else {
@@ -177,7 +177,7 @@ export class SimplePeer {
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerScreenSharingConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw "Error to delete peer connection";
+                    throw new Error("Error to delete peer connection");
                 }
                 this.createPeerConnection(user);
             } else {
@@ -229,7 +229,7 @@ export class SimplePeer {
 
             const userIndex = this.Users.findIndex((user) => user.userId === userId);
             if (userIndex < 0) {
-                throw "Couldn't delete user";
+                throw new Error("Couldn't delete user");
             } else {
                 this.Users.splice(userIndex, 1);
             }

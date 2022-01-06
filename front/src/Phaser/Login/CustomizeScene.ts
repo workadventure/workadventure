@@ -48,7 +48,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                         bodyResourceDescription.level < 0 ||
                         bodyResourceDescription.level > 5
                     ) {
-                        throw "Texture level is null";
+                        throw new Error("Texture level is null");
                     }
                     this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
                 });
