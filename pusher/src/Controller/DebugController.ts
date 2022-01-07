@@ -19,11 +19,13 @@ export class DebugController {
                 return res.writeStatus("401 Unauthorized").end("Invalid token sent!");
             }
 
+            const worlds = Object.fromEntries(socketManager.getWorlds().entries());
+
             return res
                 .writeStatus("200 OK")
                 .writeHeader("Content-Type", "application/json")
                 .end(
-                    stringify(socketManager.getWorlds(), (key: unknown, value: unknown) => {
+                    stringify(worlds, (key: unknown, value: unknown) => {
                         if (value instanceof Map) {
                             const obj: any = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
                             for (const [mapKey, mapValue] of value.entries()) {
