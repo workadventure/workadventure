@@ -1,7 +1,7 @@
 import * as tg from "generic-type-guard";
 import { isCharacterTexture } from "./CharacterTexture";
 import { isNumber } from "generic-type-guard";
-import {isMucRoomDefinition} from "./MucRoomDefinitionInterface";
+import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -18,10 +18,14 @@ export const isMapDetailsData = new tg.IsInterface()
         roomSlug: tg.isNullable(tg.isString), // deprecated
         contactPage: tg.isNullable(tg.isString),
         group: tg.isNullable(tg.isString),
-        mucRooms: tg.isArray(isMucRoomDefinition)
+        mucRooms: tg.isArray(isMucRoomDefinition),
     })
     .withOptionalProperties({
         iframeAuthentication: tg.isNullable(tg.isString),
+        // The date (in ISO 8601 format) at which the room will expire
+        expireOn: tg.isString,
+        // Whether the "report" feature is enabled or not on this room
+        canReport: tg.isBoolean,
     })
     .get();
 

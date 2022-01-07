@@ -23,6 +23,9 @@
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
+    import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
+    import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
+    import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
@@ -136,6 +139,16 @@
     {#if $helpCameraSettingsVisibleStore}
         <div>
             <HelpCameraSettingsPopup />
+        </div>
+    {/if}
+    {#if $showLimitRoomModalStore}
+        <div>
+            <LimitRoomModal />
+        </div>
+    {/if}
+    {#if $showShareLinkMapModalStore}
+        <div>
+            <ShareLinkMapModal />
         </div>
     {/if}
     {#if $requestVisitCardsStore}

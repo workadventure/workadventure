@@ -8,12 +8,14 @@ import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
-import { userIsConnected } from "../Stores/MenuStore";
+import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { limitMapStore } from "../Stores/GameStore";
+import { showLimitRoomModalStore } from "../Stores/ModalStore";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -152,11 +154,7 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (
-            connexionType === GameConnexionTypes.organization ||
-            connexionType === GameConnexionTypes.anonymous ||
-            connexionType === GameConnexionTypes.empty
-        ) {
+        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
@@ -235,6 +233,17 @@ class ConnectionManager {
         }
         if (this.localUser) {
             analyticsClient.identifyUser(this.localUser.uuid, this.localUser.email);
+        }
+
+        //if limit room active test headband
+        if (this._currentRoom.expireOn !== undefined) {
+            warningContainerStore.activateWarningContainer();
+            limitMapStore.set(true);
+
+            //check time of map
+            if (new Date() > this._currentRoom.expireOn) {
+                showLimitRoomModalStore.set(true);
+            }
         }
 
         this.serviceWorker = new _ServiceWorker();
