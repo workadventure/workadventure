@@ -53,6 +53,9 @@
                     "small": "Reduite (5 fps)"
                 }
             },
+            "language": {
+                "title": "Langage"
+            },
             "save": {
                 "warning": "(La sauvegarde de ces paramètres redémarre le jeu)",
                 "button": "Sauvegarder"

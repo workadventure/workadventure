@@ -53,6 +53,9 @@
                     "small": "Small video quality (5 fps)"
                 }
             },
+            "language": {
+                "title": "Language"
+            },
             "save": {
                 "warning": "(Saving these settings will restart the game)",
                 "button": "Save"

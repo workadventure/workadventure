@@ -4,7 +4,7 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { isMobile } from "../../Enum/EnvironmentVariable";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
-import { translator } from "../../Translator/Translator";
+    import { languages, translator } from "../../Translator/Translator";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -12,19 +12,33 @@ import { translator } from "../../Translator/Translator";
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
+    let valueLanguage: string = translator.getStringByLanguage(translator.getCurrentLanguage()) ?? "en-US";
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
+    let previewValueLanguage = valueLanguage;
 
     function saveSetting() {
-        if (valueGame !== previewValueGame) {
-            previewValueGame = valueGame;
-            localUserStore.setGameQualityValue(valueGame);
-            window.location.reload();
+        let change = false;
+
+        if (valueLanguage !== previewValueLanguage) {
+            previewValueLanguage = valueLanguage;
+            translator.switchLanguage(previewValueLanguage);
+            change = true;
         }
 
         if (valueVideo !== previewValueVideo) {
             previewValueVideo = valueVideo;
             videoConstraintStore.setFrameRate(valueVideo);
+        }
+
+        if (valueGame !== previewValueGame) {
+            previewValueGame = valueGame;
+            localUserStore.setGameQualityValue(valueGame);
+            change = true;
+        }
+
+        if (change) {
+            window.location.reload();
         }
 
         closeMenu();
@@ -127,6 +141,17 @@ import { translator } from "../../Translator/Translator";
             </select>
         </div>
     </section>
+    <section>
+        <h3>{translator._("menu.settings.language.title")}</h3>
+        <div class="nes-select is-dark">
+            <select class="languages-switcher" bind:value={valueLanguage}>
+                <!-- svelte-ignore missing-declaration -->
+                {#each languages as language}
+                    <option value={language.id}>{`${language.language} (${language.country})`}</option>
+                {/each}
+            </select>
+        </div>
+    </section>
     <section class="settings-section-save">
         <p>{translator._("menu.settings.save.warning")}</p>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
@@ -204,6 +229,10 @@ import { translator } from "../../Translator/Translator";
                 text-align: center;
                 margin: 0 0 15px;
             }
+        }
+
+        .languages-switcher option {
+            text-transform: capitalize;
         }
     }
 

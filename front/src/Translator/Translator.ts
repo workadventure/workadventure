@@ -78,6 +78,15 @@ class Translator {
     }
 
     /**
+     * TypeGuard to check if is a LanguageObject
+     * @param {unknown} object Presume LanguageObject
+     * @returns {boolean} Is a LanguageObject or not
+     */
+    private isLanguageObject(object: unknown): object is LanguageObject {
+        return typeof object === "object";
+    }
+
+    /**
      * Get from the Phase cache the current language object and promise to load it
      * @param {Phaser.Cache.CacheManager} cacheManager Phaser CacheManager
      * @returns {Promise<void>} Load current language promise
@@ -92,7 +101,11 @@ class Translator {
                 return reject(new Error("Language not found in cache"));
             }
 
-            this.currentLanguageObject = languageObject as LanguageObject;
+            if (!this.isLanguageObject(languageObject)) {
+                throw new Error("Cannot load a bad language object");
+            }
+
+            this.currentLanguageObject = languageObject;
             return resolve();
         });
     }
@@ -109,11 +122,9 @@ class Translator {
 
         let languageFound = undefined;
 
-        const languages: { [key: string]: boolean } = LANGUAGES as { [key: string]: boolean };
-
-        for (const language in languages) {
-            if (language.startsWith(languageString) && languages[language]) {
-                languageFound = this.getLanguageByString(language);
+        for (const language of LANGUAGES) {
+            if (language.id.startsWith(languageString) && language.default) {
+                languageFound = this.getLanguageByString(language.id);
                 break;
             }
         }
@@ -127,6 +138,12 @@ class Translator {
      */
     public getCurrentLanguage(): Language {
         return this.currentLanguage;
+    }
+
+    public switchLanguage(languageString: string) {
+        if (this.getLanguageByString(languageString)) {
+            localStorage.setItem("language", languageString);
+        }
     }
 
     /**
@@ -232,4 +249,5 @@ class Translator {
     }
 }
 
+export const languages: LanguageFound[] = LANGUAGES;
 export const translator = new Translator();

@@ -3,11 +3,6 @@ import fs from "fs";
 const translationsBasePath = "./translations";
 const fallbackLanguage = process.env.FALLBACK_LANGUAGE || "en-US";
 
-export type LanguageFound = {
-    id: string;
-    default: boolean;
-};
-
 const getAllLanguagesByFiles = (dirPath: string, languages: Array<LanguageFound> | undefined) => {
     const files = fs.readdirSync(dirPath);
     languages = languages || new Array<LanguageFound>();
@@ -25,10 +20,18 @@ const getAllLanguagesByFiles = (dirPath: string, languages: Array<LanguageFound>
             const rawData = fs.readFileSync(dirPath + "/" + file, "utf-8");
             const languageObject = JSON.parse(rawData);
 
-            languages?.push({
-                id: parts[1],
-                default: languageObject.default !== undefined && languageObject.default,
-            });
+            if (
+                "language" in languageObject && typeof languageObject.language === "string" &&
+                "country" in languageObject && typeof languageObject.country === "string" &&
+                "default" in languageObject && typeof languageObject.default === "boolean"
+            ) {
+                languages?.push({
+                    id: parts[1],
+                    language: languageObject.language,
+                    country: languageObject.country,
+                    default: languageObject.default
+                });
+            }
         }
     });
 
@@ -57,16 +60,5 @@ const getFallbackLanguageObject = (dirPath: string, languageObject: Object | und
     return languageObject;
 };
 
-const languagesToObject = () => {
-    const object: { [key: string]: boolean } = {};
-
-    languages.forEach((language) => {
-        object[language.id] = false;
-    });
-
-    return object;
-};
-
 export const languages = getAllLanguagesByFiles(translationsBasePath, undefined);
-export const languagesObject = languagesToObject();
 export const fallbackLanguageObject = getFallbackLanguageObject(translationsBasePath, undefined);

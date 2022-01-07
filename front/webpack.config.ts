@@ -7,8 +7,7 @@ import sveltePreprocess from "svelte-preprocess";
 import type { Configuration } from "webpack";
 import webpack from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
-import type { LanguageFound } from "./src/Translator/TranslationCompiler";
-import { fallbackLanguageObject, languages, languagesObject } from "./src/Translator/TranslationCompiler";
+import { fallbackLanguageObject, languages } from "./src/Translator/TranslationCompiler";
 
 const MergeJsonWebpackPlugin = require("merge-jsons-webpack-plugin");
 
@@ -223,7 +222,7 @@ module.exports = {
         }),
         new webpack.DefinePlugin({
             FALLBACK_LANGUAGE_OBJECT: JSON.stringify(fallbackLanguageObject),
-            LANGUAGES: JSON.stringify(languagesObject),
+            LANGUAGES: JSON.stringify(languages),
         }),
         new MergeJsonWebpackPlugin({
             output: {
