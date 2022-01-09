@@ -91,6 +91,7 @@ export class Room {
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
+
         baseUrl.hash = absoluteExitSceneUrl.hash;
 
 
