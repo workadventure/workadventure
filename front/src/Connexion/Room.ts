@@ -9,7 +9,7 @@ import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
-    constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) { }
+    constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
 }
 
 export interface RoomRedirect {
@@ -91,9 +91,7 @@ export class Room {
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
-
         baseUrl.hash = absoluteExitSceneUrl.hash;
-
 
         return baseUrl;
     }
