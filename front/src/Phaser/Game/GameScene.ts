@@ -94,6 +94,7 @@ import Camera = Phaser.Cameras.Scene2D.Camera;
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import xml from "@xmpp/xml";
 import { XmppClient } from "../../Xmpp/XmppClient";
+import {hideConnectionIssueMessage, showConnectionIssueMessage} from "../../Connexion/AxiosUtils";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -752,10 +753,12 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.onServerDisconnected(() => {
+                    showConnectionIssueMessage();
                     console.log("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
                     this.createSuccessorGameScene(true, true);
                 });
+                hideConnectionIssueMessage();
 
                 this.connection.itemEventMessageStream.subscribe((message) => {
                     const item = this.actionableItems.get(message.itemId);

@@ -1,5 +1,5 @@
 import * as tg from "generic-type-guard";
-import {isMapDetailsData} from "./MapDetailsData";
+import { isMapDetailsData } from "./MapDetailsData";
 
 export const isMucRoomDefinition = new tg.IsInterface()
     .withProperties({
@@ -9,4 +9,3 @@ export const isMucRoomDefinition = new tg.IsInterface()
     .get();
 
 export type MucRoomDefinitionInterface = tg.GuardedType<typeof isMucRoomDefinition>;
-

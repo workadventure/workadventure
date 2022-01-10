@@ -290,10 +290,10 @@ class ConnectionManager {
             });
 
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
-                console.log("An error occurred while connecting to socket server. Retrying");
+                console.log("Connection closed to socket server. Retrying");
                 reject(
                     new Error(
-                        "An error occurred while connecting to socket server. Retrying. Code: " +
+                        "Connection closed to socket server. Retrying. Code: " +
                             event.code +
                             ", Reason: " +
                             event.reason
