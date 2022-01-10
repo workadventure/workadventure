@@ -1,5 +1,5 @@
 type LanguageObject = {
-    [key: string]: string | LanguageObject;
+    [key: string]: string | boolean | LanguageObject;
 };
 
 type LanguageFound = {

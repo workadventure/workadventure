@@ -1,10 +1,15 @@
 import fs from "fs";
+import { z } from "zod";
 
 export type LanguageFound = {
     id: string;
     language: string;
     country: string;
     default: boolean;
+};
+
+type LanguageObject = {
+    [key: string]: string | boolean | LanguageObject;
 };
 
 const translationsBasePath = "./translations";
@@ -27,17 +32,23 @@ const getAllLanguagesByFiles = (dirPath: string, languages: Array<LanguageFound>
             const rawData = fs.readFileSync(dirPath + "/" + file, "utf-8");
             const languageObject = JSON.parse(rawData);
 
-            if (
-                "language" in languageObject && typeof languageObject.language === "string" &&
-                "country" in languageObject && typeof languageObject.country === "string" &&
-                "default" in languageObject && typeof languageObject.default === "boolean"
-            ) {
+            const indexLanguageObject = z.object({
+                language: z.string(),
+                country: z.string(),
+                default: z.boolean(),
+            });
+
+            try {
+                const indexLanguage = indexLanguageObject.parse(languageObject);
+
                 languages?.push({
                     id: parts[1],
-                    language: languageObject.language,
-                    country: languageObject.country,
-                    default: languageObject.default
+                    language: indexLanguage.language,
+                    country: indexLanguage.country,
+                    default: indexLanguage.default,
                 });
+            } catch (e) {
+                console.error(e);
             }
         }
     });
@@ -45,7 +56,7 @@ const getAllLanguagesByFiles = (dirPath: string, languages: Array<LanguageFound>
     return languages;
 };
 
-const getFallbackLanguageObject = (dirPath: string, languageObject: Object | undefined) => {
+const getFallbackLanguageObject = (dirPath: string, languageObject: LanguageObject | undefined) => {
     const files = fs.readdirSync(dirPath);
     languageObject = languageObject || {};
 
@@ -59,8 +70,19 @@ const getFallbackLanguageObject = (dirPath: string, languageObject: Object | und
                 return;
             }
 
-            const rawData = fs.readFileSync(dirPath + "/" + file, "utf-8");
-            languageObject = { ...languageObject, ...JSON.parse(rawData) };
+            const data = JSON.parse(fs.readFileSync(dirPath + "/" + file, "utf-8"));
+
+            try {
+                const languageObjectFormat: z.ZodType<LanguageObject> = z.lazy(() => {
+                    return z.object({}).catchall(z.union([z.string(), z.boolean(), languageObjectFormat]));
+                });
+
+                const languageObjectData = languageObjectFormat.parse(data);
+
+                languageObject = { ...languageObject, ...languageObjectData };
+            } catch (e) {
+                console.error(e);
+            }
         }
     });
 

@@ -5,10 +5,6 @@ export type Language = {
     country: string;
 };
 
-type LanguageObject = {
-    [key: string]: string | LanguageObject;
-};
-
 type TranslationParams = {
     [key: string]: string | number;
 };
@@ -19,7 +15,7 @@ class Translator {
         country: "US",
     };
 
-    private readonly fallbackLanguageObject: LanguageObject = FALLBACK_LANGUAGE_OBJECT as LanguageObject;
+    private readonly fallbackLanguageObject: LanguageObject = FALLBACK_LANGUAGE_OBJECT;
 
     /**
      * Current language
@@ -186,10 +182,14 @@ class Translator {
      */
     private getObjectValueByPath(key: string, object: LanguageObject): string | undefined {
         const paths = key.split(".");
-        let currentValue: LanguageObject | string = object;
+        let currentValue: string | boolean | LanguageObject = object;
 
         for (const path of paths) {
-            if (typeof currentValue === "string" || currentValue[path] === undefined) {
+            if (
+                typeof currentValue === "string" ||
+                typeof currentValue === "boolean" ||
+                currentValue[path] === undefined
+            ) {
                 return undefined;
             }
 
