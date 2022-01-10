@@ -1,5 +1,12 @@
 import fs from "fs";
 
+export type LanguageFound = {
+    id: string;
+    language: string;
+    country: string;
+    default: boolean;
+};
+
 const translationsBasePath = "./translations";
 const fallbackLanguage = process.env.FALLBACK_LANGUAGE || "en-US";
 

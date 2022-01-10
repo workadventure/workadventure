@@ -8,6 +8,7 @@ import type { Configuration } from "webpack";
 import webpack from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
 import { fallbackLanguageObject, languages } from "./src/Translator/TranslationCompiler";
+import type { LanguageFound } from "./src/Translator/TranslationCompiler";
 
 const MergeJsonWebpackPlugin = require("merge-jsons-webpack-plugin");
 
