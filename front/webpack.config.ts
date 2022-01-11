@@ -133,7 +133,7 @@ module.exports = {
         mainFields: ["svelte", "browser", "module", "main"],
     },
     optimization: {
-        minimize: true,
+        minimize: isProduction,
         minimizer: [new CssMinimizerPlugin(), "..."],
     },
     output: {
