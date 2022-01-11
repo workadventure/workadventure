@@ -83,6 +83,7 @@
     </button>
     <!-- svelte-ignore a11y-media-has-caption -->
     <video
+        class:no-video={!$constraintStore || $constraintStore.video === false}
         use:srcObject={$streamStore}
         autoplay
         playsinline
@@ -114,5 +115,8 @@
         .woka-icon {
             margin-right: 3px;
         }
+    }
+    video.no-video {
+        visibility: collapse;
     }
 </style>
