@@ -63,6 +63,7 @@ or just use START_ROOM_URL env variable.
 
 #### Using Webex API
 Register an Integration or take the existing one [Integrations & Authorization](https://developer.webex.com/docs/integrations)
+
 Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write`
 
 ### MacOS developers, your environment with Vagrant
