@@ -5,6 +5,7 @@
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import PixelContainer from "../Container/PixelContainer.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -19,13 +20,15 @@
     class:mozaic-full-width={mozaicFullWidth}
     class:mozaic-quarter={mozaicQuarter}
 >
-    {#if streamable instanceof VideoPeer}
-        <VideoMediaBox peer={streamable} clickable={isClickable} />
-    {:else if streamable instanceof ScreenSharingPeer}
-        <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-    {:else}
-        <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
-    {/if}
+    <div>
+        {#if streamable instanceof VideoPeer}
+            <VideoMediaBox peer={streamable} clickable={isClickable} />
+        {:else if streamable instanceof ScreenSharingPeer}
+            <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
+        {:else}
+            <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
+        {/if}
+    </div>
 </div>
 
 <style lang="scss">
@@ -40,7 +43,7 @@
         transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
             max-width 0.2s;
         pointer-events: auto;
-        background-color: rgba(0, 0, 0, 0.6);
+
         padding: 0;
         max-height: 85%;
         max-width: 85%;
@@ -90,8 +93,18 @@
             }
         }
 
+        &.nes-container.is-rounded {
+            border-image-outset: 1;
+        }
+
         &.clickable {
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+        }
+
+        > div {
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            width: 100%;
         }
     }
 

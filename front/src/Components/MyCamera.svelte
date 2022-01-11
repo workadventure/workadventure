@@ -65,8 +65,12 @@
         max-height: 20%;
         transition: transform 1000ms;
         padding: 0;
-        background-color: #00000099;
         overflow: hidden;
+        line-height: 0;
+
+        &.nes-container.is-rounded {
+            border-image-outset: 1;
+        }
     }
 
     .my-cam-video-container.hide {
@@ -76,6 +80,7 @@
     .my-cam-video {
         background-color: #00000099;
         max-height: 20vh;
+        max-width: max(25vw, 150px);
         width: 100%;
         -webkit-transform: scaleX(-1);
         transform: scaleX(-1);
@@ -85,15 +90,5 @@
         font-size: 2em;
         color: white;
         padding: 40px 20px;
-    }
-
-    @include media-breakpoint-up(md) {
-        .my-cam-video {
-            width: 150px;
-        }
-
-        .my-cam-video-container.hide {
-            right: -160px;
-        }
     }
 </style>
