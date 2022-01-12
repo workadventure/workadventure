@@ -9,8 +9,6 @@ import {
 //import App from "../Components/App.svelte"; <- Causes peerStore issue
 import type { SvelteComponentDev } from "svelte/internal";
 import WebexVideoChat from "../Components/Webex/WebexVideoChat.svelte";
-import WebexLinkGenerator from "../Components/Webex/WebexLinkGenerator.svelte";
-import { meetingLinkKey } from "../Common/Key";
 import WebexErrorPage from "../Components/Webex/WebexErrorPage.svelte";
 
 interface Webex {
@@ -130,22 +128,6 @@ export class WebexIntegration {
         await self.waitForAuthorization();
 
         return this.accessToken;
-    }
-
-    public async startMeetingLinkGenerator(roomName: string = "WorkAdventure Meeting Room", roomID: string) {
-        await this.stop();
-        coWebsiteManager.insertCoWebsite((cowebsiteDiv) => {
-            new WebexLinkGenerator({
-                target: cowebsiteDiv,
-                props: {
-                    accessToken: this.accessToken,
-                    webexMeetingLinkKey: meetingLinkKey,
-                    roomName: roomName,
-                    integrationTag: roomID,
-                },
-            });
-            return Promise.resolve();
-        });
     }
 
     public showWebexError(message: string, location: string) {

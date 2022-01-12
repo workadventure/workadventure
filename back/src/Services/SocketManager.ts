@@ -371,31 +371,25 @@ export class SocketManager {
     public async handleWebexSessionQuery(user: User, webexSessionQuery: WebexSessionQuery) {
         const serverToClientMessage = new ServerToClientMessage();
         const response = new WebexSessionResponse();
-        const hasPersonalMeetingLink =
-            webexSessionQuery.getPersonalmeetinglink() !== undefined ||
-            webexSessionQuery.getPersonalmeetinglink() !== null ||
-            webexSessionQuery.getPersonalmeetinglink() !== "" ||
-            webexSessionQuery.getPersonalmeetinglink() !== "undefined";
         try {
             console.log("[Back] Got Webex Session Query", webexSessionQuery);
-            if (!hasPersonalMeetingLink) {
-                console.log("[Back] Meeting link not valid");
-                throw Error("The link to the meeting that should be started is not valid.");
-            }
             const roomId = webexSessionQuery.getRoomid();
             const accessToken = webexSessionQuery.getAccesstoken();
+            const roomName = webexSessionQuery.getRoomname();
             response.setRoomid(roomId);
 
-            let meet = this.webexMeetings.get(roomId);
+            const meet = {
+                userId: user.id,
+                meetingLink: "",
+            };
 
-            if (isUndefined(meet)) {
-                meet = {
-                    userId: user.id,
-                    meetingLink: "",
-                };
+            const meetFromStore = this.webexMeetings.get(roomId);
+
+            if (!isUndefined(meetFromStore)) {
+                meet.meetingLink = meetFromStore.meetingLink;
             }
 
-            if (meet === null || meet.meetingLink === "") {
+            if (!meet.meetingLink) {
                 // Check to see if there's an active meeting for this room set up already that we don't know about yet
                 // Only accept this meet if it hasn't ended yet and won't end for at least 10 seconds
                 const res = await Axios.get(
@@ -418,9 +412,33 @@ export class SocketManager {
                     meet.meetingLink = legalMeets[0];
                 }
 
-                if (meet.meetingLink === undefined || meet.meetingLink === null || meet.meetingLink === "") {
-                    console.log("[Back] Choosing link that came with the request");
-                    meet.meetingLink = webexSessionQuery.getPersonalmeetinglink();
+                if (!meet.meetingLink) {
+                    console.log("[Back] Generating new meeting link with client's token");
+                    const now = new Date(Date.now() + 45 * 1000);
+                    const later = new Date(Date.now() + 4 * 60 * 60 * 1000);
+                    console.log(`[Back] Meeting going from ${now} to ${later}`);
+                    fetch("https://webexapis.com/v1/meetings", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({
+                            title: `WorkAdventure - ${roomName}`,
+                            start: now.toISOString(),
+                            end: later.toISOString(),
+                            allowAnyUserToBeCoHost: true,
+                            enabledJoinBeforeHost: true,
+                            enableConnectAudioBeforeHost: true,
+                            sendEmail: false,
+                            integrationTags: ["workadventure-" + roomId],
+                        }),
+                    })
+                        .then((resp) => resp.json())
+                        .then((data) => {
+                            console.log("[Back] (Link Generator) ", data);
+                            meet.meetingLink = data.sipAddress;
+                        });
                 }
             }
 
@@ -435,15 +453,7 @@ export class SocketManager {
             serverToClientMessage.setWebexsessionresponse(response);
         } catch (err) {
             const errMsg = new WebexSessionError();
-
-            if (err.response && err.response.data && err.response.data.message && err.response.data.errors) {
-                console.log("[Back] ", err.response.data, err.response.data.errors);
-                errMsg.setMessage(err.response.data.message);
-            } else {
-                console.log("[Back] ", err);
-                errMsg.setMessage(err.message);
-            }
-
+            console.log("[Back] ", err);
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery()");
             serverToClientMessage.setWebexsessionerror(errMsg);
         }

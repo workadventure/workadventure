@@ -3,7 +3,7 @@ syntax = "proto3";
 message WebexSessionQuery {
   string roomId = 1;
   string accessToken = 2;
-  string personalMeetingLink = 3;
+  string roomName = 3;
 }
 
 message WebexSessionResponse {
