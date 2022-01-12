@@ -54,14 +54,17 @@ We recommend to set DEBUG_MODE to `true`
 Run:
 
 ```
-docker-compose -f docker-compose.single-domain.yaml up --build
+docker-compose up
 ```
 
 You should now be able to browse to http://play.workadventure.localhost/ 
-You can set your favorite/custom map in Url like following: http://play.workadventure.localhost/_/pathToYourMap/map.json
+You can set your favorite/custom map in Url like in following example: http://play.workadventure.localhost/_/global/victorgetz.github.io/workadventure-webex-map/map.json
+or just use START_ROOM_URL env variable.
 
-#### Get Webex Access token
-Go to [Integrations & Authorization](https://developer.webex.com/docs/integrations)
+#### Using Webex API
+Register an Integration or take the existing one [Integrations & Authorization](https://developer.webex.com/docs/integrations)
+
+Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write`
 
 ### MacOS developers, your environment with Vagrant
 

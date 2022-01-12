@@ -208,6 +208,10 @@ module.exports = {
             POSTHOG_API_KEY: null,
             POSTHOG_URL: null,
             NODE_ENV: mode,
+            WEBEX_AUTHORIZATION_URL: null,
+            WEBEX_REDIRECT_URL: null,
+            WEBEX_TOKEN_REDIRECT_URL: null,
+            WEBEX_GLOBAL_SPACE_ID: null,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;
