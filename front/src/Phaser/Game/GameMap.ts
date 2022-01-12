@@ -1,10 +1,4 @@
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapObjectLayer,
-    ITiledMapProperty,
-} from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty } from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
@@ -118,6 +112,22 @@ export class GameMap {
             return this.tileSetPropertyMap[index];
         }
         return [];
+    }
+
+    public getCollisionsGrid(): number[][] {
+        const collisionsLayer = this.findPhaserLayer("collisions");
+        if (!collisionsLayer) {
+            return [];
+        }
+        const grid: number[][] = [];
+        for (let y = 0; y < collisionsLayer.height; y += 1) {
+            const row: number[] = [];
+            for (let x = 0; x < collisionsLayer.width; x += 1) {
+                row.push(collisionsLayer.getTileAt(x, y) ? 1 : 0);
+            }
+            grid.push(row);
+        }
+        return grid;
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
