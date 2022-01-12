@@ -149,7 +149,7 @@
         .highlighted-cowebsite {
             height: 100% !important;
             width: 96%;
-            background-color: rgba(#000000, 0.6);
+            /*background-color: rgba(#000000, 0.6);*/
             margin: 0 !important;
 
             .actions {
@@ -163,6 +163,10 @@
                 button {
                     pointer-events: all;
                 }
+            }
+
+            &.nes-container.is-rounded {
+              border-image-outset: 1;
             }
         }
     }
