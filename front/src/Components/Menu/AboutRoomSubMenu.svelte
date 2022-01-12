@@ -1,3 +1,4 @@
+<!-- svelte-ignore -->
 <script lang="ts">
     import {gameManager} from "../../Phaser/Game/GameManager";
     import {onMount} from "svelte";
@@ -39,7 +40,6 @@
         }
     })
 
-    <!-- svelte-ignore -->
     function copyLink() {
         HTMLShareLink.select();
         document.execCommand('copy');
