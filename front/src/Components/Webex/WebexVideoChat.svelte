@@ -1,19 +1,19 @@
-<script>
+<script lang="ts">
     import {onMount} from 'svelte'
     import {prevent_default} from "svelte/internal";
 
-    export let meetingRoom = null;
-    export let accessToken = null;
-    export let initials = "👨‍💻";
-    export let fullName = "iits";
+    export let meetingRoom: string | null = null;
+    export let accessToken: string | null = null;
+    export let initials: string | null = "👨‍💻";
+    export let fullName: string | null = "iits";
     export let personToCall = "Meeting Room";
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
 
     let ready = false;
     let waitingInQueue = false;
-    let currentMeeting = null;
-    let webex = null;
+    let currentMeeting: any = null;
+    let webex: any = null;
     let mediaSettings = {
         receiveAudio: true,
         receiveVideo: true,
@@ -22,23 +22,23 @@
         sendAudio: true,
         sendShare: false
     }
-    let criticalError = null;
+    let criticalError: string | null = null;
     let muted = false;
     let blinded = false;
     let screenSharing = false;
 
-    let localVideoStream = null;
-    let localShareStream = null;
-    let remoteAudioStream = null;
-    let remoteShareStream = null;
-    let remoteVideoStream = null;
+    let localVideoStream: any = null;
+    let localShareStream: any = null;
+    let remoteAudioStream: any = null;
+    let remoteShareStream: any = null;
+    let remoteVideoStream: any = null;
 
     function importWebex() {
         return new Promise((resolve, reject) => {
             let scriptElement = document.createElement('script');
             scriptElement.src = webexCDNLink;
             scriptElement.onload = () => {
-                resolve();
+                resolve("");
             }
             scriptElement.onerror = () => {
                 reject()
@@ -47,23 +47,23 @@
         })
     }
 
-    function bindMeetingEvents(meeting) {
-        meeting.on('error', (err) => {
+    function bindMeetingEvents(meeting: any) {
+        meeting.on('error', (err: any) => {
             console.error(err);
         });
 
-        meeting.on('meeting:self:guestAdmitted', (obj) => {
+        meeting.on('meeting:self:guestAdmitted', (obj: any) => {
             refreshAllStreams()
             console.log("guest admitted", obj)
             waitingInQueue = false;
         })
 
-        meeting.on('meeting:self:lobbyWaiting', (obj) => {
+        meeting.on('meeting:self:lobbyWaiting', (obj: any) => {
             console.log("waiting in queue", obj)
             waitingInQueue = true;
         })
 
-        meeting.on('meeting:self:mutedByOthers', (obj) => {
+        meeting.on('meeting:self:mutedByOthers', (obj:any) => {
             console.log("Muted by others", obj)
             muted = false;
             mute();
@@ -86,7 +86,7 @@
             assignElementMediaSource(document.getElementById('self-view'), localVideoStream);
         })
         // Handle media streams changes to ready state
-        meeting.on('media:ready', (media) => {
+        meeting.on('media:ready', (media:any) => {
             if (!media) {
                 return;
             }
@@ -109,7 +109,7 @@
         });
 
         // Handle media streams stopping
-        meeting.on('media:stopped', (media) => {
+        meeting.on('media:stopped', (media:any) => {
             // Remove media streams
             if (media.type === 'local') {
                 assignElementMediaSource(document.getElementById('self-view'), null);
@@ -143,20 +143,20 @@
                     assignElementMediaSource(document.getElementById('remote-view-video'), remoteShareStream);
                 }
                 assignElementMediaSource(document.getElementById('remote-view-audio'), remoteAudioStream);
-                resolve();
+                resolve("");
             } catch (e) {
-                reject(e.toString());
+                reject((e as any).toString());
             }
         })
     }
 
 
     // https://github.com/webex/webex-js-sdk/blob/2dc6ec9d6d4a933ad76d2aacc1a19ceb87eb3d52/packages/node_modules/samples/browser-call-with-screenshare/app.js#L398
-    function waitForMediaReady(meeting) {
+    function waitForMediaReady(meeting:any) {
         return new Promise((resolve, reject) => {
             try {
                 if (meeting.canUpdateMedia()) {
-                    resolve();
+                    resolve("");
                 } else {
                     console.info('SHARE-SCREEN: Unable to update media, pausing to retry...');
                     let retryAttempts = 0;
@@ -168,7 +168,7 @@
                         if (meeting.canUpdateMedia()) {
                             console.info('SHARE-SCREEN: Able to update media, continuing');
                             clearInterval(retryInterval);
-                            resolve();
+                            resolve("");
                         }
                         // If we can't update our media after 15 seconds, something went wrong
                         else if (retryAttempts > 15) {
@@ -179,7 +179,7 @@
                     }, 10000);
                 }
             } catch (err) {
-                reject(err.toString())
+                reject((err as any).toString())
             }
         });
     }
@@ -192,7 +192,7 @@
                     currentMeeting.shareScreen().then(() => {
                         console.info('SHARE-SCREEN: Screen successfully added to meeting.');
                         screenSharing = true;
-                    }).catch((e) => {
+                    }).catch((e: any) => {
                         console.error('SHARE-SCREEN: Unable to share screen, error:');
                         console.error(e);
                     });
@@ -202,7 +202,7 @@
                     currentMeeting.stopShare().then(() => {
                         console.info('SHARE-SCREEN: Screen sharing stopped');
                         screenSharing = false;
-                    }).catch((e) => {
+                    }).catch((e: any) => {
                         console.error('SHARE-SCREEN: Unable to stop sharing screen, error:');
                         console.error(e);
                     });
@@ -241,23 +241,23 @@
         }
     }
 
-    function joinMeeting(meeting) {
+    function joinMeeting(meeting:any) {
         return meeting.join().then(() => {
-            return meeting.getMediaStreams(mediaSettings).then((mediaStreams) => {
+            return meeting.getMediaStreams(mediaSettings).then((mediaStreams: any) => {
                 const [localStream, localShare] = mediaStreams;
                 currentMeeting = meeting;
                 meeting.addMedia({
                     localShare,
                     localStream,
                     mediaSettings
-                }).catch(err => {
+                }).catch((err:any) => {
                     if (err.toString() === "WebexMeetingsError 30101: Meeting has already Ended or not Active") {
                         errorScreen(new Error("The meeting hasn't started yet ⏰"));
                     } else {
                         console.error(err.toString())
                     }
                 });
-            }).catch(err => {
+            }).catch((err:any) => {
                 console.error(err);
                 if (err.toString() === "ReconnectionError: Unable to retrieve media streams") {
                     if (!blinded) {
@@ -279,12 +279,12 @@
         })
     }
 
-    function assignElementMediaSource(node, mediaSource) {
+    function assignElementMediaSource(node:any, mediaSource:any) {
         if ('srcObject' in node) {
             try {
                 node.srcObject = mediaSource;
             } catch (err) {
-                if (err.name !== 'TypeError') {
+                if ((err as any).name !== 'TypeError') {
                     console.error(err);
                     throw err;
                 }
@@ -295,7 +295,7 @@
         }
     }
 
-    function errorScreen(error) {
+    function errorScreen(error: any) {
         criticalError = error
         if (error !== null && currentMeeting !== null) {
             if (!muted) {
@@ -307,7 +307,7 @@
             try {
                 hangup();
             } catch (e) {
-                console.error("While handling " + error.toString() + ", " + e.toString() + " was thrown")
+                console.error("While handling " + error.toString() + ", " + (e as any).toString() + " was thrown")
             }
         }
     }
@@ -315,11 +315,11 @@
     function startCall() {
         errorScreen(null)
 
-        return webex.meetings.create(meetingRoom).then((meeting) => {
+        return webex.meetings.create(meetingRoom).then((meeting:any) => {
             bindMeetingEvents(meeting);
 
             return joinMeeting(meeting);
-        }).catch(error => {
+        }).catch((error:any) => {
             console.error(error);
         })
     }
@@ -334,39 +334,38 @@
 
     onMount(async () => {
         await importWebex();
-        if (window.Webex) {
-            webex = window.Webex.init({
-                credentials: {
-                    access_token: accessToken //
-                },
-                logger: {
-                    level: 'info'
-                }
-            });
-            webex.config.logger.level = 'debug';
-            webex.meetings.register().then(() => {
-                startCall()
-            }).catch(err => {
-                console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
-            });
+        webex = (window as any).Webex.init({
+            credentials: {
+                access_token: accessToken //
+            },
+            logger: {
+                level: 'info'
+            }
+        });
+        webex.config.logger.level = 'debug';
+        webex.meetings.register().then(() => {
+            startCall()
+        }).catch((err: any) => {
+            console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
+        });
 
-            ready = true;
-        }
+        ready = true;
     })
 </script>
 
 <svelte:head>
-    <link rel="stylesheet" href="./static/css/widget-demo-main.css"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/main.css'"/>
-    <link rel="stylesheet" href="./static/css/widget-space-main.css"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-space/production/main.css'"/>
-    <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2'"/>
-    <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2'"/>
-    <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font"
-          onerror="this.onerror=null;this.href='https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2'"/>
+    <link rel="stylesheet" href="https://code.s4d.io/widget-demo/archives/0.2.50/main.css"/>
+    <link rel="stylesheet" href="https://code.s4d.io/widget-space/production/main.css"/>
+    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTRegular.woff2" rel="preload" as="font"/>
+    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/CiscoSansTTLight.woff2" rel="preload" as="font"/>
+    <link href="https://code.s4d.io/widget-demo/archives/0.2.50/fonts/momentum-ui-icons.woff2" rel="preload" as="font"/>
     <link rel="stylesheet" href="./static/css/momentum-ui.min.css">
+
+    <link rel="stylesheet" href="./static/css/widget-demo-main.css"/>
+    <link rel="stylesheet" href="./static/css/widget-space-main.css"/>
+    <link href="./fonts/CiscoSansTTLight.woff2" rel="preload" as="font"/>
+    <link href="./fonts/CiscoSansTTRegular.woff2" rel="preload" as="font"/>
+    <link href="./fonts/momentum-ui-icons.woff2" rel="preload" as="font"/>
 </svelte:head>
 
 <main>
@@ -527,14 +526,14 @@
                                                 </div>
                                                 <div class="wxc-in-meeting">
                                                     <div class="wxc-local-media local-media-in-meeting">
-                                                        <video playsinline="" id="self-view" autoplay=""
+                                                        <video playsinline id="self-view" autoplay
                                                                style="height: 20vh;border-radius:20px" muted></video>
                                                     </div>
                                                     <div class="wxc-remote-media remote-media-in-meeting">
                                                         <video id="remote-view-video" class="wxc-remote-video"
-                                                               playsinline=""
-                                                               autoplay=""></video>
-                                                        <audio id="remote-view-audio" autoplay=""></audio>
+                                                               playsinline
+                                                               autoplay></video>
+                                                        <audio id="remote-view-audio" autoplay></audio>
                                                     </div>
                                                 </div>
                                             </div>
