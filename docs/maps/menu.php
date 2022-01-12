@@ -149,7 +149,13 @@ return [
                     ],
                 ]
             ],
-            $extraUtilsMenu
+            $extraUtilsMenu,
+            [
+                'title' => 'Scripting internals',
+                'url' => '/map-building/scripting-internals.md',
+                'markdown' => 'maps.scripting-internals',
+                'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/scripting-internals.md',
+            ],
         ]
     ],
     [
