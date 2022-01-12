@@ -414,31 +414,50 @@ export class SocketManager {
 
                 if (!meet.meetingLink) {
                     console.log("[Back] Generating new meeting link with client's token");
+                    const integrationTag = "workadventure-" + roomId;
                     const now = new Date(Date.now() + 45 * 1000);
                     const later = new Date(Date.now() + 4 * 60 * 60 * 1000);
                     console.log(`[Back] Meeting going from ${now} to ${later}`);
-                    fetch("https://webexapis.com/v1/meetings", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${accessToken}`,
-                        },
-                        body: JSON.stringify({
-                            title: `WorkAdventure - ${roomName}`,
-                            start: now.toISOString(),
-                            end: later.toISOString(),
-                            allowAnyUserToBeCoHost: true,
-                            enabledJoinBeforeHost: true,
-                            enableConnectAudioBeforeHost: true,
-                            sendEmail: false,
-                            integrationTags: ["workadventure-" + roomId],
-                        }),
-                    })
-                        .then((resp) => resp.json())
-                        .then((data) => {
-                            console.log("[Back] (Link Generator) ", data);
-                            meet.meetingLink = data.sipAddress;
-                        });
+                    try {
+                        const resp = await Axios.post(
+                            "https://webexapis.com/v1/meetings",
+                            {
+                                title: `WorkAdventure - ${roomName}`,
+                                start: now.toISOString(),
+                                end: later.toISOString(),
+                                allowAnyUserToBeCoHost: true,
+                                enabledJoinBeforeHost: true,
+                                enableConnectAudioBeforeHost: true,
+                                sendEmail: false,
+                                integrationTags: [
+                                    integrationTag.length > 61 ? integrationTag.substr(0, 60) + "…" : integrationTag,
+                                ],
+                            },
+                            {
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${accessToken}`,
+                                },
+                            }
+                        );
+                        console.log(`[Back] Got a response when generating a meeting link: ${resp.data}`);
+                        meet.meetingLink = resp.data.sipAddress;
+                    } catch (e) {
+                        if (Axios.isAxiosError(e)) {
+                            if (e.response) {
+                                throw Error(
+                                    `Got an error asking Cisco to make a meeting for us: ${JSON.stringify(
+                                        e.response.data
+                                    )}`
+                                );
+                            }
+                        }
+                        throw e;
+                    }
+                }
+
+                if (!meet.meetingLink) {
+                    throw Error("Meeting link still empty");
                 }
             }
 
@@ -453,7 +472,14 @@ export class SocketManager {
             serverToClientMessage.setWebexsessionresponse(response);
         } catch (err) {
             const errMsg = new WebexSessionError();
-            console.log("[Back] ", err);
+            if (err instanceof Error) {
+                console.log("[Back] ", err);
+                errMsg.setMessage(`[Back] ${err.message}`);
+            } else {
+                console.log("[Back] No idea what the type of error thrown is");
+                errMsg.setMessage("[Back] No idea what the type of error thrown is");
+            }
+            console.log(err);
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery()");
             serverToClientMessage.setWebexsessionerror(errMsg);
         }

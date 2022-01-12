@@ -1876,7 +1876,11 @@ ${escapedMessage}
         const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
-                this.connection?.emitWebexSessionQuery(this.room.id, accessToken, roomName);
+                if (accessToken !== null) {
+                    this.connection?.emitWebexSessionQuery(this.room.id, accessToken, roomName);
+                } else {
+                    console.warn("[Front] accessToken is null");
+                }
             });
         };
 

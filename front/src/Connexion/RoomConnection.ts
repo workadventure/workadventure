@@ -558,10 +558,10 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitWebexSessionQuery(roomId: string, accessToken: string | null, personalMeetingLink: string) {
+    public emitWebexSessionQuery(roomId: string, accessToken: string, roomName: string) {
         const webexSessionQuery = new WebexSessionQuery();
         webexSessionQuery.setRoomid(roomId);
-        webexSessionQuery.setPersonalmeetinglink(personalMeetingLink);
+        webexSessionQuery.setRoomname(roomName);
         if (accessToken) {
             webexSessionQuery.setAccesstoken(accessToken);
         }
