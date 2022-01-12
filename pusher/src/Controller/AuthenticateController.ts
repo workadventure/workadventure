@@ -32,7 +32,7 @@ export class AuthenticateController extends BaseController {
             try {
                 const { nonce, state, playUri, redirect } = parse(req.getQuery());
                 if (!state || !nonce) {
-                    throw "missing state and nonce URL parameters";
+                    throw new Error("missing state and nonce URL parameters");
                 }
 
                 const loginUri = await openIDClient.authorizationUrl(

@@ -78,6 +78,9 @@ export class ErrorScene extends Phaser.Scene {
      */
     public static showError(error: unknown, scene: ScenePlugin): void {
         console.error(error);
+        if (error instanceof Error) {
+            console.error("Stacktrace: ", error.stack);
+        }
         console.trace();
 
         if (typeof error === "string" || error instanceof String) {
