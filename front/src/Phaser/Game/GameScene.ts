@@ -597,9 +597,12 @@ export class GameScene extends DirtyScene {
         this.createPromiseResolve();
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
+        const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
+            | boolean
+            | undefined;
         const scriptPromises = [];
         for (const script of scripts) {
-            scriptPromises.push(iframeListener.registerScript(script));
+            scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
         }
 
         this.userInputManager.spaceEvent(() => {

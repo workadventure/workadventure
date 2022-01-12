@@ -274,7 +274,7 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             console.info("Loading map related script at ", scriptUrl);
 
@@ -283,7 +283,11 @@ class IframeListener {
                 const iframe = document.createElement("iframe");
                 iframe.id = IframeListener.getIFrameId(scriptUrl);
                 iframe.style.display = "none";
-                iframe.src = "/iframe.html?script=" + encodeURIComponent(scriptUrl);
+                iframe.src =
+                    "/iframe.html?script=" +
+                    encodeURIComponent(scriptUrl) +
+                    "&moduleMode=" +
+                    (enableModuleMode ? "true" : "false");
 
                 // We are putting a sandbox on this script because it will run in the same domain as the main website.
                 iframe.sandbox.add("allow-scripts");
@@ -318,7 +322,9 @@ class IframeListener {
                     "//" +
                     window.location.host +
                     '/iframe_api.js" ></script>\n' +
-                    '<script type="module" src="' +
+                    "<script " +
+                    (enableModuleMode ? 'type="module" ' : "") +
+                    'src="' +
                     scriptUrl +
                     '" ></script>\n' +
                     "<title></title>\n" +

@@ -28,6 +28,7 @@ export enum GameMapProperties {
     PLAY_AUDIO_LOOP = "playAudioLoop",
     READABLE_BY = "readableBy",
     SCRIPT = "script",
+    SCRIPT_DISABLE_MODULE_SUPPORT = "scriptDisableModuleSupport",
     SILENT = "silent",
     START = "start",
     START_LAYER = "startLayer",
