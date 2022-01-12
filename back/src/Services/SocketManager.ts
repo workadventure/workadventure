@@ -414,7 +414,7 @@ export class SocketManager {
 
                 if (!meet.meetingLink) {
                     console.log("[Back] Generating new meeting link with client's token");
-                    const integrationTag = "workadventure-" + roomId;
+                    const integrationTag = `workadventure-${roomId}`;
                     const now = new Date(Date.now() + 45 * 1000);
                     const later = new Date(Date.now() + 4 * 60 * 60 * 1000);
                     console.log(`[Back] Meeting going from ${now} to ${later}`);
@@ -472,14 +472,8 @@ export class SocketManager {
             serverToClientMessage.setWebexsessionresponse(response);
         } catch (err) {
             const errMsg = new WebexSessionError();
-            if (err instanceof Error) {
-                console.log("[Back] ", err);
-                errMsg.setMessage(`[Back] ${err.message}`);
-            } else {
-                console.log("[Back] No idea what the type of error thrown is");
-                errMsg.setMessage("[Back] No idea what the type of error thrown is");
-            }
-            console.log(err);
+            console.log("[Back] ", err);
+            errMsg.setMessage(`[Back] ${(err as Error).message || "Something went wrong"}`);
             errMsg.setLocation("Back -> SocketManager.ts -> handleWebexSessionQuery()");
             serverToClientMessage.setWebexsessionerror(errMsg);
         }

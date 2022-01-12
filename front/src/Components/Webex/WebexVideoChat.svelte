@@ -71,19 +71,19 @@
 
         // Handle screenshare streams
         meeting.on('meeting:startedSharingRemote', () => {
-            assignElementMediaSource(document.getElementById('remote-view-video'),remoteShareStream);
+            assignElementMediaSource(document.getElementById('remote-view-video'), remoteShareStream);
         });
 
         meeting.on('meeting:stoppedSharingRemote', () => {
-            assignElementMediaSource(document.getElementById('remote-view-video'),remoteVideoStream);
+            assignElementMediaSource(document.getElementById('remote-view-video'), remoteVideoStream);
         });
 
         meeting.on('meeting:startedSharingLocal', () => {
-            assignElementMediaSource(document.getElementById('self-view'),localShareStream);
+            assignElementMediaSource(document.getElementById('self-view'), localShareStream);
         })
 
         meeting.on('meeting:stoppedSharingLocal', () => {
-            assignElementMediaSource(document.getElementById('self-view'),localVideoStream);
+            assignElementMediaSource(document.getElementById('self-view'), localVideoStream);
         })
         // Handle media streams changes to ready state
         meeting.on('media:ready', (media) => {
@@ -334,22 +334,24 @@
 
     onMount(async () => {
         await importWebex();
-        webex = window.Webex.init({
-            credentials: {
-                access_token: accessToken //
-            },
-            logger: {
-                level: 'info'
-            }
-        });
-        webex.config.logger.level = 'debug';
-        webex.meetings.register().then(() => {
-            startCall()
-        }).catch(err => {
+        if (window.Webex) {
+            webex = window.Webex.init({
+                credentials: {
+                    access_token: accessToken //
+                },
+                logger: {
+                    level: 'info'
+                }
+            });
+            webex.config.logger.level = 'debug';
+            webex.meetings.register().then(() => {
+                startCall()
+            }).catch(err => {
                 console.error("Error: " + err + "\nmeetingRoom: " + meetingRoom + "\n" + "accessToken: " + accessToken);
             });
 
-        ready = true;
+            ready = true;
+        }
     })
 </script>
 

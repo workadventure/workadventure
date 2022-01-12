@@ -1876,7 +1876,7 @@ ${escapedMessage}
         const startAdHoc = () => {
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
-                if (accessToken !== null) {
+                if (accessToken) {
                     this.connection?.emitWebexSessionQuery(this.room.id, accessToken, roomName);
                 } else {
                     console.warn("[Front] accessToken is null");
