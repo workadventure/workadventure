@@ -31,7 +31,7 @@ services:
       UPLOADER_URL: //uploader.workadventure.localhost
       ADMIN_URL: //workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
-      STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_2: yarn install --network-timeout 100000
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
