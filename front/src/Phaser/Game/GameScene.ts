@@ -48,9 +48,10 @@ import { PropertyUtils } from "../Map/PropertyUtils";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
+import { CameraManager } from "./CameraManager";
+import { PathfindingManager } from "../../Utils/PathfindingManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    MessageUserJoined,
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
@@ -64,9 +65,7 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { CameraManager } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
-import type { Character } from "../Entity/Character";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
@@ -88,8 +87,7 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
+import { followUsersColorStore } from "../../Stores/FollowStore";
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 
@@ -203,6 +201,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
+    private pathfindingManager!: PathfindingManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -568,6 +567,9 @@ export class GameScene extends DirtyScene {
             { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
             waScaleManager
         );
+
+        this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
+        this.pathfindingManager.findPath({ x: 1, y: 3 }, { x: 29, y: 3 });
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollow(this.CurrentPlayer);
 
