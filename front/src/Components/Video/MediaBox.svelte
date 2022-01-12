@@ -5,7 +5,6 @@
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import PixelContainer from "../Container/PixelContainer.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;

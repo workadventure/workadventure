@@ -46,7 +46,7 @@
 
 <div
     id={"cowebsite-thumbnail-" + index}
-    class="cowebsite-thumbnail nes-container is-rounded nes-pointer"
+    class="cowebsite-thumbnail nes-pointer"
     class:asleep={$state === "asleep"}
     class:loading={$state === "loading"}
     class:ready={$state === "ready"}
@@ -57,7 +57,33 @@
 </div>
 
 <style lang="scss">
+    .cowebsite-thumbnail::before {
+        content: "";
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        left: -8px;
+        top: -8px;
+
+        margin: 4px;
+
+        border-style: solid;
+        border-width: 4px;
+        border-image-slice: 3;
+        border-image-width: 3;
+        border-image-repeat: stretch;
+        border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(33,37,41)" /></svg>');
+        border-image-outset: 1;
+    }
+
+    .cowebsite-thumbnail.vertical::before {
+        width: 48px;
+        height: 48px;
+    }
+
     .cowebsite-thumbnail {
+
+        position: relative;
         padding: 0;
         background-color: rgba(#000000, 0.6);
         margin: 1%;
