@@ -12,7 +12,7 @@ import { UserInputManager } from "../UserInput/UserInputManager";
 import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { waScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -855,7 +855,7 @@ export class GameScene extends DirtyScene {
                     for (const zone of zones) {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer);
+                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
                             break;
                         }
                     }
@@ -2125,7 +2125,7 @@ ${escapedMessage}
         if (this.cameraManager.isCameraLocked()) {
             return;
         }
-        waScaleManager.zoomModifier *= zoomFactor;
+        waScaleManager.handleZoomByFactor(zoomFactor);
         biggestAvailableAreaStore.recompute();
     }
 

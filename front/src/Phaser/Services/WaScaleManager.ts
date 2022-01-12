@@ -5,6 +5,10 @@ import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
+export enum WaScaleManagerEvent {
+    RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
+}
+
 export class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
@@ -69,7 +73,7 @@ export class WaScaleManager {
             return;
         }
         this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
-        this.game.events.emit("wa-scale-manager:refresh-focus-on-target", this.focusTarget);
+        this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
     }
 
     public setFocusTarget(targetDimensions?: { x: number; y: number; width: number; height: number }): void {
@@ -96,6 +100,17 @@ export class WaScaleManager {
     public set zoomModifier(zoomModifier: number) {
         this.hdpiManager.zoomModifier = zoomModifier;
         this.applyNewSize();
+    }
+
+    public handleZoomByFactor(zoomFactor: number): void {
+        this.zoomModifier *= zoomFactor;
+        if (this.focusTarget) {
+            this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
+        }
+    }
+
+    public getFocusTarget(): { x: number; y: number; width: number; height: number } | undefined {
+        return this.focusTarget;
     }
 
     public saveZoom(): void {
