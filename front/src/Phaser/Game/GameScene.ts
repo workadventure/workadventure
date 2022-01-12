@@ -855,7 +855,7 @@ export class GameScene extends DirtyScene {
                     for (const zone of zones) {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer);
+                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
                             break;
                         }
                     }
