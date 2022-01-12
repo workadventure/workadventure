@@ -333,6 +333,8 @@
     }
 
     onMount(async () => {
+        <!-- Svelte error checking fails below as it can't see the imported SDK before it's imported, which makes sense -->
+        <!-- svelte-ignore -->
         await importWebex();
         webex = window.Webex.init({
             credentials: {

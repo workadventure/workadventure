@@ -39,6 +39,7 @@
         }
     })
 
+    <!-- svelte-ignore -->
     function copyLink() {
         HTMLShareLink.select();
         document.execCommand('copy');
