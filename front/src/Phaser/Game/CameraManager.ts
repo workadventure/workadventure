@@ -19,7 +19,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private cameraMode: CameraMode = CameraMode.Free;
 
-    private cameraLockedDelayedCall: Phaser.Time.TimerEvent | undefined;
     private restoreZoomTween?: Phaser.Tweens.Tween;
     private startFollowTween?: Phaser.Tweens.Tween;
 
@@ -85,7 +84,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public leaveFocusMode(player: Player, duration = 0): void {
-        this.cameraLocked = false;
         this.waScaleManager.setFocusTarget();
         this.unlockCameraWithDelay(duration);
         this.startFollow(player, duration);
