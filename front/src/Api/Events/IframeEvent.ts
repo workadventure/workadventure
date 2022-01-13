@@ -34,6 +34,7 @@ import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import type { CameraSetPositionEvent } from "./CameraSetPositionEvent";
 import type { CameraFocusOnEvent } from "./CameraFocusOnEvent";
 import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
+import { isColorEvent } from "./ColorEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -160,6 +161,14 @@ export const iframeQueryMapTypeGuards = {
     },
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
+        answer: tg.isUndefined,
+    },
+    setPlayerOutline: {
+        query: isColorEvent,
+        answer: tg.isUndefined,
+    },
+    removePlayerOutline: {
+        query: tg.isUndefined,
         answer: tg.isUndefined,
     },
     getPlayerPosition: {

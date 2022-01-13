@@ -19,12 +19,12 @@
         uploadAudioActive = true;
     }
 
-    function send() {
+    async function send(): Promise<void> {
         if (inputSendTextActive) {
-            handleSendText.sendTextMessage(broadcastToWorld);
+            return handleSendText.sendTextMessage(broadcastToWorld);
         }
         if (uploadAudioActive) {
-            handleSendAudio.sendAudioMessage(broadcastToWorld);
+            return handleSendAudio.sendAudioMessage(broadcastToWorld);
         }
     }
 </script>

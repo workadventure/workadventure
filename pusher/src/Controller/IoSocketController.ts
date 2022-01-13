@@ -1,5 +1,5 @@
 import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import { GameRoomPolicyTypes } from "../Model/PusherRoom";
+import { GameRoomPolicyTypes, PusherRoom } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -17,6 +17,9 @@ import {
     ServerToClientMessage,
     CompanionMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
@@ -29,7 +32,7 @@ import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { CharacterTexture } from "../Services/AdminApi/CharacterTexture";
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
@@ -273,6 +276,7 @@ export class IoSocketController {
                                                     rejected: true,
                                                     message: err?.response?.data.message,
                                                     status: err?.response?.status,
+                                                    roomId,
                                                 },
                                                 websocketKey,
                                                 websocketProtocol,
@@ -367,6 +371,7 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
                                     message: e.message,
+                                    roomId,
                                 },
                                 websocketKey,
                                 websocketProtocol,
@@ -379,6 +384,7 @@ export class IoSocketController {
                                     rejected: true,
                                     reason: null,
                                     message: "500 Internal Server Error",
+                                    roomId,
                                 },
                                 websocketKey,
                                 websocketProtocol,
@@ -392,6 +398,11 @@ export class IoSocketController {
             /* Handlers */
             open: (ws) => {
                 if (ws.rejected === true) {
+                    // If there is a room in the error, let's check if we need to clean it.
+                    if (ws.roomId) {
+                        socketManager.deleteRoomIfEmptyFromId(ws.roomId as string);
+                    }
+
                     //FIX ME to use status code
                     if (ws.reason === tokenInvalidException) {
                         socketManager.emitTokenExpiredMessage(ws);
@@ -469,6 +480,18 @@ export class IoSocketController {
                         client,
                         message.getEmotepromptmessage() as EmotePromptMessage
                     );
+                } else if (message.hasFollowrequestmessage()) {
+                    socketManager.handleFollowRequest(
+                        client,
+                        message.getFollowrequestmessage() as FollowRequestMessage
+                    );
+                } else if (message.hasFollowconfirmationmessage()) {
+                    socketManager.handleFollowConfirmation(
+                        client,
+                        message.getFollowconfirmationmessage() as FollowConfirmationMessage
+                    );
+                } else if (message.hasFollowabortmessage()) {
+                    socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

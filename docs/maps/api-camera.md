@@ -4,7 +4,7 @@
 ### Listen to camera updates
 
 ```
-WA.camera.onCameraUpdate(callback: WasCameraUpdatedEventCallback): void
+WA.camera.onCameraUpdate(): Subscription
 ```
 
 Listens to updates of the camera viewport. It will trigger for every update of the camera's properties (position or scale for instance). An event will be sent.
@@ -19,5 +19,6 @@ The event has the following attributes :
 
 Example :
 ```javascript
-WA.camera.onCameraUpdate((worldView) => console.log(worldView));
-```
+const subscription = WA.camera.onCameraUpdate().subscribe((worldView) => console.log(worldView));
+//later...
+subscription.unsubscribe();

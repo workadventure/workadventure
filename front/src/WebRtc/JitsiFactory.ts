@@ -1,5 +1,5 @@
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
-import { coWebsiteManager } from "./CoWebsiteManager";
+import { CoWebsite, coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
 
@@ -140,8 +140,8 @@ class JitsiFactory {
         interfaceConfig?: object,
         jitsiUrl?: string,
         jitsiWidth?: number
-    ): void {
-        coWebsiteManager.addCoWebsite(
+    ): Promise<CoWebsite> {
+        return coWebsiteManager.addCoWebsite(
             async (cowebsiteDiv) => {
                 // Jitsi meet external API maintains some data in local storage
                 // which is sent via the appData URL parameter when joining a
@@ -200,7 +200,7 @@ class JitsiFactory {
         const jitsiCoWebsite = coWebsiteManager.searchJitsi();
 
         if (jitsiCoWebsite) {
-            coWebsiteManager.closeJitsi();
+            coWebsiteManager.closeJitsi().catch((e) => console.error(e));
         }
 
         this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);

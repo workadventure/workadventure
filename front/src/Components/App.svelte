@@ -23,6 +23,9 @@
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
+    import { showLimitRoomModalStore, showShareLinkMapModalStore } from "../Stores/ModalStore";
+    import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
+    import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
     import AudioPlaying from "./UI/AudioPlaying.svelte";
     import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
@@ -30,10 +33,10 @@
     import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import VideoOverlay from "./Video/VideoOverlay.svelte";
     import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
-    import AdminMessage from "./TypeMessage/BanMessage.svelte";
-    import TextMessage from "./TypeMessage/TextMessage.svelte";
-    import { banMessageVisibleStore } from "../Stores/TypeMessageStore/BanMessageStore";
-    import { textMessageVisibleStore } from "../Stores/TypeMessageStore/TextMessageStore";
+    import BanMessageContainer from "./TypeMessage/BanMessageContainer.svelte";
+    import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
+    import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
+    import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
     import { warningContainerStore } from "../Stores/MenuStore";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
     import { layoutManagerVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -42,6 +45,9 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
+    import { followStateStore } from "../Stores/FollowStore";
+    import { peerStore } from "../Stores/PeerStore";
+    import FollowMenu from "./FollowMenu/FollowMenu.svelte";
 
     export let game: Game;
 </script>
@@ -72,14 +78,13 @@
             <EnableCameraScene {game} />
         </div>
     {/if}
-    {#if $banMessageVisibleStore}
+    {#if $banMessageStore.length > 0}
         <div>
-            <AdminMessage />
+            <BanMessageContainer />
         </div>
-    {/if}
-    {#if $textMessageVisibleStore}
+    {:else if $textMessageStore.length > 0}
         <div>
-            <TextMessage />
+            <TextMessageContainer />
         </div>
     {/if}
     {#if $soundPlayingStore}
@@ -100,6 +105,11 @@
     {#if $showReportScreenStore !== userReportEmpty}
         <div>
             <ReportMenu />
+        </div>
+    {/if}
+    {#if $followStateStore !== "off" || $peerStore.size > 0}
+        <div>
+            <FollowMenu />
         </div>
     {/if}
     {#if $menuIconVisiblilityStore}
@@ -127,6 +137,16 @@
     {#if $helpCameraSettingsVisibleStore}
         <div>
             <HelpCameraSettingsPopup />
+        </div>
+    {/if}
+    {#if $showLimitRoomModalStore}
+        <div>
+            <LimitRoomModal />
+        </div>
+    {/if}
+    {#if $showShareLinkMapModalStore}
+        <div>
+            <ShareLinkMapModal />
         </div>
     {/if}
     {#if $requestVisitCardsStore}

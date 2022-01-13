@@ -76,7 +76,7 @@
                     break;
                 }
             }
-        } else throw "There is no menu called " + menu;
+        } else throw new Error("There is no menu called " + menu);
     }
 
     function closeMenu() {

@@ -51,7 +51,8 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
-            emote
+            emote,
+            () => {}
         );
 
         const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
@@ -86,7 +87,8 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
-            emote
+            emote,
+            () => {}
         );
 
         const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
@@ -125,7 +127,8 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
-            emote
+            emote,
+            () => {}
         );
 
         const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));

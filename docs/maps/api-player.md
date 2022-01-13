@@ -107,6 +107,27 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the position of the player
+```
+WA.player.getPosition(): Promise<Position>
+```
+The player's current position is available using the `WA.player.getPosition()` function.
+
+`Position` has the following attributes :
+* **x (number) :** The coordinate x of the current player's position.
+* **y (number) :** The coordinate y of the current player's position.
+
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before calling `WA.player.getPosition()`
+
+```typescript
+WA.onInit().then(async () => {
+    console.log('Position: ', await WA.player.getPosition());
+})
+```
+
+
 ### Listen to player movement
 ```
 WA.player.onPlayerMove(callback: HasPlayerMovedEventCallback): void;
@@ -151,3 +172,25 @@ Example:
 ```javascript
 WA.player.state.toto //will retrieve the variable
 ```
+
+### Set the outline color of the player
+```
+WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
+WA.player.removeOutlineColor(): Promise<void>;
+```
+
+You can display a thin line around your player's name (the "outline").
+
+Use `setOutlineColor` to set the outline and `removeOutlineColor` to remove it.
+
+Colors are expressed in RGB. Each parameter is an integer between 0 and 255.
+
+```typescript
+// Let's add a red outline to our player
+WA.player.setOutlineColor(255, 0, 0);
+```
+
+When you set the outline on your player, other players will see the outline too (the outline color is shared across
+browsers automatically).
+
+![](images/outlines.png)

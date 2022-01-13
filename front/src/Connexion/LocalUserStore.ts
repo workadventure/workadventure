@@ -14,6 +14,7 @@ const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
+const ignoreFollowRequests = "ignoreFollowRequests";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -128,13 +129,23 @@ class LocalUserStore {
         return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
     }
 
-    setLastRoomUrl(roomUrl: string): void {
+    setIgnoreFollowRequests(value: boolean): void {
+        localStorage.setItem(ignoreFollowRequests, value.toString());
+    }
+    getIgnoreFollowRequests(): boolean {
+        return localStorage.getItem(ignoreFollowRequests) === "true";
+    }
+
+    async setLastRoomUrl(roomUrl: string): Promise<void> {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
         if ("caches" in window) {
-            caches.open(cacheAPIIndex).then((cache) => {
+            try {
+                const cache = await caches.open(cacheAPIIndex);
                 const stringResponse = new Response(JSON.stringify({ roomUrl }));
-                cache.put(`/${lastRoomUrl}`, stringResponse);
-            });
+                await cache.put(`/${lastRoomUrl}`, stringResponse);
+            } catch (e) {
+                console.error("Could not store last room url in Browser cache. Are you using private browser mode?", e);
+            }
         }
     }
     getLastRoomUrl(): string {

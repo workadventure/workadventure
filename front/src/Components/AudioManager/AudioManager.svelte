@@ -19,12 +19,13 @@
         audioManagerVolumeStore.setVolume(volume);
         audioManagerVolumeStore.setMuted(localUserStore.getAudioPlayerMuted());
 
-        unsubscriberFileStore = audioManagerFileStore.subscribe(() => {
+        unsubscriberFileStore = audioManagerFileStore.subscribe((src) => {
             HTMLAudioPlayer.pause();
+            HTMLAudioPlayer.src = src;
             HTMLAudioPlayer.loop = get(audioManagerVolumeStore).loop;
             HTMLAudioPlayer.volume = get(audioManagerVolumeStore).volume;
             HTMLAudioPlayer.muted = get(audioManagerVolumeStore).muted;
-            HTMLAudioPlayer.play();
+            void HTMLAudioPlayer.play();
         });
         unsubscriberVolumeStore = audioManagerVolumeStore.subscribe((audioManager: audioManagerVolume) => {
             const reduceVolume = audioManager.talking && audioManager.decreaseWhileTalking;
@@ -148,9 +149,7 @@
         </label>
         <section class="audio-manager-file">
             <!-- svelte-ignore a11y-media-has-caption -->
-            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}>
-                <source src={$audioManagerFileStore} />
-            </audio>
+            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
 </div>

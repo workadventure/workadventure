@@ -92,6 +92,24 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         }
         return userRoomToken;
     }
+
+    public setOutlineColor(red: number, green: number, blue: number): Promise<void> {
+        return queryWorkadventure({
+            type: "setPlayerOutline",
+            data: {
+                red,
+                green,
+                blue,
+            },
+        });
+    }
+
+    public removeOutlineColor(): Promise<void> {
+        return queryWorkadventure({
+            type: "removePlayerOutline",
+            data: undefined,
+        });
+    }
 }
 
 export type Position = {

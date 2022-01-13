@@ -44,6 +44,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     private startFollowTween?: Phaser.Tweens.Tween;
 
     private playerToFollow?: Player;
+    private cameraLocked: boolean;
 
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
@@ -51,6 +52,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
         this.camera = scene.cameras.main;
         this.cameraBounds = cameraBounds;
+        this.cameraLocked = false;
 
         this.waScaleManager = waScaleManager;
 
@@ -123,6 +125,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
 
+        this.cameraLocked = true;
+        this.unlockCameraWithDelay(duration);
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
         const marginMult = 1 + margin;
@@ -143,8 +147,9 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
     }
 
-    public leaveFocusMode(player: Player, duration: number = 1000): void {
+    public leaveFocusMode(player: Player, duration = 0): void {
         this.waScaleManager.setFocusTarget();
+        this.unlockCameraWithDelay(duration);
         this.startFollowPlayer(player, duration);
         this.restoreZoom(duration);
     }
@@ -196,8 +201,14 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
     }
 
-    public isCameraZoomLocked(): boolean {
-        return [CameraMode.Focus, CameraMode.Positioned].includes(this.cameraMode);
+    public isCameraLocked(): boolean {
+        return this.cameraLocked;
+    }
+
+    private unlockCameraWithDelay(delay: number): void {
+        this.scene.time.delayedCall(delay, () => {
+            this.cameraLocked = false;
+        });
     }
 
     private setCameraMode(mode: CameraMode): void {

@@ -60,7 +60,7 @@ WA.chat.sendChatMessage('Hello world', 'Mr Robot');
 
 The `WA` objects contains a number of useful methods enabling you to interact with the WorkAdventure game. For instance, `WA.chat.sendChatMessage` opens the chat and adds a message in it.
 
-In your browser console, when you open the map, the chat message should be displayed right away.
+The message should be displayed in the chat history as soon as you enter the room.
 
 ## Adding a script in an iFrame
 

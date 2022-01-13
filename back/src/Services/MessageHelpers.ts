@@ -10,7 +10,19 @@ import {
 import { UserSocket } from "_Model/User";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 
-export function emitError(Client: UserSocket, message: string): void {
+function getMessageFromError(error: unknown): string {
+    if (error instanceof Error) {
+        return error.message;
+    } else if (typeof error === "string") {
+        return error;
+    } else {
+        return "Unknown error";
+    }
+}
+
+export function emitError(Client: UserSocket, error: unknown): void {
+    const message = getMessageFromError(error);
+
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
 
@@ -23,8 +35,9 @@ export function emitError(Client: UserSocket, message: string): void {
     console.warn(message);
 }
 
-export function emitErrorOnRoomSocket(Client: RoomSocket, message: string): void {
-    console.error(message);
+export function emitErrorOnRoomSocket(Client: RoomSocket, error: unknown): void {
+    console.error(error);
+    const message = getMessageFromError(error);
 
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);
@@ -41,8 +54,9 @@ export function emitErrorOnRoomSocket(Client: RoomSocket, message: string): void
     console.warn(message);
 }
 
-export function emitErrorOnZoneSocket(Client: ZoneSocket, message: string): void {
-    console.error(message);
+export function emitErrorOnZoneSocket(Client: ZoneSocket, error: unknown): void {
+    console.error(error);
+    const message = getMessageFromError(error);
 
     const errorMessage = new ErrorMessage();
     errorMessage.setMessage(message);

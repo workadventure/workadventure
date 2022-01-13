@@ -1,8 +1,8 @@
-import type { Direction } from "../../types";
 import type { GameScene } from "../Game/GameScene";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
+import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -16,6 +16,7 @@ export enum UserInputEvent {
     MoveDown,
     SpeedUp,
     Interact,
+    Follow,
     Shout,
     JoystickMove,
 }
@@ -146,6 +147,10 @@ export class UserInputManager {
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
+            },
+            {
+                event: UserInputEvent.Follow,
+                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
             {
                 event: UserInputEvent.Shout,

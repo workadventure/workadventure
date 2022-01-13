@@ -149,7 +149,7 @@ class CoWebsiteManager {
             }
 
             buttonCloseCoWebsites.blur();
-            this.closeCoWebsites();
+            this.closeCoWebsites().catch((e) => console.error(e));
         });
 
         const buttonFullScreenFrame = HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId);
@@ -515,70 +515,72 @@ class CoWebsiteManager {
                 throw new Error("Too many we");
             }
 
-            Promise.resolve(callback(this.cowebsiteBufferDom)).then((iframe) => {
-                iframe?.classList.add("pixel");
+            Promise.resolve(callback(this.cowebsiteBufferDom))
+                .then((iframe) => {
+                    iframe?.classList.add("pixel");
 
-                if (!iframe.id) {
-                    do {
-                        iframe.id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
-                    } while (this.getCoWebsiteById(iframe.id));
-                }
-
-                const onloadPromise = new Promise<void>((resolve) => {
-                    iframe.onload = () => resolve();
-                });
-
-                const icon = this.generateCoWebsiteIcon(iframe);
-
-                const coWebsite = {
-                    iframe,
-                    icon,
-                    position: position ?? this.coWebsites.length,
-                };
-
-                // Iframe management on mobile
-                icon.addEventListener("click", () => {
-                    if (this.isSmallScreen()) {
-                        this.moveRightPreviousCoWebsite(coWebsite, 0);
+                    if (!iframe.id) {
+                        do {
+                            iframe.id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
+                        } while (this.getCoWebsiteById(iframe.id));
                     }
-                });
 
-                this.coWebsites.push(coWebsite);
-                this.cowebsiteSubIconsDom.appendChild(icon);
+                    const onloadPromise = new Promise<void>((resolve) => {
+                        iframe.onload = () => resolve();
+                    });
 
-                const onTimeoutPromise = new Promise<void>((resolve) => {
-                    setTimeout(() => resolve(), 2000);
-                });
+                    const icon = this.generateCoWebsiteIcon(iframe);
 
-                this.currentOperationPromise = this.currentOperationPromise
-                    .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
-                    .then(() => {
-                        if (coWebsite.position === 0) {
-                            this.openMain();
-                            if (widthPercent) {
-                                this.widthPercent = widthPercent;
-                            }
+                    const coWebsite = {
+                        iframe,
+                        icon,
+                        position: position ?? this.coWebsites.length,
+                    };
 
-                            setTimeout(() => {
-                                this.fire();
+                    // Iframe management on mobile
+                    icon.addEventListener("click", () => {
+                        if (this.isSmallScreen()) {
+                            this.moveRightPreviousCoWebsite(coWebsite, 0);
+                        }
+                    });
+
+                    this.coWebsites.push(coWebsite);
+                    this.cowebsiteSubIconsDom.appendChild(icon);
+
+                    const onTimeoutPromise = new Promise<void>((resolve) => {
+                        setTimeout(() => resolve(), 2000);
+                    });
+
+                    this.currentOperationPromise = this.currentOperationPromise
+                        .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
+                        .then(() => {
+                            if (coWebsite.position === 0) {
+                                this.openMain();
+                                if (widthPercent) {
+                                    this.widthPercent = widthPercent;
+                                }
+
+                                setTimeout(() => {
+                                    this.fire();
+                                    position !== undefined
+                                        ? this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position)
+                                        : this.moveCoWebsite(coWebsite, coWebsite.position);
+                                }, animationTime);
+                            } else {
                                 position !== undefined
                                     ? this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position)
                                     : this.moveCoWebsite(coWebsite, coWebsite.position);
-                            }, animationTime);
-                        } else {
-                            position !== undefined
-                                ? this.moveRightPreviousCoWebsite(coWebsite, coWebsite.position)
-                                : this.moveCoWebsite(coWebsite, coWebsite.position);
-                        }
+                            }
 
-                        return resolve(coWebsite);
-                    })
-                    .catch((err) => {
-                        console.error("Error loadCoWebsite => ", err);
-                        this.removeCoWebsiteFromStack(coWebsite);
-                        return reject();
-                    });
-            });
+                            return resolve(coWebsite);
+                        })
+                        .catch((err) => {
+                            console.error("Error loadCoWebsite => ", err);
+                            this.removeCoWebsiteFromStack(coWebsite);
+                            return reject();
+                        });
+                })
+                .catch((e) => console.error("Error loadCoWebsite >=> ", e));
         });
     }
 
@@ -603,20 +605,23 @@ class CoWebsiteManager {
         return this.currentOperationPromise;
     }
 
-    public closeJitsi() {
+    public async closeJitsi() {
         const jitsi = this.searchJitsi();
         if (jitsi) {
-            this.closeCoWebsite(jitsi);
+            return this.closeCoWebsite(jitsi);
         }
     }
 
-    public closeCoWebsites(): Promise<void> {
-        this.currentOperationPromise = this.currentOperationPromise.then(() => {
-            this.coWebsites.forEach((coWebsite: CoWebsite) => {
-                this.closeCoWebsite(coWebsite);
-            });
+    public async closeCoWebsites(): Promise<void> {
+        await this.currentOperationPromise;
+
+        const promises: Promise<void>[] = [];
+        this.coWebsites.forEach((coWebsite: CoWebsite) => {
+            promises.push(this.closeCoWebsite(coWebsite));
         });
-        return this.currentOperationPromise;
+        await Promise.all(promises);
+        // TODO: this.currentOperationPromise does not point any more on the last promise
+        return;
     }
 
     public getGameSize(): { width: number; height: number } {

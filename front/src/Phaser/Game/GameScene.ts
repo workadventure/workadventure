@@ -1,7 +1,7 @@
 import type { Subscription } from "rxjs";
 import AnimatedTiles from "phaser-animated-tiles";
 import { Queue } from "queue-typescript";
-import { get } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
@@ -12,7 +12,7 @@ import { UserInputManager } from "../UserInput/UserInputManager";
 import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { waScaleManager } from "../Services/WaScaleManager";
+import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -40,7 +40,6 @@ import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
 import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
-import { worldFullMessageStream } from "../../Connexion/WorldFullMessageStream";
 import { DirtyScene } from "./DirtyScene";
 import { TextUtils } from "../Components/TextUtils";
 import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
@@ -55,11 +54,11 @@ import type {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
+    PlayerDetailsUpdatedMessageInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
-import type { UserMovedMessage } from "../../Messages/generated/messages_pb";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
@@ -87,9 +86,13 @@ import GameObject = Phaser.GameObjects.GameObject;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import Camera = Phaser.Cameras.Scene2D.Camera;
+import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
+import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
+import Camera = Phaser.Cameras.Scene2D.Camera;
+
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -125,6 +128,11 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
+interface PlayerDetailsUpdatedInterface {
+    type: "PlayerDetailsUpdated";
+    details: PlayerDetailsUpdatedMessageInterface;
+}
+
 export class GameScene extends DirtyScene {
     Terrains: Array<Phaser.Tilemaps.Tileset>;
     CurrentPlayer!: Player;
@@ -137,20 +145,14 @@ export class GameScene extends DirtyScene {
     groups: Map<number, Sprite>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents: Queue<
+    pendingEvents = new Queue<
         | InitUserPositionEventInterface
         | AddPlayerEventInterface
         | RemovePlayerEventInterface
         | UserMovedEventInterface
         | GroupCreatedUpdatedEventInterface
         | DeleteGroupEventInterface
-    > = new Queue<
-        | InitUserPositionEventInterface
-        | AddPlayerEventInterface
-        | RemovePlayerEventInterface
-        | UserMovedEventInterface
-        | GroupCreatedUpdatedEventInterface
-        | DeleteGroupEventInterface
+        | PlayerDetailsUpdatedInterface
     >();
     private initPosition: PositionInterface | null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
@@ -164,9 +166,11 @@ export class GameScene extends DirtyScene {
     private createPromise: Promise<void>;
     private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
     private iframeSubscriptionList!: Array<Subscription>;
-    private peerStoreUnsubscribe!: () => void;
-    private emoteUnsubscribe!: () => void;
-    private emoteMenuUnsubscribe!: () => void;
+    private peerStoreUnsubscribe!: Unsubscriber;
+    private emoteUnsubscribe!: Unsubscriber;
+    private emoteMenuUnsubscribe!: Unsubscriber;
+    private followUsersColorStoreUnsubscribe!: Unsubscriber;
+
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
@@ -237,7 +241,7 @@ export class GameScene extends DirtyScene {
         const textures = localUser?.textures;
         if (textures) {
             for (const texture of textures) {
-                loadCustomTexture(this.load, texture);
+                loadCustomTexture(this.load, texture).catch((e) => console.error(e));
             }
         }
 
@@ -264,7 +268,7 @@ export class GameScene extends DirtyScene {
                 this.load.on(
                     "filecomplete-tilemapJSON-" + this.MapUrlFile,
                     (key: string, type: string, data: unknown) => {
-                        this.onMapLoad(data);
+                        this.onMapLoad(data).catch((e) => console.error(e));
                     }
                 );
                 return;
@@ -288,14 +292,14 @@ export class GameScene extends DirtyScene {
                 this.load.on(
                     "filecomplete-tilemapJSON-" + this.MapUrlFile,
                     (key: string, type: string, data: unknown) => {
-                        this.onMapLoad(data);
+                        this.onMapLoad(data).catch((e) => console.error(e));
                     }
                 );
                 // If the map has already been loaded as part of another GameScene, the "on load" event will not be triggered.
                 // In this case, we check in the cache to see if the map is here and trigger the event manually.
                 if (this.cache.tilemap.exists(this.MapUrlFile)) {
                     const data = this.cache.tilemap.get(this.MapUrlFile);
-                    this.onMapLoad(data);
+                    this.onMapLoad(data).catch((e) => console.error(e));
                 }
                 return;
             }
@@ -316,7 +320,7 @@ export class GameScene extends DirtyScene {
         });
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
         this.load.on("filecomplete-tilemapJSON-" + this.MapUrlFile, (key: string, type: string, data: unknown) => {
-            this.onMapLoad(data);
+            this.onMapLoad(data).catch((e) => console.error(e));
         });
         //TODO strategy to add access token
         this.load.tilemapTiledJSON(this.MapUrlFile, this.MapUrlFile);
@@ -324,7 +328,7 @@ export class GameScene extends DirtyScene {
         // In this case, we check in the cache to see if the map is here and trigger the event manually.
         if (this.cache.tilemap.exists(this.MapUrlFile)) {
             const data = this.cache.tilemap.get(this.MapUrlFile);
-            this.onMapLoad(data);
+            this.onMapLoad(data).catch((e) => console.error(e));
         }
 
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -345,7 +349,10 @@ export class GameScene extends DirtyScene {
     private async onMapLoad(data: any): Promise<void> {
         // Triggered when the map is loaded
         // Load tiles attached to the map recursively
-        this.mapFile = data.data;
+
+        // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
+        // So we are doing a deep copy
+        this.mapFile = deepCopy(data.data);
         const url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
@@ -399,21 +406,23 @@ export class GameScene extends DirtyScene {
             this.load.on("complete", () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
-                this.createPromise.then(async () => {
-                    itemFactory.create(this);
+                this.createPromise
+                    .then(async () => {
+                        itemFactory.create(this);
 
-                    const roomJoinedAnswer = await this.connectionAnswerPromise;
+                        const roomJoinedAnswer = await this.connectionAnswerPromise;
 
-                    for (const object of objectsOfType) {
-                        // TODO: we should pass here a factory to create sprites (maybe?)
+                        for (const object of objectsOfType) {
+                            // TODO: we should pass here a factory to create sprites (maybe?)
 
-                        // Do we have a state for this object?
-                        const state = roomJoinedAnswer.items[object.id];
+                            // Do we have a state for this object?
+                            const state = roomJoinedAnswer.items[object.id];
 
-                        const actionableItem = itemFactory.factory(this, object, state);
-                        this.actionableItems.set(actionableItem.getId(), actionableItem);
-                    }
-                });
+                            const actionableItem = itemFactory.factory(this, object, state);
+                            this.actionableItems.set(actionableItem.getId(), actionableItem);
+                        }
+                    })
+                    .catch((e) => console.error(e));
             });
         }
     }
@@ -442,13 +451,9 @@ export class GameScene extends DirtyScene {
             this.pinchManager = new PinchManager(this);
         }
 
-        this.messageSubscription = worldFullMessageStream.stream.subscribe((message) =>
-            this.showWorldFullError(message)
-        );
-
         const playerName = gameManager.getPlayerName();
         if (!playerName) {
-            throw "playerName is not set";
+            throw new Error("playerName is not set");
         }
         this.playerName = playerName;
         this.characterLayers = gameManager.getCharacterLayers();
@@ -483,11 +488,11 @@ export class GameScene extends DirtyScene {
                 if (exitSceneUrl !== undefined) {
                     this.loadNextGame(
                         Room.getRoomPathFromExitSceneUrl(exitSceneUrl, window.location.toString(), this.MapUrlFile)
-                    );
+                    ).catch((e) => console.error(e));
                 }
                 const exitUrl = this.getExitUrl(layer);
                 if (exitUrl !== undefined) {
-                    this.loadNextGameFromExitUrl(exitUrl);
+                    this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
                 }
             }
             if (layer.type === "objectgroup") {
@@ -527,7 +532,7 @@ export class GameScene extends DirtyScene {
         }
 
         this.gameMap.exitUrls.forEach((exitUrl) => {
-            this.loadNextGameFromExitUrl(exitUrl);
+            this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
 
         this.startPositionCalculator = new StartPositionCalculator(
@@ -548,7 +553,10 @@ export class GameScene extends DirtyScene {
         mediaManager.setUserInputManager(this.userInputManager);
 
         if (localUserStore.getFullscreen()) {
-            document.querySelector("body")?.requestFullscreen();
+            document
+                .querySelector("body")
+                ?.requestFullscreen()
+                .catch((e) => console.error(e));
         }
 
         //notify game manager can to create currentUser in map
@@ -613,8 +621,6 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
-        this.emoteManager = new EmoteManager(this);
-
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
@@ -646,9 +652,26 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises]).then(() => {
-            this.scene.wake();
+        this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
+            if (color !== undefined) {
+                this.CurrentPlayer.setOutlineColor(color);
+                this.connection?.emitPlayerOutlineColor(color);
+            } else {
+                this.CurrentPlayer.removeOutlineColor();
+                this.connection?.emitPlayerOutlineColor(null);
+            }
         });
+
+        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises])
+            .then(() => {
+                this.scene.wake();
+            })
+            .catch((e) =>
+                console.error(
+                    "Some scripts failed to load ot the connection failed to establish to WorkAdventure server",
+                    e
+                )
+            );
     }
 
     /**
@@ -679,7 +702,7 @@ export class GameScene extends DirtyScene {
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
-                this.connection.onUserJoins((message: MessageUserJoined) => {
+                this.connection.userJoinedMessageStream.subscribe((message) => {
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
                         characterLayers: message.characterLayers,
@@ -688,35 +711,38 @@ export class GameScene extends DirtyScene {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
+                        outlineColor: message.outlineColor,
                     };
                     this.addPlayer(userMessage);
                 });
 
-                this.connection.onUserMoved((message: UserMovedMessage) => {
-                    const position = message.getPosition();
+                this.connection.userMovedMessageStream.subscribe((message) => {
+                    const position = message.position;
                     if (position === undefined) {
                         throw new Error("Position missing from UserMovedMessage");
                     }
 
                     const messageUserMoved: MessageUserMovedInterface = {
-                        userId: message.getUserid(),
+                        userId: message.userId,
                         position: ProtobufClientUtils.toPointInterface(position),
                     };
 
                     this.updatePlayerPosition(messageUserMoved);
                 });
 
-                this.connection.onUserLeft((userId: number) => {
-                    this.removePlayer(userId);
+                this.connection.userLeftMessageStream.subscribe((message) => {
+                    this.removePlayer(message.userId);
                 });
 
-                this.connection.onGroupUpdatedOrCreated((groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                    this.shareGroupPosition(groupPositionMessage);
-                });
+                this.connection.groupUpdateMessageStream.subscribe(
+                    (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                        this.shareGroupPosition(groupPositionMessage);
+                    }
+                );
 
-                this.connection.onGroupDeleted((groupId: number) => {
+                this.connection.groupDeleteMessageStream.subscribe((message) => {
                     try {
-                        this.deleteGroup(groupId);
+                        this.deleteGroup(message.groupId);
                     } catch (e) {
                         console.error(e);
                     }
@@ -728,7 +754,7 @@ export class GameScene extends DirtyScene {
                     this.createSuccessorGameScene(true, true);
                 });
 
-                this.connection.onActionableEvent((message) => {
+                this.connection.itemEventMessageStream.subscribe((message) => {
                     const item = this.actionableItems.get(message.itemId);
                     if (item === undefined) {
                         console.warn(
@@ -741,11 +767,29 @@ export class GameScene extends DirtyScene {
                     item.fire(message.event, message.state, message.parameters);
                 });
 
+                this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
+                    if (message.details === undefined) {
+                        throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
+                    }
+                    this.pendingEvents.enqueue({
+                        type: "PlayerDetailsUpdated",
+                        details: {
+                            userId: message.userId,
+                            outlineColor: message.details.outlineColor,
+                            removeOutlineColor: message.details.removeOutlineColor,
+                        },
+                    });
+                });
+
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
-                this.connection.onStartJitsiRoom((jwt, room) => {
-                    this.startJitsi(room, jwt);
+                this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
+                    this.startJitsi(message.jitsiRoom, message.jwt);
+                });
+
+                this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
+                    this.showWorldFullError(message);
                 });
 
                 // When connection is performed, let's connect SimplePeer
@@ -811,7 +855,7 @@ export class GameScene extends DirtyScene {
                     for (const zone of zones) {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer);
+                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
                             break;
                         }
                     }
@@ -820,12 +864,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.emoteManager = new EmoteManager(this, this.connection);
+
                 // this.gameMap.onLeaveLayer((layers) => {
                 //     layers.forEach((layer) => {
                 //         iframeListener.sendLeaveLayerEvent(layer.name);
                 //     });
                 // });
-            });
+            })
+            .catch((e) => console.error(e));
     }
 
     //todo: into dedicated classes
@@ -878,7 +925,7 @@ export class GameScene extends DirtyScene {
             if (newValue) {
                 this.onMapExit(
                     Room.getRoomPathFromExitSceneUrl(newValue as string, window.location.toString(), this.MapUrlFile)
-                );
+                ).catch((e) => console.error(e));
             } else {
                 setTimeout(() => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
@@ -887,7 +934,9 @@ export class GameScene extends DirtyScene {
         });
         this.gameMap.onPropertyChange(GameMapProperties.EXIT_URL, (newValue, oldValue) => {
             if (newValue) {
-                this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()));
+                this.onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString())).catch((e) =>
+                    console.error(e)
+                );
             } else {
                 setTimeout(() => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
@@ -1095,7 +1144,9 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.playSoundStream.subscribe((playSoundEvent) => {
                 const url = new URL(playSoundEvent.url, this.MapUrlFile);
-                soundManager.playSound(this.load, this.sound, url.toString(), playSoundEvent.config);
+                soundManager
+                    .playSound(this.load, this.sound, url.toString(), playSoundEvent.config)
+                    .catch((e) => console.error(e));
             })
         );
 
@@ -1136,7 +1187,7 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.loadSoundStream.subscribe((loadSoundEvent) => {
                 const url = new URL(loadSoundEvent.url, this.MapUrlFile);
-                soundManager.loadSound(this.load, this.sound, url.toString());
+                soundManager.loadSound(this.load, this.sound, url.toString()).catch((e) => console.error(e));
             })
         );
 
@@ -1147,11 +1198,15 @@ ${escapedMessage}
         );
         this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
-                this.loadNextGameFromExitUrl(url).then(() => {
-                    this.events.once(EVENT_TYPE.POST_UPDATE, () => {
-                        this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString()));
-                    });
-                });
+                this.loadNextGameFromExitUrl(url)
+                    .then(() => {
+                        this.events.once(EVENT_TYPE.POST_UPDATE, () => {
+                            this.onMapExit(Room.getRoomPathFromExitUrl(url, window.location.toString())).catch((e) =>
+                                console.error(e)
+                            );
+                        });
+                    })
+                    .catch((e) => console.error(e));
             })
         );
         let scriptedBubbleSprite: Sprite;
@@ -1379,6 +1434,21 @@ ${escapedMessage}
             layoutManagerActionStore.removeAction(message.uuid);
         });
 
+        iframeListener.registerAnswerer("setPlayerOutline", (message) => {
+            const normalizeColor = (color: number) => Math.min(Math.max(0, Math.round(color)), 255);
+            const red = normalizeColor(message.red);
+            const green = normalizeColor(message.green);
+            const blue = normalizeColor(message.blue);
+            const color = (red << 16) | (green << 8) | blue;
+            this.CurrentPlayer.setOutlineColor(color);
+            this.connection?.emitPlayerOutlineColor(color);
+        });
+
+        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+            this.CurrentPlayer.removeOutlineColor();
+            this.connection?.emitPlayerOutlineColor(null);
+        });
+
         iframeListener.registerAnswerer("getPlayerPosition", () => {
             return {
                 x: this.CurrentPlayer.x,
@@ -1393,7 +1463,7 @@ ${escapedMessage}
         propertyValue: string | number | boolean | undefined
     ): void {
         if (propertyName === GameMapProperties.EXIT_URL && typeof propertyValue === "string") {
-            this.loadNextGameFromExitUrl(propertyValue);
+            this.loadNextGameFromExitUrl(propertyValue).catch((e) => console.error(e));
         }
         this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
     }
@@ -1478,7 +1548,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsites();
+        coWebsiteManager.closeCoWebsites().catch((e) => console.error(e));
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
@@ -1499,6 +1569,7 @@ ${escapedMessage}
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
+        this.followUsersColorStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
@@ -1507,6 +1578,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("removeActionMessage");
         iframeListener.unregisterAnswerer("openCoWebsite");
         iframeListener.unregisterAnswerer("getCoWebsites");
+        iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
@@ -1762,6 +1834,12 @@ ${escapedMessage}
                 case "DeleteGroupEvent":
                     this.doDeleteGroup(event.groupId);
                     break;
+                case "PlayerDetailsUpdated":
+                    this.doUpdatePlayerDetails(event.details);
+                    break;
+                default: {
+                    const tmp: never = event;
+                }
             }
         }
         // Let's move all users
@@ -1835,6 +1913,9 @@ ${escapedMessage}
             addPlayerData.companion,
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
+        if (addPlayerData.outlineColor !== undefined) {
+            player.setOutlineColor(addPlayerData.outlineColor);
+        }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1938,6 +2019,23 @@ ${escapedMessage}
         this.groups.delete(groupId);
     }
 
+    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+        const character = this.MapPlayersByKey.get(message.userId);
+        if (character === undefined) {
+            console.log(
+                "Could not set new details to character with ID ",
+                message.userId,
+                ". Did he/she left before te message was received?"
+            );
+            return;
+        }
+        if (message.removeOutlineColor) {
+            character.removeOutlineColor();
+        } else {
+            character.setOutlineColor(message.outlineColor);
+        }
+    }
+
     /**
      * Sends to the server an event emitted by one of the ActionableItems.
      */
@@ -1992,7 +2090,9 @@ ${escapedMessage}
         const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
         const jitsiWidth = allProps.get(GameMapProperties.JITSI_WIDTH) as number | undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth);
+        jitsiFactory
+            .start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth)
+            .catch((e) => console.error(e));
         this.connection?.setSilent(true);
         mediaManager.hideGameOverlay();
         analyticsClient.enteredJitsi(roomName, this.room.id);
@@ -2047,10 +2147,10 @@ ${escapedMessage}
     }
 
     zoomByFactor(zoomFactor: number) {
-        if (this.cameraManager.isCameraZoomLocked()) {
+        if (this.cameraManager.isCameraLocked()) {
             return;
         }
-        waScaleManager.zoomModifier *= zoomFactor;
+        waScaleManager.handleZoomByFactor(zoomFactor);
         biggestAvailableAreaStore.recompute();
     }
 

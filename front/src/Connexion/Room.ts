@@ -5,6 +5,8 @@ import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
@@ -16,7 +18,10 @@ export interface RoomRedirect {
 
 export class Room {
     public readonly id: string;
-    public readonly isPublic: boolean;
+    /**
+     * @deprecated
+     */
+    private readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
@@ -25,6 +30,8 @@ export class Room {
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
+    private _expireOn: Date | undefined;
+    private _canReport: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -32,7 +39,7 @@ export class Room {
         if (this.id.startsWith("/")) {
             this.id = this.id.substr(1);
         }
-        if (this.id.startsWith("_/")) {
+        if (this.id.startsWith("_/") || this.id.startsWith("*/")) {
             this.isPublic = true;
         } else if (this.id.startsWith("@/")) {
             this.isPublic = false;
@@ -80,13 +87,11 @@ export class Room {
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
         if (currentRoom.isPublic) {
-            instance = currentRoom.instance as string;
+            instance = currentRoom.getInstance();
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
-        if (absoluteExitSceneUrl.hash) {
-            baseUrl.hash = absoluteExitSceneUrl.hash;
-        }
+        baseUrl.hash = absoluteExitSceneUrl.hash;
 
         return baseUrl;
     }
@@ -101,27 +106,41 @@ export class Room {
             });
 
             const data = result.data;
-            if (data.redirectUrl) {
-                return {
-                    redirectUrl: data.redirectUrl as string,
-                };
+
+            if (data.authenticationMandatory !== undefined) {
+                data.authenticationMandatory = Boolean(data.authenticationMandatory);
             }
-            console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
-            this._mapUrl = data.mapUrl;
-            this._textures = data.textures;
-            this._group = data.group;
-            this._authenticationMandatory =
-                data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-            this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
-            this._contactPage = data.contactPage || CONTACT_URL;
-            return new MapDetail(data.mapUrl, data.textures);
+
+            if (isRoomRedirect(data)) {
+                return {
+                    redirectUrl: data.redirectUrl,
+                };
+            } else if (isMapDetailsData(data)) {
+                console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
+                this._mapUrl = data.mapUrl;
+                this._textures = data.textures;
+                this._group = data.group;
+                this._authenticationMandatory =
+                    data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
+                this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+                this._contactPage = data.contactPage || CONTACT_URL;
+                if (data.expireOn) {
+                    this._expireOn = new Date(data.expireOn);
+                }
+                this._canReport = data.canReport ?? false;
+                return new MapDetail(data.mapUrl, data.textures);
+            } else {
+                throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
+            }
         } catch (e) {
             if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "Token decrypted error") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
                 window.location.assign("/login");
-            } else {
+            } else if (axios.isAxiosError(e)) {
                 console.error("Error => getMapDetail", e, e.response);
+            } else {
+                console.error("Error => getMapDetail", e);
             }
             throw e;
         }
@@ -131,6 +150,8 @@ export class Room {
      * Instance name is:
      * - In a public URL: the second part of the URL ( _/[instance]/map.json)
      * - In a private URL: [organizationId/worldId]
+     *
+     * @deprecated
      */
     public getInstance(): string {
         if (this.instance !== undefined) {
@@ -138,7 +159,7 @@ export class Room {
         }
 
         if (this.isPublic) {
-            const match = /_\/([^/]+)\/.+/.exec(this.id);
+            const match = /[_*]\/([^/]+)\/.+/.exec(this.id);
             if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
             this.instance = match[1];
             return this.instance;
@@ -209,5 +230,13 @@ export class Room {
 
     get group(): string | null {
         return this._group;
+    }
+
+    get expireOn(): Date | undefined {
+        return this._expireOn;
+    }
+
+    get canReport(): boolean {
+        return this._canReport;
     }
 }

@@ -5,9 +5,13 @@ import {
     AdminPusherToBackMessage,
     AdminRoomMessage,
     BanMessage,
+    BanUserMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -16,7 +20,9 @@ import {
     QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
+    SendUserMessage,
     ServerToAdminClientMessage,
+    SetPlayerDetailsMessage,
     SilentMessage,
     UserMovesMessage,
     VariableMessage,
@@ -100,11 +106,6 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasPlayglobalmessage()) {
-                            socketManager.emitPlayGlobalMessage(
-                                room,
-                                message.getPlayglobalmessage() as PlayGlobalMessage
-                            );
                         } else if (message.hasQueryjitsijwtmessage()) {
                             socketManager.handleQueryJitsiJwtMessage(
                                 user,
@@ -116,16 +117,37 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getEmotepromptmessage() as EmotePromptMessage
                             );
+                        } else if (message.hasFollowrequestmessage()) {
+                            socketManager.handleFollowRequestMessage(
+                                room,
+                                user,
+                                message.getFollowrequestmessage() as FollowRequestMessage
+                            );
+                        } else if (message.hasFollowconfirmationmessage()) {
+                            socketManager.handleFollowConfirmationMessage(
+                                room,
+                                user,
+                                message.getFollowconfirmationmessage() as FollowConfirmationMessage
+                            );
+                        } else if (message.hasFollowabortmessage()) {
+                            socketManager.handleFollowAbortMessage(
+                                room,
+                                user,
+                                message.getFollowabortmessage() as FollowAbortMessage
+                            );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
-                            if (sendUserMessage !== undefined) {
-                                socketManager.handlerSendUserMessage(user, sendUserMessage);
-                            }
+                            socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
                         } else if (message.hasBanusermessage()) {
                             const banUserMessage = message.getBanusermessage();
-                            if (banUserMessage !== undefined) {
-                                socketManager.handlerBanUserMessage(room, user, banUserMessage);
-                            }
+                            socketManager.handlerBanUserMessage(room, user, banUserMessage as BanUserMessage);
+                        } else if (message.hasSetplayerdetailsmessage()) {
+                            const setPlayerDetailsMessage = message.getSetplayerdetailsmessage();
+                            socketManager.handleSetPlayerDetails(
+                                room,
+                                user,
+                                setPlayerDetailsMessage as SetPlayerDetailsMessage
+                            );
                         } else {
                             throw new Error("Unhandled message type");
                         }
@@ -160,7 +182,7 @@ const roomManager: IRoomManagerServer = {
         socketManager
             .addZoneListener(call, zoneMessage.getRoomid(), zoneMessage.getX(), zoneMessage.getY())
             .catch((e) => {
-                emitErrorOnZoneSocket(call, e.toString());
+                emitErrorOnZoneSocket(call, e);
             });
 
         call.on("cancelled", () => {
@@ -190,7 +212,7 @@ const roomManager: IRoomManagerServer = {
         const roomMessage = call.request;
 
         socketManager.addRoomListener(call, roomMessage.getRoomid()).catch((e) => {
-            emitErrorOnRoomSocket(call, e.toString());
+            emitErrorOnRoomSocket(call, e);
         });
 
         call.on("cancelled", () => {
@@ -251,7 +273,12 @@ const roomManager: IRoomManagerServer = {
     },
     sendAdminMessage(call: ServerUnaryCall<AdminMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager
-            .sendAdminMessage(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage())
+            .sendAdminMessage(
+                call.request.getRoomid(),
+                call.request.getRecipientuuid(),
+                call.request.getMessage(),
+                call.request.getType()
+            )
             .catch((e) => console.error(e));
 
         callback(null, new EmptyMessage());

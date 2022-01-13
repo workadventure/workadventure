@@ -75,30 +75,32 @@ export class SimplePeer {
      */
     private initialise() {
         //receive signal by gemer
-        this.Connection.receiveWebrtcSignal((message: WebRtcSignalReceivedMessageInterface) => {
+        this.Connection.webRtcSignalToClientMessageStream.subscribe((message: WebRtcSignalReceivedMessageInterface) => {
             this.receiveWebrtcSignal(message);
         });
 
         //receive signal by gemer
-        this.Connection.receiveWebrtcScreenSharingSignal((message: WebRtcSignalReceivedMessageInterface) => {
-            this.receiveWebrtcScreenSharingSignal(message);
-        });
+        this.Connection.webRtcScreenSharingSignalToClientMessageStream.subscribe(
+            (message: WebRtcSignalReceivedMessageInterface) => {
+                this.receiveWebrtcScreenSharingSignal(message);
+            }
+        );
 
         mediaManager.showGameOverlay();
 
         //receive message start
-        this.Connection.receiveWebrtcStart((message: UserSimplePeerInterface) => {
+        this.Connection.webRtcStartMessageStream.subscribe((message: UserSimplePeerInterface) => {
             this.receiveWebrtcStart(message);
         });
 
-        this.Connection.disconnectMessage((data: WebRtcDisconnectMessageInterface): void => {
+        this.Connection.webRtcDisconnectMessageStream.subscribe((data: WebRtcDisconnectMessageInterface): void => {
             this.closeConnection(data.userId);
         });
     }
 
     private receiveWebrtcStart(user: UserSimplePeerInterface): void {
         this.Users.push(user);
-        // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joints a group)
+        // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
 
@@ -121,7 +123,7 @@ export class SimplePeer {
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw "Error to delete peer connection";
+                    throw new Error("Error to delete peer connection");
                 }
                 //return this.createPeerConnection(user, localStream);
             } else {
@@ -175,7 +177,7 @@ export class SimplePeer {
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerScreenSharingConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw "Error to delete peer connection";
+                    throw new Error("Error to delete peer connection");
                 }
                 this.createPeerConnection(user);
             } else {
@@ -227,7 +229,7 @@ export class SimplePeer {
 
             const userIndex = this.Users.findIndex((user) => user.userId === userId);
             if (userIndex < 0) {
-                throw "Couldn't delete user";
+                throw new Error("Couldn't delete user");
             } else {
                 this.Users.splice(userIndex, 1);
             }
