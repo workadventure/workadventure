@@ -4,6 +4,7 @@ import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
+import { BrowserUtils } from "../../Utils/BrowserUtils";
 
 export const EntrySceneName = "EntryScene";
 
@@ -27,6 +28,20 @@ export class EntryScene extends Scene {
     }
 
     create() {
+        const currentBrowser = BrowserUtils.getBrowser();
+
+        if (!BrowserUtils.isSupported(currentBrowser)) {
+            ErrorScene.showError(
+                new WAError(
+                    "Unsupported browser",
+                    `Your browser version (${currentBrowser.name} ${currentBrowser.version}) is not supported by WorkAdventure ! \n\nPlease update your browser`,
+                    "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
+                ),
+                this.scene
+            );
+            return;
+        }
+
         gameManager
             .init(this.scene)
             .then((nextSceneName) => {
