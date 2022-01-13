@@ -254,12 +254,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         );
 
         this.camera.on("followupdate", () => {
-            this.sendCameraUpdateEvent();
+            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         });
-    }
-
-    private sendCameraUpdateEvent(): void {
-        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
     }
 
     private getCameraUpdateEventData(): CameraManagerEventCameraUpdateData {

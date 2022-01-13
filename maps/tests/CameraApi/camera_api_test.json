@@ -51,32 +51,14 @@
                     {
                      "fontfamily":"MS Shell Dlg 2",
                      "pixelsize":21,
-                     "text":"Set Position - Move the camera to the given point but do not lock it. If the player moves, camera will back to following him",
+                     "text":"Set Viewport - Move the camera to the given point. It will be locked if Lock checkbox is checked",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":315.4375,
                  "x":68.4021076998051,
-                 "y":8.73391812865529
-                }, 
-                {
-                 "height":115.776,
-                 "id":3,
-                 "name":"",
-                 "rotation":0,
-                 "text":
-                    {
-                     "fontfamily":"MS Shell Dlg 2",
-                     "pixelsize":21,
-                     "text":"Focus On - Works like for Focusable Zones. Camera will be locked and won't move unless we explicitly change the mode",
-                     "wrap":true
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":315.438,
-                 "x":64.7309301350722,
-                 "y":126.555409408477
+                 "y":160.73391812865529
                 }, 
                 {
                  "height":115.776,
@@ -95,24 +77,6 @@
                  "width":315.438,
                  "x":64.7309301350722,
                  "y":256.224715416861
-                }, 
-                {
-                 "height":115.776,
-                 "id":5,
-                 "name":"",
-                 "rotation":0,
-                 "text":
-                    {
-                     "fontfamily":"MS Shell Dlg 2",
-                     "pixelsize":21,
-                     "text":"Both Set Position and Focus On will lock the ability of changing the game zoom",
-                     "wrap":true
-                    },
-                 "type":"",
-                 "visible":true,
-                 "width":315.438,
-                 "x":65.848768979972,
-                 "y":351.241017233349
                 }],
          "opacity":1,
          "type":"objectgroup",

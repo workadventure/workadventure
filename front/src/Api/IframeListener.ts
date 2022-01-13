@@ -33,8 +33,7 @@ import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Store
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
-import { CameraSetPositionEvent, isCameraSetPositionEvent } from "./Events/CameraSetPositionEvent";
-import { CameraFocusOnEvent, isCameraFocusOnEvent } from "./Events/CameraFocusOnEvent";
+import { CameraSetViewportEvent, isCameraSetViewportEvent } from "./Events/CameraSetViewportEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -59,11 +58,8 @@ class IframeListener {
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
-    private readonly _cameraSetPositionStream: Subject<CameraSetPositionEvent> = new Subject();
-    public readonly cameraSetPositionStream = this._cameraSetPositionStream.asObservable();
-
-    private readonly _cameraFocusOnStream: Subject<CameraFocusOnEvent> = new Subject();
-    public readonly cameraFocusOnStream = this._cameraFocusOnStream.asObservable();
+    private readonly _cameraSetViewportStream: Subject<CameraSetViewportEvent> = new Subject();
+    public readonly cameraSetViewportStream = this._cameraSetViewportStream.asObservable();
 
     private readonly _cameraFollowPlayerStream: Subject<CameraFollowPlayerEvent> = new Subject();
     public readonly cameraFollowPlayerStream = this._cameraFollowPlayerStream.asObservable();
@@ -214,10 +210,8 @@ class IframeListener {
                         this._hideLayerStream.next(payload.data);
                     } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
                         this._setPropertyStream.next(payload.data);
-                    } else if (payload.type === "cameraSetPosition" && isCameraSetPositionEvent(payload.data)) {
-                        this._cameraSetPositionStream.next(payload.data);
-                    } else if (payload.type === "cameraFocusOn" && isCameraFocusOnEvent(payload.data)) {
-                        this._cameraFocusOnStream.next(payload.data);
+                    } else if (payload.type === "cameraSetViewport" && isCameraSetViewportEvent(payload.data)) {
+                        this._cameraSetViewportStream.next(payload.data);
                     } else if (payload.type === "cameraFollowPlayer" && isCameraFollowPlayerEvent(payload.data)) {
                         this._cameraFollowPlayerStream.next(payload.data);
                     } else if (payload.type === "chat" && isChatEvent(payload.data)) {

@@ -1120,20 +1120,23 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.cameraSetPositionStream.subscribe((cameraSetPositionEvent) => {
-                this.cameraManager.setPosition({ ...cameraSetPositionEvent }, cameraSetPositionEvent.smooth ? 1000 : 0);
+            iframeListener.cameraSetViewportStream.subscribe((cameraSetViewportEvent) => {
+                const duration = cameraSetViewportEvent.smooth ? 1000 : 0;
+                cameraSetViewportEvent.lock
+                    ? this.cameraManager.enterFocusMode({ ...cameraSetViewportEvent }, undefined, duration)
+                    : this.cameraManager.setPosition({ ...cameraSetViewportEvent }, duration);
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.cameraFocusOnStream.subscribe((cameraFocusOnEvent) => {
-                this.cameraManager.enterFocusMode(
-                    { ...cameraFocusOnEvent },
-                    undefined,
-                    cameraFocusOnEvent.smooth ? 1000 : 0
-                );
-            })
-        );
+        // this.iframeSubscriptionList.push(
+        //     iframeListener.cameraFocusOnStream.subscribe((cameraFocusOnEvent) => {
+        //         this.cameraManager.enterFocusMode(
+        //             { ...cameraFocusOnEvent },
+        //             undefined,
+        //             cameraFocusOnEvent.smooth ? 1000 : 0
+        //         );
+        //     })
+        // );
 
         this.iframeSubscriptionList.push(
             iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
@@ -1178,8 +1181,6 @@ ${escapedMessage}
                             this.firstCameraUpdateSent = true;
                         }
                     );
-
-                    iframeListener.sendCameraUpdated(this.cameras.main);
                 }
             })
         );

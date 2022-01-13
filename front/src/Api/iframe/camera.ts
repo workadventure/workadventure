@@ -17,17 +17,17 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         }),
     ];
 
-    public setPosition(x: number, y: number, width: number, height: number, smooth: boolean = false): void {
+    public setViewport(
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        lock: boolean = false,
+        smooth: boolean = false
+    ): void {
         sendToWorkadventure({
-            type: "cameraSetPosition",
-            data: { x, y, width, height, smooth },
-        });
-    }
-
-    public focusOn(x: number, y: number, width: number, height: number, smooth: boolean = false): void {
-        sendToWorkadventure({
-            type: "cameraFocusOn",
-            data: { x, y, width, height, smooth },
+            type: "cameraSetViewport",
+            data: { x, y, width, height, lock, smooth },
         });
     }
 
