@@ -21,8 +21,8 @@
                     WA.camera.setViewport(
                         parseInt(xField.value),
                         parseInt(yField.value),
-                        parseInt(widthField.value),
-                        parseInt(heightField.value),
+                        widthField.value ? parseInt(widthField.value) : undefined,
+                        heightField.value ? parseInt(heightField.value) : undefined,
                         lockField.checked,
                         smoothField.checked,
                     );

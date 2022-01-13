@@ -4,8 +4,8 @@ export const isCameraSetViewportEvent = new tg.IsInterface()
     .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
-        width: tg.isNumber,
-        height: tg.isNumber,
+        width: tg.isOptional(tg.isNumber),
+        height: tg.isOptional(tg.isNumber),
         lock: tg.isBoolean,
         smooth: tg.isBoolean,
     })

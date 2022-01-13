@@ -2,7 +2,7 @@ import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import { hasMovedEventName, Player } from "../Player/Player";
-import type { WaScaleManager } from "../Services/WaScaleManager";
+import { WaScaleManager, WaScaleManagerEvent, WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
 import type { GameScene } from "./GameScene";
 
 export enum CameraMode {
@@ -62,7 +62,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public destroy(): void {
-        this.scene.game.events.off("wa-scale-manager:refresh-focus-on-target");
+        this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         super.destroy();
     }
 
@@ -75,18 +75,19 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param setTo Viewport on which the camera should set the position
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
-    public setPosition(setTo: { x: number; y: number; width: number; height: number }, duration: number = 1000): void {
+    public setPosition(setTo: WaScaleManagerFocusTarget, duration: number = 1000): void {
         if (this.cameraMode === CameraMode.Focus) {
             return;
         }
         this.setCameraMode(CameraMode.Positioned);
         this.waScaleManager.saveZoom();
         const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange = this.getZoomModifierChange(setTo.width, setTo.height);
+        const zoomModifierChange =
+            setTo.width && setTo.height ? this.getZoomModifierChange(setTo.width, setTo.height) : 0;
         this.camera.stopFollow();
         this.camera.pan(
-            setTo.x + setTo.width * 0.5,
-            setTo.y + setTo.height * 0.5,
+            setTo.x + (setTo.width ?? 0) * 0.5,
+            setTo.y + (setTo.height ?? 0) * 0.5,
             duration,
             Easing.SineEaseOut,
             true,
@@ -117,11 +118,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param setTo Viewport on which the camera should focus on
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
-    public enterFocusMode(
-        focusOn: { x: number; y: number; width: number; height: number },
-        margin: number = 0,
-        duration: number = 1000
-    ): void {
+    public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin: number = 0, duration: number = 1000): void {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
@@ -132,12 +129,15 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.startFollowTween?.stop();
         const marginMult = 1 + margin;
         const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange = this.getZoomModifierChange(focusOn.width * marginMult, focusOn.height * marginMult);
+        const zoomModifierChange =
+            focusOn.width && focusOn.height
+                ? this.getZoomModifierChange(focusOn.width * marginMult, focusOn.height * marginMult)
+                : 0;
         this.camera.stopFollow();
         this.playerToFollow = undefined;
         this.camera.pan(
-            focusOn.x + focusOn.width * 0.5 * marginMult,
-            focusOn.y + focusOn.height * 0.5 * marginMult,
+            focusOn.x + (focusOn.width ?? 0) * 0.5 * marginMult,
+            focusOn.y + (focusOn.height ?? 0) * 0.5 * marginMult,
             duration,
             Easing.SineEaseOut,
             true,
@@ -244,7 +244,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private bindEventHandlers(): void {
         this.scene.game.events.on(
-            "wa-scale-manager:refresh-focus-on-target",
+            WaScaleManagerEvent.RefreshFocusOnTarget,
             (focusOn: { x: number; y: number; width: number; height: number }) => {
                 if (!focusOn) {
                     return;

@@ -9,6 +9,8 @@ export enum WaScaleManagerEvent {
     RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
 }
 
+export type WaScaleManagerFocusTarget = { x: number; y: number; width?: number; height?: number };
+
 export class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
@@ -16,7 +18,7 @@ export class WaScaleManager {
     private actualZoom: number = 1;
     private _saveZoom: number = 1;
 
-    private focusTarget?: { x: number; y: number; width: number; height: number };
+    private focusTarget?: WaScaleManagerFocusTarget;
 
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
@@ -72,11 +74,13 @@ export class WaScaleManager {
         if (!this.focusTarget) {
             return;
         }
-        this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
+        if (this.focusTarget.width && this.focusTarget.height) {
+            this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
+        }
         this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
     }
 
-    public setFocusTarget(targetDimensions?: { x: number; y: number; width: number; height: number }): void {
+    public setFocusTarget(targetDimensions?: WaScaleManagerFocusTarget): void {
         this.focusTarget = targetDimensions;
     }
 
@@ -109,7 +113,7 @@ export class WaScaleManager {
         }
     }
 
-    public getFocusTarget(): { x: number; y: number; width: number; height: number } | undefined {
+    public getFocusTarget(): WaScaleManagerFocusTarget | undefined {
         return this.focusTarget;
     }
 
