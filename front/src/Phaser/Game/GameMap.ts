@@ -33,6 +33,10 @@ export type zoneChangeCallback = (
  */
 export class GameMap {
     /**
+     * spawnKey is the index of the spawn tile.
+     */
+    private spawnKey: number | undefined;
+    /**
      * oldKey is the index of the previous tile.
      */
     private oldKey: number | undefined;
@@ -145,6 +149,10 @@ export class GameMap {
 
         this.key = key;
 
+        if (!this.spawnKey) {
+            this.spawnKey = this.key;
+        }
+
         this.triggerAllProperties();
         this.triggerLayersChange();
     }
@@ -198,6 +206,10 @@ export class GameMap {
                 callback(layerArray, layersByNewKey);
             }
         }
+    }
+
+    public getSpawnLayers(): string[] {
+        return this.spawnKey ? Array.from(this.getLayersByKey(this.spawnKey)).map((layer) => layer.name) : [];
     }
 
     /**

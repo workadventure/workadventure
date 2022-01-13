@@ -1292,7 +1292,7 @@ ${escapedMessage}
             await this.connectionAnswerPromise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName,
+                spawnLayers: this.gameMap.getSpawnLayers(),
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 roomId: this.roomUrl,

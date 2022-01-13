@@ -13,7 +13,7 @@ import nav, { CoWebsite } from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
-import room, { setMapURL, setRoomId } from "./Api/iframe/room";
+import room, { setMapURL, setRoomId, setSpawnLayers } from "./Api/iframe/room";
 import { createState } from "./Api/iframe/state";
 import player, { setPlayerName, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
@@ -32,6 +32,7 @@ const initPromise = queryWorkadventure({
     setPlayerName(gameState.nickname);
     setRoomId(gameState.roomId);
     setMapURL(gameState.mapUrl);
+    setSpawnLayers(gameState.spawnLayers);
     setTags(gameState.tags);
     setUuid(gameState.uuid);
     globalState.initVariables(gameState.variables as Map<string, unknown>);

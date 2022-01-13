@@ -6,7 +6,7 @@ export const isGameStateEvent = new tg.IsInterface()
         mapUrl: tg.isString,
         nickname: tg.isString,
         uuid: tg.isUnion(tg.isString, tg.isUndefined),
-        startLayerName: tg.isUnion(tg.isString, tg.isNull),
+        spawnLayers: tg.isArray(tg.isString),
         tags: tg.isArray(tg.isString),
         variables: tg.isObject,
         userRoomToken: tg.isUnion(tg.isString, tg.isUndefined),

@@ -35,6 +35,12 @@ export const setMapURL = (url: string) => {
     mapURL = url;
 };
 
+let spawnLayers: string[] | undefined;
+
+export const setSpawnLayers = (layers: string[]) => {
+    spawnLayers = layers;
+};
+
 export class WorkadventureRoomCommands extends IframeApiContribution<WorkadventureRoomCommands> {
     callbacks = [
         apiCallback({
@@ -156,6 +162,15 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
             );
         }
         return mapURL;
+    }
+
+    get spawnLayers(): string[] {
+        if (spawnLayers === undefined) {
+            throw new Error(
+                "spawnLayers is not initialized yet. You should call WA.room.mapURL within a WA.onInit callback."
+            );
+        }
+        return spawnLayers;
     }
 
     async loadTileset(url: string): Promise<number> {
