@@ -25,7 +25,6 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         lock: boolean = false,
         smooth: boolean = false
     ): void {
-        console.log({ x, y, width, height, lock, smooth });
         sendToWorkadventure({
             type: "cameraSetViewport",
             data: { x, y, width, height, lock, smooth },

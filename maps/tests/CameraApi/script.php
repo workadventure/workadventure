@@ -36,10 +36,10 @@
     </script>
 </head>
 <body>
-X: <input type="text" id="x" value="64" /><br/>
-Y: <input type="text" id="y" value="64" /><br/>
-width: <input type="text" id="width" value="600" /><br/>
-height: <input type="text" id="height" value="400" /><br/>
+X: <input type="text" id="x" value="496" /><br/>
+Y: <input type="text" id="y" value="655" /><br/>
+width: <input type="text" id="width" value="480" /><br/>
+height: <input type="text" id="height" value="286" /><br/>
 Smooth: <input type="checkbox" id="smooth" value=1 /><br/>
 Lock: <input type="checkbox" id="lock" value=1 /><br/>
 

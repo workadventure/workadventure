@@ -840,7 +840,12 @@ export class GameScene extends DirtyScene {
                         if (focusable && focusable.value === true) {
                             const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
                             this.cameraManager.enterFocusMode(
-                                zone,
+                                {
+                                    x: zone.x + zone.width * 0.5,
+                                    y: zone.y + zone.height * 0.5,
+                                    width: zone.width,
+                                    height: zone.height,
+                                },
                                 zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
                             );
                             break;

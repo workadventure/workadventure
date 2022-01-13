@@ -211,7 +211,6 @@ class IframeListener {
                     } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
                         this._setPropertyStream.next(payload.data);
                     } else if (payload.type === "cameraSetViewport" && isCameraSetViewportEvent(payload.data)) {
-                        console.log(payload.data);
                         this._cameraSetViewportStream.next(payload.data);
                     } else if (payload.type === "cameraFollowPlayer" && isCameraFollowPlayerEvent(payload.data)) {
                         this._cameraFollowPlayerStream.next(payload.data);
