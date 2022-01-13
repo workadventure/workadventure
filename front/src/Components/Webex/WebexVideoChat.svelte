@@ -2,10 +2,10 @@
     import {onMount} from 'svelte'
     import {prevent_default} from "svelte/internal";
 
-    export let meetingRoom: string | null = null;
-    export let accessToken: string | null = null;
-    export let initials: string | null = "👨‍💻";
-    export let fullName: string | null = "iits";
+    export let meetingRoom: string;
+    export let accessToken: string;
+    export let initials: string = "👨‍💻";
+    export let fullName: string = "iits";
     export let personToCall = "Meeting Room";
 
     let webexCDNLink = "https://unpkg.com/webex/umd/webex.min.js";
