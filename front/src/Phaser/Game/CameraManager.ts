@@ -80,6 +80,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             return;
         }
         this.setCameraMode(CameraMode.Positioned);
+        this.waScaleManager.saveZoom();
         const currentZoomModifier = this.waScaleManager.zoomModifier;
         const zoomModifierChange = this.getZoomModifierChange(setTo.width, setTo.height);
         this.camera.stopFollow();

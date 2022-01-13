@@ -1128,16 +1128,6 @@ ${escapedMessage}
             })
         );
 
-        // this.iframeSubscriptionList.push(
-        //     iframeListener.cameraFocusOnStream.subscribe((cameraFocusOnEvent) => {
-        //         this.cameraManager.enterFocusMode(
-        //             { ...cameraFocusOnEvent },
-        //             undefined,
-        //             cameraFocusOnEvent.smooth ? 1000 : 0
-        //         );
-        //     })
-        // );
-
         this.iframeSubscriptionList.push(
             iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
                 this.cameraManager.leaveFocusMode(this.CurrentPlayer, cameraFollowPlayerEvent.smooth ? 1000 : 0);
