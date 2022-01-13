@@ -1,6 +1,3 @@
-{.alert.alert-danger style="width:80%"}
-This feature is "_experimental_". We may apply changes in the near future to the way it works when we gather some feedback.
-
 {.section-title.accent.text-primary}
 # Scripting WorkAdventure maps
 
@@ -61,6 +58,22 @@ WA.chat.sendChatMessage('Hello world', 'Mr Robot');
 The `WA` objects contains a number of useful methods enabling you to interact with the WorkAdventure game. For instance, `WA.chat.sendChatMessage` opens the chat and adds a message in it.
 
 The message should be displayed in the chat history as soon as you enter the room.
+
+{.alert.alert-warning}
+Internally, scripts are running inside a [sandboxed iframe](https://blog.dareboost.com/en/2015/07/securing-iframe-sandbox-attribute/).
+Furthermore, the script itself is loaded as module with `<script src="" type="module">`. Scripts loaded as module must enforce CORS.
+But the iframe itself does not have any origin, because it is sandboxed. As a result, for the script to be loaded correctly,
+you will need to allow ALL origins using this header:
+```
+Access-Control-Allow-Origin: *
+```
+or alternatively:
+```
+Access-Control-Allow-Origin: null
+```
+
+Because the script is sandboxed, a number of restrictions apply. If you want a discussion on how to overcome them,
+check out the ["scripting internals" documentation](scripting-internals.md).
 
 ## Adding a script in an iFrame
 
