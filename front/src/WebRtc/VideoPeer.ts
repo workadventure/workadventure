@@ -7,7 +7,7 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
 import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore, newChatMessageStore } from "../Stores/ChatStore";
+import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMobile } from "../Enum/EnvironmentVariable";
 
@@ -35,7 +35,7 @@ export class VideoPeer extends Peer {
     public readonly streamStore: Readable<MediaStream | null>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
-    private newMessageunsubscriber: Unsubscriber | null = null;
+    private newMessageSubscribtion: Subscription | undefined;
     private closing: Boolean = false; //this is used to prevent destroy() from being called twice
     private localStreamStoreSubscribe: Unsubscriber;
     private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
@@ -129,7 +129,7 @@ export class VideoPeer extends Peer {
             this._connected = true;
             chatMessagesStore.addIncomingUser(this.userId);
 
-            this.newMessageunsubscriber = newChatMessageStore.subscribe((newMessage) => {
+            this.newMessageSubscribtion = newChatMessageSubject.subscribe((newMessage) => {
                 if (!newMessage) return;
                 this.write(
                     new Buffer(
@@ -138,8 +138,7 @@ export class VideoPeer extends Peer {
                             message: newMessage,
                         })
                     )
-                ); //send more data
-                newChatMessageStore.set(null); //This is to prevent a newly created SimplePeer to send an old message a 2nd time. Is there a better way?
+                );
             });
         });
 
@@ -262,7 +261,7 @@ export class VideoPeer extends Peer {
             this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            if (this.newMessageunsubscriber) this.newMessageunsubscriber();
+            if (this.newMessageSubscribtion) this.newMessageSubscribtion.unsubscribe();
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
