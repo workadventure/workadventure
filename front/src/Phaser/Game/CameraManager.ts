@@ -81,10 +81,22 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
         this.setCameraMode(CameraMode.Positioned);
         this.waScaleManager.saveZoom();
-        const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange =
-            setTo.width && setTo.height ? this.getZoomModifierChange(setTo.width, setTo.height) : 0;
         this.camera.stopFollow();
+
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        const zoomModifierChange = this.getZoomModifierChange(setTo.width, setTo.height);
+
+        if (duration === 0) {
+            this.waScaleManager.zoomModifier = currentZoomModifier + zoomModifierChange;
+            this.camera.centerOn(setTo.x, setTo.y);
+            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+            this.playerToFollow?.once(hasMovedEventName, () => {
+                if (this.playerToFollow) {
+                    this.startFollowPlayer(this.playerToFollow, duration);
+                }
+            });
+            return;
+        }
         this.camera.pan(setTo.x, setTo.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             if (this.cameraMode === CameraMode.Positioned) {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
@@ -100,12 +112,6 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         });
     }
 
-    private getZoomModifierChange(width: number, height: number): number {
-        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(width, height);
-        const currentZoomModifier = this.waScaleManager.zoomModifier;
-        return targetZoomModifier - currentZoomModifier;
-    }
-
     /**
      * Set camera to focus mode. As long as the camera is in the Focus mode, its view cannot be changed.
      * @param setTo Viewport on which the camera should focus on
@@ -115,19 +121,23 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
-
         this.cameraLocked = true;
+
         this.unlockCameraWithDelay(duration);
         this.restoreZoomTween?.stop();
         this.startFollowTween?.stop();
-        const marginMult = 1 + margin;
-        const currentZoomModifier = this.waScaleManager.zoomModifier;
-        const zoomModifierChange =
-            focusOn.width && focusOn.height
-                ? this.getZoomModifierChange(focusOn.width * marginMult, focusOn.height * marginMult)
-                : 0;
         this.camera.stopFollow();
         this.playerToFollow = undefined;
+
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        const zoomModifierChange = this.getZoomModifierChange(focusOn.width, focusOn.height, 1 + margin);
+
+        if (duration === 0) {
+            this.waScaleManager.zoomModifier = currentZoomModifier + zoomModifierChange;
+            this.camera.centerOn(focusOn.x, focusOn.y);
+            this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+            return;
+        }
         this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
             this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
@@ -190,6 +200,18 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     public isCameraLocked(): boolean {
         return this.cameraLocked;
+    }
+
+    private getZoomModifierChange(width?: number, height?: number, multiplier: number = 1): number {
+        if (!width || !height) {
+            return 0;
+        }
+        const targetZoomModifier = this.waScaleManager.getTargetZoomModifierFor(
+            width * multiplier,
+            height * multiplier
+        );
+        const currentZoomModifier = this.waScaleManager.zoomModifier;
+        return targetZoomModifier - currentZoomModifier;
     }
 
     private unlockCameraWithDelay(delay: number): void {
