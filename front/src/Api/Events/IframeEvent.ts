@@ -28,10 +28,12 @@ import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
-import type { ChangeZoneEvent } from "./ChangeZoneEvent";
-import { isColorEvent } from "./ColorEvent";
 import { isPlayerPosition } from "./PlayerPosition";
 import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
+import type { ChangeZoneEvent } from "./ChangeZoneEvent";
+import type { CameraSetEvent } from "./CameraSetEvent";
+import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
+import { isColorEvent } from "./ColorEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -43,6 +45,8 @@ export interface TypedMessageEvent<T> extends MessageEvent {
 export type IframeEventMap = {
     loadPage: LoadPageEvent;
     chat: ChatEvent;
+    cameraFollowPlayer: CameraFollowPlayerEvent;
+    cameraSet: CameraSetEvent;
     openPopup: OpenPopupEvent;
     closePopup: ClosePopupEvent;
     openTab: OpenTabEvent;

@@ -34,9 +34,9 @@ const initPromise = queryWorkadventure({
     setMapURL(gameState.mapUrl);
     setTags(gameState.tags);
     setUuid(gameState.uuid);
+    setUserRoomToken(gameState.userRoomToken);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
-    setUserRoomToken(gameState.userRoomToken);
 });
 
 const wa = {

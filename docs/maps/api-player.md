@@ -58,6 +58,27 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the position of the player
+```
+WA.player.getPosition(): Promise<Position>
+```
+The player's current position is available using the `WA.player.getPosition()` function.
+
+`Position` has the following attributes :
+* **x (number) :** The coordinate x of the current player's position.
+* **y (number) :** The coordinate y of the current player's position.
+
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before calling `WA.player.getPosition()`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Position: ', WA.player.getPosition());
+})
+```
+
+
 ### Get the user-room token of the player
 
 ```

@@ -9,8 +9,8 @@ export const isGameStateEvent = new tg.IsInterface()
         startLayerName: tg.isUnion(tg.isString, tg.isNull),
         tags: tg.isArray(tg.isString),
         variables: tg.isObject,
-        userRoomToken: tg.isUnion(tg.isString, tg.isUndefined),
         playerVariables: tg.isObject,
+        userRoomToken: tg.isUnion(tg.isString, tg.isUndefined),
     })
     .get();
 /**

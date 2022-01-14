@@ -64,7 +64,7 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
-import { CameraManager } from "./CameraManager";
+import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 import type { Character } from "../Entity/Character";
 
@@ -75,6 +75,7 @@ import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
+import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
@@ -91,7 +92,6 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
 import Camera = Phaser.Cameras.Scene2D.Camera;
-import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -569,7 +569,7 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
         biggestAvailableAreaStore.recompute();
-        this.cameraManager.startFollow(this.CurrentPlayer);
+        this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -843,7 +843,12 @@ export class GameScene extends DirtyScene {
                         if (focusable && focusable.value === true) {
                             const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
                             this.cameraManager.enterFocusMode(
-                                zone,
+                                {
+                                    x: zone.x + zone.width * 0.5,
+                                    y: zone.y + zone.height * 0.5,
+                                    width: zone.width,
+                                    height: zone.height,
+                                },
                                 zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
                             );
                             break;
@@ -1123,6 +1128,21 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
+                const duration = cameraSetEvent.smooth ? 1000 : 0;
+                cameraSetEvent.lock
+                    ? this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration)
+                    : this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.cameraFollowPlayerStream.subscribe((cameraFollowPlayerEvent) => {
+                this.cameraManager.leaveFocusMode(this.CurrentPlayer, cameraFollowPlayerEvent.smooth ? 1000 : 0);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.playSoundStream.subscribe((playSoundEvent) => {
                 const url = new URL(playSoundEvent.url, this.MapUrlFile);
                 soundManager
@@ -1134,30 +1154,31 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
-                    this.cameras.main.on("followupdate", (camera: Camera) => {
-                        const cameraEvent: WasCameraUpdatedEvent = {
-                            x: camera.worldView.x,
-                            y: camera.worldView.y,
-                            width: camera.worldView.width,
-                            height: camera.worldView.height,
-                            zoom: camera.scaleManager.zoom,
-                        };
-                        if (
-                            this.lastCameraEvent?.x == cameraEvent.x &&
-                            this.lastCameraEvent?.y == cameraEvent.y &&
-                            this.lastCameraEvent?.width == cameraEvent.width &&
-                            this.lastCameraEvent?.height == cameraEvent.height &&
-                            this.lastCameraEvent?.zoom == cameraEvent.zoom
-                        ) {
-                            return;
+                    this.cameraManager.on(
+                        CameraManagerEvent.CameraUpdate,
+                        (data: CameraManagerEventCameraUpdateData) => {
+                            const cameraEvent: WasCameraUpdatedEvent = {
+                                x: data.x,
+                                y: data.y,
+                                width: data.width,
+                                height: data.height,
+                                zoom: data.zoom,
+                            };
+                            if (
+                                this.lastCameraEvent?.x == cameraEvent.x &&
+                                this.lastCameraEvent?.y == cameraEvent.y &&
+                                this.lastCameraEvent?.width == cameraEvent.width &&
+                                this.lastCameraEvent?.height == cameraEvent.height &&
+                                this.lastCameraEvent?.zoom == cameraEvent.zoom
+                            ) {
+                                return;
+                            }
+
+                            this.lastCameraEvent = cameraEvent;
+                            iframeListener.sendCameraUpdated(cameraEvent);
+                            this.firstCameraUpdateSent = true;
                         }
-
-                        this.lastCameraEvent = cameraEvent;
-                        iframeListener.sendCameraUpdated(cameraEvent);
-                        this.firstCameraUpdateSent = true;
-                    });
-
-                    iframeListener.sendCameraUpdated(this.cameras.main);
+                    );
                 }
             })
         );
