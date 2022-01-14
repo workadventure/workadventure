@@ -67,7 +67,6 @@ function createChatMessagesStore() {
             });
         },
         addPersonnalMessage(text: string) {
-            //post message iframe listener
             iframeListener.sendUserInputChat(text);
 
             newChatMessageStore.set(text);
@@ -83,7 +82,6 @@ function createChatMessagesStore() {
                     });
                 }
 
-                iframeListener.sendUserInputChat(text);
                 return list;
             });
         },

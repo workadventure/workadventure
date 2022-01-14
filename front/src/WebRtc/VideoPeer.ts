@@ -128,6 +128,7 @@ export class VideoPeer extends Peer {
         this.on("connect", () => {
             this._connected = true;
             chatMessagesStore.addIncomingUser(this.userId);
+            newChatMessageStore.set(null);
 
             this.newMessageunsubscriber = newChatMessageStore.subscribe((newMessage) => {
                 if (!newMessage) return;
