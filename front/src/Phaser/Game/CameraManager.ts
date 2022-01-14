@@ -140,6 +140,10 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
         this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
+            if (progress === 1) {
+                // NOTE: Making sure the last action will be centering after zoom change
+                this.camera.centerOn(focusOn.x, focusOn.y);
+            }
             this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
         });
     }

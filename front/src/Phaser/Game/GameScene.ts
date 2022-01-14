@@ -1125,11 +1125,11 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.cameraSetViewportStream.subscribe((cameraSetViewportEvent) => {
-                const duration = cameraSetViewportEvent.smooth ? 1000 : 0;
-                cameraSetViewportEvent.lock
-                    ? this.cameraManager.enterFocusMode({ ...cameraSetViewportEvent }, undefined, duration)
-                    : this.cameraManager.setPosition({ ...cameraSetViewportEvent }, duration);
+            iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
+                const duration = cameraSetEvent.smooth ? 1000 : 0;
+                cameraSetEvent.lock
+                    ? this.cameraManager.enterFocusMode({ ...cameraSetEvent }, undefined, duration)
+                    : this.cameraManager.setPosition({ ...cameraSetEvent }, duration);
             })
         );
 

@@ -17,7 +17,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         }),
     ];
 
-    public setViewport(
+    public set(
         x: number,
         y: number,
         width?: number,
@@ -26,7 +26,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         smooth: boolean = false
     ): void {
         sendToWorkadventure({
-            type: "cameraSetViewport",
+            type: "cameraSet",
             data: { x, y, width, height, lock, smooth },
         });
     }

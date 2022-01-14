@@ -1,6 +1,6 @@
 import * as tg from "generic-type-guard";
 
-export const isCameraSetViewportEvent = new tg.IsInterface()
+export const isCameraSetEvent = new tg.IsInterface()
     .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
@@ -13,4 +13,4 @@ export const isCameraSetViewportEvent = new tg.IsInterface()
 /**
  * A message sent from the iFrame to the game to change the camera position.
  */
-export type CameraSetViewportEvent = tg.GuardedType<typeof isCameraSetViewportEvent>;
+export type CameraSetEvent = tg.GuardedType<typeof isCameraSetEvent>;

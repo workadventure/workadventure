@@ -8,7 +8,7 @@
             WA.camera.onCameraUpdate((worldView) => console.log(worldView));
             WA.onInit().then(() => {
                 console.log('After WA init');
-                const setViewportButton = document.getElementById('setViewportButton');
+                const setCameraButton = document.getElementById('setCameraButton');
                 const followPlayerButton = document.getElementById('followPlayerButton');
                 const xField = document.getElementById('x');
                 const yField = document.getElementById('y');
@@ -17,8 +17,8 @@
                 const smoothField = document.getElementById('smooth');
                 const lockField = document.getElementById('lock');
 
-                setViewportButton.addEventListener('click', () => {
-                    WA.camera.setViewport(
+                setCameraButton.addEventListener('click', () => {
+                    WA.camera.set(
                         parseInt(xField.value),
                         parseInt(yField.value),
                         widthField.value ? parseInt(widthField.value) : undefined,
@@ -43,7 +43,7 @@ height: <input type="text" id="height" value="286" /><br/>
 Smooth: <input type="checkbox" id="smooth" value=1 /><br/>
 Lock: <input type="checkbox" id="lock" value=1 /><br/>
 
-<button id="setViewportButton">Set Viewport</button>
+<button id="setCameraButton">Set Camera</button>
 <button id="followPlayerButton">Follow Player</button>
 
 </body>

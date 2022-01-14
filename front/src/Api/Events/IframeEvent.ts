@@ -31,7 +31,7 @@ import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import { isPlayerPosition } from "./PlayerPosition";
 import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
-import type { CameraSetViewportEvent } from "./CameraSetViewportEvent";
+import type { CameraSetEvent } from "./CameraSetEvent";
 import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 
@@ -46,7 +46,7 @@ export type IframeEventMap = {
     loadPage: LoadPageEvent;
     chat: ChatEvent;
     cameraFollowPlayer: CameraFollowPlayerEvent;
-    cameraSetViewport: CameraSetViewportEvent;
+    cameraSet: CameraSetEvent;
     openPopup: OpenPopupEvent;
     closePopup: ClosePopupEvent;
     openTab: OpenTabEvent;
