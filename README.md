@@ -64,7 +64,13 @@ or just use START_ROOM_URL env variable.
 #### Using Webex API
 Register an Integration or take the existing one [Integrations & Authorization](https://developer.webex.com/docs/integrations)
 
-Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write`
+IMPORTANT: Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write meeting:admin_schedule_read`
+
+IMPORTANT: Make sure a Webex user with full admin rights registers the integration.
+
+#### TypeScript with Webex
+
+@types/webex - is in a [feature request](https://ciscocollabcustomer.ideas.aha.io/ideas/WXCUST-I-3303) status. So far the [official docs](https://developer.cisco.com/codeexchange/github/repo/gleitschirmjaeger/webpack5_typescript_webex_sample/) offers to use `any` type
 
 ### MacOS developers, your environment with Vagrant
 
