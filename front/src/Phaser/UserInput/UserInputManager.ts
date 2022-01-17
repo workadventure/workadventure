@@ -226,7 +226,7 @@ export class UserInputManager {
 
     private bindInputEventHandlers() {
         this.scene.input.on(
-            "wheel",
+            Phaser.Input.Events.POINTER_WHEEL,
             (
                 pointer: Phaser.Input.Pointer,
                 gameObjects: Phaser.GameObjects.GameObject[],
@@ -238,6 +238,13 @@ export class UserInputManager {
                     return;
                 }
                 this.userInputHandler.handleMouseWheelEvent(pointer, gameObjects, deltaX, deltaY, deltaZ);
+            }
+        );
+
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_UP,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
             }
         );
 

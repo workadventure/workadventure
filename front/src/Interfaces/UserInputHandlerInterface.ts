@@ -6,5 +6,6 @@ export interface UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number
     ) => void;
+    handlePointerUpEvent: (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => void;
     handleSpaceKeyUpEvent: (event: Event) => Event;
 }
