@@ -570,7 +570,6 @@ export class GameScene extends DirtyScene {
         );
 
         this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
-        this.pathfindingManager.findPath({ x: 1, y: 3 }, { x: 29, y: 3 });
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -2173,5 +2172,17 @@ ${escapedMessage}
 
         this.scene.stop(this.scene.key);
         this.scene.remove(this.scene.key);
+    }
+
+    public getGameMap(): GameMap {
+        return this.gameMap;
+    }
+
+    public getCameraManager(): CameraManager {
+        return this.cameraManager;
+    }
+
+    public getPathfindingManager(): PathfindingManager {
+        return this.pathfindingManager;
     }
 }

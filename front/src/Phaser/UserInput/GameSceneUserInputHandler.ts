@@ -19,8 +19,27 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        const camera = this.gameScene.cameras.main;
-        console.log(`${pointer.x + camera.scrollX}, ${pointer.y + camera.scrollY}`);
+        const camera = this.gameScene.getCameraManager().getCamera();
+        const index = this.gameScene
+            .getGameMap()
+            .getTileIndexAt(pointer.x + camera.scrollX, pointer.y + camera.scrollY);
+        const startTile = this.gameScene
+            .getGameMap()
+            .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
+        this.gameScene
+            .getPathfindingManager()
+            .findPath(startTile, index)
+            .then((path) => {
+                const tileDimensions = this.gameScene.getGameMap().getTileDimensions();
+                const pixelPath = path.map((step) => {
+                    return { x: step.x * tileDimensions.width, y: step.y * tileDimensions.height };
+                });
+                this.gameScene.CurrentPlayer.setPathToFollow([...pixelPath]);
+                console.log(pixelPath);
+            })
+            .catch((reason) => {
+                console.log(reason);
+            });
     }
 
     public handleSpaceKeyUpEvent(event: Event): Event {

@@ -130,6 +130,14 @@ export class GameMap {
         return grid;
     }
 
+    public getTileDimensions(): { width: number; height: number } {
+        return { width: this.map.tilewidth, height: this.map.tileheight };
+    }
+
+    public getTileIndexAt(x: number, y: number): { x: number; y: number } {
+        return { x: Math.floor(x / this.map.tilewidth), y: Math.floor(y / this.map.tileheight) };
+    }
+
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
