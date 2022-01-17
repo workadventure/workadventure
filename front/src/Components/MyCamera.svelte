@@ -65,8 +65,11 @@
         max-height: 20%;
         transition: transform 1000ms;
         padding: 0;
+        background-color: rgba(#000000, 0.6);
+        background-clip: content-box;
         overflow: hidden;
         line-height: 0;
+        z-index: 250;
 
         &.nes-container.is-rounded {
             border-image-outset: 1;

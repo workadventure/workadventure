@@ -1,6 +1,5 @@
 import { derived, get, writable } from "svelte/store";
 import type { CoWebsite } from "../WebRtc/CoWebsiteManager";
-import { highlightedEmbedScreen } from "./EmbedScreensStore";
 
 function createCoWebsiteStore() {
     const { subscribe, set, update } = writable(Array<CoWebsite>());
@@ -49,18 +48,4 @@ export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
 
 export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
     $coWebsites.find((coWebsite) => get(coWebsite.state) !== "asleep")
-);
-
-export const coWebsiteThumbails = derived(
-    [coWebsites, highlightedEmbedScreen, mainCoWebsite],
-    ([$coWebsites, highlightedEmbedScreen, $mainCoWebsite]) =>
-        $coWebsites.filter((coWebsite, index) => {
-            return (
-                (!$mainCoWebsite || $mainCoWebsite.iframe.id !== coWebsite.iframe.id) &&
-                (!highlightedEmbedScreen ||
-                    highlightedEmbedScreen.type !== "cowebsite" ||
-                    (highlightedEmbedScreen.type === "cowebsite" &&
-                        highlightedEmbedScreen.embed.iframe.id !== coWebsite.iframe.id))
-            );
-        })
 );

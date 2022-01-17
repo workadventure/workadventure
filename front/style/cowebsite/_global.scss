@@ -42,6 +42,14 @@
       margin-bottom: auto;
       flex: 1;
       justify-content: start;
+
+      #cowebsite-swipe {
+        display: none;
+        img {
+          transform: rotate(0deg) !important;
+          transform: scale(0.5);
+        }
+      }
     }
 
     .top-right-btn {

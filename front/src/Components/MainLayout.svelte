@@ -21,7 +21,7 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import { isMediaBreakpointDown, isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import { followStateStore } from "../Stores/FollowStore";
@@ -39,10 +39,12 @@
 
     let mainLayout: HTMLDivElement;
 
-    let displayCoWebsiteContainer = isMediaBreakpointUp("md");
+    let displayCoWebsiteContainerMd = isMediaBreakpointUp("md");
+    let displayCoWebsiteContainerLg = isMediaBreakpointDown("lg");
 
     const resizeObserver = new ResizeObserver(() => {
-        displayCoWebsiteContainer = isMediaBreakpointUp("md");
+        displayCoWebsiteContainerMd = isMediaBreakpointUp("md");
+        displayCoWebsiteContainerLg = isMediaBreakpointDown("lg");
     });
 
     onMount(() => {
@@ -56,7 +58,7 @@
             <MenuIcon />
         {/if}
 
-        {#if $embedScreenLayout === LayoutMode.VideoChat || displayCoWebsiteContainer}
+        {#if $embedScreenLayout === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
         {/if}
     </aside>
@@ -118,6 +120,10 @@
     </section>
 
     <section id="main-layout-baseline">
+        {#if displayCoWebsiteContainerLg}
+            <CoWebsitesContainer />
+        {/if}
+
         {#if $layoutManagerActionVisibilityStore}
             <LayoutActionManager />
         {/if}
