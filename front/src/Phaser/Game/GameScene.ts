@@ -90,6 +90,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import Camera = Phaser.Cameras.Scene2D.Camera;
+import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -548,7 +549,7 @@ export class GameScene extends DirtyScene {
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //create input to move
-        this.userInputManager = new UserInputManager(this);
+        this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
 
         if (localUserStore.getFullscreen()) {
@@ -606,10 +607,6 @@ export class GameScene extends DirtyScene {
         for (const script of scripts) {
             scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
         }
-
-        this.userInputManager.spaceEvent(() => {
-            this.outlinedItem?.activate();
-        });
 
         this.reposition();
 
@@ -677,6 +674,10 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+    }
+
+    public activateOutlinedItem(): void {
+        this.outlinedItem?.activate();
     }
 
     /**
