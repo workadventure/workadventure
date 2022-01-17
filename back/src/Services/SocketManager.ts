@@ -392,8 +392,8 @@ export class SocketManager {
 
             if (!meet.meetingLink) {
                 // Check to see if there's an active meeting for this room set up already that we don't know about yet
-                // Only accept this meet if it hasn't ended yet and won't end for at least 10 seconds
                 // ToDo use const for https://webexapis.com/v1
+                // ToDo make sure using inProgress is save enough (https://developer.webex.com/docs/api/v1/meetings/list-meetings)
                 const params = `meetingType=meeting&state=inProgress&siteUrl=${WEBEX_SITE_URL}`;
                 const res = await Axios.get(
                     `https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`,
