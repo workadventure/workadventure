@@ -1,8 +1,7 @@
 import { PlayerAnimationDirections } from "./Animation";
 import type { GameScene } from "../Game/GameScene";
-import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
-import type { RemotePlayer } from "../Entity/RemotePlayer";
 
 import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
@@ -20,7 +19,6 @@ export class Player extends Character {
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
-        private userInputManager: UserInputManager,
         companion: string | null,
         companionTexturePromise?: Promise<string>
     ) {
@@ -100,12 +98,11 @@ export class Player extends Character {
         return [xMovement, yMovement];
     }
 
-    public moveUser(delta: number): void {
-        const activeEvents = this.userInputManager.getEventListForGameTick();
+    public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
-        if (activeEvents.get(UserInputEvent.Follow)) {
+        if (activeUserInputEvents.get(UserInputEvent.Follow)) {
             if (state === "off" && this.scene.groups.size > 0) {
                 this.sendFollowRequest();
             } else if (state === "active") {
@@ -118,7 +115,7 @@ export class Player extends Character {
         if ((state === "active" || state === "ending") && role === "follower") {
             [x, y] = this.computeFollowMovement();
         }
-        this.inputStep(activeEvents, x, y);
+        this.inputStep(activeUserInputEvents, x, y);
     }
 
     public sendFollowRequest() {

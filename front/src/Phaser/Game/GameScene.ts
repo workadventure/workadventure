@@ -1691,7 +1691,6 @@ ${escapedMessage}
                 texturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
-                this.userInputManager,
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
@@ -1811,7 +1810,7 @@ ${escapedMessage}
     update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        this.CurrentPlayer.moveUser(delta);
+        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
