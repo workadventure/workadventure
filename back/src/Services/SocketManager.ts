@@ -394,7 +394,7 @@ export class SocketManager {
                 // Check to see if there's an active meeting for this room set up already that we don't know about yet
                 // Only accept this meet if it hasn't ended yet and won't end for at least 10 seconds
                 // ToDo use const for https://webexapis.com/v1
-                const params = `meetingType=meeting&state=inProgress&siteUrl=${WEBEX_SITE_URL}`
+                const params = `meetingType=meeting&state=inProgress&siteUrl=${WEBEX_SITE_URL}`;
                 const res = await Axios.get(
                     `https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`,
                     {
@@ -404,8 +404,9 @@ export class SocketManager {
                         },
                     }
                 );
+                // ToDo add error handling
                 console.log("[Back] Looking up meeting, got: ", res.data);
-                const legalMeets = res?.data?.items
+                const legalMeets = res?.data?.items;
                 console.log("[Back] Legal meetings to choose from: ", legalMeets);
                 if (legalMeets.length > 0) {
                     meet.meetingLink = legalMeets[0];
@@ -424,7 +425,7 @@ export class SocketManager {
                                 title: `WorkAdventure - ${roomName}`,
                                 start: now.toISOString(),
                                 end: later.toISOString(),
-                                timezone: 'Europe/Belfast',
+                                timezone: "Europe/Belfast",
                                 allowAnyUserToBeCoHost: true,
                                 enabledJoinBeforeHost: true,
                                 enableConnectAudioBeforeHost: true,
