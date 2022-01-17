@@ -62,11 +62,11 @@ You can set your favorite/custom map in Url like in following example: http://pl
 or just use START_ROOM_URL env variable.
 
 #### Using Webex API
-Register an Integration or take the existing one [Integrations & Authorization](https://developer.webex.com/docs/integrations)
 
-IMPORTANT: Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write meeting:admin_schedule_read`
-
-IMPORTANT: Make sure a Webex user with full admin rights registers the integration.
+To call the API we need for our Webex feature we need a paid Webex account
+A User with Admin rights should register an Integration [Integrations & Authorization](https://developer.webex.com/docs/integrations)
+Make sure your integration has correct Scopes to use the API. For example to create and list Meeting the following are essential:`spark:all spark:kms meeting:schedules_read meeting:schedules_write meeting:admin_schedule_read`
+If there are Webex users with email domains, which deffer from your Organisation (in Webex sense) you should [verify the domain](https://help.webex.com/en-US/article/nceb8tm/Claim-Users-to-Your-Organization-(Convert-Users))
 
 #### TypeScript with Webex
 
