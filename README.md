@@ -41,21 +41,7 @@ Note 2: If you are still getting "network error". Make sure you are authorizing 
 
 ### Development environment for webex
 
-Install Docker.
-Run:
-
-```
-cp .env.template .env
-```
-
 Make sure you have webex variables.
-We recommend to set DEBUG_MODE to `true`
-
-Run:
-
-```
-docker-compose up
-```
 
 You should now be able to browse to http://play.workadventure.localhost/ 
 You can set your favorite/custom map in Url like in following example: http://play.workadventure.localhost/_/global/victorgetz.github.io/workadventure-webex-map/map.json
