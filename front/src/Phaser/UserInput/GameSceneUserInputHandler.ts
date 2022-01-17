@@ -37,11 +37,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                         y: step.y * tileDimensions.height + tileDimensions.height * 0.5,
                     };
                 });
-                // Replace last position with pointerUp result
-                // pixelPath[pixelPath.length - 1] = { x: pointer.x + camera.scrollX, y: pointer.y + camera.scrollY };
                 // Remove first step as it is for the tile we are currently standing on
                 pixelPath.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow([...pixelPath]);
+                this.gameScene.CurrentPlayer.setPathToFollow(pixelPath);
             })
             .catch((reason) => {
                 console.warn(reason);
