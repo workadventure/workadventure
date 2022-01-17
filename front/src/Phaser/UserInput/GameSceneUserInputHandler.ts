@@ -32,13 +32,19 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .then((path) => {
                 const tileDimensions = this.gameScene.getGameMap().getTileDimensions();
                 const pixelPath = path.map((step) => {
-                    return { x: step.x * tileDimensions.width, y: step.y * tileDimensions.height };
+                    return {
+                        x: step.x * tileDimensions.width + tileDimensions.width * 0.5,
+                        y: step.y * tileDimensions.height + tileDimensions.height * 0.5,
+                    };
                 });
+                // Replace last position with pointerUp result
+                // pixelPath[pixelPath.length - 1] = { x: pointer.x + camera.scrollX, y: pointer.y + camera.scrollY };
+                // Remove first step as it is for the tile we are currently standing on
+                pixelPath.shift();
                 this.gameScene.CurrentPlayer.setPathToFollow([...pixelPath]);
-                console.log(pixelPath);
             })
             .catch((reason) => {
-                console.log(reason);
+                console.warn(reason);
             });
     }
 

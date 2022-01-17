@@ -9,7 +9,7 @@ export class PathfindingManager {
         this.scene = scene;
 
         this.easyStar = new EasyStar.js();
-        this.easyStar.disableDiagonals();
+        this.easyStar.enableDiagonals();
 
         this.setGrid(collisionsGrid);
     }

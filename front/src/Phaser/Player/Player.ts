@@ -65,7 +65,14 @@ export class Player extends Character {
     }
 
     public setPathToFollow(path: { x: number; y: number }[]): void {
-        this.pathToFollow = path;
+        // take collider offset into consideraton
+        this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
+    }
+
+    private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
+        return path.map((step) => {
+            return { x: step.x, y: step.y - this.getBody().offset.y };
+        });
     }
 
     private inputStep(activeEvents: ActiveEventList, x: number, y: number) {
@@ -133,9 +140,7 @@ export class Player extends Character {
         if (distance < 2000) {
             return [0, 0];
         }
-        const xMovement = xDistance / Math.sqrt(distance);
-        const yMovement = yDistance / Math.sqrt(distance);
-        return [xMovement, yMovement];
+        return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
     private computeFollowPathMovement(): number[] {
@@ -148,11 +153,13 @@ export class Player extends Character {
         const xDistance = nextStep.x - this.x;
         const yDistance = nextStep.y - this.y;
         const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
-        if (distance < 200) {
+        if (distance < 10) {
             this.pathToFollow.shift();
         }
-        const xMovement = xDistance / Math.sqrt(distance);
-        const yMovement = yDistance / Math.sqrt(distance);
-        return [xMovement, yMovement];
+        return this.getMovementDirection(xDistance, yDistance, distance);
+    }
+
+    private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
+        return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
     }
 }
