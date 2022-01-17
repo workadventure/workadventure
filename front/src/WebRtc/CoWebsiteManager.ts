@@ -25,6 +25,7 @@ export const cowebsiteCloseButtonId = "cowebsite-close";
 const cowebsiteFullScreenButtonId = "cowebsite-fullscreen";
 const cowebsiteOpenFullScreenImageId = "cowebsite-fullscreen-open";
 const cowebsiteCloseFullScreenImageId = "cowebsite-fullscreen-close";
+const cowebsiteSwipeButtonId = "cowebsite-swipe";
 const cowebsiteSlotBaseDomId = "cowebsite-slot-";
 const animationTime = 500; //time used by the css transitions, in ms.
 
@@ -118,8 +119,8 @@ class CoWebsiteManager {
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.gameOverlayDom);
 
-        const buttonCloseCoWebsites = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        buttonCloseCoWebsites.addEventListener("click", () => {
+        const buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+        buttonCloseCoWebsite.addEventListener("click", () => {
             const coWebsite = this.getMainCoWebsite();
 
             if (!coWebsite) {
@@ -141,6 +142,24 @@ class CoWebsiteManager {
         buttonFullScreenFrame.addEventListener("click", () => {
             buttonFullScreenFrame.blur();
             this.fullscreen();
+        });
+
+        const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
+
+        highlightedEmbedScreen.subscribe((value) => {
+            if (!value || value.type !== "cowebsite") {
+                buttonSwipe.style.display = "none";
+                return;
+            }
+
+            buttonSwipe.style.display = "block";
+        });
+
+        buttonSwipe.addEventListener("click", () => {
+            const highlightedEmbed = get(highlightedEmbedScreen);
+            if (highlightedEmbed?.type === "cowebsite") {
+                this.goToMain(highlightedEmbed.embed);
+            }
         });
     }
 
@@ -671,6 +690,16 @@ class CoWebsiteManager {
                     }
 
                     this.removeCoWebsiteFromStack(coWebsite);
+
+                    const mainCoWebsite = this.getMainCoWebsite();
+
+                    if (mainCoWebsite) {
+                        this.removeHighlightCoWebsite(mainCoWebsite);
+                        this.goToMain(mainCoWebsite);
+                        this.resizeAllIframes();
+                    } else {
+                        this.closeMain();
+                    }
                     resolve();
                 })
         );

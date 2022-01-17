@@ -1,7 +1,6 @@
 <script lang="ts">
     import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
     import CamerasContainer from "../CamerasContainer.svelte";
-    import CoWebsitesContainer from "../CoWebsitesContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
     import { afterUpdate, onMount } from "svelte";
@@ -19,19 +18,6 @@
                     console.error("Error during co-website highlighted unloading");
                 });
             }
-        }
-    }
-
-    function minimiseCoWebsite() {
-        if ($highlightedEmbedScreen?.type === "cowebsite") {
-            highlightedEmbedScreen.removeHighlight();
-            coWebsiteManager.resizeAllIframes();
-        }
-    }
-
-    function expandCoWebsite() {
-        if ($highlightedEmbedScreen?.type === "cowebsite") {
-            coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
         }
     }
 
@@ -88,14 +74,6 @@
                                 class="highlighted-cowebsite nes-container is-rounded"
                             >
                                 <div class="actions">
-                                    <button type="button" class="nes-btn is-primary expand" on:click={expandCoWebsite}
-                                        >></button
-                                    >
-                                    <button
-                                        type="button"
-                                        class="nes-btn is-secondary minimise"
-                                        on:click={minimiseCoWebsite}>=</button
-                                    >
                                     <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
                                         >&times;</button
                                     >
@@ -105,10 +83,6 @@
                     {/if}
                 {/if}
             </div>
-
-            {#if displayCoWebsiteContainer}
-                <CoWebsitesContainer />
-            {/if}
         </div>
 
         {#if $peerStore.size > 0}
@@ -143,13 +117,13 @@
     }
 
     #main-embed-screen {
-        height: 82%;
+        height: 100%;
         margin-bottom: 3%;
 
         .highlighted-cowebsite {
             height: 100% !important;
             width: 96%;
-            /*background-color: rgba(#000000, 0.6);*/
+            background-color: rgba(#000000, 0.6);
             margin: 0 !important;
 
             .actions {
@@ -163,10 +137,6 @@
                 button {
                     pointer-events: all;
                 }
-            }
-
-            &.nes-container.is-rounded {
-              border-image-outset: 1;
             }
         }
     }

@@ -139,6 +139,7 @@
         text-align: center;
         align-content: center;
         justify-content: flex-end;
+        z-index: 251;
 
         &:hover {
             div.hide {
