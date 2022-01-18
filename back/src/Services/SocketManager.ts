@@ -113,6 +113,7 @@ export class SocketManager {
     //private rooms = new Map<string, GameRoom>();
     // List of rooms in process of loading.
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
+    // ToDo clean up all related to saving webexMeetings code
     private webexMeetings = new Map<string, MeetingData>();
 
     constructor() {
@@ -300,6 +301,8 @@ export class SocketManager {
 
     leaveRoom(room: GameRoom, user: User) {
         // leave previous room and world
+        console.log('!!!!!!!!!!!!!leaveRoom room:', room)
+        console.log('!!!!!!!!!!!!!leaveRoom: user', user)
         try {
             // end webex call
             const meet = this.webexMeetings.get(room.roomUrl);
@@ -415,16 +418,13 @@ export class SocketManager {
                 if (!meet.meetingLink) {
                     console.log("[Back] Generating new meeting link with client's token");
                     const integrationTag = `workadventure-${roomId}`;
-                    const now = new Date(Date.now() + 45 * 1000);
-                    const later = new Date(Date.now() + 24 * 60 * 60 * 1000);
-                    console.log(`[Back] Meeting going from ${now} to ${later}`);
                     try {
                         const resp = await Axios.post(
                             "https://webexapis.com/v1/meetings",
                             {
                                 title: `WorkAdventure - ${roomName}`,
-                                start: now.toISOString(),
-                                end: later.toISOString(),
+                                start: new Date(Date.now() + 45 * 1000).toISOString(),
+                                end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                                 timezone: "Europe/Belfast",
                                 allowAnyUserToBeCoHost: true,
                                 enabledJoinBeforeHost: true,
