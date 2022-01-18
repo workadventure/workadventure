@@ -19,6 +19,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (pointer.rightButtonReleased()) {
+            return;
+        }
         const camera = this.gameScene.getCameraManager().getCamera();
         const index = this.gameScene
             .getGameMap()
