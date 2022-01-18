@@ -42,12 +42,16 @@ export class Player extends Character {
             }
         }
 
+        if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
+            this.pathToFollow = undefined;
+        }
+
         let x = 0;
         let y = 0;
         if ((state === "active" || state === "ending") && role === "follower") {
             [x, y] = this.computeFollowMovement();
         }
-        if (this.pathToFollow && this.pathToFollow.length !== 0) {
+        if (this.pathToFollow) {
             [x, y] = this.computeFollowPathMovement();
         }
         this.inputStep(activeUserInputEvents, x, y);
@@ -144,7 +148,10 @@ export class Player extends Character {
     }
 
     private computeFollowPathMovement(): number[] {
-        if (!this.pathToFollow || this.pathToFollow.length === 0) {
+        if (this.pathToFollow?.length === 0) {
+            this.pathToFollow = undefined;
+        }
+        if (!this.pathToFollow) {
             return [0, 0];
         }
         const nextStep = this.pathToFollow[0];
@@ -153,7 +160,7 @@ export class Player extends Character {
         const xDistance = nextStep.x - this.x;
         const yDistance = nextStep.y - this.y;
         const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
-        if (distance < 10) {
+        if (distance < 200) {
             this.pathToFollow.shift();
         }
         return this.getMovementDirection(xDistance, yDistance, distance);

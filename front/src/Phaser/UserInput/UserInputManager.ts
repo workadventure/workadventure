@@ -37,6 +37,15 @@ export class ActiveEventList {
     any(): boolean {
         return Array.from(this.eventMap.values()).reduce((accu, curr) => accu || curr, false);
     }
+    anyExcept(...exceptions: UserInputEvent[]): boolean {
+        const userInputEvents = Array.from(this.eventMap);
+        for (const event of userInputEvents) {
+            if (event[1] && !exceptions.includes(event[0])) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
