@@ -618,6 +618,7 @@ class CoWebsiteManager {
             if (coWebsite.jitsi) {
                 const gameScene = gameManager.getCurrentGameScene();
                 gameScene.disableMediaBehaviors();
+                jitsiFactory.restart();
             }
 
             this.currentOperationPromise = this.currentOperationPromise
@@ -676,7 +677,7 @@ class CoWebsiteManager {
             () =>
                 new Promise((resolve) => {
                     if (coWebsite.jitsi) {
-                        jitsiFactory.stop();
+                        jitsiFactory.destroy();
                         const gameScene = gameManager.getCurrentGameScene();
                         gameScene.enableMediaBehaviors();
                     }

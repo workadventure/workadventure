@@ -7,6 +7,7 @@ interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
     startWithVideoMuted: boolean;
     prejoinPageEnabled: boolean;
+    disableDeepLinking: boolean;
 }
 
 interface JitsiOptions {
@@ -40,6 +41,7 @@ const getDefaultConfig = (): jitsiConfigInterface => {
         startWithAudioMuted: !get(requestedMicrophoneState),
         startWithVideoMuted: !get(requestedCameraState),
         prejoinPageEnabled: false,
+        disableDeepLinking: false,
     };
 };
 
@@ -176,12 +178,22 @@ class JitsiFactory {
 
         const doResolve = (): void => {
             const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
-            if (iframe) {
-                coWebsiteManager.addCoWebsiteFromIframe(iframe, false, undefined, 0, false, true);
+            if (iframe && this.jitsiApi) {
+                const coWebsite = coWebsiteManager.addCoWebsiteFromIframe(iframe, false, undefined, 0, false, true);
+
+                this.jitsiApi.addListener("videoConferenceLeft", () => {
+                    this.closeOrUnload(coWebsite);
+                });
+
+                this.jitsiApi.addListener("readyToClose", () => {
+                    this.closeOrUnload(coWebsite);
+                });
             }
 
             coWebsiteManager.resizeAllIframes();
         };
+
+        this.jitsiApi = undefined;
 
         options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
         setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
@@ -192,6 +204,44 @@ class JitsiFactory {
         this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
     }
 
+    private closeOrUnload = function (coWebsite: CoWebsite) {
+        if (coWebsite.closable) {
+            coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
+                console.error("Error during closing a Jitsi Meet");
+            });
+        } else {
+            coWebsiteManager.unloadCoWebsite(coWebsite).catch(() => {
+                console.error("Error during unloading a Jitsi Meet");
+            });
+        }
+    };
+
+    public restart() {
+        if (!this.jitsiApi) {
+            return;
+        }
+
+        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
+        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+
+        const coWebsite = coWebsiteManager.searchJitsi();
+        console.log("jitsi api ", this.jitsiApi);
+        console.log("iframe cowebsite", coWebsite?.iframe);
+
+        if (!coWebsite) {
+            this.destroy();
+            return;
+        }
+
+        this.jitsiApi.addListener("videoConferenceLeft", () => {
+            this.closeOrUnload(coWebsite);
+        });
+
+        this.jitsiApi.addListener("readyToClose", () => {
+            this.closeOrUnload(coWebsite);
+        });
+    }
+
     public stop() {
         if (!this.jitsiApi) {
             return;
@@ -199,6 +249,14 @@ class JitsiFactory {
 
         this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
         this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
+    }
+
+    public destroy() {
+        if (!this.jitsiApi) {
+            return;
+        }
+
+        this.stop();
         this.jitsiApi?.dispose();
     }
 
