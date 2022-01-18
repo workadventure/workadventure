@@ -558,16 +558,17 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 
-    public emitWebexSessionQuery(roomId: string, accessToken: string, roomName: string) {
+    public emitWebexSessionQuery(roomId: string, accessToken: string, roomName: string, jitsiRoomName: string) {
         const webexSessionQuery = new WebexSessionQuery();
-        webexSessionQuery.setRoomid(roomId);
+        // unique room id for using as integrationTag (there length limit) for Webex API
+        const allowedLength = 60 - jitsiRoomName.length
+        const integrationTag = `${jitsiRoomName}-${roomId.substr(- 5 - allowedLength, allowedLength)}`
+        webexSessionQuery.setRoomid(integrationTag);
         webexSessionQuery.setRoomname(roomName);
-        if (accessToken) {
-            webexSessionQuery.setAccesstoken(accessToken);
-        }
+        webexSessionQuery.setAccesstoken(accessToken);
         const clientToServerMessage = new ClientToServerMessage();
         clientToServerMessage.setWebexsessionquery(webexSessionQuery);
-        console.log("[Front] Sending query for room " + roomId);
+        console.log("[Front] Sending webex query for room (integrationTag) " + integrationTag);
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }
 

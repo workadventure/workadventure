@@ -382,24 +382,12 @@ export class SocketManager {
             const roomName = webexSessionQuery.getRoomname();
             response.setRoomid(roomId);
 
-            const meet = {
-                userId: user.id,
-                meetingLink: "",
-            };
-
-            const meetFromStore = this.webexMeetings.get(roomId);
-
-            if (!isUndefined(meetFromStore)) {
-                meet.meetingLink = meetFromStore.meetingLink;
-            }
-
-            if (!meet.meetingLink) {
                 // Check to see if there's an active meeting for this room set up already that we don't know about yet
                 // ToDo use const for https://webexapis.com/v1
                 // ToDo make sure using inProgress is save enough (https://developer.webex.com/docs/api/v1/meetings/list-meetings)
                 const params = `meetingType=meeting&state=inProgress&siteUrl=${WEBEX_SITE_URL}`;
                 const res = await Axios.get(
-                    `https://webexapis.com/v1/meetings?integrationTag=workadventure-${roomId}`,
+                    `https://webexapis.com/v1/meetings?integrationTag=${roomId}&${params}`,
                     {
                         headers: {
                             "Content-Type": "application/json",
@@ -411,28 +399,25 @@ export class SocketManager {
                 console.log("[Back] Looking up meeting, got: ", res.data);
                 const legalMeets = res?.data?.items;
                 console.log("[Back] Legal meetings to choose from: ", legalMeets);
-                if (legalMeets.length > 0) {
-                    meet.meetingLink = legalMeets[0];
-                }
-
-                if (!meet.meetingLink) {
+                let meetingId = legalMeets && legalMeets[0]?.id
+                // todo get meetingLink by meetingId #11
+                let meetingLink
+                if (!meetingId) {
                     console.log("[Back] Generating new meeting link with client's token");
-                    const integrationTag = `workadventure-${roomId}`;
+
                     try {
                         const resp = await Axios.post(
                             "https://webexapis.com/v1/meetings",
                             {
                                 title: `WorkAdventure - ${roomName}`,
-                                start: new Date(Date.now() + 45 * 1000).toISOString(),
+                                start: new Date(Date.now() + 60 * 1000).toISOString(),
                                 end: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
                                 timezone: "Europe/Belfast",
                                 allowAnyUserToBeCoHost: true,
                                 enabledJoinBeforeHost: true,
                                 enableConnectAudioBeforeHost: true,
                                 sendEmail: false,
-                                integrationTags: [
-                                    integrationTag.length > 61 ? integrationTag.substr(0, 60) + "…" : integrationTag,
-                                ],
+                                integrationTags: [roomId],
                             },
                             {
                                 headers: {
@@ -441,8 +426,15 @@ export class SocketManager {
                                 },
                             }
                         );
-                        console.log(`[Back] Got a response when generating a meeting link: ${resp.data}`);
-                        meet.meetingLink = resp.data.sipAddress;
+
+                        console.log(`[Back] Created a webex meeting with id and webLink: ${resp?.data?.id}`);
+                        console.log(`[Back] Created a webex meeting with webLink: ${resp?.data?.webLink}`);
+                        meetingId = resp?.data?.id
+                        meetingLink = resp?.data?.webLink
+                        // ToDo better Error handling (response is 200 but with errors)
+                        if (!meetingId) {
+                            throw Error("Meeting is not created");
+                        }
                     } catch (e) {
                         if (Axios.isAxiosError(e)) {
                             if (e.response) {
@@ -457,17 +449,10 @@ export class SocketManager {
                     }
                 }
 
-                if (!meet.meetingLink) {
-                    throw Error("Meeting link still empty");
-                }
-            }
-
-            this.webexMeetings.set(roomId, meet);
-
-            response.setMeetinglink(meet.meetingLink);
-
+            response.setMeetinglink(meetingLink);
+            response.setRoomid(roomId)
             console.log(
-                `[Back] Responding with response object containing meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
+                `[Back] Responding with response object containing webex meeting link: ${response.getMeetinglink()} and room ID: ${response.getRoomid()}`
             );
 
             serverToClientMessage.setWebexsessionresponse(response);

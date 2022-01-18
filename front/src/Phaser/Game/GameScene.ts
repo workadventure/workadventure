@@ -1866,6 +1866,8 @@ ${escapedMessage}
         const webexMeetingUrl = allProps.get("webexMeetingUrl");
         const webexAdHoc = allProps.get("webexAdHoc");
         const jitsiWidth = allProps.get("jitsiWidth") as number | undefined;
+        // ToDo how to make sure jitsiRoom is unique within one map (case of undefined or bool type)
+        const jitsiRoom = allProps.get("jitsiRoom")?.toString() || 'RoomName';
 
         console.log("Jitsi: " + jitsiUrl);
         console.log("webexSpaceId: " + webexSpaceId);
@@ -1877,7 +1879,7 @@ ${escapedMessage}
             console.log("[Front] Found meeting url, sending query for update");
             webexIntegration.authWithWebex().then((accessToken) => {
                 if (accessToken) {
-                    this.connection?.emitWebexSessionQuery(this.room.id, accessToken, roomName);
+                    this.connection?.emitWebexSessionQuery(this.room.id, accessToken, roomName, jitsiRoom);
                 } else {
                     console.warn("[Front] accessToken is null");
                 }
