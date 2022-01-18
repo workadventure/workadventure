@@ -31,7 +31,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
         this.gameScene
             .getPathfindingManager()
-            .findPath(startTile, index)
+            .findPath(startTile, index, true)
             .then((path) => {
                 const tileDimensions = this.gameScene.getGameMap().getTileDimensions();
                 const pixelPath = path.map((step) => {
