@@ -12,6 +12,7 @@ export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
+    private followingPathPromiseResolve?: (position: { x: number; y: number }) => void;
 
     constructor(
         Scene: GameScene,
@@ -44,6 +45,7 @@ export class Player extends Character {
 
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
             this.pathToFollow = undefined;
+            this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y });
         }
 
         let x = 0;
@@ -68,9 +70,13 @@ export class Player extends Character {
         this.scene.connection?.emitFollowConfirmation();
     }
 
-    public setPathToFollow(path: { x: number; y: number }[]): void {
+    public async setPathToFollow(path: { x: number; y: number }[]): Promise<{ x: number; y: number }> {
         // take collider offset into consideraton
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
+        return new Promise((resolve) => {
+            this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y });
+            this.followingPathPromiseResolve = resolve;
+        });
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
@@ -150,6 +156,7 @@ export class Player extends Character {
     private computeFollowPathMovement(): number[] {
         if (this.pathToFollow?.length === 0) {
             this.pathToFollow = undefined;
+            this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y });
         }
         if (!this.pathToFollow) {
             return [0, 0];

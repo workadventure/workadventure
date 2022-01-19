@@ -1461,24 +1461,14 @@ ${escapedMessage}
             };
         });
 
-        iframeListener.registerAnswerer("movePlayerTo", (message) => {
+        iframeListener.registerAnswerer("movePlayerTo", async (message) => {
             // TODO: walk player to position, wait for promise to resolve
             const index = this.getGameMap().getTileIndexAt(message.x, message.y);
             const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-            this.getPathfindingManager()
-                .findPath(startTile, index, true, true)
-                .then((path) => {
-                    // Remove first step as it is for the tile we are currently standing on
-                    path.shift();
-                    this.CurrentPlayer.setPathToFollow(path);
-                })
-                .catch((reason) => {
-                    console.warn(reason);
-                });
-            return {
-                x: this.CurrentPlayer.x,
-                y: this.CurrentPlayer.y,
-            };
+            const path = await this.getPathfindingManager().findPath(startTile, index, true, true);
+            path.shift();
+            return this.CurrentPlayer.setPathToFollow(path);
+            // return position;
         });
     }
 
