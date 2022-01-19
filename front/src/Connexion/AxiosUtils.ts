@@ -1,6 +1,7 @@
 import axios from "axios";
 import * as rax from "retry-axios";
 import { errorStore } from "../Stores/ErrorStore";
+import { _ } from "../Translator/Translator";
 
 /**
  * This instance of Axios will retry in case of an issue and display an error message as a HTML overlay.
@@ -26,10 +27,13 @@ axiosWithRetry.defaults.raxConfig = {
         console.log(err);
         console.log(cfg);
         console.log(`Retry attempt #${cfg?.currentRetryAttempt} on URL '${err.config.url}'`);
-        errorStore.addErrorMessage("Unable to connect to WorkAdventure. Are you connected to internet?", {
-            closable: false,
-            id: "axios_retry",
-        });
+        errorStore.addErrorMessage(
+            _("error.connection-retry.unable-to-connect-to-workAdventure-are-you-connected-to-internet"),
+            {
+                closable: false,
+                id: "axios_retry",
+            }
+        );
     },
 };
 
