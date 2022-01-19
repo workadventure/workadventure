@@ -261,7 +261,7 @@ export class VideoPeer extends Peer {
             this.closing = true;
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
-            if (this.newMessageSubscribtion) this.newMessageSubscribtion.unsubscribe();
+            this.newMessageSubscribtion?.unsubscribe();
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();
