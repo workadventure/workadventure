@@ -1,4 +1,4 @@
-FROM testcafe/testcafe:1.18.1
+FROM testcafe/testcafe:1.18.2
 
 USER root
 RUN apk add docker-compose
