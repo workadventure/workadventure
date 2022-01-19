@@ -32,7 +32,7 @@ jobs:
           mode: start
           github-token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           ec2-image-id: ami-094dbcc53250a2480
-          ec2-instance-type: t3.xlarge
+          ec2-instance-type: m5.2xlarge
           subnet-id: subnet-0ac40025f559df1bc
           security-group-id: sg-0e36e96e3b8ed2d64
           #iam-role-name: my-role-name # optional, requires additional permissions
