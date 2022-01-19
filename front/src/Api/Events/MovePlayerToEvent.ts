@@ -1,6 +1,6 @@
 import * as tg from "generic-type-guard";
 
-export const isWalkPlayerToEventConfig = new tg.IsInterface()
+export const isMovePlayerToEventConfig = new tg.IsInterface()
     .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
@@ -8,4 +8,4 @@ export const isWalkPlayerToEventConfig = new tg.IsInterface()
     })
     .get();
 
-export type WalkPlayerToEvent = tg.GuardedType<typeof isWalkPlayerToEventConfig>;
+export type MovePlayerToEvent = tg.GuardedType<typeof isMovePlayerToEventConfig>;

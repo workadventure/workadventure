@@ -569,7 +569,11 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
-        this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getTileDimensions()
+        );
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -1457,9 +1461,20 @@ ${escapedMessage}
             };
         });
 
-        iframeListener.registerAnswerer("walkPlayerTo", () => {
+        iframeListener.registerAnswerer("movePlayerTo", (message) => {
             // TODO: walk player to position, wait for promise to resolve
-            console.log("WALK PLAYER TO ACTION CALLED");
+            const index = this.getGameMap().getTileIndexAt(message.x, message.y);
+            const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+            this.getPathfindingManager()
+                .findPath(startTile, index, true, true)
+                .then((path) => {
+                    // Remove first step as it is for the tile we are currently standing on
+                    path.shift();
+                    this.CurrentPlayer.setPathToFollow(path);
+                })
+                .catch((reason) => {
+                    console.warn(reason);
+                });
             return {
                 x: this.CurrentPlayer.x,
                 y: this.CurrentPlayer.y,

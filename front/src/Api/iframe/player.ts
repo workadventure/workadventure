@@ -84,9 +84,9 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         });
     }
 
-    public async walkTo(x: number, y: number, speed: number): Promise<{ x: number; y: number }> {
+    public async moveTo(x: number, y: number, speed: number): Promise<{ x: number; y: number }> {
         return await queryWorkadventure({
-            type: "walkPlayerTo",
+            type: "movePlayerTo",
             data: { x, y, speed },
         });
     }

@@ -34,7 +34,7 @@ import type { ChangeZoneEvent } from "./ChangeZoneEvent";
 import type { CameraSetEvent } from "./CameraSetEvent";
 import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
-import { isWalkPlayerToEventConfig } from "./WalkPlayerToEvent";
+import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -174,8 +174,8 @@ export const iframeQueryMapTypeGuards = {
         query: tg.isUndefined,
         answer: isPlayerPosition,
     },
-    walkPlayerTo: {
-        query: isWalkPlayerToEventConfig,
+    movePlayerTo: {
+        query: isMovePlayerToEventConfig,
         answer: isPlayerPosition,
     },
 };
