@@ -12,8 +12,7 @@ export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
-    private followingPathPromiseResolve?: (position: { x: number; y: number }) => void;
-    private followingPathPromiseReject?: (position: { x: number; y: number }) => void;
+    private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
 
     constructor(
@@ -46,7 +45,7 @@ export class Player extends Character {
         }
 
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
-            this.finishFollowingPath();
+            this.finishFollowingPath(true);
         }
 
         let x = 0;
@@ -71,14 +70,17 @@ export class Player extends Character {
         this.scene.connection?.emitFollowConfirmation();
     }
 
-    public async setPathToFollow(path: { x: number; y: number }[], speed?: number): Promise<{ x: number; y: number }> {
+    public async setPathToFollow(
+        path: { x: number; y: number }[],
+        speed?: number
+    ): Promise<{ x: number; y: number; cancelled: boolean }> {
+        const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
         // take collider offset into consideraton
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
         this.pathWalkingSpeed = speed;
-        return new Promise((resolve, reject) => {
-            this.followingPathPromiseReject?.call(this, { x: this.x, y: this.y });
+        return new Promise((resolve) => {
+            this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
             this.followingPathPromiseResolve = resolve;
-            this.followingPathPromiseReject = reject;
         });
     }
 
@@ -161,7 +163,7 @@ export class Player extends Character {
     }
 
     private computeFollowPathMovement(): number[] {
-        if (this.pathToFollow?.length === 0) {
+        if (this.pathToFollow !== undefined && this.pathToFollow.length === 0) {
             this.finishFollowingPath();
         }
         if (!this.pathToFollow) {
@@ -182,8 +184,7 @@ export class Player extends Character {
     private finishFollowingPath(cancelled: boolean = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
-        const func = cancelled ? this.followingPathPromiseReject : this.followingPathPromiseResolve;
-        func?.call(this, { x: this.x, y: this.y });
+        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {

@@ -15,17 +15,15 @@
 
                 randomChainedMovementButton.addEventListener('click', async () => {
                     try {
-                        let pos;
-                        pos = await WA.player.moveTo(100, 100, 10);
-                        console.log(pos);
-                        pos = await WA.player.moveTo(500, 100, 10);
-                        console.log(pos);
-                        pos = await WA.player.moveTo(500, 500, 10);
-                        console.log(pos);
-                        pos = await WA.player.moveTo(100, 500, 10);
-                        console.log(pos);
-                        pos = await WA.player.moveTo(100, 100, 10);
-                        console.log(pos);
+                        WA.player.moveTo(100, 100, 10).then((result) => {
+                            console.log(result);
+                            WA.player.moveTo(500, 100, 20).then((result) => {
+                                console.log(result);
+                                WA.player.moveTo(500, 500, 10).then((result) => {
+                                    console.log(result);
+                                });
+                            });
+                        });
                     } catch (err) {
                         console.log('movement was stopped forcefully');
                     }
