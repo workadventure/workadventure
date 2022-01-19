@@ -102,6 +102,7 @@ const config: GameConfig = {
     dom: {
         createContainer: true,
     },
+    disableContextMenu: true,
     render: {
         pixelArt: true,
         roundPixels: true,

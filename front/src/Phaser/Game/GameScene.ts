@@ -48,9 +48,9 @@ import { PropertyUtils } from "../Map/PropertyUtils";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
+import { PathfindingManager } from "../../Utils/PathfindingManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    MessageUserJoined,
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
@@ -66,7 +66,6 @@ import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITi
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
-import type { Character } from "../Entity/Character";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
@@ -89,9 +88,9 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
-import { getColorRgbFromHue } from "../../WebRtc/ColorGenerator";
+import { followUsersColorStore } from "../../Stores/FollowStore";
 import Camera = Phaser.Cameras.Scene2D.Camera;
+import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -203,6 +202,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
+    private pathfindingManager!: PathfindingManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -549,7 +549,7 @@ export class GameScene extends DirtyScene {
         this.MapPlayers = this.physics.add.group({ immovable: true });
 
         //create input to move
-        this.userInputManager = new UserInputManager(this);
+        this.userInputManager = new UserInputManager(this, new GameSceneUserInputHandler(this));
         mediaManager.setUserInputManager(this.userInputManager);
 
         if (localUserStore.getFullscreen()) {
@@ -568,6 +568,8 @@ export class GameScene extends DirtyScene {
             { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
             waScaleManager
         );
+
+        this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -604,10 +606,6 @@ export class GameScene extends DirtyScene {
         for (const script of scripts) {
             scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
         }
-
-        this.userInputManager.spaceEvent(() => {
-            this.outlinedItem?.activate();
-        });
 
         this.reposition();
 
@@ -675,6 +673,10 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+    }
+
+    public activateOutlinedItem(): void {
+        this.outlinedItem?.activate();
     }
 
     /**
@@ -1688,7 +1690,6 @@ ${escapedMessage}
                 texturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
-                this.userInputManager,
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
@@ -1808,7 +1809,7 @@ ${escapedMessage}
     update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        this.CurrentPlayer.moveUser(delta);
+        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
@@ -2171,5 +2172,17 @@ ${escapedMessage}
 
         this.scene.stop(this.scene.key);
         this.scene.remove(this.scene.key);
+    }
+
+    public getGameMap(): GameMap {
+        return this.gameMap;
+    }
+
+    public getCameraManager(): CameraManager {
+        return this.cameraManager;
+    }
+
+    public getPathfindingManager(): PathfindingManager {
+        return this.pathfindingManager;
     }
 }

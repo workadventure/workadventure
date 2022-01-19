@@ -1,8 +1,7 @@
 import { PlayerAnimationDirections } from "./Animation";
 import type { GameScene } from "../Game/GameScene";
-import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
-import type { RemotePlayer } from "../Entity/RemotePlayer";
 
 import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
@@ -12,6 +11,8 @@ export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
+    private pathToFollow?: { x: number; y: number }[];
+
     constructor(
         Scene: GameScene,
         x: number,
@@ -20,7 +21,6 @@ export class Player extends Character {
         texturesPromise: Promise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
-        private userInputManager: UserInputManager,
         companion: string | null,
         companionTexturePromise?: Promise<string>
     ) {
@@ -28,6 +28,55 @@ export class Player extends Character {
 
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+    }
+
+    public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
+        const state = get(followStateStore);
+        const role = get(followRoleStore);
+
+        if (activeUserInputEvents.get(UserInputEvent.Follow)) {
+            if (state === "off" && this.scene.groups.size > 0) {
+                this.sendFollowRequest();
+            } else if (state === "active") {
+                followStateStore.set("ending");
+            }
+        }
+
+        if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
+            this.pathToFollow = undefined;
+        }
+
+        let x = 0;
+        let y = 0;
+        if ((state === "active" || state === "ending") && role === "follower") {
+            [x, y] = this.computeFollowMovement();
+        }
+        if (this.pathToFollow) {
+            [x, y] = this.computeFollowPathMovement();
+        }
+        this.inputStep(activeUserInputEvents, x, y);
+    }
+
+    public sendFollowRequest() {
+        this.scene.connection?.emitFollowRequest();
+        followRoleStore.set("leader");
+        followStateStore.set("active");
+    }
+
+    public startFollowing() {
+        followStateStore.set("active");
+        this.scene.connection?.emitFollowConfirmation();
+    }
+
+    public setPathToFollow(path: { x: number; y: number }[]): void {
+        // take collider offset into consideraton
+        this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
+    }
+
+    private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
+        return path.map((step) => {
+            return { x: step.x, y: step.y - this.getBody().offset.y };
+        });
     }
 
     private inputStep(activeEvents: ActiveEventList, x: number, y: number) {
@@ -95,40 +144,29 @@ export class Player extends Character {
         if (distance < 2000) {
             return [0, 0];
         }
-        const xMovement = xDistance / Math.sqrt(distance);
-        const yMovement = yDistance / Math.sqrt(distance);
-        return [xMovement, yMovement];
+        return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    public moveUser(delta: number): void {
-        const activeEvents = this.userInputManager.getEventListForGameTick();
-        const state = get(followStateStore);
-        const role = get(followRoleStore);
-
-        if (activeEvents.get(UserInputEvent.Follow)) {
-            if (state === "off" && this.scene.groups.size > 0) {
-                this.sendFollowRequest();
-            } else if (state === "active") {
-                followStateStore.set("ending");
-            }
+    private computeFollowPathMovement(): number[] {
+        if (this.pathToFollow?.length === 0) {
+            this.pathToFollow = undefined;
         }
-
-        let x = 0;
-        let y = 0;
-        if ((state === "active" || state === "ending") && role === "follower") {
-            [x, y] = this.computeFollowMovement();
+        if (!this.pathToFollow) {
+            return [0, 0];
         }
-        this.inputStep(activeEvents, x, y);
+        const nextStep = this.pathToFollow[0];
+
+        // Compute movement direction
+        const xDistance = nextStep.x - this.x;
+        const yDistance = nextStep.y - this.y;
+        const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
+        if (distance < 200) {
+            this.pathToFollow.shift();
+        }
+        return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    public sendFollowRequest() {
-        this.scene.connection?.emitFollowRequest();
-        followRoleStore.set("leader");
-        followStateStore.set("active");
-    }
-
-    public startFollowing() {
-        followStateStore.set("active");
-        this.scene.connection?.emitFollowConfirmation();
+    private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {
+        return [xDistance / Math.sqrt(distance), yDistance / Math.sqrt(distance)];
     }
 }

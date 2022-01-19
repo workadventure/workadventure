@@ -1,8 +1,8 @@
-import type { GameScene } from "../Game/GameScene";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
+import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -37,12 +37,21 @@ export class ActiveEventList {
     any(): boolean {
         return Array.from(this.eventMap.values()).reduce((accu, curr) => accu || curr, false);
     }
+    anyExcept(...exceptions: UserInputEvent[]): boolean {
+        const userInputEvents = Array.from(this.eventMap);
+        for (const event of userInputEvents) {
+            if (event[1] && !exceptions.includes(event[0])) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 //this class is responsible for catching user inputs and listing all active user actions at every game tick events.
 export class UserInputManager {
-    private KeysCode!: UserInputManagerDatum[];
-    private Scene: GameScene;
+    private keysCode!: UserInputManagerDatum[];
+    private scene: Phaser.Scene;
     private isInputDisabled: boolean;
 
     private joystick!: MobileJoystick;
@@ -51,11 +60,15 @@ export class UserInputManager {
     private joystickForceAccuX = 0;
     private joystickForceAccuY = 0;
 
-    constructor(Scene: GameScene) {
-        this.Scene = Scene;
+    private userInputHandler: UserInputHandlerInterface;
+
+    constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
+        this.scene = scene;
+        this.userInputHandler = userInputHandler;
+
         this.isInputDisabled = false;
         this.initKeyBoardEvent();
-        this.initMouseWheel();
+        this.bindInputEventHandlers();
         if (touchScreenManager.supportTouchScreen) {
             this.initVirtualJoystick();
         }
@@ -66,7 +79,7 @@ export class UserInputManager {
     }
 
     initVirtualJoystick() {
-        this.joystick = new MobileJoystick(this.Scene);
+        this.joystick = new MobileJoystick(this.scene);
         this.joystick.on("update", () => {
             this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
             this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
@@ -92,80 +105,80 @@ export class UserInputManager {
     }
 
     initKeyBoardEvent() {
-        this.KeysCode = [
+        this.keysCode = [
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
             },
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
             },
             {
                 event: UserInputEvent.MoveDown,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
             },
             {
                 event: UserInputEvent.MoveRight,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
             },
 
             {
                 event: UserInputEvent.MoveUp,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
             },
             {
                 event: UserInputEvent.MoveLeft,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
             },
             {
                 event: UserInputEvent.MoveDown,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
             },
             {
                 event: UserInputEvent.MoveRight,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
             },
 
             {
                 event: UserInputEvent.SpeedUp,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
             },
 
             {
                 event: UserInputEvent.Interact,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E, false),
             },
             {
                 event: UserInputEvent.Interact,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
             },
             {
                 event: UserInputEvent.Follow,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
             {
                 event: UserInputEvent.Shout,
-                keyInstance: this.Scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
+                keyInstance: this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
             },
         ];
     }
 
     clearAllListeners() {
-        this.Scene.input.keyboard.removeAllListeners();
+        this.scene.input.keyboard.removeAllListeners();
     }
 
     //todo: should we also disable the joystick?
     disableControls() {
-        this.Scene.input.keyboard.removeAllKeys();
+        this.scene.input.keyboard.removeAllKeys();
         this.isInputDisabled = true;
     }
 
@@ -201,7 +214,7 @@ export class UserInputManager {
             }
         });
         eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
-        this.KeysCode.forEach((d) => {
+        this.keysCode.forEach((d) => {
             if (d.keyInstance.isDown) {
                 eventsMap.set(d.event, true);
             }
@@ -209,30 +222,60 @@ export class UserInputManager {
         return eventsMap;
     }
 
-    spaceEvent(callback: Function) {
-        this.Scene.input.keyboard.on("keyup-SPACE", (event: Event) => {
-            callback();
-            return event;
-        });
-    }
-
     addSpaceEventListner(callback: Function) {
-        this.Scene.input.keyboard.addListener("keyup-SPACE", callback);
+        this.scene.input.keyboard.addListener("keyup-SPACE", callback);
     }
     removeSpaceEventListner(callback: Function) {
-        this.Scene.input.keyboard.removeListener("keyup-SPACE", callback);
+        this.scene.input.keyboard.removeListener("keyup-SPACE", callback);
     }
 
     destroy(): void {
         this.joystick?.destroy();
     }
 
-    private initMouseWheel() {
-        this.Scene.input.on(
-            "wheel",
-            (pointer: unknown, gameObjects: unknown, deltaX: number, deltaY: number, deltaZ: number) => {
-                this.Scene.zoomByFactor(1 - (deltaY / 53) * 0.1);
+    private bindInputEventHandlers() {
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_WHEEL,
+            (
+                pointer: Phaser.Input.Pointer,
+                gameObjects: Phaser.GameObjects.GameObject[],
+                deltaX: number,
+                deltaY: number,
+                deltaZ: number
+            ) => {
+                if (this.isInputDisabled) {
+                    return;
+                }
+                this.userInputHandler.handleMouseWheelEvent(pointer, gameObjects, deltaX, deltaY, deltaZ);
             }
         );
+
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_UP,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                this.joystick.hide();
+                this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
+            }
+        );
+
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_DOWN,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                if (!pointer.wasTouch) {
+                    return;
+                }
+                this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
+                // Let's only display the joystick if there is one finger on the screen
+                if ((pointer.event as TouchEvent).touches.length === 1) {
+                    this.joystick.showAt(pointer.x, pointer.y);
+                } else {
+                    this.joystick.hide();
+                }
+            }
+        );
+
+        this.scene.input.keyboard.on("keyup-SPACE", (event: Event) => {
+            this.userInputHandler.handleSpaceKeyUpEvent(event);
+        });
     }
 }
