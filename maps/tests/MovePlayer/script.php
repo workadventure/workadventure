@@ -14,17 +14,21 @@
                 const speedField = document.getElementById('speed');
 
                 randomChainedMovementButton.addEventListener('click', async () => {
-                    let pos;
-                    pos = await WA.player.moveTo(100, 100, 10);
-                    console.log(pos);
-                    pos = await WA.player.moveTo(500, 100, 10);
-                    console.log(pos);
-                    pos = await WA.player.moveTo(500, 500, 10);
-                    console.log(pos);
-                    pos = await WA.player.moveTo(100, 500, 10);
-                    console.log(pos);
-                    pos = await WA.player.moveTo(100, 100, 10);
-                    console.log(pos);
+                    try {
+                        let pos;
+                        pos = await WA.player.moveTo(100, 100, 10);
+                        console.log(pos);
+                        pos = await WA.player.moveTo(500, 100, 10);
+                        console.log(pos);
+                        pos = await WA.player.moveTo(500, 500, 10);
+                        console.log(pos);
+                        pos = await WA.player.moveTo(100, 500, 10);
+                        console.log(pos);
+                        pos = await WA.player.moveTo(100, 100, 10);
+                        console.log(pos);
+                    } catch (err) {
+                        console.log('movement was stopped forcefully');
+                    }
                 });
 
                 movePlayerButton.addEventListener('click', async () => {                    
