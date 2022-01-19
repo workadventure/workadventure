@@ -19,7 +19,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (pointer.rightButtonReleased()) {
+        if (pointer.rightButtonReleased() || pointer.getDuration() > 250) {
             return;
         }
         const camera = this.gameScene.getCameraManager().getCamera();
@@ -48,6 +48,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 console.warn(reason);
             });
     }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleSpaceKeyUpEvent(event: Event): Event {
         this.gameScene.activateOutlinedItem();
