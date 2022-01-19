@@ -13,7 +13,7 @@ import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../Store
 import { get } from "svelte/store";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
-import { translator } from "../Translator/Translator";
+import { _ } from "../Translator/Translator";
 
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
@@ -30,7 +30,7 @@ export class MediaManager {
                     layoutManagerActionStore.addAction({
                         uuid: "cameraAccessDenied",
                         type: "warning",
-                        message: translator._("warning.access-denied.camera"),
+                        message: _("warning.access-denied.camera"),
                         callback: () => {
                             helpCameraSettingsVisibleStore.set(true);
                         },
@@ -51,7 +51,7 @@ export class MediaManager {
                 layoutManagerActionStore.addAction({
                     uuid: "screenSharingAccessDenied",
                     type: "warning",
-                    message: translator._("warning.access-denied.screen-sharing"),
+                    message: _("warning.access-denied.screen-sharing"),
                     callback: () => {
                         helpCameraSettingsVisibleStore.set(true);
                     },

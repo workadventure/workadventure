@@ -73,10 +73,12 @@ Example:
 }
 ```
 
-In the code you can use it like this:
+In the code you can translate using `translator.translate`, or the shortcut alias: `_`.
 
 ```js
-translator._('messages.coffe-machine.start');
+import { _ } from "../../Translator/Translator";
+
+console.log(_('messages.coffe-machine.start'));
 ```
 
 ### Add a key with parameters
@@ -99,7 +101,7 @@ Example:
 In the code you can use it like this:
 
 ```js
-translator._('messages.coffe-machine.player-start', {
+_('messages.coffe-machine.player-start', {
     playerName: "John"
 });
 ```

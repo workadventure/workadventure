@@ -4,7 +4,7 @@ import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import { translator } from "../../Translator/Translator";
+import { translator, _ } from "../../Translator/Translator";
 
 export const EntrySceneName = "EntryScene";
 
@@ -47,20 +47,20 @@ export class EntryScene extends Scene {
                         if (err.response && err.response.status == 404) {
                             ErrorScene.showError(
                                 new WAError(
-                                    translator._("error.access-link.title"),
-                                    translator._("error.access-link.sub-title"),
-                                    translator._("error.access-link.details")
+                                    _("error.access-link.title"),
+                                    _("error.access-link.sub-title"),
+                                    _("error.access-link.details")
                                 ),
                                 this.scene
                             );
                         } else if (err.response && err.response.status == 403) {
                             ErrorScene.showError(
                                 new WAError(
-                                    translator._("error.connection-rejected.title"),
-                                    translator._("error.connection-rejected.sub-title", {
+                                    _("error.connection-rejected.title"),
+                                    _("error.connection-rejected.sub-title", {
                                         error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
                                     }),
-                                    translator._("error.connection-rejected.details")
+                                    _("error.connection-rejected.details")
                                 ),
                                 this.scene
                             );

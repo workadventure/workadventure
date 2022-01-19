@@ -13,7 +13,7 @@
     import cinemaCloseImg from "../images/cinema-close.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
@@ -77,7 +77,7 @@
 
 <form class="enableCameraScene" on:submit|preventDefault={submit}>
     <section class="text-center">
-        <h2>{translator._("camera.enable.title")}</h2>
+        <h2>{_("camera.enable.title")}</h2>
     </section>
     {#if $localStreamStore.type === "success" && $localStreamStore.stream}
         <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
@@ -122,7 +122,7 @@
         {/if}
     </section>
     <section class="action">
-        <button type="submit" class="nes-btn is-primary letsgo">{translator._("camera.enable.start")}</button>
+        <button type="submit" class="nes-btn is-primary letsgo">{_("camera.enable.start")}</button>
     </section>
 </form>
 

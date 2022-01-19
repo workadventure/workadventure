@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     function copyLink() {
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
@@ -23,18 +23,14 @@
 <div class="guest-main">
     <section class="container-overflow">
         <section class="share-url not-mobile">
-            <h3>{translator._("menu.invite.description")}</h3>
+            <h3>{_("menu.invite.description")}</h3>
             <input type="text" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}
-                >{translator._("menu.invite.copy")}</button
-            >
+            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{_("menu.invite.copy")}</button>
         </section>
         <section class="is-mobile">
-            <h3>{translator._("menu.invite.description")}</h3>
+            <h3>{_("menu.invite.description")}</h3>
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}
-                >{translator._("menu.invite.share")}</button
-            >
+            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{_("menu.invite.share")}</button>
         </section>
     </section>
 </div>

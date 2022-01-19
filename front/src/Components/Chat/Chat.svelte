@@ -5,7 +5,7 @@
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -46,7 +46,7 @@
     <p class="close-icon" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
-            <li><p class="system-text">{translator._("chat.intro")}</p></li>
+            <li><p class="system-text">{_("chat.intro")}</p></li>
             {#each $chatMessagesStore as message, i}
                 <li><ChatElement {message} line={i} /></li>
             {/each}

@@ -226,7 +226,7 @@ class Translator {
      * @param {TranslationParams} params Tags to replace by value
      * @returns {string} Translation formatted
      */
-    public _(key: string, params?: TranslationParams): string {
+    public translate(key: string, params?: TranslationParams): string {
         const currentLanguageValue = this.getObjectValueByPath(key, this.currentLanguageObject);
 
         if (currentLanguageValue) {
@@ -251,3 +251,4 @@ class Translator {
 
 export const languages: LanguageFound[] = LANGUAGES;
 export const translator = new Translator();
+export const _ = translator.translate.bind(translator);

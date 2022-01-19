@@ -4,7 +4,7 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { isMobile } from "../../Enum/EnvironmentVariable";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
-    import { languages, translator } from "../../Translator/Translator";
+    import { languages, translator, _ } from "../../Translator/Translator";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -88,61 +88,61 @@
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
-        <h3>{translator._("menu.settings.game-quality.title")}</h3>
+        <h3>{_("menu.settings.game-quality.title")}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueGame}>
                 <option value={120}
                     >{isMobile()
-                        ? translator._("menu.settings.game-quality.short.high")
-                        : translator._("menu.settings.game-quality.long.high")}</option
+                        ? _("menu.settings.game-quality.short.high")
+                        : _("menu.settings.game-quality.long.high")}</option
                 >
                 <option value={60}
                     >{isMobile()
-                        ? translator._("menu.settings.game-quality.short.medium")
-                        : translator._("menu.settings.game-quality.long.medium")}</option
+                        ? _("menu.settings.game-quality.short.medium")
+                        : _("menu.settings.game-quality.long.medium")}</option
                 >
                 <option value={40}
                     >{isMobile()
-                        ? translator._("menu.settings.game-quality.short.minimum")
-                        : translator._("menu.settings.game-quality.long.minimum")}</option
+                        ? _("menu.settings.game-quality.short.minimum")
+                        : _("menu.settings.game-quality.long.minimum")}</option
                 >
                 <option value={20}
                     >{isMobile()
-                        ? translator._("menu.settings.game-quality.short.small")
-                        : translator._("menu.settings.game-quality.long.small")}</option
+                        ? _("menu.settings.game-quality.short.small")
+                        : _("menu.settings.game-quality.long.small")}</option
                 >
             </select>
         </div>
     </section>
     <section>
-        <h3>{translator._("menu.settings.video-quality.title")}</h3>
+        <h3>{_("menu.settings.video-quality.title")}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueVideo}>
                 <option value={30}
                     >{isMobile()
-                        ? translator._("menu.settings.video-quality.short.high")
-                        : translator._("menu.settings.video-quality.long.high")}</option
+                        ? _("menu.settings.video-quality.short.high")
+                        : _("menu.settings.video-quality.long.high")}</option
                 >
                 <option value={20}
                     >{isMobile()
-                        ? translator._("menu.settings.video-quality.short.medium")
-                        : translator._("menu.settings.video-quality.long.medium")}</option
+                        ? _("menu.settings.video-quality.short.medium")
+                        : _("menu.settings.video-quality.long.medium")}</option
                 >
                 <option value={10}
                     >{isMobile()
-                        ? translator._("menu.settings.video-quality.short.minimum")
-                        : translator._("menu.settings.video-quality.long.minimum")}</option
+                        ? _("menu.settings.video-quality.short.minimum")
+                        : _("menu.settings.video-quality.long.minimum")}</option
                 >
                 <option value={5}
                     >{isMobile()
-                        ? translator._("menu.settings.video-quality.short.small")
-                        : translator._("menu.settings.video-quality.long.small")}</option
+                        ? _("menu.settings.video-quality.short.small")
+                        : _("menu.settings.video-quality.long.small")}</option
                 >
             </select>
         </div>
     </section>
     <section>
-        <h3>{translator._("menu.settings.language.title")}</h3>
+        <h3>{_("menu.settings.language.title")}</h3>
         <div class="nes-select is-dark">
             <select class="languages-switcher" bind:value={valueLanguage}>
                 <!-- svelte-ignore missing-declaration -->
@@ -153,9 +153,9 @@
         </div>
     </section>
     <section class="settings-section-save">
-        <p>{translator._("menu.settings.save.warning")}</p>
+        <p>{_("menu.settings.save.warning")}</p>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
-            >{translator._("menu.settings.save.button")}</button
+            >{_("menu.settings.save.button")}</button
         >
     </section>
     <section class="settings-section-noSaveOption">
@@ -166,7 +166,7 @@
                 bind:checked={fullscreen}
                 on:change={changeFullscreen}
             />
-            <span>{translator._("menu.settings.fullscreen")}</span>
+            <span>{_("menu.settings.fullscreen")}</span>
         </label>
         <label>
             <input
@@ -175,7 +175,7 @@
                 bind:checked={notification}
                 on:change={changeNotification}
             />
-            <span>{translator._("menu.settings.notifications")}</span>
+            <span>{_("menu.settings.notifications")}</span>
         </label>
         <label>
             <input
@@ -184,7 +184,7 @@
                 bind:checked={forceCowebsiteTrigger}
                 on:change={changeForceCowebsiteTrigger}
             />
-            <span>{translator._("menu.settings.cowebsite-trigger")}</span>
+            <span>{_("menu.settings.cowebsite-trigger")}</span>
         </label>
         <label>
             <input
@@ -193,7 +193,7 @@
                 bind:checked={ignoreFollowRequests}
                 on:change={changeIgnoreFollowRequests}
             />
-            <span>{translator._("menu.settings.ignore-follow-request")}</span>
+            <span>{_("menu.settings.ignore-follow-request")}</span>
         </label>
     </section>
 </div>

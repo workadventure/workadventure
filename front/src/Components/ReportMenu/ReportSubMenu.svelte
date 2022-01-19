@@ -1,7 +1,7 @@
 <script lang="ts">
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let userUUID: string | undefined;
     let reportMessage: string;
@@ -23,20 +23,18 @@
 </script>
 
 <div class="report-container-main">
-    <h3>{translator._("report.title")}</h3>
-    <p>{translator._("report.message")}</p>
+    <h3>{_("report.title")}</h3>
+    <p>{_("report.message")}</p>
     <form>
         <section>
             <label>
-                <span>{translator._("report.message.title")}</span>
+                <span>{_("report.message.title")}</span>
                 <textarea type="text" class="nes-textarea" bind:value={reportMessage} />
             </label>
-            <p hidden={hiddenError}>{translator._("report.message.empty")}</p>
+            <p hidden={hiddenError}>{_("report.message.empty")}</p>
         </section>
         <section>
-            <button type="submit" class="nes-btn is-error" on:click={submitReport}
-                >{translator._("report.submit")}</button
-            >
+            <button type="submit" class="nes-btn is-error" on:click={submitReport}>{_("report.submit")}</button>
         </section>
     </form>
 </div>

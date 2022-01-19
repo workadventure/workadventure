@@ -1,7 +1,7 @@
 <script lang="typescript">
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let game: Game;
 
@@ -26,7 +26,7 @@
 
 <form class="selectCharacterScene">
     <section class="text-center">
-        <h2>{translator._("select-woka.title")}</h2>
+        <h2>{_("select-woka.title")}</h2>
         <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -38,12 +38,12 @@
         <button
             type="submit"
             class="selectCharacterSceneFormSubmit nes-btn is-primary"
-            on:click|preventDefault={cameraScene}>{translator._("select-woka.continue")}</button
+            on:click|preventDefault={cameraScene}>{_("select-woka.continue")}</button
         >
         <button
             type="submit"
             class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
-            on:click|preventDefault={customizeScene}>{translator._("select-woka.customize")}</button
+            on:click|preventDefault={customizeScene}>{_("select-woka.customize")}</button
         >
     </section>
 </form>

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export const handleForm = {
         blur() {
@@ -28,7 +28,7 @@
     <input
         type="text"
         bind:value={newMessageText}
-        placeholder={translator._("chat.enter")}
+        placeholder={_("chat.enter")}
         on:focus={onFocus}
         on:blur={onBlur}
         bind:this={inputElement}

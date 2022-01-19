@@ -3,7 +3,7 @@
     import megaphoneImg from "./images/megaphone.svg";
     import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
     import { afterUpdate } from "svelte";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let url: string;
     let audio: HTMLAudioElement;
@@ -19,7 +19,7 @@
 
 <div class="audio-playing" transition:fly={{ x: 210, duration: 500 }}>
     <img src={megaphoneImg} alt="Audio playing" />
-    <p>{translator._("audio.message")}</p>
+    <p>{_("audio.message")}</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded}>
         <track kind="captions" />
     </audio>

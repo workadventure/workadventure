@@ -1,6 +1,6 @@
 <script lang="ts">
     import { contactPageStore } from "../../Stores/MenuStore";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     function goToGettingStarted() {
         const sparkHost = "https://workadventu.re/getting-started";
@@ -16,18 +16,18 @@
 <div class="create-map-main">
     <section class="container-overflow">
         <section>
-            <h3>{translator._("menu.contact.getting-started.title")}</h3>
-            <p>{translator._("menu.contact.getting-started.description")}</p>
+            <h3>{_("menu.contact.getting-started.title")}</h3>
+            <p>{_("menu.contact.getting-started.description")}</p>
             <button type="button" class="nes-btn is-primary" on:click={goToGettingStarted}
-                >{translator._("menu.contact.getting-started.title")}</button
+                >{_("menu.contact.getting-started.title")}</button
             >
         </section>
 
         <section>
-            <h3>{translator._("menu.contact.create-map.title")}</h3>
-            <p>{translator._("menu.contact.create-map.description")}</p>
+            <h3>{_("menu.contact.create-map.title")}</h3>
+            <p>{_("menu.contact.create-map.description")}</p>
             <button type="button" class="nes-btn" on:click={goToBuildingMap}
-                >{translator._("menu.contact.create-map.title")}</button
+                >{_("menu.contact.create-map.title")}</button
             >
         </section>
 

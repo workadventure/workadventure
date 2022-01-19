@@ -9,7 +9,7 @@
     import { get } from "svelte/store";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -32,29 +32,19 @@
     {#if $limitMapStore}
         <img
             src={logoInvite}
-            alt={translator._("menu.icon.open.invite")}
+            alt={_("menu.icon.open.invite")}
             class="nes-pointer"
             on:click|preventDefault={showInvite}
         />
         <img
             src={logoRegister}
-            alt={translator._("menu.icon.open.register")}
+            alt={_("menu.icon.open.register")}
             class="nes-pointer"
             on:click|preventDefault={register}
         />
     {:else}
-        <img
-            src={logoWA}
-            alt={translator._("menu.icon.open.menu")}
-            class="nes-pointer"
-            on:click|preventDefault={showMenu}
-        />
-        <img
-            src={logoTalk}
-            alt={translator._("menu.icon.open.chat")}
-            class="nes-pointer"
-            on:click|preventDefault={showChat}
-        />
+        <img src={logoWA} alt={_("menu.icon.open.menu")} class="nes-pointer" on:click|preventDefault={showMenu} />
+        <img src={logoTalk} alt={_("menu.icon.open.chat")} class="nes-pointer" on:click|preventDefault={showChat} />
     {/if}
 </main>
 

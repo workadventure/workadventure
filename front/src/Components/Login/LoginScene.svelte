@@ -4,7 +4,7 @@
     import { DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let game: Game;
 
@@ -28,7 +28,7 @@
         <img src={logoImg} alt="WorkAdventure logo" />
     </section>
     <section class="text-center">
-        <h2>{translator._("login.input.name.placeholder")}</h2>
+        <h2>{_("login.input.name.placeholder")}</h2>
     </section>
     <!-- svelte-ignore a11y-autofocus -->
     <input
@@ -45,7 +45,7 @@
     />
     <section class="error-section">
         {#if name.trim() === "" && startValidating}
-            <p class="err">{translator._("login.input.name.empty")}</p>
+            <p class="err">{_("login.input.name.empty")}</p>
         {/if}
     </section>
 
@@ -53,12 +53,12 @@
         <section class="terms-and-conditions">
             <a style="display: none;" href="traduction">Need for traduction</a>
             <p>
-                {translator._("login.terms")}
+                {_("login.terms")}
             </p>
         </section>
     {/if}
     <section class="action">
-        <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{translator._("login.continue")}</button>
+        <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{_("login.continue")}</button>
     </section>
 </form>
 

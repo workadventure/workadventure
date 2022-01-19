@@ -18,7 +18,7 @@
     import { get } from "svelte/store";
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     let activeSubMenu: string = SubMenusInterface.profile;
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
@@ -92,7 +92,7 @@
 
     function translateMenuName(menuName: string) {
         const nameFormatted = "menu.sub." + menuName.toLowerCase().replaceAll(" ", "-");
-        const translation = translator._(nameFormatted);
+        const translation = _(nameFormatted);
 
         return translation === nameFormatted ? menuName : translation;
     }
@@ -102,7 +102,7 @@
 
 <div class="menu-container-main">
     <div class="menu-nav-sidebar nes-container is-rounded" transition:fly={{ x: -1000, duration: 500 }}>
-        <h2>{translator._("menu.title")}</h2>
+        <h2>{_("menu.title")}</h2>
         <nav>
             {#each $subMenusStore as submenu}
                 <button

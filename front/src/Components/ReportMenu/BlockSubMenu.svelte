@@ -2,7 +2,7 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { onMount } from "svelte";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     export let userUUID: string | undefined;
     export let userName: string;
@@ -30,10 +30,10 @@
 </script>
 
 <div class="block-container">
-    <h3>{translator._("report.block.title")}</h3>
-    <p>{translator._("report.block.content", { userName })}</p>
+    <h3>{_("report.block.title")}</h3>
+    <p>{_("report.block.content", { userName })}</p>
     <button type="button" class="nes-btn is-error" on:click|preventDefault={blockUser}>
-        {userIsBlocked ? translator._("report.block.unblock") : translator._("report.block.block")}
+        {userIsBlocked ? _("report.block.unblock") : _("report.block.block")}
     </button>
 </div>
 

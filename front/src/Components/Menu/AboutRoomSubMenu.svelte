@@ -1,7 +1,7 @@
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { onMount } from "svelte";
-    import { translator } from "../../Translator/Translator";
+    import { _ } from "../../Translator/Translator";
 
     let gameScene = gameManager.getCurrentGameScene();
 
@@ -12,7 +12,7 @@
     let mapName: string = "";
     let mapLink: string = "";
     let mapDescription: string = "";
-    let mapCopyright: string = translator._("menu.about.copyrights.map.empty");
+    let mapCopyright: string = _("menu.about.copyrights.map.empty");
     let tilesetCopyright: string[] = [];
     let audioCopyright: string[] = [];
 
@@ -63,37 +63,37 @@
 </script>
 
 <div class="about-room-main">
-    <h2>{translator._("menu.about.map-info")}</h2>
+    <h2>{_("menu.about.map-info")}</h2>
     <section class="container-overflow">
         <h3>{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
         {#if mapLink}
             <p class="string-HTML">
-                &gt; <a href={mapLink} target="_blank">{translator._("menu.about.map-link")}</a> &lt;
+                &gt; <a href={mapLink} target="_blank">{_("menu.about.map-link")}</a> &lt;
             </p>
         {/if}
         <h3 class="nes-pointer hoverable" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
-            {translator._("menu.about.copyrights.map.title")}
+            {_("menu.about.copyrights.map.title")}
         </h3>
         <p class="string-HTML" hidden={!expandedMapCopyright}>{mapCopyright}</p>
         <h3 class="nes-pointer hoverable" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
-            {translator._("menu.about.copyrights.tileset.title")}
+            {_("menu.about.copyrights.tileset.title")}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
             {#each tilesetCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
             {:else}
-                <p>{translator._("menu.about.copyrights.tileset.empty")}</p>
+                <p>{_("menu.about.copyrights.tileset.empty")}</p>
             {/each}
         </section>
         <h3 class="nes-pointer hoverable" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
-            {translator._("menu.about.copyrights.audio.title")}
+            {_("menu.about.copyrights.audio.title")}
         </h3>
         <section hidden={!expandedAudioCopyright}>
             {#each audioCopyright as copyright}
                 <p class="string-HTML">{copyright}</p>
             {:else}
-                <p>{translator._("menu.about.copyrights.audio.empty")}</p>
+                <p>{_("menu.about.copyrights.audio.empty")}</p>
             {/each}
         </section>
     </section>
