@@ -2,11 +2,13 @@ import { writable } from "svelte/store";
 import { playersStore } from "./PlayersStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
+import { Subject } from "rxjs";
 
 export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
 
-export const newChatMessageStore = writable<string | null>(null);
+const _newChatMessageSubject = new Subject<string>();
+export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export enum ChatMessageTypes {
     text = 1,
@@ -67,10 +69,9 @@ function createChatMessagesStore() {
             });
         },
         addPersonnalMessage(text: string) {
-            //post message iframe listener
             iframeListener.sendUserInputChat(text);
 
-            newChatMessageStore.set(text);
+            _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text) {
@@ -83,7 +84,6 @@ function createChatMessagesStore() {
                     });
                 }
 
-                iframeListener.sendUserInputChat(text);
                 return list;
             });
         },
