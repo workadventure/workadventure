@@ -4,7 +4,7 @@ export const isMovePlayerToEventConfig = new tg.IsInterface()
     .withProperties({
         x: tg.isNumber,
         y: tg.isNumber,
-        speed: tg.isNumber,
+        speed: tg.isOptional(tg.isNumber),
     })
     .get();
 

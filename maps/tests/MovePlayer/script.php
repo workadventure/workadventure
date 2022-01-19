@@ -8,11 +8,26 @@
             WA.onInit().then(() => {
                 console.log('After WA init');
                 const movePlayerButton = document.getElementById('movePlayerButton');
+                const randomChainedMovementButton = document.getElementById('randomChainedMovementButton');
                 const xField = document.getElementById('x');
                 const yField = document.getElementById('y');
                 const speedField = document.getElementById('speed');
 
-                movePlayerButton.addEventListener('click', async () => {
+                randomChainedMovementButton.addEventListener('click', async () => {
+                    let pos;
+                    pos = await WA.player.moveTo(100, 100, 10);
+                    console.log(pos);
+                    pos = await WA.player.moveTo(500, 100, 10);
+                    console.log(pos);
+                    pos = await WA.player.moveTo(500, 500, 10);
+                    console.log(pos);
+                    pos = await WA.player.moveTo(100, 500, 10);
+                    console.log(pos);
+                    pos = await WA.player.moveTo(100, 100, 10);
+                    console.log(pos);
+                });
+
+                movePlayerButton.addEventListener('click', async () => {                    
                     const position = await WA.player.moveTo(
                         parseInt(xField.value),
                         parseInt(yField.value),
@@ -30,6 +45,7 @@ Y: <input type="text" id="y" value="655" /><br/>
 Speed: <input type="text" id="speed" value="20" /><br/>
 
 <button id="movePlayerButton">Move Player</button>
+<button id="randomChainedMovementButton">Do random chained movement</button>
 
 </body>
 </html>

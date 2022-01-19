@@ -13,6 +13,7 @@ export const requestEmoteEventName = "requestEmote";
 export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
     private followingPathPromiseResolve?: (position: { x: number; y: number }) => void;
+    private pathWalkingSpeed?: number;
 
     constructor(
         Scene: GameScene,
@@ -70,13 +71,18 @@ export class Player extends Character {
         this.scene.connection?.emitFollowConfirmation();
     }
 
-    public async setPathToFollow(path: { x: number; y: number }[]): Promise<{ x: number; y: number }> {
+    public async setPathToFollow(path: { x: number; y: number }[], speed?: number): Promise<{ x: number; y: number }> {
         // take collider offset into consideraton
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
+        this.pathWalkingSpeed = speed;
         return new Promise((resolve) => {
             this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y });
             this.followingPathPromiseResolve = resolve;
         });
+    }
+
+    private deduceSpeed(speedUp: boolean, followMode: boolean): number {
+        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
@@ -101,8 +107,8 @@ export class Player extends Character {
 
         // Compute movement deltas
         const followMode = get(followStateStore) !== "off";
-        const speedup = activeEvents.get(UserInputEvent.SpeedUp) && !followMode ? 25 : 9;
-        const moveAmount = speedup * 20;
+        const speed = this.deduceSpeed(activeEvents.get(UserInputEvent.SpeedUp), followMode);
+        const moveAmount = speed * 20;
         x = x * moveAmount;
         y = y * moveAmount;
 
@@ -156,6 +162,7 @@ export class Player extends Character {
     private computeFollowPathMovement(): number[] {
         if (this.pathToFollow?.length === 0) {
             this.pathToFollow = undefined;
+            this.pathWalkingSpeed = undefined;
             this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y });
         }
         if (!this.pathToFollow) {

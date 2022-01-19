@@ -1467,8 +1467,7 @@ ${escapedMessage}
             const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
             const path = await this.getPathfindingManager().findPath(startTile, index, true, true);
             path.shift();
-            return this.CurrentPlayer.setPathToFollow(path);
-            // return position;
+            return this.CurrentPlayer.setPathToFollow(path, message.speed);
         });
     }
 
