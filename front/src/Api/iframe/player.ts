@@ -84,6 +84,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         });
     }
 
+    public async walkTo(x: number, y: number, speed: number): Promise<{ x: number; y: number }> {
+        return await queryWorkadventure({
+            type: "walkPlayerTo",
+            data: { x, y, speed },
+        });
+    }
+
     get userRoomToken(): string | undefined {
         if (userRoomToken === undefined) {
             throw new Error(

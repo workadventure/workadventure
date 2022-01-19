@@ -1456,6 +1456,15 @@ ${escapedMessage}
                 y: this.CurrentPlayer.y,
             };
         });
+
+        iframeListener.registerAnswerer("walkPlayerTo", () => {
+            // TODO: walk player to position, wait for promise to resolve
+            console.log("WALK PLAYER TO ACTION CALLED");
+            return {
+                x: this.CurrentPlayer.x,
+                y: this.CurrentPlayer.y,
+            };
+        });
     }
 
     private setPropertyLayer(
