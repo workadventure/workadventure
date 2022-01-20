@@ -461,6 +461,7 @@ message ServerToAdminClientMessage {
   oneof message {
     UserJoinedRoomMessage userJoinedRoom = 1;
     UserLeftRoomMessage userLeftRoom = 2;
+    ErrorMessage errorMessage = 3;
   }
 }
 

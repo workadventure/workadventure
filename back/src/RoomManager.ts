@@ -32,7 +32,7 @@ import {
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
-import { emitError, emitErrorOnRoomSocket, emitErrorOnZoneSocket } from "./Services/MessageHelpers";
+import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket, emitErrorOnZoneSocket } from "./Services/MessageHelpers";
 import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
@@ -253,7 +253,7 @@ const roomManager: IRoomManagerServer = {
                     }
                 }
             } catch (e) {
-                emitError(call, e);
+                emitErrorOnAdminSocket(call, e);
                 call.end();
             }
         });
