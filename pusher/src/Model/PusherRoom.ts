@@ -21,7 +21,7 @@ import {
     ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
-import { ClientReadableStream } from "grpc";
+import { ClientReadableStream } from "@grpc/grpc-js";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 
 const debug = Debug("room");

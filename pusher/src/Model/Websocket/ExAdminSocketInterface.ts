@@ -10,7 +10,7 @@ import {
     SubMessage,
 } from "../../Messages/generated/messages_pb";
 import { WebSocket } from "uWebSockets.js";
-import { ClientDuplexStream } from "grpc";
+import { ClientDuplexStream } from "@grpc/grpc-js";
 import { Zone } from "_Model/Zone";
 
 export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;

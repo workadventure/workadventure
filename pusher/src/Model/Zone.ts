@@ -19,7 +19,7 @@ import {
     PlayerDetailsUpdatedMessage,
     SetPlayerDetailsMessage,
 } from "../Messages/generated/messages_pb";
-import { ClientReadableStream } from "grpc";
+import { ClientReadableStream } from "@grpc/grpc-js";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
 import Debug from "debug";
 
