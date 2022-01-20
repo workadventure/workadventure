@@ -46,7 +46,11 @@ class UrlManager {
 
     public getStartLayerNameFromUrl(): string | null {
         const hash = window.location.hash;
-        return hash.length > 1 ? hash.substring(1) : null;
+        let layerName = null;
+        if (hash.length > 1) {
+            layerName = hash.includes("&") ? hash.split("&")[0].substring(1) : hash.substring(1);
+        }
+        return layerName;
     }
 
     public getHashParameter(name: string): string | undefined {
