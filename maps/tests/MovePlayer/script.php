@@ -14,28 +14,14 @@
                 const speedField = document.getElementById('speed');
 
                 randomChainedMovementButton.addEventListener('click', async () => {
-                    try {
-                        WA.player.moveTo(100, 100, 10).then((result) => {
-                            if (result.cancelled) {
-                                return;
-                            }
-                            console.log(result);
-                            WA.player.moveTo(500, 100, 20).then((result) => {
-                                if (result.cancelled) {
-                                    return;
-                                }
-                                console.log(result);
-                                WA.player.moveTo(500, 500, 10).then((result) => {
-                                    if (result.cancelled) {
-                                        return;
-                                    }
-                                    console.log(result);
-                                });
-                            });
-                        });
-                    } catch (err) {
-                        console.log('movement was stopped forcefully');
-                    }
+                    WA.player.moveTo(500, 500, 10)
+                    const result = await WA.player.moveTo(100, 100, 10).then((result) => {
+                    if (result.completed)
+                        if (result.cancelled) {
+                            return;
+                        }
+                        WA.player.moveTo(500, 100, 20);
+                    });
                 });
 
                 movePlayerButton.addEventListener('click', async () => {                    

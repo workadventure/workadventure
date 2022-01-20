@@ -188,10 +188,20 @@ You can also chain movement like this:
 await WA.player.moveTo(250, 250, 10);
 await WA.player.moveTo(500, 0, 10);
 ```
-It is possible to get the information about current player's position on stop or when movement is interrupted
+Or like this:
 ```typescript
-// Position will store x and y of Player at the moment of movement's end
-const position = await WA.player.moveTo(250, 250, 10);
+// Player will move to the next point after reaching first one or stop if the movement was cancelled
+WA.player.moveTo(250, 250, 10).then((result) => {
+    if (!result.cancelled) {
+        WA.player.moveTo(500, 0, 10);
+    }
+});
+```
+It is possible to get the information about current player's position on stop and if the movement was interrupted
+```typescript
+// Result will store x and y of Player at the moment of movement's end and information if the movement was interrupted
+const result = await WA.player.moveTo(250, 250, 10);
+// result: { x: number, y: number, cancelled: boolean }
 ```
 
 ### Set the outline color of the player
