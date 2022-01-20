@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "proto": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --grpc_out=generated --js_out=\"import_style=commonjs,binary:generated\" --ts_out=generated -I ./protos protos/*.proto",
+    "proto": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --grpc_out=grpc_js:generated --js_out=\"import_style=commonjs,binary:generated\" --ts_out=grpc_js:generated -I ./protos protos/*.proto",
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=ts-proto-generated --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true protos/*.proto",
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
     "copy-to-front-ts-proto": "sed 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ts-proto-generated/protos/messages.ts > ../front/src/Messages/ts-proto-generated/messages.ts",
@@ -19,7 +19,7 @@
   "dependencies": {
     "generic-type-guard": "^3.5.0",
     "google-protobuf": "^3.13.0",
-    "grpc": "^1.24.4",
+    "@grpc/grpc-js": "^1.5.2",
     "ts-proto": "^1.96.0"
   },
   "devDependencies": {
@@ -33,7 +33,7 @@
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-sonarjs": "^0.5.0",
     "grpc-tools": "^1.9.1",
-    "grpc_tools_node_protoc_ts": "^5.0.1",
+    "grpc_tools_node_protoc_ts": "^5.3.2",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
     "protobufjs": "^6.10.1",
