@@ -30,7 +30,7 @@ import {
     WorldFullWarningToRoomMessage,
     ZoneMessage,
 } from "./Messages/generated/messages_pb";
-import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
+import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
 import { emitError, emitErrorOnRoomSocket, emitErrorOnZoneSocket } from "./Services/MessageHelpers";
 import { User, UserSocket } from "./Model/User";
@@ -45,7 +45,7 @@ export type ZoneSocket = ServerWritableStream<ZoneMessage, BatchToPusherMessage>
 export type RoomSocket = ServerWritableStream<RoomMessage, BatchToPusherRoomMessage>;
 
 const roomManager: IRoomManagerServer = {
-    joinRoom: (call: UserSocket): void => {
+    joinRoom(call: UserSocket): void {
         console.log("joinRoom called");
 
         let room: GameRoom | null = null;
@@ -271,7 +271,7 @@ const roomManager: IRoomManagerServer = {
             console.error("An error occurred in joinAdminRoom stream:", err);
         });
     },
-    sendAdminMessage(call: ServerUnaryCall<AdminMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendAdminMessage(call: ServerUnaryCall<AdminMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
         socketManager
             .sendAdminMessage(
                 call.request.getRoomid(),
@@ -283,12 +283,12 @@ const roomManager: IRoomManagerServer = {
 
         callback(null, new EmptyMessage());
     },
-    sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
         throw new Error("Not implemented yet");
         // TODO
         callback(null, new EmptyMessage());
     },
-    ban(call: ServerUnaryCall<BanMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    ban(call: ServerUnaryCall<BanMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
         // FIXME Work in progress
         socketManager
             .banUser(call.request.getRoomid(), call.request.getRecipientuuid(), call.request.getMessage())
@@ -296,7 +296,7 @@ const roomManager: IRoomManagerServer = {
 
         callback(null, new EmptyMessage());
     },
-    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager
             .sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage(), call.request.getType())
@@ -304,7 +304,7 @@ const roomManager: IRoomManagerServer = {
         callback(null, new EmptyMessage());
     },
     sendWorldFullWarningToRoom(
-        call: ServerUnaryCall<WorldFullWarningToRoomMessage>,
+        call: ServerUnaryCall<WorldFullWarningToRoomMessage, EmptyMessage>,
         callback: sendUnaryData<EmptyMessage>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
@@ -312,7 +312,7 @@ const roomManager: IRoomManagerServer = {
         callback(null, new EmptyMessage());
     },
     sendRefreshRoomPrompt(
-        call: ServerUnaryCall<RefreshRoomPromptMessage>,
+        call: ServerUnaryCall<RefreshRoomPromptMessage, EmptyMessage>,
         callback: sendUnaryData<EmptyMessage>
     ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message

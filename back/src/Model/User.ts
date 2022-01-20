@@ -3,7 +3,7 @@ import { PointInterface } from "./Websocket/PointInterface";
 import { Zone } from "_Model/Zone";
 import { Movable } from "_Model/Movable";
 import { PositionNotifier } from "_Model/PositionNotifier";
-import { ServerDuplexStream } from "grpc";
+import { ServerDuplexStream } from "@grpc/grpc-js";
 import {
     BatchMessage,
     CompanionMessage,
