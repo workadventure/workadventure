@@ -1,4 +1,4 @@
-FROM node:14.15.4-buster-slim@sha256:cbae886186467bbfd274b82a234a1cdfbbd31201c2a6ee63a6893eefcf3c6e76 as builder
+FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as builder
 WORKDIR /usr/src
 COPY messages .
 RUN yarn install && yarn ts-proto

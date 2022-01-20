@@ -14,7 +14,7 @@ export async function assertLogMessage(t: TestController, message: string): Prom
         }
         await t.wait(1000);
         i++;
-    } while (i < 10);
+    } while (i < 30);
 
     await t.expect(logs).contains(message);
 }
