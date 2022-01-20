@@ -49,6 +49,14 @@ class UrlManager {
         return hash.length > 1 ? hash.substring(1) : null;
     }
 
+    public getHashParameters(): Record<string, string> {
+        return window.location.hash.split("&").reduce((res: Record<string, string>, item: string) => {
+            const parts = item.split("=");
+            res[parts[0]] = parts[1];
+            return res;
+        }, {});
+    }
+
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
     }
