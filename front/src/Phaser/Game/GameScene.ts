@@ -559,6 +559,12 @@ export class GameScene extends DirtyScene {
                 .catch((e) => console.error(e));
         }
 
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getTileDimensions()
+        );
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
@@ -569,11 +575,6 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
-        this.pathfindingManager = new PathfindingManager(
-            this,
-            this.gameMap.getCollisionsGrid(),
-            this.gameMap.getTileDimensions()
-        );
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -1725,6 +1726,18 @@ ${escapedMessage}
                 this.connection?.emitEmoteEvent(emoteKey);
                 analyticsClient.launchEmote(emoteKey);
             });
+            const moveToParam = urlManager.getHashParameter("moveTo");
+            if (moveToParam) {
+                const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                this.pathfindingManager
+                    .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
+                    .then((path) => {
+                        if (path && path.length > 0) {
+                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                        }
+                    })
+                    .catch((reason) => console.warn(reason));
+            }
         } catch (err) {
             if (err instanceof TextureError) {
                 gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
