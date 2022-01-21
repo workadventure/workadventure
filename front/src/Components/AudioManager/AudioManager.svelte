@@ -5,7 +5,7 @@
     import { get } from "svelte/store";
     import type { Unsubscriber } from "svelte/store";
     import { onDestroy, onMount } from "svelte";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let audioPlayerVolumeIcon: HTMLElement;
@@ -145,7 +145,7 @@
     </div>
     <div class="audio-manager-reduce-conversation">
         <label>
-            {_("audio.manager.reduce")}
+            {$LL.audio.manager.reduce()}
             <input type="checkbox" bind:checked={decreaseWhileTalking} on:change={setDecrease} />
         </label>
         <section class="audio-manager-file">

@@ -1,6 +1,6 @@
 <script lang="ts">
+    import LL from "../../i18n/i18n-svelte";
     import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
-    import { _ } from "../../Translator/Translator";
 
     export const handleForm = {
         blur() {
@@ -28,7 +28,7 @@
     <input
         type="text"
         bind:value={newMessageText}
-        placeholder={_("chat.enter")}
+        placeholder={$LL.chat.enter()}
         on:focus={onFocus}
         on:blur={onBlur}
         bind:this={inputElement}

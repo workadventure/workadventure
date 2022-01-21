@@ -9,7 +9,7 @@
     import { get } from "svelte/store";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -32,19 +32,19 @@
     {#if $limitMapStore}
         <img
             src={logoInvite}
-            alt={_("menu.icon.open.invite")}
+            alt={$LL.menu.icon.open.invite()}
             class="nes-pointer"
             on:click|preventDefault={showInvite}
         />
         <img
             src={logoRegister}
-            alt={_("menu.icon.open.register")}
+            alt={$LL.menu.icon.open.register()}
             class="nes-pointer"
             on:click|preventDefault={register}
         />
     {:else}
-        <img src={logoWA} alt={_("menu.icon.open.menu")} class="nes-pointer" on:click|preventDefault={showMenu} />
-        <img src={logoTalk} alt={_("menu.icon.open.chat")} class="nes-pointer" on:click|preventDefault={showChat} />
+        <img src={logoWA} alt={$LL.menu.icon.open.menu()} class="nes-pointer" on:click|preventDefault={showMenu} />
+        <img src={logoTalk} alt={$LL.menu.icon.open.chat()} class="nes-pointer" on:click|preventDefault={showChat} />
     {/if}
 </main>
 

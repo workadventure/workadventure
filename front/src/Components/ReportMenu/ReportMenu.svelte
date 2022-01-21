@@ -7,7 +7,7 @@
     import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     let blockActive = true;
     let reportActive = !blockActive;
@@ -60,7 +60,7 @@
 
 <div class="report-menu-main nes-container is-rounded">
     <section class="report-menu-title">
-        <h2>{_("moderate.title", { userName })}</h2>
+        <h2>{$LL.report.moderate.title({ userName })}</h2>
         <section class="justify-center">
             <button type="button" class="nes-btn" on:click|preventDefault={close}>X</button>
         </section>
@@ -70,14 +70,14 @@
             <button
                 type="button"
                 class="nes-btn {blockActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateBlock}>{_("moderate.block")}</button
+                on:click|preventDefault={activateBlock}>{$LL.report.moderate.block()}</button
             >
         </section>
         <section class="justify-center">
             <button
                 type="button"
                 class="nes-btn {reportActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateReport}>{_("moderate.report")}</button
+                on:click|preventDefault={activateReport}>{$LL.report.moderate.report()}</button
             >
         </section>
     </section>
@@ -87,7 +87,7 @@
         {:else if reportActive}
             <ReportSubMenu {userUUID} />
         {:else}
-            <p>{_("moderate.no-select")}</p>
+            <p>{$LL.report.moderate.noSelect()}</p>
         {/if}
     </section>
 </div>

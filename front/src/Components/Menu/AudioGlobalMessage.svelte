@@ -4,7 +4,7 @@
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import uploadFile from "../images/music-file.svg";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -77,7 +77,7 @@
     <img
         class="nes-pointer"
         src={uploadFile}
-        alt={_("menu.global-audio.upload-info")}
+        alt={$LL.menu.globalAudio.uploadInfo()}
         on:click|preventDefault={() => {
             fileInput.click();
         }}
@@ -86,7 +86,7 @@
         <p>{fileName} : {fileSize}</p>
     {/if}
     {#if errorFile}
-        <p class="err">{_("menu.global-audio.error")}</p>
+        <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
     <input
         type="file"

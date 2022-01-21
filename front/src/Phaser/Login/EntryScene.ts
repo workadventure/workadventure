@@ -4,7 +4,11 @@ import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import { translator, _ } from "../../Translator/Translator";
+import LL from "../../i18n/i18n-svelte";
+import { get } from "svelte/store";
+import { localeDetector } from "../../i18n/locales";
+
+const $LL = get(LL);
 
 export const EntrySceneName = "EntryScene";
 
@@ -25,16 +29,11 @@ export class EntryScene extends Scene {
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(ReconnectingTextures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
         this.load.spritesheet("cat", "resources/characters/pipoya/Cat 01-1.png", { frameWidth: 32, frameHeight: 32 });
-        translator.loadCurrentLanguageFile(this.load);
     }
 
     create() {
-        translator
-            .loadCurrentLanguageObject(this.cache)
-            .catch((e: unknown) => {
-                console.error("Error during language loading!", e);
-            })
-            .finally(() => {
+        localeDetector()
+            .then(() => {
                 gameManager
                     .init(this.scene)
                     .then((nextSceneName) => {
@@ -47,20 +46,20 @@ export class EntryScene extends Scene {
                         if (err.response && err.response.status == 404) {
                             ErrorScene.showError(
                                 new WAError(
-                                    _("error.access-link.title"),
-                                    _("error.access-link.sub-title"),
-                                    _("error.access-link.details")
+                                    $LL.error.accessLink.title(),
+                                    $LL.error.accessLink.subTitle(),
+                                    $LL.error.accessLink.details()
                                 ),
                                 this.scene
                             );
                         } else if (err.response && err.response.status == 403) {
                             ErrorScene.showError(
                                 new WAError(
-                                    _("error.connection-rejected.title"),
-                                    _("error.connection-rejected.sub-title", {
+                                    $LL.error.connectionRejected.title(),
+                                    $LL.error.connectionRejected.subTitle({
                                         error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
                                     }),
-                                    _("error.connection-rejected.details")
+                                    $LL.error.connectionRejected.details()
                                 ),
                                 this.scene
                             );
@@ -68,6 +67,9 @@ export class EntryScene extends Scene {
                             ErrorScene.showError(err, this.scene);
                         }
                     });
+            })
+            .catch(() => {
+                throw new Error("Cannot load locale!");
             });
     }
 }

@@ -4,7 +4,7 @@
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy } from "svelte";
     import { srcObject } from "./Video/utils";
-    import { _ } from "../Translator/Translator";
+    import LL from "../i18n/i18n-svelte";
 
     let stream: MediaStream | null;
 
@@ -33,5 +33,5 @@
             <SoundMeterWidget {stream} />
         {/if}
     </div>
-    <div class="is-silent" class:hide={isSilent}>{_("camera.my.silent-zone")}</div>
+    <div class="is-silent" class:hide={isSilent}>{$LL.camera.my.silentZone()}</div>
 </div>

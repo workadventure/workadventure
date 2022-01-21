@@ -1,6 +1,6 @@
 <script lang="ts">
     import { errorStore, hasClosableMessagesInErrorStore } from "../../Stores/ErrorStore";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     function close(): boolean {
         errorStore.clearClosableMessages();
@@ -9,7 +9,7 @@
 </script>
 
 <div class="error-div nes-container is-dark is-rounded" open>
-    <p class="nes-text is-error title">{_("error.error")}</p>
+    <p class="nes-text is-error title">{$LL.error.error()}</p>
     <div class="body">
         {#each $errorStore as error}
             <p>{error.message}</p>

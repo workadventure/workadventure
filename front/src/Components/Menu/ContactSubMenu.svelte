@@ -1,6 +1,6 @@
 <script lang="ts">
+    import LL from "../../i18n/i18n-svelte";
     import { contactPageStore } from "../../Stores/MenuStore";
-    import { _ } from "../../Translator/Translator";
 
     function goToGettingStarted() {
         const sparkHost = "https://workadventu.re/getting-started";
@@ -16,18 +16,18 @@
 <div class="create-map-main">
     <section class="container-overflow">
         <section>
-            <h3>{_("menu.contact.getting-started.title")}</h3>
-            <p>{_("menu.contact.getting-started.description")}</p>
+            <h3>{$LL.menu.contact.gettingStarted.title()}</h3>
+            <p>{$LL.menu.contact.gettingStarted.description()}</p>
             <button type="button" class="nes-btn is-primary" on:click={goToGettingStarted}
-                >{_("menu.contact.getting-started.title")}</button
+                >{$LL.menu.contact.gettingStarted.title()}</button
             >
         </section>
 
         <section>
-            <h3>{_("menu.contact.create-map.title")}</h3>
-            <p>{_("menu.contact.create-map.description")}</p>
+            <h3>{$LL.menu.contact.createMap.title()}</h3>
+            <p>{$LL.menu.contact.createMap.description()}</p>
             <button type="button" class="nes-btn" on:click={goToBuildingMap}
-                >{_("menu.contact.create-map.title")}</button
+                >{$LL.menu.contact.createMap.title()}</button
             >
         </section>
 

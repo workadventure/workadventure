@@ -7,10 +7,6 @@ import sveltePreprocess from "svelte-preprocess";
 import type { Configuration } from "webpack";
 import webpack from "webpack";
 import type WebpackDevServer from "webpack-dev-server";
-import { fallbackLanguageObject, languages } from "./src/Translator/TranslationCompiler";
-import type { LanguageFound } from "./src/Translator/TranslationCompiler";
-
-const MergeJsonWebpackPlugin = require("merge-jsons-webpack-plugin");
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -220,23 +216,6 @@ module.exports = {
             DISABLE_ANONYMOUS: false,
             OPID_LOGIN_SCREEN_PROVIDER: null,
             FALLBACK_LANGUAGE: null,
-        }),
-        new webpack.DefinePlugin({
-            FALLBACK_LANGUAGE_OBJECT: JSON.stringify(fallbackLanguageObject),
-            LANGUAGES: JSON.stringify(languages),
-        }),
-        new MergeJsonWebpackPlugin({
-            output: {
-                groupBy: languages.map((language: LanguageFound) => {
-                    return {
-                        pattern: `./translations/**/*.${language.id}.json`,
-                        fileName: `./resources/translations/${language.id}.json`
-                    };
-                })
-            },
-            globOptions: {
-                nosort: true,
-            },
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

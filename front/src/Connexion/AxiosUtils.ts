@@ -1,7 +1,8 @@
 import axios from "axios";
 import * as rax from "retry-axios";
 import { errorStore } from "../Stores/ErrorStore";
-import { _ } from "../Translator/Translator";
+import LL from "../i18n/i18n-svelte";
+import { get } from "svelte/store";
 
 /**
  * This instance of Axios will retry in case of an issue and display an error message as a HTML overlay.
@@ -27,13 +28,10 @@ axiosWithRetry.defaults.raxConfig = {
         console.log(err);
         console.log(cfg);
         console.log(`Retry attempt #${cfg?.currentRetryAttempt} on URL '${err.config.url}'`);
-        errorStore.addErrorMessage(
-            _("error.connection-retry.unable-to-connect-to-workAdventure-are-you-connected-to-internet"),
-            {
-                closable: false,
-                id: "axios_retry",
-            }
-        );
+        errorStore.addErrorMessage(get(LL).error.connectionRetry.unableConnect(), {
+            closable: false,
+            id: "axios_retry",
+        });
     },
 };
 

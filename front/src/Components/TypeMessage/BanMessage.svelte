@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     export let message: Message;
 
@@ -39,7 +39,7 @@
 >
     <h2 class="title-ban-message">
         <img src="resources/logos/report.svg" alt="***" />
-        {_("important-message")}
+        {$LL.warning.importantMessage()}
         <img src="resources/logos/report.svg" alt="***" />
     </h2>
     <div class="content-ban-message">

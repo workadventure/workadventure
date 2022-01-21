@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     function copyLink() {
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
@@ -23,14 +23,14 @@
 <div class="guest-main">
     <section class="container-overflow">
         <section class="share-url not-mobile">
-            <h3>{_("menu.invite.description")}</h3>
+            <h3>{$LL.menu.invite.description()}</h3>
             <input type="text" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{_("menu.invite.copy")}</button>
+            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
         </section>
         <section class="is-mobile">
-            <h3>{_("menu.invite.description")}</h3>
+            <h3>{$LL.menu.invite.description()}</h3>
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{_("menu.invite.share")}</button>
+            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
     </section>
 </div>

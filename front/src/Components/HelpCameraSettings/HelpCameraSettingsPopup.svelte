@@ -4,7 +4,7 @@
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
-    import { _ } from "../../Translator/Translator";
+    import LL from "../../i18n/i18n-svelte";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -25,13 +25,13 @@
     transition:fly={{ y: -900, duration: 500 }}
 >
     <section>
-        <h2>{_("camera.help.title")}</h2>
-        <p class="err">{_("camera.help.permission-denied")}</p>
-        <p>{_("camera.help.content")}</p>
+        <h2>{$LL.camera.help.title()}</h2>
+        <p class="err">{$LL.camera.help.permissionDenied()}</p>
+        <p>{$LL.camera.help.content()}</p>
         <p>
             {#if isFirefox}
                 <p class="err">
-                    {_("camera.help.firefox-content")}
+                    {$LL.camera.help.firefoxContent()}
                 </p>
                 <img src={firefoxImg} alt="" />
             {:else if isChrome && !isAndroid}
@@ -41,10 +41,10 @@
     </section>
     <section>
         <button class="helpCameraSettingsFormRefresh nes-btn" on:click|preventDefault={refresh}
-            >{_("camera.help.refresh")}</button
+            >{$LL.camera.help.refresh()}</button
         >
         <button type="submit" class="helpCameraSettingsFormContinue nes-btn is-primary" on:click|preventDefault={close}
-            >{_("camera.help.continue")}</button
+            >{$LL.camera.help.continue()}</button
         >
     </section>
 </form>
