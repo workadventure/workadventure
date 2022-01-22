@@ -6,20 +6,23 @@ export class PathfindingManager {
 
     private easyStar;
     private grid: number[][];
+    private tileDimensions: { width: number; height: number };
 
-    constructor(scene: Phaser.Scene, collisionsGrid: number[][]) {
+    constructor(scene: Phaser.Scene, collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
         this.scene = scene;
 
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
 
         this.grid = collisionsGrid;
+        this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
     }
 
     public async findPath(
         start: { x: number; y: number },
         end: { x: number; y: number },
+        measuredInPixels: boolean = true,
         tryFindingNearestAvailable: boolean = false
     ): Promise<{ x: number; y: number }[]> {
         let endPoints: { x: number; y: number }[] = [end];
@@ -48,10 +51,19 @@ export class PathfindingManager {
             // rejected Promise will return undefined for path
             path = await this.getPath(start, endPoint).catch();
             if (path && path.length > 0) {
-                return path;
+                return measuredInPixels ? this.mapTileUnitsToPixels(path) : path;
             }
         }
         return [];
+    }
+
+    private mapTileUnitsToPixels(path: { x: number; y: number }[]): { x: number; y: number }[] {
+        return path.map((step) => {
+            return {
+                x: step.x * this.tileDimensions.width + this.tileDimensions.width * 0.5,
+                y: step.y * this.tileDimensions.height + this.tileDimensions.height * 0.5,
+            };
+        });
     }
 
     private getNeighbouringTiles(tile: { x: number; y: number }): { x: number; y: number }[] {

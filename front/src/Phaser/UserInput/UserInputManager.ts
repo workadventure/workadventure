@@ -54,7 +54,7 @@ export class UserInputManager {
     private scene: Phaser.Scene;
     private isInputDisabled: boolean;
 
-    private joystick!: MobileJoystick;
+    private joystick?: MobileJoystick;
     private joystickEvents = new ActiveEventList();
     private joystickForceThreshold = 60;
     private joystickForceAccuX = 0;
@@ -81,9 +81,9 @@ export class UserInputManager {
     initVirtualJoystick() {
         this.joystick = new MobileJoystick(this.scene);
         this.joystick.on("update", () => {
-            this.joystickForceAccuX = this.joystick.forceX ? this.joystickForceAccuX : 0;
-            this.joystickForceAccuY = this.joystick.forceY ? this.joystickForceAccuY : 0;
-            const cursorKeys = this.joystick.createCursorKeys();
+            this.joystickForceAccuX = this.joystick?.forceX ? this.joystickForceAccuX : 0;
+            this.joystickForceAccuY = this.joystick?.forceY ? this.joystickForceAccuY : 0;
+            const cursorKeys = this.joystick?.createCursorKeys();
             for (const name in cursorKeys) {
                 const key = cursorKeys[name as Direction];
                 switch (name) {
@@ -192,7 +192,7 @@ export class UserInputManager {
             return eventsMap;
         }
         this.joystickEvents.forEach((value, key) => {
-            if (value) {
+            if (value && this.joystick) {
                 switch (key) {
                     case UserInputEvent.MoveUp:
                     case UserInputEvent.MoveDown:
@@ -253,7 +253,7 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_UP,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                this.joystick.hide();
+                this.joystick?.hide();
                 this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
             }
         );
@@ -267,9 +267,9 @@ export class UserInputManager {
                 this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
                 // Let's only display the joystick if there is one finger on the screen
                 if ((pointer.event as TouchEvent).touches.length === 1) {
-                    this.joystick.showAt(pointer.x, pointer.y);
+                    this.joystick?.showAt(pointer.x, pointer.y);
                 } else {
-                    this.joystick.hide();
+                    this.joystick?.hide();
                 }
             }
         );

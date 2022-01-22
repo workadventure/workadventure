@@ -569,7 +569,11 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
-        this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getTileDimensions()
+        );
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -1455,6 +1459,17 @@ ${escapedMessage}
                 x: this.CurrentPlayer.x,
                 y: this.CurrentPlayer.y,
             };
+        });
+
+        iframeListener.registerAnswerer("movePlayerTo", async (message) => {
+            const index = this.getGameMap().getTileIndexAt(message.x, message.y);
+            const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+            const path = await this.getPathfindingManager().findPath(startTile, index, true, true);
+            path.shift();
+            if (path.length === 0) {
+                throw new Error("no path available");
+            }
+            return this.CurrentPlayer.setPathToFollow(path, message.speed);
         });
     }
 
