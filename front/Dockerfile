@@ -10,7 +10,7 @@ COPY front .
 # move messages to front
 RUN cp -r ../messages/ts-proto-generated/protos/* src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/messages.ts
-RUN cp -r ../messages/JsonMessages src/Messages/JsonMessages
+RUN cp -r ../messages/JsonMessages/* src/Messages/JsonMessages
 
 RUN yarn install && yarn build
 
