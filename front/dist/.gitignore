@@ -1,3 +1,4 @@
 index.html
 /js/
 style.*.css
+!env-config.template.js
