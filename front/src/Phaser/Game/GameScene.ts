@@ -1463,7 +1463,6 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
-            // TODO: walk player to position, wait for promise to resolve
             const index = this.getGameMap().getTileIndexAt(message.x, message.y);
             const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
             const path = await this.getPathfindingManager().findPath(startTile, index, true, true);

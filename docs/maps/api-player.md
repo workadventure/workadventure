@@ -175,7 +175,7 @@ WA.player.state.toto //will retrieve the variable
 
 ### Move player to position
 ```typescript
-WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number }>;
+WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
 ```
 Player will try to find shortest path to the destination point and proceed to move there.
 ```typescript
