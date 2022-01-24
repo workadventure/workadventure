@@ -65,3 +65,20 @@ How to use entry point :
 
 *   To enter via this entry point, simply add a hash with the entry point name to the URL ("#[_entryPointName_]"). For instance: "`https://workadventu.re/_/global/mymap.com/path/map.json#my-entry-point`".
 *   You can of course use the "#" notation in an exit scene URL (so an exit scene URL will point to a given entry scene URL)
+
+## Defining destination point with moveTo parameter
+
+We are able to direct WOKA to the desired place immediately after spawn. To make users spawn on entry point and the go to the, for example, meeting room automatically, simply add `moveTo` as an additional parameter of URL:
+
+*Use default entry point*
+```
+.../my_map.json#&moveTo=exit
+```
+*Define entry point and moveTo parameter*
+```
+.../my_map.json#start&moveTo=meeting-room
+```
+
+For this to work, moveTo must be equal to the layer name of interest. This layer should have at least one tile defined. In case of layer having many tiles, user will go to one of them, randomly selected.
+
+![](images/moveTo-layer-example.png)

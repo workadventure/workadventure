@@ -1727,15 +1727,19 @@ ${escapedMessage}
             });
             const moveToParam = urlManager.getHashParameter("moveTo");
             if (moveToParam) {
-                const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
-                this.pathfindingManager
-                    .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
-                    .then((path) => {
-                        if (path && path.length > 0) {
-                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                        }
-                    })
-                    .catch((reason) => console.warn(reason));
+                try {
+                    const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                    this.pathfindingManager
+                        .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
+                        .then((path) => {
+                            if (path && path.length > 0) {
+                                this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                            }
+                        })
+                        .catch((reason) => console.warn(reason));
+                } catch (err) {
+                    console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+                }
             }
         } catch (err) {
             if (err instanceof TextureError) {
