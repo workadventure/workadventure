@@ -5,8 +5,8 @@ declare global {
 }
 
 const getEnv = (key: string): string | undefined => {
-    if (!global.window || !global.window.env) {
-        return;
+    if (global.process?.env) {
+        return global.process.env[key];
     }
     const value = global.window.env[key];
     if (value === "") {
