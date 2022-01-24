@@ -5,14 +5,13 @@ declare global {
 }
 
 const getEnv = (key: string): string | undefined => {
+    if (global.window?.env) {
+        return global.window.env[key];
+    }
     if (global.process?.env) {
         return global.process.env[key];
     }
-    const value = global.window.env[key];
-    if (value === "") {
-        return;
-    }
-    return value;
+    return;
 };
 
 const DEBUG_MODE: boolean = getEnv("DEBUG_MODE") == "true";
