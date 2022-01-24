@@ -88,6 +88,11 @@ export abstract class Character extends Container {
             fontSize: "8px",
             strokeThickness: 2,
             stroke: "gray",
+            metrics: {
+                ascent: 20,
+                descent: 10,
+                fontSize: 35,
+            },
         });
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
