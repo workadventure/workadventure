@@ -5,10 +5,10 @@ declare global {
 }
 
 const getEnv = (key: string): string | undefined => {
-    if (!window.env) {
+    if (!global.window || !global.window.env) {
         return;
     }
-    const value = window.env[key];
+    const value = global.window.env[key];
     if (value === "") {
         return;
     }
