@@ -2,7 +2,7 @@ import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
 import { Character } from "../Entity/Character";
 import type { PlayerAnimationDirections } from "../Player/Animation";
-import { requestVisitCardsStore } from "../../Stores/GameStore";
+import { requestVisitCardsStore, requestActionsMenuStore } from "../../Stores/GameStore";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -44,7 +44,8 @@ export class RemotePlayer extends Character {
 
         this.on("pointerdown", (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS") {
-                requestVisitCardsStore.set(this.visitCardUrl);
+                // requestVisitCardsStore.set(this.visitCardUrl);
+                requestActionsMenuStore.set(true);
             }
         });
     }
