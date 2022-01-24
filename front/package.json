@@ -82,7 +82,7 @@
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\"",
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
-    "typesafe-i18n": "typesafe-i18n"
+    "typesafe-i18n": "typesafe-i18n  --no-watch"
   },
   "lint-staged": {
     "*.svelte": [
