@@ -5,6 +5,7 @@ export const isGameStateEvent = new tg.IsInterface()
         roomId: tg.isString,
         mapUrl: tg.isString,
         nickname: tg.isString,
+        language: tg.isUnion(tg.isString, tg.isUndefined),
         uuid: tg.isUnion(tg.isString, tg.isUndefined),
         startLayerName: tg.isUnion(tg.isString, tg.isNull),
         tags: tg.isArray(tg.isString),

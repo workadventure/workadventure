@@ -1,14 +1,14 @@
-import { GameScene } from "./GameScene";
+import { get } from "svelte/store";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { Room } from "../../Connexion/Room";
+import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { EnableCameraSceneName } from "../Login/EnableCameraScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { get } from "svelte/store";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
-import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { GameScene } from "./GameScene";
 
 /**
  * This class should be responsible for any scene starting/stopping

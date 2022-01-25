@@ -40,6 +40,7 @@ export const POSTHOG_API_KEY: string = (getEnv("POSTHOG_API_KEY") as string) || 
 export const POSTHOG_URL = getEnv("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnv("DISABLE_ANONYMOUS") === "true";
 export const OPID_LOGIN_SCREEN_PROVIDER = getEnv("OPID_LOGIN_SCREEN_PROVIDER");
+const FALLBACK_LOCALE = getEnv("FALLBACK_LOCALE") || undefined;
 
 export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
 
@@ -59,4 +60,5 @@ export {
     TURN_PASSWORD,
     JITSI_URL,
     JITSI_PRIVATE_MODE,
+    FALLBACK_LOCALE,
 };

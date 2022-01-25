@@ -31,18 +31,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .getTileIndexAt(this.gameScene.CurrentPlayer.x, this.gameScene.CurrentPlayer.y);
         this.gameScene
             .getPathfindingManager()
-            .findPath(startTile, index, true)
+            .findPath(startTile, index, true, true)
             .then((path) => {
-                const tileDimensions = this.gameScene.getGameMap().getTileDimensions();
-                const pixelPath = path.map((step) => {
-                    return {
-                        x: step.x * tileDimensions.width + tileDimensions.width * 0.5,
-                        y: step.y * tileDimensions.height + tileDimensions.height * 0.5,
-                    };
-                });
                 // Remove first step as it is for the tile we are currently standing on
-                pixelPath.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(pixelPath);
+                path.shift();
+                this.gameScene.CurrentPlayer.setPathToFollow(path).catch((reason) => {});
             })
             .catch((reason) => {
                 console.warn(reason);

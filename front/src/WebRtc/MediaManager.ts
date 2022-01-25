@@ -9,10 +9,12 @@ export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 import { cowebsiteCloseButtonId } from "./CoWebsiteManager";
 import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
-import { layoutManagerActionStore, layoutManagerVisibilityStore } from "../Stores/LayoutManagerStore";
-import { get } from "svelte/store";
-import { localUserStore } from "../Connexion/LocalUserStore";
+import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import LL from "../i18n/i18n-svelte";
+import { get } from "svelte/store";
+import { localeDetector } from "../i18n/locales";
 
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
@@ -23,46 +25,52 @@ export class MediaManager {
     private userInputManager?: UserInputManager;
 
     constructor() {
-        localStreamStore.subscribe((result) => {
-            if (result.type === "error") {
-                if (result.error.name !== MediaStreamConstraintsError.NAME) {
-                    layoutManagerActionStore.addAction({
-                        uuid: "cameraAccessDenied",
-                        type: "warning",
-                        message: "Camera access denied. Click here and check your browser permissions.",
-                        callback: () => {
-                            helpCameraSettingsVisibleStore.set(true);
-                        },
-                        userInputManager: this.userInputManager,
-                    });
-                }
-                //remove it after 10 sec
-                setTimeout(() => {
-                    layoutManagerActionStore.removeAction("cameraAccessDenied");
-                }, 10000);
-                return;
-            }
-        });
-
-        screenSharingLocalStreamStore.subscribe((result) => {
-            if (result.type === "error") {
-                console.error(result.error);
-                layoutManagerActionStore.addAction({
-                    uuid: "screenSharingAccessDenied",
-                    type: "warning",
-                    message: "Screen sharing denied. Click here and check your browser permissions.",
-                    callback: () => {
-                        helpCameraSettingsVisibleStore.set(true);
-                    },
-                    userInputManager: this.userInputManager,
+        localeDetector()
+            .catch(() => {
+                throw new Error("Cannot load locale on media manager");
+            })
+            .finally(() => {
+                localStreamStore.subscribe((result) => {
+                    if (result.type === "error") {
+                        if (result.error.name !== MediaStreamConstraintsError.NAME) {
+                            layoutManagerActionStore.addAction({
+                                uuid: "cameraAccessDenied",
+                                type: "warning",
+                                message: get(LL).warning.accessDenied.camera(),
+                                callback: () => {
+                                    helpCameraSettingsVisibleStore.set(true);
+                                },
+                                userInputManager: this.userInputManager,
+                            });
+                        }
+                        //remove it after 10 sec
+                        setTimeout(() => {
+                            layoutManagerActionStore.removeAction("cameraAccessDenied");
+                        }, 10000);
+                        return;
+                    }
                 });
-                //remove it after 10 sec
-                setTimeout(() => {
-                    layoutManagerActionStore.removeAction("screenSharingAccessDenied");
-                }, 10000);
-                return;
-            }
-        });
+
+                screenSharingLocalStreamStore.subscribe((result) => {
+                    if (result.type === "error") {
+                        console.error(result.error);
+                        layoutManagerActionStore.addAction({
+                            uuid: "screenSharingAccessDenied",
+                            type: "warning",
+                            message: get(LL).warning.accessDenied.screenSharing(),
+                            callback: () => {
+                                helpCameraSettingsVisibleStore.set(true);
+                            },
+                            userInputManager: this.userInputManager,
+                        });
+                        //remove it after 10 sec
+                        setTimeout(() => {
+                            layoutManagerActionStore.removeAction("screenSharingAccessDenied");
+                        }, 10000);
+                        return;
+                    }
+                });
+            });
     }
 
     public showGameOverlay(): void {

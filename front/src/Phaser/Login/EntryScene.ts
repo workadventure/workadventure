@@ -4,6 +4,11 @@ import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
+import LL from "../../i18n/i18n-svelte";
+import { get } from "svelte/store";
+import { localeDetector } from "../../i18n/locales";
+
+const $LL = get(LL);
 
 export const EntrySceneName = "EntryScene";
 
@@ -27,38 +32,44 @@ export class EntryScene extends Scene {
     }
 
     create() {
-        gameManager
-            .init(this.scene)
-            .then((nextSceneName) => {
-                // Let's rescale before starting the game
-                // We can do it at this stage.
-                waScaleManager.applyNewSize();
-                this.scene.start(nextSceneName);
+        localeDetector()
+            .then(() => {
+                gameManager
+                    .init(this.scene)
+                    .then((nextSceneName) => {
+                        // Let's rescale before starting the game
+                        // We can do it at this stage.
+                        waScaleManager.applyNewSize();
+                        this.scene.start(nextSceneName);
+                    })
+                    .catch((err) => {
+                        if (err.response && err.response.status == 404) {
+                            ErrorScene.showError(
+                                new WAError(
+                                    $LL.error.accessLink.title(),
+                                    $LL.error.accessLink.subTitle(),
+                                    $LL.error.accessLink.details()
+                                ),
+                                this.scene
+                            );
+                        } else if (err.response && err.response.status == 403) {
+                            ErrorScene.showError(
+                                new WAError(
+                                    $LL.error.connectionRejected.title(),
+                                    $LL.error.connectionRejected.subTitle({
+                                        error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
+                                    }),
+                                    $LL.error.connectionRejected.details()
+                                ),
+                                this.scene
+                            );
+                        } else {
+                            ErrorScene.showError(err, this.scene);
+                        }
+                    });
             })
-            .catch((err) => {
-                if (err.response && err.response.status == 404) {
-                    ErrorScene.showError(
-                        new WAError(
-                            "Access link incorrect",
-                            "Could not find map. Please check your access link.",
-                            "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
-                        ),
-                        this.scene
-                    );
-                } else if (err.response && err.response.status == 403) {
-                    ErrorScene.showError(
-                        new WAError(
-                            "Connection rejected",
-                            "You cannot join the World. Try again later" +
-                                (err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "") +
-                                ".",
-                            "If you want more information, you may contact administrator or contact us at: hello@workadventu.re"
-                        ),
-                        this.scene
-                    );
-                } else {
-                    ErrorScene.showError(err, this.scene);
-                }
+            .catch(() => {
+                throw new Error("Cannot load locale!");
             });
     }
 }

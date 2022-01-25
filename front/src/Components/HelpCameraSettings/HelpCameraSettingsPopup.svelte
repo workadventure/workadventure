@@ -4,6 +4,7 @@
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
     import chromeImg from "./images/help-setting-camera-permission-chrome.png";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
+    import LL from "../../i18n/i18n-svelte";
 
     let isAndroid = isAndroidFct();
     let isFirefox = getNavigatorType() === NavigatorType.firefox;
@@ -24,14 +25,13 @@
     transition:fly={{ y: -900, duration: 500 }}
 >
     <section>
-        <h2>Camera / Microphone access needed</h2>
-        <p class="err">Permission denied</p>
-        <p>You must allow camera and microphone access in your browser.</p>
+        <h2>{$LL.camera.help.title()}</h2>
+        <p class="err">{$LL.camera.help.permissionDenied()}</p>
+        <p>{$LL.camera.help.content()}</p>
         <p>
             {#if isFirefox}
                 <p class="err">
-                    Please click the "Remember this decision" checkbox, if you don't want Firefox to keep asking you the
-                    authorization.
+                    {$LL.camera.help.firefoxContent()}
                 </p>
                 <img src={firefoxImg} alt="" />
             {:else if isChrome && !isAndroid}
@@ -40,9 +40,11 @@
         </p>
     </section>
     <section>
-        <button class="helpCameraSettingsFormRefresh nes-btn" on:click|preventDefault={refresh}>Refresh</button>
+        <button class="helpCameraSettingsFormRefresh nes-btn" on:click|preventDefault={refresh}
+            >{$LL.camera.help.refresh()}</button
+        >
         <button type="submit" class="helpCameraSettingsFormContinue nes-btn is-primary" on:click|preventDefault={close}
-            >Continue without webcam</button
+            >{$LL.camera.help.continue()}</button
         >
     </section>
 </form>
