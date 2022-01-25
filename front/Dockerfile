@@ -16,6 +16,7 @@ COPY --from=builder --chown=docker:docker /usr/src/JsonMessages /var/www/html/sr
 RUN rm dist/iframe.html
 
 RUN yarn install
+RUN yarn run typesafe-i18n
 
 ENV NODE_ENV=production
 ENV STARTUP_COMMAND_0="./templater.sh"
