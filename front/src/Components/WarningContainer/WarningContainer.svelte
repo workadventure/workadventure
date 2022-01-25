@@ -26,19 +26,25 @@
 
 <style lang="scss">
     main.warningMain {
-        pointer-events: auto;
-        width: 100vw;
-        background-color: red;
-        text-align: center;
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 0);
-        font-family: Lato;
-        min-width: 300px;
-        opacity: 0.9;
-        z-index: 2;
-        h2 {
-            padding: 5px;
-        }
+      pointer-events: auto;
+      width: 100vw;
+      background-color: #F9E81E;
+      color: #14304C;
+      text-align: center;
+      position: absolute;
+      left: 50%;
+      transform: translate(-50%, 0);
+      font-family: Lato;
+      min-width: 300px;
+      opacity: 0.9;
+      z-index: 2;
+
+      h2 {
+        padding: 5px;
+      }
+
+      a {
+        color: #FF475a;
+      }
     }
 </style>
