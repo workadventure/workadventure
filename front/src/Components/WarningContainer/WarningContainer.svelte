@@ -28,8 +28,8 @@
     main.warningMain {
         pointer-events: auto;
         width: 80%;
-        background-color: #F9E81E;
-        color: #14304C;
+        background-color: #f9e81e;
+        color: #14304c;
         text-align: center;
         position: absolute;
 
