@@ -42,7 +42,7 @@
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 34, 34, 34, 0, 0, 0, 0, 0, 0, 34, 34, 34, 34, 0, 0, 0, 0, 0, 0, 0, 34, 34, 34, 0, 0, 0, 0, 0, 0, 0, 0, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
          "id":8,
-         "name":"exit",
+         "name":"meeting-room",
          "opacity":1,
          "properties":[
                 {
@@ -106,12 +106,12 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":13,
-                     "text":"...#start2&moveTo=exit",
+                     "text":"...#start2&moveTo=meeting-room",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
-                 "width":158.292,
+                 "width":223.499265952492,
                  "x":32,
                  "y":114
                 }, 
@@ -160,12 +160,12 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":13,
-                     "text":"...#start&moveTo=exit",
+                     "text":"...#start&moveTo=meeting-room",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
-                 "width":158.292,
+                 "width":217.164845831393,
                  "x":32,
                  "y":93.740349627387
                 }, 
@@ -196,14 +196,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":13,
-                     "text":"exit",
+                     "text":"meeting-room",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
-                 "width":33.094,
-                 "x":257.323517000466,
-                 "y":135.100386888682
+                 "width":92.7120717279925,
+                 "x":233.848901257569,
+                 "y":135.845612785282
                 }],
          "opacity":1,
          "type":"objectgroup",
