@@ -512,7 +512,7 @@ class CoWebsiteManager {
             if (this.coWebsites.length < 1) {
                 this.loadMain();
             } else if (this.coWebsites.length === 5) {
-                throw new Error("Too many we");
+                throw new Error("Too many websites");
             }
 
             Promise.resolve(callback(this.cowebsiteBufferDom))
@@ -580,7 +580,7 @@ class CoWebsiteManager {
                             return reject();
                         });
                 })
-                .catch((e) => console.error("Error loadCoWebsite >=> ", e));
+                .catch((e) => console.error("Error loadCoWebsite => ", e));
         });
     }
 
