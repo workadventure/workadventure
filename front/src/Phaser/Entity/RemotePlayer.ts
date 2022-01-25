@@ -3,6 +3,7 @@ import type { PointInterface } from "../../Connexion/ConnexionModels";
 import { Character } from "../Entity/Character";
 import type { PlayerAnimationDirections } from "../Player/Animation";
 import { requestVisitCardsStore, requestActionsMenuStore } from "../../Stores/GameStore";
+import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -44,7 +45,30 @@ export class RemotePlayer extends Character {
 
         this.on("pointerdown", (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS") {
-                // requestVisitCardsStore.set(this.visitCardUrl);
+                actionsMenuStore.addPossibleAction(
+                    "visit-card",
+                    "Visiting Card", () => {
+                        requestVisitCardsStore.set(this.visitCardUrl);
+                        actionsMenuStore.clearActions();
+                        requestActionsMenuStore.set(false);
+                });
+                actionsMenuStore.addPossibleAction(
+                    "log-hello",
+                    "Log Hello", () => {
+                        console.log('HELLO');
+                        // requestActionsMenuStore.set(false);
+                });
+                actionsMenuStore.addPossibleAction(
+                    "log-goodbye",
+                    "Log Goodbye", () => {
+                        console.log('GOODBYE');
+                        // requestActionsMenuStore.set(false);
+                });
+                actionsMenuStore.addPossibleAction(
+                    "clear",
+                    "Clear Actions", () => {
+                        actionsMenuStore.clearActions();
+                });
                 requestActionsMenuStore.set(true);
             }
         });

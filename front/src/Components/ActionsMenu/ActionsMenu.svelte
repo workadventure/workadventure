@@ -1,8 +1,12 @@
 <script lang="typescript">
     import { fly } from "svelte/transition";
+    import { ActionsMenuInterface, actionsMenuStore } from '../../Stores/ActionsMenuStore';
     import { requestActionsMenuStore, requestVisitCardsStore } from '../../Stores/GameStore';
 
-    // export parameters here to show more menu options
+    let possibleActions: Map<string, ActionsMenuInterface>;
+    const unsubscribe = actionsMenuStore.subscribe(value => {
+        possibleActions = value;
+    });
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -14,10 +18,6 @@
         requestActionsMenuStore.set(false);
     }
 
-    function showVisitingCard() {
-        // requestVisitCardsStore.set(true);
-    }
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -26,13 +26,15 @@
     <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
     <h2>Actions</h2>
     <nav>
-        <button
-            type="button"
-            class="nes-btn"
-            on:click|preventDefault={() => { console.log('clicked on button'); }}
-        >
-            Visiting Card
-        </button>
+        {#each [...possibleActions] as [key, menuAction]}
+            <button
+                type="button"
+                class="nes-btn"
+                on:click|preventDefault={() => { menuAction.callback(); }}
+            >
+                {menuAction.displayName}
+            </button>
+            {/each}
     </nav>
 </div>
 
