@@ -8,7 +8,7 @@ module.exports = {
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
     ],
     "globals": {
         "Atomics": "readonly",
@@ -23,7 +23,7 @@ module.exports = {
     },
     "plugins": [
         "@typescript-eslint",
-        "svelte3"
+        "svelte3",
     ],
     "overrides": [
         {
@@ -33,6 +33,7 @@ module.exports = {
     ],
     "rules": {
         "no-unused-vars": "off",
+        "eol-last": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "error",
         "no-throw-literal": "error",
         // TODO: remove those ignored rules and write a stronger code!

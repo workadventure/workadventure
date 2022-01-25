@@ -3,7 +3,7 @@ import {assertLogMessage} from "./utils/log";
 const fs = require('fs');
 const Docker = require('dockerode');
 import { Selector } from 'testcafe';
-import {login} from "./utils/roles";
+import {login, resetLanguage} from "./utils/roles";
 import {findContainer, rebootBack, rebootPusher, resetRedis, startContainer, stopContainer} from "./utils/containers";
 
 fixture `Reconnection`
@@ -15,6 +15,8 @@ test("Test that connection can succeed even if WorkAdventure starts while pusher
     await stopContainer(container);
 
     const errorMessage = Selector('.error-div');
+
+    await resetLanguage('en-US');
 
     await t
         .navigateTo('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json')

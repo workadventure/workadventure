@@ -1,12 +1,12 @@
-import type { Configuration } from "webpack";
-import type WebpackDevServer from "webpack-dev-server";
-import path from "path";
-import webpack from "webpack";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import sveltePreprocess from "svelte-preprocess";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
+import path from "path";
+import sveltePreprocess from "svelte-preprocess";
+import type { Configuration } from "webpack";
+import webpack from "webpack";
+import type WebpackDevServer from "webpack-dev-server";
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -141,6 +141,11 @@ module.exports = {
                     filename: "fonts/[name][ext]",
                 },
             },
+            {
+                test: /\.json$/,
+                exclude: /node_modules/,
+                type: "asset",
+            },
         ],
     },
     resolve: {
@@ -210,6 +215,7 @@ module.exports = {
             NODE_ENV: mode,
             DISABLE_ANONYMOUS: false,
             OPID_LOGIN_SCREEN_PROVIDER: null,
+            FALLBACK_LANGUAGE: null,
         }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

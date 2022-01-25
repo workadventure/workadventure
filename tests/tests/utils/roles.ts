@@ -1,6 +1,11 @@
-import { Role } from 'testcafe';
+import { Role, ClientFunction } from 'testcafe';
 
-export function login(t: TestController, url: string, userName: string = "Alice", characterNumber: number = 2) {
+export const resetLanguage = ClientFunction((browserLanguage) => window.localStorage.setItem('language', browserLanguage));
+
+export async function login(t: TestController, url: string, userName: string = "Alice", characterNumber: number = 2, browserLanguage: string|null = 'en-US') {
+
+    await resetLanguage(browserLanguage);
+
     t = t
         .navigateTo(url)
         .typeText('input[name="loginSceneName"]', userName)

@@ -1,6 +1,7 @@
 <script lang="typescript">
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
+    import LL from "../../i18n/i18n-svelte";
 
     export let game: Game;
 
@@ -25,7 +26,7 @@
 
 <form class="selectCharacterScene">
     <section class="text-center">
-        <h2>Select your WOKA</h2>
+        <h2>{$LL.woka.selectWoka.title()}</h2>
         <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -37,12 +38,12 @@
         <button
             type="submit"
             class="selectCharacterSceneFormSubmit nes-btn is-primary"
-            on:click|preventDefault={cameraScene}>Continue</button
+            on:click|preventDefault={cameraScene}>{$LL.woka.selectWoka.continue()}</button
         >
         <button
             type="submit"
             class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
-            on:click|preventDefault={customizeScene}>Customize your WOKA</button
+            on:click|preventDefault={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
     </section>
 </form>

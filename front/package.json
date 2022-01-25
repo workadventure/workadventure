@@ -64,10 +64,12 @@
     "socket.io-client": "^2.3.0",
     "standardized-audio-context": "^25.2.4",
     "ts-proto": "^1.96.0",
-    "uuidv4": "^6.2.10"
+    "typesafe-i18n": "^2.59.0",
+    "uuidv4": "^6.2.10",
+    "zod": "^3.11.6"
   },
   "scripts": {
-    "start": "run-p templater serve svelte-check-watch",
+    "start": "run-p templater serve svelte-check-watch typesafe-i18n",
     "templater": "cross-env ./templater.sh",
     "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
@@ -79,7 +81,8 @@
     "svelte-check-watch": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\" --watch",
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\"",
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
-    "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'"
+    "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
+    "typesafe-i18n": "typesafe-i18n  --no-watch"
   },
   "lint-staged": {
     "*.svelte": [
