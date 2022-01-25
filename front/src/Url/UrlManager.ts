@@ -45,8 +45,28 @@ class UrlManager {
     }
 
     public getStartLayerNameFromUrl(): string | null {
-        const hash = window.location.hash;
-        return hash.length > 1 ? hash.substring(1) : null;
+        const parameters = this.getHashParameters();
+        for (const key in parameters) {
+            if (parameters[key] === undefined) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    public getHashParameter(name: string): string | undefined {
+        return this.getHashParameters()[name];
+    }
+
+    private getHashParameters(): Record<string, string> {
+        return window.location.hash
+            .substring(1)
+            .split("&")
+            .reduce((res: Record<string, string>, item: string) => {
+                const parts = item.split("=");
+                res[parts[0]] = parts[1];
+                return res;
+            }, {});
     }
 
     pushStartLayerNameToUrl(startLayerName: string): void {

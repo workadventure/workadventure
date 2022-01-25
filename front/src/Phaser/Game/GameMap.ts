@@ -1,4 +1,10 @@
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty } from "../Map/ITiledMap";
+import type {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapProperty,
+    ITiledMapTileLayer,
+} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
@@ -289,6 +295,31 @@ export class GameMap {
             // We found a property that disappeared
             this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
         }
+    }
+
+    public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
+        const layer = this.findLayer(layerName) as ITiledMapTileLayer;
+        if (!layer) {
+            throw new Error(`No layer "${layerName}" was found`);
+        }
+        const tiles = layer.data;
+        if (!tiles) {
+            throw new Error(`No tiles in "${layerName}" were found`);
+        }
+        if (typeof tiles === "string") {
+            throw new Error("The content of a JSON map must be filled as a JSON array, not as a string");
+        }
+        const possiblePositions: { x: number; y: number }[] = [];
+        tiles.forEach((objectKey: number, key: number) => {
+            if (objectKey === 0) {
+                return;
+            }
+            possiblePositions.push({ x: key % layer.width, y: Math.floor(key / layer.width) });
+        });
+        if (possiblePositions.length > 0) {
+            return MathUtils.randomFromArray(possiblePositions);
+        }
+        throw new Error("No possible position found");
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
