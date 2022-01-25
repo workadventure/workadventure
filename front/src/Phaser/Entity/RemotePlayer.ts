@@ -1,9 +1,11 @@
+
+import { requestVisitCardsStore, requestActionsMenuStore, actionsMenuPlayerNameStore } from "../../Stores/GameStore";
+import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
+import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
-import { Character } from "../Entity/Character";
 import type { PlayerAnimationDirections } from "../Player/Animation";
-import { requestVisitCardsStore, requestActionsMenuStore } from "../../Stores/GameStore";
-import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
+import type { Unsubscriber } from 'svelte/store';
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -13,6 +15,7 @@ export class RemotePlayer extends Character {
     private visitCardUrl: string | null;
 
     private actionsMenuRequested: boolean = false;
+    private actionsMenuRequestedUnsubscriber: Unsubscriber;
 
     constructor(
         userId: number,
@@ -44,13 +47,14 @@ export class RemotePlayer extends Character {
         //set data
         this.userId = userId;
         this.visitCardUrl = visitCardUrl;
-        requestActionsMenuStore.subscribe((value: boolean) => {
+        this.actionsMenuRequestedUnsubscriber = requestActionsMenuStore.subscribe((value: boolean) => {
             this.actionsMenuRequested = value;
         });
 
         this.on("pointerdown", (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS") {
                 if (this.actionsMenuRequested) {
+                    actionsMenuPlayerNameStore.set(null);
                     requestActionsMenuStore.set(false);
                     return;
                 }
@@ -78,12 +82,13 @@ export class RemotePlayer extends Character {
                     "Clear Actions", () => {
                         actionsMenuStore.clearActions();
                 });
+                actionsMenuPlayerNameStore.set(this.PlayerValue);
                 requestActionsMenuStore.set(true);
             }
         });
     }
 
-    updatePosition(position: PointInterface): void {
+    public updatePosition(position: PointInterface): void {
         this.playAnimation(position.direction as PlayerAnimationDirections, position.moving);
         this.setX(position.x);
         this.setY(position.y);
@@ -93,5 +98,11 @@ export class RemotePlayer extends Character {
         if (this.companion) {
             this.companion.setTarget(position.x, position.y, position.direction as PlayerAnimationDirections);
         }
+    }
+
+    public destroy(): void {
+        this.actionsMenuRequestedUnsubscriber();
+        requestActionsMenuStore.set(false);
+        super.destroy();
     }
 }

@@ -30,7 +30,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 return;
             }
         }
-        console.log(gameObjects);
         const camera = this.gameScene.getCameraManager().getCamera();
         const index = this.gameScene
             .getGameMap()

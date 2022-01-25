@@ -1,13 +1,16 @@
 <script lang="typescript">
     import { fly } from "svelte/transition";
     import { ActionsMenuInterface, actionsMenuStore } from '../../Stores/ActionsMenuStore';
-    import { requestActionsMenuStore, requestVisitCardsStore } from '../../Stores/GameStore';
+    import { requestActionsMenuStore, actionsMenuPlayerNameStore, requestVisitCardsStore } from '../../Stores/GameStore';
+    import { onDestroy, onMount,  } from "svelte";
+
+    import type { Unsubscriber } from "svelte/store";
 
     let possibleActions: Map<string, ActionsMenuInterface>;
-    let backgroundHeight = 100;
-    const unsubscribe = actionsMenuStore.subscribe(value => {
-        possibleActions = value;
-    });
+    let playerName: string | null;
+
+    let actionsMenuStoreUnsubscriber: Unsubscriber | null;
+    let actionsMenuPlayerNameStoreUnsubscriber: Unsubscriber | null;
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -19,13 +22,30 @@
         requestActionsMenuStore.set(false);
     }
 
+    actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe(value => {
+        possibleActions = value;
+    });
+
+    actionsMenuPlayerNameStoreUnsubscriber = actionsMenuPlayerNameStore.subscribe(value => {
+        playerName = value;
+    });
+
+    onDestroy(() => {
+        if (actionsMenuStoreUnsubscriber) {
+            actionsMenuStoreUnsubscriber();
+        }
+        if (actionsMenuPlayerNameStoreUnsubscriber) {
+            actionsMenuPlayerNameStoreUnsubscriber();
+        }
+    });
+
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="actions-menu nes-container is-rounded" style="--background-height: {backgroundHeight};">
+<div class="actions-menu nes-container is-rounded">
     <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
-    <h2>Actions</h2>
+    <h2>{playerName}</h2>
     <div class="actions">
         {#each [...possibleActions] as [key, menuAction]}
             <button
