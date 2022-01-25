@@ -68,7 +68,7 @@ How to use entry point :
 
 ## Defining destination point with moveTo parameter
 
-We are able to direct WOKA to the desired place immediately after spawn. To make users spawn on entry point and the go to the, for example, meeting room automatically, simply add `moveTo` as an additional parameter of URL:
+We are able to direct a Woka to the desired place immediately after spawn. To make users spawn on an entry point and then, walk automatically to a meeting room, simply add `moveTo` as an additional parameter of URL:
 
 *Use default entry point*
 ```
