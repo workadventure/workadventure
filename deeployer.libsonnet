@@ -219,7 +219,7 @@
               }
              }
           },
-          icon+: {
+          iconserver+: {
             ingress+: {
               spec+: {
                 tls+: [{
