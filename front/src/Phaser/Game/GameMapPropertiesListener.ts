@@ -204,7 +204,8 @@ export class GameMapPropertiesListener {
 
                     this.coWebsitesOpenByLayer.delete(layer);
 
-                    if (!websiteTriggerProperty) {
+                    const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+                    if (!forceTrigger && !websiteTriggerProperty) {
                         return;
                     }
 
