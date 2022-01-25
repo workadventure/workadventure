@@ -13,6 +13,12 @@ export const setPlayerName = (name: string) => {
     playerName = name;
 };
 
+let playerLanguage: string | undefined;
+
+export const setPlayerLanguage = (language: string | undefined) => {
+    playerLanguage = language;
+};
+
 let tags: string[] | undefined;
 
 export const setTags = (_tags: string[]) => {
@@ -59,6 +65,15 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             );
         }
         return playerName;
+    }
+
+    get language(): string {
+        if (playerLanguage === undefined) {
+            throw new Error(
+                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback."
+            );
+        }
+        return playerLanguage;
     }
 
     get tags(): string[] {

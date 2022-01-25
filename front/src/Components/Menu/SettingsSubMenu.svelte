@@ -4,6 +4,9 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { isMobile } from "../../Enum/EnvironmentVariable";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
+    import LL, { locale } from "../../i18n/i18n-svelte";
+    import type { Locales } from "../../i18n/i18n-types";
+    import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -11,19 +14,32 @@
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
+    let valueLocale: string = $locale;
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
+    let previewValueLocale = valueLocale;
 
     function saveSetting() {
-        if (valueGame !== previewValueGame) {
-            previewValueGame = valueGame;
-            localUserStore.setGameQualityValue(valueGame);
-            window.location.reload();
+        let change = false;
+
+        if (valueLocale !== previewValueLocale) {
+            previewValueLocale = valueLocale;
+            setCurrentLocale(valueLocale as Locales);
         }
 
         if (valueVideo !== previewValueVideo) {
             previewValueVideo = valueVideo;
             videoConstraintStore.setFrameRate(valueVideo);
+        }
+
+        if (valueGame !== previewValueGame) {
+            previewValueGame = valueGame;
+            localUserStore.setGameQualityValue(valueGame);
+            change = true;
+        }
+
+        if (change) {
+            window.location.reload();
         }
 
         closeMenu();
@@ -73,34 +89,74 @@
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
-        <h3>Game quality</h3>
+        <h3>{$LL.menu.settings.gameQuality.title()}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueGame}>
-                <option value={120}>{isMobile() ? "High (120 fps)" : "High video quality (120 fps)"}</option>
-                <option value={60}
-                    >{isMobile() ? "Medium (60 fps)" : "Medium video quality (60 fps, recommended)"}</option
+                <option value={120}
+                    >{isMobile()
+                        ? $LL.menu.settings.gameQuality.short.high()
+                        : $LL.menu.settings.gameQuality.long.high()}</option
                 >
-                <option value={40}>{isMobile() ? "Minimum (40 fps)" : "Minimum video quality (40 fps)"}</option>
-                <option value={20}>{isMobile() ? "Small (20 fps)" : "Small video quality (20 fps)"}</option>
+                <option value={60}
+                    >{isMobile()
+                        ? $LL.menu.settings.gameQuality.short.medium()
+                        : $LL.menu.settings.gameQuality.long.medium()}</option
+                >
+                <option value={40}
+                    >{isMobile()
+                        ? $LL.menu.settings.gameQuality.short.minimum()
+                        : $LL.menu.settings.gameQuality.long.minimum()}</option
+                >
+                <option value={20}
+                    >{isMobile()
+                        ? $LL.menu.settings.gameQuality.short.small()
+                        : $LL.menu.settings.gameQuality.long.small()}</option
+                >
             </select>
         </div>
     </section>
     <section>
-        <h3>Video quality</h3>
+        <h3>{$LL.menu.settings.videoQuality.title()}</h3>
         <div class="nes-select is-dark">
             <select bind:value={valueVideo}>
-                <option value={30}>{isMobile() ? "High (30 fps)" : "High video quality (30 fps)"}</option>
-                <option value={20}
-                    >{isMobile() ? "Medium (20 fps)" : "Medium video quality (20 fps, recommended)"}</option
+                <option value={30}
+                    >{isMobile()
+                        ? $LL.menu.settings.videoQuality.short.high()
+                        : $LL.menu.settings.videoQuality.long.high()}</option
                 >
-                <option value={10}>{isMobile() ? "Minimum (10 fps)" : "Minimum video quality (10 fps)"}</option>
-                <option value={5}>{isMobile() ? "Small (5 fps)" : "Small video quality (5 fps)"}</option>
+                <option value={20}
+                    >{isMobile()
+                        ? $LL.menu.settings.videoQuality.short.medium()
+                        : $LL.menu.settings.videoQuality.long.medium()}</option
+                >
+                <option value={10}
+                    >{isMobile()
+                        ? $LL.menu.settings.videoQuality.short.minimum()
+                        : $LL.menu.settings.videoQuality.long.minimum()}</option
+                >
+                <option value={5}
+                    >{isMobile()
+                        ? $LL.menu.settings.videoQuality.short.small()
+                        : $LL.menu.settings.videoQuality.long.small()}</option
+                >
+            </select>
+        </div>
+    </section>
+    <section>
+        <h3>{$LL.menu.settings.language.title()}</h3>
+        <div class="nes-select is-dark">
+            <select class="languages-switcher" bind:value={valueLocale}>
+                {#each displayableLocales as locale (locale.id)}
+                    <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
+                {/each}
             </select>
         </div>
     </section>
     <section class="settings-section-save">
-        <p>(Saving these settings will restart the game)</p>
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}>Save</button>
+        <p>{$LL.menu.settings.save.warning()}</p>
+        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
+            >{$LL.menu.settings.save.button()}</button
+        >
     </section>
     <section class="settings-section-noSaveOption">
         <label>
@@ -110,7 +166,7 @@
                 bind:checked={fullscreen}
                 on:change={changeFullscreen}
             />
-            <span>Fullscreen</span>
+            <span>{$LL.menu.settings.fullscreen()}</span>
         </label>
         <label>
             <input
@@ -119,7 +175,7 @@
                 bind:checked={notification}
                 on:change={changeNotification}
             />
-            <span>Notifications</span>
+            <span>{$LL.menu.settings.notifications()}</span>
         </label>
         <label>
             <input
@@ -128,7 +184,7 @@
                 bind:checked={forceCowebsiteTrigger}
                 on:change={changeForceCowebsiteTrigger}
             />
-            <span>Always ask before opening websites and Jitsi Meet rooms</span>
+            <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
         </label>
         <label>
             <input
@@ -137,7 +193,7 @@
                 bind:checked={ignoreFollowRequests}
                 on:change={changeIgnoreFollowRequests}
             />
-            <span>Ignore requests to follow other users</span>
+            <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
         </label>
     </section>
 </div>
@@ -173,6 +229,10 @@
                 text-align: center;
                 margin: 0 0 15px;
             }
+        }
+
+        .languages-switcher option {
+            text-transform: capitalize;
         }
     }
 

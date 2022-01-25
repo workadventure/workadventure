@@ -14,26 +14,27 @@
         SubMenusInterface,
         subMenusStore,
     } from "../../Stores/MenuStore";
+    import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";
-    import { get } from "svelte/store";
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
+    import LL from "../../i18n/i18n-svelte";
 
-    let activeSubMenu: string = SubMenusInterface.profile;
+    let activeSubMenu: MenuItem = $subMenusStore[0];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
 
     onMount(() => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
-            if (!get(subMenusStore).includes(activeSubMenu)) {
-                switchMenu(SubMenusInterface.profile);
+            if (!$subMenusStore.includes(activeSubMenu)) {
+                switchMenu($subMenusStore[0]);
             }
         });
 
         checkSubMenuToShow();
 
-        switchMenu(SubMenusInterface.profile);
+        switchMenu($subMenusStore[0]);
     });
 
     onDestroy(() => {
@@ -42,10 +43,10 @@
         }
     });
 
-    function switchMenu(menu: string) {
-        if (get(subMenusStore).find((subMenu) => subMenu === menu)) {
+    function switchMenu(menu: MenuItem) {
+        if (menu.type === "translated") {
             activeSubMenu = menu;
-            switch (menu) {
+            switch (menu.key) {
                 case SubMenusInterface.settings:
                     activeComponent = SettingsSubMenu;
                     break;
@@ -64,28 +65,38 @@
                 case SubMenusInterface.contact:
                     activeComponent = ContactSubMenu;
                     break;
-                default: {
-                    const customMenu = customMenuIframe.get(menu);
-                    if (customMenu !== undefined) {
-                        props = { url: customMenu.url, allowApi: customMenu.allowApi };
-                        activeComponent = CustomSubMenu;
-                    } else {
-                        sendMenuClickedEvent(menu);
-                        menuVisiblilityStore.set(false);
-                    }
-                    break;
-                }
             }
-        } else throw new Error("There is no menu called " + menu);
+        } else {
+            const customMenu = customMenuIframe.get(menu.label);
+            if (customMenu !== undefined) {
+                props = { url: customMenu.url, allowApi: customMenu.allowApi };
+                activeComponent = CustomSubMenu;
+            } else {
+                sendMenuClickedEvent(menu.label);
+                menuVisiblilityStore.set(false);
+            }
+        }
     }
 
     function closeMenu() {
         menuVisiblilityStore.set(false);
     }
+
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             closeMenu();
         }
+    }
+
+    function translateMenuName(menu: MenuItem) {
+        if (menu.type === "scripting") {
+            return menu.label;
+        }
+
+        // Bypass the proxy of typesafe for getting the menu name : https://github.com/ivanhofer/typesafe-i18n/issues/156
+        const getMenuName = $LL.menu.sub[menu.key];
+
+        return getMenuName();
     }
 </script>
 
@@ -93,7 +104,7 @@
 
 <div class="menu-container-main">
     <div class="menu-nav-sidebar nes-container is-rounded" transition:fly={{ x: -1000, duration: 500 }}>
-        <h2>Menu</h2>
+        <h2>{$LL.menu.title()}</h2>
         <nav>
             {#each $subMenusStore as submenu}
                 <button
@@ -101,14 +112,14 @@
                     class="nes-btn {activeSubMenu === submenu ? 'is-disabled' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
-                    {submenu}
+                    {translateMenuName(submenu)}
                 </button>
             {/each}
         </nav>
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly={{ y: -1000, duration: 500 }}>
         <button type="button" class="nes-btn is-error close" on:click={closeMenu}>&times</button>
-        <h2>{activeSubMenu}</h2>
+        <h2>{translateMenuName(activeSubMenu)}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>
 </div>

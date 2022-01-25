@@ -2,6 +2,7 @@
     import type { Game } from "../../Phaser/Game/Game";
     import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
     import { activeRowStore } from "../../Stores/CustomCharacterStore";
+    import LL from "../../i18n/i18n-svelte";
 
     export let game: Game;
 
@@ -34,7 +35,7 @@
 
 <form class="customCharacterScene">
     <section class="text-center">
-        <h2>Customize your WOKA</h2>
+        <h2>{$LL.woka.customWoka.title()}</h2>
     </section>
     <section class="action action-move">
         <button
@@ -53,26 +54,29 @@
     <section class="action">
         {#if $activeRowStore === 0}
             <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={previousScene}
-                >Return</button
+                >{$LL.woka.customWoka.navigation.return()}</button
             >
         {/if}
         {#if $activeRowStore !== 0}
             <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={selectUp}
-                >Back <img src="resources/objects/arrow_up_black.png" alt="" /></button
+                >{$LL.woka.customWoka.navigation.back()}
+                <img src="resources/objects/arrow_up_black.png" alt="" /></button
             >
         {/if}
         {#if $activeRowStore === 5}
             <button
                 type="submit"
                 class="customCharacterSceneFormSubmit nes-btn is-primary"
-                on:click|preventDefault={finish}>Finish</button
+                on:click|preventDefault={finish}>{$LL.woka.customWoka.navigation.finish()}</button
             >
         {/if}
         {#if $activeRowStore !== 5}
             <button
                 type="submit"
                 class="customCharacterSceneFormSubmit nes-btn is-primary"
-                on:click|preventDefault={selectDown}>Next <img src="resources/objects/arrow_down.png" alt="" /></button
+                on:click|preventDefault={selectDown}
+                >{$LL.woka.customWoka.navigation.next()}
+                <img src="resources/objects/arrow_down.png" alt="" /></button
             >
         {/if}
     </section>

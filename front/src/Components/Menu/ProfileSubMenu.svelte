@@ -17,6 +17,7 @@
     import btnProfileSubMenuCompanion from "../images/btn-menu-profile-companion.svg";
     import Woka from "../Woka/Woka.svelte";
     import Companion from "../Companion/Companion.svelte";
+    import LL from "../../i18n/i18n-svelte";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -62,20 +63,20 @@
     <div class="submenu">
         <section>
             <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>
-                <img src={btnProfileSubMenuIdentity} alt="Edit your name" />
-                <span class="btn-hover">Edit your name</span>
+                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} />
+                <span class="btn-hover">{$LL.menu.profile.edit.name()}</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>
                 <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
-                <span class="btn-hover">Edit your WOKA</span>
+                <span class="btn-hover">{$LL.menu.profile.edit.woka()}</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>
                 <Companion userId={-1} placeholderSrc={btnProfileSubMenuCompanion} width="26px" height="26px" />
-                <span class="btn-hover">Edit your companion</span>
+                <span class="btn-hover">{$LL.menu.profile.edit.companion()}</span>
             </button>
             <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>
-                <img src={btnProfileSubMenuCamera} alt="Edit your camera" />
-                <span class="btn-hover">Edit your camera</span>
+                <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} />
+                <span class="btn-hover">{$LL.menu.profile.edit.camera()}</span>
             </button>
         </section>
     </div>
@@ -88,11 +89,13 @@
                 {/if}
             </section>
             <section>
-                <button type="button" class="nes-btn" on:click|preventDefault={logOut}>Log out</button>
+                <button type="button" class="nes-btn" on:click|preventDefault={logOut}
+                    >{$LL.menu.profile.logout()}</button
+                >
             </section>
         {:else}
             <section>
-                <a type="button" class="nes-btn" href="/login">Sign in</a>
+                <a type="button" class="nes-btn" href="/login">{$LL.menu.profile.login()}</a>
             </section>
         {/if}
     </div>
