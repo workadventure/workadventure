@@ -4,6 +4,7 @@
     import { requestActionsMenuStore, requestVisitCardsStore } from '../../Stores/GameStore';
 
     let possibleActions: Map<string, ActionsMenuInterface>;
+    let backgroundHeight = 100;
     const unsubscribe = actionsMenuStore.subscribe(value => {
         possibleActions = value;
     });
@@ -22,10 +23,10 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="actions-menu nes-container is-rounded">
+<div class="actions-menu nes-container is-rounded" style="--background-height: {backgroundHeight};">
     <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
     <h2>Actions</h2>
-    <nav>
+    <div class="actions">
         {#each [...possibleActions] as [key, menuAction]}
             <button
                 type="button"
@@ -35,7 +36,7 @@
                 {menuAction.displayName}
             </button>
             {/each}
-    </nav>
+    </div>
 </div>
 
 <style lang="scss">
@@ -43,8 +44,8 @@
         position: absolute;
         left: 50%;
         transform: translate(-50%, 0);
-        width: 230px !important;
-        height: 300px !important;
+        width: 260px !important;
+        max-height: 300px;
         margin-top: 200px;
 
         pointer-events: auto;
@@ -52,14 +53,27 @@
         background-color: #333333;
         color: whitesmoke;
 
+        .actions {
+            max-height: 200px;
+            width: 100%;
+            display:block;
+            overflow-x:hidden;
+            overflow-y:auto;
+
+            button {
+                width: calc(100% - 10px);
+                margin-bottom: 10px;
+            }
+        }
+
+        .actions::-webkit-scrollbar {
+            display: none;
+        }
+
         h2 {
             text-align: center;
             margin-bottom: 20px;
-        }
-
-        nav button {
-            width: 100%;
-            margin-bottom: 10px;
+            font-family: "Press Start 2P";
         }
 
         .nes-btn.is-error.close {
