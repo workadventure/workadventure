@@ -12,6 +12,8 @@ export class RemotePlayer extends Character {
     userId: number;
     private visitCardUrl: string | null;
 
+    private actionsMenuRequested: boolean = false;
+
     constructor(
         userId: number,
         Scene: GameScene,
@@ -42,9 +44,16 @@ export class RemotePlayer extends Character {
         //set data
         this.userId = userId;
         this.visitCardUrl = visitCardUrl;
+        requestActionsMenuStore.subscribe((value: boolean) => {
+            this.actionsMenuRequested = value;
+        });
 
         this.on("pointerdown", (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS") {
+                if (this.actionsMenuRequested) {
+                    requestActionsMenuStore.set(false);
+                    return;
+                }
                 actionsMenuStore.addPossibleAction(
                     "visit-card",
                     "Visiting Card", () => {
