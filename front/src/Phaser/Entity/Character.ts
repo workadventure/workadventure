@@ -15,6 +15,8 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
+import type { OutlineableInterface } from '../Game/OutlineableInterface';
+import type { OutlineConfig } from '../../Utils/OutlineManager';
 
 const playerNameY = -25;
 
@@ -28,7 +30,7 @@ interface AnimationData {
 
 const interactiveRadius = 35;
 
-export abstract class Character extends Container {
+export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
     public playerName: string;
@@ -142,6 +144,17 @@ export abstract class Character extends Container {
 
     public getPosition(): { x: number, y: number } {
         return { x: this.x, y: this.y };
+    }
+
+    public getOutlineConfig(): OutlineConfig {
+        return {
+            thickness: 2,
+            outlineColor: 0xffff00,
+        }
+    }
+
+    public getObjectToOutline(): Phaser.GameObjects.GameObject {
+        return this.playerNameText;
     }
 
     private async getSnapshot(): Promise<string> {

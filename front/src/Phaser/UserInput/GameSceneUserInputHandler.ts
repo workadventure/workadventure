@@ -54,7 +54,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handleSpaceKeyUpEvent(event: Event): Event {
         this.gameScene.activateOutlinedItem();
-        this.gameScene.getNearestActivatableObject()?.activate();
+        this.gameScene.getSelectedActivatableObject()?.activate();
         return event;
     }
 }

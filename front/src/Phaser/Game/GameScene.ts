@@ -93,6 +93,9 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { locale } from "../../i18n/i18n-svelte";
 import type { ActivatableInterface } from './ActivatableInterface';
 import { MathUtils } from '../../Utils/MathUtils';
+import { OutlineManager } from '../../Utils/OutlineManager';
+import type { OutlineableInterface } from './OutlineableInterface';
+import { isOutlineable } from '../../Utils/CustomTypeGuards';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -191,7 +194,7 @@ export class GameScene extends DirtyScene {
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
-    private nearestActivatableObject?: ActivatableInterface;
+    private selectedActivatableObject?: ActivatableInterface;
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
@@ -206,6 +209,7 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
+    private outlineManager!: OutlineManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -577,6 +581,8 @@ export class GameScene extends DirtyScene {
             this.gameMap.getCollisionsGrid(),
             this.gameMap.getTileDimensions()
         );
+
+        this.outlineManager = new OutlineManager(this);
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -1679,9 +1685,16 @@ ${escapedMessage}
     private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
         //listen event to share position of user
         this.pushPlayerPosition(event);
-        this.nearestActivatableObject = this.findNearestActivatableObject();
-        this.outlineItem(event);
         this.gameMap.setPosition(event.x, event.y);
+
+        const newNearestObject = this.findNearestActivatableObject();
+        if (this.selectedActivatableObject === newNearestObject) {
+            return;
+        }
+        this.outlineManager.tryRemoveOutline(this.selectedActivatableObject);
+        this.selectedActivatableObject = newNearestObject;
+        this.outlineManager.tryAddOutline(this.selectedActivatableObject);
+        // this.outlineItem(event);
     }
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
@@ -2226,7 +2239,7 @@ ${escapedMessage}
         return this.pathfindingManager;
     }
 
-    public getNearestActivatableObject(): ActivatableInterface | undefined {
-        return this.nearestActivatableObject
+    public getSelectedActivatableObject(): ActivatableInterface | undefined {
+        return this.selectedActivatableObject;
     }
 }
