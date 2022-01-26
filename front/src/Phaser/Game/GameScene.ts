@@ -195,6 +195,7 @@ export class GameScene extends DirtyScene {
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
     private selectedActivatableObject?: ActivatableInterface;
+    private activatableObjectsDistances: Map<ActivatableInterface, number> = new Map<ActivatableInterface, number>();
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
@@ -1686,7 +1687,12 @@ ${escapedMessage}
         //listen event to share position of user
         this.pushPlayerPosition(event);
         this.gameMap.setPosition(event.x, event.y);
+        this.updateActivatableObjectsDistances();
+        this.deduceSelectedActivatableObject();
+        // this.outlineItem(event);
+    }
 
+    private deduceSelectedActivatableObject(): void {
         const newNearestObject = this.findNearestActivatableObject();
         if (this.selectedActivatableObject === newNearestObject) {
             return;
@@ -1694,16 +1700,28 @@ ${escapedMessage}
         this.outlineManager.tryRemoveOutline(this.selectedActivatableObject);
         this.selectedActivatableObject = newNearestObject;
         this.outlineManager.tryAddOutline(this.selectedActivatableObject);
-        // this.outlineItem(event);
+    }
+
+    private updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
+        this.activatableObjectsDistances.set(
+            object,
+            MathUtils.distanceBetween(this.CurrentPlayer.getPosition(), object.getPosition()),
+        );
+    }
+
+    private updateActivatableObjectsDistances(): void {
+        const currentPlayerPos = this.CurrentPlayer.getPosition();
+        for (const object of [...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]) {
+            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
+            this.activatableObjectsDistances.set(object, distance);
+        }
     }
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
         let shortestDistance: number = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;
-        const currentPlayerPos = this.CurrentPlayer.getPosition();
 
-        for (const object of [...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]) {
-            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
+        for (const [object, distance] of this.activatableObjectsDistances.entries()) {
             if (object.activationRadius > distance && shortestDistance > distance) {
                 shortestDistance = distance;
                 closestObject = object;
@@ -1880,6 +1898,11 @@ ${escapedMessage}
                     break;
                 case "UserMovedEvent":
                     this.doUpdatePlayerPosition(event.event);
+                    const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
+                    if (remotePlayer) {
+                        this.updateDistanceForSingleActivatableObject(remotePlayer);
+                        this.deduceSelectedActivatableObject();
+                    }
                     break;
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
