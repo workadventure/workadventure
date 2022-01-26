@@ -6,14 +6,17 @@ import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
 import type { PlayerAnimationDirections } from "../Player/Animation";
 import type { Unsubscriber } from 'svelte/store';
+import type { ActivatableInterface } from '../Game/ActivatableInterface';
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
-export class RemotePlayer extends Character {
-    userId: number;
+export class RemotePlayer extends Character implements ActivatableInterface {
+    
+    public userId: number;
+    public readonly activationRadius: number;
+    
     private visitCardUrl: string | null;
-
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
 
@@ -28,7 +31,8 @@ export class RemotePlayer extends Character {
         moving: boolean,
         visitCardUrl: string | null,
         companion: string | null,
-        companionTexturePromise?: Promise<string>
+        companionTexturePromise?: Promise<string>,
+        activationRadius?: number,
     ) {
         super(
             Scene,
@@ -46,23 +50,13 @@ export class RemotePlayer extends Character {
 
         //set data
         this.userId = userId;
+        this.activationRadius = activationRadius ?? 96;
         this.visitCardUrl = visitCardUrl;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
         });
 
-        this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
-            if (event.downElement.nodeName === "CANVAS") {
-                if (this.isActionsMenuInitialized) {
-                    actionsMenuStore.clear();
-                    return;
-                }
-                actionsMenuStore.initialize(this.playerName);
-                for (const action of this.getActionsMenuActions()) {
-                    actionsMenuStore.addAction(action.actionName, action.callback);
-                }
-            }
-        });
+        this.bindEventHandlers();
     }
 
     public updatePosition(position: PointInterface): void {
@@ -77,10 +71,25 @@ export class RemotePlayer extends Character {
         }
     }
 
+    public activate(): void {
+        this.toggleActionsMenu();
+    }
+
     public destroy(): void {
         this.actionsMenuStoreUnsubscriber();
         actionsMenuStore.clear();
         super.destroy();
+    }
+
+    private toggleActionsMenu(): void {
+        if (this.isActionsMenuInitialized) {
+            actionsMenuStore.clear();
+            return;
+        }
+        actionsMenuStore.initialize(this.playerName);
+        for (const action of this.getActionsMenuActions()) {
+            actionsMenuStore.addAction(action.actionName, action.callback);
+        }
     }
 
     private getActionsMenuActions(): { actionName: string, callback: Function }[] {
@@ -111,5 +120,13 @@ export class RemotePlayer extends Character {
                 }
             },
         ];
+    }
+
+    private bindEventHandlers(): void {
+        this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
+            if (event.downElement.nodeName === "CANVAS") {
+                this.toggleActionsMenu();
+            }
+        });
     }
 }

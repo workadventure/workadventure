@@ -12,7 +12,7 @@ import { UserInputManager } from "../UserInput/UserInputManager";
 import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
+import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -89,9 +89,10 @@ import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
-import Camera = Phaser.Cameras.Scene2D.Camera;
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import type { ActivatableInterface } from './ActivatableInterface';
+import { MathUtils } from '../../Utils/MathUtils';
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -190,6 +191,7 @@ export class GameScene extends DirtyScene {
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
+    private nearestActivatableObject?: ActivatableInterface;
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
@@ -806,12 +808,10 @@ export class GameScene extends DirtyScene {
                 this.simplePeer = new SimplePeer(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
-                //listen event to share position of user
-                this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
-                this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this));
-                this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
-                    this.gameMap.setPosition(event.x, event.y);
-                });
+                this.CurrentPlayer.on(
+                    hasMovedEventName,
+                    (event: HasPlayerMovedEvent) => { this.handleCurrentPlayerHasMovedEvent(event); },
+                );
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -1676,7 +1676,30 @@ ${escapedMessage}
         }
     }
 
-    createCollisionWithPlayer() {
+    private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
+        //listen event to share position of user
+        this.pushPlayerPosition(event);
+        this.nearestActivatableObject = this.getNearestActivatableObject();
+        this.outlineItem(event);
+        this.gameMap.setPosition(event.x, event.y);
+    }
+
+    private getNearestActivatableObject(): ActivatableInterface | undefined {
+        let shortestDistance: number = Infinity;
+        let closestObject: ActivatableInterface | undefined = undefined;
+        const currentPlayerPos = this.CurrentPlayer.getPosition();
+
+        for (const object of [...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]) {
+            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
+            if (object.activationRadius > distance && shortestDistance > distance) {
+                shortestDistance = distance;
+                closestObject = object;
+            }
+        }
+        return closestObject;
+    }
+
+    private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
@@ -1695,7 +1718,7 @@ ${escapedMessage}
         }
     }
 
-    createCurrentPlayer() {
+    private createCurrentPlayer() {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
@@ -1737,7 +1760,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    pushPlayerPosition(event: HasPlayerMovedEvent) {
+    private pushPlayerPosition(event: HasPlayerMovedEvent) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1823,7 +1846,7 @@ ${escapedMessage}
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
-    update(time: number, delta: number): void {
+    public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
@@ -1965,7 +1988,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
-    public updatePlayerPosition(message: MessageUserMovedInterface): void {
+    private updatePlayerPosition(message: MessageUserMovedInterface): void {
         this.pendingEvents.enqueue({
             type: "UserMovedEvent",
             event: message,
@@ -1995,7 +2018,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
-    public shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+    private shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         this.pendingEvents.enqueue({
             type: "GroupCreatedUpdatedEvent",
             event: groupPositionMessage,
@@ -2094,7 +2117,7 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
-    public startJitsi(roomName: string, jwt?: string): void {
+    private startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2120,7 +2143,7 @@ ${escapedMessage}
         });
     }
 
-    public stopJitsi(): void {
+    private stopJitsi(): void {
         const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
         this.connection?.setSilent(!!silent);
         jitsiFactory.stop();

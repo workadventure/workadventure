@@ -140,6 +140,10 @@ export abstract class Character extends Container {
         }
     }
 
+    public getPosition(): { x: number, y: number } {
+        return { x: this.x, y: this.y };
+    }
+
     private async getSnapshot(): Promise<string> {
         const sprites = Array.from(this.sprites.values()).map((sprite) => {
             return { sprite, frame: 1 };
