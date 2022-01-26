@@ -90,7 +90,8 @@ const menu: NonNullable<Translation["menu"]> = {
         },
         createMap: {
             title: "Eigene Karte erstellen ",
-            description: "Du kannst auch deine eigene Karte erstellen. Folge dazu unserer Schritt-für-Schritt Anleitung.",
+            description:
+                "Du kannst auch deine eigene Karte erstellen. Folge dazu unserer Schritt-für-Schritt Anleitung.",
         },
     },
     about: {
