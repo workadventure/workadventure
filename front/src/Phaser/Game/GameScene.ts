@@ -1679,12 +1679,12 @@ ${escapedMessage}
     private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
         //listen event to share position of user
         this.pushPlayerPosition(event);
-        this.nearestActivatableObject = this.getNearestActivatableObject();
+        this.nearestActivatableObject = this.findNearestActivatableObject();
         this.outlineItem(event);
         this.gameMap.setPosition(event.x, event.y);
     }
 
-    private getNearestActivatableObject(): ActivatableInterface | undefined {
+    private findNearestActivatableObject(): ActivatableInterface | undefined {
         let shortestDistance: number = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;
         const currentPlayerPos = this.CurrentPlayer.getPosition();
@@ -2224,5 +2224,9 @@ ${escapedMessage}
 
     public getPathfindingManager(): PathfindingManager {
         return this.pathfindingManager;
+    }
+
+    public getNearestActivatableObject(): ActivatableInterface | undefined {
+        return this.nearestActivatableObject
     }
 }
