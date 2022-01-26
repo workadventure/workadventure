@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const audio: BaseTranslation = {
+const audio: NonNullable<Translation["audio"]> = {
     manager: {
         reduce: "Während Unterhaltungen verringern",
     },

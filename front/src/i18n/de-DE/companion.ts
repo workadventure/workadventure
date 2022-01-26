@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const companion: BaseTranslation = {
+const companion: NonNullable<Translation["companion"]> = {
     select: {
         title: "Wähle einen Gefährten",
         any: "Kein Gefährte",

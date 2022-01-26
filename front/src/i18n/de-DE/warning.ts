@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const warning: BaseTranslation = {
+const warning: NonNullable<Translation["warning"]> = {
     title: "Warnung!",
     content:
         'Diese Welt erreicht bald die maximale Kapazität. Du kannst die Kapazität <a href={upgradeLink} target="_blank">hier</a> erhöhen',
