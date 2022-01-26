@@ -30,8 +30,8 @@ const interactiveRadius = 35;
 
 export abstract class Character extends Container {
     private bubble: SpeechBubble | null = null;
-    private readonly playerName: Text;
-    public PlayerValue: string;
+    private readonly playerNameText: Text;
+    public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     //private teleportation: Sprite;
@@ -59,7 +59,7 @@ export abstract class Character extends Container {
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
-        this.PlayerValue = name;
+        this.playerName = name;
         this.invisible = true;
 
         this.sprites = new Map<string, Sprite>();
@@ -83,7 +83,7 @@ export abstract class Character extends Container {
                 });
             });
 
-        this.playerName = new Text(scene, 0, playerNameY, name, {
+        this.playerNameText = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
@@ -94,8 +94,8 @@ export abstract class Character extends Container {
                 fontSize: 35,
             },
         });
-        this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.add(this.playerName);
+        this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+        this.add(this.playerNameText);
 
         if (isClickable) {
             this.setInteractive({
@@ -114,10 +114,10 @@ export abstract class Character extends Container {
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
             if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this.playerName);
+                this.getOutlinePlugin()?.remove(this.playerNameText);
             } else {
-                this.getOutlinePlugin()?.remove(this.playerName);
-                this.getOutlinePlugin()?.add(this.playerName, {
+                this.getOutlinePlugin()?.remove(this.playerNameText);
+                this.getOutlinePlugin()?.add(this.playerNameText, {
                     thickness: 2,
                     outlineColor: color,
                 });
@@ -408,7 +408,7 @@ export abstract class Character extends Container {
     private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
-        this.playerName.setVisible(true);
+        this.playerNameText.setVisible(true);
     }
 
     public get pictureStore(): PictureStore {

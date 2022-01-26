@@ -57,24 +57,10 @@ export class RemotePlayer extends Character {
                     actionsMenuStore.clear();
                     return;
                 }
-                actionsMenuStore.initialize(this.PlayerValue);
-                actionsMenuStore.addAction(
-                    "Visiting Card", () => {
-                        requestVisitCardsStore.set(this.visitCardUrl);
-                        actionsMenuStore.clear();
-                });
-                actionsMenuStore.addAction(
-                    "Log Hello", () => {
-                        console.log('HELLO');
-                });
-                actionsMenuStore.addAction(
-                    "Log Goodbye", () => {
-                        console.log('GOODBYE');
-                });
-                actionsMenuStore.addAction(
-                    "Clear Goodbye Action", () => {
-                        actionsMenuStore.removeAction("Log Goodbye");
-                });
+                actionsMenuStore.initialize(this.playerName);
+                for (const action of this.getActionsMenuActions()) {
+                    actionsMenuStore.addAction(action.actionName, action.callback);
+                }
             }
         });
     }
@@ -95,5 +81,35 @@ export class RemotePlayer extends Character {
         this.actionsMenuStoreUnsubscriber();
         actionsMenuStore.clear();
         super.destroy();
+    }
+
+    private getActionsMenuActions(): { actionName: string, callback: Function }[] {
+        return [
+            {
+                actionName: "Visiting Card",
+                callback: () => {
+                    requestVisitCardsStore.set(this.visitCardUrl);
+                    actionsMenuStore.clear();
+                }
+            },
+            {
+                actionName: "Log Hello",
+                callback: () => {
+                    console.log('HELLO');
+                }
+            },
+            {
+                actionName: "Log Goodbye",
+                callback: () => {
+                    console.log('GOODBYE');
+                }
+            },
+            {
+                actionName: "Clear Goodbye Action",
+                callback: () => {
+                    actionsMenuStore.removeAction("Log Goodbye");
+                }
+            },
+        ];
     }
 }
