@@ -105,13 +105,6 @@ export abstract class Character extends Container implements OutlineableInterfac
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
-
-            this.on("pointerover", () => {
-                this.outlineColorStore.pointerOver();
-            });
-            this.on("pointerout", () => {
-                this.outlineColorStore.pointerOut();
-            });
         }
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {

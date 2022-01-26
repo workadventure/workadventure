@@ -194,7 +194,8 @@ export class GameScene extends DirtyScene {
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     // The item that can be selected by pressing the space key.
-    private selectedActivatableObject?: ActivatableInterface;
+    private selectedActivatableObjectByDistance?: ActivatableInterface;
+    private selectedActivatableObjectByPointer?: ActivatableInterface;
     private activatableObjectsDistances: Map<ActivatableInterface, number> = new Map<ActivatableInterface, number>();
     private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
@@ -1688,18 +1689,23 @@ ${escapedMessage}
         this.pushPlayerPosition(event);
         this.gameMap.setPosition(event.x, event.y);
         this.updateActivatableObjectsDistances();
-        this.deduceSelectedActivatableObject();
+        this.deduceSelectedActivatableObjectByDistance();
         // this.outlineItem(event);
     }
 
-    private deduceSelectedActivatableObject(): void {
+    private deduceSelectedActivatableObjectByDistance(): void {
         const newNearestObject = this.findNearestActivatableObject();
-        if (this.selectedActivatableObject === newNearestObject) {
+        if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
         }
-        this.outlineManager.tryRemoveOutline(this.selectedActivatableObject);
-        this.selectedActivatableObject = newNearestObject;
-        this.outlineManager.tryAddOutline(this.selectedActivatableObject);
+        // update value but do not change the outline
+        if (this.selectedActivatableObjectByPointer) {
+            this.selectedActivatableObjectByDistance = newNearestObject;
+            return;    
+        }
+        this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByDistance);
+        this.selectedActivatableObjectByDistance = newNearestObject;
+        this.outlineManager.tryAddOutline(this.selectedActivatableObjectByDistance);
     }
 
     private updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
@@ -1764,7 +1770,7 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
@@ -1901,7 +1907,7 @@ ${escapedMessage}
                     const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
                     if (remotePlayer) {
                         this.updateDistanceForSingleActivatableObject(remotePlayer);
-                        this.deduceSelectedActivatableObject();
+                        this.deduceSelectedActivatableObjectByDistance();
                     }
                     break;
                 case "GroupCreatedUpdatedEvent":
@@ -1995,6 +2001,26 @@ ${escapedMessage}
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
+
+        player.on(Phaser.Input.Events.POINTER_OVER, () => {
+            if (this.selectedActivatableObjectByPointer === player) {
+                return;
+            }
+            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByDistance);
+            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByPointer);
+            this.selectedActivatableObjectByPointer = player;
+            this.outlineManager.tryAddOutline(player);
+            this.markDirty();
+        });
+
+        player.on(Phaser.Input.Events.POINTER_OUT, () => {
+            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByPointer);
+            this.selectedActivatableObjectByPointer = undefined;
+            if (this.selectedActivatableObjectByDistance) {
+                this.outlineManager.tryAddOutline(this.selectedActivatableObjectByDistance);
+            }
+            this.markDirty();
+        });
     }
 
     /**
@@ -2263,6 +2289,6 @@ ${escapedMessage}
     }
 
     public getSelectedActivatableObject(): ActivatableInterface | undefined {
-        return this.selectedActivatableObject;
+        return this.selectedActivatableObjectByDistance;
     }
 }
