@@ -1917,7 +1917,6 @@ ${escapedMessage}
         }
 
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
-        console.log(addPlayerData);
         const player = new RemotePlayer(
             addPlayerData.userId,
             this,

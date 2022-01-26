@@ -1,34 +1,43 @@
 import { writable } from "svelte/store";
 
-export interface ActionsMenuInterface {
-    displayName: string;
-    callback: Function;
+export interface ActionsMenuData {
+    playerName: string;
+    actions: {actionName: string, callback: Function }[];
 }
 
 function createActionsMenuStore() {
 
-    const actions = new Map<string, ActionsMenuInterface>();
-    const { subscribe, update, set } = writable<Map<string, ActionsMenuInterface>>(actions);
+    const { subscribe, update, set } = writable<ActionsMenuData | undefined>(undefined);
 
     return {
         subscribe,
-        addPossibleAction: (key: string, displayName: string, callback: Function) => {
-            update((actions) => {
-                actions.set(key, { displayName, callback });
-                return actions;
+        initialize: (playerName: string) => {
+            set({
+                playerName,
+                actions: [],
             });
         },
-        removePossibleAction: (key: string) => {
-            update((actions) => {
-                actions.delete(key);
-                return actions;
+        addAction: (actionName: string, callback: Function) => {
+            update((data) => {
+                data?.actions.push({ actionName, callback });
+                return data;
+            });
+        },
+        removeAction: (actionName: string) => {
+            update((data) => {
+                const actionIndex = data?.actions.findIndex(action => action.actionName === actionName);
+                console.log(actionIndex);
+                if (actionIndex !== undefined && actionIndex != -1) {
+                    data?.actions.splice(actionIndex, 1);
+                }
+                return data;
             });
         },
         /**
          * Hides menu
          */
-        clearActions: () => {
-            set(new Map<string, ActionsMenuInterface>());
+        clear: () => {
+            set(undefined);
         }
     };
 }

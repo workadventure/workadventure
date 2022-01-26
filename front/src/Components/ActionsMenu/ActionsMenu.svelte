@@ -1,16 +1,13 @@
 <script lang="typescript">
     import { fly } from "svelte/transition";
-    import { ActionsMenuInterface, actionsMenuStore } from '../../Stores/ActionsMenuStore';
-    import { requestActionsMenuStore, actionsMenuPlayerNameStore, requestVisitCardsStore } from '../../Stores/GameStore';
-    import { onDestroy, onMount,  } from "svelte";
+    import { ActionsMenuData, actionsMenuStore } from '../../Stores/ActionsMenuStore';
+    import { onDestroy } from "svelte";
 
     import type { Unsubscriber } from "svelte/store";
 
-    let possibleActions: Map<string, ActionsMenuInterface>;
-    let playerName: string | null;
+    let actionsMenuData: ActionsMenuData | undefined;
 
     let actionsMenuStoreUnsubscriber: Unsubscriber | null;
-    let actionsMenuPlayerNameStoreUnsubscriber: Unsubscriber | null;
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -19,23 +16,16 @@
     }
 
     function closeActionsMenu() {
-        requestActionsMenuStore.set(false);
+        actionsMenuStore.clear();
     }
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe(value => {
-        possibleActions = value;
-    });
-
-    actionsMenuPlayerNameStoreUnsubscriber = actionsMenuPlayerNameStore.subscribe(value => {
-        playerName = value;
+        actionsMenuData = value;
     });
 
     onDestroy(() => {
         if (actionsMenuStoreUnsubscriber) {
             actionsMenuStoreUnsubscriber();
-        }
-        if (actionsMenuPlayerNameStoreUnsubscriber) {
-            actionsMenuPlayerNameStoreUnsubscriber();
         }
     });
 
@@ -43,21 +33,23 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="actions-menu nes-container is-rounded">
-    <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
-    <h2>{playerName}</h2>
-    <div class="actions">
-        {#each [...possibleActions] as [key, menuAction]}
-            <button
-                type="button"
-                class="nes-btn"
-                on:click|preventDefault={() => { menuAction.callback(); }}
-            >
-                {menuAction.displayName}
-            </button>
-            {/each}
+{#if actionsMenuData}
+    <div class="actions-menu nes-container is-rounded">
+        <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
+        <h2>{actionsMenuData.playerName}</h2>
+        <div class="actions">
+            {#each [...actionsMenuData.actions] as { actionName, callback }}
+                <button
+                    type="button"
+                    class="nes-btn"
+                    on:click|preventDefault={() => { callback(); }}
+                >
+                    {actionName}
+                </button>
+                {/each}
+        </div>
     </div>
-</div>
+{/if}
 
 <style lang="scss">
     .actions-menu {        

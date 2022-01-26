@@ -17,7 +17,7 @@
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
-    import { requestVisitCardsStore, requestActionsMenuStore } from "../Stores/GameStore";
+    import { requestVisitCardsStore } from "../Stores/GameStore";
 
     import type { Game } from "../Phaser/Game/Game";
     import { chatVisibilityStore } from "../Stores/ChatStore";
@@ -49,6 +49,7 @@
     import { peerStore } from "../Stores/PeerStore";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
 import ActionsMenu from './ActionsMenu/ActionsMenu.svelte';
+import { actionsMenuStore } from '../Stores/ActionsMenuStore';
 
     export let game: Game;
 </script>
@@ -153,7 +154,7 @@ import ActionsMenu from './ActionsMenu/ActionsMenu.svelte';
     {#if $requestVisitCardsStore}
         <VisitCard visitCardUrl={$requestVisitCardsStore} />
     {/if}
-    {#if $requestActionsMenuStore}
+    {#if $actionsMenuStore}
         <ActionsMenu />
     {/if}
     {#if $errorStore.length > 0}

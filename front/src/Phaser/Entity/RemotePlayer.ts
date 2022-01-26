@@ -1,6 +1,6 @@
 
-import { requestVisitCardsStore, requestActionsMenuStore, actionsMenuPlayerNameStore } from "../../Stores/GameStore";
-import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
+import { requestVisitCardsStore } from "../../Stores/GameStore";
+import { ActionsMenuData, actionsMenuStore } from '../../Stores/ActionsMenuStore';
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
@@ -14,8 +14,8 @@ export class RemotePlayer extends Character {
     userId: number;
     private visitCardUrl: string | null;
 
-    private actionsMenuRequested: boolean = false;
-    private actionsMenuRequestedUnsubscriber: Unsubscriber;
+    private isActionsMenuInitialized: boolean = false;
+    private actionsMenuStoreUnsubscriber: Unsubscriber;
 
     constructor(
         userId: number,
@@ -47,43 +47,34 @@ export class RemotePlayer extends Character {
         //set data
         this.userId = userId;
         this.visitCardUrl = visitCardUrl;
-        this.actionsMenuRequestedUnsubscriber = requestActionsMenuStore.subscribe((value: boolean) => {
-            this.actionsMenuRequested = value;
+        this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
+            this.isActionsMenuInitialized = value ? true : false;
         });
 
-        this.on("pointerdown", (event: Phaser.Input.Pointer) => {
+        this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS") {
-                if (this.actionsMenuRequested) {
-                    actionsMenuPlayerNameStore.set(null);
-                    requestActionsMenuStore.set(false);
+                if (this.isActionsMenuInitialized) {
+                    actionsMenuStore.clear();
                     return;
                 }
-                actionsMenuStore.addPossibleAction(
-                    "visit-card",
+                actionsMenuStore.initialize(this.PlayerValue);
+                actionsMenuStore.addAction(
                     "Visiting Card", () => {
                         requestVisitCardsStore.set(this.visitCardUrl);
-                        actionsMenuStore.clearActions();
-                        requestActionsMenuStore.set(false);
+                        actionsMenuStore.clear();
                 });
-                actionsMenuStore.addPossibleAction(
-                    "log-hello",
+                actionsMenuStore.addAction(
                     "Log Hello", () => {
                         console.log('HELLO');
-                        // requestActionsMenuStore.set(false);
                 });
-                actionsMenuStore.addPossibleAction(
-                    "log-goodbye",
+                actionsMenuStore.addAction(
                     "Log Goodbye", () => {
                         console.log('GOODBYE');
-                        // requestActionsMenuStore.set(false);
                 });
-                actionsMenuStore.addPossibleAction(
-                    "clear",
-                    "Clear Actions", () => {
-                        actionsMenuStore.clearActions();
+                actionsMenuStore.addAction(
+                    "Clear Goodbye Action", () => {
+                        actionsMenuStore.removeAction("Log Goodbye");
                 });
-                actionsMenuPlayerNameStore.set(this.PlayerValue);
-                requestActionsMenuStore.set(true);
             }
         });
     }
@@ -101,8 +92,8 @@ export class RemotePlayer extends Character {
     }
 
     public destroy(): void {
-        this.actionsMenuRequestedUnsubscriber();
-        requestActionsMenuStore.set(false);
+        this.actionsMenuStoreUnsubscriber();
+        actionsMenuStore.clear();
         super.destroy();
     }
 }
