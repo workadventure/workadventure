@@ -38,6 +38,8 @@ body .message-info.warning{
 .video-container {
     display: flex;
     transition: all 0.2s ease;
+    background-color: #00000099;
+    border-radius: 15px;
     cursor: url('./images/cursor_pointer.png'), pointer;
     width: 100%;
 
@@ -53,10 +55,14 @@ body .message-info.warning{
         max-width: 100%;
         width: 100%;
         cursor: url('./images/cursor_pointer.png'), pointer;
+        border-radius: 15px;
 
         &.mobile{
             width: 100%;
             height: 21vh;
+        }
+        &:focus{
+            outline: none;
         }
     }
 
@@ -64,21 +70,57 @@ body .message-info.warning{
         position: absolute;
         width: 100px;
         height: 100px;
-        left: calc(50% - 50px);
-        top: calc(50% - 50px);
-        background-color: black;
-        border-radius: 50%;
+        left: -6px;
+        top: calc(100% - 28px);
         text-align: center;
-        font-size: 14px;
         color: white;
+        span{
+            font-size: 14px;
+            margin: 2px;
+            background-color: white;
+            border: solid 3px black;
+            border-radius: 8px;
+        }
+    }
+
+    .woka-icon{
+        position: absolute;
+        left: 90px;
+        top: calc(100% - 24px);
+        height: 23px;
         overflow: hidden;
+        border-radius: 50%;
+        transition: all 0.2s ease;
+        &.no-video{
+            left: calc(50% - 30px);
+            top: calc(50% - 30px);
+            height: auto;
+            img{
+                height: 60px;
+                width: 60px;
+            }
+        }
+        img{
+            height: 40px;
+            width: 40px;
+        }
+    }
+    &:hover{
+        .woka-icon{
+            top: calc(100% - 30px);
+            height: 30px;
+            &.no-video{
+                top: calc(100% - 32px);
+                height: 35px;
+            }
+        }
     }
 
     img {
         position: absolute;
         display: none;
-        width: 40px;
-        height: 40px;
+        width: 20px;
+        height: 20px;
         left: 5px;
         bottom: 5px;
         padding: 10px;
@@ -146,10 +188,6 @@ body .message-info.warning{
         &:hover {
             width: 160px;
         }
-    }
-
-    video:focus{
-        outline: none;
     }
 }
 

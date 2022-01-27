@@ -58,15 +58,12 @@
         <div class="rtc-error" />
     {/if}
     <!-- {#if !$constraintStore || $constraintStore.video === false} -->
-    <i
-        class="container"
-        class:has-video={$constraintStore && $constraintStore.video === true}
-        class:minimized={(!$constraintStore || $constraintStore.video !== true) && minimized}
-        style="background-color: {getColorByString(name)};"
-    >
-        <span style="noselect">{peer.userName}</span>
-        <div class="woka-icon"><Woka userId={peer.userId} placeholderSrc={""} /></div>
+    <i class="container">
+        <span style="background-color: {getColorByString(name)};">{peer.userName}</span>
     </i>
+    <div class="woka-icon {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
+        <Woka userId={peer.userId} placeholderSrc={""} />
+    </div>
     <!-- {/if} -->
     {#if $constraintStore && $constraintStore.audio === false}
         <img
@@ -99,22 +96,6 @@
     .container {
         display: flex;
         flex-direction: column;
-        padding-top: 15px;
-
-        &.has-video {
-            left: auto;
-            transform: scale(0.5);
-            opacity: 0.5;
-        }
-
-        &.minimized {
-            transform: scale(0.5);
-            opacity: 0.5;
-        }
-
-        .woka-icon {
-            margin-right: 3px;
-        }
     }
     video.no-video {
         visibility: collapse;
