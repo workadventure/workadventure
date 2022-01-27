@@ -31,6 +31,9 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                return res.writeStatus("401 Unauthorized").end("No token configured!");
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
@@ -78,6 +81,9 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                return res.writeStatus("401 Unauthorized").end("No token configured!");
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");

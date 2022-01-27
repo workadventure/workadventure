@@ -2,7 +2,7 @@ const MINIMUM_DISTANCE = process.env.MINIMUM_DISTANCE ? Number(process.env.MINIM
 const GROUP_RADIUS = process.env.GROUP_RADIUS ? Number(process.env.GROUP_RADIUS) : 48;
 const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == "true" : false;
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
-const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "myapitoken";
+const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "";
 const CPU_OVERHEAT_THRESHOLD = Number(process.env.CPU_OVERHEAT_THRESHOLD) || 80;
 const JITSI_URL: string | undefined = process.env.JITSI_URL === "" ? undefined : process.env.JITSI_URL;
 const JITSI_ISS = process.env.JITSI_ISS || "";

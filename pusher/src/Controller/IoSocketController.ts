@@ -29,7 +29,7 @@ import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "..
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_URL, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
@@ -42,7 +42,9 @@ export class IoSocketController {
 
     constructor(private readonly app: TemplatedApp) {
         this.ioConnection();
-        this.adminRoomSocket();
+        if (ADMIN_SOCKETS_TOKEN) {
+            this.adminRoomSocket();
+        }
     }
 
     adminRoomSocket() {
