@@ -91,7 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import { locale } from "../../i18n/i18n-svelte";
+import { locale, LL } from "../../i18n/i18n-svelte";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -983,7 +983,7 @@ export class GameScene extends DirtyScene {
                 if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = "Press SPACE or touch here to enter Jitsi Meet room";
+                        message = get(LL).message.openJitsiTrigger();
                     }
                     layoutManagerActionStore.addAction({
                         uuid: "jitsi",

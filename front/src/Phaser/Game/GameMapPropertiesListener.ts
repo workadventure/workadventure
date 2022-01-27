@@ -9,6 +9,7 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
+import { LL } from "../../i18n/i18n-svelte";
 
 enum OpenCoWebsiteState {
     LOADING,
@@ -38,7 +39,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = "Press SPACE or touch here to open web site in new tab";
+                        message = get(LL).message.openWebsiteTabTrigger();
                     }
                     layoutManagerActionStore.addAction({
                         uuid: "openTab",
@@ -141,7 +142,7 @@ export class GameMapPropertiesListener {
                     const forceTrigger = localUserStore.getForceCowebsiteTrigger();
                     if (forceTrigger || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
                         if (!websiteTriggerMessageProperty) {
-                            websiteTriggerMessageProperty = "Press SPACE or touch here to open web site";
+                            websiteTriggerMessageProperty = get(LL).message.openWebsiteTrigger();
                         }
 
                         this.coWebsitesActionTriggerByLayer.set(layer, actionUuid);

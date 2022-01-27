@@ -9,6 +9,7 @@ import error from "./error";
 import follow from "./follow";
 import login from "./login";
 import menu from "./menu";
+import message from "./message";
 import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
@@ -29,6 +30,7 @@ const fr_FR: Translation = {
     report,
     warning,
     emoji,
+    message,
 };
 
 export default fr_FR;
