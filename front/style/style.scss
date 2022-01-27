@@ -69,7 +69,7 @@ body .message-info.warning{
     i {
         position: absolute;
         width: 100px;
-        height: 100px;
+        height: auto;
         left: -6px;
         top: calc(100% - 28px);
         text-align: center;
@@ -80,6 +80,7 @@ body .message-info.warning{
             background-color: white;
             border: solid 3px black;
             border-radius: 8px;
+            font-style: normal;
         }
     }
 
