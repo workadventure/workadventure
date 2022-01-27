@@ -12,6 +12,7 @@
     export let vertical: boolean;
 
     let icon: HTMLImageElement;
+    let iconLoaded = false;
     let state = coWebsite.state;
 
     const coWebsiteUrl = coWebsite.iframe.src;
@@ -20,6 +21,9 @@
     onMount(() => {
         icon.src = `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
         icon.alt = urlObject.hostname;
+        icon.onload = () => {
+            iconLoaded = true;
+        };
     });
 
     async function onClick() {
@@ -72,7 +76,104 @@
     class:vertical
     on:click={onClick}
 >
-    <img class="cowebsite-icon noselect nes-pointer" bind:this={icon} on:dragstart|preventDefault={noDrag} alt="" />
+    <img
+        class="cowebsite-icon noselect nes-pointer"
+        class:hide={!iconLoaded}
+        bind:this={icon}
+        on:dragstart|preventDefault={noDrag}
+        alt=""
+    />
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        class="cowebsite-icon"
+        class:hide={iconLoaded}
+        style="margin: auto; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; shape-rendering: auto;"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid"
+    >
+        <rect x="19" y="19" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0s"
+                calcMode="discrete"
+            />
+        </rect><rect x="40" y="19" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.125s"
+                calcMode="discrete"
+            />
+        </rect><rect x="61" y="19" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.25s"
+                calcMode="discrete"
+            />
+        </rect><rect x="19" y="40" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.875s"
+                calcMode="discrete"
+            />
+        </rect><rect x="61" y="40" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.375s"
+                calcMode="discrete"
+            />
+        </rect><rect x="19" y="61" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.75s"
+                calcMode="discrete"
+            />
+        </rect><rect x="40" y="61" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.625s"
+                calcMode="discrete"
+            />
+        </rect><rect x="61" y="61" width="20" height="20" fill="#14304c">
+            <animate
+                attributeName="fill"
+                values="#365dff;#14304c;#14304c"
+                keyTimes="0;0.125;1"
+                dur="1s"
+                repeatCount="indefinite"
+                begin="0.5s"
+                calcMode="discrete"
+            />
+        </rect>
+    </svg>
 </div>
 
 <style lang="scss">
@@ -162,6 +263,10 @@
             width: 50px;
             height: 50px;
             object-fit: cover;
+
+            &.hide {
+                display: none;
+            }
         }
     }
 </style>
