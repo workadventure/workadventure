@@ -1,15 +1,23 @@
 <script lang="ts">
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
+    import { i18nJson } from "../../i18n/locales";
 
     function onClick(callback: () => void) {
         callback();
+    }
+
+    function i18n(text: string | number | boolean | undefined): string {
+        if (typeof text === "string") {
+            return i18nJson(text);
+        }
+        return "";
     }
 </script>
 
 <div class="layout-manager-list">
     {#each $layoutManagerActionStore as action}
         <div class="nes-container is-rounded {action.type}" on:click={() => onClick(action.callback)}>
-            <p>{action.message}</p>
+            <p>{i18n(action.message)}</p>
         </div>
     {/each}
 </div>
