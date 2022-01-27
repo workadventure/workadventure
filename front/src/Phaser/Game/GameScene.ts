@@ -49,6 +49,7 @@ import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
+import { ActivatablesManager } from './ActivatablesManager';
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -91,9 +92,6 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import type { ActivatableInterface } from './ActivatableInterface';
-import { MathUtils } from '../../Utils/MathUtils';
-import { isOutlineable } from '../../Utils/CustomTypeGuards';
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -190,11 +188,6 @@ export class GameScene extends DirtyScene {
 
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
-    // The item that can be selected by pressing the space key.
-    private selectedActivatableObjectByDistance?: ActivatableInterface;
-    private selectedActivatableObjectByPointer?: ActivatableInterface;
-    private activatableObjectsDistances: Map<ActivatableInterface, number> = new Map<ActivatableInterface, number>();
-    private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
@@ -208,6 +201,7 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
+    private activatablesManager!: ActivatablesManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -580,6 +574,8 @@ export class GameScene extends DirtyScene {
             this.gameMap.getTileDimensions()
         );
 
+        this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
+
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -683,10 +679,6 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
-    }
-
-    public activateOutlinedItem(): void {
-        this.outlinedItem?.activate();
     }
 
     /**
@@ -1683,56 +1675,8 @@ ${escapedMessage}
         //listen event to share position of user
         this.pushPlayerPosition(event);
         this.gameMap.setPosition(event.x, event.y);
-        this.updateActivatableObjectsDistances();
-        this.deduceSelectedActivatableObjectByDistance();
-        // this.outlineItem(event);
-    }
-
-    private deduceSelectedActivatableObjectByDistance(): void {
-        const newNearestObject = this.findNearestActivatableObject();
-        if (this.selectedActivatableObjectByDistance === newNearestObject) {
-            return;
-        }
-        // update value but do not change the outline
-        if (this.selectedActivatableObjectByPointer) {
-            this.selectedActivatableObjectByDistance = newNearestObject;
-            return;    
-        }
-        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
-        }
-        this.selectedActivatableObjectByDistance = newNearestObject;
-        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
-        }
-    }
-
-    private updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
-        this.activatableObjectsDistances.set(
-            object,
-            MathUtils.distanceBetween(this.CurrentPlayer.getPosition(), object.getPosition()),
-        );
-    }
-
-    private updateActivatableObjectsDistances(): void {
-        const currentPlayerPos = this.CurrentPlayer.getPosition();
-        for (const object of [...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]) {
-            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
-            this.activatableObjectsDistances.set(object, distance);
-        }
-    }
-
-    private findNearestActivatableObject(): ActivatableInterface | undefined {
-        let shortestDistance: number = Infinity;
-        let closestObject: ActivatableInterface | undefined = undefined;
-
-        for (const [object, distance] of this.activatableObjectsDistances.entries()) {
-            if (object.activationRadius > distance && shortestDistance > distance) {
-                shortestDistance = distance;
-                closestObject = object;
-            }
-        }
-        return closestObject;
+        this.activatablesManager.updateActivatableObjectsDistances([...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]);
+        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
     }
 
     private createCollisionWithPlayer() {
@@ -1822,49 +1766,6 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    /**
-     * Finds the correct item to outline and outline it (if there is an item to be outlined)
-     * @param event
-     */
-    private outlineItem(event: HasPlayerMovedEvent): void {
-        let x = event.x;
-        let y = event.y;
-        switch (event.direction) {
-            case PlayerAnimationDirections.Up:
-                y -= 32;
-                break;
-            case PlayerAnimationDirections.Down:
-                y += 32;
-                break;
-            case PlayerAnimationDirections.Left:
-                x -= 32;
-                break;
-            case PlayerAnimationDirections.Right:
-                x += 32;
-                break;
-            default:
-                throw new Error('Unexpected direction "' + event.direction + '"');
-        }
-
-        let shortestDistance: number = Infinity;
-        let selectedItem: ActionableItem | null = null;
-        for (const item of this.actionableItems.values()) {
-            const distance = item.actionableDistance(x, y);
-            if (distance !== null && distance < shortestDistance) {
-                shortestDistance = distance;
-                selectedItem = item;
-            }
-        }
-
-        if (this.outlinedItem === selectedItem) {
-            return;
-        }
-
-        this.outlinedItem?.notSelectable();
-        this.outlinedItem = selectedItem;
-        this.outlinedItem?.selectable();
-    }
-
     private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -1905,8 +1806,8 @@ ${escapedMessage}
                     this.doUpdatePlayerPosition(event.event);
                     const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
                     if (remotePlayer) {
-                        this.updateDistanceForSingleActivatableObject(remotePlayer);
-                        this.deduceSelectedActivatableObjectByDistance();
+                        this.activatablesManager.updateDistanceForSingleActivatableObject(remotePlayer);
+                        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
                     }
                     break;
                 case "GroupCreatedUpdatedEvent":
@@ -2002,30 +1903,12 @@ ${escapedMessage}
         player.updatePosition(addPlayerData.position);
 
         player.on(Phaser.Input.Events.POINTER_OVER, () => {
-            if (this.selectedActivatableObjectByPointer === player) {
-                return;
-            }
-            if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-                this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
-            }
-            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
-                this.selectedActivatableObjectByPointer?.pointerOutOutline();
-            }
-            this.selectedActivatableObjectByPointer = player;
-            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
-                this.selectedActivatableObjectByPointer?.pointerOverOutline();
-            }
+            this.activatablesManager.handlePointerOverActivatableObject(player);
             this.markDirty();
         });
 
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
-            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
-                this.selectedActivatableObjectByPointer?.pointerOutOutline();
-            }
-            this.selectedActivatableObjectByPointer = undefined;
-            if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-                this.selectedActivatableObjectByDistance?.characterCloseByOutline();
-            }
+            this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
         });
     }
@@ -2295,7 +2178,7 @@ ${escapedMessage}
         return this.pathfindingManager;
     }
 
-    public getSelectedActivatableObject(): ActivatableInterface | undefined {
-        return this.selectedActivatableObjectByPointer ?? this.selectedActivatableObjectByDistance;
+    public getActivatablesManager(): ActivatablesManager {
+        return this.activatablesManager;
     }
 }
