@@ -1,4 +1,3 @@
-import { coWebsiteManager, CoWebsite } from "../WebRtc/CoWebsiteManager";
 import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore } from "../Stores/ChatStore";
 import type { ChatEvent } from "./Events/ChatEvent";

@@ -4,6 +4,7 @@ import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
 import companion from "./companion";
+import emoji from "./emoji";
 import error from "./error";
 import follow from "./follow";
 import login from "./login";
@@ -27,6 +28,7 @@ const fr_FR: Translation = {
     menu,
     report,
     warning,
+    emoji,
 };
 
 export default fr_FR;

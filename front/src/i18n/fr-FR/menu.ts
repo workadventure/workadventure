@@ -29,14 +29,14 @@ const menu: NonNullable<Translation["menu"]> = {
             short: {
                 high: "Haute (120 fps)",
                 medium: "Moyenne (60 fps)",
-                minimum: "Minimale (40 fps)",
-                small: "Reduite (20 fps)",
+                small: "Reduite (40 fps)",
+                minimum: "Minimale (20 fps)",
             },
             long: {
                 high: "Haute (120 fps)",
                 medium: "Moyenne (60 fps, recommandée)",
-                minimum: "Minimale (40 fps)",
-                small: "Reduite (20 fps)",
+                small: "Reduite (40 fps)",
+                minimum: "Minimale (20 fps)",
             },
         },
         videoQuality: {
@@ -44,14 +44,14 @@ const menu: NonNullable<Translation["menu"]> = {
             short: {
                 high: "Haute (30 fps)",
                 medium: "Moyenne (20 fps)",
-                minimum: "Minimale (10 fps)",
-                small: "Reduite (5 fps)",
+                small: "Reduite (10 fps)",
+                minimum: "Minimale (5 fps)",
             },
             long: {
                 high: "Haute (30 fps)",
                 medium: "Moyenne (20 fps, recommandée)",
-                minimum: "Minimale (10 fps)",
-                small: "Reduite (5 fps)",
+                small: "Reduite (10 fps)",
+                minimum: "Minimale (5 fps)",
             },
         },
         language: {

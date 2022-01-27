@@ -4,6 +4,7 @@
     import { onDestroy, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { isMobile } from "../../Enum/EnvironmentVariable";
+    import LL from "../../i18n/i18n-svelte";
 
     let emojiContainer: HTMLElement;
     let picker: EmojiButton;
@@ -15,10 +16,31 @@
             rootElement: emojiContainer,
             styleProperties: {
                 "--font": "Press Start 2P",
+                "--text-color": "whitesmoke",
+                "--secondary-text-color": "whitesmoke",
+                "--category-button-color": "whitesmoke",
             },
             emojisPerRow: isMobile() ? 6 : 8,
             autoFocusSearch: false,
             style: "twemoji",
+            showPreview: false,
+            i18n: {
+                search: $LL.emoji.search(),
+                categories: {
+                    recents: $LL.emoji.categories.recents(),
+                    smileys: $LL.emoji.categories.smileys(),
+                    people: $LL.emoji.categories.people(),
+                    animals: $LL.emoji.categories.animals(),
+                    food: $LL.emoji.categories.food(),
+                    activities: $LL.emoji.categories.activities(),
+                    travel: $LL.emoji.categories.travel(),
+                    objects: $LL.emoji.categories.objects(),
+                    symbols: $LL.emoji.categories.symbols(),
+                    flags: $LL.emoji.categories.flags(),
+                    custom: $LL.emoji.categories.custom(),
+                },
+                notFound: $LL.emoji.notFound(),
+            },
         });
         //the timeout is here to prevent the menu from flashing
         setTimeout(() => picker.showPicker(emojiContainer), 100);
