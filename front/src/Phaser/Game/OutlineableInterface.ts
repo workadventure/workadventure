@@ -1,6 +1,11 @@
-import type { OutlineConfig } from '../../Utils/OutlineManager';
 
 export interface OutlineableInterface {
-    getObjectToOutline: () => Phaser.GameObjects.GameObject;
-    getOutlineConfig: () => OutlineConfig;
+    setFollowOutlineColor(color: number): void
+    removeFollowOutlineColor(): void
+    setApiOutlineColor(color: number): void
+    removeApiOutlineColor(): void
+    pointerOverOutline(): void
+    pointerOutOutline(): void
+    characterCloseByOutline(): void
+    characterFarAwayOutline(): void
 }

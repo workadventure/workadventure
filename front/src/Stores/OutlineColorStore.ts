@@ -3,14 +3,17 @@ import { writable } from "svelte/store";
 export function createColorStore() {
     const { subscribe, set } = writable<number | undefined>(undefined);
 
-    let color: number | undefined = undefined;
-    let focused: boolean = false;
+    let followColor: number | undefined = undefined;
+    let apiColor: number | undefined = undefined;
+    
+    let pointedByPointer: boolean = false;
+    let pointedByCharacter: boolean = false;
 
     const updateColor = () => {
-        if (focused) {
+        if (pointedByPointer || pointedByCharacter) {
             set(0xffff00);
         } else {
-            set(color);
+            set(followColor ?? apiColor);
         }
     };
 
@@ -18,22 +21,42 @@ export function createColorStore() {
         subscribe,
 
         pointerOver() {
-            focused = true;
+            pointedByPointer = true;
             updateColor();
         },
 
         pointerOut() {
-            focused = false;
+            pointedByPointer = false;
             updateColor();
         },
 
-        setColor(newColor: number) {
-            color = newColor;
+        characterCloseBy() {
+            pointedByCharacter = true;
             updateColor();
         },
 
-        removeColor() {
-            color = undefined;
+        characterFarAway() {
+            pointedByCharacter = false;
+            updateColor();
+        },
+
+        setFollowColor(newColor: number) {
+            followColor = newColor;
+            updateColor();
+        },
+
+        removeFollowColor() {
+            followColor = undefined;
+            updateColor();
+        },
+
+        setApiColor(newColor: number) {
+            apiColor = newColor;
+            updateColor();
+        },
+
+        removeApiColor() {
+            apiColor = undefined;
             updateColor();
         },
     };

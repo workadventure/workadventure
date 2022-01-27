@@ -93,10 +93,7 @@ import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandle
 import { locale } from "../../i18n/i18n-svelte";
 import type { ActivatableInterface } from './ActivatableInterface';
 import { MathUtils } from '../../Utils/MathUtils';
-import { OutlineManager } from '../../Utils/OutlineManager';
-import type { OutlineableInterface } from './OutlineableInterface';
 import { isOutlineable } from '../../Utils/CustomTypeGuards';
-
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -211,7 +208,6 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
-    private outlineManager!: OutlineManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -584,7 +580,6 @@ export class GameScene extends DirtyScene {
             this.gameMap.getTileDimensions()
         );
 
-        this.outlineManager = new OutlineManager(this);
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -670,10 +665,10 @@ export class GameScene extends DirtyScene {
 
         this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
             if (color !== undefined) {
-                this.CurrentPlayer.setOutlineColor(color);
+                this.CurrentPlayer.setFollowOutlineColor(color);
                 this.connection?.emitPlayerOutlineColor(color);
             } else {
-                this.CurrentPlayer.removeOutlineColor();
+                this.CurrentPlayer.removeFollowOutlineColor();
                 this.connection?.emitPlayerOutlineColor(null);
             }
         });
@@ -1455,12 +1450,12 @@ ${escapedMessage}
             const green = normalizeColor(message.green);
             const blue = normalizeColor(message.blue);
             const color = (red << 16) | (green << 8) | blue;
-            this.CurrentPlayer.setOutlineColor(color);
+            this.CurrentPlayer.setApiOutlineColor(color);
             this.connection?.emitPlayerOutlineColor(color);
         });
 
         iframeListener.registerAnswerer("removePlayerOutline", (message) => {
-            this.CurrentPlayer.removeOutlineColor();
+            this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
 
@@ -1703,9 +1698,13 @@ ${escapedMessage}
             this.selectedActivatableObjectByDistance = newNearestObject;
             return;    
         }
-        this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByDistance);
+        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+            this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+        }
         this.selectedActivatableObjectByDistance = newNearestObject;
-        this.outlineManager.tryAddOutline(this.selectedActivatableObjectByDistance);
+        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
+        }
     }
 
     private updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
@@ -1996,7 +1995,7 @@ ${escapedMessage}
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         if (addPlayerData.outlineColor !== undefined) {
-            player.setOutlineColor(addPlayerData.outlineColor);
+            player.setApiOutlineColor(addPlayerData.outlineColor);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2006,18 +2005,26 @@ ${escapedMessage}
             if (this.selectedActivatableObjectByPointer === player) {
                 return;
             }
-            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByDistance);
-            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByPointer);
+            if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+                this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+            }
+            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
+                this.selectedActivatableObjectByPointer?.pointerOutOutline();
+            }
             this.selectedActivatableObjectByPointer = player;
-            this.outlineManager.tryAddOutline(player);
+            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
+                this.selectedActivatableObjectByPointer?.pointerOverOutline();
+            }
             this.markDirty();
         });
 
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
-            this.outlineManager.tryRemoveOutline(this.selectedActivatableObjectByPointer);
+            if (isOutlineable(this.selectedActivatableObjectByPointer)) {
+                this.selectedActivatableObjectByPointer?.pointerOutOutline();
+            }
             this.selectedActivatableObjectByPointer = undefined;
-            if (this.selectedActivatableObjectByDistance) {
-                this.outlineManager.tryAddOutline(this.selectedActivatableObjectByDistance);
+            if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+                this.selectedActivatableObjectByDistance?.characterCloseByOutline();
             }
             this.markDirty();
         });
@@ -2132,9 +2139,9 @@ ${escapedMessage}
             return;
         }
         if (message.removeOutlineColor) {
-            character.removeOutlineColor();
+            character.removeApiOutlineColor();
         } else {
-            character.setOutlineColor(message.outlineColor);
+            character.setApiOutlineColor(message.outlineColor);
         }
     }
 
@@ -2289,6 +2296,6 @@ ${escapedMessage}
     }
 
     public getSelectedActivatableObject(): ActivatableInterface | undefined {
-        return this.selectedActivatableObjectByDistance;
+        return this.selectedActivatableObjectByPointer ?? this.selectedActivatableObjectByDistance;
     }
 }

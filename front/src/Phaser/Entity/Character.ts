@@ -16,7 +16,6 @@ import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from '../Game/OutlineableInterface';
-import type { OutlineConfig } from '../../Utils/OutlineManager';
 
 const playerNameY = -25;
 
@@ -137,13 +136,6 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public getPosition(): { x: number, y: number } {
         return { x: this.x, y: this.y };
-    }
-
-    public getOutlineConfig(): OutlineConfig {
-        return {
-            thickness: 2,
-            outlineColor: 0xffff00,
-        }
     }
 
     public getObjectToOutline(): Phaser.GameObjects.GameObject {
@@ -425,11 +417,35 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this._pictureStore;
     }
 
-    public setOutlineColor(color: number): void {
-        this.outlineColorStore.setColor(color);
+    public setFollowOutlineColor(color: number): void {
+        this.outlineColorStore.setFollowColor(color);
     }
 
-    public removeOutlineColor(): void {
-        this.outlineColorStore.removeColor();
+    public removeFollowOutlineColor(): void {
+        this.outlineColorStore.removeFollowColor();
+    }
+
+    public setApiOutlineColor(color: number): void {
+        this.outlineColorStore.setApiColor(color);
+    }
+
+    public removeApiOutlineColor(): void {
+        this.outlineColorStore.removeApiColor();
+    }
+
+    public pointerOverOutline(): void {
+        this.outlineColorStore.pointerOver();
+    }
+
+    public pointerOutOutline(): void {
+        this.outlineColorStore.pointerOut();
+    }
+
+    public characterCloseByOutline(): void {
+        this.outlineColorStore.characterCloseBy();
+    }
+
+    public characterFarAwayOutline(): void {
+        this.outlineColorStore.characterFarAway();
     }
 }
