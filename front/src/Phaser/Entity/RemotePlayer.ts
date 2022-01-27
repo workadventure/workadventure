@@ -107,18 +107,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                     console.log('HELLO');
                 }
             },
-            {
-                actionName: "Log Goodbye",
-                callback: () => {
-                    console.log('GOODBYE');
-                }
-            },
-            {
-                actionName: "Clear Goodbye Action",
-                callback: () => {
-                    actionsMenuStore.removeAction("Log Goodbye");
-                }
-            },
         ];
     }
 

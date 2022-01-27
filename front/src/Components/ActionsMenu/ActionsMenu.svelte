@@ -1,9 +1,10 @@
 <script lang="typescript">
     import { fly } from "svelte/transition";
-    import { ActionsMenuData, actionsMenuStore } from '../../Stores/ActionsMenuStore';
+    import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
     import { onDestroy } from "svelte";
 
     import type { Unsubscriber } from "svelte/store";
+    import type { ActionsMenuData } from '../../Stores/ActionsMenuStore';
 
     let actionsMenuData: ActionsMenuData | undefined;
 
@@ -57,7 +58,8 @@
         left: 50%;
         transform: translate(-50%, 0);
         width: 260px !important;
-        max-height: 300px;
+        height: max-content !important;
+        max-height: 40vh;
         margin-top: 200px;
 
         pointer-events: auto;
@@ -66,7 +68,7 @@
         color: whitesmoke;
 
         .actions {
-            max-height: 200px;
+            max-height: calc(100% - 50px);
             width: 100%;
             display:block;
             overflow-x:hidden;

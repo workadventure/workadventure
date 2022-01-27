@@ -1802,7 +1802,7 @@ ${escapedMessage}
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
                     break;
-                case "UserMovedEvent":
+                case "UserMovedEvent": {
                     this.doUpdatePlayerPosition(event.event);
                     const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
                     if (remotePlayer) {
@@ -1810,6 +1810,7 @@ ${escapedMessage}
                         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
                     }
                     break;
+                }
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
