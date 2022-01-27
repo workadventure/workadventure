@@ -29,14 +29,14 @@ const menu: BaseTranslation = {
             short: {
                 high: "High (120 fps)",
                 medium: "Medium (60 fps)",
-                minimum: "Minimum (40 fps)",
-                small: "Small (20 fps)",
+                small: "Small (40 fps)",
+                minimum: "Minimum (20 fps)",
             },
             long: {
                 high: "High video quality (120 fps)",
                 medium: "Medium video quality (60 fps, recommended)",
-                minimum: "Minimum video quality (40 fps)",
-                small: "Small video quality (20 fps)",
+                small: "Small video quality (40 fps)",
+                minimum: "Minimum video quality (20 fps)",
             },
         },
         videoQuality: {
@@ -44,14 +44,14 @@ const menu: BaseTranslation = {
             short: {
                 high: "High (30 fps)",
                 medium: "Medium (20 fps)",
-                minimum: "Minimum (10 fps)",
-                small: "Small (5 fps)",
+                small: "Small (10 fps)",
+                minimum: "Minimum (5 fps)",
             },
             long: {
                 high: "High video quality (30 fps)",
                 medium: "Medium video quality (20 fps, recommended)",
-                minimum: "Minimum video quality (10 fps)",
-                small: "Small video quality (5 fps)",
+                small: "Small video quality (10 fps)",
+                minimum: "Minimum video quality (5 fps)",
             },
         },
         language: {

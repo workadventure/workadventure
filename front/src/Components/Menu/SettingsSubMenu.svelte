@@ -104,13 +104,13 @@
                 >
                 <option value={40}
                     >{isMobile()
-                        ? $LL.menu.settings.gameQuality.short.minimum()
-                        : $LL.menu.settings.gameQuality.long.minimum()}</option
+                        ? $LL.menu.settings.gameQuality.short.small()
+                        : $LL.menu.settings.gameQuality.long.small()}</option
                 >
                 <option value={20}
                     >{isMobile()
-                        ? $LL.menu.settings.gameQuality.short.small()
-                        : $LL.menu.settings.gameQuality.long.small()}</option
+                        ? $LL.menu.settings.gameQuality.short.minimum()
+                        : $LL.menu.settings.gameQuality.long.minimum()}</option
                 >
             </select>
         </div>
@@ -131,13 +131,13 @@
                 >
                 <option value={10}
                     >{isMobile()
-                        ? $LL.menu.settings.videoQuality.short.minimum()
-                        : $LL.menu.settings.videoQuality.long.minimum()}</option
+                        ? $LL.menu.settings.videoQuality.short.small()
+                        : $LL.menu.settings.videoQuality.long.small()}</option
                 >
                 <option value={5}
                     >{isMobile()
-                        ? $LL.menu.settings.videoQuality.short.small()
-                        : $LL.menu.settings.videoQuality.long.small()}</option
+                        ? $LL.menu.settings.videoQuality.short.minimum()
+                        : $LL.menu.settings.videoQuality.long.minimum()}</option
                 >
             </select>
         </div>
