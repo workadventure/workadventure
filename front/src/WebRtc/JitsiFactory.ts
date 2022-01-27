@@ -7,6 +7,7 @@ interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
     startWithVideoMuted: boolean;
     prejoinPageEnabled: boolean;
+    disableDeepLinking: boolean;
 }
 
 interface JitsiOptions {
@@ -40,6 +41,7 @@ const getDefaultConfig = (): jitsiConfigInterface => {
         startWithAudioMuted: !get(requestedMicrophoneState),
         startWithVideoMuted: !get(requestedCameraState),
         prejoinPageEnabled: false,
+        disableDeepLinking: false,
     };
 };
 
@@ -132,64 +134,112 @@ class JitsiFactory {
         return slugify(instance.replace("/", "-") + "-" + roomName);
     }
 
-    public start(
+    public async start(
         roomName: string,
         playerName: string,
         jwt?: string,
         config?: object,
         interfaceConfig?: object,
-        jitsiUrl?: string,
-        jitsiWidth?: number
-    ): Promise<CoWebsite> {
-        return coWebsiteManager.addCoWebsite(
-            async (cowebsiteDiv) => {
-                // Jitsi meet external API maintains some data in local storage
-                // which is sent via the appData URL parameter when joining a
-                // conference. Problem is that this data grows indefinitely. Thus
-                // after some time the URLs get so huge that loading the iframe
-                // becomes slow and eventually breaks completely. Thus lets just
-                // clear jitsi local storage before starting a new conference.
-                window.localStorage.removeItem("jitsiLocalStorage");
+        jitsiUrl?: string
+    ) {
+        const coWebsite = coWebsiteManager.searchJitsi();
 
-                const domain = jitsiUrl || JITSI_URL;
-                if (domain === undefined) {
-                    throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
-                }
-                await this.loadJitsiScript(domain);
+        if (coWebsite) {
+            await coWebsiteManager.closeCoWebsite(coWebsite);
+        }
 
-                const options: JitsiOptions = {
-                    roomName: roomName,
-                    jwt: jwt,
-                    width: "100%",
-                    height: "100%",
-                    parentNode: cowebsiteDiv,
-                    configOverwrite: mergeConfig(config),
-                    interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...interfaceConfig },
-                };
-                if (!options.jwt) {
-                    delete options.jwt;
-                }
+        // Jitsi meet external API maintains some data in local storage
+        // which is sent via the appData URL parameter when joining a
+        // conference. Problem is that this data grows indefinitely. Thus
+        // after some time the URLs get so huge that loading the iframe
+        // becomes slow and eventually breaks completely. Thus lets just
+        // clear jitsi local storage before starting a new conference.
+        window.localStorage.removeItem("jitsiLocalStorage");
 
-                return new Promise((resolve, reject) => {
-                    const doResolve = (): void => {
-                        const iframe = cowebsiteDiv.querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
-                        if (iframe === null) {
-                            throw new Error("Could not find Jitsi Iframe");
-                        }
-                        resolve(iframe);
-                    };
-                    options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
-                    setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
-                    this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-                    this.jitsiApi.executeCommand("displayName", playerName);
+        const domain = jitsiUrl || JITSI_URL;
+        if (domain === undefined) {
+            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+        }
+        await this.loadJitsiScript(domain);
 
-                    this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-                    this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+        const options: JitsiOptions = {
+            roomName: roomName,
+            jwt: jwt,
+            width: "100%",
+            height: "100%",
+            parentNode: coWebsiteManager.getCoWebsiteBuffer(),
+            configOverwrite: mergeConfig(config),
+            interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...interfaceConfig },
+        };
+
+        if (!options.jwt) {
+            delete options.jwt;
+        }
+
+        const doResolve = (): void => {
+            const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+            if (iframe && this.jitsiApi) {
+                const coWebsite = coWebsiteManager.addCoWebsiteFromIframe(iframe, false, undefined, 0, false, true);
+
+                this.jitsiApi.addListener("videoConferenceLeft", () => {
+                    this.closeOrUnload(coWebsite);
                 });
-            },
-            jitsiWidth,
-            0
-        );
+
+                this.jitsiApi.addListener("readyToClose", () => {
+                    this.closeOrUnload(coWebsite);
+                });
+            }
+
+            coWebsiteManager.resizeAllIframes();
+        };
+
+        this.jitsiApi = undefined;
+
+        options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
+        setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
+        this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+        this.jitsiApi.executeCommand("displayName", playerName);
+
+        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
+        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+    }
+
+    private closeOrUnload = function (coWebsite: CoWebsite) {
+        if (coWebsite.closable) {
+            coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
+                console.error("Error during closing a Jitsi Meet");
+            });
+        } else {
+            coWebsiteManager.unloadCoWebsite(coWebsite).catch(() => {
+                console.error("Error during unloading a Jitsi Meet");
+            });
+        }
+    };
+
+    public restart() {
+        if (!this.jitsiApi) {
+            return;
+        }
+
+        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
+        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+
+        const coWebsite = coWebsiteManager.searchJitsi();
+        console.log("jitsi api ", this.jitsiApi);
+        console.log("iframe cowebsite", coWebsite?.iframe);
+
+        if (!coWebsite) {
+            this.destroy();
+            return;
+        }
+
+        this.jitsiApi.addListener("videoConferenceLeft", () => {
+            this.closeOrUnload(coWebsite);
+        });
+
+        this.jitsiApi.addListener("readyToClose", () => {
+            this.closeOrUnload(coWebsite);
+        });
     }
 
     public stop() {
@@ -197,14 +247,16 @@ class JitsiFactory {
             return;
         }
 
-        const jitsiCoWebsite = coWebsiteManager.searchJitsi();
-
-        if (jitsiCoWebsite) {
-            coWebsiteManager.closeJitsi().catch((e) => console.error(e));
-        }
-
         this.jitsiApi.removeListener("audioMuteStatusChanged", this.audioCallback);
         this.jitsiApi.removeListener("videoMuteStatusChanged", this.videoCallback);
+    }
+
+    public destroy() {
+        if (!this.jitsiApi) {
+            return;
+        }
+
+        this.stop();
         this.jitsiApi?.dispose();
     }
 

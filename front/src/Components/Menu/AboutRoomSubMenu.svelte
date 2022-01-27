@@ -100,6 +100,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     .string-HTML {
         white-space: pre-line;
     }
@@ -126,7 +128,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+    @include media-breakpoint-up(md) {
         div.about-room-main {
             section.container-overflow {
                 height: calc(100% - 120px);

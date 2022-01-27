@@ -86,7 +86,7 @@ export class SimplePeer {
             }
         );
 
-        mediaManager.showGameOverlay();
+        mediaManager.showMyCamera();
 
         //receive message start
         this.Connection.webRtcStartMessageStream.subscribe((message: UserSimplePeerInterface) => {

@@ -75,6 +75,7 @@
         max-width: 80vw;
         overflow: auto;
         text-align: center;
+        z-index: 450;
 
         h2 {
             font-family: "Press Start 2P";

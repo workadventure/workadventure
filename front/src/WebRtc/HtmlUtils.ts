@@ -7,6 +7,11 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '" + id + "'");
     }
 
+    public static getElementById<T extends HTMLElement>(id: string): T | undefined {
+        const elem = document.getElementById(id);
+        return HtmlUtils.isHtmlElement<T>(elem) ? elem : undefined;
+    }
+
     public static querySelectorOrFail<T extends HTMLElement>(selector: string): T {
         const elem = document.querySelector<T>(selector);
         if (HtmlUtils.isHtmlElement<T>(elem)) {

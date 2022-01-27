@@ -11,3 +11,9 @@
         </div>
     {/each}
 </div>
+
+<style lang="scss">
+    .main-ban-message-container {
+        z-index: 800;
+    }
+</style>

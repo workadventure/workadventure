@@ -7,8 +7,7 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { cowebsiteCloseButtonId } from "./CoWebsiteManager";
-import { gameOverlayVisibilityStore } from "../Stores/GameOverlayStoreVisibility";
+import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -19,8 +18,6 @@ import { localeDetector } from "../i18n/locales";
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
-
-    private triggerCloseJistiFrame: Map<String, Function> = new Map<String, Function>();
 
     private userInputManager?: UserInputManager;
 
@@ -73,36 +70,12 @@ export class MediaManager {
             });
     }
 
-    public showGameOverlay(): void {
-        const gameOverlay = HtmlUtils.getElementByIdOrFail("game-overlay");
-        gameOverlay.classList.add("active");
-
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        const functionTrigger = () => {
-            this.triggerCloseJitsiFrameButton();
-        };
-        buttonCloseFrame.removeEventListener("click", () => {
-            buttonCloseFrame.blur();
-            functionTrigger();
-        });
-
-        gameOverlayVisibilityStore.showGameOverlay();
+    public showMyCamera(): void {
+        myCameraVisibilityStore.set(true);
     }
 
-    public hideGameOverlay(): void {
-        const gameOverlay = HtmlUtils.getElementByIdOrFail("game-overlay");
-        gameOverlay.classList.remove("active");
-
-        const buttonCloseFrame = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        const functionTrigger = () => {
-            this.triggerCloseJitsiFrameButton();
-        };
-        buttonCloseFrame.addEventListener("click", () => {
-            buttonCloseFrame.blur();
-            functionTrigger();
-        });
-
-        gameOverlayVisibilityStore.hideGameOverlay();
+    public hideMyCamera(): void {
+        myCameraVisibilityStore.set(false);
     }
 
     private getScreenSharingId(userId: string): string {
@@ -177,20 +150,6 @@ export class MediaManager {
             .getElementsByClassName("connecting-spinner")
             .item(0) as HTMLDivElement | null;
         return connectingSpinnerDiv;
-    }
-
-    public addTriggerCloseJitsiFrameButton(id: String, Function: Function) {
-        this.triggerCloseJistiFrame.set(id, Function);
-    }
-
-    public removeTriggerCloseJitsiFrameButton(id: String) {
-        this.triggerCloseJistiFrame.delete(id);
-    }
-
-    private triggerCloseJitsiFrameButton(): void {
-        for (const callback of this.triggerCloseJistiFrame.values()) {
-            callback();
-        }
     }
 
     public setUserInputManager(userInputManager: UserInputManager) {

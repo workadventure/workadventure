@@ -3,9 +3,9 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { Readable, readable } from "svelte/store";
-import { videoFocusStore } from "../Stores/VideoFocusStore";
 import { getIceServersConfig } from "../Components/Video/utils";
-import { isMobile } from "../Enum/EnvironmentVariable";
+import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -43,7 +43,10 @@ export class ScreenSharingPeer extends Peer {
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
             const onStream = (stream: MediaStream | null) => {
-                videoFocusStore.focus(this);
+                highlightedEmbedScreen.highlight({
+                    type: "streamable",
+                    embed: this,
+                });
                 set(stream);
             };
             const onData = (chunk: Buffer) => {
@@ -177,7 +180,13 @@ export class ScreenSharingPeer extends Peer {
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
         this.write(
-            new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true, isMobile: isMobile() }))
+            new Buffer(
+                JSON.stringify({
+                    type: MESSAGE_TYPE_CONSTRAINT,
+                    streamEnded: true,
+                    isMobile: isMediaBreakpointUp("md"),
+                })
+            )
         );
     }
 }

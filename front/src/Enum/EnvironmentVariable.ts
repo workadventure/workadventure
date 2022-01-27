@@ -42,8 +42,6 @@ export const DISABLE_ANONYMOUS: boolean = getEnv("DISABLE_ANONYMOUS") === "true"
 export const OPID_LOGIN_SCREEN_PROVIDER = getEnv("OPID_LOGIN_SCREEN_PROVIDER");
 const FALLBACK_LOCALE = getEnv("FALLBACK_LOCALE") || undefined;
 
-export const isMobile = (): boolean => window.innerWidth <= 800 || window.innerHeight <= 600;
-
 export {
     DEBUG_MODE,
     START_ROOM_URL,

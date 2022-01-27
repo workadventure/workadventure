@@ -67,6 +67,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     div.global-message-main {
         height: calc(100% - 50px);
         display: grid;
@@ -109,7 +111,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+    @include media-breakpoint-up(md) {
         .global-message-content {
             height: calc(100% - 5px);
         }

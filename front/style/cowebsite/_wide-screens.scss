@@ -1,0 +1,41 @@
+@include media-breakpoint-down(lg) {
+  #cowebsite {
+    right: 0;
+    top: 0;
+    width: 50%;
+    height: 100vh;
+    display: flex;
+    visibility: collapse;
+    transform: translateX(100%);
+
+    &.loading {
+      visibility: visible;
+      transform: translateX(0%);
+    }
+
+    &.opened {
+      visibility: visible;
+      transform: translateX(0%);
+    }
+
+    &.closing {
+      visibility: visible;
+    }
+
+    main {
+      width: 100%;
+    }
+
+    aside {
+      width: 30px;
+
+      img {
+        transform: rotate(90deg);
+      }
+    }
+
+    &-aside-holder {
+      cursor: ew-resize;
+    }
+  }
+}

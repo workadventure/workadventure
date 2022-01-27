@@ -2,7 +2,7 @@ import "phaser";
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../style/index.scss";
 
-import { DEBUG_MODE, isMobile } from "./Enum/EnvironmentVariable";
+import { DEBUG_MODE } from "./Enum/EnvironmentVariable";
 import { LoginScene } from "./Phaser/Login/LoginScene";
 import { ReconnectingScene } from "./Phaser/Reconnecting/ReconnectingScene";
 import { SelectCharacterScene } from "./Phaser/Login/SelectCharacterScene";
@@ -24,6 +24,7 @@ import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import { analyticsClient } from "./Administration/AnalyticsClient";
+import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -90,7 +91,7 @@ const config: GameConfig = {
     scene: [
         EntryScene,
         LoginScene,
-        isMobile() ? SelectCharacterMobileScene : SelectCharacterScene,
+        isMediaBreakpointUp("md") ? SelectCharacterMobileScene : SelectCharacterScene,
         SelectCompanionScene,
         EnableCameraScene,
         ReconnectingScene,
@@ -136,7 +137,6 @@ const config: GameConfig = {
     },
 };
 
-//const game = new Phaser.Game(config);
 const game = new Game(config);
 
 waScaleManager.setGame(game);
@@ -156,7 +156,7 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 
 const app = new App({
-    target: HtmlUtils.getElementByIdOrFail("svelte-overlay"),
+    target: HtmlUtils.getElementByIdOrFail("game-overlay"),
     props: {
         game: game,
     },

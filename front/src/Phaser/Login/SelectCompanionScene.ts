@@ -9,7 +9,7 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { isMobile } from "../../Enum/EnvironmentVariable";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -44,7 +44,7 @@ export class SelectCompanionScene extends ResizableScene {
         selectCompanionSceneVisibleStore.set(true);
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
