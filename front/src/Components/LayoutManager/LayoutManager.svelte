@@ -1,6 +1,6 @@
 <script lang="ts">
     import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
-    import { locale } from "../../i18n/i18n-svelte";
+    import { i18nJson } from "../../i18n/locales";
 
     function onClick(callback: () => void) {
         callback();
@@ -8,20 +8,7 @@
 
     function i18n(text: string | number | boolean | undefined): string {
         if (typeof text === "string") {
-            if (text.trim().startsWith("{")) {
-                try {
-                    let textObject = JSON.parse(text);
-                    if (textObject[$locale]) {
-                        return textObject[$locale];
-                    } else if (Object.keys(textObject).length > 0) {
-                        // fallback to first value
-                        return textObject[Object.keys(textObject)[0]];
-                    }
-                } catch (err) {
-                    //
-                }
-            }
-            return text;
+            return i18nJson(text);
         }
         return "";
     }

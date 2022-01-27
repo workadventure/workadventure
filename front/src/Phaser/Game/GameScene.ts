@@ -92,6 +92,7 @@ import { followUsersColorStore } from "../../Stores/FollowStore";
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import { i18nJson } from "../../i18n/locales";
 
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -1049,7 +1050,7 @@ export class GameScene extends DirtyScene {
                     );
                     return;
                 }
-                const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
+                const escapedMessage = HtmlUtils.escapeHtml(i18nJson(openPopupEvent.message));
                 let html = '<div id="container" hidden>';
                 if (escapedMessage) {
                     html += `<div class="nes-container with-title is-centered">
@@ -1063,7 +1064,9 @@ ${escapedMessage}
                 for (const button of openPopupEvent.buttons) {
                     html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(
                         button.className ?? ""
-                    )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
+                    )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(
+                        i18nJson(button.label)
+                    )}</button>`;
                     id++;
                 }
                 html += "</div>";
