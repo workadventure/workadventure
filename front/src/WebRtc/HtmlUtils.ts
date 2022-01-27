@@ -40,6 +40,7 @@ export class HtmlUtils {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text = HtmlUtils.escapeHtml(text);
         return text.replace(urlRegex, (url: string) => {
+            url = HtmlUtils.htmlDecode(url);
             const link = document.createElement("a");
             link.href = url;
             link.target = "_blank";
@@ -48,6 +49,15 @@ export class HtmlUtils {
             link.setAttribute("style", style);
             return link.outerHTML;
         });
+    }
+
+    private static htmlDecode(input: string): string {
+        const doc = new DOMParser().parseFromString(input, "text/html");
+        const text = doc.documentElement.textContent;
+        if (text === null) {
+            throw new Error("Unexpected non parseable string");
+        }
+        return text;
     }
 
     public static isClickedInside(event: MouseEvent, target: HTMLElement): boolean {
