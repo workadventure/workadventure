@@ -2,7 +2,7 @@ import type * as SimplePeerNamespace from "simple-peer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { Readable, readable } from "svelte/store";
+import { Readable, readable, writable, Writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
@@ -22,7 +22,7 @@ export class ScreenSharingPeer extends Peer {
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly statusStore: Readable<PeerStatus>;
+    public readonly statusStore: Writable<PeerStatus>;
 
     constructor(
         user: UserSimplePeerInterface,
@@ -70,7 +70,7 @@ export class ScreenSharingPeer extends Peer {
             };
         });
 
-        this.statusStore = readable<PeerStatus>("connecting", (set) => {
+        this.statusStore = writable<PeerStatus>("connecting", (set) => {
             const onConnect = () => {
                 set("connected");
             };
@@ -141,6 +141,11 @@ export class ScreenSharingPeer extends Peer {
         if (!stream) {
             this.isReceivingStream = false;
         } else {
+            //Check if the peer connection is already in connect status. In this case, the status store must be set to 'connected'.
+            //In the case or player A send stream and player B send a stream, it's same peer connection, also the status must be changed to connected.
+            if (this._connected) {
+                this.statusStore.set("connected");
+            }
             this.isReceivingStream = true;
         }
     }
