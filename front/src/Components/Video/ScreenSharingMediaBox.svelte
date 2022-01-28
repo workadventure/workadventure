@@ -30,10 +30,11 @@
     {#if $statusStore === "error"}
         <div class="rtc-error" />
     {/if}
-    {#if $streamStore === null}
-        <i style="background-color: {getColorByString(name)};">{name}</i>
-    {:else}
+    {#if $streamStore !== null}
         <!-- svelte-ignore a11y-media-has-caption -->
+        <i class="container">
+            <span style="background-color: {getColorByString(name)};">{name}</span>
+        </i>
         <video
             use:srcObject={$streamStore}
             autoplay
@@ -47,6 +48,11 @@
     .video-container {
         video {
             width: 100%;
+        }
+        i {
+            span {
+                padding: 2px 32px;
+            }
         }
     }
 </style>

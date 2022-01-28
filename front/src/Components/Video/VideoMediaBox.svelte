@@ -59,7 +59,7 @@
     {/if}
     <!-- {#if !$constraintStore || $constraintStore.video === false} -->
     <i class="container">
-        <span style="background-color: {getColorByString(name)};">{peer.userName}</span>
+        <span style="background-color: {getColorByString(name)};">{name}</span>
     </i>
     <div class="woka-icon {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
         <Woka userId={peer.userId} placeholderSrc={""} />

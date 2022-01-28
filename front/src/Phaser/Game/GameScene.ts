@@ -1605,6 +1605,7 @@ ${escapedMessage}
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
+        //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
         //mediaManager.hideMyCamera();
 
         for (const iframeEvents of this.iframeSubscriptionList) {
