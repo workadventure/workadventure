@@ -141,8 +141,9 @@ export class ScreenSharingPeer extends Peer {
         if (!stream) {
             this.isReceivingStream = false;
         } else {
-            //Check if the peer connection is already in connect status. In this case, the status store must be set to 'connected'.
-            //In the case or player A send stream and player B send a stream, it's same peer connection, also the status must be changed to connected.
+            //Check if the peer connection is already connected status. In this case, the status store must be set to 'connected'.
+            //In the case or player A send stream and player B send a stream, it's same peer connection, also the status must be changed to connect.
+            //TODO add event listening when the stream is ready for displaying and change the status
             if (this._connected) {
                 this.statusStore.set("connected");
             }
