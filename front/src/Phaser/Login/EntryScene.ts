@@ -8,8 +8,6 @@ import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
 
-const $LL = get(LL);
-
 export const EntrySceneName = "EntryScene";
 
 /**
@@ -43,6 +41,7 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
+                        const $LL = get(LL);
                         if (err.response && err.response.status == 404) {
                             ErrorScene.showError(
                                 new WAError(
