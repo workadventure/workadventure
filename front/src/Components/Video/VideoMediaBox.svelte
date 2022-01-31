@@ -50,7 +50,7 @@
     });
 </script>
 
-<div class="video-container" class:no-clikable={!clickable} bind:this={videoContainer}>
+<div class="video-container" class:no-clikable={!clickable} bind:this={videoContainer} on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}>
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
     {/if}
