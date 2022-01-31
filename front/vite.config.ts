@@ -1,10 +1,13 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { envConfig } from "@geprog/vite-plugin-env-config";
+import sveltePreprocess from "svelte-preprocess";
 
 export default defineConfig({
     plugins: [
-        svelte({}),
+        svelte({
+            preprocess: sveltePreprocess(),
+        }),
         envConfig({
             variables: [
                 "SKIP_RENDER_OPTIMIZATIONS",
