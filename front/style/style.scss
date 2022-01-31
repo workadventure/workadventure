@@ -38,8 +38,6 @@ body .message-info.warning{
 .video-container {
     display: flex;
     transition: all 0.2s ease;
-    background-color: #00000099;
-    border-radius: 15px;
     cursor: url('./images/cursor_pointer.png'), pointer;
     width: 100%;
 
@@ -55,7 +53,6 @@ body .message-info.warning{
         max-width: 100%;
         width: 100%;
         cursor: url('./images/cursor_pointer.png'), pointer;
-        border-radius: 15px;
 
         &.mobile{
             width: 100%;
