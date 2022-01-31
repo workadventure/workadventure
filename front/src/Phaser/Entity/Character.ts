@@ -134,6 +134,18 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
+    public setClickable(clickable: boolean = true): void {
+        if (clickable) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+            return;
+        }
+        this.disableInteractive();
+    }
+
     public getPosition(): { x: number, y: number } {
         return { x: this.x, y: this.y };
     }

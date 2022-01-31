@@ -26,7 +26,6 @@ function createActionsMenuStore() {
         removeAction: (actionName: string) => {
             update((data) => {
                 const actionIndex = data?.actions.findIndex(action => action.actionName === actionName);
-                console.log(actionIndex);
                 if (actionIndex !== undefined && actionIndex != -1) {
                     data?.actions.splice(actionIndex, 1);
                 }

@@ -16,6 +16,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public userId: number;
     public readonly activationRadius: number;
     
+    private registeredActions: { actionName: string, callback: Function }[];
     private visitCardUrl: string | null;
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
@@ -43,13 +44,16 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             direction,
             moving,
             1,
-            !!visitCardUrl,
+            true,
             companion,
             companionTexturePromise
         );
 
         //set data
         this.userId = userId;
+        this.registeredActions = [];
+        this.registerDefaultActionsMenuActions();
+        this.setClickable(this.registeredActions.length > 0);
         this.activationRadius = activationRadius ?? 96;
         this.visitCardUrl = visitCardUrl;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
@@ -71,6 +75,19 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
+    public registerActionsMenuAction(action: { actionName: string, callback: Function }): void {
+        this.registeredActions.push(action);
+        this.updateIsClickable();
+    }
+
+    public unregisterActionsMenuAction(actionName: string) {
+        const index = this.registeredActions.findIndex(action => action.actionName === actionName);
+        if (index !== -1) {
+            this.registeredActions.splice(index, 1);
+        }
+        this.updateIsClickable();
+    }
+
     public activate(): void {
         this.toggleActionsMenu();
     }
@@ -81,33 +98,31 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         super.destroy();
     }
 
+    private updateIsClickable(): void {
+        this.setClickable(this.registeredActions.length > 0);
+    }
+
     private toggleActionsMenu(): void {
         if (this.isActionsMenuInitialized) {
             actionsMenuStore.clear();
             return;
         }
         actionsMenuStore.initialize(this.playerName);
-        for (const action of this.getActionsMenuActions()) {
+        for (const action of this.registeredActions) {
             actionsMenuStore.addAction(action.actionName, action.callback);
         }
     }
 
-    private getActionsMenuActions(): { actionName: string, callback: Function }[] {
-        return [
-            {
+    private registerDefaultActionsMenuActions(): void {
+        if (this.visitCardUrl) {
+            this.registeredActions.push({
                 actionName: "Visiting Card",
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();
                 }
-            },
-            {
-                actionName: "Log Hello",
-                callback: () => {
-                    console.log('HELLO');
-                }
-            },
-        ];
+            });
+        }
     }
 
     private bindEventHandlers(): void {
