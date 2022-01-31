@@ -26,9 +26,9 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
                 addPeer($screenSharingLocalMedia);
             }
 
-           const $highlightedEmbedScreen = get(highlightedEmbedScreen);
+            const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
-            if ($highlightedEmbedScreen?.type === 'streamable' && !peers.has($highlightedEmbedScreen.embed.uniqueId)) {
+            if ($highlightedEmbedScreen?.type === "streamable" && !peers.has($highlightedEmbedScreen.embed.uniqueId)) {
                 highlightedEmbedScreen.removeHighlight();
             }
 
