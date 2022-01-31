@@ -61,13 +61,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         });
 
         this.bindEventHandlers();
-
-        this.registerActionsMenuAction({
-            actionName: "ddd",
-            callback: () => {
-                console.log('ddd');
-            },
-        });
     }
 
     public updatePosition(position: PointInterface): void {
