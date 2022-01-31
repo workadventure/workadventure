@@ -37,6 +37,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     //private teleportation: Sprite;
     private invisible: boolean;
+    private clickable: boolean;
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
@@ -62,6 +63,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.scene = scene;
         this.playerName = name;
         this.invisible = true;
+        this.clickable = false;
 
         this.sprites = new Map<string, Sprite>();
         this._pictureStore = writable(undefined);
@@ -98,13 +100,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerNameText);
 
-        if (isClickable) {
-            this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
-                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
-                useHandCursor: true,
-            });
-        }
+        this.setClickable(isClickable);
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
             if (color === undefined) {
@@ -135,6 +131,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     public setClickable(clickable: boolean = true): void {
+        if (this.clickable === clickable) {
+            return;
+        }
+        this.clickable = clickable;
         if (clickable) {
             this.setInteractive({
                 hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
@@ -144,6 +144,10 @@ export abstract class Character extends Container implements OutlineableInterfac
             return;
         }
         this.disableInteractive();
+    }
+
+    public isClickable() {
+        return this.clickable;
     }
 
     public getPosition(): { x: number, y: number } {

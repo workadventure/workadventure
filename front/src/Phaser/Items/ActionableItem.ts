@@ -75,6 +75,10 @@ export class ActionableItem implements ActivatableInterface{
         return this.sprite.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
 
+    public isActivatable(): boolean {
+        return this.isSelectable;
+    }
+
     public activate(): void {
         this.onActivateCallback(this);
     }

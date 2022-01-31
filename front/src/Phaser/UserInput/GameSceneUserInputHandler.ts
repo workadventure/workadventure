@@ -53,7 +53,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleSpaceKeyUpEvent(event: Event): Event {
-        this.gameScene.getActivatablesManager().getSelectedActivatableObject()?.activate();
+        const activatable = this.gameScene.getActivatablesManager().getSelectedActivatableObject();
+        if (activatable && activatable.isActivatable()) {
+            activatable.activate();    
+        }
         return event;
     }
 }

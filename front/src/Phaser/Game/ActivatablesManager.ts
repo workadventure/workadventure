@@ -70,7 +70,7 @@ export class ActivatablesManager {
         let closestObject: ActivatableInterface | undefined = undefined;
 
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
-            if (object.activationRadius > distance && shortestDistance > distance) {
+            if (object.isActivatable() && object.activationRadius > distance && shortestDistance > distance) {
                 shortestDistance = distance;
                 closestObject = object;
             }
