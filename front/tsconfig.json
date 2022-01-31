@@ -15,7 +15,7 @@
     "allowJs": true,
     "esModuleInterop": true,
 
-    "importsNotUsedAsValues": "error",
+    "importsNotUsedAsValues": "remove",
 
     "strict": true,                        /* Enable all strict type-checking options. */
     "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */
