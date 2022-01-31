@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
     "@tsconfig/svelte": "^1.0.10",
     "@types/google-protobuf": "^3.7.3",
     "@types/jasmine": "^3.5.10",
@@ -37,6 +38,7 @@
     "ts-node": "^10.4.0",
     "tsconfig-paths": "^3.9.0",
     "typescript": "^4.5.3",
+    "vite": "^2.7.13",
     "webpack": "^5.37.0",
     "webpack-cli": "^4.7.0",
     "webpack-dev-server": "^3.11.2"
