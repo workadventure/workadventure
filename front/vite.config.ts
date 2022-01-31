@@ -6,6 +6,10 @@ import sveltePreprocess from "svelte-preprocess";
 export default defineConfig({
     server: {
         port: 8080,
+        hmr: {
+            // workaround for development in docker
+            clientPort: 80,
+        }
     },
     plugins: [
         svelte({
