@@ -75,7 +75,7 @@
   "scripts": {
     "start": "run-p templater serve svelte-check-watch typesafe-i18n",
     "templater": "cross-env ./templater.sh",
-    "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
+    "serve": "cross-env vite --host",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
     "build-typings": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production BUILD_TYPINGS=1 webpack",
     "test": "cross-env TS_NODE_PROJECT=\"tsconfig-for-jasmine.json\" ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",

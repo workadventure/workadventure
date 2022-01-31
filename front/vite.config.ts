@@ -4,6 +4,9 @@ import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
 
 export default defineConfig({
+    server: {
+        port: 8080,
+    },
     plugins: [
         svelte({
             preprocess: sveltePreprocess(),
