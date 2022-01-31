@@ -16,6 +16,7 @@
     import { embedScreenLayout } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { localUserStore } from "../Connexion/LocalUserStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -32,8 +33,10 @@
         if (isSilent) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
+            localUserStore.setCameraEnable(false);
         } else {
             requestedCameraState.enableWebcam();
+            localUserStore.setCameraEnable(true);
         }
     }
 
@@ -41,8 +44,10 @@
         if (isSilent) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
+            localUserStore.setMicrophoneEnable(false);
         } else {
             requestedMicrophoneState.enableMicrophone();
+            localUserStore.setMicrophoneEnable(true);
         }
     }
 

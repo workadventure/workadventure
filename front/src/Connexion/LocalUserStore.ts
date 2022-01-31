@@ -22,6 +22,8 @@ const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
+const cameraEnable = "cameraEnable";
+const microphoneEnable = "microEnable";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 
@@ -222,6 +224,22 @@ class LocalUserStore {
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    setCameraEnable(enable: boolean) {
+        localStorage.setItem(cameraEnable, enable ? "1" : "0");
+    }
+
+    getCameraEnable() {
+        return localStorage.getItem(cameraEnable) === "0" ? false : true;
+    }
+
+    setMicrophoneEnable(enable: boolean) {
+        localStorage.setItem(microphoneEnable, enable ? "1" : "0");
+    }
+
+    getMicrophoneEnable() {
+        return localStorage.getItem(microphoneEnable) === "0" ? false : true;
     }
 
     getAllUserProperties(): Map<string, unknown> {

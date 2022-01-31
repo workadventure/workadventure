@@ -15,7 +15,7 @@ import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsErro
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set, update } = writable(localUserStore.getCameraEnable());
 
     return {
         subscribe,
@@ -28,7 +28,7 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set, update } = writable(localUserStore.getMicrophoneEnable());
 
     return {
         subscribe,
