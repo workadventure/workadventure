@@ -6,8 +6,9 @@ import { Readable, readable, writable, Writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import Peer from "simple-peer";
 
-const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
+// const { default: Peer } = await import("simple-peer");
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.

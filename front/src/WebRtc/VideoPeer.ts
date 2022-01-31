@@ -10,8 +10,9 @@ import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import Peer from "simple-peer";
 
-const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
+// const { default: Peer } = await import("simple-peer");
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
