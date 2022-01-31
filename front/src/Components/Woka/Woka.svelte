@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { onDestroy } from "svelte";
 
     import { gameManager } from "../../Phaser/Game/GameManager";

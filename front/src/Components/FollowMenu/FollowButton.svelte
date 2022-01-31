@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import followImg from "../images/follow.svg";
 
     export let hidden: Boolean;

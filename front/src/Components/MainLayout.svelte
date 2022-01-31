@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayout, hasEmbedScreen } from "../Stores/EmbedScreensStore";

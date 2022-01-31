@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { AudioContext } from "standardized-audio-context";
     import { SoundMeter } from "../Phaser/Components/SoundMeter";
     import { onDestroy } from "svelte";

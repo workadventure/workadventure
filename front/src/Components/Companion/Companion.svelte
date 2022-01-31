@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import type { PictureStore } from "../../Stores/PictureStore";
     import { onDestroy } from "svelte";
