@@ -31,10 +31,10 @@
         <div class="rtc-error" />
     {/if}
     {#if $streamStore !== null}
-        <!-- svelte-ignore a11y-media-has-caption -->
         <i class="container">
             <span style="background-color: {getColorByString(name)};">{name}</span>
         </i>
+        <!-- svelte-ignore a11y-media-has-caption -->
         <video
             use:srcObject={$streamStore}
             autoplay
