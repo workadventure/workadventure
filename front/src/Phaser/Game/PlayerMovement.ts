@@ -41,7 +41,7 @@ export class PlayerMovement {
             oldX: this.startPosition.x,
             oldY: this.startPosition.y,
             direction: this.endPosition.direction,
-            moving: this.endPosition.moving,
+            moving: this.isOutdated(tick) ? false : this.endPosition.moving,
         };
     }
 }

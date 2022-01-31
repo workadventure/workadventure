@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 const camera: NonNullable<Translation["camera"]> = {
     enable: {
         title: "Allumez votre caméra et votre microphone",
-        start: "C'est partie!",
+        start: "C'est parti!",
     },
     help: {
         title: "Accès à la caméra / au microphone nécessaire",

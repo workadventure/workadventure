@@ -52,17 +52,17 @@ WA.nav.goToRoom("/_/global/<path to global map>.json#start-layer-2")
 ### Opening/closing web page in Co-Websites
 
 ```
-WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = "", position: number = 0): Promise<CoWebsite>
+WA.nav.openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = "", position: number, closable: boolean, lazy: boolean): Promise<CoWebsite>
 ```
 
-Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow), position in whitch slot the web page will be open.
-You can have only 5 co-wbesites open simultaneously.
+Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame. `allowApi` allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the `openWebsiteAllowApi` property in the map). `allowPolicy` grants additional access rights to the iFrame. The `allowPolicy` parameter is turned into an [`allow` feature policy in the iFrame](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-allow), position in whitch slot the web page will be open, closable allow to close the webpage also you need to close it by the api and lazy
+it's to add the cowebsite but don't load it.
 
 Example:
 
 ```javascript
 const coWebsite = await WA.nav.openCoWebSite('https://www.wikipedia.org/');
-const coWebsiteWorkAdventure = await WA.nav.openCoWebSite('https://workadventu.re/', true, "", 1);
+const coWebsiteWorkAdventure = await WA.nav.openCoWebSite('https://workadventu.re/', true, "", 1, true, true);
 // ...
 coWebsite.close();
 ```

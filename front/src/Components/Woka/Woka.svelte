@@ -22,10 +22,21 @@
         src = source ?? placeholderSrc;
     });
 
+    function noDrag() {
+        return false;
+    }
+
     onDestroy(unsubscribe);
 </script>
 
-<img {src} alt="" class="nes-pointer" style="--theme-width: {width}; --theme-height: {height}" />
+<img
+    {src}
+    alt=""
+    class="nes-pointer noselect"
+    style="--theme-width: {width}; --theme-height: {height}"
+    draggable="false"
+    on:dragstart|preventDefault={noDrag}
+/>
 
 <style>
     img {

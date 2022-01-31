@@ -30,7 +30,7 @@ section.section-input-send-text {
   }
 }
 
-@media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+@include media-breakpoint-up(md) {
   section.section-input-send-text {
     --height-toolbar: 30%;
 

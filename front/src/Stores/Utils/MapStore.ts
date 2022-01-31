@@ -96,6 +96,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
             const unsubscribe = storeByKey.subscribe((newMapValue) => {
                 if (unsubscribeDeepStore) {
                     unsubscribeDeepStore();
+                    unsubscribeDeepStore = undefined;
                 }
                 if (newMapValue === undefined) {
                     set(undefined);
@@ -115,6 +116,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
                 unsubscribe();
                 if (unsubscribeDeepStore) {
                     unsubscribeDeepStore();
+                    unsubscribeDeepStore = undefined;
                 }
             };
         });

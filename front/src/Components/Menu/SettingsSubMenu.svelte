@@ -2,11 +2,11 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { videoConstraintStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import { isMobile } from "../../Enum/EnvironmentVariable";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import type { Locales } from "../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -85,6 +85,8 @@
     function closeMenu() {
         menuVisiblilityStore.set(false);
     }
+
+    const isMobile = isMediaBreakpointUp("md");
 </script>
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
@@ -93,24 +95,24 @@
         <div class="nes-select is-dark">
             <select bind:value={valueGame}>
                 <option value={120}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.gameQuality.short.high()
                         : $LL.menu.settings.gameQuality.long.high()}</option
                 >
                 <option value={60}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.gameQuality.short.medium()
                         : $LL.menu.settings.gameQuality.long.medium()}</option
                 >
                 <option value={40}
-                    >{isMobile()
-                        ? $LL.menu.settings.gameQuality.short.minimum()
-                        : $LL.menu.settings.gameQuality.long.minimum()}</option
-                >
-                <option value={20}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.gameQuality.short.small()
                         : $LL.menu.settings.gameQuality.long.small()}</option
+                >
+                <option value={20}
+                    >{isMobile
+                        ? $LL.menu.settings.gameQuality.short.minimum()
+                        : $LL.menu.settings.gameQuality.long.minimum()}</option
                 >
             </select>
         </div>
@@ -120,24 +122,24 @@
         <div class="nes-select is-dark">
             <select bind:value={valueVideo}>
                 <option value={30}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.videoQuality.short.high()
                         : $LL.menu.settings.videoQuality.long.high()}</option
                 >
                 <option value={20}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.videoQuality.short.medium()
                         : $LL.menu.settings.videoQuality.long.medium()}</option
                 >
                 <option value={10}
-                    >{isMobile()
-                        ? $LL.menu.settings.videoQuality.short.minimum()
-                        : $LL.menu.settings.videoQuality.long.minimum()}</option
-                >
-                <option value={5}
-                    >{isMobile()
+                    >{isMobile
                         ? $LL.menu.settings.videoQuality.short.small()
                         : $LL.menu.settings.videoQuality.long.small()}</option
+                >
+                <option value={5}
+                    >{isMobile
+                        ? $LL.menu.settings.videoQuality.short.minimum()
+                        : $LL.menu.settings.videoQuality.long.minimum()}</option
                 >
             </select>
         </div>
@@ -199,6 +201,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     div.settings-main {
         height: calc(100% - 40px);
         overflow-y: auto;
@@ -236,7 +240,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+    @include media-breakpoint-up(md) {
         div.settings-main {
             section {
                 padding: 0;

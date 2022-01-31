@@ -83,7 +83,8 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json"
+        "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+        "ICON_URL": "//icon-"+url,
       }
     },
     "uploader": {
@@ -109,7 +110,15 @@
     "redis": {
       "image": "redis:6",
       "ports": [6379]
-    }
+    },
+    "iconserver": {
+      "image": "matthiasluedtke/iconserver:v3.13.0",
+      "host": {
+        "url": "icon-"+url,
+        "containerPort": 8080,
+      },
+      "ports": [8080]
+    },
   },
   "config": {
     k8sextension(k8sConf)::
@@ -205,6 +214,16 @@
               spec+: {
                 tls+: [{
                   hosts: ["maps-"+url],
+                  secretName: "certificate-tls"
+                }]
+              }
+             }
+          },
+          iconserver+: {
+            ingress+: {
+              spec+: {
+                tls+: [{
+                  hosts: ["icon-"+url],
                   secretName: "certificate-tls"
                 }]
               }

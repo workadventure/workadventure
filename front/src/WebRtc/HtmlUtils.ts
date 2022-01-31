@@ -7,6 +7,11 @@ export class HtmlUtils {
         throw new Error("Cannot find HTML element with id '" + id + "'");
     }
 
+    public static getElementById<T extends HTMLElement>(id: string): T | undefined {
+        const elem = document.getElementById(id);
+        return HtmlUtils.isHtmlElement<T>(elem) ? elem : undefined;
+    }
+
     public static querySelectorOrFail<T extends HTMLElement>(selector: string): T {
         const elem = document.querySelector<T>(selector);
         if (HtmlUtils.isHtmlElement<T>(elem)) {
@@ -35,6 +40,7 @@ export class HtmlUtils {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text = HtmlUtils.escapeHtml(text);
         return text.replace(urlRegex, (url: string) => {
+            url = HtmlUtils.htmlDecode(url);
             const link = document.createElement("a");
             link.href = url;
             link.target = "_blank";
@@ -43,6 +49,15 @@ export class HtmlUtils {
             link.setAttribute("style", style);
             return link.outerHTML;
         });
+    }
+
+    private static htmlDecode(input: string): string {
+        const doc = new DOMParser().parseFromString(input, "text/html");
+        const text = doc.documentElement.textContent;
+        if (text === null) {
+            throw new Error("Unexpected non parseable string");
+        }
+        return text;
     }
 
     public static isClickedInside(event: MouseEvent, target: HTMLElement): boolean {

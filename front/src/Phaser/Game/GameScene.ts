@@ -250,7 +250,7 @@ export class GameScene extends DirtyScene {
         }
         this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in.mp3");
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
-        //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
+        this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -558,6 +558,12 @@ export class GameScene extends DirtyScene {
                 .catch((e) => console.error(e));
         }
 
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getTileDimensions()
+        );
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
@@ -632,13 +638,9 @@ export class GameScene extends DirtyScene {
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
-                this.sound.play("audio-webrtc-in", {
-                    volume: 0.2,
-                });
+                this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeerNumber) {
-                this.sound.play("audio-webrtc-out", {
-                    volume: 0.2,
-                });
+                this.playSound("audio-webrtc-out");
             }
             oldPeerNumber = newPeerNumber;
         });
@@ -1259,21 +1261,21 @@ ${escapedMessage}
                 throw new Error("Unknown query source");
             }
 
-            const coWebsite = await coWebsiteManager.loadCoWebsite(
+            const coWebsite = coWebsiteManager.addCoWebsite(
                 openCoWebsite.url,
                 iframeListener.getBaseUrlFromSource(source),
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
-                openCoWebsite.position
+                openCoWebsite.position,
+                openCoWebsite.closable ?? true
             );
 
-            if (!coWebsite) {
-                throw new Error("Error on opening co-website");
+            if (openCoWebsite.lazy !== undefined && !openCoWebsite.lazy) {
+                await coWebsiteManager.loadCoWebsite(coWebsite);
             }
 
             return {
                 id: coWebsite.iframe.id,
-                position: coWebsite.position,
             };
         });
 
@@ -1283,7 +1285,6 @@ ${escapedMessage}
             return coWebsites.map((coWebsite: CoWebsite) => {
                 return {
                     id: coWebsite.iframe.id,
-                    position: coWebsite.position,
                 };
             });
         });
@@ -1559,6 +1560,12 @@ ${escapedMessage}
         }
     }
 
+    public playSound(sound: string) {
+        this.sound.play(sound, {
+            volume: 0.2,
+        });
+    }
+
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites().catch((e) => console.error(e));
@@ -1596,7 +1603,10 @@ ${escapedMessage}
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
-        mediaManager.hideGameOverlay();
+        //When we leave game, the camera is stop to be reopen after.
+        // I think that we could keep camera status and the scene can manage camera setup
+        //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
+        //mediaManager.hideMyCamera();
 
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
@@ -1729,6 +1739,22 @@ ${escapedMessage}
                 this.connection?.emitEmoteEvent(emoteKey);
                 analyticsClient.launchEmote(emoteKey);
             });
+            const moveToParam = urlManager.getHashParameter("moveTo");
+            if (moveToParam) {
+                try {
+                    const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                    this.pathfindingManager
+                        .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
+                        .then((path) => {
+                            if (path && path.length > 0) {
+                                this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                            }
+                        })
+                        .catch((reason) => console.warn(reason));
+                } catch (err) {
+                    console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+                }
+            }
         } catch (err) {
             if (err instanceof TextureError) {
                 gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
@@ -2070,7 +2096,18 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
-    private startJitsi(roomName: string, jwt?: string): void {
+    public enableMediaBehaviors() {
+        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+        this.connection?.setSilent(!!silent);
+        mediaManager.showMyCamera();
+    }
+
+    public disableMediaBehaviors() {
+        this.connection?.setSilent(true);
+        mediaManager.hideMyCamera();
+    }
+
+    public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2081,28 +2118,21 @@ ${escapedMessage}
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
         const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
-        const jitsiWidth = allProps.get(GameMapProperties.JITSI_WIDTH) as number | undefined;
 
-        jitsiFactory
-            .start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth)
-            .catch((e) => console.error(e));
-        this.connection?.setSilent(true);
-        mediaManager.hideGameOverlay();
-        analyticsClient.enteredJitsi(roomName, this.room.id);
-
-        //permit to stop jitsi when user close iframe
-        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
-            this.stopJitsi();
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl).catch(() => {
+            console.error("Cannot start a Jitsi co-website");
         });
+        this.disableMediaBehaviors();
+        analyticsClient.enteredJitsi(roomName, this.room.id);
     }
 
-    private stopJitsi(): void {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
-        jitsiFactory.stop();
-        mediaManager.showGameOverlay();
-
-        mediaManager.removeTriggerCloseJitsiFrameButton("close-jitsi");
+    public stopJitsi(): void {
+        const coWebsite = coWebsiteManager.searchJitsi();
+        if (coWebsite) {
+            coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => {
+                console.error("Error during Jitsi co-website closing", e);
+            });
+        }
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

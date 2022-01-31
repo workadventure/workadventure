@@ -8,7 +8,6 @@ import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
 import { isGoToPageEvent } from "./Events/GoToPageEvent";
-import { isCloseCoWebsite, CloseCoWebsiteEvent } from "./Events/CloseCoWebsiteEvent";
 import {
     IframeErrorAnswerEvent,
     IframeQueryMap,

@@ -36,6 +36,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     div.guest-main {
         height: calc(100% - 56px);
 
@@ -57,7 +59,7 @@
         }
     }
 
-    @media only screen and (max-width: 900px), only screen and (max-height: 600px) {
+    @include media-breakpoint-up(md) {
         div.guest-main {
             section.share-url.not-mobile {
                 display: none;

@@ -31,4 +31,8 @@ export class MathUtils {
         const distance = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
         return squared ? Math.sqrt(distance) : distance;
     }
+
+    public static randomFromArray<T>(array: T[]): T {
+        return array[Math.floor(Math.random() * array.length)];
+    }
 }
