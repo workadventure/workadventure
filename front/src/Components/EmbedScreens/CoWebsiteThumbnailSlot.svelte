@@ -204,6 +204,10 @@
             border-image-outset: 1;
         }
 
+        &:not(.vertical) {
+            animation: bounce 0.35s ease 4 alternate;
+        }
+
         &.vertical {
             margin: 7px;
 
@@ -216,6 +220,8 @@
                 width: 40px;
                 height: 40px;
             }
+
+            animation: shake 0.35s ease-in-out;
         }
 
         &.displayed {
@@ -256,6 +262,41 @@
 
             100% {
                 transform: translateY(-15px);
+            }
+        }
+
+        @keyframes bounce {
+            from {
+                transform: translateY(0);
+            }
+            to {
+                transform: translateY(-15px);
+            }
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            20% {
+                transform: translateX(-10px);
+            }
+
+            40% {
+                transform: translateX(10px);
+            }
+
+            60% {
+                transform: translateX(-10px);
+            }
+
+            80% {
+                transform: translateX(10px);
+            }
+
+            100% {
+                transform: translateX(0);
             }
         }
 
