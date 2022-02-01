@@ -20,7 +20,7 @@
 
     onMount(() => {
         icon.src = `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
-        icon.alt = urlObject.hostname;
+        icon.alt = coWebsite.altMessage ?? urlObject.hostname;
         icon.onload = () => {
             iconLoaded = true;
         };
@@ -205,7 +205,7 @@
         }
 
         &:not(.vertical) {
-            animation: bounce 0.35s ease 4 alternate;
+            animation: bounce 0.35s ease 6 alternate;
         }
 
         &.vertical {
