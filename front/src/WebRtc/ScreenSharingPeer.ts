@@ -1,4 +1,3 @@
-import type * as SimplePeerNamespace from "simple-peer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -7,8 +6,6 @@ import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import Peer from "simple-peer";
-
-// const { default: Peer } = await import("simple-peer");
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.

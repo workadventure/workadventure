@@ -1,4 +1,3 @@
-import type * as SimplePeerNamespace from "simple-peer";
 import { mediaManager } from "./MediaManager";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
@@ -11,8 +10,6 @@ import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import Peer from "simple-peer";
-
-// const { default: Peer } = await import("simple-peer");
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
