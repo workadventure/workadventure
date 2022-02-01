@@ -63,8 +63,6 @@ export class SoundMeter {
         //this.slow = 0.95 * that.slow + 0.05 * that.instant;
         //this.clip = clipcount / input.length;
 
-        //console.log('instant', this.instant, 'clip', this.clip);
-
         return this.instant;
     }
 

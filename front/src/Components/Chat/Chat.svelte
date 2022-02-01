@@ -5,6 +5,7 @@
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    import LL from "../../i18n/i18n-svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -42,10 +43,10 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
-    <p class="close-icon" on:click={closeChat}>&times</p>
+    <p class="close-icon noselect" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
-            <li><p class="system-text">Here is your chat history:</p></li>
+            <li><p class="system-text">{$LL.chat.intro()}</p></li>
             {#each $chatMessagesStore as message, i}
                 <li><ChatElement {message} line={i} /></li>
             {/each}
@@ -77,7 +78,7 @@
     }
 
     aside.chatWindow {
-        z-index: 100;
+        z-index: 1000;
         pointer-events: auto;
         position: absolute;
         top: 0;

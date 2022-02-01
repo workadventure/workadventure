@@ -1,12 +1,10 @@
-import { derived, get, Readable, writable } from "svelte/store";
+import { derived, get, Readable } from "svelte/store";
 import { ScreenSharingLocalMedia, screenSharingLocalMedia } from "./ScreenSharingStore";
 import { peerStore, screenSharingStreamStore } from "./PeerStore";
 import type { RemotePeer } from "../WebRtc/SimplePeer";
-import { LayoutMode } from "../WebRtc/LayoutManager";
+import { highlightedEmbedScreen } from "./EmbedScreensStore";
 
 export type Streamable = RemotePeer | ScreenSharingLocalMedia;
-
-export const layoutModeStore = writable<LayoutMode>(LayoutMode.Presentation);
 
 /**
  * A store that contains everything that can produce a stream (so the peers + the local screen sharing stream)
@@ -26,6 +24,12 @@ function createStreamableCollectionStore(): Readable<Map<string, Streamable>> {
 
             if ($screenSharingLocalMedia?.stream) {
                 addPeer($screenSharingLocalMedia);
+            }
+
+            const $highlightedEmbedScreen = get(highlightedEmbedScreen);
+
+            if ($highlightedEmbedScreen?.type === "streamable" && !peers.has($highlightedEmbedScreen.embed.uniqueId)) {
+                highlightedEmbedScreen.removeHighlight();
             }
 
             set(peers);

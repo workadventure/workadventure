@@ -5,6 +5,7 @@
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import type { Quill } from "quill";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import LL from "../../i18n/i18n-svelte";
 
     //toolbar
     const toolbarOptions = [
@@ -58,7 +59,7 @@
         const { default: Quill } = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
 
         quill = new Quill(QUILL_EDITOR, {
-            placeholder: "Enter your message here...",
+            placeholder: $LL.menu.globalMessage.enter(),
             theme: "snow",
             modules: {
                 toolbar: toolbarOptions,

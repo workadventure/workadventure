@@ -1,12 +1,14 @@
-import type { Configuration } from "webpack";
-import type WebpackDevServer from "webpack-dev-server";
-import path from "path";
-import webpack from "webpack";
+import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import fs from 'fs/promises';
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
-import sveltePreprocess from "svelte-preprocess";
-import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
+import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 import NodePolyfillPlugin from "node-polyfill-webpack-plugin";
+import path from "path";
+import sveltePreprocess from "svelte-preprocess";
+import type { Configuration } from "webpack";
+import webpack from "webpack";
+import type WebpackDevServer from "webpack-dev-server";
 
 const mode = process.env.NODE_ENV ?? "development";
 const buildNpmTypingsForApi = !!process.env.BUILD_TYPINGS;
@@ -33,6 +35,35 @@ module.exports = {
             disableDotRule: true,
         },
         liveReload: process.env.LIVE_RELOAD != "0" && process.env.LIVE_RELOAD != "false",
+        before: (app) => {
+            let appConfigContent = '';
+            const TEMPLATE_PATH = path.join(__dirname, 'dist', 'env-config.template.js');
+
+            function renderTemplateWithEnvVars(content: string): string {
+                let result = content;
+                const regex = /\$\{([a-zA-Z_]+[a-zA-Z0-9_]*?)\}/g;
+
+                let matched: RegExpExecArray | null;
+                while ((matched = regex.exec(content))) {
+                  result = result.replace(`\${${matched[1]}}`, process.env[matched[1]] || '');
+                }
+
+                return result;
+            }
+
+            void (async () => {
+              const content = (await fs.readFile(TEMPLATE_PATH)).toString();
+              appConfigContent = renderTemplateWithEnvVars(content);
+            })();
+
+            app.get('/env-config.js', (_, response) => {
+                response.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+                response.setHeader('Cache-Control', 'no-cache');
+                response.setHeader('Content-Length', Buffer.byteLength(appConfigContent, 'utf8'));
+
+                response.send(appConfigContent);
+            });
+        },
     },
     module: {
         rules: [
@@ -49,33 +80,9 @@ module.exports = {
                 },
             },
             {
-                test: /\.scss$/,
+                test: /\.(sc|c)ss$/,
                 exclude: /node_modules/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: "css-loader",
-                        options: {
-                            //url: false,
-                            sourceMap: true,
-                        },
-                    },
-                    "sass-loader",
-                ],
-            },
-            {
-                test: /\.css$/,
-                exclude: /node_modules/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    {
-                        loader: "css-loader",
-                        options: {
-                            //url: false,
-                            sourceMap: true,
-                        },
-                    },
-                ],
+                use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
             },
             {
                 test: /\.(html|svelte)$/,
@@ -141,6 +148,11 @@ module.exports = {
                     filename: "fonts/[name][ext]",
                 },
             },
+            {
+                test: /\.json$/,
+                exclude: /node_modules/,
+                type: "asset",
+            },
         ],
     },
     resolve: {
@@ -149,6 +161,10 @@ module.exports = {
         },
         extensions: [".tsx", ".ts", ".js", ".svelte"],
         mainFields: ["svelte", "browser", "module", "main"],
+    },
+    optimization: {
+        minimize: isProduction,
+        minimizer: [new CssMinimizerPlugin(), "..."],
     },
     output: {
         filename: (pathData) => {
@@ -168,7 +184,7 @@ module.exports = {
         }),
         new MiniCssExtractPlugin({ filename: "[name].[contenthash].css" }),
         new HtmlWebpackPlugin({
-            template: "./dist/index.tmpl.html.tmp",
+            template: "./dist/index.ejs",
             minify: {
                 collapseWhitespace: true,
                 keepClosingSlash: true,
@@ -184,32 +200,5 @@ module.exports = {
             Phaser: "phaser",
         }),
         new NodePolyfillPlugin(),
-        new webpack.EnvironmentPlugin({
-            API_URL: null,
-            SKIP_RENDER_OPTIMIZATIONS: false,
-            DISABLE_NOTIFICATIONS: false,
-            PUSHER_URL: undefined,
-            UPLOADER_URL: null,
-            ADMIN_URL: null,
-            CONTACT_URL: null,
-            PROFILE_URL: null,
-            ICON_URL: null,
-            DEBUG_MODE: null,
-            STUN_SERVER: null,
-            TURN_SERVER: null,
-            TURN_USER: null,
-            TURN_PASSWORD: null,
-            JITSI_URL: null,
-            JITSI_PRIVATE_MODE: null,
-            START_ROOM_URL: null,
-            MAX_USERNAME_LENGTH: 8,
-            MAX_PER_GROUP: 4,
-            DISPLAY_TERMS_OF_USE: false,
-            POSTHOG_API_KEY: null,
-            POSTHOG_URL: null,
-            NODE_ENV: mode,
-            DISABLE_ANONYMOUS: false,
-            OPID_LOGIN_SCREEN_PROVIDER: null,
-        }),
     ],
 } as Configuration & WebpackDevServer.Configuration;

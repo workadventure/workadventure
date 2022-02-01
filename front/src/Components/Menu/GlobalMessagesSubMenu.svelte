@@ -1,6 +1,7 @@
 <script lang="ts">
     import TextGlobalMessage from "./TextGlobalMessage.svelte";
     import AudioGlobalMessage from "./AudioGlobalMessage.svelte";
+    import LL from "../../i18n/i18n-svelte";
 
     let handleSendText: { sendTextMessage(broadcast: boolean): void };
     let handleSendAudio: { sendAudioMessage(broadcast: boolean): Promise<void> };
@@ -35,14 +36,14 @@
             <button
                 type="button"
                 class="nes-btn {inputSendTextActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateInputText}>Text</button
+                on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
             >
         </section>
         <section>
             <button
                 type="button"
                 class="nes-btn {uploadAudioActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateUploadAudio}>Audio</button
+                on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
             >
         </section>
     </div>
@@ -57,15 +58,17 @@
     <div class="global-message-footer">
         <label>
             <input type="checkbox" class="nes-checkbox is-dark nes-pointer" bind:checked={broadcastToWorld} />
-            <span>Broadcast to all rooms of the world</span>
+            <span>{$LL.menu.globalMessage.warning()}</span>
         </label>
         <section>
-            <button class="nes-btn is-primary" on:click|preventDefault={send}>Send</button>
+            <button class="nes-btn is-primary" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
         </section>
     </div>
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     div.global-message-main {
         height: calc(100% - 50px);
         display: grid;
@@ -108,7 +111,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px), only screen and (max-height: 800px) {
+    @include media-breakpoint-up(md) {
         .global-message-content {
             height: calc(100% - 5px);
         }

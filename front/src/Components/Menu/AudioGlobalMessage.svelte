@@ -4,6 +4,7 @@
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
     import uploadFile from "../images/music-file.svg";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
+    import LL from "../../i18n/i18n-svelte";
 
     interface EventTargetFiles extends EventTarget {
         files: Array<File>;
@@ -76,7 +77,7 @@
     <img
         class="nes-pointer"
         src={uploadFile}
-        alt="Upload a file"
+        alt={$LL.menu.globalAudio.uploadInfo()}
         on:click|preventDefault={() => {
             fileInput.click();
         }}
@@ -85,7 +86,7 @@
         <p>{fileName} : {fileSize}</p>
     {/if}
     {#if errorFile}
-        <p class="err">No file selected. You need to upload a file before sending it.</p>
+        <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
     <input
         type="file"

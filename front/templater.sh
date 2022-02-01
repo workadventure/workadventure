@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -x
 set -o nounset errexit
-template_file_index=dist/index.tmpl.html
-generated_file_index=dist/index.tmpl.html.tmp
+index_file=dist/index.html
 tmp_trackcodefile=/tmp/trackcode
 
 # To inject tracking code, you have two choices:
@@ -21,6 +20,6 @@ if [[ "${GA_TRACKING_ID:-}" != ""  || "${INSERT_ANALYTICS:-NO}" != "NO" ]]; then
     sed "s#<!-- TRACKING NUMBER -->#${GA_TRACKING_ID:-}#g" "${ANALYTICS_CODE_PATH}" > "$tmp_trackcodefile"
 fi
 
-echo "Templating ${generated_file_index} from ${template_file_index}"
-sed "/<!-- TRACK CODE -->/r ${tmp_trackcodefile}" "${template_file_index}" > "${generated_file_index}"
+echo "Templating ${index_file}"
+sed --in-place "/<!-- TRACK CODE -->/r ${tmp_trackcodefile}" "${index_file}"
 rm "${tmp_trackcodefile}"

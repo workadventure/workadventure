@@ -3,6 +3,7 @@ import type { PointInterface } from "../../Connexion/ConnexionModels";
 import { Character } from "../Entity/Character";
 import type { PlayerAnimationDirections } from "../Player/Animation";
 import { requestVisitCardsStore } from "../../Stores/GameStore";
+import type CancelablePromise from "cancelable-promise";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -17,7 +18,7 @@ export class RemotePlayer extends Character {
         x: number,
         y: number,
         name: string,
-        texturesPromise: Promise<string[]>,
+        texturesPromise: CancelablePromise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
         visitCardUrl: string | null,

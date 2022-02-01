@@ -2,6 +2,7 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import { onMount } from "svelte";
+    import LL from "../../i18n/i18n-svelte";
 
     export let userUUID: string | undefined;
     export let userName: string;
@@ -29,10 +30,10 @@
 </script>
 
 <div class="block-container">
-    <h3>Block</h3>
-    <p>Block any communication from and to {userName}. This can be reverted.</p>
+    <h3>{$LL.report.block.title()}</h3>
+    <p>{$LL.report.block.content({ userName })}</p>
     <button type="button" class="nes-btn is-error" on:click|preventDefault={blockUser}>
-        {userIsBlocked ? "Unblock this user" : "Block this user"}
+        {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
     </button>
 </div>
 

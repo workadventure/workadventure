@@ -7,6 +7,7 @@
     import { playersStore } from "../../Stores/PlayersStore";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
+    import LL from "../../i18n/i18n-svelte";
 
     let blockActive = true;
     let reportActive = !blockActive;
@@ -59,7 +60,7 @@
 
 <div class="report-menu-main nes-container is-rounded">
     <section class="report-menu-title">
-        <h2>Moderate {userName}</h2>
+        <h2>{$LL.report.moderate.title({ userName })}</h2>
         <section class="justify-center">
             <button type="button" class="nes-btn" on:click|preventDefault={close}>X</button>
         </section>
@@ -69,14 +70,14 @@
             <button
                 type="button"
                 class="nes-btn {blockActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateBlock}>Block</button
+                on:click|preventDefault={activateBlock}>{$LL.report.moderate.block()}</button
             >
         </section>
         <section class="justify-center">
             <button
                 type="button"
                 class="nes-btn {reportActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateReport}>Report</button
+                on:click|preventDefault={activateReport}>{$LL.report.moderate.report()}</button
             >
         </section>
     </section>
@@ -86,7 +87,7 @@
         {:else if reportActive}
             <ReportSubMenu {userUUID} />
         {:else}
-            <p>ERROR : There is no action selected.</p>
+            <p>{$LL.report.moderate.noSelect()}</p>
         {/if}
     </section>
 </div>
@@ -107,12 +108,16 @@
         pointer-events: auto;
         background-color: #333333;
         color: whitesmoke;
-
-        position: relative;
+        z-index: 650;
+        position: absolute;
         height: 70vh;
         width: 50vw;
-        top: 10vh;
-        margin: auto;
+        top: 4%;
+
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
 
         section.report-menu-title {
             display: grid;
@@ -134,15 +139,6 @@
 
         section.report-menu-action.hidden {
             display: none;
-        }
-    }
-
-    @media only screen and (max-width: 800px) {
-        div.report-menu-main {
-            top: 21vh;
-            height: 60vh;
-            width: 100vw;
-            font-size: 0.5em;
         }
     }
 </style>
