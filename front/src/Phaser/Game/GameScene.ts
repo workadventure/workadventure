@@ -1270,7 +1270,7 @@ ${escapedMessage}
                 openCoWebsite.closable ?? true
             );
 
-            if (openCoWebsite.lazy !== undefined && !openCoWebsite.lazy) {
+            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
 
