@@ -1,19 +1,4 @@
-// import { getEnvConfig } from "@geprog/vite-plugin-env-config";
-
-interface EnvConfig {
-    [key: string]: string;
-}
-
-function getEnvConfig<T extends keyof EnvConfig>(key: keyof EnvConfig): EnvConfig[T] | undefined {
-    const _window = globalThis.window as unknown as { env?: EnvConfig };
-    if (_window?.env) {
-        return _window.env[key];
-    }
-    if (globalThis.process?.env) {
-        return globalThis.process.env[key];
-    }
-    return;
-}
+import { getEnvConfig } from "@geprog/vite-plugin-env-config";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
 const START_ROOM_URL: string =
