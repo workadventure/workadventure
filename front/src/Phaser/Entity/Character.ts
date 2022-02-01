@@ -31,6 +31,7 @@ const interactiveRadius = 35;
 export abstract class Character extends Container {
     private bubble: SpeechBubble | null = null;
     private readonly playerName: Text;
+    private readonly iconTalk: Phaser.GameObjects.Image;
     public PlayerValue: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -97,6 +98,11 @@ export abstract class Character extends Container {
         this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerName);
 
+        this.iconTalk = new Phaser.GameObjects.Image(scene, 0, -45, 'iconTalk')
+            .setScale(0.15)
+            .setVisible(false);
+        this.add(this.iconTalk);
+
         if (isClickable) {
             this.setInteractive({
                 hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
@@ -154,6 +160,10 @@ export abstract class Character extends Container {
             }
             return "male1";
         });
+    }
+
+    public showIconTalk(show: boolean = true): void {
+        this.iconTalk.setVisible(show);
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {

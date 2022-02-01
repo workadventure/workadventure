@@ -245,6 +245,7 @@ export class GameScene extends DirtyScene {
                 loadCustomTexture(this.load, texture).catch((e) => console.error(e));
             }
         }
+        this.load.svg('iconTalk', '/resources/icons/icon_talking.svg');
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -630,6 +631,7 @@ export class GameScene extends DirtyScene {
 
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            console.log(peers);
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
                 this.playSound("audio-webrtc-in");
