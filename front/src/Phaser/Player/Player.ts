@@ -6,6 +6,7 @@ import { Character } from "../Entity/Character";
 import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
+import type CancelablePromise from "cancelable-promise";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -20,7 +21,7 @@ export class Player extends Character {
         x: number,
         y: number,
         name: string,
-        texturesPromise: Promise<string[]>,
+        texturesPromise: CancelablePromise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
         companion: string | null,

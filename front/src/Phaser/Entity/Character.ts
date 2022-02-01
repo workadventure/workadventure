@@ -15,6 +15,7 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
+import type CancelablePromise from "cancelable-promise";
 
 const playerNameY = -25;
 
@@ -43,12 +44,13 @@ export abstract class Character extends Container {
     private readonly _pictureStore: Writable<string | undefined>;
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
+    private texturePromise: CancelablePromise<string[] | void> | undefined;
 
     constructor(
         scene: GameScene,
         x: number,
         y: number,
-        texturesPromise: Promise<string[]>,
+        texturesPromise: CancelablePromise<string[]>,
         name: string,
         direction: PlayerAnimationDirections,
         moving: boolean,
@@ -66,7 +68,7 @@ export abstract class Character extends Container {
         this._pictureStore = writable(undefined);
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
-        texturesPromise
+        this.texturePromise = texturesPromise
             .then((textures) => {
                 this.addTextures(textures, frame);
                 this.invisible = false;
@@ -81,6 +83,9 @@ export abstract class Character extends Container {
                     this.invisible = false;
                     this.playAnimation(direction, moving);
                 });
+            })
+            .finally(() => {
+                this.texturePromise = undefined;
             });
 
         this.playerName = new Text(scene, 0, playerNameY, name, {
@@ -326,6 +331,7 @@ export abstract class Character extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
+        this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
         this.outlineColorStoreUnsubscribe();
         super.destroy();

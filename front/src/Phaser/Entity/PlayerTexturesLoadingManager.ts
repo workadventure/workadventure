@@ -1,6 +1,7 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import type { CharacterTexture } from "../../Connexion/LocalUser";
 import { BodyResourceDescriptionInterface, LAYERS, PLAYER_RESOURCES } from "./PlayerTextures";
+import CancelablePromise from "cancelable-promise";
 
 export interface FrameConfig {
     frameWidth: number;
@@ -30,7 +31,7 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
 export const loadCustomTexture = (
     loaderPlugin: LoaderPlugin,
     texture: CharacterTexture
-): Promise<BodyResourceDescriptionInterface> => {
+): CancelablePromise<BodyResourceDescriptionInterface> => {
     const name = "customCharacterTexture" + texture.id;
     const playerResourceDescriptor: BodyResourceDescriptionInterface = { name, img: texture.url, level: texture.level };
     return createLoadingPromise(loaderPlugin, playerResourceDescriptor, {
@@ -42,8 +43,8 @@ export const loadCustomTexture = (
 export const lazyLoadPlayerCharacterTextures = (
     loadPlugin: LoaderPlugin,
     texturekeys: Array<string | BodyResourceDescriptionInterface>
-): Promise<string[]> => {
-    const promisesList: Promise<unknown>[] = [];
+): CancelablePromise<string[]> => {
+    const promisesList: CancelablePromise<unknown>[] = [];
     texturekeys.forEach((textureKey: string | BodyResourceDescriptionInterface) => {
         try {
             //TODO refactor
@@ -60,12 +61,12 @@ export const lazyLoadPlayerCharacterTextures = (
             console.error(err);
         }
     });
-    let returnPromise: Promise<Array<string | BodyResourceDescriptionInterface>>;
+    let returnPromise: CancelablePromise<Array<string | BodyResourceDescriptionInterface>>;
     if (promisesList.length > 0) {
         loadPlugin.start();
-        returnPromise = Promise.all(promisesList).then(() => texturekeys);
+        returnPromise = CancelablePromise.all(promisesList).then(() => texturekeys);
     } else {
-        returnPromise = Promise.resolve(texturekeys);
+        returnPromise = CancelablePromise.resolve(texturekeys);
     }
 
     //If the loading fail, we render the default model instead.
@@ -98,10 +99,17 @@ export const createLoadingPromise = (
     playerResourceDescriptor: BodyResourceDescriptionInterface,
     frameConfig: FrameConfig
 ) => {
-    return new Promise<BodyResourceDescriptionInterface>((res, rej) => {
+    return new CancelablePromise<BodyResourceDescriptionInterface>((res, rej, cancel) => {
         if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
             return res(playerResourceDescriptor);
         }
+
+        cancel(() => {
+            loadPlugin.off("loaderror");
+            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.name);
+            return;
+        });
+
         loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, frameConfig);
         const errorCallback = (file: { src: string }) => {
             if (file.src !== playerResourceDescriptor.img) return;
