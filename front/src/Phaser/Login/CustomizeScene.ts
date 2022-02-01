@@ -289,7 +289,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         gameManager.setCharacterLayers(layers);
         this.scene.sleep(CustomizeSceneName);
         waScaleManager.restoreZoom();
-        this.events.removeListener("wake");
         gameManager.tryResumingGame(EnableCameraSceneName);
         customCharacterSceneVisibleStore.set(false);
     }
