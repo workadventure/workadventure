@@ -54,7 +54,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
-import {isMapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 
 const debug = Debug("socket");
 
@@ -676,7 +676,7 @@ export class SocketManager implements ZoneEventListener {
         playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
         if (!client.tags.includes("admin")) {
-            throw "Client is not an admin!";
+            throw new Error("Client is not an admin!");
         }
 
         const clientRoomUrl = client.roomId;
@@ -703,9 +703,11 @@ export class SocketManager implements ZoneEventListener {
 
     handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
         if (client.xmppClient === undefined) {
-            throw new Error('Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition.');
+            throw new Error(
+                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
+            );
         }
-        client.xmppClient.send(xmppMessage.getStanza()).catch(e => console.error(e));
+        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 }
 

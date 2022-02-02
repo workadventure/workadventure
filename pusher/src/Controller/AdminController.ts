@@ -31,6 +31,10 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                res.writeStatus("401 Unauthorized").end("No token configured!");
+                return;
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
@@ -39,7 +43,7 @@ export class AdminController extends BaseController {
 
             try {
                 if (typeof body.roomId !== "string") {
-                    throw "Incorrect roomId parameter";
+                    throw new Error("Incorrect roomId parameter");
                 }
                 const roomId: string = body.roomId;
 
@@ -78,6 +82,10 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                res.writeStatus("401 Unauthorized").end("No token configured!");
+                return;
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
@@ -86,13 +94,13 @@ export class AdminController extends BaseController {
 
             try {
                 if (typeof body.text !== "string") {
-                    throw "Incorrect text parameter";
+                    throw new Error("Incorrect text parameter");
                 }
                 if (body.type !== "capacity" && body.type !== "message") {
-                    throw "Incorrect type parameter";
+                    throw new Error("Incorrect type parameter");
                 }
                 if (!body.targets || typeof body.targets !== "object") {
-                    throw "Incorrect targets parameter";
+                    throw new Error("Incorrect targets parameter");
                 }
                 const text: string = body.text;
                 const type: string = body.type;

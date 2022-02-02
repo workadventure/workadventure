@@ -1,5 +1,31 @@
 {.section-title.accent.text-primary}
+
 # API Camera functions Reference
+
+### Start following player
+
+```javascript
+WA.camera.followPlayer(smooth: boolean): void
+```
+Set camera to follow the player. Set `smooth` to true for smooth transition.
+
+### Set spot for camera to look at
+
+```javascript
+WA.camera.set(
+    x: number,
+    y: number,
+    width?: number,
+    height?: number,
+    lock: boolean = false,
+    smooth: boolean = false,
+): void
+```
+
+Set camera to look at given spot.
+Setting `width` and `height` will adjust zoom.
+Set `lock` to true to lock camera in this position.
+Set `smooth` to true for smooth transition.
 
 ### Listen to camera updates
 

@@ -8,7 +8,6 @@ import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
 import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
 import { isGoToPageEvent } from "./Events/GoToPageEvent";
-import { isCloseCoWebsite, CloseCoWebsiteEvent } from "./Events/CloseCoWebsiteEvent";
 import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
@@ -33,6 +32,8 @@ import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Store
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
+import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
+import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -55,6 +56,12 @@ class IframeListener {
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
+
+    private readonly _cameraSetStream: Subject<CameraSetEvent> = new Subject();
+    public readonly cameraSetStream = this._cameraSetStream.asObservable();
+
+    private readonly _cameraFollowPlayerStream: Subject<CameraFollowPlayerEvent> = new Subject();
+    public readonly cameraFollowPlayerStream = this._cameraFollowPlayerStream.asObservable();
 
     private readonly _enablePlayerControlStream: Subject<void> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
@@ -202,6 +209,10 @@ class IframeListener {
                         this._hideLayerStream.next(payload.data);
                     } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
                         this._setPropertyStream.next(payload.data);
+                    } else if (payload.type === "cameraSet" && isCameraSetEvent(payload.data)) {
+                        this._cameraSetStream.next(payload.data);
+                    } else if (payload.type === "cameraFollowPlayer" && isCameraFollowPlayerEvent(payload.data)) {
+                        this._cameraFollowPlayerStream.next(payload.data);
                     } else if (payload.type === "chat" && isChatEvent(payload.data)) {
                         scriptUtils.sendAnonymousChat(payload.data);
                     } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
@@ -274,7 +285,7 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             console.info("Loading map related script at ", scriptUrl);
 
@@ -283,7 +294,11 @@ class IframeListener {
                 const iframe = document.createElement("iframe");
                 iframe.id = IframeListener.getIFrameId(scriptUrl);
                 iframe.style.display = "none";
-                iframe.src = "/iframe.html?script=" + encodeURIComponent(scriptUrl);
+                iframe.src =
+                    "/iframe.html?script=" +
+                    encodeURIComponent(scriptUrl) +
+                    "&moduleMode=" +
+                    (enableModuleMode ? "true" : "false");
 
                 // We are putting a sandbox on this script because it will run in the same domain as the main website.
                 iframe.sandbox.add("allow-scripts");
@@ -318,7 +333,9 @@ class IframeListener {
                     "//" +
                     window.location.host +
                     '/iframe_api.js" ></script>\n' +
-                    '<script type="module" src="' +
+                    "<script " +
+                    (enableModuleMode ? 'type="module" ' : "") +
+                    'src="' +
                     scriptUrl +
                     '" ></script>\n' +
                     "<title></title>\n" +

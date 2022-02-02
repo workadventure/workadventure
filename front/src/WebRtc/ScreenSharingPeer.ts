@@ -2,10 +2,10 @@ import type * as SimplePeerNamespace from "simple-peer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
-import { Readable, readable } from "svelte/store";
-import { videoFocusStore } from "../Stores/VideoFocusStore";
+import { Readable, readable, writable, Writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
-import { isMobile } from "../Enum/EnvironmentVariable";
+import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
+import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -22,7 +22,7 @@ export class ScreenSharingPeer extends Peer {
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly statusStore: Readable<PeerStatus>;
+    public readonly statusStore: Writable<PeerStatus>;
 
     constructor(
         user: UserSimplePeerInterface,
@@ -43,7 +43,10 @@ export class ScreenSharingPeer extends Peer {
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
             const onStream = (stream: MediaStream | null) => {
-                videoFocusStore.focus(this);
+                highlightedEmbedScreen.highlight({
+                    type: "streamable",
+                    embed: this,
+                });
                 set(stream);
             };
             const onData = (chunk: Buffer) => {
@@ -67,7 +70,7 @@ export class ScreenSharingPeer extends Peer {
             };
         });
 
-        this.statusStore = readable<PeerStatus>("connecting", (set) => {
+        this.statusStore = writable<PeerStatus>("connecting", (set) => {
             const onConnect = () => {
                 set("connected");
             };
@@ -138,6 +141,12 @@ export class ScreenSharingPeer extends Peer {
         if (!stream) {
             this.isReceivingStream = false;
         } else {
+            //Check if the peer connection is already connected status. In this case, the status store must be set to 'connected'.
+            //In the case or player A send stream and player B send a stream, it's same peer connection, also the status must be changed to connect.
+            //TODO add event listening when the stream is ready for displaying and change the status
+            if (this._connected) {
+                this.statusStore.set("connected");
+            }
             this.isReceivingStream = true;
         }
     }
@@ -177,7 +186,13 @@ export class ScreenSharingPeer extends Peer {
     public stopPushingScreenSharingToRemoteUser(stream: MediaStream) {
         this.removeStream(stream);
         this.write(
-            new Buffer(JSON.stringify({ type: MESSAGE_TYPE_CONSTRAINT, streamEnded: true, isMobile: isMobile() }))
+            new Buffer(
+                JSON.stringify({
+                    type: MESSAGE_TYPE_CONSTRAINT,
+                    streamEnded: true,
+                    isMobile: isMediaBreakpointUp("md"),
+                })
+            )
         );
     }
 }

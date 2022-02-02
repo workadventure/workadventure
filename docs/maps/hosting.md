@@ -12,6 +12,11 @@ If you decide to host your maps on your own webserver, you must **configure CORS
 
 CORS headers ([Cross Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)) are useful when a website want to make some resources accessible to another website. This is exactly what we want to do. We want the map you are designing to be accessible from the WorkAdventure domain (`play.workadventu.re`).
 
+{.alert.alert-warning}
+If you are using the "scripting API", only allowing the `play.workadventu.re` will not be enough. You will need to allow `*`
+as a domain in order to be able to load scripts. If for some reason, you cannot or do not want to allow `*` as a domain, please
+read the [scripting internals](scripting-internals.md) guide for alternatives.
+
 ### Enabling CORS for Apache
 
 In order to enable CORS in your Apache configuration, you will need to ensure the `headers` module is enabled.

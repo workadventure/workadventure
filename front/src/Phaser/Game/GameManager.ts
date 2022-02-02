@@ -1,14 +1,14 @@
-import { GameScene } from "./GameScene";
+import { get } from "svelte/store";
 import { connectionManager } from "../../Connexion/ConnectionManager";
+import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { Room } from "../../Connexion/Room";
+import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
+import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { EnableCameraSceneName } from "../Login/EnableCameraScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import { get } from "svelte/store";
-import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
-import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+import { GameScene } from "./GameScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -66,7 +66,7 @@ export class GameManager {
 
     getCharacterLayers(): string[] {
         if (!this.characterLayers) {
-            throw "characterLayers are not set";
+            throw new Error("characterLayers are not set");
         }
         return this.characterLayers;
     }
@@ -119,7 +119,7 @@ export class GameManager {
      * This will close the socket connections and stop the gameScene, but won't remove it.
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
-        if (this.currentGameSceneName === null) throw "No current scene id set!";
+        if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
@@ -143,7 +143,7 @@ export class GameManager {
     }
 
     public getCurrentGameScene(): GameScene {
-        if (this.currentGameSceneName === null) throw "No current scene id set!";
+        if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
         return this.scenePlugin.get(this.currentGameSceneName) as GameScene;
     }
 

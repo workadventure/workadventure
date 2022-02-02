@@ -62,7 +62,7 @@ function hsv_to_rgb(hue: number, saturation: number, brightness: number): { r: n
             b = q;
             break;
         default:
-            throw "h_i cannot be " + h_i;
+            throw new Error("h_i cannot be " + h_i);
     }
     return {
         r,

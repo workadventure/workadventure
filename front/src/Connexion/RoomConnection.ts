@@ -723,7 +723,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public getUserId(): number {
-        if (this.userId === null) throw "UserId cannot be null!";
+        if (this.userId === null) throw new Error("UserId cannot be null!");
         return this.userId;
     }
 

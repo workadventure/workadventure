@@ -106,10 +106,10 @@ class ConnectionManager {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
                 if (!state || !localUserStore.verifyState(state)) {
-                    throw "Could not validate state!";
+                    throw new Error("Could not validate state!");
                 }
                 if (!code) {
-                    throw "No Auth code provided";
+                    throw new Error("No Auth code provided");
                 }
                 localUserStore.setCode(code);
             }
@@ -168,6 +168,9 @@ class ConnectionManager {
                     }
                 } catch (err) {
                     console.error(err);
+                    if (err instanceof Error) {
+                        console.error(err.stack);
+                    }
                 }
             } else {
                 const query = urlParams.toString();
@@ -180,13 +183,13 @@ class ConnectionManager {
                     window.location.hash;
             }
 
+            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+            //use href to keep # value
+            await localUserStore.setLastRoomUrl(new URL(roomPath).href);
+
             //get detail map for anonymous login and set texture in local storage
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
             this._currentRoom = await Room.createRoom(new URL(roomPath));
-
-            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
-            //use href to keep # value
-            await localUserStore.setLastRoomUrl(this._currentRoom.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -333,10 +336,10 @@ class ConnectionManager {
 
         if (!token) {
             if (!state || !localUserStore.verifyState(state)) {
-                throw "Could not validate state!";
+                throw new Error("Could not validate state!");
             }
             if (!code) {
-                throw "No Auth code provided";
+                throw new Error("No Auth code provided");
             }
         }
         const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {

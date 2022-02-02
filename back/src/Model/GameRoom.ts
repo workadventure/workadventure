@@ -213,13 +213,13 @@ export class GameRoom {
     }
 
     private updateUserGroup(user: User): void {
-        user.group?.updatePosition();
-        user.group?.searchForNearbyUsers();
-
         if (user.silent) {
             return;
         }
+
         const group = user.group;
+        const closestItem: User | Group | null = this.searchClosestAvailableUserOrGroup(user);
+
         if (group === undefined) {
             // If the user is not part of a group:
             //  should he join a group?
@@ -229,12 +229,11 @@ export class GameRoom {
                 return;
             }
 
-            const closestItem: User | Group | null = this.searchClosestAvailableUserOrGroup(user);
-
             if (closestItem !== null) {
                 if (closestItem instanceof Group) {
                     // Let's join the group!
                     closestItem.join(user);
+                    closestItem.setOutOfBounds(false);
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
@@ -249,32 +248,95 @@ export class GameRoom {
                 }
             }
         } else {
-            // If the user is part of a group:
-            //  should he leave the group?
-            let noOneOutOfBounds = true;
-            group.getUsers().forEach((foreignUser: User) => {
-                if (foreignUser.group === undefined) {
-                    return;
+            let hasKickOutSomeone = false;
+            let followingMembers: User[] = [];
+
+            const previewNewGroupPosition = group.previewGroupPosition();
+
+            if (!previewNewGroupPosition) {
+                this.leaveGroup(user);
+                return;
+            }
+
+            if (user.hasFollowers() || user.following) {
+                followingMembers = user.hasFollowers()
+                    ? group.getUsers().filter((currentUser) => currentUser.following === user)
+                    : group.getUsers().filter((currentUser) => currentUser.following === user.following);
+
+                // If all group members are part of the same follow group
+                if (group.getUsers().length - 1 === followingMembers.length) {
+                    let isOutOfBounds = false;
+
+                    // If a follower is far away from the leader, "outOfBounds" is set to true
+                    for (const member of followingMembers) {
+                        const distance = GameRoom.computeDistanceBetweenPositions(
+                            member.getPosition(),
+                            previewNewGroupPosition
+                        );
+
+                        if (distance > this.groupRadius) {
+                            isOutOfBounds = true;
+                            break;
+                        }
+                    }
+                    group.setOutOfBounds(isOutOfBounds);
                 }
-                const usrPos = foreignUser.getPosition();
-                const grpPos = foreignUser.group.getPosition();
-                const distance = GameRoom.computeDistanceBetweenPositions(usrPos, grpPos);
+            }
+
+            // Check if the moving user has kicked out another user
+            for (const headMember of group.getGroupHeads()) {
+                if (!headMember.group) {
+                    this.leaveGroup(headMember);
+                    continue;
+                }
+
+                const headPosition = headMember.getPosition();
+                const distance = GameRoom.computeDistanceBetweenPositions(headPosition, previewNewGroupPosition);
 
                 if (distance > this.groupRadius) {
-                    if (foreignUser.hasFollowers() || foreignUser.following) {
-                        // If one user is out of the group bounds BUT following, the group still exists... but should be hidden.
-                        // We put it in 'outOfBounds' mode
-                        group.setOutOfBounds(true);
-                        noOneOutOfBounds = false;
-                    } else {
-                        this.leaveGroup(foreignUser);
-                    }
+                    hasKickOutSomeone = true;
+                    break;
                 }
-            });
-            if (noOneOutOfBounds && !user.group?.isEmpty()) {
-                group.setOutOfBounds(false);
+            }
+
+            /**
+             * If the current moving user has kicked another user from the radius,
+             * the moving user leaves the group because he is too far away.
+             */
+            const userDistance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), previewNewGroupPosition);
+
+            if (hasKickOutSomeone && userDistance > this.groupRadius) {
+                if (user.hasFollowers() && group.getUsers().length === 3 && followingMembers.length === 1) {
+                    const other = group
+                        .getUsers()
+                        .find((currentUser) => !currentUser.hasFollowers() && !currentUser.following);
+                    if (other) {
+                        this.leaveGroup(other);
+                    }
+                } else if (user.hasFollowers()) {
+                    this.leaveGroup(user);
+                    for (const member of followingMembers) {
+                        this.leaveGroup(member);
+                    }
+
+                    // Re-create a group with the followers
+                    const newGroup: Group = new Group(
+                        this.roomUrl,
+                        [user, ...followingMembers],
+                        this.groupRadius,
+                        this.connectCallback,
+                        this.disconnectCallback,
+                        this.positionNotifier
+                    );
+                    this.groups.add(newGroup);
+                } else {
+                    this.leaveGroup(user);
+                }
             }
         }
+
+        user.group?.updatePosition();
+        user.group?.searchForNearbyUsers();
     }
 
     public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {

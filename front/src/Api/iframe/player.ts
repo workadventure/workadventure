@@ -13,6 +13,12 @@ export const setPlayerName = (name: string) => {
     playerName = name;
 };
 
+let playerLanguage: string | undefined;
+
+export const setPlayerLanguage = (language: string | undefined) => {
+    playerLanguage = language;
+};
+
 let tags: string[] | undefined;
 
 export const setTags = (_tags: string[]) => {
@@ -61,6 +67,15 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return playerName;
     }
 
+    get language(): string {
+        if (playerLanguage === undefined) {
+            throw new Error(
+                "Player language not initialized yet. You should call WA.player.language within a WA.onInit callback."
+            );
+        }
+        return playerLanguage;
+    }
+
     get tags(): string[] {
         if (tags === undefined) {
             throw new Error("Tags not initialized yet. You should call WA.player.tags within a WA.onInit callback.");
@@ -81,6 +96,13 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         return await queryWorkadventure({
             type: "getPlayerPosition",
             data: undefined,
+        });
+    }
+
+    public async moveTo(x: number, y: number, speed?: number): Promise<{ x: number; y: number; cancelled: boolean }> {
+        return await queryWorkadventure({
+            type: "movePlayerTo",
+            data: { x, y, speed },
         });
     }
 

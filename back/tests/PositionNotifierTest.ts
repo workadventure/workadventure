@@ -1,11 +1,10 @@
 import "jasmine";
-import {PositionNotifier} from "../src/Model/PositionNotifier";
-import {User, UserSocket} from "../src/Model/User";
-import {Zone} from "_Model/Zone";
-import {Movable} from "_Model/Movable";
-import {PositionInterface} from "_Model/PositionInterface";
-import {ZoneSocket} from "../src/RoomManager";
-
+import { PositionNotifier } from "../src/Model/PositionNotifier";
+import { User, UserSocket } from "../src/Model/User";
+import { Zone } from "_Model/Zone";
+import { Movable } from "_Model/Movable";
+import { PositionInterface } from "_Model/PositionInterface";
+import { ZoneSocket } from "../src/RoomManager";
 
 describe("PositionNotifier", () => {
     it("should receive notifications when player moves", () => {
@@ -13,28 +12,59 @@ describe("PositionNotifier", () => {
         let moveTriggered = false;
         let leaveTriggered = false;
 
-        const positionNotifier = new PositionNotifier(300, 300, (thing: Movable) => {
-            enterTriggered = true;
-        }, (thing: Movable, position: PositionInterface) => {
-            moveTriggered = true;
-        }, (thing: Movable) => {
-            leaveTriggered = true;
-        }, () => {},
-            () => {});
+        const positionNotifier = new PositionNotifier(
+            300,
+            300,
+            (thing: Movable) => {
+                enterTriggered = true;
+            },
+            (thing: Movable, position: PositionInterface) => {
+                moveTriggered = true;
+            },
+            (thing: Movable) => {
+                leaveTriggered = true;
+            },
+            () => {},
+            () => {}
+        );
 
-        const user1 = new User(1, 'test', '10.0.0.2', {
-            x: 500,
-            y: 500,
-            moving: false,
-            direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        const user1 = new User(
+            1,
+            "test",
+            "10.0.0.2",
+            {
+                x: 500,
+                y: 500,
+                moving: false,
+                direction: "down",
+            },
+            false,
+            positionNotifier,
+            {} as UserSocket,
+            [],
+            null,
+            "foo",
+            []
+        );
 
-        const user2 = new User(2, 'test', '10.0.0.2', {
-            x: -9999,
-            y: -9999,
-            moving: false,
-            direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        const user2 = new User(
+            2,
+            "test",
+            "10.0.0.2",
+            {
+                x: -9999,
+                y: -9999,
+                moving: false,
+                direction: "down",
+            },
+            false,
+            positionNotifier,
+            {} as UserSocket,
+            [],
+            null,
+            "foo",
+            []
+        );
 
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 1);
@@ -47,21 +77,21 @@ describe("PositionNotifier", () => {
             bottom: 500
         });*/
 
-        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
+        user2.setPosition({ x: 500, y: 500, direction: "down", moving: false });
 
         expect(enterTriggered).toBe(true);
         expect(moveTriggered).toBe(false);
         enterTriggered = false;
 
         // Move inside the zone
-        user2.setPosition({x:501, y:500, direction: 'down', moving: false});
+        user2.setPosition({ x: 501, y: 500, direction: "down", moving: false });
 
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(true);
         moveTriggered = false;
 
         // Move out of the zone in a zone that we don't track
-        user2.setPosition({x: 901, y: 500, direction: 'down', moving: false});
+        user2.setPosition({ x: 901, y: 500, direction: "down", moving: false });
 
         expect(enterTriggered).toBe(false);
         expect(moveTriggered).toBe(false);
@@ -69,7 +99,7 @@ describe("PositionNotifier", () => {
         leaveTriggered = false;
 
         // Move back in
-        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
+        user2.setPosition({ x: 500, y: 500, direction: "down", moving: false });
         expect(enterTriggered).toBe(true);
         expect(moveTriggered).toBe(false);
         expect(leaveTriggered).toBe(false);
@@ -89,28 +119,59 @@ describe("PositionNotifier", () => {
         let moveTriggered = false;
         let leaveTriggered = false;
 
-        const positionNotifier = new PositionNotifier(300, 300, (thing: Movable, fromZone: Zone|null ) => {
-            enterTriggered = true;
-        }, (thing: Movable, position: PositionInterface) => {
-            moveTriggered = true;
-        }, (thing: Movable) => {
-            leaveTriggered = true;
-        }, () => {},
-            () => {});
+        const positionNotifier = new PositionNotifier(
+            300,
+            300,
+            (thing: Movable, fromZone: Zone | null) => {
+                enterTriggered = true;
+            },
+            (thing: Movable, position: PositionInterface) => {
+                moveTriggered = true;
+            },
+            (thing: Movable) => {
+                leaveTriggered = true;
+            },
+            () => {},
+            () => {}
+        );
 
-        const user1 = new User(1, 'test', '10.0.0.2', {
-            x: 500,
-            y: 500,
-            moving: false,
-            direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        const user1 = new User(
+            1,
+            "test",
+            "10.0.0.2",
+            {
+                x: 500,
+                y: 500,
+                moving: false,
+                direction: "down",
+            },
+            false,
+            positionNotifier,
+            {} as UserSocket,
+            [],
+            null,
+            "foo",
+            []
+        );
 
-        const user2 = new User(2, 'test', '10.0.0.2', {
-            x: 0,
-            y: 0,
-            moving: false,
-            direction: 'down'
-        }, false, positionNotifier, {} as UserSocket, [], null, 'foo', []);
+        const user2 = new User(
+            2,
+            "test",
+            "10.0.0.2",
+            {
+                x: 0,
+                y: 0,
+                moving: false,
+                direction: "down",
+            },
+            false,
+            positionNotifier,
+            {} as UserSocket,
+            [],
+            null,
+            "foo",
+            []
+        );
 
         const listener = {} as ZoneSocket;
         positionNotifier.addZoneListener(listener, 0, 0);
@@ -126,14 +187,12 @@ describe("PositionNotifier", () => {
         positionNotifier.enter(user1);
         positionNotifier.enter(user2);
 
-
         //expect(newUsers.length).toBe(2);
         expect(enterTriggered).toBe(true);
         enterTriggered = false;
 
-
         //positionNotifier.updatePosition(user2, {x:500, y:500}, {x:0, y: 0})
-        user2.setPosition({x: 500, y: 500, direction: 'down', moving: false});
+        user2.setPosition({ x: 500, y: 500, direction: "down", moving: false });
 
         expect(enterTriggered).toBe(true);
         expect(moveTriggered).toBe(false);
@@ -184,4 +243,4 @@ describe("PositionNotifier", () => {
         enterTriggered = false;
         //expect(newUsers.length).toBe(2);
     });
-})
+});

@@ -1,4 +1,5 @@
 <script lang="typescript">
+    import LL from "../../i18n/i18n-svelte";
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
 
@@ -25,7 +26,7 @@
 
 <form class="selectCompanionScene">
     <section class="text-center">
-        <h2>Select your companion</h2>
+        <h2>{$LL.companion.select.title()}</h2>
         <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
@@ -35,17 +36,19 @@
     </section>
     <section class="action">
         <button href="/" class="selectCompanionSceneFormBack nes-btn" on:click|preventDefault={noCompanion}
-            >No companion</button
+            >{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
             class="selectCompanionSceneFormSubmit nes-btn is-primary"
-            on:click|preventDefault={selectCompanion}>Continue</button
+            on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>
 </form>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     form.selectCompanionScene {
         font-family: "Press Start 2P";
         pointer-events: auto;
@@ -84,7 +87,7 @@
         }
     }
 
-    @media only screen and (max-width: 800px) {
+    @include media-breakpoint-up(md) {
         form.selectCompanionScene button.selectCharacterButtonLeft {
             left: 5vw;
         }
