@@ -644,9 +644,9 @@ export class GameScene extends DirtyScene {
             for (const [key, videoStream] of peers) {
                 this.volumeStoreUnsubscribes.set(key, videoStream.volumeStore.subscribe((volume) => {
                     if (volume) {
-                        console.log(volume);
+                        console.log(`${key}: ${volume}`);
                         this.MapPlayersByKey.get(key)?.showIconTalk(volume > 5);
-                        this.markDirty();
+                        this.markDirty(); // should be dirty from animation
                     }
                 }));
             }
