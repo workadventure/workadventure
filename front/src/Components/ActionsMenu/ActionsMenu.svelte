@@ -1,5 +1,4 @@
 <script lang="typescript">
-    import { fly } from "svelte/transition";
     import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
     import { onDestroy } from "svelte";
 

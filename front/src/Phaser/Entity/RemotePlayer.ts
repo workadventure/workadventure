@@ -7,6 +7,7 @@ import type { PointInterface } from "../../Connexion/ConnexionModels";
 import type { PlayerAnimationDirections } from "../Player/Animation";
 import type { Unsubscriber } from 'svelte/store';
 import type { ActivatableInterface } from '../Game/ActivatableInterface';
+import type CancelablePromise from "cancelable-promise";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -27,7 +28,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         x: number,
         y: number,
         name: string,
-        texturesPromise: Promise<string[]>,
+        texturesPromise: CancelablePromise<string[]>,
         direction: PlayerAnimationDirections,
         moving: boolean,
         visitCardUrl: string | null,

@@ -44,6 +44,7 @@ export type CoWebsite = {
     allowPolicy: string | undefined;
     allowApi: boolean | undefined;
     jitsi?: boolean;
+    altMessage?: string;
 };
 
 class CoWebsiteManager {
@@ -533,7 +534,8 @@ class CoWebsiteManager {
         allowApi?: boolean,
         allowPolicy?: string,
         position?: number,
-        closable?: boolean
+        closable?: boolean,
+        altMessage?: string
     ): CoWebsite {
         const iframe = document.createElement("iframe");
         const fullUrl = new URL(url, base);
@@ -547,6 +549,7 @@ class CoWebsiteManager {
             closable: closable ?? false,
             allowPolicy,
             allowApi,
+            altMessage,
         };
 
         this.initialiseCowebsite(newCoWebsite, position);

@@ -44,7 +44,7 @@
         pointer-events: auto;
 
         padding: 0;
-        max-height: 85%;
+        max-height: 200px;
         max-width: 85%;
 
         &:hover {

@@ -15,7 +15,7 @@
     if (stream) {
         embedScreen = {
             type: "streamable",
-            embed: stream as unknown as Streamable,
+            embed: peer as unknown as Streamable,
         };
     }
 </script>
