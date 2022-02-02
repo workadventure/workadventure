@@ -10,6 +10,9 @@ import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { SoundMeter } from '../Phaser/Components/SoundMeter';
+import { AudioContext } from 'standardized-audio-context';
+import { Console } from 'console';
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -33,6 +36,7 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
+    public readonly volumeStore: Readable<number | null>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
@@ -58,6 +62,7 @@ export class VideoPeer extends Peer {
         this.uniqueId = "video_" + this.userId;
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
+            console.log('STREAM STORE INITIALIZE');
             const onStream = (stream: MediaStream | null) => {
                 set(stream);
             };
@@ -67,6 +72,38 @@ export class VideoPeer extends Peer {
             return () => {
                 this.off("stream", onStream);
             };
+        });
+
+        console.log('CREATE VOLUME STORE');
+
+        this.volumeStore = readable<number | null>(null, (set) => {
+            let timeout: ReturnType<typeof setTimeout>;
+            console.log('VOLUME STORE INITIALIZE');
+            const unsubscribe = this.streamStore.subscribe((mediaStream) => {
+                if (mediaStream === null) {
+                    set(null);
+                    return;
+                }
+                const soundMeter = new SoundMeter();
+                soundMeter.connectToSource(mediaStream, new AudioContext());
+                let error = false;
+
+                timeout = setInterval(() => {
+                    try {
+                        set(soundMeter.getVolume());
+                    } catch (err) {
+                        if (!error) {
+                            console.error(err);
+                            error = true;
+                        }
+                    }
+                }, 100);
+            });
+
+            return () => {
+                unsubscribe();
+                clearInterval(timeout);
+            }
         });
 
         this.constraintsStore = readable<ObtainedMediaStreamConstraints | null>(null, (set) => {

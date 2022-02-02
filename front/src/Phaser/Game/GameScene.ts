@@ -168,6 +168,7 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
+    private volumeStoreUnsubscribes: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
@@ -637,7 +638,19 @@ export class GameScene extends DirtyScene {
 
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            console.log(peers);
+            this.volumeStoreUnsubscribes.forEach(unsubscribe => unsubscribe());
+            this.volumeStoreUnsubscribes.clear();
+
+            for (const [key, videoStream] of peers) {
+                this.volumeStoreUnsubscribes.set(key, videoStream.volumeStore.subscribe((volume) => {
+                    if (volume) {
+                        console.log(volume);
+                        this.MapPlayersByKey.get(key)?.showIconTalk(volume > 5);
+                        this.markDirty();
+                    }
+                }));
+            }
+
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
                 this.playSound("audio-webrtc-in");
