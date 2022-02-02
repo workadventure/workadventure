@@ -5,11 +5,11 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import type { GameScene } from "../Game/GameScene";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import type { ActivatableInterface } from '../Game/ActivatableInterface';
+import type { ActivatableInterface } from "../Game/ActivatableInterface";
 
 type EventCallback = (state: unknown, parameters: unknown) => void;
 
-export class ActionableItem implements ActivatableInterface{
+export class ActionableItem implements ActivatableInterface {
     private readonly activationRadiusSquared: number;
     private isSelectable: boolean = false;
     private callbacks: Map<string, Array<EventCallback>> = new Map<string, Array<EventCallback>>();
@@ -41,7 +41,7 @@ export class ActionableItem implements ActivatableInterface{
         }
     }
 
-    public getPosition(): { x: number, y: number } {
+    public getPosition(): { x: number; y: number } {
         return { x: this.sprite.x, y: this.sprite.y };
     }
 

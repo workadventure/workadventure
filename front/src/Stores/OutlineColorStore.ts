@@ -5,7 +5,7 @@ export function createColorStore() {
 
     let followColor: number | undefined = undefined;
     let apiColor: number | undefined = undefined;
-    
+
     let pointedByPointer: boolean = false;
     let pointedByCharacter: boolean = false;
 

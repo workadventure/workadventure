@@ -49,7 +49,7 @@ import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
-import { ActivatablesManager } from './ActivatablesManager';
+import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -805,10 +805,9 @@ export class GameScene extends DirtyScene {
                 this.simplePeer = new SimplePeer(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
-                this.CurrentPlayer.on(
-                    hasMovedEventName,
-                    (event: HasPlayerMovedEvent) => { this.handleCurrentPlayerHasMovedEvent(event); },
-                );
+                this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
+                    this.handleCurrentPlayerHasMovedEvent(event);
+                });
 
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
@@ -1685,7 +1684,10 @@ ${escapedMessage}
         //listen event to share position of user
         this.pushPlayerPosition(event);
         this.gameMap.setPosition(event.x, event.y);
-        this.activatablesManager.updateActivatableObjectsDistances([...Array.from(this.MapPlayersByKey.values()), ...this.actionableItems.values()]);
+        this.activatablesManager.updateActivatableObjectsDistances([
+            ...Array.from(this.MapPlayersByKey.values()),
+            ...this.actionableItems.values(),
+        ]);
         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
     }
 

@@ -1,23 +1,21 @@
-
 import { requestVisitCardsStore } from "../../Stores/GameStore";
-import { ActionsMenuData, actionsMenuStore } from '../../Stores/ActionsMenuStore';
+import { ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
 import type { PlayerAnimationDirections } from "../Player/Animation";
-import type { Unsubscriber } from 'svelte/store';
-import type { ActivatableInterface } from '../Game/ActivatableInterface';
+import type { Unsubscriber } from "svelte/store";
+import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
 export class RemotePlayer extends Character implements ActivatableInterface {
-    
     public userId: number;
     public readonly activationRadius: number;
-    
-    private registeredActions: { actionName: string, callback: Function }[];
+
+    private registeredActions: { actionName: string; callback: Function }[];
     private visitCardUrl: string | null;
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
@@ -34,21 +32,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         visitCardUrl: string | null,
         companion: string | null,
         companionTexturePromise?: Promise<string>,
-        activationRadius?: number,
+        activationRadius?: number
     ) {
-        super(
-            Scene,
-            x,
-            y,
-            texturesPromise,
-            name,
-            direction,
-            moving,
-            1,
-            true,
-            companion,
-            companionTexturePromise
-        );
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
 
         //set data
         this.userId = userId;
@@ -76,13 +62,13 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
-    public registerActionsMenuAction(action: { actionName: string, callback: Function }): void {
+    public registerActionsMenuAction(action: { actionName: string; callback: Function }): void {
         this.registeredActions.push(action);
         this.updateIsClickable();
     }
 
     public unregisterActionsMenuAction(actionName: string) {
-        const index = this.registeredActions.findIndex(action => action.actionName === actionName);
+        const index = this.registeredActions.findIndex((action) => action.actionName === actionName);
         if (index !== -1) {
             this.registeredActions.splice(index, 1);
         }
@@ -125,7 +111,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();
-                }
+                },
             });
         }
     }

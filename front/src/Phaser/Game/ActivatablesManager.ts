@@ -1,17 +1,16 @@
-import { isOutlineable } from '../../Utils/CustomTypeGuards';
-import { MathUtils } from '../../Utils/MathUtils';
-import type { Player } from '../Player/Player';
-import type { ActivatableInterface } from './ActivatableInterface';
+import { isOutlineable } from "../../Utils/CustomTypeGuards";
+import { MathUtils } from "../../Utils/MathUtils";
+import type { Player } from "../Player/Player";
+import type { ActivatableInterface } from "./ActivatableInterface";
 
 export class ActivatablesManager {
-
     // The item that can be selected by pressing the space key.
     private selectedActivatableObjectByDistance?: ActivatableInterface;
     private selectedActivatableObjectByPointer?: ActivatableInterface;
     private activatableObjectsDistances: Map<ActivatableInterface, number> = new Map<ActivatableInterface, number>();
 
     private currentPlayer: Player;
-    
+
     constructor(currentPlayer: Player) {
         this.currentPlayer = currentPlayer;
     }
@@ -54,7 +53,7 @@ export class ActivatablesManager {
         // update value but do not change the outline
         if (this.selectedActivatableObjectByPointer) {
             this.selectedActivatableObjectByDistance = newNearestObject;
-            return;    
+            return;
         }
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
             this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
@@ -88,7 +87,7 @@ export class ActivatablesManager {
     public updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
         this.activatableObjectsDistances.set(
             object,
-            MathUtils.distanceBetween(this.currentPlayer.getPosition(), object.getPosition()),
+            MathUtils.distanceBetween(this.currentPlayer.getPosition(), object.getPosition())
         );
     }
 }

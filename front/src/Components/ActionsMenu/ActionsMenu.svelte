@@ -1,9 +1,9 @@
 <script lang="typescript">
-    import { actionsMenuStore } from '../../Stores/ActionsMenuStore';
+    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { onDestroy } from "svelte";
 
     import type { Unsubscriber } from "svelte/store";
-    import type { ActionsMenuData } from '../../Stores/ActionsMenuStore';
+    import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
 
     let actionsMenuData: ActionsMenuData | undefined;
 
@@ -19,7 +19,7 @@
         actionsMenuStore.clear();
     }
 
-    actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe(value => {
+    actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
     });
 
@@ -28,7 +28,6 @@
             actionsMenuStoreUnsubscriber();
         }
     });
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -42,17 +41,19 @@
                 <button
                     type="button"
                     class="nes-btn"
-                    on:click|preventDefault={() => { callback(); }}
+                    on:click|preventDefault={() => {
+                        callback();
+                    }}
                 >
                     {actionName}
                 </button>
-                {/each}
+            {/each}
         </div>
     </div>
 {/if}
 
 <style lang="scss">
-    .actions-menu {        
+    .actions-menu {
         position: absolute;
         left: 50%;
         transform: translate(-50%, 0);
@@ -69,9 +70,9 @@
         .actions {
             max-height: calc(100% - 50px);
             width: 100%;
-            display:block;
-            overflow-x:hidden;
-            overflow-y:auto;
+            display: block;
+            overflow-x: hidden;
+            overflow-y: auto;
 
             button {
                 width: calc(100% - 10px);

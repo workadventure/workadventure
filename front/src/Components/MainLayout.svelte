@@ -36,8 +36,8 @@
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
     import ShareLinkMapModal from "./Modal/ShareLinkMapModal.svelte";
     import { LayoutMode } from "../WebRtc/LayoutManager";
-import { actionsMenuStore } from '../Stores/ActionsMenuStore';
-import ActionsMenu from './ActionsMenu/ActionsMenu.svelte';
+    import { actionsMenuStore } from "../Stores/ActionsMenuStore";
+    import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -107,7 +107,7 @@ import ActionsMenu from './ActionsMenu/ActionsMenu.svelte';
         {#if $followStateStore !== "off" || $peerStore.size > 0}
             <FollowMenu />
         {/if}
-        
+
         {#if $actionsMenuStore}
             <ActionsMenu />
         {/if}

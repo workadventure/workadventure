@@ -1,5 +1,5 @@
-import { Player } from '../Player/Player';
-import { RemotePlayer } from '../Entity/RemotePlayer';
+import { Player } from "../Player/Player";
+import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
@@ -55,7 +55,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handleSpaceKeyUpEvent(event: Event): Event {
         const activatable = this.gameScene.getActivatablesManager().getSelectedActivatableObject();
         if (activatable && activatable.isActivatable()) {
-            activatable.activate();    
+            activatable.activate();
         }
         return event;
     }

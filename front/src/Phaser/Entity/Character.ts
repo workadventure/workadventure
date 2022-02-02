@@ -15,7 +15,7 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
-import type { OutlineableInterface } from '../Game/OutlineableInterface';
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 
 const playerNameY = -25;
@@ -155,7 +155,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.clickable;
     }
 
-    public getPosition(): { x: number, y: number } {
+    public getPosition(): { x: number; y: number } {
         return { x: this.x, y: this.y };
     }
 
