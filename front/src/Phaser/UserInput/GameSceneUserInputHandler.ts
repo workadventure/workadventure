@@ -1,3 +1,6 @@
+import { Player } from "../Player/Player";
+import { RemotePlayer } from "../Entity/RemotePlayer";
+
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
 
@@ -22,6 +25,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (pointer.rightButtonReleased() || pointer.getDuration() > 250) {
             return;
         }
+        for (const object of gameObjects) {
+            if (object instanceof Player || object instanceof RemotePlayer) {
+                return;
+            }
+        }
         const camera = this.gameScene.getCameraManager().getCamera();
         const index = this.gameScene
             .getGameMap()
@@ -45,7 +53,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleSpaceKeyUpEvent(event: Event): Event {
-        this.gameScene.activateOutlinedItem();
+        const activatable = this.gameScene.getActivatablesManager().getSelectedActivatableObject();
+        if (activatable && activatable.isActivatable()) {
+            activatable.activate();
+        }
         return event;
     }
 }
