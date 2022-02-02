@@ -66,6 +66,7 @@ export class GameMapPropertiesListener {
                     let websitePolicyProperty: string | undefined;
                     let websitePositionProperty: number | undefined;
                     let websiteTriggerProperty: string | undefined;
+                    let websiteTriggerMessageProperty: string | undefined;
 
                     layer.properties.forEach((property) => {
                         switch (property.name) {
@@ -83,6 +84,9 @@ export class GameMapPropertiesListener {
                                 break;
                             case GameMapProperties.OPEN_WEBSITE_TRIGGER:
                                 websiteTriggerProperty = property.value as string | undefined;
+                                break;
+                            case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
+                                websiteTriggerMessageProperty = property.value as string | undefined;
                                 break;
                         }
                     });

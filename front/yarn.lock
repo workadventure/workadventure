@@ -1352,6 +1352,11 @@ camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.2.0.tgz#924af881c9d525ac9d87f40d964e5cea982a1809"
   integrity sha512-c7wVvbw3f37nuobQNtgsgG9POC9qMbNuMQmTCqZv23b6MIz0fcYpBiOlv9gEN/hdLdnZTDQhg6e9Dq5M1vKvfg==
 
+cancelable-promise@^4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/cancelable-promise/-/cancelable-promise-4.2.1.tgz#b02f79c5dde2704acfff1bc1ac2b4090f55541fe"
+  integrity sha512-PJZ/000ocWhPZQBAuNewAOMA2WEkJ8RhXI6AxeGLiGdW8EYDmumzo9wKyNgjDgxc1q/HbXuTdlcI+wXrOe/jMw==
+
 caniuse-api@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/caniuse-api/-/caniuse-api-3.0.0.tgz#5e4d90e2274961d46291997df599e3ed008ee4c0"

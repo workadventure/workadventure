@@ -7,7 +7,7 @@
 
     function name(userId: number): string {
         const user = gameScene.MapPlayersByKey.get(userId);
-        return user ? user.PlayerValue : "";
+        return user ? user.playerName : "";
     }
 
     function acceptFollowRequest() {

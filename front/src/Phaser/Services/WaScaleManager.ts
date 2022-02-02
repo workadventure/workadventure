@@ -41,8 +41,8 @@ export class WaScaleManager {
             this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
         }
 
-        this.scaleManager.setZoom(this.actualZoom);
         this.scaleManager.resize(gameSize.width, gameSize.height);
+        this.scaleManager.setZoom(this.actualZoom);
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;

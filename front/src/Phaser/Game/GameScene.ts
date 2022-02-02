@@ -12,7 +12,7 @@ import { UserInputManager } from "../UserInput/UserInputManager";
 import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
+import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -49,6 +49,7 @@ import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
+import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -89,10 +90,8 @@ import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
-import Camera = Phaser.Cameras.Scene2D.Camera;
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -189,8 +188,6 @@ export class GameScene extends DirtyScene {
 
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
-    // The item that can be selected by pressing the space key.
-    private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
@@ -204,6 +201,7 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
+    private activatablesManager!: ActivatablesManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -577,6 +575,14 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getTileDimensions()
+        );
+
+        this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
+
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -659,10 +665,10 @@ export class GameScene extends DirtyScene {
 
         this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
             if (color !== undefined) {
-                this.CurrentPlayer.setOutlineColor(color);
+                this.CurrentPlayer.setFollowOutlineColor(color);
                 this.connection?.emitPlayerOutlineColor(color);
             } else {
-                this.CurrentPlayer.removeOutlineColor();
+                this.CurrentPlayer.removeFollowOutlineColor();
                 this.connection?.emitPlayerOutlineColor(null);
             }
         });
@@ -677,10 +683,6 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
-    }
-
-    public activateOutlinedItem(): void {
-        this.outlinedItem?.activate();
     }
 
     /**
@@ -805,11 +807,8 @@ export class GameScene extends DirtyScene {
                 this.simplePeer = new SimplePeer(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
-                //listen event to share position of user
-                this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
-                this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this));
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
-                    this.gameMap.setPosition(event.x, event.y);
+                    this.handleCurrentPlayerHasMovedEvent(event);
                 });
 
                 // Set up variables manager
@@ -1272,7 +1271,7 @@ ${escapedMessage}
                 openCoWebsite.closable ?? true
             );
 
-            if (openCoWebsite.lazy !== undefined && !openCoWebsite.lazy) {
+            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
 
@@ -1445,12 +1444,12 @@ ${escapedMessage}
             const green = normalizeColor(message.green);
             const blue = normalizeColor(message.blue);
             const color = (red << 16) | (green << 8) | blue;
-            this.CurrentPlayer.setOutlineColor(color);
+            this.CurrentPlayer.setApiOutlineColor(color);
             this.connection?.emitPlayerOutlineColor(color);
         });
 
         iframeListener.registerAnswerer("removePlayerOutline", (message) => {
-            this.CurrentPlayer.removeOutlineColor();
+            this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
 
@@ -1683,7 +1682,18 @@ ${escapedMessage}
         }
     }
 
-    createCollisionWithPlayer() {
+    private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
+        //listen event to share position of user
+        this.pushPlayerPosition(event);
+        this.gameMap.setPosition(event.x, event.y);
+        this.activatablesManager.updateActivatableObjectsDistances([
+            ...Array.from(this.MapPlayersByKey.values()),
+            ...this.actionableItems.values(),
+        ]);
+        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+    }
+
+    private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
@@ -1702,7 +1712,7 @@ ${escapedMessage}
         }
     }
 
-    createCurrentPlayer() {
+    private createCurrentPlayer() {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
@@ -1717,7 +1727,7 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
@@ -1760,7 +1770,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    pushPlayerPosition(event: HasPlayerMovedEvent) {
+    private pushPlayerPosition(event: HasPlayerMovedEvent) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1786,49 +1796,6 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    /**
-     * Finds the correct item to outline and outline it (if there is an item to be outlined)
-     * @param event
-     */
-    private outlineItem(event: HasPlayerMovedEvent): void {
-        let x = event.x;
-        let y = event.y;
-        switch (event.direction) {
-            case PlayerAnimationDirections.Up:
-                y -= 32;
-                break;
-            case PlayerAnimationDirections.Down:
-                y += 32;
-                break;
-            case PlayerAnimationDirections.Left:
-                x -= 32;
-                break;
-            case PlayerAnimationDirections.Right:
-                x += 32;
-                break;
-            default:
-                throw new Error('Unexpected direction "' + event.direction + '"');
-        }
-
-        let shortestDistance: number = Infinity;
-        let selectedItem: ActionableItem | null = null;
-        for (const item of this.actionableItems.values()) {
-            const distance = item.actionableDistance(x, y);
-            if (distance !== null && distance < shortestDistance) {
-                shortestDistance = distance;
-                selectedItem = item;
-            }
-        }
-
-        if (this.outlinedItem === selectedItem) {
-            return;
-        }
-
-        this.outlinedItem?.notSelectable();
-        this.outlinedItem = selectedItem;
-        this.outlinedItem?.selectable();
-    }
-
     private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -1846,7 +1813,7 @@ ${escapedMessage}
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
-    update(time: number, delta: number): void {
+    public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
@@ -1865,9 +1832,15 @@ ${escapedMessage}
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
                     break;
-                case "UserMovedEvent":
+                case "UserMovedEvent": {
                     this.doUpdatePlayerPosition(event.event);
+                    const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
+                    if (remotePlayer) {
+                        this.activatablesManager.updateDistanceForSingleActivatableObject(remotePlayer);
+                        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+                    }
                     break;
+                }
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
@@ -1954,11 +1927,21 @@ ${escapedMessage}
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         if (addPlayerData.outlineColor !== undefined) {
-            player.setOutlineColor(addPlayerData.outlineColor);
+            player.setApiOutlineColor(addPlayerData.outlineColor);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
+
+        player.on(Phaser.Input.Events.POINTER_OVER, () => {
+            this.activatablesManager.handlePointerOverActivatableObject(player);
+            this.markDirty();
+        });
+
+        player.on(Phaser.Input.Events.POINTER_OUT, () => {
+            this.activatablesManager.handlePointerOutActivatableObject();
+            this.markDirty();
+        });
     }
 
     /**
@@ -1988,7 +1971,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
-    public updatePlayerPosition(message: MessageUserMovedInterface): void {
+    private updatePlayerPosition(message: MessageUserMovedInterface): void {
         this.pendingEvents.enqueue({
             type: "UserMovedEvent",
             event: message,
@@ -2018,7 +2001,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
-    public shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+    private shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         this.pendingEvents.enqueue({
             type: "GroupCreatedUpdatedEvent",
             event: groupPositionMessage,
@@ -2070,9 +2053,9 @@ ${escapedMessage}
             return;
         }
         if (message.removeOutlineColor) {
-            character.removeOutlineColor();
+            character.removeApiOutlineColor();
         } else {
-            character.setOutlineColor(message.outlineColor);
+            character.setApiOutlineColor(message.outlineColor);
         }
     }
 
@@ -2228,5 +2211,9 @@ ${escapedMessage}
 
     public getPathfindingManager(): PathfindingManager {
         return this.pathfindingManager;
+    }
+
+    public getActivatablesManager(): ActivatablesManager {
+        return this.activatablesManager;
     }
 }
