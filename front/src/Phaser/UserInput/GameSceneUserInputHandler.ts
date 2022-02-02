@@ -22,7 +22,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (pointer.rightButtonReleased() || pointer.getDuration() > 250) {
+        if (!pointer.wasTouch && pointer.leftButtonReleased() || pointer.getDuration() > 250) {
             return;
         }
         for (const object of gameObjects) {
