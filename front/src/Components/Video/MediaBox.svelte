@@ -9,6 +9,7 @@
     export let streamable: Streamable;
     export let isHightlighted = false;
     export let isClickable = false;
+    export let mozaicSolo = false;
     export let mozaicFullWidth = false;
     export let mozaicQuarter = false;
 </script>
@@ -16,6 +17,7 @@
 <div
     class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
     class:clickable={isClickable}
+    class:mozaic-solo={mozaicSolo}
     class:mozaic-full-width={mozaicFullWidth}
     class:mozaic-quarter={mozaicQuarter}
 >
@@ -66,6 +68,11 @@
             }
         }
 
+        &.mozaic-solo {
+            max-height: inherit !important;
+            width: 90% !important;
+        }
+
         &.mozaic-full-width {
             width: 95%;
             max-width: 95%;
@@ -73,6 +80,7 @@
             margin-right: 3%;
             margin-top: auto;
             margin-bottom: auto;
+            max-height: 95%;
 
             &:hover {
                 margin-top: auto;
@@ -85,6 +93,7 @@
             max-width: 95%;
             margin-top: auto;
             margin-bottom: auto;
+            max-height: 95%;
 
             &:hover {
                 margin-top: auto;
