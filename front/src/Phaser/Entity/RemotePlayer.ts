@@ -31,18 +31,18 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         moving: boolean,
         visitCardUrl: string | null,
         companion: string | null,
-        companionTexturePromise?: Promise<string>,
+        companionTexturePromise?: CancelablePromise<string>,
         activationRadius?: number
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
 
         //set data
         this.userId = userId;
+        this.visitCardUrl = visitCardUrl;
         this.registeredActions = [];
         this.registerDefaultActionsMenuActions();
         this.setClickable(this.registeredActions.length > 0);
         this.activationRadius = activationRadius ?? 96;
-        this.visitCardUrl = visitCardUrl;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
         });
@@ -118,7 +118,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
-            if (event.downElement.nodeName === "CANVAS") {
+            if (event.downElement.nodeName === "CANVAS" && event.leftButtonDown()) {
                 this.toggleActionsMenu();
             }
         });

@@ -59,7 +59,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: Promise<string>
+        companionTexturePromise?: CancelablePromise<string>
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -142,7 +142,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.clickable = clickable;
         if (clickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
@@ -179,7 +179,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public addCompanion(name: string, texturePromise?: Promise<string>): void {
+    public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
