@@ -36,7 +36,7 @@
                 const coWebsites = $coWebsitesNotAsleep;
                 const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
                 if (newMain) {
-                    coWebsiteManager.goToMain(coWebsite);
+                    coWebsiteManager.goToMain(newMain);
                 }
             } else {
                 highlightedEmbedScreen.toggleHighlight({
