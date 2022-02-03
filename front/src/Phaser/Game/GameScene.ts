@@ -637,12 +637,12 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
-        // localVolumeStore.subscribe((volume) => {
-        //     if (volume) {
-        //         this.CurrentPlayer.showIconTalk(volume > 5);
-        //         this.markDirty(); // should be dirty from animation
-        //     }
-        // });
+        localVolumeStore.subscribe((volume) => {
+            if (volume) {
+                this.CurrentPlayer.showIconTalk(volume > 5);
+                this.markDirty(); // should be dirty from animation
+            }
+        });
 
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {

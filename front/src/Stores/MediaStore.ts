@@ -397,47 +397,6 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
     }
 }
 
-export const localVolumeStore = readable<number | null>(null, (set) => {
-    let timeout: ReturnType<typeof setTimeout>;
-    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
-        console.log('LOCAL VOLUME STORE SUBSCRIBE TO LOCAL STREAM STORE');
-        if (localStreamStoreValue.type === "error") {
-            console.log('D1');
-            set(null);
-            return;
-        }
-        const soundMeter = new SoundMeter();
-        const mediaStream = localStreamStoreValue.stream;
-        if (mediaStream === null) {
-            console.log('D2');
-            set(null);
-            return;
-        }
-        console.log('D3');
-        console.log(localStreamStoreValue);
-        soundMeter.connectToSource(mediaStream, new AudioContext());
-        let error = false;
-
-        timeout = setInterval(() => {
-            console.log('local time interval');
-            try {
-                set(soundMeter.getVolume());
-            } catch (err) {
-                if (!error) {
-                    console.error(err);
-                    error = true;
-                }
-            }
-        }, 100);
-    });
-
-    return () => {
-        console.log('UNSUBSCRIBE FROM LOCAL STREAM STORE');
-        unsubscribe();
-        clearInterval(timeout);
-    }
-});
-
 /**
  * A store containing the MediaStream object (or null if nothing requested, or Error if an error occurred)
  */
@@ -583,6 +542,44 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
         }
     }
 );
+
+export const localVolumeStore = readable<number | null>(null, (set) => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+        console.log('LOCAL VOLUME STORE SUBSCRIBE TO LOCAL STREAM STORE');
+        if (localStreamStoreValue.type === "error") {
+            console.log('D1');
+            set(null);
+            return;
+        }
+        const soundMeter = new SoundMeter();
+        const mediaStream = localStreamStoreValue.stream;
+        if (mediaStream !== null && mediaStream.getAudioTracks().length > 0) {
+            console.log('D3');
+            console.log(localStreamStoreValue);
+            soundMeter.connectToSource(mediaStream, new AudioContext());
+            let error = false;
+    
+            timeout = setInterval(() => {
+                console.log('local time interval');
+                try {
+                    set(soundMeter.getVolume());
+                } catch (err) {
+                    if (!error) {
+                        console.error(err);
+                        error = true;
+                    }
+                }
+            }, 100);
+        }
+    });
+
+    return () => {
+        console.log('UNSUBSCRIBE FROM LOCAL STREAM STORE');
+        unsubscribe();
+        clearInterval(timeout);
+    }
+});
 
 /**
  * Device list
