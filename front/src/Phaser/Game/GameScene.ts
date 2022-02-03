@@ -647,9 +647,7 @@ export class GameScene extends DirtyScene {
             for (const [key, videoStream] of peers) {
                 this.volumeStoreUnsubscribers.set(key, videoStream.volumeStore.subscribe((volume) => {
                     if (volume) {
-                        console.log(`${key}: ${volume}`);
-                        this.MapPlayersByKey.get(key)?.showIconTalk(volume > 5);
-                        this.markDirty(); // should be dirty from animation
+                        this.MapPlayersByKey.get(key)?.showTalkIcon(volume > 5);
                     }
                 }));
             }
@@ -663,8 +661,7 @@ export class GameScene extends DirtyScene {
             if (newPeerNumber > 0) {
                 this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                     if (volume) {
-                        this.CurrentPlayer.showIconTalk(volume > 5);
-                        this.markDirty(); // should be dirty from animation
+                        this.CurrentPlayer.showTalkIcon(volume > 5);
                     }
                 });
             } else {

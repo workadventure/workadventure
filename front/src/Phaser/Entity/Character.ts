@@ -17,6 +17,7 @@ import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
+import { TalkIcon } from '../Components/TalkIcon';
 
 const playerNameY = -25;
 
@@ -33,7 +34,7 @@ const interactiveRadius = 35;
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
-    private readonly iconTalk: Phaser.GameObjects.Image;
+    private readonly talkIcon: TalkIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -104,10 +105,8 @@ export abstract class Character extends Container implements OutlineableInterfac
             },
         });
 
-        this.iconTalk = new Phaser.GameObjects.Image(scene, 0, -45, 'iconTalk')
-            .setScale(0.15)
-            .setVisible(false);
-        this.add(this.iconTalk);
+        this.talkIcon = new TalkIcon(scene, 0, -45);
+        this.add(this.talkIcon);
 
         if (isClickable) {
             this.setInteractive({
@@ -193,8 +192,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showIconTalk(show: boolean = true): void {
-        this.iconTalk.setVisible(show);
+    public showTalkIcon(show: boolean = true): void {
+        this.talkIcon.show(show);
     }
 
     public addCompanion(name: string, texturePromise?: Promise<string>): void {
