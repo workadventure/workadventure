@@ -56,6 +56,10 @@ jobs:
           ADMIN_URL: "//localhost:80"
         working-directory: "front"
 
+      - name: "Build iframe-api"
+        run: yarn run build-iframe-api
+        working-directory: "front"
+
       - name: "Typecheck"
         run: yarn run typecheck
         working-directory: "front"
