@@ -62,7 +62,6 @@ export class VideoPeer extends Peer {
         this.uniqueId = "video_" + this.userId;
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
-            console.log('STREAM STORE INITIALIZE');
             const onStream = (stream: MediaStream | null) => {
                 set(stream);
             };
@@ -74,19 +73,22 @@ export class VideoPeer extends Peer {
             };
         });
 
-        console.log('CREATE VOLUME STORE');
-
         this.volumeStore = readable<number | null>(null, (set) => {
             let timeout: ReturnType<typeof setTimeout>;
-            console.log('VOLUME STORE INITIALIZE');
             const unsubscribe = this.streamStore.subscribe((mediaStream) => {
                 if (mediaStream === null) {
                     set(null);
                     return;
                 }
                 const soundMeter = new SoundMeter();
-                soundMeter.connectToSource(mediaStream, new AudioContext());
                 let error = false;
+                try {
+                    soundMeter.connectToSource(mediaStream, new AudioContext());
+                } catch (errMsg) {
+                    console.warn(errMsg);
+                    set(null);
+                    return;
+                }
 
                 timeout = setInterval(() => {
                     try {

@@ -92,6 +92,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import { localVolumeStore } from '../../Stores/MediaStore';
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -635,6 +636,13 @@ export class GameScene extends DirtyScene {
             this.scene.sleep();
             this.connect();
         }
+
+        // localVolumeStore.subscribe((volume) => {
+        //     if (volume) {
+        //         this.CurrentPlayer.showIconTalk(volume > 5);
+        //         this.markDirty(); // should be dirty from animation
+        //     }
+        // });
 
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
