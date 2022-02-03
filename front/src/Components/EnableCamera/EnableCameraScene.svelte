@@ -5,6 +5,7 @@
         audioConstraintStore,
         cameraListStore,
         localStreamStore,
+        localVolumeStore,
         microphoneListStore,
         videoConstraintStore,
     } from "../../Stores/MediaStore";
@@ -18,6 +19,7 @@
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
+    let volume = 0;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -38,7 +40,7 @@
 
     let stream: MediaStream | null;
 
-    const unsubscribe = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
@@ -59,7 +61,14 @@
         }
     });
 
-    onDestroy(unsubscribe);
+    const unsubscribeLocalVolumeStore = localVolumeStore.subscribe((value) => {
+        volume = value ?? 0;
+    });
+
+    onDestroy(() => {
+        unsubscribeLocalVolumeStore();
+        unsubscribeLocalStreamStore();
+    });
 
     function normalizeDeviceName(label: string): string {
         // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
@@ -86,7 +95,7 @@
             <img class="background-img" src={cinemaCloseImg} alt="" />
         </div>
     {/if}
-    <HorizontalSoundMeterWidget {stream} />
+    <HorizontalSoundMeterWidget {volume} />
 
     <section class="selectWebcamForm">
         {#if $cameraListStore.length > 1}

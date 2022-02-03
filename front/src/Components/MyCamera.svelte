@@ -1,5 +1,5 @@
 <script lang="typescript">
-    import { obtainedMediaConstraintStore } from "../Stores/MediaStore";
+    import { localVolumeStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
     import { localStreamStore, isSilentStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy, onMount } from "svelte";
@@ -7,8 +7,9 @@
     import LL from "../i18n/i18n-svelte";
 
     let stream: MediaStream | null;
+    let volume = 0;
 
-    const unsubscribe = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
         } else {
@@ -16,7 +17,14 @@
         }
     });
 
-    onDestroy(unsubscribe);
+    const unsubscribeLocalVolumeStore = localVolumeStore.subscribe((value) => {
+        volume = value ?? 0;
+    });
+
+    onDestroy(() => {
+        unsubscribeLocalStreamStore();
+        unsubscribeLocalVolumeStore();
+    });
 
     let isSilent: boolean;
     const unsubscribeIsSilent = isSilentStore.subscribe((value) => {
@@ -51,7 +59,7 @@
         <div class="is-silent">{$LL.camera.my.silentZone()}</div>
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <video class="my-cam-video" use:srcObject={stream} autoplay muted playsinline />
-        <SoundMeterWidget {stream} />
+        <SoundMeterWidget {volume} />
     {/if}
 </div>
 
