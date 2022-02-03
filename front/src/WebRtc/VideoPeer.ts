@@ -62,7 +62,6 @@ export class VideoPeer extends Peer {
         this.uniqueId = "video_" + this.userId;
 
         this.streamStore = readable<MediaStream | null>(null, (set) => {
-            console.log('STREAM STORE INITIALIZE');
             const onStream = (stream: MediaStream | null) => {
                 set(stream);
             };
@@ -74,32 +73,30 @@ export class VideoPeer extends Peer {
             };
         });
 
-        console.log('CREATE VOLUME STORE');
-
         this.volumeStore = readable<number | null>(null, (set) => {
             let timeout: ReturnType<typeof setTimeout>;
-            console.log('VOLUME STORE INITIALIZE');
             const unsubscribe = this.streamStore.subscribe((mediaStream) => {
-                if (mediaStream !== null && mediaStream.getAudioTracks().length > 0) {
-                    const soundMeter = new SoundMeter();
-                    soundMeter.connectToSource(mediaStream, new AudioContext());
-                    let error = false;
-    
-                    timeout = setInterval(() => {
-                        try {
-                            set(soundMeter.getVolume());
-                        } catch (err) {
-                            if (!error) {
-                                console.error(err);
-                                error = true;
-                            }
-                        }
-                    }, 100);
+                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                    set(null);
+                    return;
                 }
+                const soundMeter = new SoundMeter();
+                soundMeter.connectToSource(mediaStream, new AudioContext());
+                let error = false;
+
+                timeout = setInterval(() => {
+                    try {
+                        set(soundMeter.getVolume());
+                    } catch (err) {
+                        if (!error) {
+                            console.error(err);
+                            error = true;
+                        }
+                    }
+                }, 100);
             });
 
             return () => {
-                console.log('UNSUBSCRIBE');
                 unsubscribe();
                 clearInterval(timeout);
             }

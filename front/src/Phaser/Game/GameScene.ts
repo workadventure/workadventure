@@ -169,7 +169,9 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
-    private volumeStoreUnsubscribes: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
+    
+    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
+    private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
@@ -637,20 +639,13 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
-        localVolumeStore.subscribe((volume) => {
-            if (volume) {
-                this.CurrentPlayer.showIconTalk(volume > 5);
-                this.markDirty(); // should be dirty from animation
-            }
-        });
-
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            this.volumeStoreUnsubscribes.forEach(unsubscribe => unsubscribe());
-            this.volumeStoreUnsubscribes.clear();
+            this.volumeStoreUnsubscribers.forEach(unsubscribe => unsubscribe());
+            this.volumeStoreUnsubscribers.clear();
 
             for (const [key, videoStream] of peers) {
-                this.volumeStoreUnsubscribes.set(key, videoStream.volumeStore.subscribe((volume) => {
+                this.volumeStoreUnsubscribers.set(key, videoStream.volumeStore.subscribe((volume) => {
                     if (volume) {
                         console.log(`${key}: ${volume}`);
                         this.MapPlayersByKey.get(key)?.showIconTalk(volume > 5);
@@ -664,6 +659,18 @@ export class GameScene extends DirtyScene {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeerNumber) {
                 this.playSound("audio-webrtc-out");
+            }
+            if (newPeerNumber > 0) {
+                this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
+                    if (volume) {
+                        this.CurrentPlayer.showIconTalk(volume > 5);
+                        this.markDirty(); // should be dirty from animation
+                    }
+                });
+            } else {
+                if (this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber();
+                }
             }
             oldPeerNumber = newPeerNumber;
         });
