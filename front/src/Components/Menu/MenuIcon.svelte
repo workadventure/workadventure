@@ -99,6 +99,7 @@
             width: 60px;
             padding-top: 0;
             margin: 5%;
+            image-rendering: pixelated;
         }
     }
 
