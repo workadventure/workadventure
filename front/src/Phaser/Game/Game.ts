@@ -26,15 +26,6 @@ export class Game extends Phaser.Game {
                 }
             }
         });
-
-        /*window.addEventListener('resize', (event) => {
-            // Let's trigger the onResize method of any active scene that is a ResizableScene
-            for (const scene of this.scene.getScenes(true)) {
-                if (scene instanceof ResizableScene) {
-                    scene.onResize(event);
-                }
-            }
-        });*/
     }
 
     public step(time: number, delta: number) {

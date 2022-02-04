@@ -255,6 +255,11 @@ export class UserInputManager {
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
                 this.joystick?.hide();
                 this.userInputHandler.handlePointerUpEvent(pointer, gameObjects);
+
+                // Disable focus on iframe (need by Firefox)
+                if (pointer.downElement.nodeName === "CANVAS" && document.activeElement instanceof HTMLIFrameElement) {
+                    document.activeElement.blur();
+                }
             }
         );
 
