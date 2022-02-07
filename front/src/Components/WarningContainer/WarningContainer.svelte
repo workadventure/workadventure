@@ -38,7 +38,6 @@
         right: 0;
         margin-left: auto;
         margin-right: auto;
-        transform: translate(-50%, 0);
         font-family: Lato;
         min-width: 300px;
         opacity: 0.9;

@@ -92,7 +92,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { localVolumeStore } from '../../Stores/MediaStore';
+import { localVolumeStore } from "../../Stores/MediaStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -169,7 +169,7 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
-    
+
     private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
@@ -247,7 +247,7 @@ export class GameScene extends DirtyScene {
                 loadCustomTexture(this.load, texture).catch((e) => console.error(e));
             }
         }
-        this.load.svg('iconTalk', '/resources/icons/icon_talking.svg');
+        this.load.svg("iconTalk", "/resources/icons/icon_talking.svg");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -641,15 +641,18 @@ export class GameScene extends DirtyScene {
 
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            this.volumeStoreUnsubscribers.forEach(unsubscribe => unsubscribe());
+            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
             this.volumeStoreUnsubscribers.clear();
 
             for (const [key, videoStream] of peers) {
-                this.volumeStoreUnsubscribers.set(key, videoStream.volumeStore.subscribe((volume) => {
-                    if (volume) {
-                        this.MapPlayersByKey.get(key)?.showTalkIcon(volume > 5);
-                    }
-                }));
+                this.volumeStoreUnsubscribers.set(
+                    key,
+                    videoStream.volumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > 5);
+                        }
+                    })
+                );
             }
 
             const newPeerNumber = peers.size;
@@ -1763,6 +1766,12 @@ ${escapedMessage}
                 } else {
                     emoteMenuStore.openEmoteMenu();
                 }
+            });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOverOutline(0x00ffff);
+            });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOutOutline();
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);

@@ -4,6 +4,7 @@ import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Anima
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { Writable, writable } from "svelte/store";
 import type { PictureStore } from "../../Stores/PictureStore";
+import type CancelablePromise from "cancelable-promise";
 
 export interface CompanionStatus {
     x: number;
@@ -25,8 +26,9 @@ export class Companion extends Container {
     private direction: PlayerAnimationDirections;
     private animationType: PlayerAnimationTypes;
     private readonly _pictureStore: Writable<string | undefined>;
+    private texturePromise: CancelablePromise<string | void> | undefined;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: Promise<string>) {
+    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: CancelablePromise<string>) {
         super(scene, x + 14, y + 4);
 
         this.sprites = new Map<string, Sprite>();
@@ -41,7 +43,7 @@ export class Companion extends Container {
         this.companionName = name;
         this._pictureStore = writable(undefined);
 
-        texturePromise
+        this.texturePromise = texturePromise
             .then((resource) => {
                 this.addResource(resource);
                 this.invisible = false;
@@ -234,6 +236,7 @@ export class Companion extends Container {
     }
 
     public destroy(): void {
+        this.texturePromise?.cancel();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);

@@ -17,7 +17,7 @@ import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
-import { TalkIcon } from '../Components/TalkIcon';
+import { TalkIcon } from "../Components/TalkIcon";
 
 const playerNameY = -25;
 
@@ -61,7 +61,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: Promise<string>
+        companionTexturePromise?: CancelablePromise<string>
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -155,7 +155,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.clickable = clickable;
         if (clickable) {
             this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
                 hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
                 useHandCursor: true,
             });
@@ -170,6 +170,27 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public getPosition(): { x: number; y: number } {
         return { x: this.x, y: this.y };
+    }
+
+    /**
+     * Returns position based on where player is currently facing
+     * @param shift How far from player should the point of interest be.
+     */
+    public getDirectionalActivationPosition(shift: number): { x: number; y: number } {
+        switch (this.lastDirection) {
+            case PlayerAnimationDirections.Down: {
+                return { x: this.x, y: this.y + shift };
+            }
+            case PlayerAnimationDirections.Left: {
+                return { x: this.x - shift, y: this.y };
+            }
+            case PlayerAnimationDirections.Right: {
+                return { x: this.x + shift, y: this.y };
+            }
+            case PlayerAnimationDirections.Up: {
+                return { x: this.x, y: this.y - shift };
+            }
+        }
     }
 
     public getObjectToOutline(): Phaser.GameObjects.GameObject {
@@ -196,7 +217,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.talkIcon.show(show);
     }
 
-    public addCompanion(name: string, texturePromise?: Promise<string>): void {
+    public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
@@ -472,16 +493,16 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.outlineColorStore.removeApiColor();
     }
 
-    public pointerOverOutline(): void {
-        this.outlineColorStore.pointerOver();
+    public pointerOverOutline(color: number): void {
+        this.outlineColorStore.pointerOver(color);
     }
 
     public pointerOutOutline(): void {
         this.outlineColorStore.pointerOut();
     }
 
-    public characterCloseByOutline(): void {
-        this.outlineColorStore.characterCloseBy();
+    public characterCloseByOutline(color: number): void {
+        this.outlineColorStore.characterCloseBy(color);
     }
 
     public characterFarAwayOutline(): void {

@@ -22,7 +22,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (pointer.rightButtonReleased() || pointer.getDuration() > 250) {
+        if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
         for (const object of gameObjects) {
@@ -53,10 +53,20 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleSpaceKeyUpEvent(event: Event): Event {
-        const activatable = this.gameScene.getActivatablesManager().getSelectedActivatableObject();
-        if (activatable && activatable.isActivatable()) {
+        const activatableManager = this.gameScene.getActivatablesManager();
+        const activatable = activatableManager.getSelectedActivatableObject();
+        if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
             activatable.activate();
         }
         return event;
+    }
+
+    public addSpaceEventListener(callback: Function): void {
+        this.gameScene.input.keyboard.addListener("keyup-SPACE", callback);
+        this.gameScene.getActivatablesManager().disableSelectingByDistance();
+    }
+    public removeSpaceEventListner(callback: Function): void {
+        this.gameScene.input.keyboard.removeListener("keyup-SPACE", callback);
+        this.gameScene.getActivatablesManager().enableSelectingByDistance();
     }
 }
