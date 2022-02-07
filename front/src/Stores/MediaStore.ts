@@ -10,8 +10,8 @@ import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
-import { SoundMeter } from '../Phaser/Components/SoundMeter';
-import { AudioContext } from 'standardized-audio-context';
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AudioContext } from "standardized-audio-context";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -577,7 +577,7 @@ export const localVolumeStore = readable<number | null>(null, (set) => {
     return () => {
         unsubscribe();
         clearInterval(timeout);
-    }
+    };
 });
 
 /**

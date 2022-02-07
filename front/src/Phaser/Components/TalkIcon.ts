@@ -1,15 +1,14 @@
-import { Easing } from '../../types';
+import { Easing } from "../../types";
 
 export class TalkIcon extends Phaser.GameObjects.Image {
-
     private shown: boolean;
     private showAnimationTween?: Phaser.Tweens.Tween;
 
-    private defaultPosition: { x: number, y: number };
+    private defaultPosition: { x: number; y: number };
     private defaultScale: number;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'iconTalk');
+        super(scene, x, y, "iconTalk");
 
         this.defaultPosition = { x, y };
         this.defaultScale = 0.15;
@@ -39,7 +38,7 @@ export class TalkIcon extends Phaser.GameObjects.Image {
             this.alpha = 0;
         }
         this.showAnimationTween = this.scene.tweens.add({
-            targets: [ this ],
+            targets: [this],
             duration: 350,
             alpha: show ? 1 : 0,
             y: this.defaultPosition.y,
@@ -47,7 +46,7 @@ export class TalkIcon extends Phaser.GameObjects.Image {
             ease: Easing.BackEaseOut,
             onComplete: () => {
                 this.showAnimationTween = undefined;
-            }
+            },
         });
     }
 

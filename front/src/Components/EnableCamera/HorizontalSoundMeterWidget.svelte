@@ -1,5 +1,4 @@
 <script lang="typescript">
-
     export let volume = 0;
 
     const NB_BARS = 20;

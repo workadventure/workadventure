@@ -10,9 +10,9 @@ import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-import { SoundMeter } from '../Phaser/Components/SoundMeter';
-import { AudioContext } from 'standardized-audio-context';
-import { Console } from 'console';
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AudioContext } from "standardized-audio-context";
+import { Console } from "console";
 
 const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
 
@@ -99,7 +99,7 @@ export class VideoPeer extends Peer {
             return () => {
                 unsubscribe();
                 clearInterval(timeout);
-            }
+            };
         });
 
         this.constraintsStore = readable<ObtainedMediaStreamConstraints | null>(null, (set) => {
