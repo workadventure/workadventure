@@ -3,8 +3,8 @@ export interface OutlineableInterface {
     removeFollowOutlineColor(): void;
     setApiOutlineColor(color: number): void;
     removeApiOutlineColor(): void;
-    pointerOverOutline(): void;
+    pointerOverOutline(color: number): void;
     pointerOutOutline(): void;
-    characterCloseByOutline(): void;
+    characterCloseByOutline(color: number): void;
     characterFarAwayOutline(): void;
 }
