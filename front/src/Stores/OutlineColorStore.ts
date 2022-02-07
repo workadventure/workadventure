@@ -5,38 +5,36 @@ export function createColorStore() {
 
     let followColor: number | undefined = undefined;
     let apiColor: number | undefined = undefined;
+    let pointedByPointer: number | undefined = undefined;
+    let pointedByCharacter: number | undefined = undefined;
 
-    let pointedByPointer: boolean = false;
-    let pointedByCharacter: boolean = false;
 
     const updateColor = () => {
-        if (pointedByPointer || pointedByCharacter) {
-            set(0xffff00);
-        } else {
-            set(followColor ?? apiColor);
-        }
+        console.log('update color');
+        console.log(pointedByPointer, pointedByCharacter, followColor, apiColor);
+        set(pointedByPointer ?? pointedByCharacter ?? followColor ?? apiColor);
     };
 
     return {
         subscribe,
 
-        pointerOver() {
-            pointedByPointer = true;
+        pointerOver(color: number) {
+            pointedByPointer = color;
             updateColor();
         },
 
         pointerOut() {
-            pointedByPointer = false;
+            pointedByPointer = undefined;
             updateColor();
         },
 
-        characterCloseBy() {
-            pointedByCharacter = true;
+        characterCloseBy(color: number) {
+            pointedByCharacter = color;
             updateColor();
         },
 
         characterFarAway() {
-            pointedByCharacter = false;
+            pointedByCharacter = undefined;
             updateColor();
         },
 

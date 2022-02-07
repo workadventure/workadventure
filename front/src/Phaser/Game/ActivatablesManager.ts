@@ -11,6 +11,8 @@ export class ActivatablesManager {
 
     private currentPlayer: Player;
 
+    private readonly outlineColor = 0xffff00;
+
     constructor(currentPlayer: Player) {
         this.currentPlayer = currentPlayer;
     }
@@ -27,7 +29,7 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByPointer = object;
         if (isOutlineable(this.selectedActivatableObjectByPointer)) {
-            this.selectedActivatableObjectByPointer?.pointerOverOutline();
+            this.selectedActivatableObjectByPointer?.pointerOverOutline(this.outlineColor);
         }
     }
 
@@ -37,7 +39,7 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByPointer = undefined;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
+            this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
         }
     }
 
@@ -60,7 +62,7 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
+            this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
         }
     }
 

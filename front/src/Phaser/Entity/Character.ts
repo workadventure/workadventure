@@ -455,16 +455,16 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.outlineColorStore.removeApiColor();
     }
 
-    public pointerOverOutline(): void {
-        this.outlineColorStore.pointerOver();
+    public pointerOverOutline(color: number): void {
+        this.outlineColorStore.pointerOver(color);
     }
 
     public pointerOutOutline(): void {
         this.outlineColorStore.pointerOut();
     }
 
-    public characterCloseByOutline(): void {
-        this.outlineColorStore.characterCloseBy();
+    public characterCloseByOutline(color: number): void {
+        this.outlineColorStore.characterCloseBy(color);
     }
 
     public characterFarAwayOutline(): void {

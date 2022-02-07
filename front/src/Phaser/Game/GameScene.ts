@@ -1737,6 +1737,12 @@ ${escapedMessage}
                     emoteMenuStore.openEmoteMenu();
                 }
             });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOverOutline(0x00ffff);
+            });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOutOutline();
+            });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
                 analyticsClient.launchEmote(emoteKey);
