@@ -43,6 +43,7 @@ export type CoWebsite = {
     closable: boolean;
     allowPolicy: string | undefined;
     allowApi: boolean | undefined;
+    widthPercent?: number | undefined;
     jitsi?: boolean;
     altMessage?: string;
 };
@@ -82,8 +83,13 @@ class CoWebsiteManager {
         this.cowebsiteDom.style.width = width + "px";
     }
 
-    set widthPercent(width: number) {
-        this.cowebsiteDom.style.width = width + "%";
+    get maxWidth(): number {
+        let maxWidth = 75 * window.innerWidth;
+        if (maxWidth !== 0) {
+            maxWidth = Math.round(maxWidth / 100);
+        }
+
+        return maxWidth;
     }
 
     get height(): number {
@@ -92,6 +98,15 @@ class CoWebsiteManager {
 
     set height(height: number) {
         this.cowebsiteDom.style.height = height + "px";
+    }
+
+    get maxHeight(): number {
+        let maxHeight = 60 * window.innerHeight;
+        if (maxHeight !== 0) {
+            maxHeight = Math.round(maxHeight / 100);
+        }
+
+        return maxHeight;
     }
 
     get verticalMode(): boolean {
@@ -191,29 +206,21 @@ class CoWebsiteManager {
 
             if (this.verticalMode) {
                 const tempValue = this.height + y;
-                let maxHeight = 60 * window.innerHeight;
-                if (maxHeight !== 0) {
-                    maxHeight = Math.round(maxHeight / 100);
-                }
 
                 if (tempValue < this.cowebsiteAsideHolderDom.offsetHeight) {
                     this.height = this.cowebsiteAsideHolderDom.offsetHeight;
-                } else if (tempValue > maxHeight) {
-                    this.height = maxHeight;
+                } else if (tempValue > this.maxHeight) {
+                    this.height = this.maxHeight;
                 } else {
                     this.height = tempValue;
                 }
             } else {
                 const tempValue = this.width - x;
-                let maxWidth = 75 * window.innerWidth;
-                if (maxWidth !== 0) {
-                    maxWidth = Math.round(maxWidth / 100);
-                }
 
                 if (tempValue < this.cowebsiteAsideHolderDom.offsetWidth) {
                     this.width = this.cowebsiteAsideHolderDom.offsetWidth;
-                } else if (tempValue > maxWidth) {
-                    this.width = maxWidth;
+                } else if (tempValue > this.maxWidth) {
+                    this.width = this.maxWidth;
                 } else {
                     this.width = tempValue;
                 }
@@ -308,7 +315,7 @@ class CoWebsiteManager {
         this.fire();
     }
 
-    private loadMain(): void {
+    private loadMain(openingWidth?: number): void {
         this.loaderAnimationInterval.interval = setInterval(() => {
             if (!this.loaderAnimationInterval.trails) {
                 this.loaderAnimationInterval.trails = [0, 1, 2];
@@ -337,6 +344,25 @@ class CoWebsiteManager {
                 trail === 3 ? 0 : trail + 1
             );
         }, 200);
+
+        if (!this.verticalMode && openingWidth) {
+            let newWidth = 50;
+
+            if (openingWidth > 100) {
+                newWidth = 100;
+            } else if (openingWidth > 1) {
+                newWidth = openingWidth;
+            }
+
+            newWidth = Math.round((newWidth * this.maxWidth) / 100);
+
+            if (newWidth < this.cowebsiteAsideHolderDom.offsetWidth) {
+                newWidth = this.cowebsiteAsideHolderDom.offsetWidth;
+            }
+
+            this.width = newWidth;
+        }
+
         this.cowebsiteDom.classList.add("opened");
         this.openedMain = iframeStates.loading;
     }
@@ -346,7 +372,6 @@ class CoWebsiteManager {
             this.resizeAllIframes();
         });
         this.openedMain = iframeStates.opened;
-        this.resetStyleMain();
     }
 
     public resetStyleMain() {
@@ -533,6 +558,7 @@ class CoWebsiteManager {
         base: string,
         allowApi?: boolean,
         allowPolicy?: string,
+        widthPercent?: number,
         position?: number,
         closable?: boolean,
         altMessage?: string
@@ -549,6 +575,7 @@ class CoWebsiteManager {
             closable: closable ?? false,
             allowPolicy,
             allowApi,
+            widthPercent,
             altMessage,
         };
 
@@ -561,14 +588,11 @@ class CoWebsiteManager {
         iframe: HTMLIFrameElement,
         allowApi?: boolean,
         allowPolicy?: string,
+        widthPercent?: number,
         position?: number,
         closable?: boolean,
         jitsi?: boolean
     ): CoWebsite {
-        if (get(coWebsitesNotAsleep).length < 1) {
-            this.loadMain();
-        }
-
         iframe.id = this.generateUniqueId();
 
         const newCoWebsite: CoWebsite = {
@@ -578,8 +602,15 @@ class CoWebsiteManager {
             closable: closable ?? false,
             allowPolicy,
             allowApi,
+            widthPercent,
             jitsi,
         };
+
+        if (get(coWebsitesNotAsleep).length < 1) {
+            coWebsites.remove(newCoWebsite);
+            coWebsites.add(newCoWebsite, 0);
+            this.loadMain(widthPercent);
+        }
 
         if (position === 0) {
             this.openMain();
@@ -597,7 +628,7 @@ class CoWebsiteManager {
         if (get(coWebsitesNotAsleep).length < 1) {
             coWebsites.remove(coWebsite);
             coWebsites.add(coWebsite, 0);
-            this.loadMain();
+            this.loadMain(coWebsite.widthPercent);
         }
 
         coWebsite.state.set("loading");

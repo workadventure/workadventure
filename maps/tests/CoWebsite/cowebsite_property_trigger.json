@@ -47,6 +47,11 @@
                  "name":"openWebsiteTrigger",
                  "type":"string",
                  "value":"onaction"
+                }, 
+                {
+                 "name":"openWebsiteWidth",
+                 "type":"int",
+                 "value":100
                 }],
          "type":"tilelayer",
          "visible":true,

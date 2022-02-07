@@ -9,7 +9,6 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
-import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 
 enum OpenCoWebsiteState {
     ASLEEP,
@@ -66,6 +65,7 @@ export class GameMapPropertiesListener {
                     let openWebsiteProperty: string | undefined;
                     let allowApiProperty: boolean | undefined;
                     let websitePolicyProperty: string | undefined;
+                    let websiteWidthProperty: number | undefined;
                     let websitePositionProperty: number | undefined;
                     let websiteTriggerProperty: string | undefined;
                     let websiteTriggerMessageProperty: string | undefined;
@@ -80,6 +80,9 @@ export class GameMapPropertiesListener {
                                 break;
                             case GameMapProperties.OPEN_WEBSITE_POLICY:
                                 websitePolicyProperty = property.value as string | undefined;
+                                break;
+                            case GameMapProperties.OPEN_WEBSITE_WIDTH:
+                                websiteWidthProperty = property.value as number | undefined;
                                 break;
                             case GameMapProperties.OPEN_WEBSITE_POSITION:
                                 websitePositionProperty = property.value as number | undefined;
@@ -135,17 +138,13 @@ export class GameMapPropertiesListener {
                         layoutManagerActionStore.removeAction(actionId);
                     };
 
-                    const openCoWebsiteFunction = (
-                        url: string | undefined,
-                        allowApi: boolean | undefined,
-                        policy: string | undefined,
-                        position: number | undefined
-                    ) => {
+                    const openCoWebsiteFunction = () => {
                         const coWebsite = coWebsiteManager.addCoWebsite(
-                            url ?? "",
+                            openWebsiteProperty ?? "",
                             this.scene.MapUrlFile,
                             allowApiProperty,
                             websitePolicyProperty,
+                            websiteWidthProperty,
                             websitePositionProperty,
                             false
                         );
@@ -167,13 +166,7 @@ export class GameMapPropertiesListener {
                             uuid: actionId,
                             type: "message",
                             message: websiteTriggerMessageProperty,
-                            callback: () =>
-                                openCoWebsiteFunction(
-                                    openWebsiteProperty,
-                                    allowApiProperty,
-                                    websitePolicyProperty,
-                                    websitePositionProperty
-                                ),
+                            callback: () => openCoWebsiteFunction(),
                             userInputManager: this.scene.userInputManager,
                         });
                     } else if (!websiteTriggerProperty || websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
@@ -182,6 +175,7 @@ export class GameMapPropertiesListener {
                             this.scene.MapUrlFile,
                             allowApiProperty,
                             websitePolicyProperty,
+                            websiteWidthProperty,
                             websitePositionProperty,
                             false
                         );
@@ -194,12 +188,7 @@ export class GameMapPropertiesListener {
                     }
 
                     if (!websiteTriggerProperty) {
-                        openCoWebsiteFunction(
-                            openWebsiteProperty,
-                            allowApiProperty,
-                            websitePolicyProperty,
-                            websitePositionProperty
-                        );
+                        openCoWebsiteFunction();
                     }
                 });
             };
