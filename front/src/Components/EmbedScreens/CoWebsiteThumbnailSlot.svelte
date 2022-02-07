@@ -5,6 +5,7 @@
     import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
+    import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     export let index: number;
@@ -35,8 +36,12 @@
             if ($mainCoWebsite.iframe.id === coWebsite.iframe.id) {
                 const coWebsites = $coWebsitesNotAsleep;
                 const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
-                if (newMain) {
+                if (newMain && newMain.iframe.id !== $mainCoWebsite.iframe.id) {
                     coWebsiteManager.goToMain(newMain);
+                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                    coWebsiteManager.displayMain();
+                } else {
+                    coWebsiteManager.hideMain();
                 }
             } else {
                 highlightedEmbedScreen.toggleHighlight({

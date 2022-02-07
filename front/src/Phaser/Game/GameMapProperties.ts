@@ -20,6 +20,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE = "openWebsite",
     OPEN_WEBSITE_ALLOW_API = "openWebsiteAllowApi",
     OPEN_WEBSITE_POLICY = "openWebsitePolicy",
+    OPEN_WEBSITE_WIDTH = "openWebsiteWidth",
     OPEN_WEBSITE_POSITION = "openWebsitePosition",
     OPEN_WEBSITE_TRIGGER = "openWebsiteTrigger",
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",

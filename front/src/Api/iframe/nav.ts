@@ -45,6 +45,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         url: string,
         allowApi?: boolean,
         allowPolicy?: string,
+        widthPercent?: number,
         position?: number,
         closable?: boolean,
         lazy?: boolean
@@ -55,6 +56,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
                 url,
                 allowApi,
                 allowPolicy,
+                widthPercent,
                 position,
                 closable,
                 lazy,
