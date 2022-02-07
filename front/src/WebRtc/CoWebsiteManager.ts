@@ -10,7 +10,7 @@ import { jitsiFactory } from "./JitsiFactory";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { LayoutMode } from "./LayoutManager";
 
-enum iframeStates {
+export enum iframeStates {
     closed = 1,
     loading, // loading an iframe can be slow, so we show some placeholder until it is ready
     opened,
@@ -74,6 +74,10 @@ class CoWebsiteManager {
     private resizeObserver = new ResizeObserver((entries) => {
         this.resizeAllIframes();
     });
+
+    public getMainState() {
+        return this.openedMain;
+    }
 
     get width(): number {
         return this.cowebsiteDom.clientWidth;
@@ -304,6 +308,27 @@ class CoWebsiteManager {
                 this.loaderAnimationInterval.trails = undefined;
             }
         });
+    }
+
+    public displayMain() {
+        const coWebsite = this.getMainCoWebsite();
+        if (coWebsite) {
+            coWebsite.iframe.style.display = "block";
+        }
+        this.loadMain();
+        this.openMain();
+        this.fire();
+    }
+
+    public hideMain() {
+        const coWebsite = this.getMainCoWebsite();
+        if (coWebsite) {
+            coWebsite.iframe.style.display = "none";
+        }
+        this.cowebsiteDom.classList.add("closing");
+        this.cowebsiteDom.classList.remove("opened");
+        this.openedMain = iframeStates.closed;
+        this.fire();
     }
 
     private closeMain(): void {
@@ -629,6 +654,11 @@ class CoWebsiteManager {
             coWebsites.remove(coWebsite);
             coWebsites.add(coWebsite, 0);
             this.loadMain(coWebsite.widthPercent);
+        }
+
+        // Check if the main is hide
+        if (this.getMainCoWebsite() && this.openedMain === iframeStates.closed) {
+            this.displayMain();
         }
 
         coWebsite.state.set("loading");
