@@ -73,7 +73,9 @@ export class ActivatablesManager {
     }
 
     public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
-        const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift);
+        const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(
+            this.directionalActivationPositionShift
+        );
         for (const object of objects) {
             const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
             this.activatableObjectsDistances.set(object, distance);
@@ -85,7 +87,7 @@ export class ActivatablesManager {
             object,
             MathUtils.distanceBetween(
                 this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift),
-                object.getPosition(),
+                object.getPosition()
             )
         );
     }

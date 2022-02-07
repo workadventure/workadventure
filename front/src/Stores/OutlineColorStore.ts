@@ -8,7 +8,6 @@ export function createColorStore() {
     let pointedByPointer: number | undefined = undefined;
     let pointedByCharacter: number | undefined = undefined;
 
-
     const updateColor = () => {
         set(pointedByPointer ?? pointedByCharacter ?? followColor ?? apiColor);
     };
