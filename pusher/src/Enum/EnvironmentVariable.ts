@@ -19,6 +19,8 @@ export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
 export const OPID_CLIENT_REDIRECT_URL = process.env.OPID_CLIENT_REDIRECT_URL || FRONT_URL + "/jwt";
 export const OPID_PROFILE_SCREEN_PROVIDER = process.env.OPID_PROFILE_SCREEN_PROVIDER || ADMIN_URL + "/profile";
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
+export const EJABBERD_DOMAIN: string = process.env.EJABBERD_DOMAIN || "";
+export const EJABBERD_JWT_SECRET: string = process.env.EJABBERD_JWT_SECRET || "";
 
 export {
     SECRET_KEY,

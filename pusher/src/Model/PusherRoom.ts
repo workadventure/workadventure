@@ -13,8 +13,8 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import {XmppClient} from "../Services/XmppClient";
-import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { XmppClient } from "../Services/XmppClient";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 const debug = Debug("room");
 
@@ -42,10 +42,12 @@ export class PusherRoom {
         this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
 
         // By default, create a MUC room whose name is the name of the room.
-        this.mucRooms = [ {
-            name: "Connected users",
-            uri: roomUrl
-        } ];
+        this.mucRooms = [
+            {
+                name: "Connected users",
+                uri: roomUrl,
+            },
+        ];
 
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
@@ -71,7 +73,7 @@ export class PusherRoom {
         this.listeners.delete(socket);
         //const client = this.xmppListeners.get(socket.userUuid);
         if (socket.xmppClient) {
-            socket.xmppClient.close().catch((e) => console.error(e));
+            socket.xmppClient.close();
             //this.xmppListeners.delete(socket.userUuid);
         }
         socket.pusherRoom = undefined;
@@ -169,7 +171,7 @@ export class PusherRoom {
             client.close();
         }*/
         for (const client of this.listeners) {
-            client.xmppClient?.close().catch((e) => console.error(e));
+            client.xmppClient?.close();
         }
         //this.xmppListeners.clear();
     }

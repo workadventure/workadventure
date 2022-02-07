@@ -30,13 +30,23 @@ import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "..
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import {
+    ADMIN_API_URL,
+    ADMIN_SOCKETS_TOKEN,
+    DISABLE_ANONYMOUS,
+    EJABBERD_DOMAIN,
+    EJABBERD_JWT_SECRET,
+    SECRET_KEY,
+    SOCKET_IDLE_TIMER,
+} from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
+import Jwt from "jsonwebtoken";
+const { jid } = require("@xmpp/client");
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -256,6 +266,8 @@ export class IoSocketController {
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
+                            jabberId: "",
+                            jabberPassword: "",
                         };
                         if (ADMIN_API_URL) {
                             try {
@@ -321,6 +333,19 @@ export class IoSocketController {
                             }
                         }
 
+                        if (!userData.jabberId) {
+                            // If there is no admin, or no user, let's log users using JWT tokens
+                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            if (EJABBERD_JWT_SECRET) {
+                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                    expiresIn: "1d",
+                                    algorithm: "HS256",
+                                });
+                            } else {
+                                userData.jabberPassword = "no_password_set";
+                            }
+                        }
+
                         // Generate characterLayers objects from characterLayers string[]
                         const characterLayerObjs: CharacterLayer[] =
                             SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);
@@ -349,6 +374,8 @@ export class IoSocketController {
                                 visitCardUrl: memberVisitCardUrl,
                                 userRoomToken: memberUserRoomToken,
                                 textures: memberTextures,
+                                jabberId: userData.jabberId,
+                                jabberPassword: userData.jabberPassword,
                                 position: {
                                     x: x,
                                     y: y,
@@ -370,6 +397,9 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
+                            if (!(e instanceof InvalidTokenError)) {
+                                console.error(e);
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -545,6 +575,8 @@ export class IoSocketController {
         client.companion = ws.companion;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
+        client.jabberId = ws.jabberId;
+        client.jabberPassword = ws.jabberPassword;
         return client;
     }
 }

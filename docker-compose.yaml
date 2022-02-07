@@ -87,6 +87,9 @@ services:
       OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      EJABBERD_DOMAIN: ejabberd
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: mySecretJwtToken
     volumes:
       - ./pusher:/usr/src/app
     labels:

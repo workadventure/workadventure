@@ -20,6 +20,8 @@ export interface FetchMemberDataByUuidResponse {
     messages: unknown[];
     anonymous?: boolean;
     userRoomToken: string | undefined;
+    jabberId: string | null;
+    jabberPassword: string | null;
 }
 
 class AdminApi {

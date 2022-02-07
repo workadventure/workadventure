@@ -1,13 +1,16 @@
 import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
-import {v4} from "uuid";
+import { v4 } from "uuid";
 import {
     MucRoomDefinitionMessage,
     ServerToClientMessage,
-    SubMessage, XmppConnectionStatusChangeMessage,
+    SubMessage,
+    XmppConnectionStatusChangeMessage,
     XmppMessage,
-    XmppSettingsMessage
+    XmppSettingsMessage,
 } from "../Messages/generated/messages_pb";
-import {MucRoomDefinitionInterface} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
+import CancelablePromise from "cancelable-promise";
 
 const { client, xml, jid } = require("@xmpp/client");
 const debug = require("@xmpp/debug");
@@ -32,22 +35,44 @@ interface XmlElement {
 
 export class XmppClient {
     private address!: JID;
-    private clientPromise!: Promise<XmppSocket>;
+    private clientPromise!: CancelablePromise<XmppSocket>;
     private clientID: string;
+    private clientDomain: string;
+    private clientResource: string;
+    private clientPassword: string;
+    private timeout: ReturnType<typeof setTimeout> | undefined;
+
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        this.clientID = clientSocket.userUuid + "@ejabberd";
-        this.clientPromise = new Promise((res, rej) => this.createClient(res, rej));
+        console.log("CONNECTING JABBERID ", clientSocket.jabberId);
+        const userJid = jid(clientSocket.jabberId);
+        this.clientID = userJid.local;
+        this.clientDomain = userJid.domain;
+        this.clientResource = userJid.resource;
+        this.clientPassword = clientSocket.jabberPassword;
+        this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
+            this.createClient(res, rej);
+            onCancel(() => {
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                    this.timeout = undefined;
+                }
+            });
+        });
     }
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
 
-    private createClient(res: (value: (XmppSocket | PromiseLike<XmppSocket>)) => void, rej: (reason?: any) => void): void {
-        let status: "disconnected"|"connected" = "disconnected";
+    private createClient(
+        res: (value: XmppSocket | PromiseLike<XmppSocket>) => void,
+        rej: (reason?: any) => void
+    ): void {
+        let status: "disconnected" | "connected" = "disconnected";
         const xmpp = client({
             service: "ws://ejabberd:5443/ws",
-            username: this.clientSocket.userUuid,
-            resource: v4().toString(), //"pusher",
-            password: "abc",
+            domain: EJABBERD_DOMAIN,
+            username: this.clientID,
+            resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
+            password: this.clientPassword,
         });
         debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
 
@@ -61,9 +86,9 @@ export class XmppClient {
             status = "disconnected";
             // This can happen when the first connection failed for some reason.
             // We should probably retry regularly (every 10 seconds)
-            setTimeout(() => {
+            this.timeout = setTimeout(() => {
                 this.createClient(res, rej);
-            }, 10000)
+            }, 10000);
         });
         xmpp.on("disconnect", () => {
             if (status !== "disconnected") {
@@ -82,7 +107,7 @@ export class XmppClient {
             }
         });
         xmpp.on("online", async (address: JID) => {
-            console.log('CONNECTED TO XMPP SERVER')
+            console.log("CONNECTED TO XMPP SERVER");
             status = "connected";
             await xmpp.send(xml("presence"));
 
@@ -90,13 +115,15 @@ export class XmppClient {
 
             const xmppSettings = new XmppSettingsMessage();
             xmppSettings.setJid(address.toString());
-            xmppSettings.setConferencedomain('conference.ejabberd');
-            xmppSettings.setRoomsList(this.initialMucRooms.map((definition) => {
-                const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
-                mucRoomDefinitionMessage.setName(definition.name);
-                mucRoomDefinitionMessage.setUrl(definition.uri);
-                return mucRoomDefinitionMessage;
-            }));
+            xmppSettings.setConferencedomain("conference.ejabberd");
+            xmppSettings.setRoomsList(
+                this.initialMucRooms.map((definition) => {
+                    const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                    mucRoomDefinitionMessage.setName(definition.name);
+                    mucRoomDefinitionMessage.setUrl(definition.uri);
+                    return mucRoomDefinitionMessage;
+                })
+            );
 
             const serverToClientMessage = new ServerToClientMessage();
             serverToClientMessage.setXmppsettingsmessage(xmppSettings);
@@ -148,11 +175,14 @@ export class XmppClient {
     }*/
 
     close() {
-        return this.clientPromise.then(async (xmpp) => {
-            await xmpp.send(xml("presence", { type: "unavailable" }));
-            await xmpp.stop();
-            return xmpp;
-        });
+        this.clientPromise
+            .then(async (xmpp) => {
+                await xmpp.send(xml("presence", { type: "unavailable" }));
+                await xmpp.stop();
+                return xmpp;
+            })
+            .catch((e) => console.error(e))
+            .cancel();
     }
 
     async send(stanza: string): Promise<void> {

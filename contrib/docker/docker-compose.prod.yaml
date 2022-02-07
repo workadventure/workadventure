@@ -67,6 +67,9 @@ services:
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
       FRONT_URL: https://play.${DOMAIN}
+      EJABBERD_DOMAIN: ejabberd
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: "$EJABBERD_JWT_SECRET"
     labels:
       - "traefik.http.routers.pusher.rule=Host(`pusher.${DOMAIN}`)"
       - "traefik.http.routers.pusher.entryPoints=web,traefik"

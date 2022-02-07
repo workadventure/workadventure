@@ -289,6 +289,8 @@ export class AuthenticateController extends BaseController {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
+            jabberId: null,
+            jabberPassword: null,
         };
         try {
             data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
