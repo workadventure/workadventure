@@ -169,7 +169,7 @@ export class GameMapPropertiesListener {
                             callback: () => openCoWebsiteFunction(),
                             userInputManager: this.scene.userInputManager,
                         });
-                    } else if (!websiteTriggerProperty || websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+                    } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
                         const coWebsite = coWebsiteManager.addCoWebsite(
                             openWebsiteProperty,
                             this.scene.MapUrlFile,
