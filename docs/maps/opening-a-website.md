@@ -52,6 +52,13 @@ If you set `openWebsiteTrigger: onaction`, when the user walks on the layer, an 
 
 If you set `openWebsiteTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to open the web site'.
 
+If you set `openWebsiteTrigger: onicon`, when the user walks on the layer, an icon will be displayed at the bottom of the screen:
+
+<figure class="figure">
+    <img src="images/icon_open_website.png" class="figure-img img-fluid rounded" alt="" />
+    <figcaption class="figure-caption">The iFrame will only open if the user clicks on icon</figcaption>
+</figure>
+
 ### Setting the iFrame "allow" attribute
 
 By default, iFrames have limited rights in browsers. For instance, they cannot put their content in fullscreen, they cannot start your webcam, etc...
