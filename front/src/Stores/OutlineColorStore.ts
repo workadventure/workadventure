@@ -10,8 +10,6 @@ export function createColorStore() {
 
 
     const updateColor = () => {
-        console.log('update color');
-        console.log(pointedByPointer, pointedByCharacter, followColor, apiColor);
         set(pointedByPointer ?? pointedByCharacter ?? followColor ?? apiColor);
     };
 

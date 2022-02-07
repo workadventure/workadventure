@@ -11,6 +11,8 @@ export class ActivatablesManager {
 
     private currentPlayer: Player;
 
+    private canSelectByDistance: boolean = true;
+
     private readonly outlineColor = 0xffff00;
     private readonly directionalActivationPositionShift = 50;
 
@@ -49,6 +51,9 @@ export class ActivatablesManager {
     }
 
     public deduceSelectedActivatableObjectByDistance(): void {
+        if (!this.canSelectByDistance) {
+            return;
+        }
         const newNearestObject = this.findNearestActivatableObject();
         if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
@@ -67,18 +72,6 @@ export class ActivatablesManager {
         }
     }
 
-    private findNearestActivatableObject(): ActivatableInterface | undefined {
-        let shortestDistance: number = Infinity;
-        let closestObject: ActivatableInterface | undefined = undefined;
-
-        for (const [object, distance] of this.activatableObjectsDistances.entries()) {
-            if (object.isActivatable() && object.activationRadius > distance && shortestDistance > distance) {
-                shortestDistance = distance;
-                closestObject = object;
-            }
-        }
-        return closestObject;
-    }
     public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
         const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift);
         for (const object of objects) {
@@ -95,5 +88,34 @@ export class ActivatablesManager {
                 object.getPosition(),
             )
         );
+    }
+
+    public disableSelectingByDistance(): void {
+        this.canSelectByDistance = false;
+        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+            this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+        }
+        this.selectedActivatableObjectByDistance = undefined;
+    }
+
+    public enableSelectingByDistance(): void {
+        this.canSelectByDistance = true;
+    }
+
+    private findNearestActivatableObject(): ActivatableInterface | undefined {
+        let shortestDistance: number = Infinity;
+        let closestObject: ActivatableInterface | undefined = undefined;
+
+        for (const [object, distance] of this.activatableObjectsDistances.entries()) {
+            if (object.isActivatable() && object.activationRadius > distance && shortestDistance > distance) {
+                shortestDistance = distance;
+                closestObject = object;
+            }
+        }
+        return closestObject;
+    }
+
+    public isSelectingByDistanceEnabled(): boolean {
+        return this.canSelectByDistance;
     }
 }

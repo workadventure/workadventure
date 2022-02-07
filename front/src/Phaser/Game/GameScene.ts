@@ -957,9 +957,11 @@ export class GameScene extends DirtyScene {
 
         this.gameMap.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
+                this.activatablesManager.enableSelectingByDistance();
                 layoutManagerActionStore.removeAction("jitsi");
                 this.stopJitsi();
             } else {
+                this.activatablesManager.disableSelectingByDistance();
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
