@@ -3,12 +3,15 @@ import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
     room = 1,
-    register,
+    register /*@deprecated*/,
     empty,
     unknown,
     jwt,
     login,
+    privateAccessToken,
 }
+
+export const queryPrivateAccessToken = "privateAccessToken";
 
 //this class is responsible with analysing and editing the game's url
 class UrlManager {
@@ -19,8 +22,13 @@ class UrlManager {
         } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
+            if (window.location.search.includes(queryPrivateAccessToken)) {
+                return GameConnexionTypes.privateAccessToken;
+            }
             return GameConnexionTypes.room;
-        } else if (url.includes("register/")) {
+        }
+        //@deprecated register url will be replace by "?privateAccessToken=<private access token>"
+        else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
             return GameConnexionTypes.empty;
@@ -29,6 +37,17 @@ class UrlManager {
         }
     }
 
+    /**
+     * @return string
+     */
+    get getPrivateAccessToken(): string | null {
+        const urlParams = new URLSearchParams(window.location.search.toString());
+        return urlParams.get(queryPrivateAccessToken);
+    }
+
+    /**
+     * @deprecated
+     */
     public getOrganizationToken(): string | null {
         const match = /\/register\/(.+)/.exec(window.location.pathname.toString());
         return match ? match[1] : null;
