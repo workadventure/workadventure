@@ -159,6 +159,19 @@ export abstract class Character extends Container implements OutlineableInterfac
         return { x: this.x, y: this.y };
     }
 
+    /**
+     * Returns position based on where player is currently facing
+     * @param shift How far from player should the point of interest be.
+     */
+    public getDirectionalActivationPosition(shift: number): { x: number, y: number } {
+        switch (this.lastDirection) {
+            case PlayerAnimationDirections.Down: { return { x: this.x, y: this.y + shift }; }
+            case PlayerAnimationDirections.Left: { return { x: this.x - shift, y: this.y }; }
+            case PlayerAnimationDirections.Right: { return { x: this.x + shift, y: this.y }; }
+            case PlayerAnimationDirections.Up: { return { x: this.x, y: this.y - shift }; }
+        }
+    }
+
     public getObjectToOutline(): Phaser.GameObjects.GameObject {
         return this.playerNameText;
     }

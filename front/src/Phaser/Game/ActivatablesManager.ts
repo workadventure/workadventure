@@ -12,6 +12,7 @@ export class ActivatablesManager {
     private currentPlayer: Player;
 
     private readonly outlineColor = 0xffff00;
+    private readonly directionalActivationPositionShift = 50;
 
     constructor(currentPlayer: Player) {
         this.currentPlayer = currentPlayer;
@@ -79,7 +80,7 @@ export class ActivatablesManager {
         return closestObject;
     }
     public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
-        const currentPlayerPos = this.currentPlayer.getPosition();
+        const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift);
         for (const object of objects) {
             const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
             this.activatableObjectsDistances.set(object, distance);
@@ -89,7 +90,10 @@ export class ActivatablesManager {
     public updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
         this.activatableObjectsDistances.set(
             object,
-            MathUtils.distanceBetween(this.currentPlayer.getPosition(), object.getPosition())
+            MathUtils.distanceBetween(
+                this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift),
+                object.getPosition(),
+            )
         );
     }
 }
