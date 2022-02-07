@@ -618,6 +618,10 @@ class CoWebsiteManager {
         closable?: boolean,
         jitsi?: boolean
     ): CoWebsite {
+        if (get(coWebsitesNotAsleep).length < 1) {
+            this.loadMain(widthPercent);
+        }
+
         iframe.id = this.generateUniqueId();
 
         const newCoWebsite: CoWebsite = {
@@ -630,12 +634,6 @@ class CoWebsiteManager {
             widthPercent,
             jitsi,
         };
-
-        if (get(coWebsitesNotAsleep).length < 1) {
-            coWebsites.remove(newCoWebsite);
-            coWebsites.add(newCoWebsite, 0);
-            this.loadMain(widthPercent);
-        }
 
         if (position === 0) {
             this.openMain();
