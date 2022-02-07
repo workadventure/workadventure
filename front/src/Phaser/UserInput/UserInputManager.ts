@@ -223,10 +223,10 @@ export class UserInputManager {
     }
 
     addSpaceEventListner(callback: Function) {
-        this.scene.input.keyboard.addListener("keyup-SPACE", callback);
+        this.userInputHandler.addSpaceEventListener(callback);
     }
     removeSpaceEventListner(callback: Function) {
-        this.scene.input.keyboard.removeListener("keyup-SPACE", callback);
+        this.userInputHandler.removeSpaceEventListner(callback);
     }
 
     destroy(): void {
