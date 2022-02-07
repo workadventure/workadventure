@@ -972,6 +972,7 @@ export class GameScene extends DirtyScene {
                     } else {
                         this.startJitsi(roomName, undefined);
                     }
+                    this.activatablesManager.enableSelectingByDistance();
                     layoutManagerActionStore.removeAction("jitsi");
                 };
 
