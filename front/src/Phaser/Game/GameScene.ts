@@ -668,6 +668,8 @@ export class GameScene extends DirtyScene {
                     }
                 });
             } else {
+                this.CurrentPlayer.showTalkIcon(false);
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                 }
