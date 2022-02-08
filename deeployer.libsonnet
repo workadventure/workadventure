@@ -59,7 +59,11 @@
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-              "FRONT_URL": "https://play-"+url
+              "FRONT_URL": "https://play-"+url,
+              "EJABBERD_DOMAIN": "ejabberd",
+              # Only used if you set up a JWT authentication mechanism in Ejabberd
+              "EJABBERD_JWT_SECRET": "mySecretJwtToken",
+
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
