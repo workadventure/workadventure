@@ -9,6 +9,7 @@ import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { jitsiFactory } from "./JitsiFactory";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { LayoutMode } from "./LayoutManager";
+import CancelablePromise from "cancelable-promise";
 
 export enum iframeStates {
     closed = 1,
@@ -53,11 +54,7 @@ class CoWebsiteManager {
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
-    /**
-     * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
-     * So we use this promise to queue up every cowebsite state transition
-     */
-    private currentOperationPromise: Promise<void> = Promise.resolve();
+
     private cowebsiteDom: HTMLDivElement;
     private resizing: boolean = false;
     private gameOverlayDom: HTMLDivElement;
@@ -148,13 +145,9 @@ class CoWebsiteManager {
             }
 
             if (coWebsite.closable) {
-                this.closeCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during closing a co-website by a button");
-                });
+                this.closeCoWebsite(coWebsite);
             } else {
-                this.unloadCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during unloading a co-website by a button");
-                });
+                this.unloadCoWebsite(coWebsite);
             }
         });
 
@@ -647,7 +640,7 @@ class CoWebsiteManager {
         return newCoWebsite;
     }
 
-    public loadCoWebsite(coWebsite: CoWebsite): Promise<CoWebsite> {
+    public loadCoWebsite(coWebsite: CoWebsite): CancelablePromise<CoWebsite> {
         if (get(coWebsitesNotAsleep).length < 1) {
             coWebsites.remove(coWebsite);
             coWebsites.add(coWebsite, 0);
@@ -663,7 +656,7 @@ class CoWebsiteManager {
 
         const mainCoWebsite = this.getMainCoWebsite();
 
-        return new Promise((resolve, reject) => {
+        return new CancelablePromise((resolve, reject, cancel) => {
             const onloadPromise = new Promise<void>((resolve) => {
                 coWebsite.iframe.onload = () => {
                     coWebsite.state.set("ready");
@@ -683,8 +676,7 @@ class CoWebsiteManager {
                 jitsiFactory.restart();
             }
 
-            this.currentOperationPromise = this.currentOperationPromise
-                .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
+            const race = CancelablePromise.race([onloadPromise, onTimeoutPromise])
                 .then(() => {
                     if (mainCoWebsite && mainCoWebsite.iframe.id === coWebsite.iframe.id) {
                         this.openMain();
@@ -701,83 +693,72 @@ class CoWebsiteManager {
                     this.removeCoWebsiteFromStack(coWebsite);
                     return reject();
                 });
-        });
-    }
 
-    public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.removeHighlightCoWebsite(coWebsite);
-
-            coWebsite.iframe.parentNode?.removeChild(coWebsite.iframe);
-            coWebsite.state.set("asleep");
-            coWebsites.remove(coWebsite);
-
-            if (coWebsite.jitsi) {
-                jitsiFactory.stop();
-                const gameScene = gameManager.getCurrentGameScene();
-                gameScene.enableMediaBehaviors();
-            }
-
-            const mainCoWebsite = this.getMainCoWebsite();
-
-            if (mainCoWebsite) {
-                this.removeHighlightCoWebsite(mainCoWebsite);
-                this.goToMain(mainCoWebsite);
-                this.resizeAllIframes();
-            } else {
-                this.closeMain();
-            }
-
-            coWebsites.add(coWebsite, get(coWebsites).length);
-
-            resolve();
-        });
-    }
-
-    public closeCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        this.currentOperationPromise = this.currentOperationPromise.then(
-            () =>
-                new Promise((resolve) => {
-                    if (coWebsite.jitsi) {
-                        jitsiFactory.destroy();
-                        const gameScene = gameManager.getCurrentGameScene();
-                        gameScene.enableMediaBehaviors();
-                    }
-
-                    if (get(coWebsites).length === 1) {
-                        this.fire();
-                    }
-
-                    if (coWebsite.allowApi) {
-                        iframeListener.unregisterIframe(coWebsite.iframe);
-                    }
-
-                    this.removeCoWebsiteFromStack(coWebsite);
-
-                    const mainCoWebsite = this.getMainCoWebsite();
-
-                    if (mainCoWebsite) {
-                        this.removeHighlightCoWebsite(mainCoWebsite);
-                        this.goToMain(mainCoWebsite);
-                        this.resizeAllIframes();
-                    } else {
-                        this.closeMain();
-                    }
-                    resolve();
-                })
-        );
-        return this.currentOperationPromise;
-    }
-
-    public closeCoWebsites(): Promise<void> {
-        return (this.currentOperationPromise = this.currentOperationPromise.then(() => {
-            get(coWebsites).forEach((coWebsite: CoWebsite) => {
-                this.closeCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during closing a co-website");
-                });
+            cancel(() => {
+                race.cancel();
+                this.unloadCoWebsite(coWebsite);
             });
-        }));
-        return this.currentOperationPromise;
+        });
+    }
+
+    public unloadCoWebsite(coWebsite: CoWebsite): void {
+        this.removeHighlightCoWebsite(coWebsite);
+
+        coWebsite.iframe.parentNode?.removeChild(coWebsite.iframe);
+        coWebsite.state.set("asleep");
+        coWebsites.remove(coWebsite);
+
+        if (coWebsite.jitsi) {
+            jitsiFactory.stop();
+            const gameScene = gameManager.getCurrentGameScene();
+            gameScene.enableMediaBehaviors();
+        }
+
+        const mainCoWebsite = this.getMainCoWebsite();
+
+        if (mainCoWebsite) {
+            this.removeHighlightCoWebsite(mainCoWebsite);
+            this.goToMain(mainCoWebsite);
+            this.resizeAllIframes();
+        } else {
+            this.closeMain();
+        }
+
+        coWebsites.add(coWebsite, get(coWebsites).length);
+    }
+
+    public closeCoWebsite(coWebsite: CoWebsite): void {
+        if (coWebsite.jitsi) {
+            jitsiFactory.destroy();
+            const gameScene = gameManager.getCurrentGameScene();
+            gameScene.enableMediaBehaviors();
+        }
+
+        if (get(coWebsites).length === 1) {
+            this.fire();
+        }
+
+        if (coWebsite.allowApi) {
+            iframeListener.unregisterIframe(coWebsite.iframe);
+        }
+
+        this.removeCoWebsiteFromStack(coWebsite);
+
+        const mainCoWebsite = this.getMainCoWebsite();
+
+        if (mainCoWebsite) {
+            this.removeHighlightCoWebsite(mainCoWebsite);
+            this.goToMain(mainCoWebsite);
+            this.resizeAllIframes();
+        } else {
+            this.closeMain();
+        }
+    }
+
+    public closeCoWebsites(): void {
+        get(coWebsites).forEach((coWebsite: CoWebsite) => {
+            this.closeCoWebsite(coWebsite);
+        });
     }
 
     public getGameSize(): { width: number; height: number } {

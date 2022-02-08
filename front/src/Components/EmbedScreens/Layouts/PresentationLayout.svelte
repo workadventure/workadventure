@@ -10,13 +10,9 @@
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
             if ($highlightedEmbedScreen.embed.closable) {
-                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted closing");
-                });
+                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
             } else {
-                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted unloading");
-                });
+                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed);
             }
         }
     }

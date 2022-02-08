@@ -1289,22 +1289,18 @@ ${escapedMessage}
             });
         });
 
-        iframeListener.registerAnswerer("closeCoWebsite", async (coWebsiteId) => {
+        iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
             const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
 
             if (!coWebsite) {
                 throw new Error("Unknown co-website");
             }
 
-            return coWebsiteManager.closeCoWebsite(coWebsite).catch((error) => {
-                throw new Error("Error on closing co-website");
-            });
+            return coWebsiteManager.closeCoWebsite(coWebsite);
         });
 
-        iframeListener.registerAnswerer("closeCoWebsites", async () => {
-            return await coWebsiteManager.closeCoWebsites().catch((error) => {
-                throw new Error("Error on closing all co-websites");
-            });
+        iframeListener.registerAnswerer("closeCoWebsites", () => {
+            return coWebsiteManager.closeCoWebsites();
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -1568,7 +1564,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsites().catch((e) => console.error(e));
+        coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
@@ -2138,9 +2134,7 @@ ${escapedMessage}
     public stopJitsi(): void {
         const coWebsite = coWebsiteManager.searchJitsi();
         if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => {
-                console.error("Error during Jitsi co-website closing", e);
-            });
+            coWebsiteManager.closeCoWebsite(coWebsite);
         }
     }
 

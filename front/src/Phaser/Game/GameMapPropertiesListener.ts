@@ -9,17 +9,12 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
-
-enum OpenCoWebsiteState {
-    ASLEEP,
-    OPENED,
-    MUST_BE_CLOSE,
-}
+import type CancelablePromise from "cancelable-promise";
 
 interface OpenCoWebsite {
     actionId: string;
     coWebsite?: CoWebsite;
-    state: OpenCoWebsiteState;
+    loadPromise?: CancelablePromise;
 }
 
 export class GameMapPropertiesListener {
@@ -106,34 +101,16 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    this.coWebsitesOpenByLayer.set(layer, {
+                    const coWebsiteOpen: OpenCoWebsite = {
                         actionId: actionId,
-                        coWebsite: undefined,
-                        state: OpenCoWebsiteState.ASLEEP,
-                    });
+                    };
+
+                    this.coWebsitesOpenByLayer.set(layer, coWebsiteOpen);
 
                     const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-                        coWebsiteManager
-                            .loadCoWebsite(coWebsite)
-                            .then((coWebsite) => {
-                                const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
-                                if (coWebsiteOpen && coWebsiteOpen.state === OpenCoWebsiteState.MUST_BE_CLOSE) {
-                                    coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
-                                        console.error("Error during a co-website closing");
-                                    });
-                                    this.coWebsitesOpenByLayer.delete(layer);
-                                    this.coWebsitesActionTriggerByLayer.delete(layer);
-                                } else {
-                                    this.coWebsitesOpenByLayer.set(layer, {
-                                        actionId,
-                                        coWebsite,
-                                        state: OpenCoWebsiteState.OPENED,
-                                    });
-                                }
-                            })
-                            .catch(() => {
-                                console.error("Error during loading a co-website: " + coWebsite.url);
-                            });
+                        coWebsiteOpen.loadPromise = coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                            console.error("Error during loading a co-website: " + coWebsite.url);
+                        });
 
                         layoutManagerActionStore.removeAction(actionId);
                     };
@@ -148,6 +125,8 @@ export class GameMapPropertiesListener {
                             websitePositionProperty,
                             false
                         );
+
+                        coWebsiteOpen.coWebsite = coWebsite;
 
                         loadCoWebsiteFunction(coWebsite);
                     };
@@ -180,11 +159,7 @@ export class GameMapPropertiesListener {
                             false
                         );
 
-                        const ObjectByLayer = this.coWebsitesOpenByLayer.get(layer);
-
-                        if (ObjectByLayer) {
-                            ObjectByLayer.coWebsite = coWebsite;
-                        }
+                        coWebsiteOpen.coWebsite = coWebsite;
                     }
 
                     if (!websiteTriggerProperty) {
@@ -228,12 +203,12 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    if (coWebsiteOpen.state === OpenCoWebsiteState.ASLEEP) {
-                        coWebsiteOpen.state = OpenCoWebsiteState.MUST_BE_CLOSE;
+                    if (coWebsiteOpen.loadPromise !== undefined) {
+                        coWebsiteOpen.loadPromise.cancel();
                     }
 
                     if (coWebsiteOpen.coWebsite !== undefined) {
-                        coWebsiteManager.closeCoWebsite(coWebsiteOpen.coWebsite).catch((e) => console.error(e));
+                        coWebsiteManager.closeCoWebsite(coWebsiteOpen.coWebsite);
                     }
 
                     this.coWebsitesOpenByLayer.delete(layer);

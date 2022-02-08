@@ -145,7 +145,7 @@ class JitsiFactory {
         const coWebsite = coWebsiteManager.searchJitsi();
 
         if (coWebsite) {
-            await coWebsiteManager.closeCoWebsite(coWebsite);
+            coWebsiteManager.closeCoWebsite(coWebsite);
         }
 
         // Jitsi meet external API maintains some data in local storage
@@ -214,13 +214,9 @@ class JitsiFactory {
 
     private closeOrUnload = function (coWebsite: CoWebsite) {
         if (coWebsite.closable) {
-            coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
-                console.error("Error during closing a Jitsi Meet");
-            });
+            coWebsiteManager.closeCoWebsite(coWebsite);
         } else {
-            coWebsiteManager.unloadCoWebsite(coWebsite).catch(() => {
-                console.error("Error during unloading a Jitsi Meet");
-            });
+            coWebsiteManager.unloadCoWebsite(coWebsite);
         }
     };
 
