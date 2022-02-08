@@ -19,7 +19,6 @@
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
     let selectedMicrophone: string | undefined = undefined;
-    let volume = 0;
 
     const enableCameraScene = game.scene.getScene(EnableCameraSceneName) as EnableCameraScene;
 
@@ -61,12 +60,7 @@
         }
     });
 
-    const unsubscribeLocalVolumeStore = localVolumeStore.subscribe((value) => {
-        volume = value ?? 0;
-    });
-
     onDestroy(() => {
-        unsubscribeLocalVolumeStore();
         unsubscribeLocalStreamStore();
     });
 
@@ -95,7 +89,7 @@
             <img class="background-img" src={cinemaCloseImg} alt="" />
         </div>
     {/if}
-    <HorizontalSoundMeterWidget {volume} />
+    <HorizontalSoundMeterWidget volume={$localVolumeStore} />
 
     <section class="selectWebcamForm">
         {#if $cameraListStore.length > 1}

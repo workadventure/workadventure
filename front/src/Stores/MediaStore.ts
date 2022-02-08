@@ -543,23 +543,21 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
     }
 );
 
-export const localVolumeStore = readable<number | null>(null, (set) => {
+export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
     const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
         if (localStreamStoreValue.type === "error") {
-            set(null);
+            set(undefined);
             return;
         }
-        const soundMeter = new SoundMeter();
         const mediaStream = localStreamStoreValue.stream;
 
         if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
-            set(null);
+            set(undefined);
             return;
         }
-
-        soundMeter.connectToSource(mediaStream, new AudioContext());
+        const soundMeter = new SoundMeter(mediaStream);
         let error = false;
 
         timeout = setInterval(() => {

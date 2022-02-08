@@ -11,7 +11,7 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import Woka from "../Woka/Woka.svelte";
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
 
     export let clickable = false;
@@ -30,11 +30,6 @@
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let minimized = isMediaBreakpointOnly("md");
-    let volume = 0;
-
-    const unsubscribe = volumeStore.subscribe((value) => {
-        volume = value ?? 0;
-    });
 
     if (peer) {
         embedScreen = {
@@ -53,10 +48,6 @@
 
     onMount(() => {
         resizeObserver.observe(videoContainer);
-    });
-
-    onDestroy(() => {
-        unsubscribe();
     });
 </script>
 
@@ -103,7 +94,7 @@
     />
     <img src={blockSignImg} draggable="false" on:dragstart|preventDefault={noDrag} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
-        <SoundMeterWidget {volume} />
+        <SoundMeterWidget volume={$volumeStore} />
     {/if}
 </div>
 
