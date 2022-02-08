@@ -131,7 +131,7 @@ class ConnectionManager {
             urlParams.delete(queryPrivateAccessToken);
 
             //create play uri parameter
-            const playUri = window.location.protocol + "//" + window.location.host;
+            const playUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
             const data = await Axios.post(`${PUSHER_URL}/register`, {
                 organizationMemberToken,
                 playUri,
