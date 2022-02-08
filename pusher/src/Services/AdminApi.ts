@@ -47,25 +47,31 @@ class AdminApi {
 
     async fetchMemberDataByUuid(
         userIdentifier: string | null,
-        roomId: string,
+        playUri: string,
         ipAddress: string
     ): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         const res = await Axios.get(ADMIN_API_URL + "/api/room/access", {
-            params: { userIdentifier, roomId, ipAddress },
+            params: {
+                userIdentifier,
+                roomId: playUri /* @deprecated */,
+                playUri,
+                ipAddress,
+            },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         return res.data;
     }
 
-    async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
+    async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
+            params: { playUri },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
         if (!isAdminApiData(res.data)) {

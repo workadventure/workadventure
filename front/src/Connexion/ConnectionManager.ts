@@ -130,9 +130,12 @@ class ConnectionManager {
             //clear queryPrivateAccessToken query in window location
             urlParams.delete(queryPrivateAccessToken);
 
-            const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
-                (res) => res.data
-            );
+            //create play uri parameter
+            const playUri = window.location.protocol + "//" + window.location.host;
+            const data = await Axios.post(`${PUSHER_URL}/register`, {
+                organizationMemberToken,
+                playUri,
+            }).then((res) => res.data);
             if (!isRegisterData(data)) {
                 console.error("Invalid data received from /register route. Data: ", data);
                 throw new Error("Invalid data received from /register route.");
