@@ -85,6 +85,7 @@ export class GameMap {
                     phaserMap
                         .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
                         .setDepth(depth)
+                        .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
                         .setAlpha(layer.opacity)
                         .setVisible(layer.visible)
                         .setSize(layer.width, layer.height)
@@ -94,7 +95,6 @@ export class GameMap {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
-        console.log(this.phaserLayers);
         for (const tileset of map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
                 if (tile.properties) {
