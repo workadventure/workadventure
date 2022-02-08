@@ -94,6 +94,7 @@ export class GameMap {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
+        console.log(this.phaserLayers);
         for (const tileset of map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
                 if (tile.properties) {
