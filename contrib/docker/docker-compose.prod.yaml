@@ -45,7 +45,7 @@ services:
       START_ROOM_URL: "${START_ROOM_URL}"
     labels:
       - "traefik.http.routers.front.rule=Host(`play.${DOMAIN}`)"
-      - "traefik.http.routers.front.entryPoints=web,traefik"
+      - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=80"
       - "traefik.http.routers.front-ssl.rule=Host(`play.${DOMAIN}`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
@@ -69,7 +69,7 @@ services:
       FRONT_URL: https://play.${DOMAIN}
     labels:
       - "traefik.http.routers.pusher.rule=Host(`pusher.${DOMAIN}`)"
-      - "traefik.http.routers.pusher.entryPoints=web,traefik"
+      - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
       - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.${DOMAIN}`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
@@ -105,7 +105,7 @@ services:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
       - "traefik.http.routers.icon.rule=Host(`icon.${DOMAIN}`)"
-      - "traefik.http.routers.icon.entryPoints=web,traefik"
+      - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
       - "traefik.http.routers.icon-ssl.rule=Host(`icon.${DOMAIN}`)"
       - "traefik.http.routers.icon-ssl.entryPoints=websecure"
