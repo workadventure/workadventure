@@ -65,7 +65,39 @@
          "draworder":"topdown",
          "id":3,
          "name":"floorLayer",
-         "objects":[],
+         "objects":[
+                {
+                 "height":101.5,
+                 "id":11,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "text":"You should be able to get here only if the path isn't blocked",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":383,
+                 "x":81.226595249185,
+                 "y":297.048206800186
+                }, 
+                {
+                 "height":101.5,
+                 "id":12,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "text":"Try to move to the next room by using right-click \/ tap movement. Click \"Toggle Door\" button to block \/ make access.",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":383,
+                 "x":81,
+                 "y":99.75
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
@@ -73,7 +105,7 @@
          "y":0
         }],
  "nextlayerid":9,
- "nextobjectid":11,
+ "nextobjectid":13,
  "orientation":"orthogonal",
  "properties":[
         {
