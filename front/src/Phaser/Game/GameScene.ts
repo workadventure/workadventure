@@ -568,6 +568,8 @@ export class GameScene extends DirtyScene {
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
 
+        this.tryMovePlayerWithMoveToParameter();
+
         this.cameraManager = new CameraManager(
             this,
             { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
@@ -1460,9 +1462,9 @@ ${escapedMessage}
         });
 
         iframeListener.registerAnswerer("movePlayerTo", async (message) => {
-            const index = this.getGameMap().getTileIndexAt(message.x, message.y);
-            const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-            const path = await this.getPathfindingManager().findPath(startTile, index, true, true);
+            const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+            const destinationTileIndex = this.getGameMap().getTileIndexAt(message.x, message.y);
+            const path = await this.getPathfindingManager().findPath(startTileIndex, destinationTileIndex, true, true);
             path.shift();
             if (path.length === 0) {
                 throw new Error("no path available");
@@ -1626,6 +1628,31 @@ ${escapedMessage}
         this.MapPlayersByKey.clear();
     }
 
+    private tryMovePlayerWithMoveToParameter(): void {
+        const moveToParam = urlManager.getHashParameter("moveTo");
+        if (moveToParam) {
+            try {
+                const destinationObject = this.gameMap.getObjectWithName(moveToParam);
+                let endPos;
+                if (destinationObject) {
+                    endPos = this.gameMap.getTileIndexAt(destinationObject.x, destinationObject.y);
+                } else {
+                    endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                }
+                this.pathfindingManager
+                    .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
+                    .then((path) => {
+                        if (path && path.length > 0) {
+                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                        }
+                    })
+                    .catch((reason) => console.warn(reason));
+            } catch (err) {
+                console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+            }
+        }
+    }
+
     private getExitUrl(layer: ITiledMapLayer): string | undefined {
         return this.getProperty(layer, GameMapProperties.EXIT_URL) as string | undefined;
     }
@@ -1748,22 +1775,6 @@ ${escapedMessage}
                 this.connection?.emitEmoteEvent(emoteKey);
                 analyticsClient.launchEmote(emoteKey);
             });
-            const moveToParam = urlManager.getHashParameter("moveTo");
-            if (moveToParam) {
-                try {
-                    const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
-                    this.pathfindingManager
-                        .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
-                        .then((path) => {
-                            if (path && path.length > 0) {
-                                this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                            }
-                        })
-                        .catch((reason) => console.warn(reason));
-                } catch (err) {
-                    console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
-                }
-            }
         } catch (err) {
             if (err instanceof TextureError) {
                 gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
