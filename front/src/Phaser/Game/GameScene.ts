@@ -93,6 +93,7 @@ import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
 import { StringUtils } from "../../Utils/StringUtils";
+import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -541,6 +542,8 @@ export class GameScene extends DirtyScene {
             this.initPosition,
             urlManager.getStartLayerNameFromUrl()
         );
+
+        startLayerNamesStore.set(this.startPositionCalculator.getStartPositionNames());
 
         //add entities
         this.Objects = new Array<Phaser.Physics.Arcade.Sprite>();

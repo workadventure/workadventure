@@ -1,5 +1,12 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+
+    let entryPoint: string = $startLayerNamesStore[0];
+    let walkAutomatically: boolean = false;
+    const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
+    const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 
     function copyLink() {
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
@@ -8,8 +15,21 @@
         document.execCommand("copy");
     }
 
+    function getLink() {
+        return `${location.origin}${location.pathname}#${entryPoint}${
+            walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
+        }`;
+    }
+
+    function updateInputFieldValue() {
+        const input = document.getElementById("input-share-link");
+        if (input) {
+            (input as HTMLInputElement).value = getLink();
+        }
+    }
+
     async function shareLink() {
-        const shareData = { url: location.toString() };
+        const shareData = { url: getLink() };
 
         try {
             await navigator.share(shareData);
@@ -32,6 +52,30 @@
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
             <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
+        <h3>Select an entry point</h3>
+        <section class="nes-select is-dark">
+            <select
+                bind:value={entryPoint}
+                on:blur={() => {
+                    updateInputFieldValue();
+                }}
+            >
+                {#each $startLayerNamesStore as entryPointName}
+                    <option value={entryPointName}>{entryPointName}</option>
+                {/each}
+            </select>
+        </section>
+        <label>
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={walkAutomatically}
+                on:change={() => {
+                    updateInputFieldValue();
+                }}
+            />
+            <span>Walk automatically to my position</span>
+        </label>
     </section>
 </div>
 
@@ -45,6 +89,10 @@
 
         section {
             margin-bottom: 50px;
+        }
+
+        section.nes-select select:focus {
+            outline: none;
         }
 
         section.container-overflow {

@@ -16,32 +16,6 @@ export class StartPositionCalculator {
     ) {
         this.initStartXAndStartY();
     }
-    private initStartXAndStartY() {
-        // If there is an init position passed
-        if (this.initPosition !== null) {
-            this.startPosition = this.initPosition;
-        } else {
-            // Now, let's find the start layer
-            if (this.startLayerName) {
-                this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
-            }
-            if (this.startPosition === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                this.initPositionFromLayerName(defaultStartLayerName, this.startLayerName);
-            }
-        }
-        // Still no start position? Something is wrong with the map, we need a "start" layer.
-        if (this.startPosition === undefined) {
-            console.warn(
-                'This map is missing a layer named "start" that contains the available default start positions.'
-            );
-            // Let's start in the middle of the map
-            this.startPosition = {
-                x: this.mapFile.width * 16,
-                y: this.mapFile.height * 16,
-            };
-        }
-    }
 
     /**
      *
@@ -72,6 +46,47 @@ export class StartPositionCalculator {
             this.startPosition = {
                 x: startPosition.x + this.mapFile.tilewidth / 2,
                 y: startPosition.y + this.mapFile.tileheight / 2,
+            };
+        }
+    }
+
+    public getStartPositionNames(): string[] {
+        const names: string[] = [];
+        for (const layer of this.gameMap.flatLayers) {
+            if (layer.name === "start") {
+                names.push(layer.name);
+                continue;
+            }
+            if (this.isStartLayer(layer)) {
+                names.push(layer.name);
+            }
+        }
+        return names;
+    }
+
+    private initStartXAndStartY() {
+        // If there is an init position passed
+        if (this.initPosition !== null) {
+            this.startPosition = this.initPosition;
+        } else {
+            // Now, let's find the start layer
+            if (this.startLayerName) {
+                this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
+            }
+            if (this.startPosition === undefined) {
+                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
+                this.initPositionFromLayerName(defaultStartLayerName, this.startLayerName);
+            }
+        }
+        // Still no start position? Something is wrong with the map, we need a "start" layer.
+        if (this.startPosition === undefined) {
+            console.warn(
+                'This map is missing a layer named "start" that contains the available default start positions.'
+            );
+            // Let's start in the middle of the map
+            this.startPosition = {
+                x: this.mapFile.width * 16,
+                y: this.mapFile.height * 16,
             };
         }
     }
