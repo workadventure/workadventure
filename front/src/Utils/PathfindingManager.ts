@@ -19,6 +19,10 @@ export class PathfindingManager {
         this.setEasyStarGrid(collisionsGrid);
     }
 
+    public setCollisionGrid(collisionGrid: number[][]): void {
+        this.setEasyStarGrid(collisionGrid);
+    }
+
     public async findPath(
         start: { x: number; y: number },
         end: { x: number; y: number },
