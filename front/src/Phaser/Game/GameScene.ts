@@ -92,6 +92,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import { StringUtils } from "../../Utils/StringUtils";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1632,12 +1633,17 @@ ${escapedMessage}
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam) {
             try {
-                const destinationObject = this.gameMap.getObjectWithName(moveToParam);
                 let endPos;
-                if (destinationObject) {
-                    endPos = this.gameMap.getTileIndexAt(destinationObject.x, destinationObject.y);
+                const posFromParam = StringUtils.parsePointFromParam(moveToParam);
+                if (posFromParam) {
+                    endPos = this.gameMap.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                    const destinationObject = this.gameMap.getObjectWithName(moveToParam);
+                    if (destinationObject) {
+                        endPos = this.gameMap.getTileIndexAt(destinationObject.x, destinationObject.y);
+                    } else {
+                        endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                    }
                 }
                 this.pathfindingManager
                     .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
