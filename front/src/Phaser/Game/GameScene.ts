@@ -1297,6 +1297,7 @@ ${escapedMessage}
                 iframeListener.getBaseUrlFromSource(source),
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
+                openCoWebsite.widthPercent,
                 openCoWebsite.position,
                 openCoWebsite.closable ?? true
             );
