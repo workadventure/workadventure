@@ -2,9 +2,10 @@
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { coWebsitesNotAsleep, mainCoWebsite, jitsiCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+    import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
@@ -15,10 +16,9 @@
     let icon: HTMLImageElement;
     let iconLoaded = false;
     let state = coWebsite.getStateSubscriber();
-    let isJitsi: boolean = false;
+    let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
 
     onMount(() => {
-        isJitsi = Boolean($jitsiCoWebsite && $jitsiCoWebsite.getId() === coWebsite.getId());
         icon.src = isJitsi
             ? "/resources/logos/meet.svg"
             : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
