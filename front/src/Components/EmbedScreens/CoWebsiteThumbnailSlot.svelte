@@ -2,7 +2,7 @@
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -17,6 +17,7 @@
     let iconLoaded = false;
     let state = coWebsite.getStateSubscriber();
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
+    const mainState = coWebsiteManager.getMainStateSubscriber();
 
     onMount(() => {
         icon.src = isJitsi
@@ -33,20 +34,23 @@
             coWebsiteManager.goToMain(coWebsite);
         } else if ($mainCoWebsite) {
             if ($mainCoWebsite.getId() === coWebsite.getId()) {
-                const coWebsites = $coWebsitesNotAsleep;
-                const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
-                if (newMain && newMain.getId() !== $mainCoWebsite.getId()) {
-                    coWebsiteManager.goToMain(newMain);
-                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                if (coWebsiteManager.getMainState() === iframeStates.closed) {
                     coWebsiteManager.displayMain();
+                } else if ($highlightedEmbedScreen?.type === "cowebsite") {
+                    coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
                 } else {
                     coWebsiteManager.hideMain();
                 }
             } else {
-                highlightedEmbedScreen.toggleHighlight({
-                    type: "cowebsite",
-                    embed: coWebsite,
-                });
+                if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                    coWebsiteManager.goToMain(coWebsite);
+                    coWebsiteManager.displayMain();
+                } else {
+                    highlightedEmbedScreen.toggleHighlight({
+                        type: "cowebsite",
+                        embed: coWebsite,
+                    });
+                }
             }
         }
 
@@ -64,7 +68,10 @@
     let isHighlight: boolean = false;
     let isMain: boolean = false;
     $: {
-        isMain = $mainCoWebsite !== undefined && $mainCoWebsite.getId() === coWebsite.getId();
+        isMain =
+            $mainState === iframeStates.opened &&
+            $mainCoWebsite !== undefined &&
+            $mainCoWebsite.getId() === coWebsite.getId();
         isHighlight =
             $highlightedEmbedScreen !== null &&
             $highlightedEmbedScreen.type === "cowebsite" &&
