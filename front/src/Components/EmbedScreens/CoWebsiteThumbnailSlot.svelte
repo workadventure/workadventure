@@ -5,6 +5,7 @@
     import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
+    import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     export let index: number;
@@ -19,7 +20,9 @@
     const urlObject = new URL(coWebsiteUrl);
 
     onMount(() => {
-        icon.src = `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
+        icon.src = coWebsite.jitsi
+            ? "/resources/logos/meet.svg"
+            : `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
         icon.alt = coWebsite.altMessage ?? urlObject.hostname;
         icon.onload = () => {
             iconLoaded = true;
@@ -33,8 +36,12 @@
             if ($mainCoWebsite.iframe.id === coWebsite.iframe.id) {
                 const coWebsites = $coWebsitesNotAsleep;
                 const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
-                if (newMain) {
-                    coWebsiteManager.goToMain(coWebsite);
+                if (newMain && newMain.iframe.id !== $mainCoWebsite.iframe.id) {
+                    coWebsiteManager.goToMain(newMain);
+                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                    coWebsiteManager.displayMain();
+                } else {
+                    coWebsiteManager.hideMain();
                 }
             } else {
                 highlightedEmbedScreen.toggleHighlight({
@@ -79,6 +86,7 @@
     <img
         class="cowebsite-icon noselect nes-pointer"
         class:hide={!iconLoaded}
+        class:jitsi={coWebsite.jitsi}
         bind:this={icon}
         on:dragstart|preventDefault={noDrag}
         alt=""
@@ -307,6 +315,12 @@
 
             &.hide {
                 display: none;
+            }
+
+            &.jitsi {
+                filter: invert(100%);
+                -webkit-filter: invert(100%);
+                padding: 7px;
             }
         }
     }

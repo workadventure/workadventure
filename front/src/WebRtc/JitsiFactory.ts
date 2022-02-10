@@ -179,7 +179,15 @@ class JitsiFactory {
         const doResolve = (): void => {
             const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
             if (iframe && this.jitsiApi) {
-                const coWebsite = coWebsiteManager.addCoWebsiteFromIframe(iframe, false, undefined, 0, false, true);
+                const coWebsite = coWebsiteManager.addCoWebsiteFromIframe(
+                    iframe,
+                    false,
+                    undefined,
+                    undefined,
+                    0,
+                    false,
+                    true
+                );
 
                 this.jitsiApi.addListener("videoConferenceLeft", () => {
                     this.closeOrUnload(coWebsite);

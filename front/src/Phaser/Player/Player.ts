@@ -25,7 +25,7 @@ export class Player extends Character {
         direction: PlayerAnimationDirections,
         moving: boolean,
         companion: string | null,
-        companionTexturePromise?: Promise<string>
+        companionTexturePromise?: CancelablePromise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
 

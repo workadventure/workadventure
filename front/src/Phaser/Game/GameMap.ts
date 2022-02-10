@@ -85,6 +85,7 @@ export class GameMap {
                     phaserMap
                         .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
                         .setDepth(depth)
+                        .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
                         .setAlpha(layer.opacity)
                         .setVisible(layer.visible)
                         .setSize(layer.width, layer.height)
@@ -120,7 +121,7 @@ export class GameMap {
         return [];
     }
 
-    public getCollisionsGrid(): number[][] {
+    public getCollisionGrid(): number[][] {
         const grid: number[][] = [];
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
@@ -328,6 +329,9 @@ export class GameMap {
 
     private isCollidingAt(x: number, y: number): boolean {
         for (const layer of this.phaserLayers) {
+            if (!layer.visible) {
+                continue;
+            }
             if (layer.getTileAt(x, y)?.properties[GameMapProperties.COLLIDES]) {
                 return true;
             }
