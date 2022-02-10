@@ -1,7 +1,9 @@
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
-import { CoWebsite, coWebsiteManager } from "./CoWebsiteManager";
+import { coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
+import type { CoWebsite } from "./CoWebsite/CoWesbite";
+import CancelablePromise from "cancelable-promise";
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
@@ -134,89 +136,91 @@ class JitsiFactory {
         return slugify(instance.replace("/", "-") + "-" + roomName);
     }
 
-    public async start(
+    public start(
         roomName: string,
         playerName: string,
         jwt?: string,
         config?: object,
         interfaceConfig?: object,
         jitsiUrl?: string
-    ) {
-        const coWebsite = coWebsiteManager.searchJitsi();
+    ): CancelablePromise<HTMLIFrameElement> {
+        return new CancelablePromise((resolve, reject, cancel) => {
+            // Jitsi meet external API maintains some data in local storage
+            // which is sent via the appData URL parameter when joining a
+            // conference. Problem is that this data grows indefinitely. Thus
+            // after some time the URLs get so huge that loading the iframe
+            // becomes slow and eventually breaks completely. Thus lets just
+            // clear jitsi local storage before starting a new conference.
+            window.localStorage.removeItem("jitsiLocalStorage");
 
-        if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite);
-        }
-
-        // Jitsi meet external API maintains some data in local storage
-        // which is sent via the appData URL parameter when joining a
-        // conference. Problem is that this data grows indefinitely. Thus
-        // after some time the URLs get so huge that loading the iframe
-        // becomes slow and eventually breaks completely. Thus lets just
-        // clear jitsi local storage before starting a new conference.
-        window.localStorage.removeItem("jitsiLocalStorage");
-
-        const domain = jitsiUrl || JITSI_URL;
-        if (domain === undefined) {
-            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
-        }
-        await this.loadJitsiScript(domain);
-
-        const options: JitsiOptions = {
-            roomName: roomName,
-            jwt: jwt,
-            width: "100%",
-            height: "100%",
-            parentNode: coWebsiteManager.getCoWebsiteBuffer(),
-            configOverwrite: mergeConfig(config),
-            interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...interfaceConfig },
-        };
-
-        if (!options.jwt) {
-            delete options.jwt;
-        }
-
-        const doResolve = (): void => {
-            const iframe = coWebsiteManager.getCoWebsiteBuffer().querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
-            if (iframe && this.jitsiApi) {
-                const coWebsite = coWebsiteManager.addCoWebsiteFromIframe(
-                    iframe,
-                    false,
-                    undefined,
-                    undefined,
-                    0,
-                    false,
-                    true
-                );
-
-                this.jitsiApi.addListener("videoConferenceLeft", () => {
-                    this.closeOrUnload(coWebsite);
-                });
-
-                this.jitsiApi.addListener("readyToClose", () => {
-                    this.closeOrUnload(coWebsite);
-                });
+            const domain = jitsiUrl || JITSI_URL;
+            if (domain === undefined) {
+                throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
             }
 
-            coWebsiteManager.resizeAllIframes();
-        };
+            const loadScript = this.loadJitsiScript(domain).then(() => {
+                const options: JitsiOptions = {
+                    roomName: roomName,
+                    jwt: jwt,
+                    width: "100%",
+                    height: "100%",
+                    parentNode: coWebsiteManager.getCoWebsiteBuffer(),
+                    configOverwrite: mergeConfig(config),
+                    interfaceConfigOverwrite: { ...defaultInterfaceConfig, ...interfaceConfig },
+                };
 
-        this.jitsiApi = undefined;
+                if (!options.jwt) {
+                    delete options.jwt;
+                }
 
-        options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
-        setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
-        this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-        this.jitsiApi.executeCommand("displayName", playerName);
+                const timemout = setTimeout(() => doResolve(), 2000); //failsafe in case the iframe is deleted before loading or too long to load
 
-        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+                const doResolve = (): void => {
+                    clearTimeout(timemout);
+                    const iframe = coWebsiteManager
+                        .getCoWebsiteBuffer()
+                        .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+                    if (iframe && this.jitsiApi) {
+                        this.jitsiApi.addListener("videoConferenceLeft", () => {
+                            this.closeOrUnload();
+                        });
+
+                        this.jitsiApi.addListener("readyToClose", () => {
+                            this.closeOrUnload();
+                        });
+
+                        return resolve(iframe);
+                    }
+                };
+
+                this.jitsiApi = undefined;
+
+                options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
+                this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+                this.jitsiApi.executeCommand("displayName", playerName);
+
+                this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
+                this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+            });
+
+            cancel(() => {
+                loadScript.cancel();
+            });
+        });
     }
 
-    private closeOrUnload = function (coWebsite: CoWebsite) {
-        if (coWebsite.closable) {
+    private closeOrUnload = function () {
+        const coWebsite = coWebsiteManager.searchJitsi();
+        if (!coWebsite) {
+            return;
+        }
+
+        if (coWebsite.isClosable()) {
             coWebsiteManager.closeCoWebsite(coWebsite);
         } else {
-            coWebsiteManager.unloadCoWebsite(coWebsite);
+            coWebsiteManager.unloadCoWebsite(coWebsite).catch((err) => {
+                console.error("Cannot unload co-website from the Jitsi factory", err);
+            });
         }
     };
 
@@ -229,8 +233,6 @@ class JitsiFactory {
         this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
 
         const coWebsite = coWebsiteManager.searchJitsi();
-        console.log("jitsi api ", this.jitsiApi);
-        console.log("iframe cowebsite", coWebsite?.iframe);
 
         if (!coWebsite) {
             this.destroy();
@@ -238,11 +240,11 @@ class JitsiFactory {
         }
 
         this.jitsiApi.addListener("videoConferenceLeft", () => {
-            this.closeOrUnload(coWebsite);
+            this.closeOrUnload();
         });
 
         this.jitsiApi.addListener("readyToClose", () => {
-            this.closeOrUnload(coWebsite);
+            this.closeOrUnload();
         });
     }
 
@@ -280,8 +282,8 @@ class JitsiFactory {
         }
     }
 
-    private async loadJitsiScript(domain: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+    private loadJitsiScript(domain: string): CancelablePromise<void> {
+        return new CancelablePromise<void>((resolve, reject, cancel) => {
             if (this.jitsiScriptLoaded) {
                 resolve();
                 return;
@@ -300,6 +302,10 @@ class JitsiFactory {
             };
 
             document.head.appendChild(jitsiScript);
+
+            cancel(() => {
+                jitsiScript.remove();
+            });
         });
     }
 }

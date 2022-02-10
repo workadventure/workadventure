@@ -1,7 +1,6 @@
 import type { GameScene } from "./GameScene";
 import type { GameMap } from "./GameMap";
 import { scriptUtils } from "../../Api/ScriptUtils";
-import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -9,12 +8,12 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
-import type CancelablePromise from "cancelable-promise";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 
 interface OpenCoWebsite {
     actionId: string;
     coWebsite?: CoWebsite;
-    loadPromise?: CancelablePromise;
 }
 
 export class GameMapPropertiesListener {
@@ -108,25 +107,25 @@ export class GameMapPropertiesListener {
                     this.coWebsitesOpenByLayer.set(layer, coWebsiteOpen);
 
                     const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-                        coWebsiteOpen.loadPromise = coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                            console.error("Error during loading a co-website: " + coWebsite.url);
+                        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                            console.error("Error during loading a co-website: " + coWebsite.getUrl());
                         });
 
                         layoutManagerActionStore.removeAction(actionId);
                     };
 
                     const openCoWebsiteFunction = () => {
-                        const coWebsite = coWebsiteManager.addCoWebsite(
-                            openWebsiteProperty ?? "",
-                            this.scene.MapUrlFile,
+                        const coWebsite = new SimpleCoWebsite(
+                            new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
                             allowApiProperty,
                             websitePolicyProperty,
                             websiteWidthProperty,
-                            websitePositionProperty,
                             false
                         );
 
                         coWebsiteOpen.coWebsite = coWebsite;
+
+                        coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
 
                         loadCoWebsiteFunction(coWebsite);
                     };
@@ -149,17 +148,17 @@ export class GameMapPropertiesListener {
                             userInputManager: this.scene.userInputManager,
                         });
                     } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
-                        const coWebsite = coWebsiteManager.addCoWebsite(
-                            openWebsiteProperty,
-                            this.scene.MapUrlFile,
+                        const coWebsite = new SimpleCoWebsite(
+                            new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
                             allowApiProperty,
                             websitePolicyProperty,
                             websiteWidthProperty,
-                            websitePositionProperty,
                             false
                         );
 
                         coWebsiteOpen.coWebsite = coWebsite;
+
+                        coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
                     }
 
                     if (!websiteTriggerProperty) {
@@ -203,12 +202,10 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    if (coWebsiteOpen.loadPromise !== undefined) {
-                        coWebsiteOpen.loadPromise.cancel();
-                    }
+                    const coWebsite = coWebsiteOpen.coWebsite;
 
-                    if (coWebsiteOpen.coWebsite !== undefined) {
-                        coWebsiteManager.closeCoWebsite(coWebsiteOpen.coWebsite);
+                    if (coWebsite) {
+                        coWebsiteManager.closeCoWebsite(coWebsite);
                     }
 
                     this.coWebsitesOpenByLayer.delete(layer);
