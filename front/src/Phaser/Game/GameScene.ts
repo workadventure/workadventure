@@ -570,6 +570,7 @@ export class GameScene extends DirtyScene {
         this.pathfindingManager = new PathfindingManager(
             this,
             this.gameMap.getCollisionGrid(),
+            this.gameMap.getWalkingCostGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -581,12 +582,6 @@ export class GameScene extends DirtyScene {
             this,
             { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
             waScaleManager
-        );
-
-        this.pathfindingManager = new PathfindingManager(
-            this,
-            this.gameMap.getCollisionGrid(),
-            this.gameMap.getTileDimensions()
         );
 
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
@@ -1530,7 +1525,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid(), this.gameMap.getWalkingCostGrid());
         this.markDirty();
     }
 
