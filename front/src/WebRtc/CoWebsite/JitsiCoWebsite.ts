@@ -5,7 +5,7 @@ import { jitsiFactory } from "../JitsiFactory";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 export class JitsiCoWebsite extends SimpleCoWebsite {
-    private jitsiLoadPromise?: CancelablePromise<HTMLIFrameElement>;
+    private jitsiLoadPromise?: () => CancelablePromise<HTMLIFrameElement>;
 
     constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
         const coWebsite = coWebsiteManager.searchJitsi();
@@ -17,7 +17,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         super(url, allowApi, allowPolicy, widthPercent, closable);
     }
 
-    setJitsiLoadPromise(promise: CancelablePromise<HTMLIFrameElement>): void {
+    setJitsiLoadPromise(promise: () => CancelablePromise<HTMLIFrameElement>): void {
         this.jitsiLoadPromise = promise;
     }
 
@@ -32,7 +32,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
                 return reject("Undefined Jitsi start callback");
             }
 
-            const jitsiLoading = this.jitsiLoadPromise
+            const jitsiLoading = this.jitsiLoadPromise()
                 .then((iframe) => {
                     this.iframe = iframe;
                     this.iframe.classList.add("pixel");
