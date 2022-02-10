@@ -5,7 +5,7 @@ import { get, Unsubscriber } from "svelte/store";
 
 import { userMessageManager } from "../../Administration/UserMessageManager";
 import { connectionManager } from "../../Connexion/ConnectionManager";
-import { CoWebsite, coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
+import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { UserInputManager } from "../UserInput/UserInputManager";
@@ -22,7 +22,13 @@ import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/Pl
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, JITSI_PRIVATE_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import {
+    DEBUG_MODE,
+    JITSI_PRIVATE_MODE,
+    JITSI_URL,
+    MAX_PER_GROUP,
+    POSITION_DELAY,
+} from "../../Enum/EnvironmentVariable";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
@@ -93,6 +99,9 @@ import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
 import { localVolumeStore } from "../../Stores/MediaStore";
+import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -565,7 +574,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getCollisionGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -581,7 +590,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMap.getCollisionsGrid(),
+            this.gameMap.getCollisionGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -826,7 +835,19 @@ export class GameScene extends DirtyScene {
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
                 this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
-                    this.startJitsi(message.jitsiRoom, message.jwt);
+                    if (!JITSI_URL) {
+                        throw new Error("Missing JITSI_URL environment variable.");
+                    }
+
+                    let domain = JITSI_URL;
+
+                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                        domain = `${location.protocol}//${domain}`;
+                    }
+
+                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
+                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                    this.startJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
@@ -995,12 +1016,25 @@ export class GameScene extends DirtyScene {
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.instance);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         const adminTag = allProps.get(GameMapProperties.JITSI_ADMIN_ROOM_TAG) as string | undefined;
 
                         this.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
                     } else {
-                        this.startJitsi(roomName, undefined);
+                        let domain = jitsiUrl || JITSI_URL;
+                        if (domain === undefined) {
+                            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                        }
+
+                        if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                            domain = `${location.protocol}//${domain}`;
+                        }
+
+                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
+
+                        coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                        this.startJitsi(coWebsite, roomName, undefined);
                     }
                     layoutManagerActionStore.removeAction("jitsi");
                 };
@@ -1292,13 +1326,11 @@ ${escapedMessage}
                 throw new Error("Unknown query source");
             }
 
-            const coWebsite = coWebsiteManager.addCoWebsite(
-                openCoWebsite.url,
-                iframeListener.getBaseUrlFromSource(source),
+            const coWebsite: SimpleCoWebsite = new SimpleCoWebsite(
+                new URL(openCoWebsite.url, iframeListener.getBaseUrlFromSource(source)),
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
-                openCoWebsite.position,
                 openCoWebsite.closable ?? true
             );
 
@@ -1307,7 +1339,7 @@ ${escapedMessage}
             }
 
             return {
-                id: coWebsite.iframe.id,
+                id: coWebsite.getId(),
             };
         });
 
@@ -1316,27 +1348,23 @@ ${escapedMessage}
 
             return coWebsites.map((coWebsite: CoWebsite) => {
                 return {
-                    id: coWebsite.iframe.id,
+                    id: coWebsite.getId(),
                 };
             });
         });
 
-        iframeListener.registerAnswerer("closeCoWebsite", async (coWebsiteId) => {
+        iframeListener.registerAnswerer("closeCoWebsite", (coWebsiteId) => {
             const coWebsite = coWebsiteManager.getCoWebsiteById(coWebsiteId);
 
             if (!coWebsite) {
                 throw new Error("Unknown co-website");
             }
 
-            return coWebsiteManager.closeCoWebsite(coWebsite).catch((error) => {
-                throw new Error("Error on closing co-website");
-            });
+            return coWebsiteManager.closeCoWebsite(coWebsite);
         });
 
-        iframeListener.registerAnswerer("closeCoWebsites", async () => {
-            return await coWebsiteManager.closeCoWebsites().catch((error) => {
-                throw new Error("Error on closing all co-websites");
-            });
+        iframeListener.registerAnswerer("closeCoWebsites", () => {
+            return coWebsiteManager.closeCoWebsites();
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -1534,6 +1562,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
         this.markDirty();
     }
 
@@ -1600,7 +1629,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsites().catch((e) => console.error(e));
+        coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
@@ -2148,7 +2177,7 @@ ${escapedMessage}
         mediaManager.hideMyCamera();
     }
 
-    public startJitsi(roomName: string, jwt?: string): void {
+    public startJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
@@ -2160,19 +2189,21 @@ ${escapedMessage}
         );
         const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
-        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl).catch(() => {
-            console.error("Cannot start a Jitsi co-website");
+        coWebsite.setJitsiLoadPromise(() => {
+            return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
         });
-        this.disableMediaBehaviors();
+
+        coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
+            console.error(err);
+        });
+
         analyticsClient.enteredJitsi(roomName, this.room.id);
     }
 
     public stopJitsi(): void {
         const coWebsite = coWebsiteManager.searchJitsi();
         if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => {
-                console.error("Error during Jitsi co-website closing", e);
-            });
+            coWebsiteManager.closeCoWebsite(coWebsite);
         }
     }
 
