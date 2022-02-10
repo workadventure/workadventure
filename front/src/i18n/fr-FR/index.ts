@@ -15,7 +15,7 @@ import woka from "./woka";
 import trigger from "./trigger";
 
 const fr_FR: Translation = {
-    ...en_US,
+    ...(en_US as Translation),
     language: "Français",
     country: "France",
     audio,
