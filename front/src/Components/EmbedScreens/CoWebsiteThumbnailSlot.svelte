@@ -2,9 +2,9 @@
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { coWebsitesNotAsleep, mainCoWebsite, jitsiCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
@@ -14,16 +14,15 @@
 
     let icon: HTMLImageElement;
     let iconLoaded = false;
-    let state = coWebsite.state;
-
-    const coWebsiteUrl = coWebsite.iframe.src;
-    const urlObject = new URL(coWebsiteUrl);
+    let state = coWebsite.getStateSubscriber();
+    let isJitsi: boolean = false;
 
     onMount(() => {
-        icon.src = coWebsite.jitsi
+        isJitsi = Boolean($jitsiCoWebsite && $jitsiCoWebsite.getId() === coWebsite.getId());
+        icon.src = isJitsi
             ? "/resources/logos/meet.svg"
-            : `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
-        icon.alt = coWebsite.altMessage ?? urlObject.hostname;
+            : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
+        icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
             iconLoaded = true;
         };
@@ -33,10 +32,10 @@
         if (vertical) {
             coWebsiteManager.goToMain(coWebsite);
         } else if ($mainCoWebsite) {
-            if ($mainCoWebsite.iframe.id === coWebsite.iframe.id) {
+            if ($mainCoWebsite.getId() === coWebsite.getId()) {
                 const coWebsites = $coWebsitesNotAsleep;
                 const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
-                if (newMain && newMain.iframe.id !== $mainCoWebsite.iframe.id) {
+                if (newMain && newMain.getId() !== $mainCoWebsite.getId()) {
                     coWebsiteManager.goToMain(newMain);
                 } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
                     coWebsiteManager.displayMain();
@@ -65,11 +64,11 @@
     let isHighlight: boolean = false;
     let isMain: boolean = false;
     $: {
-        isMain = $mainCoWebsite !== undefined && $mainCoWebsite.iframe === coWebsite.iframe;
+        isMain = $mainCoWebsite !== undefined && $mainCoWebsite.getId() === coWebsite.getId();
         isHighlight =
             $highlightedEmbedScreen !== null &&
             $highlightedEmbedScreen.type === "cowebsite" &&
-            $highlightedEmbedScreen.embed.iframe === coWebsite.iframe;
+            $highlightedEmbedScreen.embed.getId() === coWebsite.getId();
     }
 </script>
 
@@ -86,7 +85,7 @@
     <img
         class="cowebsite-icon noselect nes-pointer"
         class:hide={!iconLoaded}
-        class:jitsi={coWebsite.jitsi}
+        class:jitsi={isJitsi}
         bind:this={icon}
         on:dragstart|preventDefault={noDrag}
         alt=""

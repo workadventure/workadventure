@@ -1,5 +1,6 @@
 import { derived, get, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsiteManager";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
+import { JitsiCoWebsite } from "../WebRtc/CoWebsite/JitsiCoWebsite";
 
 function createCoWebsiteStore() {
     const { subscribe, set, update } = writable(Array<CoWebsite>());
@@ -9,7 +10,7 @@ function createCoWebsiteStore() {
     return {
         subscribe,
         add: (coWebsite: CoWebsite, position?: number) => {
-            coWebsite.state.subscribe((value) => {
+            coWebsite.getStateSubscriber().subscribe((value) => {
                 update((currentArray) => currentArray);
             });
 
@@ -31,7 +32,7 @@ function createCoWebsiteStore() {
         },
         remove: (coWebsite: CoWebsite) => {
             update((currentArray) => [
-                ...currentArray.filter((currentCoWebsite) => currentCoWebsite.iframe.id !== coWebsite.iframe.id),
+                ...currentArray.filter((currentCoWebsite) => currentCoWebsite.getId() !== coWebsite.getId()),
             ]);
         },
         empty: () => {
@@ -43,9 +44,13 @@ function createCoWebsiteStore() {
 export const coWebsites = createCoWebsiteStore();
 
 export const coWebsitesNotAsleep = derived([coWebsites], ([$coWebsites]) =>
-    $coWebsites.filter((coWebsite) => get(coWebsite.state) !== "asleep")
+    $coWebsites.filter((coWebsite) => coWebsite.getState() !== "asleep")
 );
 
 export const mainCoWebsite = derived([coWebsites], ([$coWebsites]) =>
-    $coWebsites.find((coWebsite) => get(coWebsite.state) !== "asleep")
+    $coWebsites.find((coWebsite) => coWebsite.getState() !== "asleep")
+);
+
+export const jitsiCoWebsite = derived([coWebsites], ([$coWebsites]) =>
+    $coWebsites.find((coWebsite) => coWebsite instanceof JitsiCoWebsite)
 );

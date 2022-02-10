@@ -1,5 +1,5 @@
 import { derived, get, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsiteManager";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { coWebsites } from "./CoWebsiteStore";
 import { Streamable, streamableCollectionStore } from "./StreamableCollectionStore";
@@ -31,7 +31,7 @@ function createHighlightedEmbedScreenStore() {
                 embedScreen.type !== currentEmbedScreen.type ||
                 (embedScreen.type === "cowebsite" &&
                     currentEmbedScreen.type === "cowebsite" &&
-                    embedScreen.embed.iframe.id !== currentEmbedScreen.embed.iframe.id) ||
+                    embedScreen.embed.getId() !== currentEmbedScreen.embed.getId()) ||
                 (embedScreen.type === "streamable" &&
                     currentEmbedScreen.type === "streamable" &&
                     embedScreen.embed.uniqueId !== currentEmbedScreen.embed.uniqueId)
