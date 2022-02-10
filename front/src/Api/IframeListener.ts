@@ -34,6 +34,7 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
+import type { ActionMenuclickedEvent } from "./Events/ActionMenuClickedEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -241,6 +242,8 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
+                        // } else if (payload.type == "onOpenActionMenu") {
+                        //     this..next();
                     } else if (payload.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
@@ -463,6 +466,13 @@ class IframeListener {
                 data: event,
             });
         }
+    }
+
+    sendActionMenuClicked(event: ActionMenuclickedEvent) {
+        this.postMessage({
+            type: "actionMenuClickedEvent",
+            data: event,
+        });
     }
 
     sendCameraUpdated(event: WasCameraUpdatedEvent) {

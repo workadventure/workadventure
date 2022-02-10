@@ -36,6 +36,7 @@ import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
+import type { ActionMenuclickedEvent as ActionMenuClickedEvent } from "./ActionMenuClickedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -58,6 +59,7 @@ export type IframeEventMap = {
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
+    onOpenActionMenu: undefined;
     onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
@@ -90,6 +92,7 @@ export interface IframeResponseEventMap {
     enterZoneEvent: ChangeZoneEvent;
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
+    actionMenuClickedEvent: ActionMenuClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;

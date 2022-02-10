@@ -8,6 +8,10 @@ import type { Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 
+export enum RemotePlayerEvent {
+    Clicked = "Clicked",
+}
+
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
@@ -41,7 +45,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.visitCardUrl = visitCardUrl;
         this.registeredActions = [];
         this.registerDefaultActionsMenuActions();
-        this.setClickable(this.registeredActions.length > 0);
+        // this.setClickable(this.registeredActions.length > 0);
         this.activationRadius = activationRadius ?? 96;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
@@ -90,7 +94,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private updateIsClickable(): void {
-        this.setClickable(this.registeredActions.length > 0);
+        // this.setClickable(this.registeredActions.length > 0);
+        this.setClickable(true);
     }
 
     private toggleActionsMenu(): void {
@@ -120,6 +125,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS" && event.leftButtonDown()) {
                 this.toggleActionsMenu();
+                this.emit(RemotePlayerEvent.Clicked);
             }
         });
     }

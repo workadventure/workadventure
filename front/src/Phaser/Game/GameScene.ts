@@ -31,7 +31,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -1946,6 +1946,10 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
+        });
+
+        player.on(RemotePlayerEvent.Clicked, () => {
+            iframeListener.sendActionMenuClicked({ id: player.userId });
         });
     }
 
