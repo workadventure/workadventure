@@ -16,6 +16,7 @@ import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
+import LL from "../../i18n/i18n-svelte";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -40,7 +41,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = "Press SPACE or touch here to open web site in new tab";
+                        message = get(LL).trigger.newTab();
                     }
                     layoutManagerActionStore.addAction({
                         uuid: "openTab",
@@ -96,7 +97,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = "Press SPACE or touch here to enter Jitsi Meet room";
+                        message = get(LL).trigger.jitsiRoom();
                     }
                     layoutManagerActionStore.addAction({
                         uuid: "jitsi",
@@ -265,7 +266,7 @@ export class GameMapPropertiesListener {
                         websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON
                     ) {
                         if (!websiteTriggerMessageProperty) {
-                            websiteTriggerMessageProperty = "Press SPACE or touch here to open web site";
+                            websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
                         }
 
                         this.coWebsitesActionTriggerByLayer.set(layer, actionId);
