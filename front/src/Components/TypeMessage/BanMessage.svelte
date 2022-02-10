@@ -1,8 +1,10 @@
 <script lang="ts">
     import { fly, fade } from "svelte/transition";
     import { onMount } from "svelte";
+    import { gameManager } from "../../Phaser/Game/GameManager";
     import type { Message } from "../../Stores/TypeMessageStore/MessageStore";
     import { banMessageStore } from "../../Stores/TypeMessageStore/BanMessageStore";
+    import LL from "../../i18n/i18n-svelte";
 
     export let message: Message;
 
@@ -12,6 +14,8 @@
 
     onMount(() => {
         timeToRead();
+        const gameScene = gameManager.getCurrentGameScene();
+        gameScene.playSound("audio-report-message");
     });
 
     function timeToRead() {
@@ -37,7 +41,8 @@
     out:fade={{ duration: 200 }}
 >
     <h2 class="title-ban-message">
-        <img src="resources/logos/report.svg" alt="***" /> Important message
+        <img src="resources/logos/report.svg" alt="***" />
+        {$LL.warning.importantMessage()}
         <img src="resources/logos/report.svg" alt="***" />
     </h2>
     <div class="content-ban-message">
@@ -51,18 +56,19 @@
             on:click|preventDefault={closeBanMessage}>{nameButton}</button
         >
     </div>
-    <!-- svelte-ignore a11y-media-has-caption -->
-    <audio id="report-message" autoplay>
-        <source src="/resources/objects/report-message.mp3" type="audio/mp3" />
-    </audio>
 </div>
 
 <style lang="scss">
     div.main-ban-message {
         display: flex;
         flex-direction: column;
-        position: relative;
-        top: 15vh;
+        position: absolute;
+        top: 4%;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 850;
 
         height: 70vh;
         width: 60vw;

@@ -6,18 +6,19 @@ import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
-import { ON_ACTION_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
+import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 
 enum OpenCoWebsiteState {
-    LOADING,
+    ASLEEP,
     OPENED,
     MUST_BE_CLOSE,
 }
 
 interface OpenCoWebsite {
-    coWebsite: CoWebsite | undefined;
+    actionId: string;
+    coWebsite?: CoWebsite;
     state: OpenCoWebsiteState;
 }
 
@@ -99,62 +100,95 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    const actionUuid = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+                    const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
 
                     if (this.coWebsitesOpenByLayer.has(layer)) {
                         return;
                     }
 
                     this.coWebsitesOpenByLayer.set(layer, {
+                        actionId: actionId,
                         coWebsite: undefined,
-                        state: OpenCoWebsiteState.LOADING,
+                        state: OpenCoWebsiteState.ASLEEP,
                     });
 
-                    const openWebsiteFunction = () => {
+                    const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
                         coWebsiteManager
-                            .loadCoWebsite(
-                                openWebsiteProperty as string,
-                                this.scene.MapUrlFile,
-                                allowApiProperty,
-                                websitePolicyProperty,
-                                websiteWidthProperty,
-                                websitePositionProperty
-                            )
+                            .loadCoWebsite(coWebsite)
                             .then((coWebsite) => {
                                 const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
                                 if (coWebsiteOpen && coWebsiteOpen.state === OpenCoWebsiteState.MUST_BE_CLOSE) {
-                                    coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => console.error(e));
+                                    coWebsiteManager.closeCoWebsite(coWebsite).catch(() => {
+                                        console.error("Error during a co-website closing");
+                                    });
                                     this.coWebsitesOpenByLayer.delete(layer);
                                     this.coWebsitesActionTriggerByLayer.delete(layer);
                                 } else {
                                     this.coWebsitesOpenByLayer.set(layer, {
+                                        actionId,
                                         coWebsite,
                                         state: OpenCoWebsiteState.OPENED,
                                     });
                                 }
                             })
-                            .catch((e) => console.error(e));
+                            .catch(() => {
+                                console.error("Error during loading a co-website: " + coWebsite.url);
+                            });
 
-                        layoutManagerActionStore.removeAction(actionUuid);
+                        layoutManagerActionStore.removeAction(actionId);
                     };
 
-                    const forceTrigger = localUserStore.getForceCowebsiteTrigger();
-                    if (forceTrigger || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
+                    const openCoWebsiteFunction = () => {
+                        const coWebsite = coWebsiteManager.addCoWebsite(
+                            openWebsiteProperty ?? "",
+                            this.scene.MapUrlFile,
+                            allowApiProperty,
+                            websitePolicyProperty,
+                            websiteWidthProperty,
+                            websitePositionProperty,
+                            false
+                        );
+
+                        loadCoWebsiteFunction(coWebsite);
+                    };
+
+                    if (
+                        localUserStore.getForceCowebsiteTrigger() ||
+                        websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON
+                    ) {
                         if (!websiteTriggerMessageProperty) {
                             websiteTriggerMessageProperty = "Press SPACE or touch here to open web site";
                         }
 
-                        this.coWebsitesActionTriggerByLayer.set(layer, actionUuid);
+                        this.coWebsitesActionTriggerByLayer.set(layer, actionId);
 
                         layoutManagerActionStore.addAction({
-                            uuid: actionUuid,
+                            uuid: actionId,
                             type: "message",
                             message: websiteTriggerMessageProperty,
-                            callback: () => openWebsiteFunction(),
+                            callback: () => openCoWebsiteFunction(),
                             userInputManager: this.scene.userInputManager,
                         });
-                    } else {
-                        openWebsiteFunction();
+                    } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+                        const coWebsite = coWebsiteManager.addCoWebsite(
+                            openWebsiteProperty,
+                            this.scene.MapUrlFile,
+                            allowApiProperty,
+                            websitePolicyProperty,
+                            websiteWidthProperty,
+                            websitePositionProperty,
+                            false
+                        );
+
+                        const ObjectByLayer = this.coWebsitesOpenByLayer.get(layer);
+
+                        if (ObjectByLayer) {
+                            ObjectByLayer.coWebsite = coWebsite;
+                        }
+                    }
+
+                    if (!websiteTriggerProperty) {
+                        openCoWebsiteFunction();
                     }
                 });
             };
@@ -194,7 +228,7 @@ export class GameMapPropertiesListener {
                         return;
                     }
 
-                    if (coWebsiteOpen.state === OpenCoWebsiteState.LOADING) {
+                    if (coWebsiteOpen.state === OpenCoWebsiteState.ASLEEP) {
                         coWebsiteOpen.state = OpenCoWebsiteState.MUST_BE_CLOSE;
                     }
 
@@ -223,6 +257,8 @@ export class GameMapPropertiesListener {
                     if (action) {
                         layoutManagerActionStore.removeAction(actionTriggerUuid);
                     }
+
+                    this.coWebsitesActionTriggerByLayer.delete(layer);
                 });
             };
 

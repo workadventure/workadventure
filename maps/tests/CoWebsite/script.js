@@ -12,12 +12,12 @@ WA.onInit().then(() => {
     });
 });
 
-function wookaSendMessage(message) {
-    WA.chat.sendChatMessage(message, 'Wooka');
+function wokaSendMessage(message) {
+    WA.chat.sendChatMessage(message, 'Woka');
 }
 
 function unknownCommand() {
-    wookaSendMessage('Unknown command');
+    wokaSendMessage('Unknown command');
 }
 
 function executeCommand(command, args) {
@@ -32,7 +32,7 @@ function executeCommand(command, args) {
 
 function coWebsiteCommand(args) {
     if (args.length < 1) {
-        wookaSendMessage('Too few arguments');
+        wokaSendMessage('Too few arguments');
         return;
     }
 
@@ -52,27 +52,27 @@ function coWebsiteCommand(args) {
 
 async function openCoWebsite(args) {
     if (args.length < 1)  {
-        wookaSendMessage('Too few arguments');
+        wokaSendMessage('Too few arguments');
         return;
     }
 
     try {
         const url = new URL(args[0]);
       } catch (exception) {
-        wookaSendMessage('Parameter is not a valid URL !');
+        wokaSendMessage('Parameter is not a valid URL !');
         return;
       }
 
     await WA.nav.openCoWebSite(args[0]).then(() => {
-        wookaSendMessage('Co-website has been opened !');
+        wokaSendMessage('Co-website has been opened !');
     }).catch((error) => {
-        wookaSendMessage(`Something wrong happen during co-website opening: ${error.message}`);
+        wokaSendMessage(`Something wrong happen during co-website opening: ${error.message}`);
     });
 }
 
 async function closeCoWebsite(args) {
     if (args.length < 1)  {
-        wookaSendMessage('Too few arguments');
+        wokaSendMessage('Too few arguments');
         return;
     }
 
@@ -83,7 +83,7 @@ async function closeCoWebsite(args) {
         coWebsites.forEach(coWebsite => {
             coWebsite.close();
         });
-        wookaSendMessage('All co-websites has been closed !');
+        wokaSendMessage('All co-websites has been closed !');
         return;
     }
 
@@ -96,13 +96,13 @@ async function closeCoWebsite(args) {
         coWebsites.find((coWebsite) => coWebsite.position === position);
 
     if (!coWebsite) {
-        wookaSendMessage('Unknown co-website');
+        wokaSendMessage('Unknown co-website');
         return;
     }
 
     await coWebsite.close().then(() => {
-        wookaSendMessage('This co-websites has been closed !');
+        wokaSendMessage('This co-websites has been closed !');
     }).catch((error) => {
-        wookaSendMessage(`Something wrong happen during co-website closing: ${error.message}`);
+        wokaSendMessage(`Something wrong happen during co-website closing: ${error.message}`);
     });
 }

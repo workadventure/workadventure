@@ -1,4 +1,7 @@
 <script lang="ts">
+    import LL from "../../i18n/i18n-svelte";
+    import { contactPageStore } from "../../Stores/MenuStore";
+
     function goToGettingStarted() {
         const sparkHost = "https://workadventu.re/getting-started";
         window.open(sparkHost, "_blank");
@@ -8,25 +11,24 @@
         const sparkHost = "https://workadventu.re/map-building/";
         window.open(sparkHost, "_blank");
     }
-
-    import { contactPageStore } from "../../Stores/MenuStore";
 </script>
 
 <div class="create-map-main">
     <section class="container-overflow">
         <section>
-            <h3>Getting started</h3>
-            <p>
-                WorkAdventure allows you to create an online space to communicate spontaneously with others. And it all
-                starts with creating your own space. Choose from a large selection of prefabricated maps by our team.
-            </p>
-            <button type="button" class="nes-btn is-primary" on:click={goToGettingStarted}>Getting started</button>
+            <h3>{$LL.menu.contact.gettingStarted.title()}</h3>
+            <p>{$LL.menu.contact.gettingStarted.description()}</p>
+            <button type="button" class="nes-btn is-primary" on:click={goToGettingStarted}
+                >{$LL.menu.contact.gettingStarted.title()}</button
+            >
         </section>
 
         <section>
-            <h3>Create your map</h3>
-            <p>You can also create your own custom map by following the step of the documentation.</p>
-            <button type="button" class="nes-btn" on:click={goToBuildingMap}>Create your map</button>
+            <h3>{$LL.menu.contact.createMap.title()}</h3>
+            <p>{$LL.menu.contact.createMap.description()}</p>
+            <button type="button" class="nes-btn" on:click={goToBuildingMap}
+                >{$LL.menu.contact.createMap.title()}</button
+            >
         </section>
 
         <iframe

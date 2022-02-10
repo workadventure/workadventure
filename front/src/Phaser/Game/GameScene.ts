@@ -12,7 +12,7 @@ import { UserInputManager } from "../UserInput/UserInputManager";
 import { gameManager } from "./GameManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
-import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
+import { waScaleManager } from "../Services/WaScaleManager";
 import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -49,6 +49,7 @@ import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { GameMapProperties } from "./GameMapProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
+import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
@@ -89,9 +90,8 @@ import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
-import Camera = Phaser.Cameras.Scene2D.Camera;
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-
+import { locale } from "../../i18n/i18n-svelte";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -188,8 +188,6 @@ export class GameScene extends DirtyScene {
 
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
-    // The item that can be selected by pressing the space key.
-    private outlinedItem: ActionableItem | null = null;
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
     private playerName!: string;
@@ -203,6 +201,7 @@ export class GameScene extends DirtyScene {
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
+    private activatablesManager!: ActivatablesManager;
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
@@ -251,7 +250,7 @@ export class GameScene extends DirtyScene {
         }
         this.load.audio("audio-webrtc-in", "/resources/objects/webrtc-in.mp3");
         this.load.audio("audio-webrtc-out", "/resources/objects/webrtc-out.mp3");
-        //this.load.audio('audio-report-message', '/resources/objects/report-message.mp3');
+        this.load.audio("audio-report-message", "/resources/objects/report-message.mp3");
         this.sound.pauseOnBlur = false;
 
         this.load.on(FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -559,6 +558,12 @@ export class GameScene extends DirtyScene {
                 .catch((e) => console.error(e));
         }
 
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionGrid(),
+            this.gameMap.getTileDimensions()
+        );
+
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
         this.removeAllRemotePlayers(); //cleanup the list  of remote players in case the scene was rebooted
@@ -569,7 +574,14 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
-        this.pathfindingManager = new PathfindingManager(this, this.gameMap.getCollisionsGrid());
+        this.pathfindingManager = new PathfindingManager(
+            this,
+            this.gameMap.getCollisionGrid(),
+            this.gameMap.getTileDimensions()
+        );
+
+        this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
+
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
 
@@ -626,13 +638,9 @@ export class GameScene extends DirtyScene {
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
-                this.sound.play("audio-webrtc-in", {
-                    volume: 0.2,
-                });
+                this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeerNumber) {
-                this.sound.play("audio-webrtc-out", {
-                    volume: 0.2,
-                });
+                this.playSound("audio-webrtc-out");
             }
             oldPeerNumber = newPeerNumber;
         });
@@ -655,10 +663,10 @@ export class GameScene extends DirtyScene {
 
         this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
             if (color !== undefined) {
-                this.CurrentPlayer.setOutlineColor(color);
+                this.CurrentPlayer.setFollowOutlineColor(color);
                 this.connection?.emitPlayerOutlineColor(color);
             } else {
-                this.CurrentPlayer.removeOutlineColor();
+                this.CurrentPlayer.removeFollowOutlineColor();
                 this.connection?.emitPlayerOutlineColor(null);
             }
         });
@@ -673,10 +681,6 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
-    }
-
-    public activateOutlinedItem(): void {
-        this.outlinedItem?.activate();
     }
 
     /**
@@ -801,11 +805,8 @@ export class GameScene extends DirtyScene {
                 this.simplePeer = new SimplePeer(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
-                //listen event to share position of user
-                this.CurrentPlayer.on(hasMovedEventName, this.pushPlayerPosition.bind(this));
-                this.CurrentPlayer.on(hasMovedEventName, this.outlineItem.bind(this));
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
-                    this.gameMap.setPosition(event.x, event.y);
+                    this.handleCurrentPlayerHasMovedEvent(event);
                 });
 
                 // Set up variables manager
@@ -1259,21 +1260,22 @@ ${escapedMessage}
                 throw new Error("Unknown query source");
             }
 
-            const coWebsite = await coWebsiteManager.loadCoWebsite(
+            const coWebsite = coWebsiteManager.addCoWebsite(
                 openCoWebsite.url,
                 iframeListener.getBaseUrlFromSource(source),
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
-                openCoWebsite.position
+                openCoWebsite.widthPercent,
+                openCoWebsite.position,
+                openCoWebsite.closable ?? true
             );
 
-            if (!coWebsite) {
-                throw new Error("Error on opening co-website");
+            if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
+                await coWebsiteManager.loadCoWebsite(coWebsite);
             }
 
             return {
                 id: coWebsite.iframe.id,
-                position: coWebsite.position,
             };
         });
 
@@ -1283,7 +1285,6 @@ ${escapedMessage}
             return coWebsites.map((coWebsite: CoWebsite) => {
                 return {
                     id: coWebsite.iframe.id,
-                    position: coWebsite.position,
                 };
             });
         });
@@ -1321,6 +1322,7 @@ ${escapedMessage}
                 startLayerName: this.startPositionCalculator.startLayerName,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
+                language: get(locale),
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
@@ -1441,12 +1443,12 @@ ${escapedMessage}
             const green = normalizeColor(message.green);
             const blue = normalizeColor(message.blue);
             const color = (red << 16) | (green << 8) | blue;
-            this.CurrentPlayer.setOutlineColor(color);
+            this.CurrentPlayer.setApiOutlineColor(color);
             this.connection?.emitPlayerOutlineColor(color);
         });
 
         iframeListener.registerAnswerer("removePlayerOutline", (message) => {
-            this.CurrentPlayer.removeOutlineColor();
+            this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
 
@@ -1455,6 +1457,17 @@ ${escapedMessage}
                 x: this.CurrentPlayer.x,
                 y: this.CurrentPlayer.y,
             };
+        });
+
+        iframeListener.registerAnswerer("movePlayerTo", async (message) => {
+            const index = this.getGameMap().getTileIndexAt(message.x, message.y);
+            const startTile = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+            const path = await this.getPathfindingManager().findPath(startTile, index, true, true);
+            path.shift();
+            if (path.length === 0) {
+                throw new Error("no path available");
+            }
+            return this.CurrentPlayer.setPathToFollow(path, message.speed);
         });
     }
 
@@ -1489,6 +1502,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
         this.markDirty();
     }
 
@@ -1547,6 +1561,12 @@ ${escapedMessage}
         }
     }
 
+    public playSound(sound: string) {
+        this.sound.play(sound, {
+            volume: 0.2,
+        });
+    }
+
     public cleanupClosingScene(): void {
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites().catch((e) => console.error(e));
@@ -1584,7 +1604,10 @@ ${escapedMessage}
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
-        mediaManager.hideGameOverlay();
+        //When we leave game, the camera is stop to be reopen after.
+        // I think that we could keep camera status and the scene can manage camera setup
+        //TODO find wy chrome don't manage correctly a multiple ask mediaDevices
+        //mediaManager.hideMyCamera();
 
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
@@ -1659,7 +1682,18 @@ ${escapedMessage}
         }
     }
 
-    createCollisionWithPlayer() {
+    private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
+        //listen event to share position of user
+        this.pushPlayerPosition(event);
+        this.gameMap.setPosition(event.x, event.y);
+        this.activatablesManager.updateActivatableObjectsDistances([
+            ...Array.from(this.MapPlayersByKey.values()),
+            ...this.actionableItems.values(),
+        ]);
+        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+    }
+
+    private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
@@ -1678,7 +1712,7 @@ ${escapedMessage}
         }
     }
 
-    createCurrentPlayer() {
+    private createCurrentPlayer() {
         //TODO create animation moving between exit and start
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
@@ -1693,7 +1727,7 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
@@ -1705,10 +1739,32 @@ ${escapedMessage}
                     emoteMenuStore.openEmoteMenu();
                 }
             });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOverOutline(0x00ffff);
+            });
+            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
+                this.CurrentPlayer.pointerOutOutline();
+            });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
                 analyticsClient.launchEmote(emoteKey);
             });
+            const moveToParam = urlManager.getHashParameter("moveTo");
+            if (moveToParam) {
+                try {
+                    const endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                    this.pathfindingManager
+                        .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
+                        .then((path) => {
+                            if (path && path.length > 0) {
+                                this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                            }
+                        })
+                        .catch((reason) => console.warn(reason));
+                } catch (err) {
+                    console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+                }
+            }
         } catch (err) {
             if (err instanceof TextureError) {
                 gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
@@ -1720,7 +1776,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    pushPlayerPosition(event: HasPlayerMovedEvent) {
+    private pushPlayerPosition(event: HasPlayerMovedEvent) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1746,49 +1802,6 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    /**
-     * Finds the correct item to outline and outline it (if there is an item to be outlined)
-     * @param event
-     */
-    private outlineItem(event: HasPlayerMovedEvent): void {
-        let x = event.x;
-        let y = event.y;
-        switch (event.direction) {
-            case PlayerAnimationDirections.Up:
-                y -= 32;
-                break;
-            case PlayerAnimationDirections.Down:
-                y += 32;
-                break;
-            case PlayerAnimationDirections.Left:
-                x -= 32;
-                break;
-            case PlayerAnimationDirections.Right:
-                x += 32;
-                break;
-            default:
-                throw new Error('Unexpected direction "' + event.direction + '"');
-        }
-
-        let shortestDistance: number = Infinity;
-        let selectedItem: ActionableItem | null = null;
-        for (const item of this.actionableItems.values()) {
-            const distance = item.actionableDistance(x, y);
-            if (distance !== null && distance < shortestDistance) {
-                shortestDistance = distance;
-                selectedItem = item;
-            }
-        }
-
-        if (this.outlinedItem === selectedItem) {
-            return;
-        }
-
-        this.outlinedItem?.notSelectable();
-        this.outlinedItem = selectedItem;
-        this.outlinedItem?.selectable();
-    }
-
     private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
@@ -1806,7 +1819,7 @@ ${escapedMessage}
      * @param time
      * @param delta The delta time in ms since the last frame. This is a smoothed and capped value based on the FPS rate.
      */
-    update(time: number, delta: number): void {
+    public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
@@ -1825,9 +1838,15 @@ ${escapedMessage}
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
                     break;
-                case "UserMovedEvent":
+                case "UserMovedEvent": {
                     this.doUpdatePlayerPosition(event.event);
+                    const remotePlayer = this.MapPlayersByKey.get(event.event.userId);
+                    if (remotePlayer) {
+                        this.activatablesManager.updateDistanceForSingleActivatableObject(remotePlayer);
+                        this.activatablesManager.deduceSelectedActivatableObjectByDistance();
+                    }
                     break;
+                }
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
@@ -1914,11 +1933,21 @@ ${escapedMessage}
             addPlayerData.companion !== null ? lazyLoadCompanionResource(this.load, addPlayerData.companion) : undefined
         );
         if (addPlayerData.outlineColor !== undefined) {
-            player.setOutlineColor(addPlayerData.outlineColor);
+            player.setApiOutlineColor(addPlayerData.outlineColor);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
+
+        player.on(Phaser.Input.Events.POINTER_OVER, () => {
+            this.activatablesManager.handlePointerOverActivatableObject(player);
+            this.markDirty();
+        });
+
+        player.on(Phaser.Input.Events.POINTER_OUT, () => {
+            this.activatablesManager.handlePointerOutActivatableObject();
+            this.markDirty();
+        });
     }
 
     /**
@@ -1948,7 +1977,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.removePlayer(userId);
     }
 
-    public updatePlayerPosition(message: MessageUserMovedInterface): void {
+    private updatePlayerPosition(message: MessageUserMovedInterface): void {
         this.pendingEvents.enqueue({
             type: "UserMovedEvent",
             event: message,
@@ -1978,7 +2007,7 @@ ${escapedMessage}
         this.playersPositionInterpolator.updatePlayerPosition(player.userId, playerMovement);
     }
 
-    public shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+    private shareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
         this.pendingEvents.enqueue({
             type: "GroupCreatedUpdatedEvent",
             event: groupPositionMessage,
@@ -2030,9 +2059,9 @@ ${escapedMessage}
             return;
         }
         if (message.removeOutlineColor) {
-            character.removeOutlineColor();
+            character.removeApiOutlineColor();
         } else {
-            character.setOutlineColor(message.outlineColor);
+            character.setApiOutlineColor(message.outlineColor);
         }
     }
 
@@ -2077,6 +2106,17 @@ ${escapedMessage}
         biggestAvailableAreaStore.recompute();
     }
 
+    public enableMediaBehaviors() {
+        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+        this.connection?.setSilent(!!silent);
+        mediaManager.showMyCamera();
+    }
+
+    public disableMediaBehaviors() {
+        this.connection?.setSilent(true);
+        mediaManager.hideMyCamera();
+    }
+
     public startJitsi(roomName: string, jwt?: string): void {
         const allProps = this.gameMap.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
@@ -2088,28 +2128,21 @@ ${escapedMessage}
             GameMapProperties.JITSI_INTERFACE_CONFIG
         );
         const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
-        const jitsiWidth = allProps.get(GameMapProperties.JITSI_WIDTH) as number | undefined;
 
-        jitsiFactory
-            .start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl, jitsiWidth)
-            .catch((e) => console.error(e));
-        this.connection?.setSilent(true);
-        mediaManager.hideGameOverlay();
-        analyticsClient.enteredJitsi(roomName, this.room.id);
-
-        //permit to stop jitsi when user close iframe
-        mediaManager.addTriggerCloseJitsiFrameButton("close-jitsi", () => {
-            this.stopJitsi();
+        jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl).catch(() => {
+            console.error("Cannot start a Jitsi co-website");
         });
+        this.disableMediaBehaviors();
+        analyticsClient.enteredJitsi(roomName, this.room.id);
     }
 
     public stopJitsi(): void {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
-        jitsiFactory.stop();
-        mediaManager.showGameOverlay();
-
-        mediaManager.removeTriggerCloseJitsiFrameButton("close-jitsi");
+        const coWebsite = coWebsiteManager.searchJitsi();
+        if (coWebsite) {
+            coWebsiteManager.closeCoWebsite(coWebsite).catch((e) => {
+                console.error("Error during Jitsi co-website closing", e);
+            });
+        }
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
@@ -2184,5 +2217,9 @@ ${escapedMessage}
 
     public getPathfindingManager(): PathfindingManager {
         return this.pathfindingManager;
+    }
+
+    public getActivatablesManager(): ActivatablesManager {
+        return this.activatablesManager;
     }
 }

@@ -42,14 +42,17 @@
     div.main-text-message {
         display: flex;
         flex-direction: column;
+        position: absolute;
 
-        max-height: 25vh;
-        width: 80vw;
+        max-height: 25%;
+        width: 60%;
         margin-right: auto;
         margin-left: auto;
-        margin-bottom: 16px;
-        margin-top: 0;
+        top: 6%;
+        left: 0;
+        right: 0;
         padding-bottom: 0;
+        z-index: 240;
 
         pointer-events: auto;
         background-color: #333333;

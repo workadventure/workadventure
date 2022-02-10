@@ -6,7 +6,7 @@ import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
-import { gameOverlayVisibilityStore } from "./GameOverlayStoreVisibility";
+import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
@@ -233,7 +233,7 @@ export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
         requestedMicrophoneState,
-        gameOverlayVisibilityStore,
+        myCameraVisibilityStore,
         enableCameraSceneVisibilityStore,
         videoConstraintStore,
         audioConstraintStore,
@@ -245,7 +245,7 @@ export const mediaStreamConstraintsStore = derived(
         [
             $requestedCameraState,
             $requestedMicrophoneState,
-            $gameOverlayVisibilityStore,
+            $myCameraVisibilityStore,
             $enableCameraSceneVisibilityStore,
             $videoConstraintStore,
             $audioConstraintStore,
@@ -283,7 +283,7 @@ export const mediaStreamConstraintsStore = derived(
         }
 
         // Disable webcam and microphone when in a Jitsi
-        if ($gameOverlayVisibilityStore === false) {
+        if ($myCameraVisibilityStore === false) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

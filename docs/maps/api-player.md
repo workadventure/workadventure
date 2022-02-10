@@ -36,6 +36,23 @@ WA.onInit().then(() => {
 })
 ```
 
+### Get the player language
+
+```
+WA.player.language: string;
+```
+
+The current language of player is available from the `WA.player.language` property.
+
+{.alert.alert-info}
+You need to wait for the end of the initialization before accessing `WA.player.language`
+
+```typescript
+WA.onInit().then(() => {
+    console.log('Player language: ', WA.player.language);
+})
+```
+
 ### Get the tags of the player
 
 ```
@@ -171,6 +188,37 @@ A player variable can be read by calling its key from the player's state.
 Example:
 ```javascript
 WA.player.state.toto //will retrieve the variable
+```
+
+### Move player to position
+```typescript
+WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
+```
+Player will try to find shortest path to the destination point and proceed to move there.
+```typescript
+// Let's move player to x: 250 y: 250 with speed of 10
+WA.player.moveTo(250, 250, 10);
+```
+You can also chain movement like this:
+```typescript
+// Player will move to the next point after reaching first one
+await WA.player.moveTo(250, 250, 10);
+await WA.player.moveTo(500, 0, 10);
+```
+Or like this:
+```typescript
+// Player will move to the next point after reaching first one or stop if the movement was cancelled
+WA.player.moveTo(250, 250, 10).then((result) => {
+    if (!result.cancelled) {
+        WA.player.moveTo(500, 0, 10);
+    }
+});
+```
+It is possible to get the information about current player's position on stop and if the movement was interrupted
+```typescript
+// Result will store x and y of Player at the moment of movement's end and information if the movement was interrupted
+const result = await WA.player.moveTo(250, 250, 10);
+// result: { x: number, y: number, cancelled: boolean }
 ```
 
 ### Set the outline color of the player

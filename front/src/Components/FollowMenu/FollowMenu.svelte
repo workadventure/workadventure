@@ -1,20 +1,13 @@
-<!--
-vim: ft=typescript
--->
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import followImg from "../images/follow.svg";
-
     import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
+    import LL from "../../i18n/i18n-svelte";
 
     const gameScene = gameManager.getCurrentGameScene();
 
-    function name(userId: number): string | undefined {
-        return gameScene.MapPlayersByKey.get(userId)?.PlayerValue;
-    }
-
-    function sendFollowRequest() {
-        gameScene.CurrentPlayer.sendFollowRequest();
+    function name(userId: number): string {
+        const user = gameScene.MapPlayersByKey.get(userId);
+        return user ? user.playerName : "";
     }
 
     function acceptFollowRequest() {
@@ -42,11 +35,15 @@ vim: ft=typescript
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div class="interact-menu nes-container is-rounded">
         <section class="interact-menu-title">
-            <h2>Do you want to follow {name($followUsersStore[0])}?</h2>
+            <h2>{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</h2>
         </section>
         <section class="interact-menu-action">
-            <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}>Yes</button>
-            <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}>No</button>
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={acceptFollowRequest}
+                >{$LL.follow.interactMenu.yes()}</button
+            >
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={reset}
+                >{$LL.follow.interactMenu.no()}</button
+            >
         </section>
     </div>
 {/if}
@@ -54,88 +51,77 @@ vim: ft=typescript
 {#if $followStateStore === "ending"}
     <div class="interact-menu nes-container is-rounded">
         <section class="interact-menu-title">
-            <h2>Interaction</h2>
+            <h2>{$LL.follow.interactMenu.title.interact()}</h2>
         </section>
         {#if $followRoleStore === "follower"}
             <section class="interact-menu-question">
-                <p>Do you want to stop following {name($followUsersStore[0])}?</p>
+                <p>{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</p>
             </section>
         {:else if $followRoleStore === "leader"}
             <section class="interact-menu-question">
-                <p>Do you want to stop leading the way?</p>
+                <p>{$LL.follow.interactMenu.stop.leader()}</p>
             </section>
         {/if}
         <section class="interact-menu-action">
-            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}>Yes</button>
-            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}>No</button>
+            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}
+                >{$LL.follow.interactMenu.yes()}</button
+            >
+            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}
+                >{$LL.follow.interactMenu.no()}</button
+            >
         </section>
     </div>
 {/if}
 
 {#if $followStateStore === "active" || $followStateStore === "ending"}
     <div class="interact-status nes-container is-rounded">
-        <section class="interact-status">
+        <section>
             {#if $followRoleStore === "follower"}
-                <p>Following {name($followUsersStore[0])}</p>
+                <p>{$LL.follow.interactStatus.following({ leader: name($followUsersStore[0]) })}</p>
             {:else if $followUsersStore.length === 0}
-                <p>Waiting for followers' confirmation</p>
+                <p>{$LL.follow.interactStatus.waitingFollowers()}</p>
             {:else if $followUsersStore.length === 1}
-                <p>{name($followUsersStore[0])} is following you</p>
+                <p>{$LL.follow.interactStatus.followed.one({ follower: name($followUsersStore[0]) })}</p>
             {:else if $followUsersStore.length === 2}
-                <p>{name($followUsersStore[0])} and {name($followUsersStore[1])} are following you</p>
+                <p>
+                    {$LL.follow.interactStatus.followed.two({
+                        firstFollower: name($followUsersStore[0]),
+                        secondFollower: name($followUsersStore[1]),
+                    })}
+                </p>
             {:else}
                 <p>
-                    {$followUsersStore.slice(0, -1).map(name).join(", ")} and {name(
-                        $followUsersStore[$followUsersStore.length - 1]
-                    )} are following you
+                    {$LL.follow.interactStatus.followed.many({
+                        followers: $followUsersStore.slice(0, -1).map(name).join(", "),
+                        lastFollower: name($followUsersStore[$followUsersStore.length - 1]),
+                    })}
                 </p>
             {/if}
         </section>
     </div>
 {/if}
 
-{#if $followStateStore === "off"}
-    <button
-        type="button"
-        class="nes-btn is-primary follow-menu-button"
-        on:click|preventDefault={sendFollowRequest}
-        title="Ask others to follow"><img class="background-img" src={followImg} alt="" /></button
-    >
-{/if}
-
-{#if $followStateStore === "active" || $followStateStore === "ending"}
-    {#if $followRoleStore === "follower"}
-        <button
-            type="button"
-            class="nes-btn is-error follow-menu-button"
-            on:click|preventDefault={reset}
-            title="Stop following"><img class="background-img" src={followImg} alt="" /></button
-        >
-    {:else}
-        <button
-            type="button"
-            class="nes-btn is-error follow-menu-button"
-            on:click|preventDefault={reset}
-            title="Stop leading the way"><img class="background-img" src={followImg} alt="" /></button
-        >
-    {/if}
-{/if}
-
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     .nes-container {
         padding: 5px;
     }
 
-    div.interact-status {
+    .interact-status {
         background-color: #333333;
         color: whitesmoke;
 
-        position: relative;
-        height: 2.7em;
+        position: absolute;
+        max-height: 2.7em;
         width: 40vw;
         top: 87vh;
-        margin: auto;
         text-align: center;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 400;
     }
 
     div.interact-menu {
@@ -143,10 +129,14 @@ vim: ft=typescript
         background-color: #333333;
         color: whitesmoke;
 
-        position: relative;
+        position: absolute;
         width: 60vw;
         top: 60vh;
-        margin: auto;
+        left: 0;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        z-index: 150;
 
         section.interact-menu-title {
             margin-bottom: 20px;
@@ -174,23 +164,16 @@ vim: ft=typescript
         }
     }
 
-    .follow-menu-button {
-        position: absolute;
-        bottom: 10px;
-        left: 10px;
-        pointer-events: all;
-    }
-
-    @media only screen and (max-width: 800px) {
-        div.interact-status {
-            width: 100vw;
+    @include media-breakpoint-up(md) {
+        .interact-status {
+            width: 90vw;
             top: 78vh;
             font-size: 0.75em;
         }
 
         div.interact-menu {
-            height: 21vh;
-            width: 100vw;
+            max-height: 21vh;
+            width: 90vw;
             font-size: 0.75em;
         }
     }

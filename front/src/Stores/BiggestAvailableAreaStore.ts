@@ -2,14 +2,14 @@ import { get, writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import { LayoutMode } from "../WebRtc/LayoutManager";
-import { layoutModeStore } from "./StreamableCollectionStore";
+import { embedScreenLayout } from "./EmbedScreensStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
 function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-    if (get(layoutModeStore) === LayoutMode.VideoChat) {
+    if (get(embedScreenLayout) === LayoutMode.VideoChat) {
         const children = document.querySelectorAll<HTMLDivElement>("div.chat-mode > div");
         const htmlChildren = Array.from(children.values());
 

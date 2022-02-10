@@ -15,7 +15,8 @@
 </div>
 
 <style lang="scss">
-    div.main-text-message-container {
+    .main-text-message-container {
         padding-top: 16px;
+        z-index: 800;
     }
 </style>

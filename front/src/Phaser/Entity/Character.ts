@@ -15,6 +15,8 @@ import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
+import type { OutlineableInterface } from "../Game/OutlineableInterface";
+import type CancelablePromise from "cancelable-promise";
 
 const playerNameY = -25;
 
@@ -28,14 +30,15 @@ interface AnimationData {
 
 const interactiveRadius = 35;
 
-export abstract class Character extends Container {
+export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
-    private readonly playerName: Text;
-    public PlayerValue: string;
+    private readonly playerNameText: Text;
+    public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     //private teleportation: Sprite;
     private invisible: boolean;
+    private clickable: boolean;
     public companion?: Companion;
     private emote: Phaser.GameObjects.DOMElement | null = null;
     private emoteTween: Phaser.Tweens.Tween | null = null;
@@ -43,30 +46,32 @@ export abstract class Character extends Container {
     private readonly _pictureStore: Writable<string | undefined>;
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
+    private texturePromise: CancelablePromise<string[] | void> | undefined;
 
     constructor(
         scene: GameScene,
         x: number,
         y: number,
-        texturesPromise: Promise<string[]>,
+        texturesPromise: CancelablePromise<string[]>,
         name: string,
         direction: PlayerAnimationDirections,
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: Promise<string>
+        companionTexturePromise?: CancelablePromise<string>
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
-        this.PlayerValue = name;
+        this.playerName = name;
         this.invisible = true;
+        this.clickable = false;
 
         this.sprites = new Map<string, Sprite>();
         this._pictureStore = writable(undefined);
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
-        texturesPromise
+        this.texturePromise = texturesPromise
             .then((textures) => {
                 this.addTextures(textures, frame);
                 this.invisible = false;
@@ -81,38 +86,33 @@ export abstract class Character extends Container {
                     this.invisible = false;
                     this.playAnimation(direction, moving);
                 });
+            })
+            .finally(() => {
+                this.texturePromise = undefined;
             });
 
-        this.playerName = new Text(scene, 0, playerNameY, name, {
+        this.playerNameText = new Text(scene, 0, playerNameY, name, {
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
             stroke: "gray",
+            metrics: {
+                ascent: 20,
+                descent: 10,
+                fontSize: 35,
+            },
         });
-        this.playerName.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.add(this.playerName);
+        this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
+        this.add(this.playerNameText);
 
-        if (isClickable) {
-            this.setInteractive({
-                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
-                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
-                useHandCursor: true,
-            });
-
-            this.on("pointerover", () => {
-                this.outlineColorStore.pointerOver();
-            });
-            this.on("pointerout", () => {
-                this.outlineColorStore.pointerOut();
-            });
-        }
+        this.setClickable(isClickable);
 
         this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
             if (color === undefined) {
-                this.getOutlinePlugin()?.remove(this.playerName);
+                this.getOutlinePlugin()?.remove(this.playerNameText);
             } else {
-                this.getOutlinePlugin()?.remove(this.playerName);
-                this.getOutlinePlugin()?.add(this.playerName, {
+                this.getOutlinePlugin()?.remove(this.playerNameText);
+                this.getOutlinePlugin()?.add(this.playerNameText, {
                     thickness: 2,
                     outlineColor: color,
                 });
@@ -135,6 +135,55 @@ export abstract class Character extends Container {
         }
     }
 
+    public setClickable(clickable: boolean = true): void {
+        if (this.clickable === clickable) {
+            return;
+        }
+        this.clickable = clickable;
+        if (clickable) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(8, 8, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+            return;
+        }
+        this.disableInteractive();
+    }
+
+    public isClickable() {
+        return this.clickable;
+    }
+
+    public getPosition(): { x: number; y: number } {
+        return { x: this.x, y: this.y };
+    }
+
+    /**
+     * Returns position based on where player is currently facing
+     * @param shift How far from player should the point of interest be.
+     */
+    public getDirectionalActivationPosition(shift: number): { x: number; y: number } {
+        switch (this.lastDirection) {
+            case PlayerAnimationDirections.Down: {
+                return { x: this.x, y: this.y + shift };
+            }
+            case PlayerAnimationDirections.Left: {
+                return { x: this.x - shift, y: this.y };
+            }
+            case PlayerAnimationDirections.Right: {
+                return { x: this.x + shift, y: this.y };
+            }
+            case PlayerAnimationDirections.Up: {
+                return { x: this.x, y: this.y - shift };
+            }
+        }
+    }
+
+    public getObjectToOutline(): Phaser.GameObjects.GameObject {
+        return this.playerNameText;
+    }
+
     private async getSnapshot(): Promise<string> {
         const sprites = Array.from(this.sprites.values()).map((sprite) => {
             return { sprite, frame: 1 };
@@ -151,7 +200,7 @@ export abstract class Character extends Container {
         });
     }
 
-    public addCompanion(name: string, texturePromise?: Promise<string>): void {
+    public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
@@ -321,6 +370,7 @@ export abstract class Character extends Container {
                 this.scene.sys.updateList.remove(sprite);
             }
         }
+        this.texturePromise?.cancel();
         this.list.forEach((objectContaining) => objectContaining.destroy());
         this.outlineColorStoreUnsubscribe();
         super.destroy();
@@ -403,18 +453,42 @@ export abstract class Character extends Container {
     private destroyEmote() {
         this.emote?.destroy();
         this.emote = null;
-        this.playerName.setVisible(true);
+        this.playerNameText.setVisible(true);
     }
 
     public get pictureStore(): PictureStore {
         return this._pictureStore;
     }
 
-    public setOutlineColor(color: number): void {
-        this.outlineColorStore.setColor(color);
+    public setFollowOutlineColor(color: number): void {
+        this.outlineColorStore.setFollowColor(color);
     }
 
-    public removeOutlineColor(): void {
-        this.outlineColorStore.removeColor();
+    public removeFollowOutlineColor(): void {
+        this.outlineColorStore.removeFollowColor();
+    }
+
+    public setApiOutlineColor(color: number): void {
+        this.outlineColorStore.setApiColor(color);
+    }
+
+    public removeApiOutlineColor(): void {
+        this.outlineColorStore.removeApiColor();
+    }
+
+    public pointerOverOutline(color: number): void {
+        this.outlineColorStore.pointerOver(color);
+    }
+
+    public pointerOutOutline(): void {
+        this.outlineColorStore.pointerOut();
+    }
+
+    public characterCloseByOutline(color: number): void {
+        this.outlineColorStore.characterCloseBy(color);
+    }
+
+    public characterFarAwayOutline(): void {
+        this.outlineColorStore.characterFarAway();
     }
 }

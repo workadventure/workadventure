@@ -32,7 +32,12 @@ import {
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "@grpc/grpc-js";
 import { socketManager } from "./Services/SocketManager";
-import { emitError, emitErrorOnAdminSocket, emitErrorOnRoomSocket, emitErrorOnZoneSocket } from "./Services/MessageHelpers";
+import {
+    emitError,
+    emitErrorOnAdminSocket,
+    emitErrorOnRoomSocket,
+    emitErrorOnZoneSocket,
+} from "./Services/MessageHelpers";
 import { User, UserSocket } from "./Model/User";
 import { GameRoom } from "./Model/GameRoom";
 import Debug from "debug";
@@ -283,7 +288,10 @@ const roomManager: IRoomManagerServer = {
 
         callback(null, new EmptyMessage());
     },
-    sendGlobalAdminMessage(call: ServerUnaryCall<AdminGlobalMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendGlobalAdminMessage(
+        call: ServerUnaryCall<AdminGlobalMessage, EmptyMessage>,
+        callback: sendUnaryData<EmptyMessage>
+    ): void {
         throw new Error("Not implemented yet");
         // TODO
         callback(null, new EmptyMessage());
@@ -296,7 +304,10 @@ const roomManager: IRoomManagerServer = {
 
         callback(null, new EmptyMessage());
     },
-    sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage, EmptyMessage>, callback: sendUnaryData<EmptyMessage>): void {
+    sendAdminMessageToRoom(
+        call: ServerUnaryCall<AdminRoomMessage, EmptyMessage>,
+        callback: sendUnaryData<EmptyMessage>
+    ): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager
             .sendAdminRoomMessage(call.request.getRoomid(), call.request.getMessage(), call.request.getType())

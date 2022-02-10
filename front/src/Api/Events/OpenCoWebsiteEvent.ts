@@ -5,14 +5,16 @@ export const isOpenCoWebsiteEvent = new tg.IsInterface()
         url: tg.isString,
         allowApi: tg.isOptional(tg.isBoolean),
         allowPolicy: tg.isOptional(tg.isString),
+        widthPercent: tg.isOptional(tg.isNumber),
         position: tg.isOptional(tg.isNumber),
+        closable: tg.isOptional(tg.isBoolean),
+        lazy: tg.isOptional(tg.isBoolean),
     })
     .get();
 
 export const isCoWebsite = new tg.IsInterface()
     .withProperties({
         id: tg.isString,
-        position: tg.isNumber,
     })
     .get();
 

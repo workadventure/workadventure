@@ -1,7 +1,7 @@
 import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution";
 
 export class CoWebsite {
-    constructor(private readonly id: string, public readonly position: number) {}
+    constructor(private readonly id: string) {}
 
     close() {
         return queryWorkadventure({
@@ -41,17 +41,28 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
-    async openCoWebSite(url: string, allowApi?: boolean, allowPolicy?: string, position?: number): Promise<CoWebsite> {
+    async openCoWebSite(
+        url: string,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number,
+        position?: number,
+        closable?: boolean,
+        lazy?: boolean
+    ): Promise<CoWebsite> {
         const result = await queryWorkadventure({
             type: "openCoWebsite",
             data: {
                 url,
                 allowApi,
                 allowPolicy,
+                widthPercent,
                 position,
+                closable,
+                lazy,
             },
         });
-        return new CoWebsite(result.id, result.position);
+        return new CoWebsite(result.id);
     }
 
     async getCoWebSites(): Promise<CoWebsite[]> {
@@ -59,7 +70,7 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
             type: "getCoWebsites",
             data: undefined,
         });
-        return result.map((cowebsiteEvent) => new CoWebsite(cowebsiteEvent.id, cowebsiteEvent.position));
+        return result.map((cowebsiteEvent) => new CoWebsite(cowebsiteEvent.id));
     }
 
     /**
