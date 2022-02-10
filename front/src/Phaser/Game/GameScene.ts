@@ -2157,9 +2157,9 @@ ${escapedMessage}
         );
         const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
-        coWebsite.setJitsiLoadPromise(
-            jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl)
-        );
+        coWebsite.setJitsiLoadPromise(() => {
+            return jitsiFactory.start(roomName, this.playerName, jwt, jitsiConfig, jitsiInterfaceConfig, jitsiUrl);
+        });
 
         coWebsiteManager.loadCoWebsite(coWebsite).catch((err) => {
             console.error(err);
