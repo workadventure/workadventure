@@ -1,8 +1,8 @@
 import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
-import { coWebsites, coWebsitesNotAsleep, jitsiCoWebsite, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import { get } from "svelte/store";
+import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { embedScreenLayout, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
@@ -34,7 +34,7 @@ interface TouchMoveCoordinates {
 }
 
 class CoWebsiteManager {
-    private openedMain: iframeStates = iframeStates.closed;
+    private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
@@ -57,6 +57,10 @@ class CoWebsiteManager {
     });
 
     public getMainState() {
+        return get(this.openedMain);
+    }
+
+    public getMainStateSubscriber(): Readable<iframeStates> {
         return this.openedMain;
     }
 
@@ -324,7 +328,7 @@ class CoWebsiteManager {
         }
         this.cowebsiteDom.classList.add("closing");
         this.cowebsiteDom.classList.remove("opened");
-        this.openedMain = iframeStates.closed;
+        this.openedMain.set(iframeStates.closed);
         this.fire();
     }
 
@@ -332,7 +336,7 @@ class CoWebsiteManager {
         this.toggleFullScreenIcon(true);
         this.cowebsiteDom.classList.add("closing");
         this.cowebsiteDom.classList.remove("opened");
-        this.openedMain = iframeStates.closed;
+        this.openedMain.set(iframeStates.closed);
         this.resetStyleMain();
         this.fire();
     }
@@ -386,14 +390,14 @@ class CoWebsiteManager {
         }
 
         this.cowebsiteDom.classList.add("opened");
-        this.openedMain = iframeStates.loading;
+        this.openedMain.set(iframeStates.loading);
     }
 
     private openMain(): void {
         this.cowebsiteDom.addEventListener("transitionend", () => {
             this.resizeAllIframes();
         });
-        this.openedMain = iframeStates.opened;
+        this.openedMain.set(iframeStates.opened);
     }
 
     public resetStyleMain() {
@@ -556,17 +560,10 @@ class CoWebsiteManager {
             mainCoWebsite.getId() !== coWebsite.getId() &&
             mainCoWebsite.getState() !== "asleep"
         ) {
-            highlightedEmbedScreen.toggleHighlight({
-                type: "cowebsite",
-                embed: mainCoWebsite,
-            });
+            highlightedEmbedScreen.removeHighlight();
         }
 
         this.resizeAllIframes();
-    }
-
-    public searchJitsi(): CoWebsite | undefined {
-        return get(jitsiCoWebsite);
     }
 
     public addCoWebsiteToStore(coWebsite: CoWebsite, position: number | undefined) {
@@ -591,7 +588,7 @@ class CoWebsiteManager {
         }
 
         // Check if the main is hide
-        if (this.getMainCoWebsite() && this.openedMain === iframeStates.closed) {
+        if (this.getMainCoWebsite() && this.getMainState() === iframeStates.closed) {
             this.displayMain();
         }
 
@@ -665,7 +662,7 @@ class CoWebsiteManager {
     }
 
     public getGameSize(): { width: number; height: number } {
-        if (this.openedMain === iframeStates.closed) {
+        if (this.getMainState() === iframeStates.closed) {
             return {
                 width: window.innerWidth,
                 height: window.innerHeight,
