@@ -219,7 +219,8 @@
         }
 
         &:not(.vertical) {
-            animation: bounce 0.35s ease 6 alternate;
+            transition: all 300ms;
+            transform: translateY(0px);
         }
 
         &.vertical {
@@ -240,7 +241,7 @@
 
         &.displayed {
             &:not(.vertical) {
-                animation: activeThumbnail 300ms ease-in 0s forwards;
+                transform: translateY(-15px);
             }
         }
 
@@ -266,16 +267,6 @@
 
             100% {
                 background-color: #25598e;
-            }
-        }
-
-        @keyframes activeThumbnail {
-            0% {
-                transform: translateY(0);
-            }
-
-            100% {
-                transform: translateY(-15px);
             }
         }
 
