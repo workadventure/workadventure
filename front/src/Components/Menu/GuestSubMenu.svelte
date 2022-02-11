@@ -28,7 +28,7 @@
         }
     }
 
-    let canShare = navigator.canShare;
+    let canShare = navigator.share !== undefined;
 
     async function shareLink() {
         const shareData = { url: getLink() };
@@ -44,18 +44,18 @@
 
 <div class="guest-main">
     <section class="container-overflow">
-        {#if (!canShare) }
-        <section class="share-url not-mobile">
-            <h3>{$LL.menu.invite.description()}</h3>
-            <input type="text" readonly id="input-share-link" class="link-url" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
-        </section>
+        {#if !canShare}
+            <section class="share-url not-mobile">
+                <h3>{$LL.menu.invite.description()}</h3>
+                <input type="text" readonly id="input-share-link" class="link-url" value={location.toString()} />
+                <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
+            </section>
         {:else}
-        <section class="is-mobile">
-            <h3>{$LL.menu.invite.description()}</h3>
-            <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
-        </section>
+            <section class="is-mobile">
+                <h3>{$LL.menu.invite.description()}</h3>
+                <input type="hidden" readonly id="input-share-link" value={location.toString()} />
+                <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
+            </section>
         {/if}
         <h3>Select an entry point</h3>
         <section class="nes-select is-dark starting-points">
@@ -79,7 +79,7 @@
                     updateInputFieldValue();
                 }}
             />
-            <span>Walk automatically to my position</span>
+            <span>{$LL.menu.invite.walk_automatically_to_position()}</span>
         </label>
     </section>
 </div>
@@ -132,8 +132,8 @@
     }
 
     @include media-breakpoint-up(lg) {
-      div.guest-main {
-        width: 100%;
-      }
+        div.guest-main {
+            width: 100%;
+        }
     }
 </style>
