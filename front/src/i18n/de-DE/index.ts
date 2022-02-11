@@ -14,7 +14,7 @@ import warning from "./warning";
 import woka from "./woka";
 
 const de_DE: Translation = {
-    ...en_US,
+    ...(en_US as Translation),
     language: "Deutsch",
     country: "Deutschland",
     audio,
