@@ -28,6 +28,8 @@
         }
     }
 
+    let canShare = navigator.canShare;
+
     async function shareLink() {
         const shareData = { url: getLink() };
 
@@ -42,18 +44,21 @@
 
 <div class="guest-main">
     <section class="container-overflow">
+        {#if (!canShare) }
         <section class="share-url not-mobile">
             <h3>{$LL.menu.invite.description()}</h3>
-            <input type="text" readonly id="input-share-link" value={location.toString()} />
+            <input type="text" readonly id="input-share-link" class="link-url" value={location.toString()} />
             <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
         </section>
+        {:else}
         <section class="is-mobile">
             <h3>{$LL.menu.invite.description()}</h3>
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
             <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
+        {/if}
         <h3>Select an entry point</h3>
-        <section class="nes-select is-dark">
+        <section class="nes-select is-dark starting-points">
             <select
                 bind:value={entryPoint}
                 on:blur={() => {
@@ -83,9 +88,18 @@
     @import "../../../style/breakpoints.scss";
 
     div.guest-main {
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
         height: calc(100% - 56px);
 
-        text-align: center;
+        input.link-url {
+            width: calc(100% - 200px);
+        }
+
+        .starting-points {
+            width: 80%;
+        }
 
         section {
             margin-bottom: 50px;
@@ -103,25 +117,23 @@
         }
 
         section.is-mobile {
-            display: none;
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
         }
     }
 
     @include media-breakpoint-up(md) {
         div.guest-main {
-            section.share-url.not-mobile {
-                display: none;
-            }
-
-            section.is-mobile {
-                display: block;
-                text-align: center;
-                margin-bottom: 20px;
-            }
-
             section.container-overflow {
                 height: calc(100% - 120px);
             }
         }
+    }
+
+    @include media-breakpoint-up(lg) {
+      div.guest-main {
+        width: 100%;
+      }
     }
 </style>
