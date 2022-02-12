@@ -1,5 +1,5 @@
 import { derived, get, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWebsite";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { coWebsites } from "./CoWebsiteStore";
 import { Streamable, streamableCollectionStore } from "./StreamableCollectionStore";

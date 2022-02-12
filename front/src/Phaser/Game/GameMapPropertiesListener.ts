@@ -8,7 +8,7 @@ import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
 import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
-import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
@@ -194,6 +194,7 @@ export class GameMapPropertiesListener {
                     let websitePositionProperty: number | undefined;
                     let websiteTriggerProperty: string | undefined;
                     let websiteTriggerMessageProperty: string | undefined;
+                    let websiteHintProperty: string | undefined;
 
                     layer.properties.forEach((property) => {
                         switch (property.name) {
@@ -217,6 +218,9 @@ export class GameMapPropertiesListener {
                                 break;
                             case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
                                 websiteTriggerMessageProperty = property.value as string | undefined;
+                                break;
+                            case GameMapProperties.OPEN_WEBSITE_HINT:
+                                websiteHintProperty = property.value as string | undefined;
                                 break;
                         }
                     });
@@ -251,7 +255,8 @@ export class GameMapPropertiesListener {
                             allowApiProperty,
                             websitePolicyProperty,
                             websiteWidthProperty,
-                            false
+                            false,
+                            websiteHintProperty
                         );
 
                         coWebsiteOpen.coWebsite = coWebsite;
@@ -284,7 +289,8 @@ export class GameMapPropertiesListener {
                             allowApiProperty,
                             websitePolicyProperty,
                             websiteWidthProperty,
-                            false
+                            false,
+                            websiteHintProperty
                         );
 
                         coWebsiteOpen.coWebsite = coWebsite;

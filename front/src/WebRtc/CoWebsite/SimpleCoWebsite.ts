@@ -2,7 +2,7 @@ import CancelablePromise from "cancelable-promise";
 import { get, Readable, writable, Writable } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
 import { coWebsiteManager } from "../CoWebsiteManager";
-import type { CoWebsite, CoWebsiteState } from "./CoWesbite";
+import type { CoWebsite, CoWebsiteState } from "./CoWebsite";
 
 export class SimpleCoWebsite implements CoWebsite {
     protected id: string;
@@ -14,8 +14,16 @@ export class SimpleCoWebsite implements CoWebsite {
     protected allowPolicy?: string;
     protected widthPercent?: number;
     protected closable: boolean;
+    protected hint?: string;
 
-    constructor(url: URL, allowApi?: boolean, allowPolicy?: string, widthPercent?: number, closable?: boolean) {
+    constructor(
+        url: URL,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number,
+        closable?: boolean,
+        hint?: string
+    ) {
         this.id = coWebsiteManager.generateUniqueId();
         this.url = url;
         this.state = writable("asleep" as CoWebsiteState);
@@ -23,6 +31,7 @@ export class SimpleCoWebsite implements CoWebsite {
         this.allowPolicy = allowPolicy;
         this.widthPercent = widthPercent;
         this.closable = closable ?? false;
+        this.hint = hint;
     }
 
     getId(): string {
@@ -55,6 +64,10 @@ export class SimpleCoWebsite implements CoWebsite {
 
     isClosable(): boolean {
         return this.closable;
+    }
+
+    getHint(): string | undefined {
+        return this.hint;
     }
 
     load(): CancelablePromise<HTMLIFrameElement> {

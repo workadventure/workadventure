@@ -6,7 +6,7 @@ import { get, Readable, Writable, writable } from "svelte/store";
 import { embedScreenLayout, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
-import type { CoWebsite } from "./CoWebsite/CoWesbite";
+import type { CoWebsite } from "./CoWebsite/CoWebsite";
 import type CancelablePromise from "cancelable-promise";
 
 export enum iframeStates {
