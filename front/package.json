@@ -61,7 +61,7 @@
     "zod": "^3.11.6"
   },
   "scripts": {
-    "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n",
+    "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",
     "templater": "cross-env ./templater.sh",
     "serve": "cross-env vite --host",
     "build": "cross-env vite build",
@@ -77,7 +77,8 @@
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
     "typecheck": "tsc --noEmit",
-    "typesafe-i18n": "typesafe-i18n  --no-watch"
+    "typesafe-i18n": "typesafe-i18n  --no-watch",
+    "typesafe-i18n-watch": "typesafe-i18n"
   },
   "lint-staged": {
     "*.svelte": [

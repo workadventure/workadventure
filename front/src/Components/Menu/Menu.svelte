@@ -69,6 +69,7 @@
         } else {
             const customMenu = customMenuIframe.get(menu.label);
             if (customMenu !== undefined) {
+                activeSubMenu = menu;
                 props = { url: customMenu.url, allowApi: customMenu.allowApi };
                 activeComponent = CustomSubMenu;
             } else {

@@ -11,6 +11,11 @@ export class ActivatablesManager {
 
     private currentPlayer: Player;
 
+    private canSelectByDistance: boolean = true;
+
+    private readonly outlineColor = 0xffff00;
+    private readonly directionalActivationPositionShift = 50;
+
     constructor(currentPlayer: Player) {
         this.currentPlayer = currentPlayer;
     }
@@ -27,7 +32,7 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByPointer = object;
         if (isOutlineable(this.selectedActivatableObjectByPointer)) {
-            this.selectedActivatableObjectByPointer?.pointerOverOutline();
+            this.selectedActivatableObjectByPointer?.pointerOverOutline(this.outlineColor);
         }
     }
 
@@ -37,7 +42,7 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByPointer = undefined;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
+            this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
         }
     }
 
@@ -46,6 +51,9 @@ export class ActivatablesManager {
     }
 
     public deduceSelectedActivatableObjectByDistance(): void {
+        if (!this.canSelectByDistance) {
+            return;
+        }
         const newNearestObject = this.findNearestActivatableObject();
         if (this.selectedActivatableObjectByDistance === newNearestObject) {
             return;
@@ -60,8 +68,40 @@ export class ActivatablesManager {
         }
         this.selectedActivatableObjectByDistance = newNearestObject;
         if (isOutlineable(this.selectedActivatableObjectByDistance)) {
-            this.selectedActivatableObjectByDistance?.characterCloseByOutline();
+            this.selectedActivatableObjectByDistance?.characterCloseByOutline(this.outlineColor);
         }
+    }
+
+    public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
+        const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(
+            this.directionalActivationPositionShift
+        );
+        for (const object of objects) {
+            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
+            this.activatableObjectsDistances.set(object, distance);
+        }
+    }
+
+    public updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
+        this.activatableObjectsDistances.set(
+            object,
+            MathUtils.distanceBetween(
+                this.currentPlayer.getDirectionalActivationPosition(this.directionalActivationPositionShift),
+                object.getPosition()
+            )
+        );
+    }
+
+    public disableSelectingByDistance(): void {
+        this.canSelectByDistance = false;
+        if (isOutlineable(this.selectedActivatableObjectByDistance)) {
+            this.selectedActivatableObjectByDistance?.characterFarAwayOutline();
+        }
+        this.selectedActivatableObjectByDistance = undefined;
+    }
+
+    public enableSelectingByDistance(): void {
+        this.canSelectByDistance = true;
     }
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
@@ -76,18 +116,8 @@ export class ActivatablesManager {
         }
         return closestObject;
     }
-    public updateActivatableObjectsDistances(objects: ActivatableInterface[]): void {
-        const currentPlayerPos = this.currentPlayer.getPosition();
-        for (const object of objects) {
-            const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
-            this.activatableObjectsDistances.set(object, distance);
-        }
-    }
 
-    public updateDistanceForSingleActivatableObject(object: ActivatableInterface): void {
-        this.activatableObjectsDistances.set(
-            object,
-            MathUtils.distanceBetween(this.currentPlayer.getPosition(), object.getPosition())
-        );
+    public isSelectingByDistanceEnabled(): boolean {
+        return this.canSelectByDistance;
     }
 }

@@ -23,8 +23,9 @@
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
             <MediaBox
                 streamable={peer}
+                mozaicSolo={$streamableCollectionStore.size === 1}
                 mozaicFullWidth={$streamableCollectionStore.size === 1 || $streamableCollectionStore.size === 2}
-                mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size === 4}
+                mozaicQuarter={$streamableCollectionStore.size === 3 || $streamableCollectionStore.size >= 4}
             />
         {/each}
     </div>

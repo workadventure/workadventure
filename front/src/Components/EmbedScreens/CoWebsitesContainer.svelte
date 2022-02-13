@@ -7,7 +7,7 @@
 
 {#if $coWebsites.length > 0}
     <div id="cowebsite-thumbnail-container" class:vertical>
-        {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.iframe.id)}
+        {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())}
             <CoWebsiteThumbnail {index} {coWebsite} {vertical} />
         {/each}
     </div>

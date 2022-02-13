@@ -53,7 +53,7 @@
         <section class="terms-and-conditions">
             <a style="display: none;" href="traduction">Need for traduction</a>
             <p>
-                {$LL.login.terms()}
+                {@html $LL.login.terms()}
             </p>
         </section>
     {/if}
