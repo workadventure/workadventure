@@ -585,8 +585,19 @@ export class SocketManager {
         const userdata = joinBBBMeetingMessage.getUserdataMap();
 
         const api = Bbb.api(BBB_URL, BBB_SECRET);
-        const attendeePW = hashjs.sha256().update(`attendee-${meetingId}-${BBB_SECRET}`).digest('hex');
-        const moderatorPW = hashjs.sha256().update(`moderator-${meetingId}-${BBB_SECRET}`).digest('hex')
+
+        // It seems bbb-api is limiting password length to 50 chars
+        const maxPWLen = 50;
+        const attendeePW = hashjs
+                               .sha256()
+                               .update(`attendee-${meetingId}-${BBB_SECRET}`)
+                               .digest('hex')
+                               .slice(0, maxPWLen);
+        const moderatorPW = hashjs
+                                .sha256()
+                                .update(`moderator-${meetingId}-${BBB_SECRET}`)
+                                .digest('hex')
+                                .slice(0, maxPWLen)
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
         const meetingName = meetingId;
