@@ -7,12 +7,15 @@
             //@ts-ignore
             WA.onInit().then(() => {
                 console.log('After WA init');
+                let lastRemotePlayerClicked;
                 const addActionButton = document.getElementById('addActionButton');
                 const removeActionButton = document.getElementById('removeActionButton');
 
                 console.log('===== D1 =====');
-                WA.utils.onActionMenuClicked.subscribe((data) => {
+                WA.utils.onRemotePlayerClicked.subscribe((data) => {
                     console.log(data);
+                    lastRemotePlayerClicked = data.id;
+                    WA.utils.addMenuActionKeysToRemotePlayer(data.id, ['hit me', 'log info']);
                 });
                 
                 
@@ -22,14 +25,7 @@
 
                 addActionButton.addEventListener('click', () => {
                     console.log('add action');
-                    // WA.camera.set(
-                    //     parseInt(xField.value),
-                    //     parseInt(yField.value),
-                    //     widthField.value ? parseInt(widthField.value) : undefined,
-                    //     heightField.value ? parseInt(heightField.value) : undefined,
-                    //     lockField.checked,
-                    //     smoothField.checked,
-                    // );
+                    WA.utils.addMenuActionKeysToRemotePlayer(lastRemotePlayerClicked, [Math.random().toString()]);
                 });
 
                 removeActionButton.addEventListener('click', () => {

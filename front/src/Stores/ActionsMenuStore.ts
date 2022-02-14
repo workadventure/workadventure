@@ -1,8 +1,9 @@
 import { writable } from "svelte/store";
+import { string } from "zod";
 
 export interface ActionsMenuData {
     playerName: string;
-    actions: { actionName: string; callback: Function }[];
+    actions: Map<string, { actionName: string; callback: Function }>;
 }
 
 function createActionsMenuStore() {
@@ -13,21 +14,18 @@ function createActionsMenuStore() {
         initialize: (playerName: string) => {
             set({
                 playerName,
-                actions: [],
+                actions: new Map<string, { actionName: string; callback: Function }>(),
             });
         },
         addAction: (actionName: string, callback: Function) => {
             update((data) => {
-                data?.actions.push({ actionName, callback });
+                data?.actions.set(actionName, { actionName, callback });
                 return data;
             });
         },
         removeAction: (actionName: string) => {
             update((data) => {
-                const actionIndex = data?.actions.findIndex((action) => action.actionName === actionName);
-                if (actionIndex !== undefined && actionIndex != -1) {
-                    data?.actions.splice(actionIndex, 1);
-                }
+                data?.actions.delete(actionName);
                 return data;
             });
         },

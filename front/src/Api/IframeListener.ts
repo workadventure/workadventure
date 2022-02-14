@@ -34,7 +34,11 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
-import type { ActionMenuclickedEvent } from "./Events/ActionMenuClickedEvent";
+import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
+import {
+    AddMenuActionKeysToRemotePlayerEvent,
+    isAddMenuActionKeysToRemotePlayerEvent,
+} from "./Events/AddMenuActionKeysToRemotePlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -63,6 +67,10 @@ class IframeListener {
 
     private readonly _cameraFollowPlayerStream: Subject<CameraFollowPlayerEvent> = new Subject();
     public readonly cameraFollowPlayerStream = this._cameraFollowPlayerStream.asObservable();
+
+    private readonly _addMenuActionKeysToRemotePlayerStream: Subject<AddMenuActionKeysToRemotePlayerEvent> =
+        new Subject();
+    public readonly addMenuActionKeysToRemotePlayerStream = this._addMenuActionKeysToRemotePlayerStream.asObservable();
 
     private readonly _enablePlayerControlStream: Subject<void> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
@@ -242,8 +250,11 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
-                        // } else if (payload.type == "onOpenActionMenu") {
-                        //     this..next();
+                    } else if (
+                        payload.type == "addMenuActionKeysToRemotePlayer" &&
+                        isAddMenuActionKeysToRemotePlayerEvent(payload.data)
+                    ) {
+                        this._addMenuActionKeysToRemotePlayerStream.next(payload.data);
                     } else if (payload.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
@@ -468,9 +479,9 @@ class IframeListener {
         }
     }
 
-    sendActionMenuClicked(event: ActionMenuclickedEvent) {
+    sendActionMenuClicked(event: RemotePlayerClickedEvent) {
         this.postMessage({
-            type: "actionMenuClickedEvent",
+            type: "remotePlayerClickedEvent",
             data: event,
         });
     }

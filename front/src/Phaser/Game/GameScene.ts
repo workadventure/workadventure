@@ -1077,6 +1077,19 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.addMenuActionKeysToRemotePlayerStream.subscribe((data) => {
+                for (const actionName of data.actionKeys) {
+                    this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                        actionName,
+                        callback: () => {
+                            console.log("send info about click to the iframe");
+                        },
+                    });
+                }
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
                     this.cameraManager.on(

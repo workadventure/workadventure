@@ -12,6 +12,8 @@ export enum RemotePlayerEvent {
     Clicked = "Clicked",
 }
 
+type ActionsMenuAction = { actionName: string; callback: Function; protected?: boolean };
+
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
@@ -19,7 +21,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public userId: number;
     public readonly activationRadius: number;
 
-    private registeredActions: { actionName: string; callback: Function }[];
+    private registeredActions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
     private visitCardUrl: string | null;
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
@@ -43,7 +45,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         //set data
         this.userId = userId;
         this.visitCardUrl = visitCardUrl;
-        this.registeredActions = [];
         this.registerDefaultActionsMenuActions();
         // this.setClickable(this.registeredActions.length > 0);
         this.activationRadius = activationRadius ?? 96;
@@ -67,15 +68,18 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public registerActionsMenuAction(action: { actionName: string; callback: Function }): void {
-        this.registeredActions.push(action);
+        const prevAction = this.registeredActions.get(action.actionName);
+        if (prevAction && prevAction.protected) {
+            return;
+        }
+        this.registeredActions.set(action.actionName, action);
+        actionsMenuStore.addAction(action.actionName, action.callback);
         this.updateIsClickable();
     }
 
     public unregisterActionsMenuAction(actionName: string) {
-        const index = this.registeredActions.findIndex((action) => action.actionName === actionName);
-        if (index !== -1) {
-            this.registeredActions.splice(index, 1);
-        }
+        this.registeredActions.delete(actionName);
+        actionsMenuStore.removeAction(actionName);
         this.updateIsClickable();
     }
 
@@ -104,15 +108,16 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
-        for (const action of this.registeredActions) {
+        for (const action of this.registeredActions.values()) {
             actionsMenuStore.addAction(action.actionName, action.callback);
         }
     }
 
     private registerDefaultActionsMenuActions(): void {
         if (this.visitCardUrl) {
-            this.registeredActions.push({
+            this.registeredActions.set("Visiting Card", {
                 actionName: "Visiting Card",
+                protected: true,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();

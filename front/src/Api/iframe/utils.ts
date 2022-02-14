@@ -1,41 +1,37 @@
 import { Subject } from "rxjs";
+import type { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
 import {
-    isActionMenuClickedEvent,
-    ActionMenuclickedEvent,
-    ActionMenuclickedEventCallback,
-} from "../Events/ActionMenuClickedEvent";
+    isRemotePlayerClickedEvent,
+    RemotePlayerClickedEvent as RemotePlayerClickedEvent,
+} from "../Events/RemotePlayerClickedEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
-// const openActionMenuStream = new Subject<ActionMenuclickedEvent>();
-
 export class WorkadventureUtilsCommands extends IframeApiContribution<WorkadventureUtilsCommands> {
-    public readonly onActionMenuClicked: Subject<ActionMenuclickedEvent>;
+    public readonly onRemotePlayerClicked: Subject<RemotePlayerClickedEvent>;
 
     constructor() {
         super();
-        this.onActionMenuClicked = new Subject<ActionMenuclickedEvent>();
+        this.onRemotePlayerClicked = new Subject<RemotePlayerClickedEvent>();
     }
 
     callbacks = [
         apiCallback({
-            type: "actionMenuClickedEvent",
-            typeChecker: isActionMenuClickedEvent,
-            callback: (payloadData: ActionMenuclickedEvent) => {
-                console.log("actionMenuClickedEvent callback");
-                this.onActionMenuClicked.next(payloadData);
+            type: "remotePlayerClickedEvent",
+            typeChecker: isRemotePlayerClickedEvent,
+            callback: (payloadData: RemotePlayerClickedEvent) => {
+                // console.log("remotePlayerClickedEvent callback");
+                this.onRemotePlayerClicked.next(payloadData);
             },
         }),
     ];
 
-    // onActionMenuClicked(): Subject<ActionMenuclickedEvent> {
-    //     return openActionMenuStream;
-    // openActionMenuStream.subscribe(callback);
-    // sendToWorkadventure({
-    //     type: "onOpenActionMenu",
-    //     data: null,
-    // });
-    // }
+    public addMenuActionKeysToRemotePlayer(id: number, actionKeys: string[]): void {
+        sendToWorkadventure({
+            type: "addMenuActionKeysToRemotePlayer",
+            data: { id, actionKeys },
+        });
+    }
 }
 
 export default new WorkadventureUtilsCommands();
