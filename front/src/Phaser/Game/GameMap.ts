@@ -121,7 +121,7 @@ export class GameMap {
         return [];
     }
 
-    public getCollisionsGrid(): number[][] {
+    public getCollisionGrid(): number[][] {
         const grid: number[][] = [];
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
@@ -323,12 +323,19 @@ export class GameMap {
         throw new Error("No possible position found");
     }
 
+    public getObjectWithName(name: string): ITiledMapObject | undefined {
+        return this.tiledObjects.find((object) => object.name === name);
+    }
+
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
     private isCollidingAt(x: number, y: number): boolean {
         for (const layer of this.phaserLayers) {
+            if (!layer.visible) {
+                continue;
+            }
             if (layer.getTileAt(x, y)?.properties[GameMapProperties.COLLIDES]) {
                 return true;
             }

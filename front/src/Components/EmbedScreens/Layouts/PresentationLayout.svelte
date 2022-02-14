@@ -9,13 +9,11 @@
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
-            if ($highlightedEmbedScreen.embed.closable) {
-                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted closing");
-                });
+            if ($highlightedEmbedScreen.embed.isClosable()) {
+                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
             } else {
-                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted unloading");
+                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
+                    console.error("Cannot unload co-website", err);
                 });
             }
         }
@@ -68,9 +66,9 @@
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                        {#key $highlightedEmbedScreen.embed.iframe.id}
+                        {#key $highlightedEmbedScreen.embed.getId()}
                             <div
-                                id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.iframe.id}
+                                id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
                                 class="highlighted-cowebsite nes-container is-rounded"
                             >
                                 <div class="actions">
