@@ -11,7 +11,7 @@ export class TalkIcon extends Phaser.GameObjects.Image {
         super(scene, x, y, "iconTalk");
 
         this.defaultPosition = { x, y };
-        this.defaultScale = 0.15;
+        this.defaultScale = 0.3;
 
         this.shown = false;
         this.setAlpha(0);

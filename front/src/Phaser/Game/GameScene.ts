@@ -251,7 +251,7 @@ export class GameScene extends DirtyScene {
                 loadCustomTexture(this.load, texture).catch((e) => console.error(e));
             }
         }
-        this.load.svg("iconTalk", "/resources/icons/icon_talking.svg");
+        this.load.image("iconTalk", "/resources/icons/icon_talking.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -646,6 +646,7 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        const talkIconVolumeTreshold = 10;
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -656,7 +657,7 @@ export class GameScene extends DirtyScene {
                     key,
                     videoStream.volumeStore.subscribe((volume) => {
                         if (volume) {
-                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > 5);
+                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
                         }
                     })
                 );
@@ -671,7 +672,7 @@ export class GameScene extends DirtyScene {
             if (newPeerNumber > 0) {
                 this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                     if (volume) {
-                        this.CurrentPlayer.showTalkIcon(volume > 5);
+                        this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
                     }
                 });
             } else {
