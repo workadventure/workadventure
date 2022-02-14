@@ -7,6 +7,7 @@ import type { PlayerAnimationDirections } from "../Player/Animation";
 import type { Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
+import LL from "../../i18n/i18n-svelte";
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
@@ -107,7 +108,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private registerDefaultActionsMenuActions(): void {
         if (this.visitCardUrl) {
             this.registeredActions.push({
-                actionName: "Visiting Card",
+                actionName: LL.woka.menu.businessCard(),
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();

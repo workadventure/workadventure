@@ -15,6 +15,9 @@ const woka: NonNullable<Translation["woka"]> = {
         continue: "Continuer",
         customize: "Personnalisez votre WOKA",
     },
+    menu: {
+        businessCard: "Carte de visite",
+    },
 };
 
 export default woka;
