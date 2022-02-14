@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@16bits/nes.css@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@16bits/nes.css/-/nes.css-2.3.2.tgz#e69db834119b33ae8d3cb044f106a07a17cadd6f"
+  integrity sha512-nEM5PIth+Bab5JSOa4uUR+PMNUsNTYxA55oVlG3gXI/4LoYtWS767Uv9Pu/KCbHXVvnIjt4ZXt13kZw3083qTw==
+
 "@babel/code-frame@^7.0.0":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.13.tgz#dcfc826beef65e75c50e21d3837d7d95798dd658"
