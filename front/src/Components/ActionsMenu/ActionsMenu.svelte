@@ -68,7 +68,7 @@
         color: whitesmoke;
 
         .actions {
-            height: 30vh;
+            max-height: 30vh;
             width: 100%;
             display: block;
             overflow-x: hidden;
