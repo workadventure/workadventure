@@ -115,8 +115,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     private registerDefaultActionsMenuActions(): void {
         if (this.visitCardUrl) {
-            this.registeredActions.set("Visiting Card", {
-                actionName: "Visiting Card",
+            this.registeredActions.set("Business Card", {
+                actionName: "Business Card",
                 protected: true,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
