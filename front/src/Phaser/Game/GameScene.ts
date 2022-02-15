@@ -856,7 +856,7 @@ export class GameScene extends DirtyScene {
                     const coWebsite = new SimpleCoWebsite(
                         clientOrigin,
                         true,
-                        `microphone ${clientOrigin}; camera ${clientOrigin}`,
+                        "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *;",
                         undefined,
                         false);
                     coWebsiteManager.loadCoWebsite(coWebsite)
