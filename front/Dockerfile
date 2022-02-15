@@ -14,10 +14,6 @@ RUN cp -r ../messages/JsonMessages/* src/Messages/JsonMessages
 
 RUN yarn install && yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
 
-# Removing the iframe.html file from the final image as this adds a XSS attack.
-# iframe.html is only in dev mode to circumvent a limitation
-RUN rm dist/iframe.html
-
 FROM thecodingmachine/nodejs:14-apache
 
 COPY --from=builder --chown=docker:docker /usr/src/front/dist dist
