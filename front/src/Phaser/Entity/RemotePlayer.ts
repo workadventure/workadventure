@@ -1,5 +1,5 @@
 import { requestVisitCardsStore } from "../../Stores/GameStore";
-import { ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import { ActionsMenuAction, ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
@@ -8,18 +8,18 @@ import type { Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
+import { blackListManager } from "../../WebRtc/BlackListManager";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
 }
 
-type ActionsMenuAction = { actionName: string; callback: Function; protected?: boolean };
-
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
 export class RemotePlayer extends Character implements ActivatableInterface {
-    public userId: number;
+    public readonly userId: number;
+    public readonly userUuid: string;
     public readonly activationRadius: number;
 
     private registeredActions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
@@ -29,6 +29,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     constructor(
         userId: number,
+        userUuid: string,
         Scene: GameScene,
         x: number,
         y: number,
@@ -45,9 +46,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         //set data
         this.userId = userId;
+        this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
-        this.registerDefaultActionsMenuActions();
-        this.setClickable(this.registeredActions.size > 0);
+        this.updateIsClickable();
         this.activationRadius = activationRadius ?? 96;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
@@ -74,9 +75,12 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         this.registeredActions.set(action.actionName, action);
-        actionsMenuStore.addAction(action.actionName, () => {
-            action.callback();
-            actionsMenuStore.clear();
+        actionsMenuStore.addAction({
+            ...action,
+            callback: () => {
+                action.callback();
+                actionsMenuStore.clear();
+            },
         });
         this.updateIsClickable();
     }
@@ -102,7 +106,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private updateIsClickable(): void {
-        this.setClickable(this.registeredActions.size > 0);
+        this.setClickable(this.registeredActions.size > 0 || this.getDefaultActionsMenuActions().length > 0);
     }
 
     private toggleActionsMenu(): void {
@@ -111,28 +115,40 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
+        for (const action of this.getDefaultActionsMenuActions()) {
+            actionsMenuStore.addAction(action);
+        }
         for (const action of this.registeredActions.values()) {
-            actionsMenuStore.addAction(action.actionName, action.callback);
+            actionsMenuStore.addAction(action);
         }
     }
 
-    private registerDefaultActionsMenuActions(): void {
+    // TODO: Create objects every time because end-result may vary in time
+    private getDefaultActionsMenuActions(): ActionsMenuAction[] {
+        const actions: ActionsMenuAction[] = [];
         if (this.visitCardUrl) {
-            this.registeredActions.set("Business Card", {
+            actions.push({
                 actionName: LL.woka.menu.businessCard(),
                 protected: true,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
+                    actionsMenuStore.clear();
                 },
             });
         }
-        this.registeredActions.set("Block Player", {
-            actionName: "Block",
+
+        const blocked = blackListManager.isBlackListed(this.userUuid);
+        actions.push({
+            actionName: blocked ? LL.report.block.unblock() : LL.report.block.block(),
             protected: true,
+            style: blocked ? "is-success" : "is-error",
             callback: () => {
-                console.log("Player Blocked");
+                blocked ? blackListManager.cancelBlackList(this.userUuid) : blackListManager.blackList(this.userUuid);
+                actionsMenuStore.clear();
             },
         });
+
+        return actions;
     }
 
     private bindEventHandlers(): void {

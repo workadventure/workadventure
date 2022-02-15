@@ -21,6 +21,7 @@
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
+        console.log(value);
     });
 
     onDestroy(() => {
@@ -40,7 +41,7 @@
             {#each [...actionsMenuData.actions] as [actionName, action]}
                 <button
                     type="button"
-                    class="nes-btn"
+                    class="nes-btn {action.style ?? ''}"
                     on:click|preventDefault={() => {
                         action.callback();
                     }}

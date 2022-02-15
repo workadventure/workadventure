@@ -1,9 +1,15 @@
 import { writable } from "svelte/store";
 import { string } from "zod";
 
+export type ActionsMenuAction = {
+    actionName: string;
+    callback: Function;
+    protected?: boolean;
+    style?: "is-success" | "is-error" | "is-primary";
+};
 export interface ActionsMenuData {
     playerName: string;
-    actions: Map<string, { actionName: string; callback: Function }>;
+    actions: Map<string, ActionsMenuAction>;
 }
 
 function createActionsMenuStore() {
@@ -14,12 +20,12 @@ function createActionsMenuStore() {
         initialize: (playerName: string) => {
             set({
                 playerName,
-                actions: new Map<string, { actionName: string; callback: Function }>(),
+                actions: new Map<string, ActionsMenuAction>(),
             });
         },
-        addAction: (actionName: string, callback: Function) => {
+        addAction: (action: ActionsMenuAction) => {
             update((data) => {
-                data?.actions.set(actionName, { actionName, callback });
+                data?.actions.set(action.actionName, action);
                 return data;
             });
         },
