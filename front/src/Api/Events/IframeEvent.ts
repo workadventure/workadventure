@@ -39,7 +39,7 @@ import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 import type { AddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
-import type { RemoveMenuActionKeyFromRemotePlayerEvent } from "./RemoveMenuActionKeyFromRemotePlayerEvent";
+import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -50,7 +50,7 @@ export interface TypedMessageEvent<T> extends MessageEvent {
  */
 export type IframeEventMap = {
     addActionsMenuKeyToRemotePlayer: AddActionsMenuKeyToRemotePlayerEvent;
-    removeMenuActionKeyFromRemotePlayer: RemoveMenuActionKeyFromRemotePlayerEvent;
+    removeActionsMenuKeyFromRemotePlayer: RemoveActionsMenuKeyFromRemotePlayerEvent;
     loadPage: LoadPageEvent;
     chat: ChatEvent;
     cameraFollowPlayer: CameraFollowPlayerEvent;

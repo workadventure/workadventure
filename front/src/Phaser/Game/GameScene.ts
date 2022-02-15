@@ -1088,7 +1088,7 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.removeMenuActionKeyFromRemotePlayerEvent.subscribe((data) => {
+            iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
                 this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
             })
         );

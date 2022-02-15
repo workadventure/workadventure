@@ -45,7 +45,7 @@
                 removeActionButton.addEventListener('click', () => {
                     const randomAction = randomActions.pop();
                     if (randomAction) {
-                        WA.utils.removeMenuActionKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
+                        WA.utils.removeActionsMenuKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
                     }
                 });
             });

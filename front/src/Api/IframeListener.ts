@@ -41,9 +41,9 @@ import {
 } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import {
-    isRemoveMenuActionKeyFromRemotePlayerEvent,
-    RemoveMenuActionKeyFromRemotePlayerEvent,
-} from "./Events/RemoveMenuActionKeyFromRemotePlayerEvent";
+    isRemoveActionsMenuKeyFromRemotePlayerEvent,
+    RemoveActionsMenuKeyFromRemotePlayerEvent,
+} from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -77,10 +77,10 @@ class IframeListener {
         new Subject();
     public readonly addActionsMenuKeyToRemotePlayerStream = this._addActionsMenuKeyToRemotePlayerStream.asObservable();
 
-    private readonly _removeMenuActionKeyFromRemotePlayerEvent: Subject<RemoveMenuActionKeyFromRemotePlayerEvent> =
+    private readonly _removeActionsMenuKeyFromRemotePlayerEvent: Subject<RemoveActionsMenuKeyFromRemotePlayerEvent> =
         new Subject();
-    public readonly removeMenuActionKeyFromRemotePlayerEvent =
-        this._removeMenuActionKeyFromRemotePlayerEvent.asObservable();
+    public readonly removeActionsMenuKeyFromRemotePlayerEvent =
+        this._removeActionsMenuKeyFromRemotePlayerEvent.asObservable();
 
     private readonly _enablePlayerControlStream: Subject<void> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
@@ -266,10 +266,10 @@ class IframeListener {
                     ) {
                         this._addActionsMenuKeyToRemotePlayerStream.next(payload.data);
                     } else if (
-                        payload.type == "removeMenuActionKeyFromRemotePlayer" &&
-                        isRemoveMenuActionKeyFromRemotePlayerEvent(payload.data)
+                        payload.type == "removeActionsMenuKeyFromRemotePlayer" &&
+                        isRemoveActionsMenuKeyFromRemotePlayerEvent(payload.data)
                     ) {
-                        this._removeMenuActionKeyFromRemotePlayerEvent.next(payload.data);
+                        this._removeActionsMenuKeyFromRemotePlayerEvent.next(payload.data);
                     } else if (payload.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
