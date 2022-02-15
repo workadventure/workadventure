@@ -561,6 +561,13 @@ class CoWebsiteManager {
         coWebsites.remove(coWebsite);
         coWebsites.add(coWebsite, 0);
 
+        if (mainCoWebsite) {
+            const iframe = mainCoWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "block";
+            }
+        }
+
         if (
             isMediaBreakpointDown("lg") &&
             get(embedScreenLayout) === LayoutMode.Presentation &&
