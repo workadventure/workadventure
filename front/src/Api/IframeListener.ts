@@ -40,6 +40,10 @@ import {
     isAddMenuActionKeysToRemotePlayerEvent,
 } from "./Events/AddMenuActionKeysToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
+import {
+    isRemoveMenuActionKeyFromRemotePlayerEvent,
+    RemoveMenuActionKeyFromRemotePlayerEvent,
+} from "./Events/RemoveMenuActionKeyFromRemotePlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -72,6 +76,11 @@ class IframeListener {
     private readonly _addMenuActionKeysToRemotePlayerStream: Subject<AddMenuActionKeysToRemotePlayerEvent> =
         new Subject();
     public readonly addMenuActionKeysToRemotePlayerStream = this._addMenuActionKeysToRemotePlayerStream.asObservable();
+
+    private readonly _removeMenuActionKeyFromRemotePlayerEvent: Subject<RemoveMenuActionKeyFromRemotePlayerEvent> =
+        new Subject();
+    public readonly removeMenuActionKeyFromRemotePlayerEvent =
+        this._removeMenuActionKeyFromRemotePlayerEvent.asObservable();
 
     private readonly _enablePlayerControlStream: Subject<void> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
@@ -256,6 +265,11 @@ class IframeListener {
                         isAddMenuActionKeysToRemotePlayerEvent(payload.data)
                     ) {
                         this._addMenuActionKeysToRemotePlayerStream.next(payload.data);
+                    } else if (
+                        payload.type == "removeMenuActionKeyFromRemotePlayer" &&
+                        isRemoveMenuActionKeyFromRemotePlayerEvent(payload.data)
+                    ) {
+                        this._removeMenuActionKeyFromRemotePlayerEvent.next(payload.data);
                     } else if (payload.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {

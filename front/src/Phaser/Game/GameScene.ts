@@ -1090,6 +1090,12 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.removeMenuActionKeyFromRemotePlayerEvent.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
                     this.cameraManager.on(

@@ -44,10 +44,9 @@
                 });
 
                 removeActionButton.addEventListener('click', () => {
-                    console.log('remove action');
                     const randomAction = randomActions.pop();
                     if (randomAction) {
-                        // WA.utils.removeMenuActionKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
+                        WA.utils.removeMenuActionKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
                     }
                     // WA.camera.followPlayer(smoothField.checked);
                 });

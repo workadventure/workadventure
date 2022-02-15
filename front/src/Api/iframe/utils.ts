@@ -44,6 +44,13 @@ export class WorkadventureUtilsCommands extends IframeApiContribution<Workadvent
             data: { id, actionKeys },
         });
     }
+
+    public removeMenuActionKeyFromRemotePlayer(id: number, actionKey: string): void {
+        sendToWorkadventure({
+            type: "removeMenuActionKeyFromRemotePlayer",
+            data: { id, actionKey },
+        });
+    }
 }
 
 export default new WorkadventureUtilsCommands();
