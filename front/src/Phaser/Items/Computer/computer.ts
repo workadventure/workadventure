@@ -61,7 +61,6 @@ export default {
             state = initState;
         }
 
-        // Idée: ESSAYER WebPack? https://paultavares.wordpress.com/2018/07/02/webpack-how-to-generate-an-es-module-bundle/
         const computer = new Sprite(scene, object.x, object.y, "computer");
         scene.add.existing(computer);
         if (state.status === "on") {
