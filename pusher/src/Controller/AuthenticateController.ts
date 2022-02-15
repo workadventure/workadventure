@@ -79,7 +79,7 @@ export class AuthenticateController extends BaseController {
                             if (!code && !nonce) {
                                 res.writeStatus("200");
                                 this.addCorsHeaders(res);
-                                res.writeHeader('Content-Type', 'application/json');
+                                res.writeHeader("Content-Type", "application/json");
                                 return res.end(JSON.stringify({ ...resUserData, authToken: token }));
                             }
                             console.error("Token cannot to be check on OpenId provider");
@@ -92,7 +92,7 @@ export class AuthenticateController extends BaseController {
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        res.writeHeader('Content-Type', 'application/json');
+                        res.writeHeader("Content-Type", "application/json");
                         return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
                     } catch (err) {
                         console.info("User was not connected", err);
@@ -123,7 +123,7 @@ export class AuthenticateController extends BaseController {
 
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
-                res.writeHeader('Content-Type', 'application/json');
+                res.writeHeader("Content-Type", "application/json");
                 return res.end(JSON.stringify({ ...data, authToken }));
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
@@ -186,7 +186,7 @@ export class AuthenticateController extends BaseController {
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);
-                    res.writeHeader('Content-Type', 'application/json');
+                    res.writeHeader("Content-Type", "application/json");
                     res.end(
                         JSON.stringify({
                             authToken,
@@ -226,7 +226,7 @@ export class AuthenticateController extends BaseController {
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
                 res.writeStatus("200 OK");
                 this.addCorsHeaders(res);
-                res.writeHeader('Content-Type', 'application/json');
+                res.writeHeader("Content-Type", "application/json");
                 res.end(
                     JSON.stringify({
                         authToken,
