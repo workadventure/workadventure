@@ -39,6 +39,7 @@ import {
     AddMenuActionKeysToRemotePlayerEvent,
     isAddMenuActionKeysToRemotePlayerEvent,
 } from "./Events/AddMenuActionKeysToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -479,9 +480,16 @@ class IframeListener {
         }
     }
 
-    sendActionMenuClicked(event: RemotePlayerClickedEvent) {
+    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
         this.postMessage({
             type: "remotePlayerClickedEvent",
+            data: event,
+        });
+    }
+
+    sendActionsMenuActionClickedEvent(event: ActionsMenuActionClickedEvent) {
+        this.postMessage({
+            type: "actionsMenuActionClickedEvent",
             data: event,
         });
     }

@@ -1082,7 +1082,7 @@ ${escapedMessage}
                     this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
                         actionName,
                         callback: () => {
-                            console.log("send info about click to the iframe");
+                            iframeListener.sendActionsMenuActionClickedEvent({ actionName, id: data.id });
                         },
                     });
                 }
@@ -1892,7 +1892,7 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            iframeListener.sendActionMenuClicked({ id: player.userId });
+            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
         });
     }
 

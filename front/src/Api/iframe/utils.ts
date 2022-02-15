@@ -1,6 +1,10 @@
 import { Subject } from "rxjs";
 import type { RemotePlayer } from "../../Phaser/Entity/RemotePlayer";
 import {
+    ActionsMenuActionClickedEvent,
+    isActionsMenuActionClickedEvent,
+} from "../Events/ActionsMenuActionClickedEvent";
+import {
     isRemotePlayerClickedEvent,
     RemotePlayerClickedEvent as RemotePlayerClickedEvent,
 } from "../Events/RemotePlayerClickedEvent";
@@ -9,10 +13,12 @@ import { apiCallback } from "./registeredCallbacks";
 
 export class WorkadventureUtilsCommands extends IframeApiContribution<WorkadventureUtilsCommands> {
     public readonly onRemotePlayerClicked: Subject<RemotePlayerClickedEvent>;
+    public readonly onActionsMenuActionClicked: Subject<ActionsMenuActionClickedEvent>;
 
     constructor() {
         super();
         this.onRemotePlayerClicked = new Subject<RemotePlayerClickedEvent>();
+        this.onActionsMenuActionClicked = new Subject<ActionsMenuActionClickedEvent>();
     }
 
     callbacks = [
@@ -20,8 +26,14 @@ export class WorkadventureUtilsCommands extends IframeApiContribution<Workadvent
             type: "remotePlayerClickedEvent",
             typeChecker: isRemotePlayerClickedEvent,
             callback: (payloadData: RemotePlayerClickedEvent) => {
-                // console.log("remotePlayerClickedEvent callback");
                 this.onRemotePlayerClicked.next(payloadData);
+            },
+        }),
+        apiCallback({
+            type: "actionsMenuActionClickedEvent",
+            typeChecker: isActionsMenuActionClickedEvent,
+            callback: (payloadData: ActionsMenuActionClickedEvent) => {
+                this.onActionsMenuActionClicked.next(payloadData);
             },
         }),
     ];

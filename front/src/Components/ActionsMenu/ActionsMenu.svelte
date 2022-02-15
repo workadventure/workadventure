@@ -37,12 +37,12 @@
         <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
         <h2>{actionsMenuData.playerName}</h2>
         <div class="actions">
-            {#each [...actionsMenuData.actions] as { actionName, callback }}
+            {#each [...actionsMenuData.actions] as [actionName, action]}
                 <button
                     type="button"
                     class="nes-btn"
                     on:click|preventDefault={() => {
-                        callback();
+                        action.callback();
                     }}
                 >
                     {actionName}

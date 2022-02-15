@@ -6,30 +6,49 @@
         window.addEventListener('load', () => {
             //@ts-ignore
             WA.onInit().then(() => {
-                console.log('After WA init');
+
+
+                const actions = {
+                    'Ask to tell a joke': () => {
+                        console.log("Why don't scientists trust atoms?");
+                        setTimeout(() => { console.log('...'); }, 1000);
+                        setTimeout(() => { console.log('...'); }, 2000);
+                        setTimeout(() => { console.log('BECAUSE THEY MAKE UP EVERYTHING!') }, 3000);
+                    },
+                }
+
+                const randomActions = [];
+
                 let lastRemotePlayerClicked;
                 const addActionButton = document.getElementById('addActionButton');
                 const removeActionButton = document.getElementById('removeActionButton');
 
-                console.log('===== D1 =====');
                 WA.utils.onRemotePlayerClicked.subscribe((data) => {
                     console.log(data);
                     lastRemotePlayerClicked = data.id;
-                    WA.utils.addMenuActionKeysToRemotePlayer(data.id, ['hit me', 'log info']);
+                    WA.utils.addMenuActionKeysToRemotePlayer(data.id, ['Ask to tell a joke']);
+                });
+
+                WA.utils.onActionsMenuActionClicked.subscribe((data) => {
+                    console.log(data);
+                    const action = actions[data.actionName];
+                    if (action) {
+                        action();
+                    }
                 });
                 
-                
-                // ((remotePlayerID) => {
-                //     console.log('on action menu clicked from script');
-                // });
-
                 addActionButton.addEventListener('click', () => {
-                    console.log('add action');
-                    WA.utils.addMenuActionKeysToRemotePlayer(lastRemotePlayerClicked, [Math.random().toString()]);
+                    const randomActionName = Math.random().toString();
+                    randomActions.push(randomActionName);
+                    WA.utils.addMenuActionKeysToRemotePlayer(lastRemotePlayerClicked, [randomActionName]);
                 });
 
                 removeActionButton.addEventListener('click', () => {
                     console.log('remove action');
+                    const randomAction = randomActions.pop();
+                    if (randomAction) {
+                        // WA.utils.removeMenuActionKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
+                    }
                     // WA.camera.followPlayer(smoothField.checked);
                 });
             });

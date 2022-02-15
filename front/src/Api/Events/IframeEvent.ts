@@ -38,6 +38,7 @@ import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 import type { AddMenuActionKeysToRemotePlayerEvent } from "./AddMenuActionKeysToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -95,6 +96,7 @@ export interface IframeResponseEventMap {
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
     remotePlayerClickedEvent: RemotePlayerClickedEvent;
+    actionsMenuActionClickedEvent: ActionsMenuActionClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;
