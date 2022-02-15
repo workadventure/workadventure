@@ -159,9 +159,17 @@ class CoWebsiteManager {
         });
 
         buttonSwipe.addEventListener("click", () => {
+            const mainCoWebsite = this.getMainCoWebsite();
             const highlightedEmbed = get(highlightedEmbedScreen);
             if (highlightedEmbed?.type === "cowebsite") {
                 this.goToMain(highlightedEmbed.embed);
+
+                if (mainCoWebsite) {
+                    highlightedEmbedScreen.toggleHighlight({
+                        type: "cowebsite",
+                        embed: mainCoWebsite,
+                    });
+                }
             }
         });
     }
