@@ -596,12 +596,20 @@ class CoWebsiteManager {
             .load()
             .then(() => {
                 const mainCoWebsite = this.getMainCoWebsite();
-                if (mainCoWebsite && mainCoWebsite.getId() === coWebsite.getId()) {
-                    this.openMain();
+                const highlightedEmbed = get(highlightedEmbedScreen);
+                if (mainCoWebsite) {
+                    if (mainCoWebsite.getId() === coWebsite.getId()) {
+                        this.openMain();
 
-                    setTimeout(() => {
-                        this.fire();
-                    }, animationTime);
+                        setTimeout(() => {
+                            this.fire();
+                        }, animationTime);
+                    } else if (!highlightedEmbed) {
+                        highlightedEmbedScreen.toggleHighlight({
+                            type: "cowebsite",
+                            embed: coWebsite,
+                        });
+                    }
                 }
                 this.resizeAllIframes();
             })
