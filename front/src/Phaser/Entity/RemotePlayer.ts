@@ -7,6 +7,7 @@ import type { PlayerAnimationDirections } from "../Player/Animation";
 import type { Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
+import LL from "../../i18n/i18n-svelte";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -116,7 +117,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private registerDefaultActionsMenuActions(): void {
         if (this.visitCardUrl) {
             this.registeredActions.set("Business Card", {
-                actionName: "Business Card",
+                actionName: LL.woka.menu.businessCard(),
                 protected: true,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);

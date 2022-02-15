@@ -70,7 +70,7 @@ const menu: NonNullable<Translation["menu"]> = {
         description: "Link zu diesem Raum teilen!",
         copy: "Kopieren",
         share: "Teilen",
-        walk_automatically_to_position: "Walk automatically to my position",
+        walk_automatically_to_position: "Automatisch zu meiner Position gehen",
     },
     globalMessage: {
         text: "Text",
