@@ -47,7 +47,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.userId = userId;
         this.visitCardUrl = visitCardUrl;
         this.registerDefaultActionsMenuActions();
-        // this.setClickable(this.registeredActions.length > 0);
+        this.setClickable(this.registeredActions.size > 0);
         this.activationRadius = activationRadius ?? 96;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
@@ -68,13 +68,16 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
-    public registerActionsMenuAction(action: { actionName: string; callback: Function }): void {
+    public registerActionsMenuAction(action: ActionsMenuAction): void {
         const prevAction = this.registeredActions.get(action.actionName);
         if (prevAction && prevAction.protected) {
             return;
         }
         this.registeredActions.set(action.actionName, action);
-        actionsMenuStore.addAction(action.actionName, action.callback);
+        actionsMenuStore.addAction(action.actionName, () => {
+            action.callback();
+            actionsMenuStore.clear();
+        });
         this.updateIsClickable();
     }
 
@@ -99,8 +102,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private updateIsClickable(): void {
-        // this.setClickable(this.registeredActions.length > 0);
-        this.setClickable(true);
+        this.setClickable(this.registeredActions.size > 0);
     }
 
     private toggleActionsMenu(): void {
@@ -121,10 +123,16 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 protected: true,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
-                    actionsMenuStore.clear();
                 },
             });
         }
+        this.registeredActions.set("Block Player", {
+            actionName: "Block",
+            protected: true,
+            callback: () => {
+                console.log("Player Blocked");
+            },
+        });
     }
 
     private bindEventHandlers(): void {
