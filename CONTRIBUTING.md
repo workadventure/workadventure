@@ -83,15 +83,11 @@ End-to-end tests are available in the "/tests" directory.
 To run these tests locally:
 
 ```console
-$ LIVE_RELOAD=0 docker-compose up -d
+$ docker-compose up -d
 $ cd tests
 $ npm install
 $ npm run test
 ```
-
-Note: If your tests fail on a Javascript error in "sockjs", this is due to the
-Webpack live reload. The Webpack live reload feature is conflicting with testcafe. This is why we recommend starting
-WorkAdventure with the `LIVE_RELOAD=0` environment variable.
 
 End-to-end tests can take a while to run. To run only one test, use:
 
@@ -103,7 +99,7 @@ You can also run the tests inside a container (but you will not have visual feed
 the local tests).
 
 ```console
-$ LIVE_RELOAD=0 docker-compose up -d
+$ docker-compose up -d
 # Wait 2-3 minutes for the environment to start, then:
 $ PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up
 ```
