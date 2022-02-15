@@ -38,10 +38,10 @@ export class WorkadventureUtilsCommands extends IframeApiContribution<Workadvent
         }),
     ];
 
-    public addMenuActionKeysToRemotePlayer(id: number, actionKeys: string[]): void {
+    public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {
         sendToWorkadventure({
-            type: "addMenuActionKeysToRemotePlayer",
-            data: { id, actionKeys },
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id, actionKey },
         });
     }
 

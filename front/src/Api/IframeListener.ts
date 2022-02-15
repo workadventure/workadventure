@@ -36,9 +36,9 @@ import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
 import {
-    AddMenuActionKeysToRemotePlayerEvent,
-    isAddMenuActionKeysToRemotePlayerEvent,
-} from "./Events/AddMenuActionKeysToRemotePlayerEvent";
+    AddActionsMenuKeyToRemotePlayerEvent,
+    isAddActionsMenuKeyToRemotePlayerEvent,
+} from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import {
     isRemoveMenuActionKeyFromRemotePlayerEvent,
@@ -73,9 +73,9 @@ class IframeListener {
     private readonly _cameraFollowPlayerStream: Subject<CameraFollowPlayerEvent> = new Subject();
     public readonly cameraFollowPlayerStream = this._cameraFollowPlayerStream.asObservable();
 
-    private readonly _addMenuActionKeysToRemotePlayerStream: Subject<AddMenuActionKeysToRemotePlayerEvent> =
+    private readonly _addActionsMenuKeyToRemotePlayerStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> =
         new Subject();
-    public readonly addMenuActionKeysToRemotePlayerStream = this._addMenuActionKeysToRemotePlayerStream.asObservable();
+    public readonly addActionsMenuKeyToRemotePlayerStream = this._addActionsMenuKeyToRemotePlayerStream.asObservable();
 
     private readonly _removeMenuActionKeyFromRemotePlayerEvent: Subject<RemoveMenuActionKeyFromRemotePlayerEvent> =
         new Subject();
@@ -261,10 +261,10 @@ class IframeListener {
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
                     } else if (
-                        payload.type == "addMenuActionKeysToRemotePlayer" &&
-                        isAddMenuActionKeysToRemotePlayerEvent(payload.data)
+                        payload.type == "addActionsMenuKeyToRemotePlayer" &&
+                        isAddActionsMenuKeyToRemotePlayerEvent(payload.data)
                     ) {
-                        this._addMenuActionKeysToRemotePlayerStream.next(payload.data);
+                        this._addActionsMenuKeyToRemotePlayerStream.next(payload.data);
                     } else if (
                         payload.type == "removeMenuActionKeyFromRemotePlayer" &&
                         isRemoveMenuActionKeyFromRemotePlayerEvent(payload.data)

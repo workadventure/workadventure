@@ -1077,15 +1077,13 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.addMenuActionKeysToRemotePlayerStream.subscribe((data) => {
-                for (const actionName of data.actionKeys) {
-                    this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
-                        actionName,
-                        callback: () => {
-                            iframeListener.sendActionsMenuActionClickedEvent({ actionName, id: data.id });
-                        },
-                    });
-                }
+            iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                    actionName: data.actionKey,
+                    callback: () => {
+                        iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
+                    },
+                });
             })
         );
 

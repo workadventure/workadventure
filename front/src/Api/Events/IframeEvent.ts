@@ -37,7 +37,7 @@ import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
-import type { AddMenuActionKeysToRemotePlayerEvent } from "./AddMenuActionKeysToRemotePlayerEvent";
+import type { AddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import type { RemoveMenuActionKeyFromRemotePlayerEvent } from "./RemoveMenuActionKeyFromRemotePlayerEvent";
 
@@ -49,7 +49,7 @@ export interface TypedMessageEvent<T> extends MessageEvent {
  * List event types sent from an iFrame to WorkAdventure
  */
 export type IframeEventMap = {
-    addMenuActionKeysToRemotePlayer: AddMenuActionKeysToRemotePlayerEvent;
+    addActionsMenuKeyToRemotePlayer: AddActionsMenuKeyToRemotePlayerEvent;
     removeMenuActionKeyFromRemotePlayer: RemoveMenuActionKeyFromRemotePlayerEvent;
     loadPage: LoadPageEvent;
     chat: ChatEvent;

@@ -7,7 +7,6 @@
             //@ts-ignore
             WA.onInit().then(() => {
 
-
                 const actions = {
                     'Ask to tell a joke': () => {
                         console.log("Why don't scientists trust atoms?");
@@ -26,7 +25,7 @@
                 WA.utils.onRemotePlayerClicked.subscribe((data) => {
                     console.log(data);
                     lastRemotePlayerClicked = data.id;
-                    WA.utils.addMenuActionKeysToRemotePlayer(data.id, ['Ask to tell a joke']);
+                    WA.utils.addActionsMenuKeyToRemotePlayer(data.id, 'Ask to tell a joke');
                 });
 
                 WA.utils.onActionsMenuActionClicked.subscribe((data) => {
@@ -40,7 +39,7 @@
                 addActionButton.addEventListener('click', () => {
                     const randomActionName = Math.random().toString();
                     randomActions.push(randomActionName);
-                    WA.utils.addMenuActionKeysToRemotePlayer(lastRemotePlayerClicked, [randomActionName]);
+                    WA.utils.addActionsMenuKeyToRemotePlayer(lastRemotePlayerClicked, randomActionName);
                 });
 
                 removeActionButton.addEventListener('click', () => {
@@ -48,7 +47,6 @@
                     if (randomAction) {
                         WA.utils.removeMenuActionKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
                     }
-                    // WA.camera.followPlayer(smoothField.checked);
                 });
             });
         })
