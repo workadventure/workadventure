@@ -22,13 +22,13 @@
                 const addActionButton = document.getElementById('addActionButton');
                 const removeActionButton = document.getElementById('removeActionButton');
 
-                WA.utils.onRemotePlayerClicked.subscribe((data) => {
+                WA.ui.onRemotePlayerClicked.subscribe((data) => {
                     console.log(data);
                     lastRemotePlayerClicked = data.id;
-                    WA.utils.addActionsMenuKeyToRemotePlayer(data.id, 'Ask to tell a joke');
+                    WA.ui.addActionsMenuKeyToRemotePlayer(data.id, 'Ask to tell a joke');
                 });
 
-                WA.utils.onActionsMenuActionClicked.subscribe((data) => {
+                WA.ui.onActionsMenuActionClicked.subscribe((data) => {
                     const action = actions[data.actionName];
                     if (action) {
                         action();
@@ -38,13 +38,13 @@
                 addActionButton.addEventListener('click', () => {
                     const randomActionName = Math.random().toString();
                     randomActions.push(randomActionName);
-                    WA.utils.addActionsMenuKeyToRemotePlayer(lastRemotePlayerClicked, randomActionName);
+                    WA.ui.addActionsMenuKeyToRemotePlayer(lastRemotePlayerClicked, randomActionName);
                 });
 
                 removeActionButton.addEventListener('click', () => {
                     const randomAction = randomActions.pop();
                     if (randomAction) {
-                        WA.utils.removeActionsMenuKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
+                        WA.ui.removeActionsMenuKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
                     }
                 });
             });

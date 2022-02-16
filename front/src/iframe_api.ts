@@ -14,7 +14,6 @@ import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
-import utils from "./Api/iframe/utils";
 import { createState } from "./Api/iframe/state";
 import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
@@ -49,7 +48,6 @@ const wa = {
     sound,
     room,
     player,
-    utils,
     camera,
     state: globalState,
 
