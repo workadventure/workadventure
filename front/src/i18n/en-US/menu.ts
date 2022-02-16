@@ -70,6 +70,7 @@ const menu: BaseTranslation = {
         description: "Share the link of the room!",
         copy: "Copy",
         share: "Share",
+        walk_automatically_to_position: "Walk automatically to my position",
     },
     globalMessage: {
         text: "Text",

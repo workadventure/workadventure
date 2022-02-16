@@ -335,6 +335,10 @@ export class GameMap {
         throw new Error("No possible position found");
     }
 
+    public getObjectWithName(name: string): ITiledMapObject | undefined {
+        return this.tiledObjects.find((object) => object.name === name);
+    }
+
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }

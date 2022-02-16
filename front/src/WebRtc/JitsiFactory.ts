@@ -2,7 +2,6 @@ import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
-import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
 
 interface jitsiConfigInterface {
@@ -180,13 +179,14 @@ class JitsiFactory {
                     const iframe = coWebsiteManager
                         .getCoWebsiteBuffer()
                         .querySelector<HTMLIFrameElement>('[id*="jitsi" i]');
+
                     if (iframe && this.jitsiApi) {
                         this.jitsiApi.addListener("videoConferenceLeft", () => {
-                            this.closeOrUnload();
+                            this.closeOrUnload(iframe);
                         });
 
                         this.jitsiApi.addListener("readyToClose", () => {
-                            this.closeOrUnload();
+                            this.closeOrUnload(iframe);
                         });
 
                         return resolve(iframe);
@@ -209,8 +209,9 @@ class JitsiFactory {
         });
     }
 
-    private closeOrUnload = function () {
-        const coWebsite = coWebsiteManager.searchJitsi();
+    private closeOrUnload = function (iframe: HTMLIFrameElement) {
+        const coWebsite = coWebsiteManager.getCoWebsites().find((coWebsite) => coWebsite.getIframe() === iframe);
+
         if (!coWebsite) {
             return;
         }
@@ -223,30 +224,6 @@ class JitsiFactory {
             });
         }
     };
-
-    public restart() {
-        if (!this.jitsiApi) {
-            return;
-        }
-
-        this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
-        this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
-
-        const coWebsite = coWebsiteManager.searchJitsi();
-
-        if (!coWebsite) {
-            this.destroy();
-            return;
-        }
-
-        this.jitsiApi.addListener("videoConferenceLeft", () => {
-            this.closeOrUnload();
-        });
-
-        this.jitsiApi.addListener("readyToClose", () => {
-            this.closeOrUnload();
-        });
-    }
 
     public stop() {
         if (!this.jitsiApi) {
