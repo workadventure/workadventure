@@ -213,8 +213,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showTalkIcon(show: boolean = true): void {
-        this.talkIcon.show(show);
+    public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
+        this.talkIcon.show(show, forceClose);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {

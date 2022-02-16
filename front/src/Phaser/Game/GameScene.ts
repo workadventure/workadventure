@@ -678,8 +678,8 @@ export class GameScene extends DirtyScene {
                     });
                 }
             } else {
-                this.CurrentPlayer.showTalkIcon(false);
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false));
+                this.CurrentPlayer.showTalkIcon(false, true);
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;

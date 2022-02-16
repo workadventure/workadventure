@@ -20,15 +20,17 @@ export class TalkIcon extends Phaser.GameObjects.Image {
         this.scene.add.existing(this);
     }
 
-    public show(show: boolean = true): void {
-        if (this.shown === show) {
+    public show(show: boolean = true, forceClose: boolean = false): void {
+        if (this.shown === show && !forceClose) {
             return;
         }
-        this.showAnimation(show);
+        this.showAnimation(show, forceClose);
     }
 
-    private showAnimation(show: boolean = true) {
-        if (this.showAnimationTween?.isPlaying()) {
+    private showAnimation(show: boolean = true, forceClose: boolean = false) {
+        if (forceClose && !show) {
+            this.showAnimationTween?.stop();
+        } else if (this.showAnimationTween?.isPlaying()) {
             return;
         }
         this.shown = show;
