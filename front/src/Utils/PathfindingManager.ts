@@ -17,7 +17,7 @@ export class PathfindingManager {
         this.scene = scene;
 
         this.easyStar = new EasyStar.js();
-        // this.easyStar.enableDiagonals();
+        this.easyStar.enableDiagonals();
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
