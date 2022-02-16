@@ -1438,7 +1438,7 @@ ${escapedMessage}
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
         } else {
             const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
-            if (phaserLayers === []) {
+            if (phaserLayers.length === 0) {
                 console.warn(
                     'Could not find layer with name that contains "' +
                         layerName +
