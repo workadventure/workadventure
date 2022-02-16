@@ -4,3 +4,4 @@ index.html
 style.*.css
 !env-config.template.js
 *.png
+!/resources/**
