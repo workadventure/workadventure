@@ -77,7 +77,7 @@ services:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(${PUSHER_HOST}`)"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.service=pusher"
       - "traefik.http.routers.pusher-ssl.tls=true"
