@@ -9,6 +9,7 @@ import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
+import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -77,6 +78,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.registeredActions.set(action.actionName, action);
         actionsMenuStore.addAction({
             ...action,
+            priority: action.priority ?? 0,
             callback: () => {
                 action.callback();
                 actionsMenuStore.clear();
@@ -115,10 +117,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
-        for (const action of this.getDefaultActionsMenuActions()) {
+        for (const action of this.registeredActions.values()) {
             actionsMenuStore.addAction(action);
         }
-        for (const action of this.registeredActions.values()) {
+        for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
     }
@@ -130,6 +132,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             actions.push({
                 actionName: LL.woka.menu.businessCard(),
                 protected: true,
+                priority: 1,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();
@@ -137,13 +140,15 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             });
         }
 
-        const blocked = blackListManager.isBlackListed(this.userUuid);
         actions.push({
-            actionName: blocked ? LL.report.block.unblock() : LL.report.block.block(),
+            actionName: blackListManager.isBlackListed(this.userUuid)
+                ? LL.report.block.unblock()
+                : LL.report.block.block(),
             protected: true,
-            style: blocked ? "is-success" : "is-error",
+            priority: -1,
+            style: "is-error",
             callback: () => {
-                blocked ? blackListManager.cancelBlackList(this.userUuid) : blackListManager.blackList(this.userUuid);
+                showReportScreenStore.set({ userId: this.userId, userName: this.name });
                 actionsMenuStore.clear();
             },
         });

@@ -1,11 +1,12 @@
 <script lang="typescript">
-    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { onDestroy } from "svelte";
 
     import type { Unsubscriber } from "svelte/store";
     import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
 
     let actionsMenuData: ActionsMenuData | undefined;
+    let sortedActions: ActionsMenuAction[] | undefined;
 
     let actionsMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -21,7 +22,20 @@
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
-        console.log(value);
+        if (actionsMenuData) {
+            sortedActions = [...actionsMenuData.actions.values()].sort((a, b) => {
+                const ap = a.priority ?? 0;
+                const bp = b.priority ?? 0;
+                if (ap > bp) {
+                    return -1;
+                }
+                if (ap < bp) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+        }
     });
 
     onDestroy(() => {
@@ -38,7 +52,7 @@
         <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
         <h2>{actionsMenuData.playerName}</h2>
         <div class="actions">
-            {#each [...actionsMenuData.actions] as [actionName, action]}
+            {#each sortedActions ?? [] as action}
                 <button
                     type="button"
                     class="nes-btn {action.style ?? ''}"
@@ -46,7 +60,7 @@
                         action.callback();
                     }}
                 >
-                    {actionName}
+                    {action.actionName}
                 </button>
             {/each}
         </div>

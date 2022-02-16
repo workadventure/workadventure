@@ -1,10 +1,10 @@
 import { writable } from "svelte/store";
-import { string } from "zod";
 
 export type ActionsMenuAction = {
     actionName: string;
     callback: Function;
     protected?: boolean;
+    priority?: number;
     style?: "is-success" | "is-error" | "is-primary";
 };
 export interface ActionsMenuData {

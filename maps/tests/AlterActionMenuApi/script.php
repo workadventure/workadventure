@@ -29,7 +29,6 @@
                 });
 
                 WA.utils.onActionsMenuActionClicked.subscribe((data) => {
-                    console.log(data);
                     const action = actions[data.actionName];
                     if (action) {
                         action();
