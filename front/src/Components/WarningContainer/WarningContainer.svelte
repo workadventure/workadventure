@@ -27,13 +27,13 @@
 <style lang="scss">
     main.warningMain {
         pointer-events: auto;
-        width: 80%;
+        width: 100%;
         background-color: #f9e81e;
         color: #14304c;
         text-align: center;
         position: absolute;
 
-        top: 4%;
+        top: 0;
         left: 0;
         right: 0;
         margin-left: auto;
