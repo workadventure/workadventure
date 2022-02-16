@@ -1190,6 +1190,8 @@ ${escapedMessage}
                 openCoWebsite.closable ?? true
             );
 
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
+
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
