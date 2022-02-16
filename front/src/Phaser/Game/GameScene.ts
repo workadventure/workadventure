@@ -670,16 +670,19 @@ export class GameScene extends DirtyScene {
                 this.playSound("audio-webrtc-out");
             }
             if (newPeerNumber > 0) {
-                this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                    if (volume) {
-                        this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
-                    }
-                });
+                if (!this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        }
+                    });
+                }
             } else {
                 this.CurrentPlayer.showTalkIcon(false);
                 this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
+                    this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
             oldPeerNumber = newPeerNumber;
