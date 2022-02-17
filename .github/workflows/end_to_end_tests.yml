@@ -72,7 +72,7 @@ jobs:
         run: docker-compose up -d
 
       - name: "Wait for environment to build (and downloading testcafe image)"
-        run: (docker-compose -f docker-compose.testcafe.yml build &) && docker-compose logs -f --tail=0 front | grep -q "Compiled successfully"
+        run: (docker-compose -f docker-compose.testcafe.yml build &) && docker-compose logs -f --tail=0 front | grep -q "dev server running at"
 
 #      - name: "temp debug: display logs"
 #        run: docker-compose logs
