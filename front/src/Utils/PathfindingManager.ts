@@ -22,12 +22,12 @@ export class PathfindingManager {
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
-        this.setWalkingCostGrid(walkingCostGrid);
+        void this.setWalkingCostGrid(walkingCostGrid);
     }
 
     public setCollisionGrid(collisionGrid: number[][], walkingCostGrid: number[][]): void {
         this.setEasyStarGrid(collisionGrid);
-        this.setWalkingCostGrid(walkingCostGrid);
+        void this.setWalkingCostGrid(walkingCostGrid);
     }
 
     public async findPath(
@@ -122,12 +122,15 @@ export class PathfindingManager {
         this.easyStar.setAcceptableTiles([0]); // zeroes are walkable
     }
 
-    private setWalkingCostGrid(grid: number[][]): void {
-        for (let y = 0; y < grid.length; y += 1) {
-            for (let x = 0; x < grid[y].length; x += 1) {
-                this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
+    private async setWalkingCostGrid(grid: number[][]): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            for (let y = 0; y < grid.length; y += 1) {
+                for (let x = 0; x < grid[y].length; x += 1) {
+                    this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
+                }
             }
-        }
+            resolve();
+        });
     }
 
     private logGridToTheConsole(grid: number[][]): void {
