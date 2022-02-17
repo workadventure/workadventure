@@ -53,6 +53,7 @@ import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface"
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { compressors } from "hyper-express";
 
 const debug = Debug("socket");
 
@@ -619,7 +620,7 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
-    public emitWorldFullMessage(client: WebSocket) {
+    public emitWorldFullMessage(client: compressors.WebSocket) {
         const errorMessage = new WorldFullMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -630,7 +631,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: WebSocket) {
+    public emitTokenExpiredMessage(client: compressors.WebSocket) {
         const errorMessage = new TokenExpiredMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -641,7 +642,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string) {
         const errorMessage = new WorldConnexionMessage();
         errorMessage.setMessage(message);
 

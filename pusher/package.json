@@ -41,22 +41,20 @@
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
     "axios": "^0.21.2",
-    "busboy": "^0.3.1",
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
     "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
     "grpc": "^1.24.4",
+    "hyper-express": "^5.8.1",
     "jsonwebtoken": "^8.5.1",
     "mkdirp": "^1.0.4",
     "openid-client": "^4.7.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.4.0",
     "uuidv4": "^6.0.7"
   },
   "devDependencies": {
-    "@types/busboy": "^0.2.3",
     "@types/circular-json": "^0.4.0",
     "@types/debug": "^4.1.5",
     "@types/google-protobuf": "^3.7.3",

@@ -1,6 +1,5 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import { GameRoomPolicyTypes } from "_Model/PusherRoom";
 import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";

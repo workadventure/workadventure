@@ -1,20 +1,18 @@
 import { v4 } from "uuid";
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
-import { BaseController } from "./BaseController";
+import { BaseHttpController } from "./BaseHttpController";
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 
 export interface TokenInterface {
     userUuid: string;
 }
 
-export class AuthenticateController extends BaseController {
-    constructor(private App: TemplatedApp) {
-        super();
+export class AuthenticateController extends BaseHttpController {
+    routes() {
         this.openIDLogin();
         this.openIDCallback();
         this.register();
@@ -24,13 +22,9 @@ export class AuthenticateController extends BaseController {
 
     openIDLogin() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/login-screen", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
+        this.app.get("/login-screen", async (req, res) => {
             try {
-                const { nonce, state, playUri, redirect } = parse(req.getQuery());
+                const { nonce, state, playUri, redirect } = parse(req.path_query);
                 if (!state || !nonce) {
                     throw new Error("missing state and nonce URL parameters");
                 }
@@ -41,24 +35,22 @@ export class AuthenticateController extends BaseController {
                     playUri as string | undefined,
                     redirect as string | undefined
                 );
-                res.writeStatus("302");
-                res.writeHeader("Location", loginUri);
-                return res.end();
+                res.status(302);
+                res.setHeader("Location", loginUri);
+                return res;
             } catch (e) {
                 console.error("openIDLogin => e", e);
-                return this.errorToResponse(e, res);
+                this.castErrorToResponse(e, res);
+                return;
             }
         });
     }
 
     openIDCallback() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/login-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-            const IPAddress = req.getHeader("x-forwarded-for");
-            const { code, nonce, token, playUri } = parse(req.getQuery());
+        this.app.get("/login-callback", async (req, res) => {
+            const IPAddress = req.header("x-forwarded-for");
+            const { code, nonce, token, playUri } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -77,23 +69,16 @@ export class AuthenticateController extends BaseController {
                             //if not nonce and code, user connected in anonymous
                             //get data with identifier and return token
                             if (!code && !nonce) {
-                                res.writeStatus("200");
-                                this.addCorsHeaders(res);
-                                res.writeHeader("Content-Type", "application/json");
-                                return res.end(JSON.stringify({ ...resUserData, authToken: token }));
+                                return res.json(JSON.stringify({ ...resUserData, authToken: token }));
                             }
                             console.error("Token cannot to be check on OpenId provider");
-                            res.writeStatus("500");
-                            res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                            res.end("User cannot to be connected on openid provider");
+                            res.status(500);
+                            res.send("User cannot to be connected on openid provider");
                             return;
                         }
 
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                        res.writeStatus("200");
-                        this.addCorsHeaders(res);
-                        res.writeHeader("Content-Type", "application/json");
-                        return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
+                        return res.json({ ...resCheckTokenAuth, ...resUserData, authToken: token });
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -106,9 +91,8 @@ export class AuthenticateController extends BaseController {
                 } catch (err) {
                     //if no access on openid provider, return error
                     console.error("User cannot to be connected on OpenId provider => ", err);
-                    res.writeStatus("500");
-                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                    res.end("User cannot to be connected on openid provider");
+                    res.status(500);
+                    res.send("User cannot to be connected on openid provider");
                     return;
                 }
                 const email = userInfo.email || userInfo.sub;
@@ -121,23 +105,16 @@ export class AuthenticateController extends BaseController {
                 //This is very important to create User Local in LocalStorage in WorkAdventure
                 const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
 
-                res.writeStatus("200");
-                this.addCorsHeaders(res);
-                res.writeHeader("Content-Type", "application/json");
-                return res.end(JSON.stringify({ ...data, authToken }));
+                return res.json({ ...data, authToken });
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
-                return this.errorToResponse(e, res);
+                return this.castErrorToResponse(e, res);
             }
         });
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/logout-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
-            const { token } = parse(req.getQuery());
+        this.app.get("/logout-callback", async (req, res) => {
+            const { token } = parse(req.path_query);
 
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
@@ -147,29 +124,17 @@ export class AuthenticateController extends BaseController {
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
                 console.error("openIDCallback => logout-callback", error);
-            } finally {
-                res.writeStatus("200");
-                this.addCorsHeaders(res);
-                // eslint-disable-next-line no-unsafe-finally
-                return res.end();
             }
+
+            return res;
         });
     }
 
     //Try to login with an admin token
     private register() {
-        this.App.options("/register", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-
-            res.end();
-        });
-
-        this.App.post("/register", (res: HttpResponse, req: HttpRequest) => {
+        this.app.post("/register", (req, res) => {
             (async () => {
-                res.onAborted(() => {
-                    console.warn("Login request was aborted");
-                });
-                const param = await res.json();
+                const param = await req.json();
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken: string | null = param.organizationMemberToken;
@@ -184,23 +149,18 @@ export class AuthenticateController extends BaseController {
                     const textures = data.textures;
 
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
-                    res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
-                    res.writeHeader("Content-Type", "application/json");
-                    res.end(
-                        JSON.stringify({
-                            authToken,
-                            userUuid,
-                            email,
-                            roomUrl,
-                            mapUrlStart,
-                            organizationMemberToken,
-                            textures,
-                        } as RegisterData)
-                    );
+                    res.json({
+                        authToken,
+                        userUuid,
+                        email,
+                        roomUrl,
+                        mapUrlStart,
+                        organizationMemberToken,
+                        textures,
+                    } as RegisterData);
                 } catch (e) {
                     console.error("register => ERROR", e);
-                    this.errorToResponse(e, res);
+                    this.castErrorToResponse(e, res);
                 }
             })();
         });
@@ -208,44 +168,25 @@ export class AuthenticateController extends BaseController {
 
     //permit to login on application. Return token to connect on Websocket IO.
     private anonymLogin() {
-        this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
-        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("Login request was aborted");
-            });
-
+        this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
-                res.writeStatus("403 FORBIDDEN");
-                res.end();
+                res.status(403);
+                return res;
             } else {
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
-                res.writeStatus("200 OK");
-                this.addCorsHeaders(res);
-                res.writeHeader("Content-Type", "application/json");
-                res.end(
-                    JSON.stringify({
-                        authToken,
-                        userUuid,
-                    })
-                );
+                return res.json({
+                    authToken,
+                    userUuid,
+                });
             }
         });
     }
 
     profileCallback() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/profile-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-            const { token } = parse(req.getQuery());
+        this.app.get("/profile-callback", async (req, res) => {
+            const { token } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -257,18 +198,17 @@ export class AuthenticateController extends BaseController {
                         await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
                         //get login profile
-                        res.writeStatus("302");
-                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
-                        this.addCorsHeaders(res);
-                        // eslint-disable-next-line no-unsafe-finally
-                        return res.end();
+                        res.status(302);
+                        res.setHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
+                        return;
                     } catch (error) {
-                        return this.errorToResponse(error, res);
+                        this.castErrorToResponse(error, res);
+                        return;
                     }
                 }
             } catch (error) {
                 console.error("profileCallback => ERROR", error);
-                this.errorToResponse(error, res);
+                this.castErrorToResponse(error, res);
             }
         });
     }

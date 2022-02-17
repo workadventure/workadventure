@@ -1,5 +1,5 @@
 import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import { GameRoomPolicyTypes, PusherRoom } from "../Model/PusherRoom";
+import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -23,7 +23,6 @@ import {
     VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
-import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
@@ -36,11 +35,12 @@ import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
+import HyperExpress from "hyper-express";
 
 export class IoSocketController {
     private nextUserId: number = 1;
 
-    constructor(private readonly app: TemplatedApp) {
+    constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();

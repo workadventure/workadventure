@@ -1,45 +1,22 @@
-import { BaseController } from "./BaseController";
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
-import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     AdminRoomMessage,
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
 } from "../Messages/generated/messages_pb";
+import { adminToken } from "../Middleware/AdminToken";
+import { BaseHttpController } from "./BaseHttpController";
 
-export class AdminController extends BaseController {
-    constructor(private App: TemplatedApp) {
-        super();
-        this.App = App;
+export class AdminController extends BaseHttpController {
+    routes() {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
     }
 
     receiveRoomEditionPrompt() {
-        this.App.options("/room/refresh", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.post("/room/refresh", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
-            const token = req.getHeader("admin-token");
-            const body = await res.json();
-
-            if (ADMIN_API_TOKEN === "") {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                return;
-            }
-            if (token !== ADMIN_API_TOKEN) {
-                console.error("Admin access refused for token: " + token);
-                res.writeStatus("401 Unauthorized").end("Incorrect token");
-                return;
-            }
+        this.app.post("/room/refresh", { middlewares: [adminToken] }, async (req, res) => {
+            const body = await req.json();
 
             try {
                 if (typeof body.roomId !== "string") {
@@ -58,41 +35,18 @@ export class AdminController extends BaseController {
                     });
                 });
             } catch (err) {
-                this.errorToResponse(err, res);
+                this.castErrorToResponse(err, res);
                 return;
             }
 
-            res.writeStatus("200");
-            res.end("ok");
+            res.send("ok");
         });
     }
 
     receiveGlobalMessagePrompt() {
-        this.App.options("/message", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.post("/message", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
-            const token = req.getHeader("admin-token");
-            const body = await res.json();
-
-            if (ADMIN_API_TOKEN === "") {
-                res.writeStatus("401 Unauthorized").end("No token configured!");
-                res.end();
-                return;
-            }
-            if (token !== ADMIN_API_TOKEN) {
-                console.error("Admin access refused for token: " + token);
-                res.writeStatus("401 Unauthorized").end("Incorrect token");
-                res.end();
-                return;
-            }
+        this.app.post("/message", { middlewares: [adminToken] }, async (req, res) => {
+            const body = await req.json();
 
             try {
                 if (typeof body.text !== "string") {
@@ -133,13 +87,11 @@ export class AdminController extends BaseController {
                     })
                 );
             } catch (err) {
-                this.errorToResponse(err, res);
+                this.castErrorToResponse(err, res);
                 return;
             }
 
-            res.writeStatus("200");
-            this.addCorsHeaders(res);
-            res.end("ok");
+            res.send("ok");
         });
     }
 }
