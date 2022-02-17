@@ -73,9 +73,9 @@
             $mainCoWebsite !== undefined &&
             $mainCoWebsite.getId() === coWebsite.getId();
         isHighlight =
-            $highlightedEmbedScreen !== null &&
-            $highlightedEmbedScreen.type === "cowebsite" &&
-            $highlightedEmbedScreen.embed.getId() === coWebsite.getId();
+            $highlightedEmbedScreen !== undefined &&
+            $highlightedEmbedScreen?.type === "cowebsite" &&
+            $highlightedEmbedScreen?.embed.getId() === coWebsite.getId();
     }
 </script>
 

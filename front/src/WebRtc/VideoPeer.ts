@@ -9,6 +9,9 @@ import { playersStore } from "../Stores/PlayersStore";
 import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AudioContext } from "standardized-audio-context";
+import { Console } from "console";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
 
@@ -32,6 +35,7 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
+    public readonly volumeStore: Readable<number | undefined>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
@@ -65,6 +69,34 @@ export class VideoPeer extends Peer {
 
             return () => {
                 this.off("stream", onStream);
+            };
+        });
+
+        this.volumeStore = readable<number | undefined>(undefined, (set) => {
+            let timeout: ReturnType<typeof setTimeout>;
+            const unsubscribe = this.streamStore.subscribe((mediaStream) => {
+                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                    set(undefined);
+                    return;
+                }
+                const soundMeter = new SoundMeter(mediaStream);
+                let error = false;
+
+                timeout = setInterval(() => {
+                    try {
+                        set(soundMeter.getVolume());
+                    } catch (err) {
+                        if (!error) {
+                            console.error(err);
+                            error = true;
+                        }
+                    }
+                }, 100);
+            });
+
+            return () => {
+                unsubscribe();
+                clearInterval(timeout);
             };
         });
 

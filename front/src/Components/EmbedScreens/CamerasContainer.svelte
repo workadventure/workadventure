@@ -3,7 +3,7 @@
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
 
-    export let highlightedEmbedScreen: EmbedScreen | null;
+    export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
     $: clickable = !full;
 </script>
