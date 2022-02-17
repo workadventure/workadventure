@@ -220,6 +220,16 @@ class ConnectionManager {
                 if (this.localUser.textures.length === 0) {
                     this.localUser.textures = this._currentRoom.textures;
                 } else {
+                    // TODO: the local store should NOT be used as a buffer for all the texture we were authorized to have. Bad idea.
+                    // Instead, it is the responsibility of the ADMIN to return the EXACT list of textures we can have in a given context
+                    // + this list can change over time or over rooms.
+
+                    // 1- a room could forbid a particular dress code. In this case, the user MUST change its skin.
+                    // 2- a room can allow "external skins from other maps" => important: think about fediverse! => switch to URLs? (with a whitelist mechanism?) => but what about NFTs?
+
+                    // Note: stocker des URL dans le localstorage pour les utilisateurs actuels: mauvaise idée (empêche de mettre l'URL à jour dans le futur) => en même temps, problème avec le portage de user d'un serveur à l'autre
+                    // Réfléchir à une notion de "character server" ??
+
                     this._currentRoom.textures.forEach((newTexture) => {
                         const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
                         if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {

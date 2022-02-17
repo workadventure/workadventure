@@ -13,4 +13,6 @@ Check out the [contributing guide](../../CONTRIBUTING.md)
 
 ## Front documentation
 
+- [How to add translations](how-to-translate.md)
 - [How to add new functions in the scripting API](contributing-to-scripting-api.md)
+- [About Wokas](wokas.md)

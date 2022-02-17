@@ -69,7 +69,7 @@ export class AuthenticateController extends BaseHttpController {
                             //if not nonce and code, user connected in anonymous
                             //get data with identifier and return token
                             if (!code && !nonce) {
-                                return res.json(JSON.stringify({ ...resUserData, authToken: token }));
+                                return res.json({ ...resUserData, authToken: token });
                             }
                             console.error("Token cannot to be check on OpenId provider");
                             res.status(500);
