@@ -1,0 +1,69 @@
+{
+  "name": "@workadventure/desktop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "scripts": {
+    "tsc": "tsup-node ./src/main.ts",
+    "dev": "tsup-node ./src/main.ts --watch --onSuccess 'yarn electron dist/main.js'",
+    "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
+    "runprod": "node --max-old-space-size=4096 ./dist/server.js",
+    "profile": "tsc && node --prof ./dist/server.js",
+    "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+    "lint": "node_modules/.bin/eslint src/ . --ext .ts",
+    "fix": "node_modules/.bin/eslint --fix src/ . --ext .ts"
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.5",
+    "electron-is-dev": "^2.0.0",
+    "electron-log": "^4.4.6",
+    "electron-settings": "^4.0.2",
+    "electron-updater": "^4.6.5",
+    "electron-util": "^0.17.2",
+    "electron-window-state": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/auto-launch": "^5.0.2",
+    "@types/jasmine": "^3.5.10",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
+    "electron": "^17.0.1",
+    "electron-builder": "^22.14.13",
+    "eslint": "^6.8.0",
+    "jasmine": "^3.5.0",
+    "tsup": "^5.11.13",
+    "typescript": "^3.8.3"
+  },
+  "build": {
+    "appId": "re.workadventu.desktop",
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "dmg": {
+      "icon": false
+    },
+    "linux": {
+      "category": "TODO;TODO",
+      "packageCategory": "TODO;TODO",
+      "maintainer": "TODO",
+      "icon": "assets/icons/TODO.icns",
+      "description": "TODO",
+      "target": [
+        "deb",
+        "zip",
+        "AppImage"
+      ],
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "win": {
+      "icon": "assets/icons/TODO.ico",
+      "artifactName": "${productName}-${version}-setup.${ext}"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "TODO"
+    }
+  }
+}
