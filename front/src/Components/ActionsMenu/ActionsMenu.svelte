@@ -1,7 +1,8 @@
 <script lang="typescript">
-    import { ActionsMenuAction, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+    import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { onDestroy } from "svelte";
 
+    import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
     import type { Unsubscriber } from "svelte/store";
     import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
 
