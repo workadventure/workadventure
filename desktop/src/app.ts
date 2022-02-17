@@ -1,9 +1,10 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, globalShortcut } from "electron";
 
 import { createWindow, getWindow } from "./window";
 import { createTray } from "./tray";
-// import * as autoUpdater from "./auto-updater";
+import autoUpdater from "./auto-updater";
 import updateAutoLaunch from "./update-auto-launch";
+import ipc, { emitMutedKeyPress } from "./ipc";
 
 function init() {
   const appLock = app.requestSingleInstanceLock();
@@ -32,13 +33,10 @@ function init() {
 
   // This method will be called when Electron has finished loading
   app.on("ready", () => {
-    // autoUpdater.init();
+    autoUpdater.init();
 
     // enable auto launch
     updateAutoLaunch();
-
-    // load ipc handler
-    // ipc();
 
     // Don't show the app in the doc
     // if (app.dock) {
@@ -47,6 +45,13 @@ function init() {
 
     createWindow();
     createTray();
+
+    // load ipc handler
+    ipc();
+
+    globalShortcut.register("Alt+CommandOrControl+M", () => {
+      emitMutedKeyPress();
+    });
   });
 
   // Quit when all windows are closed.

@@ -38,7 +38,7 @@ export async function manualRequestUpdateCheck() {
   isManualRequestedUpdate = false;
 }
 
-export function init() {
+function init() {
   autoUpdater.logger = log;
 
   autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
@@ -92,3 +92,7 @@ export function init() {
   // run update check every hour again
   setInterval(() => checkForUpdates, 1000 * 60 * 1);
 }
+
+export default {
+  init,
+};

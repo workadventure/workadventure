@@ -1,10 +1,12 @@
 import { BrowserWindow } from "electron";
+import electronIsDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
-import { getTray } from "./tray";
+import path from "path";
 
 let mainWindow: BrowserWindow | undefined;
 
-const url = process.env.PLAY_URL; // TODO
+const url = process.env.PLAY_URL;
+// "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village"; // TODO
 
 export function getWindow() {
   return mainWindow;
@@ -32,6 +34,7 @@ export function createWindow() {
     show: false,
     title: "WorkAdventure",
     webPreferences: {
+      preload: path.join(__dirname, "../dist/preload/index.js"),
       // allowRunningInsecureContent: false,
       // contextIsolation: true, // TODO: remove in electron 12
       // nodeIntegration: false,
@@ -73,9 +76,12 @@ export function createWindow() {
   //     app.confirmedExitPrompt = false;
   //   }
   // });
-  // and load the index.html of the app.
 
-  if (url) {
+  if (!url || electronIsDev) {
+    // TODO
+    mainWindow.loadFile("../test-app/index.html");
+    mainWindow.webContents.openDevTools();
+  } else {
     mainWindow.loadURL(url); // TODO: load app on demand
   }
 }

@@ -6,7 +6,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "scripts": {
     "tsc": "tsup-node ./src/main.ts",
-    "dev": "tsup-node ./src/main.ts --watch --onSuccess 'yarn electron dist/main.js'",
+    "dev": "tsup-node ./src/main.ts ./src/preload/index.ts --watch --onSuccess 'yarn electron dist/main.js'",
     "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
