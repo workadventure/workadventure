@@ -12,6 +12,7 @@ import { WebSocket } from "uWebSockets.js";
 import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
 import { CharacterTexture } from "../../Messages/JsonMessages/CharacterTexture";
+import { compressors } from "hyper-express";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -20,7 +21,7 @@ export interface CharacterLayer {
     url: string | undefined;
 }
 
-export interface ExSocketInterface extends WebSocket, Identificable {
+export interface ExSocketInterface extends compressors.WebSocket, Identificable {
     token: string;
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user

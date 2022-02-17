@@ -1,26 +1,13 @@
-import { BaseController } from "./BaseController";
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
-import { adminApi } from "../Services/AdminApi";
 import { OPID_CLIENT_ISSUER } from "../Enum/EnvironmentVariable";
-import { IntrospectionResponse } from "openid-client";
+import { BaseHttpController } from "./BaseHttpController";
 
-export class OpenIdProfileController extends BaseController {
-    constructor(private App: TemplatedApp) {
-        super();
-        this.profileOpenId();
-    }
-
-    profileOpenId() {
+export class OpenIdProfileController extends BaseHttpController {
+    routes() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/profile", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
-            const { accessToken } = parse(req.getQuery());
+        this.app.get("/profile", async (req, res) => {
+            const { accessToken } = parse(req.path_query);
             if (!accessToken) {
                 throw Error("Access token expected cannot to be check on Hydra");
             }
@@ -29,7 +16,7 @@ export class OpenIdProfileController extends BaseController {
                 if (!resCheckTokenAuth.email) {
                     throw new Error("Email was not found");
                 }
-                res.end(
+                res.send(
                     this.buildHtml(
                         OPID_CLIENT_ISSUER,
                         resCheckTokenAuth.email as string,
@@ -38,7 +25,7 @@ export class OpenIdProfileController extends BaseController {
                 );
             } catch (error) {
                 console.error("profileCallback => ERROR", error);
-                this.errorToResponse(error, res);
+                this.castErrorToResponse(error, res);
             }
         });
     }
@@ -64,13 +51,13 @@ export class OpenIdProfileController extends BaseController {
                     <body>
                         <div class="container">
                             <section>
-                                <img src="${pictureUrl ? pictureUrl : "/images/profile"}"> 
+                                <img src="${pictureUrl ? pictureUrl : "/images/profile"}">
                             </section>
                             <section>
                                 Profile validated by domain: <span style="font-weight: bold">${domain}</span>
-                            </section>    
+                            </section>
                             <section>
-                                Your email: <span style="font-weight: bold">${email}</span>   
+                                Your email: <span style="font-weight: bold">${email}</span>
                             </section>
                         </div>
                     </body>

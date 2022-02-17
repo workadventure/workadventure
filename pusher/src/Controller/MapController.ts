@@ -1,41 +1,21 @@
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
-import { BaseController } from "./BaseController";
-import { parse } from "query-string";
 import { adminApi } from "../Services/AdminApi";
-import { ADMIN_API_URL, DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
-import { v4 } from "uuid";
 import { InvalidTokenError } from "./InvalidTokenError";
+import { parse } from "query-string";
+import { BaseHttpController } from "./BaseHttpController";
 
-export class MapController extends BaseController {
-    constructor(private App: TemplatedApp) {
-        super();
-        this.App = App;
-        this.getMapUrl();
-    }
-
+export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
-    getMapUrl() {
-        this.App.options("/map", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
-        this.App.get("/map", (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/map request was aborted");
-            });
-
-            const query = parse(req.getQuery());
-
+    routes() {
+        this.app.get("/map", (req, res) => {
+            const query = parse(req.path_query);
             if (typeof query.playUri !== "string") {
                 console.error("Expected playUri parameter in /map endpoint");
-                res.writeStatus("400 Bad request");
-                this.addCorsHeaders(res);
-                res.end("Expected playUri parameter");
+                res.status(400);
+                res.send("Expected playUri parameter");
                 return;
             }
 
@@ -45,30 +25,23 @@ export class MapController extends BaseController {
 
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
                 if (!match) {
-                    res.writeStatus("404 Not Found");
-                    this.addCorsHeaders(res);
-                    res.writeHeader("Content-Type", "application/json");
-                    res.end(JSON.stringify({}));
+                    res.status(404);
+                    res.json({});
                     return;
                 }
 
                 const mapUrl = roomUrl.protocol + "//" + match[1];
 
-                res.writeStatus("200 OK");
-                this.addCorsHeaders(res);
-                res.writeHeader("Content-Type", "application/json");
-                res.end(
-                    JSON.stringify({
-                        mapUrl,
-                        policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-                        roomSlug: null, // Deprecated
-                        group: null,
-                        tags: [],
-                        textures: [],
-                        contactPage: null,
-                        authenticationMandatory: DISABLE_ANONYMOUS,
-                    } as MapDetailsData)
-                );
+                res.json({
+                    mapUrl,
+                    policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
+                    roomSlug: null, // Deprecated
+                    group: null,
+                    tags: [],
+                    textures: [],
+                    contactPage: null,
+                    authenticationMandatory: DISABLE_ANONYMOUS,
+                } as MapDetailsData);
 
                 return;
             }
@@ -90,12 +63,12 @@ export class MapController extends BaseController {
                             } catch (e) {
                                 if (e instanceof InvalidTokenError) {
                                     // The token was not good, redirect user on login page
-                                    res.writeStatus("401 Unauthorized");
-                                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                                    res.end("Token decrypted error");
+                                    res.status(401);
+                                    res.send("Token decrypted error");
                                     return;
                                 } else {
-                                    return this.errorToResponse(e, res);
+                                    this.castErrorToResponse(e, res);
+                                    return;
                                 }
                             }
                         }
@@ -106,12 +79,9 @@ export class MapController extends BaseController {
                         mapDetails.authenticationMandatory = true;
                     }
 
-                    res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
-                    res.writeHeader("Content-Type", "application/json");
-                    res.end(JSON.stringify(mapDetails));
+                    res.json(mapDetails);
                 } catch (e) {
-                    this.errorToResponse(e, res);
+                    this.castErrorToResponse(e, res);
                 }
             })();
         });
