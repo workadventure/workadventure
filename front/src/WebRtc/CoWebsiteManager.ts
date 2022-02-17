@@ -1,14 +1,13 @@
 import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
-import { iframeListener } from "../Api/IframeListener";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import { get, Writable, writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { embedScreenLayout, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
-import { jitsiFactory } from "./JitsiFactory";
-import { gameManager } from "../Phaser/Game/GameManager";
 import { LayoutMode } from "./LayoutManager";
+import type { CoWebsite } from "./CoWebsite/CoWesbite";
+import type CancelablePromise from "cancelable-promise";
 
 export enum iframeStates {
     closed = 1,
@@ -34,30 +33,12 @@ interface TouchMoveCoordinates {
     y: number;
 }
 
-export type CoWebsiteState = "asleep" | "loading" | "ready";
-
-export type CoWebsite = {
-    iframe: HTMLIFrameElement;
-    url: URL;
-    state: Writable<CoWebsiteState>;
-    closable: boolean;
-    allowPolicy: string | undefined;
-    allowApi: boolean | undefined;
-    widthPercent?: number | undefined;
-    jitsi?: boolean;
-    altMessage?: string;
-};
-
 class CoWebsiteManager {
-    private openedMain: iframeStates = iframeStates.closed;
+    private openedMain: Writable<iframeStates> = writable(iframeStates.closed);
 
     private _onResize: Subject<void> = new Subject();
     public onResize = this._onResize.asObservable();
-    /**
-     * Quickly going in and out of an iframe trigger can create conflicts between the iframe states.
-     * So we use this promise to queue up every cowebsite state transition
-     */
-    private currentOperationPromise: Promise<void> = Promise.resolve();
+
     private cowebsiteDom: HTMLDivElement;
     private resizing: boolean = false;
     private gameOverlayDom: HTMLDivElement;
@@ -76,6 +57,10 @@ class CoWebsiteManager {
     });
 
     public getMainState() {
+        return get(this.openedMain);
+    }
+
+    public getMainStateSubscriber(): Readable<iframeStates> {
         return this.openedMain;
     }
 
@@ -147,13 +132,11 @@ class CoWebsiteManager {
                 throw new Error("Undefined main co-website on closing");
             }
 
-            if (coWebsite.closable) {
-                this.closeCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during closing a co-website by a button");
-                });
+            if (coWebsite.isClosable()) {
+                this.closeCoWebsite(coWebsite);
             } else {
-                this.unloadCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during unloading a co-website by a button");
+                this.unloadCoWebsite(coWebsite).catch((err) => {
+                    console.error("Cannot unload co-website on click on close button", err);
                 });
             }
         });
@@ -176,9 +159,17 @@ class CoWebsiteManager {
         });
 
         buttonSwipe.addEventListener("click", () => {
+            const mainCoWebsite = this.getMainCoWebsite();
             const highlightedEmbed = get(highlightedEmbedScreen);
             if (highlightedEmbed?.type === "cowebsite") {
                 this.goToMain(highlightedEmbed.embed);
+
+                if (mainCoWebsite) {
+                    highlightedEmbedScreen.toggleHighlight({
+                        type: "cowebsite",
+                        embed: mainCoWebsite,
+                    });
+                }
             }
         });
     }
@@ -241,7 +232,10 @@ class CoWebsiteManager {
                 return;
             }
 
-            coWebsite.iframe.style.display = "none";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "none";
+            }
             this.resizing = true;
             document.addEventListener("mousemove", movecallback);
         });
@@ -257,7 +251,10 @@ class CoWebsiteManager {
                 return;
             }
 
-            coWebsite.iframe.style.display = "flex";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "flex";
+            }
             this.resizing = false;
         });
 
@@ -270,7 +267,10 @@ class CoWebsiteManager {
                 return;
             }
 
-            coWebsite.iframe.style.display = "none";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "none";
+            }
             this.resizing = true;
             const touchEvent = event.touches[0];
             this.previousTouchMoveCoordinates = { x: touchEvent.pageX, y: touchEvent.pageY };
@@ -289,7 +289,10 @@ class CoWebsiteManager {
                 return;
             }
 
-            coWebsite.iframe.style.display = "flex";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "flex";
+            }
             this.resizing = false;
         });
     }
@@ -313,9 +316,12 @@ class CoWebsiteManager {
     public displayMain() {
         const coWebsite = this.getMainCoWebsite();
         if (coWebsite) {
-            coWebsite.iframe.style.display = "block";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "block";
+            }
         }
-        this.loadMain();
+        this.loadMain(coWebsite?.getWidthPercent());
         this.openMain();
         this.fire();
     }
@@ -323,11 +329,14 @@ class CoWebsiteManager {
     public hideMain() {
         const coWebsite = this.getMainCoWebsite();
         if (coWebsite) {
-            coWebsite.iframe.style.display = "none";
+            const iframe = coWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "none";
+            }
         }
         this.cowebsiteDom.classList.add("closing");
         this.cowebsiteDom.classList.remove("opened");
-        this.openedMain = iframeStates.closed;
+        this.openedMain.set(iframeStates.closed);
         this.fire();
     }
 
@@ -335,7 +344,7 @@ class CoWebsiteManager {
         this.toggleFullScreenIcon(true);
         this.cowebsiteDom.classList.add("closing");
         this.cowebsiteDom.classList.remove("opened");
-        this.openedMain = iframeStates.closed;
+        this.openedMain.set(iframeStates.closed);
         this.resetStyleMain();
         this.fire();
     }
@@ -389,14 +398,14 @@ class CoWebsiteManager {
         }
 
         this.cowebsiteDom.classList.add("opened");
-        this.openedMain = iframeStates.loading;
+        this.openedMain.set(iframeStates.loading);
     }
 
     private openMain(): void {
         this.cowebsiteDom.addEventListener("transitionend", () => {
             this.resizeAllIframes();
         });
-        this.openedMain = iframeStates.opened;
+        this.openedMain.set(iframeStates.opened);
     }
 
     public resetStyleMain() {
@@ -409,7 +418,9 @@ class CoWebsiteManager {
     }
 
     public getCoWebsiteById(coWebsiteId: string): CoWebsite | undefined {
-        return get(coWebsites).find((coWebsite: CoWebsite) => coWebsite.iframe.id === coWebsiteId);
+        return get(coWebsites).find((coWebsite: CoWebsite) => {
+            return coWebsite.getId() === coWebsiteId;
+        });
     }
 
     private getCoWebsiteByPosition(position: number): CoWebsite | undefined {
@@ -429,7 +440,9 @@ class CoWebsiteManager {
     }
 
     private getPositionByCoWebsite(coWebsite: CoWebsite): number {
-        return get(coWebsites).findIndex((currentCoWebsite) => currentCoWebsite.iframe.id === coWebsite.iframe.id);
+        return get(coWebsites).findIndex((currentCoWebsite) => {
+            return currentCoWebsite.getId() === coWebsite.getId();
+        });
     }
 
     private getSlotByCowebsite(coWebsite: CoWebsite): HTMLDivElement | undefined {
@@ -443,7 +456,7 @@ class CoWebsiteManager {
         if (index === 0) {
             id += "main";
         } else {
-            id += coWebsite.iframe.id;
+            id += coWebsite.getId();
         }
 
         const slot = HtmlUtils.getElementById<HTMLDivElement>(id);
@@ -460,60 +473,72 @@ class CoWebsiteManager {
 
         const bounding = coWebsiteSlot.getBoundingClientRect();
 
-        coWebsite.iframe.style.top = bounding.top + "px";
-        coWebsite.iframe.style.left = bounding.left + "px";
-        coWebsite.iframe.style.width = bounding.right - bounding.left + "px";
-        coWebsite.iframe.style.height = bounding.bottom - bounding.top + "px";
+        const iframe = coWebsite.getIframe();
+
+        if (iframe) {
+            iframe.style.top = bounding.top + "px";
+            iframe.style.left = bounding.left + "px";
+            iframe.style.width = bounding.right - bounding.left + "px";
+            iframe.style.height = bounding.bottom - bounding.top + "px";
+        }
     }
 
     public resizeAllIframes() {
         const mainCoWebsite = this.getCoWebsiteByPosition(0);
+        const mainIframe = mainCoWebsite?.getIframe();
         const highlightEmbed = get(highlightedEmbedScreen);
 
-        get(coWebsites).forEach((coWebsite) => {
-            const notMain = !mainCoWebsite || (mainCoWebsite && mainCoWebsite.iframe.id !== coWebsite.iframe.id);
+        get(coWebsites).forEach((coWebsite: CoWebsite) => {
+            const iframe = coWebsite.getIframe();
+            if (!iframe) {
+                return;
+            }
+
+            const notMain = !mainCoWebsite || (mainCoWebsite && mainIframe && mainIframe.id !== iframe.id);
             const notHighlighEmbed =
                 !highlightEmbed ||
                 (highlightEmbed &&
                     (highlightEmbed.type !== "cowebsite" ||
-                        (highlightEmbed.type === "cowebsite" &&
-                            highlightEmbed.embed.iframe.id !== coWebsite.iframe.id)));
+                        (highlightEmbed.type === "cowebsite" && highlightEmbed.embed.getId() !== coWebsite.getId())));
 
-            if (coWebsite.iframe.classList.contains("main") && notMain) {
-                coWebsite.iframe.classList.remove("main");
+            if (iframe.classList.contains("main") && notMain) {
+                iframe.classList.remove("main");
             }
 
-            if (coWebsite.iframe.classList.contains("highlighted") && notHighlighEmbed) {
-                coWebsite.iframe.classList.remove("highlighted");
-                coWebsite.iframe.classList.add("pixel");
-                coWebsite.iframe.style.top = "-1px";
-                coWebsite.iframe.style.left = "-1px";
+            if (iframe.classList.contains("highlighted") && notHighlighEmbed) {
+                iframe.classList.remove("highlighted");
+                iframe.classList.add("pixel");
+                iframe.style.top = "-1px";
+                iframe.style.left = "-1px";
             }
 
             if (notMain && notHighlighEmbed) {
-                coWebsite.iframe.classList.add("pixel");
-                coWebsite.iframe.style.top = "-1px";
-                coWebsite.iframe.style.left = "-1px";
+                iframe.classList.add("pixel");
+                iframe.style.top = "-1px";
+                iframe.style.left = "-1px";
             }
 
             this.setIframeOffset(coWebsite);
         });
 
-        if (mainCoWebsite) {
-            mainCoWebsite.iframe.classList.add("main");
-            mainCoWebsite.iframe.classList.remove("pixel");
+        if (mainIframe) {
+            mainIframe.classList.add("main");
+            mainIframe.classList.remove("pixel");
         }
 
         if (highlightEmbed && highlightEmbed.type === "cowebsite") {
-            highlightEmbed.embed.iframe.classList.add("highlighted");
-            highlightEmbed.embed.iframe.classList.remove("pixel");
+            const highlightEmbedIframe = highlightEmbed.embed.getIframe();
+            if (highlightEmbedIframe) {
+                highlightEmbedIframe.classList.add("highlighted");
+                highlightEmbedIframe.classList.remove("pixel");
+            }
         }
     }
 
     private removeHighlightCoWebsite(coWebsite: CoWebsite) {
         const highlighted = get(highlightedEmbedScreen);
 
-        if (highlighted && highlighted.type === "cowebsite" && highlighted.embed.iframe.id === coWebsite.iframe.id) {
+        if (highlighted && highlighted.type === "cowebsite" && highlighted.embed.getId() === coWebsite.getId()) {
             highlightedEmbedScreen.removeHighlight();
         }
     }
@@ -526,7 +551,9 @@ class CoWebsiteManager {
             this.closeMain();
         }
 
-        coWebsite.iframe.remove();
+        coWebsite.unload().catch((err) => {
+            console.error("Cannot unload cowebsite on remove from stack");
+        });
     }
 
     public goToMain(coWebsite: CoWebsite) {
@@ -534,42 +561,32 @@ class CoWebsiteManager {
         coWebsites.remove(coWebsite);
         coWebsites.add(coWebsite, 0);
 
+        if (mainCoWebsite) {
+            const iframe = mainCoWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "block";
+            }
+        }
+
         if (
             isMediaBreakpointDown("lg") &&
             get(embedScreenLayout) === LayoutMode.Presentation &&
             mainCoWebsite &&
-            mainCoWebsite.iframe.id !== coWebsite.iframe.id &&
-            get(mainCoWebsite.state) !== "asleep"
+            mainCoWebsite.getId() !== coWebsite.getId() &&
+            mainCoWebsite.getState() !== "asleep"
         ) {
-            highlightedEmbedScreen.toggleHighlight({
-                type: "cowebsite",
-                embed: mainCoWebsite,
-            });
+            highlightedEmbedScreen.removeHighlight();
         }
 
         this.resizeAllIframes();
     }
 
-    public searchJitsi(): CoWebsite | undefined {
-        return get(coWebsites).find((coWebsite: CoWebsite) => coWebsite.jitsi);
-    }
-
-    private initialiseCowebsite(coWebsite: CoWebsite, position: number | undefined) {
-        if (coWebsite.allowPolicy) {
-            coWebsite.iframe.allow = coWebsite.allowPolicy;
-        }
-
-        if (coWebsite.allowApi) {
-            iframeListener.registerIframe(coWebsite.iframe);
-        }
-
-        coWebsite.iframe.classList.add("pixel");
-
+    public addCoWebsiteToStore(coWebsite: CoWebsite, position: number | undefined) {
         const coWebsitePosition = position === undefined ? get(coWebsites).length : position;
         coWebsites.add(coWebsite, coWebsitePosition);
     }
 
-    private generateUniqueId() {
+    public generateUniqueId() {
         let id = undefined;
         do {
             id = "cowebsite-iframe-" + (Math.random() + 1).toString(36).substring(7);
@@ -578,210 +595,97 @@ class CoWebsiteManager {
         return id;
     }
 
-    public addCoWebsite(
-        url: string,
-        base: string,
-        allowApi?: boolean,
-        allowPolicy?: string,
-        widthPercent?: number,
-        position?: number,
-        closable?: boolean,
-        altMessage?: string
-    ): CoWebsite {
-        const iframe = document.createElement("iframe");
-        const fullUrl = new URL(url, base);
-        iframe.src = fullUrl.toString();
-        iframe.id = this.generateUniqueId();
-
-        const newCoWebsite: CoWebsite = {
-            iframe,
-            url: fullUrl,
-            state: writable("asleep" as CoWebsiteState),
-            closable: closable ?? false,
-            allowPolicy,
-            allowApi,
-            widthPercent,
-            altMessage,
-        };
-
-        this.initialiseCowebsite(newCoWebsite, position);
-
-        return newCoWebsite;
-    }
-
-    public addCoWebsiteFromIframe(
-        iframe: HTMLIFrameElement,
-        allowApi?: boolean,
-        allowPolicy?: string,
-        widthPercent?: number,
-        position?: number,
-        closable?: boolean,
-        jitsi?: boolean
-    ): CoWebsite {
-        if (get(coWebsitesNotAsleep).length < 1) {
-            this.loadMain(widthPercent);
-        }
-
-        iframe.id = this.generateUniqueId();
-
-        const newCoWebsite: CoWebsite = {
-            iframe,
-            url: new URL(iframe.src),
-            state: writable("ready" as CoWebsiteState),
-            closable: closable ?? false,
-            allowPolicy,
-            allowApi,
-            widthPercent,
-            jitsi,
-        };
-
-        if (position === 0) {
-            this.openMain();
-            setTimeout(() => {
-                this.fire();
-            }, animationTime);
-        }
-
-        this.initialiseCowebsite(newCoWebsite, position);
-
-        return newCoWebsite;
-    }
-
-    public loadCoWebsite(coWebsite: CoWebsite): Promise<CoWebsite> {
+    public loadCoWebsite(coWebsite: CoWebsite): CancelablePromise<void> {
         if (get(coWebsitesNotAsleep).length < 1) {
             coWebsites.remove(coWebsite);
             coWebsites.add(coWebsite, 0);
-            this.loadMain(coWebsite.widthPercent);
+            this.loadMain(coWebsite.getWidthPercent());
         }
 
         // Check if the main is hide
-        if (this.getMainCoWebsite() && this.openedMain === iframeStates.closed) {
+        if (this.getMainCoWebsite() && this.getMainState() === iframeStates.closed) {
             this.displayMain();
         }
 
-        coWebsite.state.set("loading");
-
-        const mainCoWebsite = this.getMainCoWebsite();
-
-        return new Promise((resolve, reject) => {
-            const onloadPromise = new Promise<void>((resolve) => {
-                coWebsite.iframe.onload = () => {
-                    coWebsite.state.set("ready");
-                    resolve();
-                };
-            });
-
-            const onTimeoutPromise = new Promise<void>((resolve) => {
-                setTimeout(() => resolve(), 2000);
-            });
-
-            this.cowebsiteBufferDom.appendChild(coWebsite.iframe);
-
-            if (coWebsite.jitsi) {
-                const gameScene = gameManager.getCurrentGameScene();
-                gameScene.disableMediaBehaviors();
-                jitsiFactory.restart();
-            }
-
-            this.currentOperationPromise = this.currentOperationPromise
-                .then(() => Promise.race([onloadPromise, onTimeoutPromise]))
-                .then(() => {
-                    if (mainCoWebsite && mainCoWebsite.iframe.id === coWebsite.iframe.id) {
+        const coWebsiteLloading = coWebsite
+            .load()
+            .then(() => {
+                const mainCoWebsite = this.getMainCoWebsite();
+                const highlightedEmbed = get(highlightedEmbedScreen);
+                if (mainCoWebsite) {
+                    if (mainCoWebsite.getId() === coWebsite.getId()) {
                         this.openMain();
 
                         setTimeout(() => {
                             this.fire();
                         }, animationTime);
+                    } else if (!highlightedEmbed) {
+                        highlightedEmbedScreen.toggleHighlight({
+                            type: "cowebsite",
+                            embed: coWebsite,
+                        });
                     }
+                }
+                this.resizeAllIframes();
+            })
+            .catch((err) => {
+                console.error("Error on co-website loading => ", err);
+                this.removeCoWebsiteFromStack(coWebsite);
+            });
 
-                    return resolve(coWebsite);
-                })
-                .catch((err) => {
-                    console.error("Error on co-website loading => ", err);
-                    this.removeCoWebsiteFromStack(coWebsite);
-                    return reject();
-                });
-        });
+        return coWebsiteLloading;
     }
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        return new Promise((resolve, reject) => {
-            this.removeHighlightCoWebsite(coWebsite);
+        this.removeHighlightCoWebsite(coWebsite);
 
-            coWebsite.iframe.parentNode?.removeChild(coWebsite.iframe);
-            coWebsite.state.set("asleep");
-            coWebsites.remove(coWebsite);
+        return coWebsite
+            .unload()
+            .then(() => {
+                coWebsites.remove(coWebsite);
+                const mainCoWebsite = this.getMainCoWebsite();
 
-            if (coWebsite.jitsi) {
-                jitsiFactory.stop();
-                const gameScene = gameManager.getCurrentGameScene();
-                gameScene.enableMediaBehaviors();
-            }
+                if (mainCoWebsite) {
+                    this.removeHighlightCoWebsite(mainCoWebsite);
+                    this.goToMain(mainCoWebsite);
+                    this.resizeAllIframes();
+                } else {
+                    this.closeMain();
+                }
 
-            const mainCoWebsite = this.getMainCoWebsite();
+                coWebsites.add(coWebsite, get(coWebsites).length);
+            })
+            .catch(() => {
+                console.error();
+            });
+    }
 
-            if (mainCoWebsite) {
-                this.removeHighlightCoWebsite(mainCoWebsite);
-                this.goToMain(mainCoWebsite);
-                this.resizeAllIframes();
-            } else {
-                this.closeMain();
-            }
+    public closeCoWebsite(coWebsite: CoWebsite): void {
+        if (get(coWebsites).length === 1) {
+            this.fire();
+        }
 
-            coWebsites.add(coWebsite, get(coWebsites).length);
+        this.removeCoWebsiteFromStack(coWebsite);
 
-            resolve();
+        const mainCoWebsite = this.getMainCoWebsite();
+
+        if (mainCoWebsite) {
+            this.removeHighlightCoWebsite(mainCoWebsite);
+            this.goToMain(mainCoWebsite);
+            this.resizeAllIframes();
+        } else {
+            this.closeMain();
+        }
+    }
+
+    public closeCoWebsites(): void {
+        get(coWebsites).forEach((coWebsite: CoWebsite) => {
+            this.closeCoWebsite(coWebsite);
         });
     }
 
-    public closeCoWebsite(coWebsite: CoWebsite): Promise<void> {
-        this.currentOperationPromise = this.currentOperationPromise.then(
-            () =>
-                new Promise((resolve) => {
-                    if (coWebsite.jitsi) {
-                        jitsiFactory.destroy();
-                        const gameScene = gameManager.getCurrentGameScene();
-                        gameScene.enableMediaBehaviors();
-                    }
-
-                    if (get(coWebsites).length === 1) {
-                        this.fire();
-                    }
-
-                    if (coWebsite.allowApi) {
-                        iframeListener.unregisterIframe(coWebsite.iframe);
-                    }
-
-                    this.removeCoWebsiteFromStack(coWebsite);
-
-                    const mainCoWebsite = this.getMainCoWebsite();
-
-                    if (mainCoWebsite) {
-                        this.removeHighlightCoWebsite(mainCoWebsite);
-                        this.goToMain(mainCoWebsite);
-                        this.resizeAllIframes();
-                    } else {
-                        this.closeMain();
-                    }
-                    resolve();
-                })
-        );
-        return this.currentOperationPromise;
-    }
-
-    public closeCoWebsites(): Promise<void> {
-        return (this.currentOperationPromise = this.currentOperationPromise.then(() => {
-            get(coWebsites).forEach((coWebsite: CoWebsite) => {
-                this.closeCoWebsite(coWebsite).catch(() => {
-                    console.error("Error during closing a co-website");
-                });
-            });
-        }));
-        return this.currentOperationPromise;
-    }
-
     public getGameSize(): { width: number; height: number } {
-        if (this.openedMain === iframeStates.closed) {
+        if (this.getMainState() === iframeStates.closed) {
             return {
                 width: window.innerWidth,
                 height: window.innerHeight,

@@ -47,6 +47,7 @@ export class MapController extends BaseController {
                 if (!match) {
                     res.writeStatus("404 Not Found");
                     this.addCorsHeaders(res);
+                    res.writeHeader("Content-Type", "application/json");
                     res.end(JSON.stringify({}));
                     return;
                 }
@@ -55,6 +56,7 @@ export class MapController extends BaseController {
 
                 res.writeStatus("200 OK");
                 this.addCorsHeaders(res);
+                res.writeHeader("Content-Type", "application/json");
                 res.end(
                     JSON.stringify({
                         mapUrl,
@@ -69,7 +71,7 @@ export class MapController extends BaseController {
                             {
                                 name: "Room",
                                 uri: roomUrl.toString(),
-                            }
+                            },
                         ],
                     } as MapDetailsData)
                 );
@@ -112,6 +114,7 @@ export class MapController extends BaseController {
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);
+                    res.writeHeader("Content-Type", "application/json");
                     res.end(JSON.stringify(mapDetails));
                 } catch (e) {
                     this.errorToResponse(e, res);

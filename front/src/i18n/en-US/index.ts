@@ -11,6 +11,7 @@ import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
+import trigger from "./trigger";
 
 const en_US: BaseTranslation = {
     language: "English",
@@ -27,6 +28,7 @@ const en_US: BaseTranslation = {
     report,
     warning,
     emoji,
+    trigger,
 };
 
 export default en_US;

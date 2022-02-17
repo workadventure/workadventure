@@ -10,6 +10,8 @@ import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AudioContext } from "standardized-audio-context";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -540,6 +542,41 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
         }
     }
 );
+
+export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+        clearInterval(timeout);
+        if (localStreamStoreValue.type === "error") {
+            set(undefined);
+            return;
+        }
+        const mediaStream = localStreamStoreValue.stream;
+
+        if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+            set(undefined);
+            return;
+        }
+        const soundMeter = new SoundMeter(mediaStream);
+        let error = false;
+
+        timeout = setInterval(() => {
+            try {
+                set(soundMeter.getVolume());
+            } catch (err) {
+                if (!error) {
+                    console.error(err);
+                    error = true;
+                }
+            }
+        }, 100);
+    });
+
+    return () => {
+        unsubscribe();
+        clearInterval(timeout);
+    };
+});
 
 /**
  * Device list
