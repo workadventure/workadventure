@@ -6,6 +6,7 @@ import { PrometheusController } from "./Controller/PrometheusController";
 import { DebugController } from "./Controller/DebugController";
 import { AdminController } from "./Controller/AdminController";
 import { OpenIdProfileController } from "./Controller/OpenIdProfileController";
+import { WokaListController } from "./Controller/WokaListController";
 import HyperExpress from "hyper-express";
 import { cors } from "./Middleware/Cors";
 
@@ -29,6 +30,7 @@ class App {
         new DebugController(webserver);
         new AdminController(webserver);
         new OpenIdProfileController(webserver);
+        new WokaListController(webserver);
     }
 }
 
