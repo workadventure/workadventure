@@ -6,46 +6,36 @@
         window.addEventListener('load', () => {
             //@ts-ignore
             WA.onInit().then(() => {
-
-                const actions = {
-                    'Ask to tell a joke': () => {
-                        console.log("Why don't scientists trust atoms?");
-                        setTimeout(() => { console.log('...'); }, 1000);
-                        setTimeout(() => { console.log('...'); }, 2000);
-                        setTimeout(() => { console.log('BECAUSE THEY MAKE UP EVERYTHING!') }, 3000);
-                    },
-                }
-
-                const randomActions = [];
-
-                let lastRemotePlayerClicked;
                 const addActionButton = document.getElementById('addActionButton');
                 const removeActionButton = document.getElementById('removeActionButton');
 
-                WA.ui.onRemotePlayerClicked.subscribe((data) => {
-                    console.log(data);
-                    lastRemotePlayerClicked = data.id;
-                    WA.ui.addActionsMenuKeyToRemotePlayer(data.id, 'Ask to tell a joke');
-                });
-
-                WA.ui.onActionsMenuActionClicked.subscribe((data) => {
-                    const action = actions[data.actionName];
-                    if (action) {
-                        action();
-                    }
+                WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
+                    const action = remotePlayer.addAction('tell a joke', () => {
+                        console.log('I am telling you a joke');
+                        window.setTimeout(
+                            () => {
+                                action.remove();
+                                console.log('remove action');
+                            },
+                            1000,
+                        );
+                    });
+                    remotePlayer.addAction('do NOT tell a joke', () => {
+                        console.log('I am NOT telling you a joke');
+                    });
                 });
                 
                 addActionButton.addEventListener('click', () => {
-                    const randomActionName = Math.random().toString();
-                    randomActions.push(randomActionName);
-                    WA.ui.addActionsMenuKeyToRemotePlayer(lastRemotePlayerClicked, randomActionName);
+                    // const randomActionName = Math.random().toString();
+                    // randomActions.push(randomActionName);
+                    // WA.ui.addActionsMenuKeyToRemotePlayer(lastRemotePlayerClicked, randomActionName);
                 });
 
                 removeActionButton.addEventListener('click', () => {
-                    const randomAction = randomActions.pop();
-                    if (randomAction) {
-                        WA.ui.removeActionsMenuKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
-                    }
+                    // const randomAction = randomActions.pop();
+                    // if (randomAction) {
+                    //     WA.ui.removeActionsMenuKeyFromRemotePlayer(lastRemotePlayerClicked, randomAction);
+                    // }
                 });
             });
         })

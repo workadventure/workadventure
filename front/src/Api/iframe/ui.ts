@@ -13,7 +13,7 @@ import {
     ActionsMenuActionClickedEvent,
     isActionsMenuActionClickedEvent,
 } from "../Events/ActionsMenuActionClickedEvent";
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -48,14 +48,71 @@ export interface ActionMessageOptions {
     callback: () => void;
 }
 
+export interface RemotePlayerInterface {
+    addAction(key: string, callback: Function): void;
+}
+
+export class RemotePlayer implements RemotePlayerInterface {
+    private id: number;
+
+    private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
+
+    constructor(id: number) {
+        this.id = id;
+    }
+
+    public addAction(key: string, callback: Function): ActionsMenuAction {
+        const newAction = new ActionsMenuAction(this, key, callback);
+        this.actions.set(key, newAction);
+        sendToWorkadventure({
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id: this.id, actionKey: key },
+        });
+        return newAction;
+    }
+
+    public callAction(key: string): void {
+        const action = this.actions.get(key);
+        if (action) {
+            action.call();
+        }
+    }
+
+    public removeAction(key: string): void {
+        this.actions.delete(key);
+    }
+}
+
+export class ActionsMenuAction {
+    private remotePlayer: RemotePlayer;
+    private key: string;
+    private callback: Function;
+
+    constructor(remotePlayer: RemotePlayer, key: string, callback: Function) {
+        this.remotePlayer = remotePlayer;
+        this.key = key;
+        this.callback = callback;
+    }
+
+    public call(): void {
+        this.callback();
+    }
+
+    public remove(): void {
+        this.remotePlayer.removeAction(this.key);
+    }
+}
+
 export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
-    public readonly onRemotePlayerClicked: Subject<RemotePlayerClickedEvent>;
-    public readonly onActionsMenuActionClicked: Subject<ActionsMenuActionClickedEvent>;
+    public readonly _onRemotePlayerClicked: Subject<RemotePlayerInterface>;
+    public readonly onRemotePlayerClicked: Observable<RemotePlayerInterface>;
+
+    private currentlyClickedRemotePlayer?: RemotePlayer;
 
     constructor() {
         super();
-        this.onRemotePlayerClicked = new Subject<RemotePlayerClickedEvent>();
-        this.onActionsMenuActionClicked = new Subject<ActionsMenuActionClickedEvent>();
+        this._onRemotePlayerClicked = new Subject<RemotePlayerInterface>();
+        this.onRemotePlayerClicked = this._onRemotePlayerClicked.asObservable();
     }
 
     callbacks = [
@@ -101,14 +158,16 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             type: "remotePlayerClickedEvent",
             typeChecker: isRemotePlayerClickedEvent,
             callback: (payloadData: RemotePlayerClickedEvent) => {
-                this.onRemotePlayerClicked.next(payloadData);
+                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData.id);
+                this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
             },
         }),
         apiCallback({
             type: "actionsMenuActionClickedEvent",
             typeChecker: isActionsMenuActionClickedEvent,
             callback: (payloadData: ActionsMenuActionClickedEvent) => {
-                this.onActionsMenuActionClicked.next(payloadData);
+                this.currentlyClickedRemotePlayer?.callAction(payloadData.actionName);
+                // this.onActionsMenuActionClicked.next(payloadData);
             },
         }),
     ];
