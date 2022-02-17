@@ -122,16 +122,16 @@ api_permissions:
     what: "*"
   "admin access":
     who:
-      access:
-        allow:
-          acl: loopback
-          acl: admin
-      oauth:
-        scope: "ejabberd:admin"
-        access:
-          allow:
-            acl: loopback
-            acl: admin
+      - access:
+        - allow:
+          - acl: loopback
+          - acl: admin
+      - oauth:
+        - scope: "ejabberd:admin"
+        - access:
+          - allow:
+            - acl: loopback
+            - acl: admin
     what:
       - "*"
       - "!stop"
