@@ -26,13 +26,12 @@
     float: left;
   }
 
-  div.avatar-container > img {
+  :global(div.avatar-container > img) {
     display: block;
     width: 100%;
     min-width:32px;
     max-width: 32px; /*actual image width*/
     height: auto; /* maintain aspect ratio*/
     margin: auto; /*optional centering of image*/
-    position: absolute;
   }
 </style>
