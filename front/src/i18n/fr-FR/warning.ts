@@ -1,5 +1,5 @@
 import type { Translation } from "../i18n-types";
-import {ADMIN_URL} from "../../Enum/EnvironmentVariable";
+import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
 const upgradeLink = ADMIN_URL + "/pricing";
 
