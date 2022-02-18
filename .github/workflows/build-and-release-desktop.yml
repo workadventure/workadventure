@@ -1,0 +1,104 @@
+name: Build & Release Desktop App
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+  release:
+    types: [created]
+
+jobs:
+  build_on_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop"
+
+      - name: "Build Typescript"
+        run: yarn build
+        working-directory: "desktop"
+
+      - name: "Build App"
+        run: yarn bundle
+        working-directory: "desktop"
+        if: ${{ github.event_name != 'release' }}
+
+      - name: "Build & Publish App"
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn release
+        working-directory: "desktop"
+        if: ${{ github.event_name == 'release' }}
+
+  build_on_mac:
+    runs-on: macos-latest
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop"
+
+      - name: "Build Typescript"
+        run: yarn build
+        working-directory: "desktop"
+
+      - name: "Build App"
+        run: yarn bundle
+        working-directory: "desktop"
+        if: ${{ github.event_name != 'release' }}
+
+      - name: "Build & Publish App"
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn release
+        working-directory: "desktop"
+        if: ${{ github.event_name == 'release' }}
+
+  build_on_win:
+    runs-on: windows-latest
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop"
+
+      - name: "Build Typescript"
+        run: yarn build
+        working-directory: "desktop"
+
+      - name: "Build App"
+        run: yarn bundle
+        working-directory: "desktop"
+        if: ${{ github.event_name != 'release' }}
+
+      - name: "Build & Publish App"
+        # env:
+        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn release
+        working-directory: "desktop"
+        if: ${{ github.event_name == 'release' }}

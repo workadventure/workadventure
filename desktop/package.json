@@ -1,13 +1,15 @@
 {
-    "name": "@workadventure/desktop",
+    "name": "workadventure-desktop",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "build/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
-        "build": "tsup-node ./src/main.ts ./src/sidebar/preload.ts ./src/app/preload.js",
+        "build": "tsup-node -d build ./src/main.ts ./src/sidebar/preload.ts ./src/app/preload.ts",
+        "dev": "yarn build --watch --onSuccess 'yarn electron build/main.js'",
+        "bundle": "electron-builder install-app-deps && electron-builder",
+        "release": "yarn bundle",
         "typecheck": "tsc --noEmit",
-        "dev": "yarn build --watch --onSuccess 'yarn electron dist/main.js'",
         "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
         "lint": "yarn eslint src/ . --ext .ts",
         "fix": "yarn eslint --fix src/ . --ext .ts",
@@ -35,36 +37,5 @@
         "prettier": "^2.5.1",
         "tsup": "^5.11.13",
         "typescript": "^3.8.3"
-    },
-    "build": {
-        "appId": "re.workadventu.desktop",
-        "files": [
-            "src/**/*",
-            "assets/**/*"
-        ],
-        "dmg": {
-            "icon": false
-        },
-        "linux": {
-            "category": "TODO;TODO",
-            "packageCategory": "TODO;TODO",
-            "maintainer": "TODO",
-            "icon": "assets/icons/TODO.icns",
-            "description": "TODO",
-            "target": [
-                "deb",
-                "zip",
-                "AppImage"
-            ],
-            "artifactName": "${productName}-${version}-${arch}.${ext}"
-        },
-        "win": {
-            "icon": "assets/icons/TODO.ico",
-            "artifactName": "${productName}-${version}-setup.${ext}"
-        },
-        "publish": {
-            "provider": "generic",
-            "url": "TODO"
-        }
     }
 }

@@ -1,0 +1,33 @@
+appId: re.workadventu.desktop
+
+files:
+    - "build/**/*"
+    - "assets/**/*"
+    - "sidebar/**/*"
+
+dmg:
+    icon: false
+
+linux:
+    category: "TODO;TODO"
+    packageCategory: "TODO;TODO"
+    maintainer: "TODO"
+    icon: "assets/icons/TODO.icns"
+    description: "TODO"
+    target:
+        # - deb
+        - zip
+        - AppImage
+
+    artifactName: "${productName}-${version}-${arch}.${ext}"
+
+win:
+    icon: "assets/icons/TODO.ico"
+    artifactName: "${productName}-${version}-setup.${ext}"
+
+publish:
+    provider: github
+    owner: thecodingmachine
+    repo: workadventure
+    vPrefixedTagName: false
+    releaseType: draft
