@@ -1,4 +1,4 @@
-name: Build & Release Desktop App
+name: Build & release desktop app
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
 
 jobs:
   build_on_linux:
+    name: "Build & release for Linux"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout"
@@ -44,6 +45,7 @@ jobs:
         if: ${{ github.event_name == 'release' }}
 
   build_on_mac:
+    name: "Build & release for MacOS"
     runs-on: macos-latest
     steps:
       - name: "Checkout"
@@ -77,6 +79,7 @@ jobs:
         if: ${{ github.event_name == 'release' }}
 
   build_on_win:
+    name: "Build & release for Windows"
     runs-on: windows-latest
     steps:
       - name: "Checkout"
