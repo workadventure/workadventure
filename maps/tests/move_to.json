@@ -3,7 +3,7 @@
  "infinite":false,
  "layers":[
         {
-         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 12, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
          "height":10,
          "id":1,
          "name":"floor",
@@ -204,6 +204,71 @@
                  "width":92.7120717279925,
                  "x":233.848901257569,
                  "y":135.845612785282
+                }, 
+                {
+                 "height":0,
+                 "id":9,
+                 "name":"destination",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":207.918025151374,
+                 "y":243.31625523987
+                }, 
+                {
+                 "height":45.0829063809967,
+                 "id":10,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"destination object",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":83,
+                 "x":167.26,
+                 "y":254.682580344667
+                }, 
+                {
+                 "height":19.6921,
+                 "id":11,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start&moveTo=destination",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":202.260327899394,
+                 "x":32.2652715416861,
+                 "y":148.51445302748
+                }, 
+                {
+                 "height":19.6921,
+                 "id":12,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start2&moveTo=200,100",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":202.26,
+                 "x":32.2654354913834,
+                 "y":169.008165183978
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -212,7 +277,7 @@
          "y":0
         }],
  "nextlayerid":11,
- "nextobjectid":9,
+ "nextobjectid":13,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.7.2",

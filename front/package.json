@@ -42,6 +42,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
+    "@16bits/nes.css": "^2.3.2",
     "@fontsource/press-start-2p": "^4.3.0",
     "@joeattardi/emoji-button": "^4.6.2",
     "@types/simple-peer": "^9.11.1",
@@ -71,7 +72,7 @@
     "zod": "^3.11.6"
   },
   "scripts": {
-    "start": "run-p templater serve svelte-check-watch typesafe-i18n",
+    "start": "run-p templater serve svelte-check-watch typesafe-i18n-watch",
     "templater": "cross-env ./templater.sh",
     "serve": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" webpack serve --open",
     "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack.json\" NODE_ENV=production webpack",
@@ -84,7 +85,8 @@
     "svelte-check": "svelte-check --fail-on-warnings --fail-on-hints --compiler-warnings \"a11y-no-onchange:ignore,a11y-autofocus:ignore,a11y-media-has-caption:ignore\"",
     "pretty": "yarn prettier --write 'src/**/*.{ts,svelte}'",
     "pretty-check": "yarn prettier --check 'src/**/*.{ts,svelte}'",
-    "typesafe-i18n": "typesafe-i18n  --no-watch"
+    "typesafe-i18n": "typesafe-i18n  --no-watch",
+    "typesafe-i18n-watch": "typesafe-i18n"
   },
   "lint-staged": {
     "*.svelte": [

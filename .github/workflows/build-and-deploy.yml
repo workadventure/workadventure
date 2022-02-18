@@ -149,6 +149,10 @@ jobs:
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Set ADMIN_URL if "deploy-connect-to-admin" label is set
+        run: echo "ADMIN_API_URL=https://${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}.test.workadventu.re" >> $GITHUB_ENV
+        if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy-connect-to-admin') }}
+
       - name: Write certificate
         run: echo "${CERTS_PRIVATE_KEY}" > secret.key && chmod 0600 secret.key
         env:
@@ -185,6 +189,7 @@ jobs:
         env:
           KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
+          ADMIN_SOCKETS_TOKEN: ${{ secrets.ADMIN_SOCKETS_TOKEN }}
           JITSI_ISS: ${{ secrets.JITSI_ISS }}
           JITSI_URL: ${{ secrets.JITSI_URL }}
           SECRET_JITSI_KEY: ${{ secrets.SECRET_JITSI_KEY }}

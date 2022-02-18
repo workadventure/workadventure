@@ -8,19 +8,27 @@ export class PathfindingManager {
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
 
-    constructor(scene: Phaser.Scene, collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
+    constructor(
+        scene: Phaser.Scene,
+        collisionsGrid: number[][],
+        walkingCostGrid: number[][],
+        tileDimensions: { width: number; height: number }
+    ) {
         this.scene = scene;
 
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
+        this.easyStar.disableCornerCutting();
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
+        this.setWalkingCostGrid(walkingCostGrid);
     }
 
-    public setCollisionGrid(collisionGrid: number[][]): void {
+    public setCollisionGrid(collisionGrid: number[][], walkingCostGrid: number[][]): void {
         this.setEasyStarGrid(collisionGrid);
+        this.setWalkingCostGrid(walkingCostGrid);
     }
 
     public async findPath(
@@ -113,6 +121,14 @@ export class PathfindingManager {
     private setEasyStarGrid(grid: number[][]): void {
         this.easyStar.setGrid(grid);
         this.easyStar.setAcceptableTiles([0]); // zeroes are walkable
+    }
+
+    private setWalkingCostGrid(grid: number[][]): void {
+        for (let y = 0; y < grid.length; y += 1) {
+            for (let x = 0; x < grid[y].length; x += 1) {
+                this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
+            }
+        }
     }
 
     private logGridToTheConsole(grid: number[][]): void {

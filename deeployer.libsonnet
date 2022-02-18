@@ -4,7 +4,7 @@
   local tag = namespace,
   local url = namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
-  local adminUrl = if std.startsWith(namespace, "admin") then "https://"+url else null,
+  local adminUrl = if std.objectHas(env, 'ADMIN_API_URL') then env.ADMIN_API_URL else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
