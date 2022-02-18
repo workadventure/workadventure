@@ -84,11 +84,13 @@ export class AdminController extends BaseController {
 
             if (ADMIN_API_TOKEN === "") {
                 res.writeStatus("401 Unauthorized").end("No token configured!");
+                res.end();
                 return;
             }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
+                res.end();
                 return;
             }
 
