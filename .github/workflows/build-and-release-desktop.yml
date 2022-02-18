@@ -30,7 +30,9 @@ jobs:
         working-directory: "desktop"
 
       - name: "Build App"
-        run: yarn bundle
+        run: yarn bundle --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop"
         if: ${{ github.event_name != 'release' }}
 
@@ -61,13 +63,15 @@ jobs:
         working-directory: "desktop"
 
       - name: "Build App"
-        run: yarn bundle
+        run: yarn bundle --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop"
         if: ${{ github.event_name != 'release' }}
 
       - name: "Build & Publish App"
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn release
         working-directory: "desktop"
         if: ${{ github.event_name == 'release' }}
@@ -92,13 +96,15 @@ jobs:
         working-directory: "desktop"
 
       - name: "Build App"
-        run: yarn bundle
+        run: yarn bundle --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop"
         if: ${{ github.event_name != 'release' }}
 
       - name: "Build & Publish App"
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: yarn release
         working-directory: "desktop"
         if: ${{ github.event_name == 'release' }}
