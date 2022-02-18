@@ -99,5 +99,5 @@ export function createWindow() {
         mainWindow?.setTitle("WorkAdventure Desktop");
     });
 
-    mainWindow.loadFile("../sidebar/index.html");
+    mainWindow.loadFile(path.resolve(__dirname, "..", "sidebar", "index.html"));
 }
