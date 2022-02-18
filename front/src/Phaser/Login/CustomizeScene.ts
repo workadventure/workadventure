@@ -4,16 +4,17 @@ import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
 import Sprite = Phaser.GameObjects.Sprite;
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { activeRowStore, customCharacterSceneVisibleStore } from "../../Stores/CustomCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { isMobile } from "../../Enum/EnvironmentVariable";
 import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -29,44 +30,49 @@ export class CustomizeScene extends AbstractCharacterScene {
     private moveHorizontally: number = 0;
     private moveVertically: number = 0;
 
+    private loader: Loader;
+
     constructor() {
         super({
             key: CustomizeSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
-        this.loadCustomSceneSelectCharacters().then((bodyResourceDescriptions) => {
-            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                if (
-                    bodyResourceDescription.level == undefined ||
-                    bodyResourceDescription.level < 0 ||
-                    bodyResourceDescription.level > 5
-                ) {
-                    throw "Texture level is null";
-                }
-                this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
-            });
-            this.lazyloadingAttempt = true;
-        });
+        this.loadCustomSceneSelectCharacters()
+            .then((bodyResourceDescriptions) => {
+                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                    if (
+                        bodyResourceDescription.level == undefined ||
+                        bodyResourceDescription.level < 0 ||
+                        bodyResourceDescription.level > 5
+                    ) {
+                        throw new Error("Texture level is null");
+                    }
+                    this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+                });
+                this.lazyloadingAttempt = true;
+            })
+            .catch((e) => console.error(e));
 
         this.layers = loadAllLayers(this.load);
         this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
         customCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
             customCharacterSceneVisibleStore.set(true);
         });
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMobile() ? 3 : 1;
+        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
 
         this.Rectangle = this.add.rectangle(
             this.cameras.main.worldView.x + this.cameras.main.width / 2,
@@ -278,10 +284,11 @@ export class CustomizeScene extends AbstractCharacterScene {
             return;
         }
 
+        analyticsClient.validationWoka("CustomizeWoka");
+
         gameManager.setCharacterLayers(layers);
         this.scene.sleep(CustomizeSceneName);
         waScaleManager.restoreZoom();
-        this.events.removeListener("wake");
         gameManager.tryResumingGame(EnableCameraSceneName);
         customCharacterSceneVisibleStore.set(false);
     }

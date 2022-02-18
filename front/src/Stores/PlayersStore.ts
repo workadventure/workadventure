@@ -3,6 +3,7 @@ import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getRandomColor } from "../WebRtc/ColorGenerator";
 import { localUserStore } from "../Connexion/LocalUserStore";
+import room from "../Api/iframe/room";
 
 let idCount = 0;
 
@@ -12,14 +13,15 @@ let idCount = 0;
 function createPlayersStore() {
     let players = new Map<number, PlayerInterface>();
 
-    const { subscribe, set, update } = writable(players);
+    const { subscribe, set, update } = writable<Map<number, PlayerInterface>>(players);
 
     return {
         subscribe,
         connectToRoomConnection: (roomConnection: RoomConnection) => {
             players = new Map<number, PlayerInterface>();
             set(players);
-            roomConnection.onUserJoins((message) => {
+            // TODO: it would be cool to unsubscribe properly here
+            roomConnection.userJoinedMessageStream.subscribe((message) => {
                 update((users) => {
                     users.set(message.userId, {
                         userId: message.userId,
@@ -33,9 +35,9 @@ function createPlayersStore() {
                     return users;
                 });
             });
-            roomConnection.onUserLeft((userId) => {
+            roomConnection.userLeftMessageStream.subscribe((message) => {
                 update((users) => {
-                    users.delete(userId);
+                    users.delete(message.userId);
                     return users;
                 });
             });

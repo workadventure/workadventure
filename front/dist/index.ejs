@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+        <!-- TRACK CODE -->
+        <!-- END TRACK CODE -->
+
+        <link rel="apple-touch-icon" sizes="57x57" href="static/images/favicons/apple-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="static/images/favicons/apple-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="static/images/favicons/apple-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="static/images/favicons/apple-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="static/images/favicons/apple-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="static/images/favicons/apple-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="static/images/favicons/apple-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="static/images/favicons/apple-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="static/images/favicons/apple-icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="192x192"  href="static/images/favicons/android-icon-192x192.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="static/images/favicons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="static/images/favicons/favicon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="static/images/favicons/favicon-16x16.png">
+        <link rel="manifest" href="static/images/favicons/manifest.json">
+        <meta name="msapplication-TileColor" content="#000000">
+        <meta name="msapplication-TileImage" content="static/images/favicons/ms-icon-144x144.png">
+        <meta name="theme-color" content="#000000">
+
+        <script src="/env-config.js"></script>
+        <base href="/">
+        <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+
+        <title>WorkAdventure</title>
+    </head>
+    <body id="body" style="margin: 0; background-color: #000">
+        <div class="main-container" id="main-container">
+            <!-- Create the editor container -->
+            <div id="game" class="game">
+                <div id="game-overlay"></div>
+            </div>
+            <div id="cowebsite">
+                <aside id="cowebsite-aside" class="noselect">
+                    <div id="cowebsite-aside-buttons">
+                        <button class="top-right-btn nes-btn is-error" id="cowebsite-close" alt="close all co-websites">
+                            &times;
+                        </button>
+                        <button class="top-right-btn nes-btn is-primary" id="cowebsite-fullscreen" alt="fullscreen mode">
+                            <img id="cowebsite-fullscreen-close" style="display: none;" src="resources/logos/fullscreen-exit.svg"/>
+                            <img id="cowebsite-fullscreen-open" src="resources/logos/fullscreen.svg"/>
+                        </button>
+                        <button class="top-right-btn nes-btn is-primary" id="cowebsite-swipe" alt="swipe cowebsites">
+                            <img src="resources/logos/cowebsite-swipe.svg"/>
+                        </button>
+                    </div>
+                    <div id="cowebsite-aside-holder">
+                        <img src="/static/images/menu.svg" alt="hold to resize"/>
+                    </div>
+                    <aside id="cowebsite-other-actions"></aside>
+                </aside>
+                <main id="cowebsite-slot-main">
+                    <svg id="cowebsite-loader" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 45.51 45.51"><defs><style>.cls-1{fill:#f2f2f2;}.cls-2{fill:#c7c7c7;}.cls-3{fill:#fff;}.cls-4{fill:#e0e0e0;}</style></defs><g id="mug"><polygon class="cls-1" points="43.76 17.5 43.76 19.25 42.01 19.25 42.01 21.01 42.01 22.76 42.01 24.51 42.01 26.26 42.01 28.01 42.01 29.76 42.01 31.51 43.76 31.51 43.76 29.76 43.76 28.01 45.51 28.01 45.51 26.26 45.51 24.51 45.51 22.76 45.51 21.01 45.51 19.25 45.51 17.5 43.76 17.5"/><polygon class="cls-1" points="42.01 15.75 40.26 15.75 38.51 15.75 36.76 15.75 36.76 17.5 36.76 19.25 38.51 19.25 38.51 17.5 40.26 17.5 42.01 17.5 43.76 17.5 43.76 15.75 42.01 15.75"/><rect class="cls-1" x="40.26" y="31.51" width="1.75" height="1.75"/><rect class="cls-1" x="36.76" y="33.26" width="1.75" height="1.75"/><polygon class="cls-2" points="40.26 17.5 38.51 17.5 38.51 19.25 36.76 19.25 36.76 17.5 36.76 15.75 36.76 14 36.76 12.25 35.01 12.25 33.26 12.25 33.26 14 33.26 15.75 35.01 15.75 35.01 17.5 35.01 19.25 35.01 21.01 35.01 22.76 35.01 24.51 35.01 26.26 35.01 28.01 35.01 29.76 35.01 31.51 35.01 33.26 35.01 35.01 35.01 36.76 35.01 38.51 33.26 38.51 31.51 38.51 31.51 40.26 29.76 40.26 29.76 42.01 28.01 42.01 26.26 42.01 24.51 42.01 24.51 43.76 22.76 43.76 21.01 43.76 19.25 43.76 17.5 43.76 15.75 43.76 14 43.76 12.25 43.76 10.5 43.76 8.75 43.76 7 43.76 7 45.51 8.75 45.51 10.5 45.51 12.25 45.51 14 45.51 15.75 45.51 17.5 45.51 19.25 45.51 21.01 45.51 22.76 45.51 24.51 45.51 26.26 45.51 28.01 45.51 29.76 45.51 29.76 43.76 31.51 43.76 33.26 43.76 33.26 42.01 33.26 40.26 35.01 40.26 36.76 40.26 36.76 38.51 36.76 36.76 38.51 36.76 38.51 35.01 36.76 35.01 36.76 33.26 36.76 31.51 36.76 29.76 36.76 28.01 36.76 26.26 36.76 24.51 36.76 22.76 36.76 21.01 38.51 21.01 40.26 21.01 40.26 19.25 42.01 19.25 42.01 17.5 40.26 17.5"/><polygon class="cls-3" points="8.75 10.5 7 10.5 5.25 10.5 5.25 12.25 7 12.25 8.75 12.25 10.5 12.25 10.5 10.5 8.75 10.5"/><polygon class="cls-3" points="7 14 5.25 14 5.25 15.75 5.25 17.5 5.25 19.25 5.25 21.01 5.25 22.76 5.25 24.51 5.25 26.26 5.25 28.01 7 28.01 7 26.26 8.75 26.26 8.75 24.51 8.75 22.76 8.75 21.01 8.75 19.25 8.75 17.5 10.5 17.5 10.5 15.75 10.5 14 8.75 14 7 14"/><polygon class="cls-4" points="43.76 28.01 43.76 29.76 43.76 31.51 45.51 31.51 45.51 29.76 45.51 28.01 43.76 28.01"/><rect class="cls-4" x="42.01" y="31.51" width="1.75" height="1.75"/><rect class="cls-4" x="42.01" y="17.5" width="1.75" height="1.75"/><polygon class="cls-4" points="38.51 33.26 38.51 35.01 40.26 35.01 42.01 35.01 42.01 33.26 40.26 33.26 38.51 33.26"/><polygon class="cls-4" points="33.26 14 33.26 12.25 31.51 12.25 29.76 12.25 28.01 12.25 26.26 12.25 24.51 12.25 22.76 12.25 21.01 12.25 19.25 12.25 17.5 12.25 15.75 12.25 14 12.25 12.25 12.25 10.5 12.25 8.75 12.25 7 12.25 5.25 12.25 3.5 12.25 1.75 12.25 0 12.25 0 14 1.75 14 3.5 14 5.25 14 7 14 8.75 14 10.5 14 12.25 14 14 14 15.75 14 17.5 14 19.25 14 21.01 14 22.76 14 24.51 14 26.26 14 28.01 14 29.76 14 29.76 15.75 29.76 17.5 29.76 19.25 29.76 21.01 29.76 22.76 29.76 24.51 29.76 26.26 29.76 28.01 29.76 29.76 29.76 31.51 29.76 33.26 29.76 35.01 28.01 35.01 28.01 36.76 26.26 36.76 26.26 38.51 24.51 38.51 22.76 38.51 21.01 38.51 21.01 40.26 19.25 40.26 17.5 40.26 17.5 42.01 15.75 42.01 14 42.01 12.25 42.01 10.5 42.01 8.75 42.01 7 42.01 5.25 42.01 3.5 42.01 3.5 43.76 5.25 43.76 7 43.76 8.75 43.76 10.5 43.76 12.25 43.76 14 43.76 15.75 43.76 17.5 43.76 19.25 43.76 21.01 43.76 22.76 43.76 24.51 43.76 24.51 42.01 26.26 42.01 28.01 42.01 29.76 42.01 29.76 40.26 31.51 40.26 31.51 38.51 33.26 38.51 35.01 38.51 35.01 36.76 35.01 35.01 35.01 33.26 35.01 31.51 35.01 29.76 35.01 28.01 35.01 26.26 35.01 24.51 35.01 22.76 35.01 21.01 35.01 19.25 35.01 17.5 35.01 15.75 33.26 15.75 33.26 14"/><polygon class="cls-1" points="35.01 10.5 33.26 10.5 31.51 10.5 29.76 10.5 28.01 10.5 26.26 10.5 24.51 10.5 22.76 10.5 21.01 10.5 19.25 10.5 17.5 10.5 15.75 10.5 14 10.5 12.25 10.5 10.5 10.5 10.5 12.25 12.25 12.25 14 12.25 15.75 12.25 17.5 12.25 19.25 12.25 21.01 12.25 22.76 12.25 24.51 12.25 26.26 12.25 28.01 12.25 29.76 12.25 31.51 12.25 33.26 12.25 35.01 12.25 36.76 12.25 36.76 10.5 35.01 10.5"/><polygon class="cls-1" points="26.26 14 24.51 14 22.76 14 21.01 14 19.25 14 17.5 14 15.75 14 14 14 12.25 14 10.5 14 10.5 15.75 10.5 17.5 8.75 17.5 8.75 19.25 8.75 21.01 8.75 22.76 8.75 24.51 8.75 26.26 7 26.26 7 28.01 5.25 28.01 5.25 26.26 5.25 24.51 5.25 22.76 5.25 21.01 5.25 19.25 5.25 17.5 5.25 15.75 5.25 14 3.5 14 1.75 14 0 14 0 15.75 0 17.5 0 19.25 0 21.01 0 22.76 0 24.51 0 26.26 0 28.01 0 29.76 0 31.51 0 33.26 0 35.01 0 36.76 0 38.51 0 40.26 1.75 40.26 1.75 42.01 3.5 42.01 5.25 42.01 7 42.01 8.75 42.01 10.5 42.01 12.25 42.01 14 42.01 15.75 42.01 17.5 42.01 17.5 40.26 19.25 40.26 21.01 40.26 21.01 38.51 22.76 38.51 24.51 38.51 26.26 38.51 26.26 36.76 28.01 36.76 28.01 35.01 29.76 35.01 29.76 33.26 29.76 31.51 29.76 29.76 29.76 28.01 29.76 26.26 29.76 24.51 29.76 22.76 29.76 21.01 29.76 19.25 29.76 17.5 29.76 15.75 29.76 14 28.01 14 26.26 14"/><polygon class="cls-1" points="3.5 12.25 5.25 12.25 5.25 10.5 3.5 10.5 1.75 10.5 0 10.5 0 12.25 1.75 12.25 3.5 12.25"/></g><g id="smoke"><g id="trail-3"><polygon id="trail-3-state-3" class="cls-4" points="24.51 0 22.76 0 22.76 1.75 22.76 3.5 24.51 3.5 24.51 1.75 24.51 0"/><polygon id="trail-3-state-2" class="cls-4" points="24.51 3.5 24.51 5.25 24.51 7 26.26 7 26.26 5.25 26.26 3.5 24.51 3.5"/><rect id="trail-3-state-1" class="cls-4" x="22.76" y="7" width="1.75" height="1.75"/></g><g id="trail-2"><polygon id="trail-2-state-3" class="cls-4" points="17.5 0 15.75 0 15.75 1.75 15.75 3.5 17.5 3.5 17.5 1.75 17.5 0"/><polygon id="trail-2-state-2" class="cls-4" points="17.5 5.25 17.5 7 19.25 7 19.25 5.25 19.25 3.5 17.5 3.5 17.5 5.25"/><rect id="trail-2-state-1" class="cls-4" x="15.75" y="7" width="1.75" height="1.75"/></g><g id="trail-1"><polygon id="trail-1-state-3" class="cls-4" points="10.5 0 8.75 0 8.75 1.75 8.75 3.5 10.5 3.5 10.5 1.75 10.5 0"/><polygon id="trail-1-state-2" class="cls-4" points="10.5 5.25 10.5 7 12.25 7 12.25 5.25 12.25 3.5 10.5 3.5 10.5 5.25"/><rect id="trail-1-state-1" class="cls-4" x="8.75" y="7" width="1.75" height="1.75"/></g></g></svg>
+                </main>
+            </div>
+            <div id="cowebsite-buffer"></div>
+        </div>
+    </body>
+</html>

@@ -8,6 +8,9 @@ import {
     CharacterLayerMessage,
     EmoteEventMessage,
     EmotePromptMessage,
+    FollowRequestMessage,
+    FollowConfirmationMessage,
+    FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
     JoinRoomMessage,
@@ -34,6 +37,7 @@ import {
     VariableMessage,
     ErrorMessage,
     WorldFullMessage,
+    PlayerDetailsUpdatedMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -47,14 +51,15 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone"
 import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "./AdminApi/RoomRedirect";
-import { CharacterTexture } from "./AdminApi/CharacterTexture";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 
 const debug = Debug("socket");
 
 interface AdminSocketRoomsList {
     [index: string]: number;
 }
+
 interface AdminSocketUsersList {
     [index: string]: boolean;
 }
@@ -132,6 +137,12 @@ export class SocketManager implements ZoneEventListener {
         const message = new AdminPusherToBackMessage();
         message.setSubscribetoroom(roomId);
 
+        console.log(
+            `Admin socket handle room ${roomId} connections for a client on ${Buffer.from(
+                client.getRemoteAddressAsText()
+            ).toString()}`
+        );
+
         adminRoomStream.write(message);
     }
 
@@ -151,6 +162,11 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setName(client.name);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
+
+            if (client.userRoomToken) {
+                joinRoomMessage.setUserroomtoken(client.userRoomToken);
+            }
+
             if (client.visitCardUrl) {
                 joinRoomMessage.setVisitcardurl(client.visitCardUrl);
             }
@@ -231,12 +247,12 @@ export class SocketManager implements ZoneEventListener {
         try {
             client.viewport = viewport;
 
-            const world = this.rooms.get(client.roomId);
-            if (!world) {
+            const room = this.rooms.get(client.roomId);
+            if (!room) {
                 console.error("In SET_VIEWPORT, could not find world with id '", client.roomId, "'");
                 return;
             }
-            world.setViewport(client, client.viewport);
+            room.setViewport(client, client.viewport);
         } catch (e) {
             console.error('An error occurred on "SET_VIEWPORT" event');
             console.error(e);
@@ -258,9 +274,37 @@ export class SocketManager implements ZoneEventListener {
         this.handleViewport(client, viewport.toObject());
     }
 
+    handleFollowRequest(client: ExSocketInterface, message: FollowRequestMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowrequestmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleFollowConfirmation(client: ExSocketInterface, message: FollowConfirmationMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowconfirmationmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleFollowAbort(client: ExSocketInterface, message: FollowAbortMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setFollowabortmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setEmoteeventmessage(emoteMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
+    onPlayerDetailsUpdated(
+        playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
+        listener: ExSocketInterface
+    ): void {
+        const subMessage = new SubMessage();
+        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
 
         emitInBatch(listener, subMessage);
     }
@@ -340,11 +384,7 @@ export class SocketManager implements ZoneEventListener {
                         debug("Leaving room %s.", socket.roomId);
 
                         room.leave(socket);
-                        if (room.isEmpty()) {
-                            room.close();
-                            this.rooms.delete(socket.roomId);
-                            debug("Room %s is empty. Deleting.", socket.roomId);
-                        }
+                        this.deleteRoomIfEmpty(room);
                     } else {
                         console.error("Could not find the GameRoom the user is leaving!");
                     }
@@ -360,6 +400,21 @@ export class SocketManager implements ZoneEventListener {
             if (socket.backConnection) {
                 socket.backConnection.end();
             }
+        }
+    }
+
+    private deleteRoomIfEmpty(room: PusherRoom): void {
+        if (room.isEmpty()) {
+            room.close();
+            this.rooms.delete(room.roomUrl);
+            debug("Room %s is empty. Deleting.", room.roomUrl);
+        }
+    }
+
+    public deleteRoomIfEmptyFromId(roomUrl: string): void {
+        const room = this.rooms.get(roomUrl);
+        if (room) {
+            this.deleteRoomIfEmpty(room);
         }
     }
 
@@ -616,7 +671,7 @@ export class SocketManager implements ZoneEventListener {
         playGlobalMessageEvent: PlayGlobalMessage
     ): Promise<void> {
         if (!client.tags.includes("admin")) {
-            throw "Client is not an admin!";
+            throw new Error("Client is not an admin!");
         }
 
         const clientRoomUrl = client.roomId;

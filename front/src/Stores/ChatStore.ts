@@ -1,11 +1,14 @@
 import { writable } from "svelte/store";
 import { playersStore } from "./PlayersStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { iframeListener } from "../Api/IframeListener";
+import { Subject } from "rxjs";
 
 export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
 
-export const newChatMessageStore = writable<string | null>(null);
+const _newChatMessageSubject = new Subject<string>();
+export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export enum ChatMessageTypes {
     text = 1,
@@ -25,7 +28,7 @@ export interface ChatMessage {
 function getAuthor(authorId: number): PlayerInterface {
     const author = playersStore.getPlayerById(authorId);
     if (!author) {
-        throw "Could not find data for author " + authorId;
+        throw new Error("Could not find data for author " + authorId);
     }
     return author;
 }
@@ -66,7 +69,9 @@ function createChatMessagesStore() {
             });
         },
         addPersonnalMessage(text: string) {
-            newChatMessageStore.set(text);
+            iframeListener.sendUserInputChat(text);
+
+            _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text) {
@@ -78,13 +83,19 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
                 return list;
             });
         },
         addExternalMessage(authorId: number, text: string) {
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.text && lastMessage.text) {
+                if (
+                    lastMessage &&
+                    lastMessage.type === ChatMessageTypes.text &&
+                    lastMessage.text &&
+                    lastMessage?.author?.userId === authorId
+                ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -94,6 +105,8 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                iframeListener.sendUserInputChat(text);
                 return list;
             });
             chatVisibilityStore.set(true);
@@ -116,4 +129,4 @@ function createChatSubMenuVisibilityStore() {
     };
 }
 
-export const chatSubMenuVisbilityStore = createChatSubMenuVisibilityStore();
+export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();

@@ -1,9 +1,13 @@
 ## Version develop
 
+### Updates
+- Added multi Co-Website management
+
 ### Bugfix
 - Moving a discussion over a user will now add this user to the discussion
 - Being in a silent zone new forces mediaConstraints to false (#1508)
 - Fixes for the emote menu (#1501)
+- Fixing chat message attributed to wrong user (#1507 #1528)
 
 ## Version 1.5.0
 ### Updates

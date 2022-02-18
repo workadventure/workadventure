@@ -1,8 +1,8 @@
 <script lang="ts">
-    import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
-    import {chatSubMenuVisbilityStore} from "../../Stores/ChatStore";
-    import {onDestroy, onMount} from "svelte";
-    import type {Unsubscriber} from "svelte/store";
+    import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
+    import { chatSubMenuVisibilityStore } from "../../Stores/ChatStore";
+    import { onDestroy, onMount } from "svelte";
+    import type { Unsubscriber } from "svelte/store";
     import ChatSubMenu from "./ChatSubMenu.svelte";
 
     export let player: PlayerInterface;
@@ -12,30 +12,28 @@
     let chatSubMenuVisivilytUnsubcribe: Unsubscriber;
 
     function openSubMenu() {
-        chatSubMenuVisbilityStore.openSubMenu(player.name, line);
+        chatSubMenuVisibilityStore.openSubMenu(player.name, line);
     }
 
     onMount(() => {
-        chatSubMenuVisivilytUnsubcribe = chatSubMenuVisbilityStore.subscribe((newValue) => {
-            isSubMenuOpen = (newValue === player.name + line);
-        })
-    })
+        chatSubMenuVisivilytUnsubcribe = chatSubMenuVisibilityStore.subscribe((newValue) => {
+            isSubMenuOpen = newValue === player.name + line;
+        });
+    });
 
     onDestroy(() => {
         chatSubMenuVisivilytUnsubcribe();
-    })
-
+    });
 </script>
 
 <div class="subMenu">
     <span class="chatPlayerName" style="color: {player.color || 'white'}" on:click={openSubMenu}>
-    {player.name}
+        {player.name}
     </span>
     {#if isSubMenuOpen}
-        <ChatSubMenu player={player}/>
+        <ChatSubMenu {player} />
     {/if}
 </div>
-
 
 <style lang="scss">
   div.subMenu {

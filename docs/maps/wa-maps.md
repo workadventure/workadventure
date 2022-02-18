@@ -92,3 +92,20 @@ You can add properties either on individual tiles of a tileset OR on a complete 
 If you put a property on a layer, it will be triggered if your Woka walks on any tile of the layer.
 
 The exception is the "collides" property that can only be set on tiles, but not on a complete layer.
+
+## Insert helpful information in your map
+
+By setting properties on the map itself, you can help visitors know more about the creators of the map.
+
+The following *map* properties are supported:
+* `mapName` (string): The name of your map
+* `mapLink` (string): A link to your map, for example a repository
+* `mapDescription` (string): A short description of your map
+* `mapCopyright` (string): Copyright notice
+
+Each *tileset* can also have a property called `tilesetCopyright` (string). 
+If you are using audio files in your map, you can declare a layer property `audioCopyright` (string).
+
+Resulting in a "credit" page in the menu looking like this:
+
+![](images/mapProperties.png){.document-img}

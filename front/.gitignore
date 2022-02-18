@@ -6,6 +6,7 @@
 /dist/main.*.css.map
 /dist/tests/
 /yarn-error.log
+/package-lock.json
 /dist/webpack.config.js
 /dist/webpack.config.js.map
 /dist/src

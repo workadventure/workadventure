@@ -14,6 +14,10 @@ In WorkAdventure you can move around your office and talk to your colleagues (us
 
 See more features for your virtual office: https://workadventu.re/virtual-office
 
+## Community resources
+
+Check out resources developed by the WorkAdventure community at [awesome-workadventure](https://github.com/workadventure/awesome-workadventure)
+
 ## Setting up a development environment
 
 Install Docker.
@@ -38,7 +42,7 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 ```
 
 Note: If on the first run you get a page with "network error". Try to ``docker-compose stop`` , then ``docker-compose start``.
-Note 2: If you are still getting "network error". Make sure you are authorizing the self-signed certificate by entering https://pusher.workadventure.testing and accepting them.
+Note 2: If you are still getting "network error". Make sure you are authorizing the self-signed certificate by entering https://pusher.workadventure.localhost and accepting them.
 
 ### MacOS developers, your environment with Vagrant
 

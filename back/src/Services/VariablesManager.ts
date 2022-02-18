@@ -1,15 +1,11 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapObjectLayer,
-} from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 import { User } from "_Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";
+import { VariableError } from "./VariableError";
 
 interface Variable {
     defaultValue?: string;
@@ -105,11 +101,11 @@ export class VariablesManager {
                     }
 
                     // We store a copy of the object (to make it immutable)
-                    objects.set(object.name, this.iTiledObjectToVariable(object));
+                    objects.set(object.name as string, this.iTiledObjectToVariable(object));
                 }
             }
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers) {
+            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
                 this.recursiveFindVariablesInLayer(innerLayer, objects);
             }
         }
@@ -120,7 +116,7 @@ export class VariablesManager {
 
         if (object.properties) {
             for (const property of object.properties) {
-                const value = property.value;
+                const value = property.value as unknown;
                 switch (property.name) {
                     case "default":
                         variable.defaultValue = JSON.stringify(value);
@@ -174,11 +170,13 @@ export class VariablesManager {
         if (this.variableObjects) {
             variableObject = this.variableObjects.get(name);
             if (variableObject === undefined) {
-                throw new Error('Trying to set a variable "' + name + '" that is not defined as an object in the map.');
+                throw new VariableError(
+                    'Trying to set a variable "' + name + '" that is not defined as an object in the map.'
+                );
             }
 
             if (variableObject.writableBy && !user.tags.includes(variableObject.writableBy)) {
-                throw new Error(
+                throw new VariableError(
                     'Trying to set a variable "' +
                         name +
                         '". User "' +

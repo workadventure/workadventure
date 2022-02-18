@@ -13,14 +13,6 @@ export enum DivImportance {
 }
 
 export const ON_ACTION_TRIGGER_BUTTON = "onaction";
-
-export const TRIGGER_WEBSITE_PROPERTIES = "openWebsiteTrigger";
-export const TRIGGER_JITSI_PROPERTIES = "jitsiTrigger";
-
-export const WEBSITE_MESSAGE_PROPERTIES = "openWebsiteTriggerMessage";
-export const JITSI_MESSAGE_PROPERTIES = "jitsiTriggerMessage";
-
-export const AUDIO_VOLUME_PROPERTY = "audioVolume";
-export const AUDIO_LOOP_PROPERTY = "audioLoop";
+export const ON_ICON_TRIGGER_BUTTON = "onicon";
 
 export type Box = { xStart: number; yStart: number; xEnd: number; yEnd: number };

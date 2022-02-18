@@ -1,7 +1,8 @@
 <script lang="typescript">
     import type { Game } from "../../Phaser/Game/Game";
-    import {CustomizeScene, CustomizeSceneName} from "../../Phaser/Login/CustomizeScene";
-    import {activeRowStore} from "../../Stores/CustomCharacterStore";
+    import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
+    import { activeRowStore } from "../../Stores/CustomCharacterStore";
+    import LL from "../../i18n/i18n-svelte";
 
     export let game: Game;
 
@@ -30,88 +31,112 @@
     function finish() {
         customCharacterScene.nextSceneToCamera();
     }
-
 </script>
 
 <form class="customCharacterScene">
     <section class="text-center">
-        <h2>Customize your WOKA</h2>
+        <h2>{$LL.woka.customWoka.title()}</h2>
     </section>
     <section class="action action-move">
-        <button class="customCharacterSceneButton customCharacterSceneButtonLeft nes-btn" on:click|preventDefault={ selectLeft }> &lt; </button>
-        <button class="customCharacterSceneButton customCharacterSceneButtonRight nes-btn" on:click|preventDefault={ selectRight }> &gt; </button>
+        <button
+            class="customCharacterSceneButton customCharacterSceneButtonLeft nes-btn"
+            on:click|preventDefault={selectLeft}
+        >
+            &lt;
+        </button>
+        <button
+            class="customCharacterSceneButton customCharacterSceneButtonRight nes-btn"
+            on:click|preventDefault={selectRight}
+        >
+            &gt;
+        </button>
     </section>
     <section class="action">
         {#if $activeRowStore === 0}
-            <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={ previousScene }>Return</button>
+            <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={previousScene}
+                >{$LL.woka.customWoka.navigation.return()}</button
+            >
         {/if}
         {#if $activeRowStore !== 0}
-            <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={ selectUp }>Back <img src="resources/objects/arrow_up_black.png" alt=""/></button>
+            <button type="submit" class="customCharacterSceneFormBack nes-btn" on:click|preventDefault={selectUp}
+                >{$LL.woka.customWoka.navigation.back()}
+                <img src="resources/objects/arrow_up_black.png" alt="" /></button
+            >
         {/if}
         {#if $activeRowStore === 5}
-            <button type="submit" class="customCharacterSceneFormSubmit nes-btn is-primary" on:click|preventDefault={ finish }>Finish</button>
+            <button
+                type="submit"
+                class="customCharacterSceneFormSubmit nes-btn is-primary"
+                on:click|preventDefault={finish}>{$LL.woka.customWoka.navigation.finish()}</button
+            >
         {/if}
         {#if $activeRowStore !== 5}
-            <button type="submit" class="customCharacterSceneFormSubmit nes-btn is-primary" on:click|preventDefault={ selectDown }>Next <img src="resources/objects/arrow_down.png" alt=""/></button>
+            <button
+                type="submit"
+                class="customCharacterSceneFormSubmit nes-btn is-primary"
+                on:click|preventDefault={selectDown}
+                >{$LL.woka.customWoka.navigation.next()}
+                <img src="resources/objects/arrow_down.png" alt="" /></button
+            >
         {/if}
     </section>
 </form>
 
 <style lang="scss">
-  form.customCharacterScene {
-    font-family: "Press Start 2P";
-    pointer-events: auto;
-    color: #ebeeee;
+    @import "../../../style/breakpoints.scss";
 
-    section {
-      margin: 10px;
-
-      &.action {
-        text-align: center;
-        margin-top: 55vh;
-      }
-
-      h2 {
+    form.customCharacterScene {
         font-family: "Press Start 2P";
-        margin: 1px;
-      }
+        pointer-events: auto;
+        color: #ebeeee;
 
-      &.text-center {
-        text-align: center;
-      }
+        section {
+            margin: 10px;
 
-      button.customCharacterSceneButton {
-        position: absolute;
-        top: 33vh;
-        margin: 0;
-      }
+            &.action {
+                text-align: center;
+                margin-top: 55vh;
+            }
 
-      button.customCharacterSceneFormBack {
-        color: #292929;
-      }
+            h2 {
+                font-family: "Press Start 2P";
+                margin: 1px;
+            }
+
+            &.text-center {
+                text-align: center;
+            }
+
+            button.customCharacterSceneButton {
+                position: absolute;
+                top: 33vh;
+                margin: 0;
+            }
+
+            button.customCharacterSceneFormBack {
+                color: #292929;
+            }
+        }
+
+        button {
+            font-family: "Press Start 2P";
+
+            &.customCharacterSceneButtonLeft {
+                left: 33vw;
+            }
+
+            &.customCharacterSceneButtonRight {
+                right: 33vw;
+            }
+        }
     }
 
-    button {
-      font-family: "Press Start 2P";
-
-      &.customCharacterSceneButtonLeft {
-        left: 33vw;
-      }
-
-      &.customCharacterSceneButtonRight {
-        right: 33vw;
-      }
+    @include media-breakpoint-up(md) {
+        form.customCharacterScene button.customCharacterSceneButtonLeft {
+            left: 5vw;
+        }
+        form.customCharacterScene button.customCharacterSceneButtonRight {
+            right: 5vw;
+        }
     }
-  }
-
-  @media only screen and (max-width: 800px) {
-    form.customCharacterScene button.customCharacterSceneButtonLeft{
-      left: 5vw;
-    }
-    form.customCharacterScene button.customCharacterSceneButtonRight{
-      right: 5vw;
-    }
-  }
-
-
 </style>

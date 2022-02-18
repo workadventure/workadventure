@@ -1,23 +1,24 @@
 <script lang="ts">
-    import { fly } from 'svelte/transition';
+    import { fly } from "svelte/transition";
     import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
-    import ChatMessageForm from './ChatMessageForm.svelte';
-    import ChatElement from './ChatElement.svelte';
-    import {afterUpdate, beforeUpdate, onMount} from "svelte";
-    import {HtmlUtils} from "../../WebRtc/HtmlUtils";
-    
+    import ChatMessageForm from "./ChatMessageForm.svelte";
+    import ChatElement from "./ChatElement.svelte";
+    import { afterUpdate, beforeUpdate, onMount } from "svelte";
+    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    import LL from "../../i18n/i18n-svelte";
+
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur():void };
+    let handleFormBlur: { blur(): void };
     let autoscroll: boolean;
 
     beforeUpdate(() => {
-        autoscroll = listDom && (listDom.offsetHeight + listDom.scrollTop) > (listDom.scrollHeight - 20);
+        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
 
     onMount(() => {
         listDom.scrollTo(0, listDom.scrollHeight);
-    })
+    });
 
     afterUpdate(() => {
         if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
@@ -32,18 +33,18 @@
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-    function onKeyDown(e:KeyboardEvent) {
-        if (e.key === 'Escape') {
+    function onKeyDown(e: KeyboardEvent) {
+        if (e.key === "Escape") {
             closeChat();
         }
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClick}/>
-
+<svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" transition:fly="{{ x: -1000, duration: 500 }}" bind:this={chatWindowElement}>
     <button type="button" class="nes-btn is-error close" on:click={closeChat}>&times</button>
+    <p>{$LL.chat.intro()}</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
         {#each $chatMessagesStore as message, i}
@@ -52,7 +53,7 @@
         </ul>
     </section>
     <section class="messageForm">
-        <ChatMessageForm bind:handleForm={handleFormBlur}></ChatMessageForm>
+        <ChatMessageForm bind:handleForm={handleFormBlur} />
     </section>
 </aside>
 
@@ -93,7 +94,7 @@
         background: #404547;
         border-radius: 2px;
       }
-      
+
       .messagesList {
         margin-top: 50px;
         overflow-y: auto;

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import { Readable } from "stream";
 import { us_listen_socket_close, TemplatedApp, HttpResponse, HttpRequest } from "uWebSockets.js";
 

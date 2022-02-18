@@ -52,6 +52,12 @@ return [
         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/website-in-map.md',
     ],
     [
+        'title' => 'Camera',
+        'url' => '/map-building/camera.md',
+        'markdown' => 'maps.camera',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/camera.md',
+    ],
+    [
         'title' => 'Variables',
         'url' => '/map-building/variables.md',
         'markdown' => 'maps.variables',
@@ -143,7 +149,13 @@ return [
                     ],
                 ]
             ],
-            $extraUtilsMenu
+            $extraUtilsMenu,
+            [
+                'title' => 'Scripting internals',
+                'url' => '/map-building/scripting-internals.md',
+                'markdown' => 'maps.scripting-internals',
+                'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/scripting-internals.md',
+            ],
         ]
     ],
     [

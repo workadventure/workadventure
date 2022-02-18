@@ -13,6 +13,8 @@ const audioPlayerVolumeKey = "audioVolume";
 const audioPlayerMuteKey = "audioMute";
 const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
+const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
+const ignoreFollowRequests = "ignoreFollowRequests";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -20,8 +22,8 @@ const nonce = "nonce";
 const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
-
 const cacheAPIIndex = "workavdenture-cache";
+const userProperties = "user-properties";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -120,12 +122,31 @@ class LocalUserStore {
         return localStorage.getItem(fullscreenKey) === "true";
     }
 
-    setLastRoomUrl(roomUrl: string): void {
+    setForceCowebsiteTrigger(value: boolean): void {
+        localStorage.setItem(forceCowebsiteTriggerKey, value.toString());
+    }
+    getForceCowebsiteTrigger(): boolean {
+        return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
+    }
+
+    setIgnoreFollowRequests(value: boolean): void {
+        localStorage.setItem(ignoreFollowRequests, value.toString());
+    }
+    getIgnoreFollowRequests(): boolean {
+        return localStorage.getItem(ignoreFollowRequests) === "true";
+    }
+
+    async setLastRoomUrl(roomUrl: string): Promise<void> {
         localStorage.setItem(lastRoomUrl, roomUrl.toString());
-        caches.open(cacheAPIIndex).then((cache) => {
-            const stringResponse = new Response(JSON.stringify({ roomUrl }));
-            cache.put(`/${lastRoomUrl}`, stringResponse);
-        });
+        if ("caches" in window) {
+            try {
+                const cache = await caches.open(cacheAPIIndex);
+                const stringResponse = new Response(JSON.stringify({ roomUrl }));
+                await cache.put(`/${lastRoomUrl}`, stringResponse);
+            } catch (e) {
+                console.error("Could not store last room url in Browser cache. Are you using private browser mode?", e);
+            }
+        }
     }
     getLastRoomUrl(): string {
         return (
@@ -133,6 +154,9 @@ class LocalUserStore {
         );
     }
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
+        if (!("caches" in window)) {
+            return Promise.resolve(undefined);
+        }
         return caches.open(cacheAPIIndex).then((cache) => {
             return cache.match(`/${lastRoomUrl}`).then((res) => {
                 return res?.json().then((data) => {
@@ -165,7 +189,14 @@ class LocalUserStore {
 
     verifyState(value: string): boolean {
         const oldValue = localStorage.getItem(state);
+        if (!oldValue) {
+            localStorage.setItem(state, value);
+            return true;
+        }
         return oldValue === value;
+    }
+    setState(value: string) {
+        localStorage.setItem(state, value);
     }
     getState(): string | null {
         return localStorage.getItem(state);
@@ -191,6 +222,27 @@ class LocalUserStore {
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    getAllUserProperties(): Map<string, unknown> {
+        const result = new Map<string, string>();
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key) {
+                if (key.startsWith(userProperties + "_")) {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        const userKey = key.substr((userProperties + "_").length);
+                        result.set(userKey, JSON.parse(value));
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    setUserProperty(name: string, value: unknown): void {
+        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
     }
 }
 

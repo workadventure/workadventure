@@ -31,6 +31,10 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                res.writeStatus("401 Unauthorized").end("No token configured!");
+                return;
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
@@ -39,12 +43,12 @@ export class AdminController extends BaseController {
 
             try {
                 if (typeof body.roomId !== "string") {
-                    throw "Incorrect roomId parameter";
+                    throw new Error("Incorrect roomId parameter");
                 }
                 const roomId: string = body.roomId;
 
                 await apiClientRepository.getClient(roomId).then((roomClient) => {
-                    return new Promise((res, rej) => {
+                    return new Promise<void>((res, rej) => {
                         const roomMessage = new RefreshRoomPromptMessage();
                         roomMessage.setRoomid(roomId);
 
@@ -78,6 +82,10 @@ export class AdminController extends BaseController {
             const token = req.getHeader("admin-token");
             const body = await res.json();
 
+            if (ADMIN_API_TOKEN === "") {
+                res.writeStatus("401 Unauthorized").end("No token configured!");
+                return;
+            }
             if (token !== ADMIN_API_TOKEN) {
                 console.error("Admin access refused for token: " + token);
                 res.writeStatus("401 Unauthorized").end("Incorrect token");
@@ -86,13 +94,13 @@ export class AdminController extends BaseController {
 
             try {
                 if (typeof body.text !== "string") {
-                    throw "Incorrect text parameter";
+                    throw new Error("Incorrect text parameter");
                 }
                 if (body.type !== "capacity" && body.type !== "message") {
-                    throw "Incorrect type parameter";
+                    throw new Error("Incorrect type parameter");
                 }
                 if (!body.targets || typeof body.targets !== "object") {
-                    throw "Incorrect targets parameter";
+                    throw new Error("Incorrect targets parameter");
                 }
                 const text: string = body.text;
                 const type: string = body.type;
@@ -101,7 +109,7 @@ export class AdminController extends BaseController {
                 await Promise.all(
                     targets.map((roomId) => {
                         return apiClientRepository.getClient(roomId).then((roomClient) => {
-                            return new Promise((res, rej) => {
+                            return new Promise<void>((res, rej) => {
                                 if (type === "message") {
                                     const roomMessage = new AdminRoomMessage();
                                     roomMessage.setMessage(text);

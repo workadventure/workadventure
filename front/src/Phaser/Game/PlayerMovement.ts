@@ -38,8 +38,10 @@ export class PlayerMovement {
         return {
             x,
             y,
+            oldX: this.startPosition.x,
+            oldY: this.startPosition.y,
             direction: this.endPosition.direction,
-            moving: true,
+            moving: this.isOutdated(tick) ? false : this.endPosition.moving,
         };
     }
 }

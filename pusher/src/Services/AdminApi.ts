@@ -1,20 +1,10 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 import { GameRoomPolicyTypes } from "_Model/PusherRoom";
-import { CharacterTexture } from "./AdminApi/CharacterTexture";
-import { MapDetailsData } from "./AdminApi/MapDetailsData";
-import { RoomRedirect } from "./AdminApi/RoomRedirect";
-
-export interface AdminApiData {
-    roomUrl: string;
-    email: string | null;
-    mapUrlStart: string;
-    tags: string[];
-    policy_type: number;
-    userUuid: string;
-    messages?: unknown[];
-    textures: CharacterTexture[];
-}
+import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -22,12 +12,14 @@ export interface AdminBannedData {
 }
 
 export interface FetchMemberDataByUuidResponse {
+    email: string;
     userUuid: string;
     tags: string[];
     visitCardUrl: string | null;
     textures: CharacterTexture[];
     messages: unknown[];
     anonymous?: boolean;
+    userRoomToken: string | undefined;
 }
 
 class AdminApi {
@@ -76,17 +68,10 @@ class AdminApi {
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
-        return res.data;
-    }
-
-    async fetchCheckUserByToken(organizationMemberToken: string): Promise<AdminApiData> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
+        if (!isAdminApiData(res.data)) {
+            console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+            throw new Error("Message received from /api/login-url is not in the expected format.");
         }
-        //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
-        const res = await Axios.get(ADMIN_API_URL + "/api/check-user/" + organizationMemberToken, {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
-        });
         return res.data;
     }
 
@@ -96,6 +81,9 @@ class AdminApi {
         reporterUserUuid: string,
         reportWorldSlug: string
     ) {
+        if (!ADMIN_API_URL) {
+            return Promise.reject(new Error("No admin backoffice set!"));
+        }
         return Axios.post(
             `${ADMIN_API_URL}/api/report`,
             {
@@ -142,13 +130,19 @@ class AdminApi {
         });
     }
 
-    /*TODO add constant to use profile companny*/
+    /**
+     *
+     * @param accessToken
+     */
     getProfileUrl(accessToken: string): string {
-        if (!ADMIN_URL) {
+        if (!OPID_PROFILE_SCREEN_PROVIDER) {
             throw new Error("No admin backoffice set!");
         }
+        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
+    }
 
-        return ADMIN_URL + `/profile?token=${accessToken}`;
+    async logoutOauth(token: string) {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }
 

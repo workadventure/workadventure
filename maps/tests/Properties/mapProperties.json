@@ -8,6 +8,12 @@
          "id":1,
          "name":"start",
          "opacity":1,
+         "properties":[
+                {
+                 "name":"audioCopyright",
+                 "type":"string",
+                 "value":"Copyright 2021 John Doe"
+                }],
          "type":"tilelayer",
          "visible":true,
          "width":10,

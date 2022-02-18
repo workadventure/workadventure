@@ -1,0 +1,19 @@
+version: "3.5"
+services:
+  testcafe:
+    build: tests/
+    working_dir: /project/tests
+    command:
+      - --dev
+    # Run as root to have the right to access /var/run/docker.sock
+    user: root
+    environment:
+      BROWSER: "chromium --use-fake-device-for-media-stream"
+      PROJECT_DIR: ${PROJECT_DIR}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
+    volumes:
+      - ./:/project
+      - ./maps:/maps
+      - /var/run/docker.sock:/var/run/docker.sock
+  #  security_opt:
+  #    - seccomp:unconfined

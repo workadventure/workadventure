@@ -52,7 +52,7 @@
     "openid-client": "^4.7.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.4.0",
     "uuidv4": "^6.0.7"
   },
   "devDependencies": {
@@ -71,8 +71,8 @@
     "jasmine": "^3.5.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
-    "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3"
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.5.2"
   },
   "lint-staged": {
     "*.ts": [

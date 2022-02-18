@@ -1,6 +1,10 @@
 import Sprite = Phaser.GameObjects.Sprite;
 import Container = Phaser.GameObjects.Container;
 import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
+import { Writable, writable } from "svelte/store";
+import type { PictureStore } from "../../Stores/PictureStore";
+import type CancelablePromise from "cancelable-promise";
 
 export interface CompanionStatus {
     x: number;
@@ -21,8 +25,10 @@ export class Companion extends Container {
     private companionName: string;
     private direction: PlayerAnimationDirections;
     private animationType: PlayerAnimationTypes;
+    private readonly _pictureStore: Writable<string | undefined>;
+    private texturePromise: CancelablePromise<string | void> | undefined;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: Promise<string>) {
+    constructor(scene: Phaser.Scene, x: number, y: number, name: string, texturePromise: CancelablePromise<string>) {
         super(scene, x + 14, y + 4);
 
         this.sprites = new Map<string, Sprite>();
@@ -35,11 +41,17 @@ export class Companion extends Container {
         this.animationType = PlayerAnimationTypes.Idle;
 
         this.companionName = name;
+        this._pictureStore = writable(undefined);
 
-        texturePromise.then((resource) => {
-            this.addResource(resource);
-            this.invisible = false;
-        });
+        this.texturePromise = texturePromise
+            .then((resource) => {
+                this.addResource(resource);
+                this.invisible = false;
+                return this.getSnapshot().then((htmlImageElementSrc) => {
+                    this._pictureStore.set(htmlImageElementSrc);
+                });
+            })
+            .catch((e) => console.error(e));
 
         this.scene.physics.world.enableBody(this);
 
@@ -121,6 +133,22 @@ export class Companion extends Container {
             moving: animationType === PlayerAnimationTypes.Walk,
             name: companionName,
         };
+    }
+
+    public async getSnapshot(): Promise<string> {
+        const sprites = Array.from(this.sprites.values()).map((sprite) => {
+            return { sprite, frame: 1 };
+        });
+        return TexturesHelper.getSnapshot(this.scene, ...sprites).catch((reason) => {
+            console.warn(reason);
+            for (const sprite of this.sprites.values()) {
+                // it can be either cat or dog prefix
+                if (sprite.texture.key.includes("cat") || sprite.texture.key.includes("dog")) {
+                    return this.scene.textures.getBase64(sprite.texture.key);
+                }
+            }
+            return "cat1";
+        });
     }
 
     private playAnimation(direction: PlayerAnimationDirections, type: PlayerAnimationTypes): void {
@@ -208,6 +236,7 @@ export class Companion extends Container {
     }
 
     public destroy(): void {
+        this.texturePromise?.cancel();
         for (const sprite of this.sprites.values()) {
             if (this.scene) {
                 this.scene.sys.updateList.remove(sprite);
@@ -219,5 +248,9 @@ export class Companion extends Container {
         }
 
         super.destroy();
+    }
+
+    public get pictureStore(): PictureStore {
+        return this._pictureStore;
     }
 }

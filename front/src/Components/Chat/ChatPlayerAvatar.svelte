@@ -1,76 +1,38 @@
 <script lang="ts">
     import type {PlayerInterface} from "../../Phaser/Game/PlayerInterface";
-    import {chatSubMenuVisbilityStore} from "../../Stores/ChatStore";
-    import {onDestroy, onMount} from "svelte";
-    import type {Unsubscriber} from "svelte/store";
-    import ChatSubMenu from "./ChatSubMenu.svelte";
+    import Woka from "../Woka/Woka.svelte";
 
-    export let player: PlayerInterface;
-    export let line: number;
+    export let player: PlayerInterface | undefined;
 
-    let isSubMenuOpen: boolean;
-    let chatSubMenuVisivilytUnsubcribe: Unsubscriber;
-
-    function openSubMenu() {
-        chatSubMenuVisbilityStore.openSubMenu(player.name, line);
-    }
-
-    function getInitials(name) {
-        // TODO: This could be replaced by the Woka of the player if possible
-        let initials = name.split(' ');
-
-        if (initials.length === 1) {
-            // John => JOH
-            // JOH => JOH
-            // Jo => JO
-            initials = name.length >= 3 ? name.substring(0, 3) : name;
-        } else if (initials.length > 1) {
-            // John Doe => JOD
-            // John Doe Bar => JOB
-            // J Doe => JD
-            const firstname = initials.shift()
-            const lastname = initials.pop()
-            initials = (firstname.length >= 2 ? firstname.substring(0, 2) : firstname) + lastname.charAt(0);
-        }
-
-        return initials.toUpperCase();
-    }
-
-    onMount(() => {
-        chatSubMenuVisivilytUnsubcribe = chatSubMenuVisbilityStore.subscribe((newValue) => {
-            isSubMenuOpen = (newValue === player.name + line);
-        })
-    })
-
-    onDestroy(() => {
-        chatSubMenuVisivilytUnsubcribe();
-    })
-
+    const userId = player ? player.userId : -1;
+    const placeholderSrc = player ? player.name : 'Me';
+    const bgColor = player ? player.color : 'white';
 </script>
 
-<div class="avatar" style="background-color: {player.color || 'white'}">
-    <p class="name">{getInitials(player.name)}</p>
+<div class="avatar-container" style="background-color: { bgColor }">
+    <Woka userId={ userId } placeholderSrc={ placeholderSrc } width={ "32px" } height={ "32px" }/>
 </div>
 
 <style lang="scss">
-  div.avatar {
+  div.avatar-container {
     cursor: pointer;
-    display: inline-block;
-    float: left;
     border-radius: 5px;
     width: 40px;
-    height: 40px;
+    min-height: 40px;
+    margin:auto;
+    display: flex;
     align-items: center;
     justify-content: center;
+    float: left;
+  }
 
-    .name {
-      cursor: pointer;
-      overflow: hidden;
-      font-weight: bold;
-      color: white;
-      text-shadow: 2px 2px dimgrey;
-      line-height: 40px;
-      text-align: center;
-    }
+  div.avatar-container > img {
+    display: block;
+    width: 100%;
+    min-width:32px;
+    max-width: 32px; /*actual image width*/
+    height: auto; /* maintain aspect ratio*/
+    margin: auto; /*optional centering of image*/
+    position: absolute;
   }
 </style>

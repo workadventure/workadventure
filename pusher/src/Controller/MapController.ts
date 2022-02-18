@@ -2,12 +2,13 @@ import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
 import { BaseController } from "./BaseController";
 import { parse } from "query-string";
 import { adminApi } from "../Services/AdminApi";
-import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_URL, DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import { MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { socketManager } from "../Services/SocketManager";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { v4 } from "uuid";
+import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseController {
     constructor(private App: TemplatedApp) {
@@ -20,7 +21,6 @@ export class MapController extends BaseController {
     getMapUrl() {
         this.App.options("/map", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
-
             res.end();
         });
 
@@ -59,11 +59,12 @@ export class MapController extends BaseController {
                     JSON.stringify({
                         mapUrl,
                         policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-                        roomSlug: "", // Deprecated
+                        roomSlug: null, // Deprecated
                         group: null,
                         tags: [],
                         textures: [],
-                        contactPage: undefined,
+                        contactPage: null,
+                        authenticationMandatory: DISABLE_ANONYMOUS,
                     } as MapDetailsData)
                 );
 
@@ -79,13 +80,29 @@ export class MapController extends BaseController {
                             authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string);
                             userId = authTokenData.identifier;
                         } catch (e) {
-                            // Decode token, in this case we don't need to create new token.
-                            authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string, true);
-                            userId = authTokenData.identifier;
-                            console.info("JWT expire, but decoded", userId);
+                            try {
+                                // Decode token, in this case we don't need to create new token.
+                                authTokenData = jwtTokenManager.verifyJWTToken(query.authToken as string, true);
+                                userId = authTokenData.identifier;
+                                console.info("JWT expire, but decoded", userId);
+                            } catch (e) {
+                                if (e instanceof InvalidTokenError) {
+                                    // The token was not good, redirect user on login page
+                                    res.writeStatus("401 Unauthorized");
+                                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
+                                    res.end("Token decrypted error");
+                                    return;
+                                } else {
+                                    return this.errorToResponse(e, res);
+                                }
+                            }
                         }
                     }
                     const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
+
+                    if (isMapDetailsData(mapDetails) && DISABLE_ANONYMOUS) {
+                        mapDetails.authenticationMandatory = true;
+                    }
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);

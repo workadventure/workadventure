@@ -2,7 +2,13 @@ import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
 import { PositionInterface } from "_Model/PositionInterface";
-import { EmoteCallback, EntersCallback, LeavesCallback, MovesCallback } from "_Model/Zone";
+import {
+    EmoteCallback,
+    EntersCallback,
+    LeavesCallback,
+    MovesCallback,
+    PlayerDetailsUpdatedCallback,
+} from "_Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "_Model/Movable";
 import {
@@ -11,9 +17,11 @@ import {
     EmoteEventMessage,
     ErrorMessage,
     JoinRoomMessage,
+    SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
     VariableMessage,
     VariableWithTagMessage,
+    ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
@@ -26,6 +34,8 @@ import { VariablesManager } from "../Services/VariablesManager";
 import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { VariableError } from "../Services/VariableError";
+import { isRoomRedirect } from "../Services/AdminApi/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -55,10 +65,19 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {
         // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionNotifier(320, 320, onEnters, onMoves, onLeaves, onEmote);
+        this.positionNotifier = new PositionNotifier(
+            320,
+            320,
+            onEnters,
+            onMoves,
+            onLeaves,
+            onEmote,
+            onPlayerDetailsUpdated
+        );
     }
 
     public static async create(
@@ -70,7 +89,8 @@ export class GameRoom {
         onEnters: EntersCallback,
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
-        onEmote: EmoteCallback
+        onEmote: EmoteCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
 
@@ -84,14 +104,11 @@ export class GameRoom {
             onEnters,
             onMoves,
             onLeaves,
-            onEmote
+            onEmote,
+            onPlayerDetailsUpdated
         );
 
         return gameRoom;
-    }
-
-    public getGroups(): Group[] {
-        return Array.from(this.groups.values());
     }
 
     public getUsers(): Map<number, User> {
@@ -156,6 +173,14 @@ export class GameRoom {
         if (userObj !== undefined && typeof userObj.group !== "undefined") {
             this.leaveGroup(userObj);
         }
+
+        if (user.hasFollowers()) {
+            user.stopLeading();
+        }
+        if (user.following) {
+            user.following.delFollower(user);
+        }
+
         this.users.delete(user.id);
         this.usersByUuid.delete(user.uuid);
 
@@ -179,15 +204,23 @@ export class GameRoom {
         this.updateUserGroup(user);
     }
 
-    private updateUserGroup(user: User): void {
-        user.group?.updatePosition();
-        user.group?.searchForNearbyUsers();
+    updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        if (playerDetailsMessage.getRemoveoutlinecolor()) {
+            user.outlineColor = undefined;
+        } else {
+            user.outlineColor = playerDetailsMessage.getOutlinecolor();
+        }
+    }
 
+    private updateUserGroup(user: User): void {
         if (user.silent) {
             return;
         }
 
-        if (user.group === undefined) {
+        const group = user.group;
+        const closestItem: User | Group | null = this.searchClosestAvailableUserOrGroup(user);
+
+        if (group === undefined) {
             // If the user is not part of a group:
             //  should he join a group?
 
@@ -196,12 +229,11 @@ export class GameRoom {
                 return;
             }
 
-            const closestItem: User | Group | null = this.searchClosestAvailableUserOrGroup(user);
-
             if (closestItem !== null) {
                 if (closestItem instanceof Group) {
                     // Let's join the group!
                     closestItem.join(user);
+                    closestItem.setOutOfBounds(false);
                 } else {
                     const closestUser: User = closestItem;
                     const group: Group = new Group(
@@ -216,13 +248,103 @@ export class GameRoom {
                 }
             }
         } else {
-            // If the user is part of a group:
-            //  should he leave the group?
-            const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), user.group.getPosition());
-            if (distance > this.groupRadius) {
+            let hasKickOutSomeone = false;
+            let followingMembers: User[] = [];
+
+            const previewNewGroupPosition = group.previewGroupPosition();
+
+            if (!previewNewGroupPosition) {
                 this.leaveGroup(user);
+                return;
+            }
+
+            if (user.hasFollowers() || user.following) {
+                followingMembers = user.hasFollowers()
+                    ? group.getUsers().filter((currentUser) => currentUser.following === user)
+                    : group.getUsers().filter((currentUser) => currentUser.following === user.following);
+
+                // If all group members are part of the same follow group
+                if (group.getUsers().length - 1 === followingMembers.length) {
+                    let isOutOfBounds = false;
+
+                    // If a follower is far away from the leader, "outOfBounds" is set to true
+                    for (const member of followingMembers) {
+                        const distance = GameRoom.computeDistanceBetweenPositions(
+                            member.getPosition(),
+                            previewNewGroupPosition
+                        );
+
+                        if (distance > this.groupRadius) {
+                            isOutOfBounds = true;
+                            break;
+                        }
+                    }
+                    group.setOutOfBounds(isOutOfBounds);
+                }
+            }
+
+            // Check if the moving user has kicked out another user
+            for (const headMember of group.getGroupHeads()) {
+                if (!headMember.group) {
+                    this.leaveGroup(headMember);
+                    continue;
+                }
+
+                const headPosition = headMember.getPosition();
+                const distance = GameRoom.computeDistanceBetweenPositions(headPosition, previewNewGroupPosition);
+
+                if (distance > this.groupRadius) {
+                    hasKickOutSomeone = true;
+                    break;
+                }
+            }
+
+            /**
+             * If the current moving user has kicked another user from the radius,
+             * the moving user leaves the group because he is too far away.
+             */
+            const userDistance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), previewNewGroupPosition);
+
+            if (hasKickOutSomeone && userDistance > this.groupRadius) {
+                if (user.hasFollowers() && group.getUsers().length === 3 && followingMembers.length === 1) {
+                    const other = group
+                        .getUsers()
+                        .find((currentUser) => !currentUser.hasFollowers() && !currentUser.following);
+                    if (other) {
+                        this.leaveGroup(other);
+                    }
+                } else if (user.hasFollowers()) {
+                    this.leaveGroup(user);
+                    for (const member of followingMembers) {
+                        this.leaveGroup(member);
+                    }
+
+                    // Re-create a group with the followers
+                    const newGroup: Group = new Group(
+                        this.roomUrl,
+                        [user, ...followingMembers],
+                        this.groupRadius,
+                        this.connectCallback,
+                        this.disconnectCallback,
+                        this.positionNotifier
+                    );
+                    this.groups.add(newGroup);
+                } else {
+                    this.leaveGroup(user);
+                }
             }
         }
+
+        user.group?.updatePosition();
+        user.group?.searchForNearbyUsers();
+    }
+
+    public sendToOthersInGroupIncludingUser(user: User, message: ServerToClientMessage): void {
+        user.group?.getUsers().forEach((currentUser: User) => {
+            if (currentUser.id !== user.id) {
+                currentUser.socket.write(message);
+            }
+        });
     }
 
     setSilent(user: User, silent: boolean) {
@@ -252,12 +374,9 @@ export class GameRoom {
         }
         group.leave(user);
         if (group.isEmpty()) {
-            this.positionNotifier.leave(group);
             group.destroy();
             if (!this.groups.has(group)) {
-                throw new Error(
-                    "Could not find group " + group.getId() + " referenced by user " + user.id + " in World."
-                );
+                throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
             this.groups.delete(group);
             //todo: is the group garbage collected?
@@ -336,30 +455,62 @@ export class GameRoom {
         // First, let's check if "user" is allowed to modify the variable.
         const variableManager = await this.getVariableManager();
 
-        const readableBy = variableManager.setVariable(name, value, user);
+        try {
+            const readableBy = variableManager.setVariable(name, value, user);
 
-        // If the variable was not changed, let's not dispatch anything.
-        if (readableBy === false) {
-            return;
-        }
+            // If the variable was not changed, let's not dispatch anything.
+            if (readableBy === false) {
+                return;
+            }
 
-        // TODO: should we batch those every 100ms?
-        const variableMessage = new VariableWithTagMessage();
-        variableMessage.setName(name);
-        variableMessage.setValue(value);
-        if (readableBy) {
-            variableMessage.setReadableby(readableBy);
-        }
+            // TODO: should we batch those every 100ms?
+            const variableMessage = new VariableWithTagMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value);
+            if (readableBy) {
+                variableMessage.setReadableby(readableBy);
+            }
 
-        const subMessage = new SubToPusherRoomMessage();
-        subMessage.setVariablemessage(variableMessage);
+            const subMessage = new SubToPusherRoomMessage();
+            subMessage.setVariablemessage(variableMessage);
 
-        const batchMessage = new BatchToPusherRoomMessage();
-        batchMessage.addPayload(subMessage);
+            const batchMessage = new BatchToPusherRoomMessage();
+            batchMessage.addPayload(subMessage);
 
-        // Dispatch the message on the room listeners
-        for (const socket of this.roomListeners) {
-            socket.write(batchMessage);
+            // Dispatch the message on the room listeners
+            for (const socket of this.roomListeners) {
+                socket.write(batchMessage);
+            }
+        } catch (e) {
+            if (e instanceof VariableError) {
+                // Ok, we have an error setting a variable. Either the user is trying to hack the map... or the map
+                // is not up to date. So let's try to reload the map from scratch.
+                if (this.variableManagerLastLoad === undefined) {
+                    throw e;
+                }
+                const lastLoaded = new Date().getTime() - this.variableManagerLastLoad.getTime();
+                if (lastLoaded < 10000) {
+                    console.log(
+                        'An error occurred while setting the "' +
+                            name +
+                            "\" variable. But we tried to reload the map less than 10 seconds ago, so let's fail."
+                    );
+                    // Do not try to reload if we tried to reload less than 10 seconds ago.
+                    throw e;
+                }
+
+                // Reset the variable manager
+                this.variableManagerPromise = undefined;
+                this.mapPromise = undefined;
+
+                console.log(
+                    'An error occurred while setting the "' + name + "\" variable. Let's reload the map and try again"
+                );
+                // Try to set the variable again!
+                await this.setVariable(name, value, user);
+            } else {
+                throw e;
+            }
         }
     }
 
@@ -426,9 +577,9 @@ export class GameRoom {
         }
 
         const result = await adminApi.fetchMapDetails(roomUrl);
-        if (!isMapDetailsData(result)) {
-            console.error("Unexpected room details received from server", result);
-            throw new Error("Unexpected room details received from server");
+        if (isRoomRedirect(result)) {
+            console.error("Unexpected room redirect received while querying map details", result);
+            throw new Error("Unexpected room redirect received while querying map details");
         }
         return result;
     }
@@ -449,9 +600,11 @@ export class GameRoom {
     }
 
     private variableManagerPromise: Promise<VariablesManager> | undefined;
+    private variableManagerLastLoad: Date | undefined;
 
     private getVariableManager(): Promise<VariablesManager> {
         if (!this.variableManagerPromise) {
+            this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
                 .then((map) => {
                     const variablesManager = new VariablesManager(this.roomUrl, map);

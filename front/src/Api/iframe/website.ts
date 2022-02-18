@@ -1,8 +1,4 @@
-import type { LoadSoundEvent } from "../Events/LoadSoundEvent";
-import type { PlaySoundEvent } from "../Events/PlaySoundEvent";
-import type { StopSoundEvent } from "../Events/StopSoundEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
-import { Sound } from "./Sound/Sound";
 import { EmbeddedWebsite } from "./Room/EmbeddedWebsite";
 import type { CreateEmbeddedWebsiteEvent } from "../Events/EmbeddedWebsiteEvent";
 

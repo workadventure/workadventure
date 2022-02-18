@@ -6,6 +6,8 @@ export const isHasPlayerMovedEvent = new tg.IsInterface()
         moving: tg.isBoolean,
         x: tg.isNumber,
         y: tg.isNumber,
+        oldX: tg.isOptional(tg.isNumber),
+        oldY: tg.isOptional(tg.isNumber),
     })
     .get();
 

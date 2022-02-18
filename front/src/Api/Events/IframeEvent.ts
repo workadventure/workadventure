@@ -5,11 +5,10 @@ import type { ClosePopupEvent } from "./ClosePopupEvent";
 import type { EnterLeaveEvent } from "./EnterLeaveEvent";
 import type { GoToPageEvent } from "./GoToPageEvent";
 import type { LoadPageEvent } from "./LoadPageEvent";
-import type { OpenCoWebSiteEvent } from "./OpenCoWebSiteEvent";
+import { isCoWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
 import type { OpenPopupEvent } from "./OpenPopupEvent";
 import type { OpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { MapDataEvent } from "./MapDataEvent";
 import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
@@ -25,14 +24,18 @@ import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
 import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
-import type {
-    MessageReferenceEvent,
-    removeActionMessage,
-    triggerActionMessage,
-    TriggerActionMessageEvent,
-} from "./ui/TriggerActionMessageEvent";
+import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
 import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
+import type { ChangeLayerEvent } from "./ChangeLayerEvent";
+import { isPlayerPosition } from "./PlayerPosition";
+import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
+import type { ChangeZoneEvent } from "./ChangeZoneEvent";
+import type { CameraSetEvent } from "./CameraSetEvent";
+import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
+import { isColorEvent } from "./ColorEvent";
+import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
+import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -44,17 +47,18 @@ export interface TypedMessageEvent<T> extends MessageEvent {
 export type IframeEventMap = {
     loadPage: LoadPageEvent;
     chat: ChatEvent;
+    cameraFollowPlayer: CameraFollowPlayerEvent;
+    cameraSet: CameraSetEvent;
     openPopup: OpenPopupEvent;
     closePopup: ClosePopupEvent;
     openTab: OpenTabEvent;
     goToPage: GoToPageEvent;
-    openCoWebSite: OpenCoWebSiteEvent;
-    closeCoWebSite: null;
     disablePlayerControls: null;
     restorePlayerControls: null;
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
+    onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
@@ -81,8 +85,13 @@ export interface IframeResponseEventMap {
     userInputChat: UserInputChatEvent;
     enterEvent: EnterLeaveEvent;
     leaveEvent: EnterLeaveEvent;
+    enterLayerEvent: ChangeLayerEvent;
+    leaveLayerEvent: ChangeLayerEvent;
+    enterZoneEvent: ChangeZoneEvent;
+    leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
+    wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;
     setVariable: SetVariableEvent;
     messageTriggered: MessageReferenceEvent;
@@ -118,6 +127,22 @@ export const iframeQueryMapTypeGuards = {
         query: isLoadTilesetEvent,
         answer: tg.isNumber,
     },
+    openCoWebsite: {
+        query: isOpenCoWebsiteEvent,
+        answer: isCoWebsite,
+    },
+    getCoWebsites: {
+        query: tg.isUndefined,
+        answer: tg.isArray(isCoWebsite),
+    },
+    closeCoWebsite: {
+        query: tg.isString,
+        answer: tg.isUndefined,
+    },
+    closeCoWebsites: {
+        query: tg.isUndefined,
+        answer: tg.isUndefined,
+    },
     triggerActionMessage: {
         query: isTriggerActionMessageEvent,
         answer: tg.isUndefined,
@@ -137,6 +162,22 @@ export const iframeQueryMapTypeGuards = {
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
         answer: tg.isUndefined,
+    },
+    setPlayerOutline: {
+        query: isColorEvent,
+        answer: tg.isUndefined,
+    },
+    removePlayerOutline: {
+        query: tg.isUndefined,
+        answer: tg.isUndefined,
+    },
+    getPlayerPosition: {
+        query: tg.isUndefined,
+        answer: isPlayerPosition,
+    },
+    movePlayerTo: {
+        query: isMovePlayerToEventConfig,
+        answer: isMovePlayerToEventAnswer,
     },
 };
 

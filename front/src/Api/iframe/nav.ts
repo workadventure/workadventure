@@ -1,8 +1,15 @@
-import type { GoToPageEvent } from "../Events/GoToPageEvent";
-import type { OpenTabEvent } from "../Events/OpenTabEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
-import type { OpenCoWebSiteEvent } from "../Events/OpenCoWebSiteEvent";
-import type { LoadPageEvent } from "../Events/LoadPageEvent";
+import { IframeApiContribution, sendToWorkadventure, queryWorkadventure } from "./IframeApiContribution";
+
+export class CoWebsite {
+    constructor(private readonly id: string) {}
+
+    close() {
+        return queryWorkadventure({
+            type: "closeCoWebsite",
+            data: this.id,
+        });
+    }
+}
 
 export class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
     callbacks = [];
@@ -34,21 +41,45 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
-    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): void {
-        sendToWorkadventure({
-            type: "openCoWebSite",
+    async openCoWebSite(
+        url: string,
+        allowApi?: boolean,
+        allowPolicy?: string,
+        widthPercent?: number,
+        position?: number,
+        closable?: boolean,
+        lazy?: boolean
+    ): Promise<CoWebsite> {
+        const result = await queryWorkadventure({
+            type: "openCoWebsite",
             data: {
                 url,
                 allowApi,
                 allowPolicy,
+                widthPercent,
+                position,
+                closable,
+                lazy,
             },
         });
+        return new CoWebsite(result.id);
     }
 
-    closeCoWebSite(): void {
-        sendToWorkadventure({
-            type: "closeCoWebSite",
-            data: null,
+    async getCoWebSites(): Promise<CoWebsite[]> {
+        const result = await queryWorkadventure({
+            type: "getCoWebsites",
+            data: undefined,
+        });
+        return result.map((cowebsiteEvent) => new CoWebsite(cowebsiteEvent.id));
+    }
+
+    /**
+     * @deprecated Use closeCoWebsites instead to close all co-websites
+     */
+    closeCoWebSite() {
+        return queryWorkadventure({
+            type: "closeCoWebsites",
+            data: undefined,
         });
     }
 }

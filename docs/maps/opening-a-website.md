@@ -5,7 +5,7 @@
 
 ## The openWebsite property
 
-On your map, you can define special zones. When a player will pass over these zones, a website will open (as an iframe 
+On your map, you can define special zones. When a player will pass over these zones, a website will open (as an iframe
 on the right side of the screen)
 
 In order to create a zone that opens websites:
@@ -16,7 +16,7 @@ In order to create a zone that opens websites:
 * You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
 
 {.alert.alert-warning}
-A website can explicitly forbid another website from loading it in an iFrame using 
+A website can explicitly forbid another website from loading it in an iFrame using
 the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
 
 ## Integrating a Youtube video
@@ -52,6 +52,13 @@ If you set `openWebsiteTrigger: onaction`, when the user walks on the layer, an 
 
 If you set `openWebsiteTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to open the web site'.
 
+If you set `openWebsiteTrigger: onicon`, when the user walks on the layer, an icon will be displayed at the bottom of the screen:
+
+<figure class="figure">
+    <img src="images/icon_open_website.png" class="figure-img img-fluid rounded" alt="" />
+    <figcaption class="figure-caption">The iFrame will only open if the user clicks on icon</figcaption>
+</figure>
+
 ### Setting the iFrame "allow" attribute
 
 By default, iFrames have limited rights in browsers. For instance, they cannot put their content in fullscreen, they cannot start your webcam, etc...
@@ -64,3 +71,13 @@ For instance, if you want an iFrame to be able to go in fullscreen, you will use
     <img src="images/open_website_policy.jpg" class="figure-img img-fluid rounded" alt="" />
     <figcaption class="figure-caption">The generated iFrame will have the allow attribute set to: <code>&lt;iframe allow="fullscreen"&gt;</code></figcaption>
 </figure>
+
+### Open a Jitsi with a co-website
+
+Cowebsites allow you to have several sites open at the same time.
+
+If you want to open a Jitsi and another page it's easy!
+
+You have just to [add a Jitsi to the map](meeting-rooms.md) and [add a co-website](opening-a-website.md#the-openwebsite-property) on the same layer.
+
+It's done!

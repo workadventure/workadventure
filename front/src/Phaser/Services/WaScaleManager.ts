@@ -5,12 +5,20 @@ import type { Game } from "../Game/Game";
 import { ResizableScene } from "../Login/ResizableScene";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 
-class WaScaleManager {
+export enum WaScaleManagerEvent {
+    RefreshFocusOnTarget = "wa-scale-manager:refresh-focus-on-target",
+}
+
+export type WaScaleManagerFocusTarget = { x: number; y: number; width?: number; height?: number };
+
+export class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager!: ScaleManager;
     private game!: Game;
     private actualZoom: number = 1;
     private _saveZoom: number = 1;
+
+    private focusTarget?: WaScaleManagerFocusTarget;
 
     public constructor(private minGamePixelsNumber: number, private absoluteMinPixelNumber: number) {
         this.hdpiManager = new HdpiManager(minGamePixelsNumber, absoluteMinPixelNumber);
@@ -23,25 +31,23 @@ class WaScaleManager {
 
     public applyNewSize() {
         const { width, height } = coWebsiteManager.getGameSize();
-
-        let devicePixelRatio = 1;
-        if (window.devicePixelRatio) {
-            devicePixelRatio = window.devicePixelRatio;
-        }
-
+        const devicePixelRatio = window.devicePixelRatio ?? 1;
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: width * devicePixelRatio,
             height: height * devicePixelRatio,
         });
 
-        this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
-        this.scaleManager.setZoom(realSize.width / gameSize.width / devicePixelRatio);
+        if (realSize.width !== 0 && gameSize.width !== 0 && devicePixelRatio !== 0) {
+            this.actualZoom = realSize.width / gameSize.width / devicePixelRatio;
+        }
+
         this.scaleManager.resize(gameSize.width, gameSize.height);
+        this.scaleManager.setZoom(this.actualZoom);
 
         // Override bug in canvas resizing in Phaser. Let's resize the canvas ourselves
         const style = this.scaleManager.canvas.style;
-        style.width = Math.ceil(realSize.width / devicePixelRatio) + "px";
-        style.height = Math.ceil(realSize.height / devicePixelRatio) + "px";
+        style.width = Math.ceil(realSize.width !== 0 ? realSize.width / devicePixelRatio : 0) + "px";
+        style.height = Math.ceil(realSize.height !== 0 ? realSize.height / devicePixelRatio : 0) + "px";
 
         // Resize the game element at the same size at the canvas
         const gameStyle = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("game").style;
@@ -59,6 +65,36 @@ class WaScaleManager {
         this.game.markDirty();
     }
 
+    /**
+     * Use this in case of resizing while focusing on something
+     */
+    public refreshFocusOnTarget(): void {
+        if (!this.focusTarget) {
+            return;
+        }
+        if (this.focusTarget.width && this.focusTarget.height) {
+            this.zoomModifier = this.getTargetZoomModifierFor(this.focusTarget.width, this.focusTarget.height);
+        }
+        this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
+    }
+
+    public setFocusTarget(targetDimensions?: WaScaleManagerFocusTarget): void {
+        this.focusTarget = targetDimensions;
+    }
+
+    public getTargetZoomModifierFor(viewportWidth: number, viewportHeight: number) {
+        const { width: gameWidth, height: gameHeight } = coWebsiteManager.getGameSize();
+        const devicePixelRatio = window.devicePixelRatio ?? 1;
+
+        const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
+            width: gameWidth * devicePixelRatio,
+            height: gameHeight * devicePixelRatio,
+        });
+        const desiredZoom = Math.min(realSize.width / viewportWidth, realSize.height / viewportHeight);
+        const realPixelNumber = gameWidth * devicePixelRatio * gameHeight * devicePixelRatio;
+        return desiredZoom / (this.hdpiManager.getOptimalZoomLevel(realPixelNumber) || 1);
+    }
+
     public get zoomModifier(): number {
         return this.hdpiManager.zoomModifier;
     }
@@ -68,8 +104,23 @@ class WaScaleManager {
         this.applyNewSize();
     }
 
+    public handleZoomByFactor(zoomFactor: number): void {
+        this.zoomModifier *= zoomFactor;
+        if (this.focusTarget) {
+            this.game.events.emit(WaScaleManagerEvent.RefreshFocusOnTarget, this.focusTarget);
+        }
+    }
+
+    public getFocusTarget(): WaScaleManagerFocusTarget | undefined {
+        return this.focusTarget;
+    }
+
     public saveZoom(): void {
         this._saveZoom = this.hdpiManager.zoomModifier;
+    }
+
+    public getSaveZoom(): number {
+        return this._saveZoom;
     }
 
     public restoreZoom(): void {

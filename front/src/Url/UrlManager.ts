@@ -2,8 +2,7 @@ import type { Room } from "../Connexion/Room";
 import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
-    anonymous = 1,
-    organization,
+    room = 1,
     register,
     empty,
     unknown,
@@ -19,10 +18,8 @@ class UrlManager {
             return GameConnexionTypes.login;
         } else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
-        } else if (url.includes("_/")) {
-            return GameConnexionTypes.anonymous;
-        } else if (url.includes("@/")) {
-            return GameConnexionTypes.organization;
+        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
+            return GameConnexionTypes.room;
         } else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
@@ -40,15 +37,36 @@ class UrlManager {
     public pushRoomIdToUrl(room: Room): void {
         if (window.location.pathname === room.id) return;
         //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
-        localUserStore.setLastRoomUrl(room.key);
+        //use href to keep # value
+        localUserStore.setLastRoomUrl(room.href).catch((e) => console.error(e));
         const hash = window.location.hash;
         const search = room.search.toString();
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);
     }
 
     public getStartLayerNameFromUrl(): string | null {
-        const hash = window.location.hash;
-        return hash.length > 1 ? hash.substring(1) : null;
+        const parameters = this.getHashParameters();
+        for (const key in parameters) {
+            if (parameters[key] === undefined) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    public getHashParameter(name: string): string | undefined {
+        return this.getHashParameters()[name];
+    }
+
+    private getHashParameters(): Record<string, string> {
+        return window.location.hash
+            .substring(1)
+            .split("&")
+            .reduce((res: Record<string, string>, item: string) => {
+                const parts = item.split("=");
+                res[parts[0]] = parts[1];
+                return res;
+            }, {});
     }
 
     pushStartLayerNameToUrl(startLayerName: string): void {

@@ -1,9 +1,11 @@
 import { TextField } from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
 import Sprite = Phaser.GameObjects.Sprite;
+import LL from "../../i18n/i18n-svelte";
+import { get } from "svelte/store";
 
 export const ReconnectingSceneName = "ReconnectingScene";
-enum ReconnectingTextures {
+export enum ReconnectingTextures {
     icon = "icon",
     mainFont = "main_font",
 }
@@ -38,10 +40,10 @@ export class ReconnectingScene extends Phaser.Scene {
             this,
             this.game.renderer.width / 2,
             this.game.renderer.height / 2,
-            "Connection lost. Reconnecting..."
+            get(LL).warning.connectionLost()
         );
 
-        const cat = this.physics.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat");
+        const cat = this.add.sprite(this.game.renderer.width / 2, this.game.renderer.height / 2 - 32, "cat");
         this.anims.create({
             key: "right",
             frames: this.anims.generateFrameNumbers("cat", { start: 6, end: 8 }),

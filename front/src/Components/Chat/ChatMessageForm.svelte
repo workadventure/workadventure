@@ -1,14 +1,15 @@
 <script lang="ts">
-    import {chatMessagesStore, chatInputFocusStore} from "../../Stores/ChatStore";
+    import LL from "../../i18n/i18n-svelte";
+    import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
 
     export const handleForm = {
         blur() {
             inputElement.blur();
-        }
-    }
+        },
+    };
     let inputElement: HTMLElement;
-    let newMessageText = '';
-    
+    let newMessageText = "";
+
     function onFocus() {
         chatInputFocusStore.set(true);
     }
@@ -19,12 +20,19 @@
     function saveMessage() {
         if (!newMessageText) return;
         chatMessagesStore.addPersonnalMessage(newMessageText);
-        newMessageText = '';
+        newMessageText = "";
     }
 </script>
 
 <form on:submit|preventDefault={saveMessage}>
-    <input type="text" bind:value={newMessageText} placeholder="Message" on:focus={onFocus} on:blur={onBlur} bind:this={inputElement}>
+    <input
+        type="text"
+        bind:value={newMessageText}
+        placeholder={$LL.chat.enter()}
+        on:focus={onFocus}
+        on:blur={onBlur}
+        bind:this={inputElement}
+    />
     <button type="submit">Send</button>
 </form>
 

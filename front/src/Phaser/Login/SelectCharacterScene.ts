@@ -4,7 +4,7 @@ import { EnableCameraSceneName } from "./EnableCameraScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
@@ -12,7 +12,8 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { isMobile } from "../../Enum/EnvironmentVariable";
+import { analyticsClient } from "../../Administration/AnalyticsClient";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -30,32 +31,36 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected pointerTimer: number = 0;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+    private loader: Loader;
 
     constructor() {
         super({
             key: SelectCharacterSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
-        this.loadSelectSceneCharacters().then((bodyResourceDescriptions) => {
-            bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                this.playerModels.push(bodyResourceDescription);
-            });
-            this.lazyloadingAttempt = true;
-        });
+        this.loadSelectSceneCharacters()
+            .then((bodyResourceDescriptions) => {
+                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                    this.playerModels.push(bodyResourceDescription);
+                });
+                this.lazyloadingAttempt = true;
+            })
+            .catch((e) => console.error(e));
         this.playerModels = loadAllDefaultModels(this.load);
         this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
         selectCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
             selectCharacterSceneVisibleStore.set(true);
         });
 
@@ -64,7 +69,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         }
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
 
         const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
         this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xffffff);
@@ -98,6 +103,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (!this.selectedPlayer) {
             return;
         }
+
+        analyticsClient.validationWoka("SelectWoka");
+
         this.scene.stop(SelectCharacterSceneName);
         waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);

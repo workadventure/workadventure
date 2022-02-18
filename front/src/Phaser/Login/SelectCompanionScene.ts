@@ -1,4 +1,4 @@
-import { addLoader } from "../Components/Loader";
+import { Loader } from "../Components/Loader";
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { EnableCameraSceneName } from "./EnableCameraScene";
@@ -9,7 +9,7 @@ import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { isMobile } from "../../Enum/EnvironmentVariable";
+import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 
 export const SelectCompanionSceneName = "SelectCompanionScene";
 
@@ -22,11 +22,13 @@ export class SelectCompanionScene extends ResizableScene {
     private currentCompanion = 0;
     private pointerClicked: boolean = false;
     private pointerTimer: number = 0;
+    private loader: Loader;
 
     constructor() {
         super({
             key: SelectCompanionSceneName,
         });
+        this.loader = new Loader(this);
     }
 
     preload() {
@@ -35,14 +37,14 @@ export class SelectCompanionScene extends ResizableScene {
         });
 
         //this function must stay at the end of preload function
-        addLoader(this);
+        this.loader.addLoader();
     }
 
     create() {
         selectCompanionSceneVisibleStore.set(true);
 
         waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMobile() ? 2 : 1;
+        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
