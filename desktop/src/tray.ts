@@ -20,7 +20,7 @@ export function createTray() {
   const trayContextMenu = Menu.buildFromTemplate([
     {
       id: "open",
-      label: "Open / Close",
+      label: "Show / Hide",
       click() {
         const mainWindow = getWindow();
         if (!mainWindow) {

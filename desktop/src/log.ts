@@ -1,5 +1,4 @@
 import { dialog, shell } from "electron";
-import electronIsDev from "electron-is-dev";
 import log from "electron-log";
 
 import settings from "./settings";
@@ -40,17 +39,11 @@ function onRejection(reason: Error) {
 
 function init() {
   const logLevel = settings.get("log_level", "info");
-  log.transports.file.level = logLevel;
   log.transports.console.level = logLevel;
+  log.transports.file.level = logLevel;
 
   // eslint-disable-next-line no-console
   console.log = log.log.bind(log);
-
-  if (!electronIsDev) {
-    log.transports.file.fileName = "work-adventure.log";
-  } else {
-    console.log("Log file is disabled in dev. Using console output instead.");
-  }
 
   process.on("uncaughtException", onError);
   process.on("unhandledRejection", onRejection);

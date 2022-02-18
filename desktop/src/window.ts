@@ -1,15 +1,18 @@
-import { BrowserWindow } from "electron";
-import electronIsDev from "electron-is-dev";
+import { BrowserView, BrowserWindow } from "electron";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
 
 let mainWindow: BrowserWindow | undefined;
+let appView: BrowserView | undefined;
 
-const url = process.env.PLAY_URL;
-// "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village"; // TODO
+const sidebarWidth = 70;
 
 export function getWindow() {
   return mainWindow;
+}
+
+export function getAppView() {
+  return appView;
 }
 
 export function createWindow() {
@@ -32,13 +35,8 @@ export function createWindow() {
     height: windowState.height,
     autoHideMenuBar: true,
     show: false,
-    title: "WorkAdventure",
     webPreferences: {
-      preload: path.join(__dirname, "../dist/preload/index.js"),
-      // allowRunningInsecureContent: false,
-      // contextIsolation: true, // TODO: remove in electron 12
-      // nodeIntegration: false,
-      // sandbox: true,
+      preload: path.join(__dirname, "../dist/sidebar/preload.js"),
     },
   });
 
@@ -47,16 +45,8 @@ export function createWindow() {
   // and restore the maximized or full screen state
   windowState.manage(mainWindow);
 
-  mainWindow.on("show", () => {
-    // TODO
-  });
-
   mainWindow.on("closed", () => {
     mainWindow = undefined;
-  });
-
-  mainWindow.once("ready-to-show", () => {
-    mainWindow?.show();
   });
 
   // mainWindow.on('close', async (event) => {
@@ -77,11 +67,37 @@ export function createWindow() {
   //   }
   // });
 
-  if (!url || electronIsDev) {
-    // TODO
-    mainWindow.loadFile("../test-app/index.html");
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadURL(url); // TODO: load app on demand
-  }
+  appView = new BrowserView({
+    webPreferences: {
+      preload: path.join(__dirname, "../dist/app/index.js"),
+    },
+  });
+  mainWindow.setBrowserView(appView);
+  appView.setBounds({
+    x: sidebarWidth,
+    y: 0,
+    width: mainWindow.getBounds().width - sidebarWidth,
+    height: mainWindow.getBounds().height,
+  });
+  appView.setAutoResize({
+    width: true,
+    height: true,
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    (async () => {
+      await appView?.webContents.loadURL("https://workadventu.re/"); // TODO: use some splashscreen ?
+      // appView.webContents.openDevTools({
+      //   mode: "detach",
+      // });
+      mainWindow?.show();
+      // mainWindow?.webContents.openDevTools({ mode: "detach" });
+    })();
+  });
+
+  mainWindow.webContents.on("did-finish-load", () => {
+    mainWindow?.setTitle("WorkAdventure Desktop");
+  });
+
+  mainWindow.loadFile("../sidebar/index.html");
 }

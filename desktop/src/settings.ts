@@ -1,9 +1,16 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
 
+type Server = {
+  _id: string;
+  name: string;
+  url: string;
+};
+
 type SettingsData = {
   log_level: ElectronLog.LogLevel;
   auto_launch_enabled: boolean;
+  servers: Server[];
 };
 
 let settings: SettingsData;

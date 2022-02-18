@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>WorkAdventure Desktop Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        width: 70px;
+        background-color: #25292E;
+      }
+
+      #servers {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1rem;
+      }
+
+      #servers div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        margin: 0.5rem;
+        color: #62727C;
+        border: 1px solid #62727C;
+        text-align: center;
+        border-radius: 50%;
+        height: 50px;
+        width: 50px;
+      }
+
+      #servers div:hover {
+        border-color: #E1E4E8;
+        color: #E1E4E8;
+      }
+
+      #btn-reload {
+        margin-top: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="servers"></div>
+    <button id="btn-reload">Refresh</button>
+    <script src="./index.js" lang="javascript"></script>
+  </body>
+</html>
