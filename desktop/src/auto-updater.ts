@@ -12,87 +12,85 @@ let isCheckPending = false;
 let isManualRequestedUpdate = false;
 
 export async function checkForUpdates() {
-  if (isCheckPending) {
-    return;
-  }
+    if (isCheckPending) {
+        return;
+    }
 
-  // Don't do auto-updates in development
-  if (isDev) {
-    return;
-  }
+    // Don't do auto-updates in development
+    if (isDev) {
+        return;
+    }
 
-  // check for updates right away
-  await autoUpdater.checkForUpdates();
+    // check for updates right away
+    await autoUpdater.checkForUpdates();
 
-  isCheckPending = false;
+    isCheckPending = false;
 }
 
 export async function manualRequestUpdateCheck() {
-  isManualRequestedUpdate = true;
+    isManualRequestedUpdate = true;
 
-  createAndShowNotification({
-    body: "Checking for updates ...",
-  });
+    createAndShowNotification({
+        body: "Checking for updates ...",
+    });
 
-  await checkForUpdates();
-  isManualRequestedUpdate = false;
+    await checkForUpdates();
+    isManualRequestedUpdate = false;
 }
 
 function init() {
-  autoUpdater.logger = log;
+    autoUpdater.logger = log;
 
-  autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
-    (async () => {
-      const dialogOpts = {
-        type: "question",
-        buttons: ["Install and Restart", "Install Later"],
-        defaultId: 0,
-        title: "WorkAdventure - Update",
-        message: process.platform === "win32" ? releaseNotes : releaseName,
-        detail:
-          "A new version has been downloaded. Restart the application to apply the updates.",
-      };
+    autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
+        (async () => {
+            const dialogOpts = {
+                type: "question",
+                buttons: ["Install and Restart", "Install Later"],
+                defaultId: 0,
+                title: "WorkAdventure - Update",
+                message: process.platform === "win32" ? releaseNotes : releaseName,
+                detail: "A new version has been downloaded. Restart the application to apply the updates.",
+            };
 
-      const { response } = await dialog.showMessageBox(dialogOpts);
-      if (response === 0) {
-        await sleep(1000);
+            const { response } = await dialog.showMessageBox(dialogOpts);
+            if (response === 0) {
+                await sleep(1000);
 
-        autoUpdater.quitAndInstall();
+                autoUpdater.quitAndInstall();
 
-        // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-        app.isQuiting = true;
-        app.confirmedExitPrompt = true;
-        app.quit();
-      }
-    })();
-  });
-
-  if (process.platform === "linux" && !process.env.APPIMAGE) {
-    autoUpdater.autoDownload = false;
-    autoUpdater.autoInstallOnAppQuit = false;
-
-    autoUpdater.on("update-available", () => {
-      createAndShowNotification({
-        title: "WorkAdventure - Update available",
-        body: "Please go to our website and install the newest version",
-      });
+                // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
+                // app.confirmedExitPrompt = true;
+                app.quit();
+            }
+        })();
     });
-  }
 
-  autoUpdater.on("update-not-available", () => {
-    if (isManualRequestedUpdate) {
-      createAndShowNotification({
-        body: "No update available.",
-      });
+    if (process.platform === "linux" && !process.env.APPIMAGE) {
+        autoUpdater.autoDownload = false;
+        autoUpdater.autoInstallOnAppQuit = false;
+
+        autoUpdater.on("update-available", () => {
+            createAndShowNotification({
+                title: "WorkAdventure - Update available",
+                body: "Please go to our website and install the newest version",
+            });
+        });
     }
-  });
 
-  checkForUpdates();
+    autoUpdater.on("update-not-available", () => {
+        if (isManualRequestedUpdate) {
+            createAndShowNotification({
+                body: "No update available.",
+            });
+        }
+    });
 
-  // run update check every hour again
-  setInterval(() => checkForUpdates, 1000 * 60 * 1);
+    checkForUpdates();
+
+    // run update check every hour again
+    setInterval(() => checkForUpdates, 1000 * 60 * 1);
 }
 
 export default {
-  init,
+    init,
 };

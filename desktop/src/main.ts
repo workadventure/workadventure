@@ -3,8 +3,8 @@ import log from "./log";
 import settings from "./settings";
 
 async function start() {
-  await settings.init();
-  log.init();
+    await settings.init();
+    log.init();
 }
 
 start();
