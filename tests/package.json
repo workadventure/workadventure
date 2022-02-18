@@ -6,7 +6,7 @@
     "dockerode": "^3.3.1"
   },
   "scripts": {
-    "test": "ADMIN_API_TOKEN=123 playwright test",
+    "test": "playwright test",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test"
   }
 }
