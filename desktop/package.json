@@ -10,7 +10,7 @@
         "bundle": "electron-builder install-app-deps && electron-builder",
         "release": "yarn bundle",
         "typecheck": "tsc --noEmit",
-        "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
+        "test": "exit 0",
         "lint": "yarn eslint src/ . --ext .ts",
         "fix": "yarn eslint --fix src/ . --ext .ts",
         "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
@@ -27,13 +27,11 @@
     },
     "devDependencies": {
         "@types/auto-launch": "^5.0.2",
-        "@types/jasmine": "^3.5.10",
         "@typescript-eslint/eslint-plugin": "^2.26.0",
         "@typescript-eslint/parser": "^2.26.0",
         "electron": "^17.0.1",
         "electron-builder": "^22.14.13",
         "eslint": "^6.8.0",
-        "jasmine": "^3.5.0",
         "prettier": "^2.5.1",
         "tsup": "^5.11.13",
         "typescript": "^3.8.3"
