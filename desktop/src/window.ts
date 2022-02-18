@@ -36,7 +36,7 @@ export function createWindow() {
         autoHideMenuBar: true,
         show: false,
         webPreferences: {
-            preload: path.join(__dirname, "../dist/sidebar/preload.js"),
+            preload: path.resolve(__dirname, "..", "build", "sidebar", "preload.js"),
         },
     });
 
@@ -69,7 +69,7 @@ export function createWindow() {
 
     appView = new BrowserView({
         webPreferences: {
-            preload: path.join(__dirname, "../dist/app/index.js"),
+            preload: path.resolve(__dirname, "..", "build", "app", "preload.js"),
         },
     });
     mainWindow.setBrowserView(appView);
@@ -87,8 +87,8 @@ export function createWindow() {
     mainWindow.once("ready-to-show", () => {
         (async () => {
             await appView?.webContents.loadURL("https://workadventu.re/"); // TODO: use some splashscreen ?
-            // appView.webContents.openDevTools({
-            //   mode: "detach",
+            // appView?.webContents.openDevTools({
+            //     mode: "detach",
             // });
             mainWindow?.show();
             // mainWindow?.webContents.openDevTools({ mode: "detach" });
