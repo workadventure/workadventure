@@ -93,10 +93,10 @@
   dependencies:
     "@fortawesome/fontawesome-common-types" "^0.2.35"
 
-"@geprog/vite-plugin-env-config@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-3.0.0.tgz#b16e57ad16429be7d73d19f13b5b529a78e7f9fa"
-  integrity sha512-ocIPodgIZAJm+h6As20IB8s5RLV85wvlnXNRFU2oI1owbBLqDjzSleY9+6Ey0abGSu0MNXlJQZL5ApSg6L5qCg==
+"@geprog/vite-plugin-env-config@^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-4.0.0.tgz#989d95f23fbab5eae7c4c96d04a18abdc289b81e"
+  integrity sha512-25ZMNdpssqkyv1sxfa6gBhmL8yCxCqjRRc1c05GJfhPkqD6Cn9dnG6xnHHHfJaEqrDFCViD0Bcnr+tgs76OZ2Q==
 
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.2"
@@ -1377,10 +1377,10 @@ fuzzysort@^1.1.4:
   resolved "https://registry.yarnpkg.com/fuzzysort/-/fuzzysort-1.1.4.tgz#a0510206ed44532cbb52cf797bf5a3cb12acd4ba"
   integrity sha512-JzK/lHjVZ6joAg3OnCjylwYXYVjRiwTY6Yb25LvfpJHK8bjisfnZJ5bY8aVWwTwCXgxPNgLAtmHL+Hs5q1ddLQ==
 
-generic-type-guard@^3.2.0:
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.4.1.tgz#0896dc018de915c890562a34763858076e4676da"
-  integrity sha512-sXce0Lz3Wfy2rR1W8O8kUemgEriTeG1x8shqSJeWGb0FwJu2qBEkB1M2qXbdSLmpgDnHcIXo0Dj/1VLNJkK/QA==
+generic-type-guard@^3.4.2:
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.4.2.tgz#fbbafde675dc30f12e701e67d2e0a451d17ccf07"
+  integrity sha512-k7HLCaToIwCx28Ck0H6SXwjxgV2GLoJuwq8CjgST5CeeFD0dEwE95jRinpv9ubsTPPXOCNdUufUAgJVbiRpMJg==
 
 get-browser-rtc@^1.1.0:
   version "1.1.0"

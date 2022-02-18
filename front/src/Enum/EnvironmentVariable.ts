@@ -1,4 +1,4 @@
-import { getEnvConfig } from "@geprog/vite-plugin-env-config";
+import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
 const START_ROOM_URL: string =
