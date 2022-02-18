@@ -1,11 +1,6 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
-
-type Server = {
-  _id: string;
-  name: string;
-  url: string;
-};
+import type { Server } from "./sidebar/types";
 
 type SettingsData = {
   log_level: ElectronLog.LogLevel;
