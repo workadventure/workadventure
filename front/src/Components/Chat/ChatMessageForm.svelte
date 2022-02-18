@@ -38,39 +38,39 @@
 
 <style lang="scss">
     form {
-      border: 1px solid #888;
-      border-radius: 2px;
-      display: flex;
-      background: rgba(16, 40, 63, 0.9);
-      line-height: 32px;
+        border: 1px solid #888;
+        border-radius: 2px;
+        display: flex;
+        background: rgba(16, 40, 63, 0.9);
+        line-height: 32px;
 
         input {
-          flex: auto;
-          border: none;
-          color: white;
-          font-size: 14px;
-          background-color: inherit;
-          padding-left: 6px;
-          min-width: 0; //Needed so that the input doesn't overflow the container in firefox
-          outline: none;
-          &:hover {
-            cursor: text;
-          }
-          &::placeholder {
-            padding-left: 6px;
-            color: #c0bebe;
-            font-style: italic;
+            flex: auto;
+            border: none;
+            color: white;
             font-size: 14px;
-            opacity: 1; /* Firefox */
-          }
+            background-color: inherit;
+            padding-left: 6px;
+            min-width: 0; //Needed so that the input doesn't overflow the container in firefox
+            outline: none;
+            &:hover {
+                cursor: text;
+            }
+            &::placeholder {
+                padding-left: 6px;
+                color: #c0bebe;
+                font-style: italic;
+                font-size: 14px;
+                opacity: 1; /* Firefox */
+            }
         }
 
         button {
-          background: rgb(62, 148, 234);
-          border: none;
-          color: white;
-          border-left: 1px solid #888;
-          font-size: 16px;
+            background: rgb(62, 148, 234);
+            border: none;
+            color: white;
+            border-left: 1px solid #888;
+            font-size: 16px;
         }
     }
 </style>

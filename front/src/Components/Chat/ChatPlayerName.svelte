@@ -36,14 +36,14 @@
 </div>
 
 <style lang="scss">
-  div.subMenu {
-    display: inline-block;
-  }
-  span.chatPlayerName {
-    margin-left: 3px;
-  }
-  .chatPlayerName:hover {
-      text-decoration: underline;
-      cursor: pointer;
+    div.subMenu {
+        display: inline-block;
+    }
+    span.chatPlayerName {
+        margin-left: 3px;
+    }
+    .chatPlayerName:hover {
+        text-decoration: underline;
+        cursor: pointer;
     }
 </style>
