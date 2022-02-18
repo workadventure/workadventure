@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 
 const POLLING_INTERVAL = 50;
 
@@ -6,7 +6,7 @@ const POLLING_INTERVAL = 50;
  * Tries to find a given log message in the logs (for 10 seconds)
  */
 export async function assertLogMessage(
-  page,
+  page: Page,
   substring: string,
   timeout: number = 10000
 ): Promise<void> {

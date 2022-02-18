@@ -1,5 +1,7 @@
+import { Page } from '@playwright/test';
+
 export async function login(
-  page,
+  page: Page,
   userName: string = 'Alice',
   characterNumber: number = 2,
   browserLanguage: string | null = 'en-US'
