@@ -11,103 +11,72 @@ on:
 
 jobs:
   build_on_linux:
-    name: "Build & release for Linux"
-    runs-on: ubuntu-latest
+    name: "Build & release desktop app for ${{ matrix.os }}"
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        runtime: [ linux-x64, win-x64, osx-x64 ]
+        include:
+        - runtime: linux-x64
+          os: ubuntu-latest
+
+        - runtime: osx-x64
+          os: macos-latest
+
+        - runtime: win-x64
+          os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: ${{ matrix.node-version }}
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
         working-directory: "desktop"
 
-      - name: "Build Typescript"
+      - name: "Build typescript"
         run: yarn build
         working-directory: "desktop"
 
-      - name: "Build App"
+      - name: "Build app"
         run: yarn bundle --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop"
         if: ${{ github.event_name != 'release' }}
 
-      - name: "Build & Publish App"
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Build & publish App"
         run: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop"
         if: ${{ github.event_name == 'release' }}
 
-  build_on_mac:
-    name: "Build & release for MacOS"
-    runs-on: macos-latest
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+      - name: Upload Linux .AppImage artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'linux')
         with:
-          node-version: '14.x'
+          name: workadventure-desktop-linux-x64.AppImage
+          path: desktop/workadventure-desktop-*x86_64.AppImage
 
-      - name: "Install dependencies"
-        run: yarn install --froze-lockfile
-        working-directory: "desktop"
-
-      - name: "Build Typescript"
-        run: yarn build
-        working-directory: "desktop"
-
-      - name: "Build App"
-        run: yarn bundle --publish never
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop"
-        if: ${{ github.event_name != 'release' }}
-
-      - name: "Build & Publish App"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn release
-        working-directory: "desktop"
-        if: ${{ github.event_name == 'release' }}
-
-  build_on_win:
-    name: "Build & release for Windows"
-    runs-on: windows-latest
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+      - name: Upload Windows .exe artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'windows')
         with:
-          node-version: '14.x'
+          name: workadventure-desktop-win-x64.exe
+          path: desktop/workadventure-desktop-*.exe
 
-      - name: "Install dependencies"
-        run: yarn install --froze-lockfile
-        working-directory: "desktop"
-
-      - name: "Build Typescript"
-        run: yarn build
-        working-directory: "desktop"
-
-      - name: "Build App"
-        run: yarn bundle --publish never
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop"
-        if: ${{ github.event_name != 'release' }}
-
-      - name: "Build & Publish App"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn release
-        working-directory: "desktop"
-        if: ${{ github.event_name == 'release' }}
+      - name: Upload MacOS .dmg artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'macos')
+        with:
+          name: workadventure-mac.dmg
+          path: desktop/workadventure-desktop-*.dmg

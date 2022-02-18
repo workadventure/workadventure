@@ -16,7 +16,6 @@ linux:
     description: "TODO"
     target:
         # - deb
-        - zip
         - AppImage
 
     artifactName: "${productName}-${version}-${arch}.${ext}"
