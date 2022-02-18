@@ -4,14 +4,13 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import LL from "../../i18n/i18n-svelte";
 
-    const upgradeLink = ADMIN_URL + "/pricing";
     const registerLink = ADMIN_URL + "/second-step-register";
 </script>
 
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
     {#if $userIsAdminStore}
         <h2>{$LL.warning.title()}</h2>
-        <p>{@html $LL.warning.content({ upgradeLink })}</p>
+        <p>{@html $LL.warning.content()}</p>
     {:else if $limitMapStore}
         <p>
             This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
