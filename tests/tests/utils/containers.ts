@@ -1,6 +1,6 @@
 //import Docker from "dockerode";
 //import * as Dockerode from "dockerode";
-import Dockerode = require( 'dockerode')
+import Dockerode from 'dockerode';
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const { execSync } = require('child_process');
@@ -13,6 +13,7 @@ const fs = require('fs');
 export function dockerCompose(command: string): void {
     let param = '';
     const projectDir = process.env.PROJECT_DIR;
+    const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
     if (!projectDir && fs.existsSync('/project')) {
         // We are probably in the docker-image AND we did not pass PROJECT_DIR env variable
@@ -22,6 +23,10 @@ export function dockerCompose(command: string): void {
     if (projectDir) {
         const dirName = path.basename(projectDir);
         param = '--project-name '+dirName+' --project-directory '+projectDir;
+    }
+    
+    if (overrideDockerCompose) {
+        param += ' -f docker-compose.yaml -f '+overrideDockerCompose;
     }
 
     let stdout = execSync('docker-compose '+param+' '+command, {

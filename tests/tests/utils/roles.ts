@@ -1,20 +1,18 @@
-import { Role, ClientFunction } from 'testcafe';
+export async function login(
+  page,
+  userName: string = 'Alice',
+  characterNumber: number = 2,
+  browserLanguage: string | null = 'en-US'
+) {
+  // window.localStorage.setItem('language', browserLanguage)
 
-export const resetLanguage = ClientFunction((browserLanguage) => window.localStorage.setItem('language', browserLanguage));
+  await page.fill('input[name="loginSceneName"]', userName);
+  await page.click('button.loginSceneFormSubmit');
 
-export async function login(t: TestController, url: string, userName: string = "Alice", characterNumber: number = 2, browserLanguage: string|null = 'en-US') {
+  for (let i = 0; i < characterNumber; i++) {
+    await page.click('button.selectCharacterButtonRight');
+  }
 
-    await resetLanguage(browserLanguage);
-
-    t = t
-        .navigateTo(url)
-        .typeText('input[name="loginSceneName"]', userName)
-        .click('button.loginSceneFormSubmit');
-
-    for (let i = 0; i < characterNumber; i++) {
-        t = t.click('button.selectCharacterButtonRight');
-    }
-
-    return t.click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo');
+  await page.click('button.selectCharacterSceneFormSubmit');
+  await page.click('button.letsgo');
 }
