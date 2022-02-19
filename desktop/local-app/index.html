@@ -12,19 +12,25 @@
 
       html, body {
         height: 100%;
+        width: 100%;
       }
 
       body {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        background-color: #30343D;
+      }
+
+      .sidebar {
+        display: flex;
         width: 70px;
-        background-color: #25292E;
+        flex-direction: column;
+        background-color: #2B2F37;
       }
 
       #servers {
         display: flex;
         flex-direction: column;
-        margin-bottom: 1rem;
       }
 
       #servers div {
@@ -49,11 +55,25 @@
       #btn-reload {
         margin-top: auto;
       }
+
+      .main {
+        display: flex;
+        flex-grow: 1;
+        justify-content: center;
+        align-items: center;
+      }
     </style>
   </head>
   <body>
-    <div id="servers"></div>
-    <button id="btn-reload">Refresh</button>
+    <div class="sidebar">
+      <div id="servers">
+
+      </div>
+      <button id="btn-reload">Refresh</button>
+    </div>
+    <div class="main">
+      <img src="../assets/icons/logo-text.png" />
+    </div>
     <script src="./index.js" lang="javascript"></script>
   </body>
 </html>

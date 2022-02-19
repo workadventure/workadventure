@@ -1,7 +1,7 @@
 import { ipcMain } from "electron";
 import { createAndShowNotification } from "./notification";
 import settings from "./settings";
-import { getAppView, getWindow } from "./window";
+import { getAppView, getWindow, showAppView } from "./window";
 
 export function emitMutedKeyPress() {
     const mainWindow = getWindow();
@@ -17,7 +17,7 @@ export default () => {
         createAndShowNotification({ body: txt });
     });
 
-    ipcMain.handle("sidebar:getServers", () => {
+    ipcMain.handle("local-app:getServers", () => {
         // TODO: remove
         if (!settings.get("servers")) {
             settings.set("servers", [
@@ -37,7 +37,7 @@ export default () => {
         return settings.get("servers", []);
     });
 
-    ipcMain.handle("sidebar:selectServer", (event, serverId: string) => {
+    ipcMain.handle("local-app:selectServer", (event, serverId: string) => {
         const appView = getAppView();
         if (!appView) {
             throw new Error("App view not found");
@@ -50,11 +50,11 @@ export default () => {
             return new Error("Server not found");
         }
 
-        appView.webContents.loadURL(selectedServer.url);
+        showAppView(selectedServer.url);
         return true;
     });
 
-    ipcMain.handle("sidebar:addServer", (event, serverName: string, serverUrl: string) => {
+    ipcMain.handle("local-app:addServer", (event, serverName: string, serverUrl: string) => {
         const servers = settings.get("servers", []);
         servers.push({
             _id: `${servers.length + 1}`,

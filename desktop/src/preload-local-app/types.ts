@@ -4,7 +4,7 @@ export type Server = {
     url: string;
 };
 
-export type WorkAdventureSidebarApi = {
+export type WorkAdventureLocalAppApi = {
     desktop: boolean;
     getServers: () => Promise<Server[]>;
     selectServer: (serverId: string) => Promise<Error | boolean>;

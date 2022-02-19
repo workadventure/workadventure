@@ -36,7 +36,7 @@ export function createWindow() {
         autoHideMenuBar: true,
         show: false,
         webPreferences: {
-            preload: path.resolve(__dirname, "..", "build", "sidebar", "preload.js"),
+            preload: path.resolve(__dirname, "..", "build", "preload-local-app", "preload.js"),
         },
     });
 
@@ -69,10 +69,9 @@ export function createWindow() {
 
     appView = new BrowserView({
         webPreferences: {
-            preload: path.resolve(__dirname, "..", "build", "app", "preload.js"),
+            preload: path.resolve(__dirname, "..", "build", "preload-app", "preload.js"),
         },
     });
-    mainWindow.setBrowserView(appView);
     appView.setBounds({
         x: sidebarWidth,
         y: 0,
@@ -86,12 +85,11 @@ export function createWindow() {
 
     mainWindow.once("ready-to-show", () => {
         (async () => {
-            await appView?.webContents.loadURL("https://workadventu.re/"); // TODO: use some splashscreen ?
             // appView?.webContents.openDevTools({
             //     mode: "detach",
             // });
             mainWindow?.show();
-            // mainWindow?.webContents.openDevTools({ mode: "detach" });
+            mainWindow?.webContents.openDevTools({ mode: "detach" });
         })();
     });
 
@@ -99,5 +97,36 @@ export function createWindow() {
         mainWindow?.setTitle("WorkAdventure Desktop");
     });
 
-    mainWindow.loadFile(path.resolve(__dirname, "..", "sidebar", "index.html"));
+    mainWindow.loadFile(path.resolve(__dirname, "..", "local-app", "index.html"));
+}
+
+export function showAppView(url?: string) {
+    if (!appView) {
+        throw new Error("App view not found");
+    }
+
+    if (!mainWindow) {
+        throw new Error("Main window not found");
+    }
+
+    if (mainWindow.getBrowserView()) {
+        mainWindow.removeBrowserView(appView);
+    }
+    mainWindow.addBrowserView(appView);
+
+    if (url) {
+        appView.webContents.loadURL(url);
+    }
+}
+
+export function hideAppView() {
+    if (!appView) {
+        throw new Error("App view not found");
+    }
+
+    if (!mainWindow) {
+        throw new Error("Main window not found");
+    }
+
+    mainWindow.removeBrowserView(appView);
 }

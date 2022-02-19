@@ -3,7 +3,7 @@ appId: re.workadventu.desktop
 files:
     - "build/**/*"
     - "assets/**/*"
-    - "sidebar/**/*"
+    - "local-app/**/*"
 
 dmg:
     icon: false
