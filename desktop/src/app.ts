@@ -34,11 +34,10 @@ function init() {
     });
 
     // This method will be called when Electron has finished loading
-    app.on("ready", async () => {
+    app.whenReady().then(async () => {
         await settings.init();
 
-        const logLevel = settings.get("log_level");
-        setLogLevel(logLevel || "info");
+        setLogLevel(settings.get("log_level") || "info");
 
         autoUpdater.init();
 

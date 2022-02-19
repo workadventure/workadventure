@@ -84,13 +84,11 @@ export function createWindow() {
     });
 
     mainWindow.once("ready-to-show", () => {
-        (async () => {
-            // appView?.webContents.openDevTools({
-            //     mode: "detach",
-            // });
-            mainWindow?.show();
-            // mainWindow?.webContents.openDevTools({ mode: "detach" });
-        })();
+        // appView?.webContents.openDevTools({
+        //     mode: "detach",
+        // });
+        mainWindow?.show();
+        // mainWindow?.webContents.openDevTools({ mode: "detach" });
     });
 
     mainWindow.webContents.on("did-finish-load", () => {
