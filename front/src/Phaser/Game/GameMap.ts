@@ -348,9 +348,7 @@ export class GameMap {
             if (!layer.visible) {
                 continue;
             }
-            // TODO: use optional chaining when https://github.com/DevExpress/testcafe-hammerhead/issues/2714 is fixed
-            const properties = layer.getTileAt(x, y)?.properties;
-            if (properties && properties[GameMapProperties.COLLIDES]) {
+            if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
                 return true;
             }
         }
