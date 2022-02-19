@@ -5,6 +5,8 @@ import { createTray } from "./tray";
 import autoUpdater from "./auto-updater";
 import updateAutoLaunch from "./update-auto-launch";
 import ipc, { emitMutedKeyPress } from "./ipc";
+import settings from "./settings";
+import { setLogLevel } from "./log";
 
 function init() {
     const appLock = app.requestSingleInstanceLock();
@@ -32,7 +34,12 @@ function init() {
     });
 
     // This method will be called when Electron has finished loading
-    app.on("ready", () => {
+    app.on("ready", async () => {
+        await settings.init();
+
+        const logLevel = settings.get("log_level");
+        setLogLevel(logLevel || "info");
+
         autoUpdater.init();
 
         // enable auto launch

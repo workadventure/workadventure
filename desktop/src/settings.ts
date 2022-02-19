@@ -14,8 +14,8 @@ async function init() {
     settings = (await Settings.get()) as SettingsData;
 }
 
-function get<T extends keyof SettingsData>(key: T, fallback?: SettingsData[T]): SettingsData[T] {
-    if (settings === null) {
+function get<T extends keyof SettingsData>(key: T): SettingsData[T] | undefined {
+    if (settings === undefined) {
         throw new Error("Settings not initialized");
     }
 
@@ -23,7 +23,7 @@ function get<T extends keyof SettingsData>(key: T, fallback?: SettingsData[T]): 
 }
 
 export function set<T extends keyof SettingsData>(key: T, value: SettingsData[T]) {
-    if (settings === null) {
+    if (settings === undefined) {
         throw new Error("Settings not initialized");
     }
 

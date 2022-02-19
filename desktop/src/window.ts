@@ -36,7 +36,7 @@ export function createWindow() {
         autoHideMenuBar: true,
         show: false,
         webPreferences: {
-            preload: path.resolve(__dirname, "..", "build", "preload-local-app", "preload.js"),
+            preload: path.resolve(__dirname, "..", "dist", "preload-local-app", "preload.js"),
         },
     });
 
@@ -69,7 +69,7 @@ export function createWindow() {
 
     appView = new BrowserView({
         webPreferences: {
-            preload: path.resolve(__dirname, "..", "build", "preload-app", "preload.js"),
+            preload: path.resolve(__dirname, "..", "dist", "preload-app", "preload.js"),
         },
     });
     appView.setBounds({
@@ -89,7 +89,7 @@ export function createWindow() {
             //     mode: "detach",
             // });
             mainWindow?.show();
-            mainWindow?.webContents.openDevTools({ mode: "detach" });
+            // mainWindow?.webContents.openDevTools({ mode: "detach" });
         })();
     });
 

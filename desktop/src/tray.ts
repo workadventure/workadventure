@@ -1,5 +1,5 @@
 import { app, Tray, Menu } from "electron";
-import * as path from "path";
+import path from "path";
 import { showAboutWindow } from "electron-util";
 
 import * as autoUpdater from "./auto-updater";
@@ -50,7 +50,7 @@ export function createTray() {
             label: "About",
             click() {
                 showAboutWindow({
-                    icon: path.join(__dirname, "..", "assets", "icons", "logo.png"),
+                    icon: path.join(assetsDirectory, "icons", "logo.png"),
                     copyright: "Copyright © WorkAdventure",
                 });
             },

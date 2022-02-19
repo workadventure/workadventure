@@ -1,12 +1,13 @@
 {
     "name": "workadventure-desktop",
     "version": "1.0.0",
-    "description": "",
-    "main": "build/main.js",
+    "description": "Desktop application for WorkAdventure",
+    "author": "thecodingmachine",
+    "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
-        "build": "tsup-node -d build ./src/main.ts ./src/preload-local-app/preload.ts ./src/preload-app/preload.ts",
-        "dev": "yarn build --watch --onSuccess 'yarn electron build/main.js'",
+        "build": "tsup-node ./src/main.ts ./src/preload-local-app/preload.ts ./src/preload-app/preload.ts",
+        "dev": "yarn build --watch --onSuccess 'yarn electron dist/main.js'",
         "bundle": "electron-builder install-app-deps && electron-builder",
         "release": "yarn bundle",
         "typecheck": "tsc --noEmit",

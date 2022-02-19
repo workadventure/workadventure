@@ -1,10 +1,12 @@
 appId: re.workadventu.desktop
-productName: "WorkAdventure desktop"
 
 files:
-    - "build/**/*"
+    - "dist/**/*"
     - "assets/**/*"
     - "local-app/**/*"
+
+directories:
+    output: ./build
 
 dmg:
     icon: false
@@ -12,9 +14,7 @@ dmg:
 linux:
     category: "TODO;TODO"
     packageCategory: "TODO;TODO"
-    maintainer: "thecodingmachine"
     icon: "assets/icons/logo.icns"
-    description: "Desktop app for WorkAdventure"
     target:
         - AppImage
     artifactName: "${productName}-${version}-${arch}.${ext}"

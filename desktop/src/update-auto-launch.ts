@@ -1,5 +1,5 @@
 import AutoLaunch from "auto-launch";
-import * as isDev from "electron-is-dev";
+import isDev from "electron-is-dev";
 import { app } from "electron";
 
 import settings from "./settings";
@@ -8,7 +8,7 @@ export default async () => {
     let isAutoLaunchEnabled = settings.get("auto_launch_enabled");
 
     // set default to enabled
-    if (isAutoLaunchEnabled === null) {
+    if (isAutoLaunchEnabled === undefined) {
         settings.set("auto_launch_enabled", true);
         isAutoLaunchEnabled = true;
     }

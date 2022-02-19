@@ -1,7 +1,6 @@
 import { dialog, shell } from "electron";
+import ElectronLog from "electron-log";
 import log from "electron-log";
-
-import settings from "./settings";
 
 function onError(e: Error) {
     try {
@@ -9,7 +8,6 @@ function onError(e: Error) {
 
         dialog.showErrorBox("WorkAdventure - A JavaScript error occurred", e.stack || "");
     } catch (logError) {
-        // eslint-disable-next-line no-console
         console.error(e);
     }
 }
@@ -35,11 +33,6 @@ function onRejection(reason: Error) {
 }
 
 function init() {
-    const logLevel = settings.get("log_level", "info");
-    log.transports.console.level = logLevel;
-    log.transports.file.level = logLevel;
-
-    // eslint-disable-next-line no-console
     console.log = log.log.bind(log);
 
     process.on("uncaughtException", onError);
@@ -49,6 +42,11 @@ function init() {
 export async function openLog() {
     const logFilePath = log.transports.file.getFile().path;
     await shell.openPath(logFilePath);
+}
+
+export function setLogLevel(logLevel: ElectronLog.LogLevel) {
+    log.transports.console.level = logLevel;
+    log.transports.file.level = logLevel;
 }
 
 export default {

@@ -34,7 +34,7 @@ export default () => {
             ]);
         }
 
-        return settings.get("servers", []);
+        return settings.get("servers") || [];
     });
 
     ipcMain.handle("local-app:selectServer", (event, serverId: string) => {
@@ -43,7 +43,7 @@ export default () => {
             throw new Error("App view not found");
         }
 
-        const servers = settings.get("servers", []);
+        const servers = settings.get("servers") || [];
         const selectedServer = servers.find((s) => s._id === serverId);
 
         if (!selectedServer) {
@@ -55,7 +55,7 @@ export default () => {
     });
 
     ipcMain.handle("local-app:addServer", (event, serverName: string, serverUrl: string) => {
-        const servers = settings.get("servers", []);
+        const servers = settings.get("servers") || [];
         servers.push({
             _id: `${servers.length + 1}`,
             name: serverName,
