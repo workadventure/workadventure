@@ -1,79 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <title>WorkAdventure Desktop Demo</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
+    <title>WorkAdventure Desktop</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-      html, body {
+      html, body, #app {
         height: 100%;
         width: 100%;
       }
 
-      body {
+      #app {
         display: flex;
-        flex-direction: row;
-        background-color: #30343D;
-      }
-
-      .sidebar {
-        display: flex;
-        width: 70px;
-        flex-direction: column;
-        background-color: #2B2F37;
-      }
-
-      #servers {
-        display: flex;
-        flex-direction: column;
-      }
-
-      #servers div {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        margin: 0.5rem;
-        color: #62727C;
-        border: 1px solid #62727C;
-        text-align: center;
-        border-radius: 50%;
-        height: 50px;
-        width: 50px;
-      }
-
-      #servers div:hover {
-        border-color: #E1E4E8;
-        color: #E1E4E8;
-      }
-
-      #btn-reload {
-        margin-top: auto;
-      }
-
-      .main {
-        display: flex;
-        flex-grow: 1;
-        justify-content: center;
-        align-items: center;
       }
     </style>
   </head>
   <body>
-    <div class="sidebar">
-      <div id="servers">
-
-      </div>
-      <button id="btn-reload">Refresh</button>
-    </div>
-    <div class="main">
-      <img src="../assets/icons/logo-text.png" />
-    </div>
-    <script src="./index.js" lang="javascript"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

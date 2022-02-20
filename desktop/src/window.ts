@@ -1,6 +1,8 @@
 import { BrowserView, BrowserWindow } from "electron";
+import electronIsDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
+import { loadCustomScheme } from "./serve";
 
 let mainWindow: BrowserWindow | undefined;
 let appView: BrowserView | undefined;
@@ -15,7 +17,7 @@ export function getAppView() {
     return appView;
 }
 
-export function createWindow() {
+export async function createWindow() {
     // do not re-create window if still existing
     if (mainWindow) {
         return;
@@ -84,18 +86,26 @@ export function createWindow() {
     });
 
     mainWindow.once("ready-to-show", () => {
-        // appView?.webContents.openDevTools({
-        //     mode: "detach",
-        // });
         mainWindow?.show();
-        // mainWindow?.webContents.openDevTools({ mode: "detach" });
+        if (electronIsDev) {
+            // appView?.webContents.openDevTools({
+            //     mode: "detach",
+            // });
+            mainWindow?.webContents.openDevTools({ mode: "detach" });
+        }
     });
 
     mainWindow.webContents.on("did-finish-load", () => {
         mainWindow?.setTitle("WorkAdventure Desktop");
     });
 
-    mainWindow.loadFile(path.resolve(__dirname, "..", "local-app", "index.html"));
+    if (electronIsDev && process.env.LOCAL_APP_URL) {
+        await mainWindow.loadURL(process.env.LOCAL_APP_URL);
+    } else {
+        // load custom url scheme app://
+        await loadCustomScheme(mainWindow);
+        await mainWindow.loadURL("app://-");
+    }
 }
 
 export function showAppView(url?: string) {

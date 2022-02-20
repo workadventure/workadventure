@@ -74,6 +74,4 @@ export function createTray() {
 
         mainWindow.show();
     });
-
-    return tray;
 }

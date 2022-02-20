@@ -1,7 +1,9 @@
 import { ipcMain } from "electron";
+import electronIsDev from "electron-is-dev";
 import { createAndShowNotification } from "./notification";
+import { Server } from "./preload-local-app/types";
 import settings from "./settings";
-import { getAppView, getWindow, showAppView } from "./window";
+import { getWindow, hideAppView, showAppView } from "./window";
 
 export function emitMutedKeyPress() {
     const mainWindow = getWindow();
@@ -13,36 +15,31 @@ export function emitMutedKeyPress() {
 }
 
 export default () => {
+    ipcMain.handle("is-development", () => electronIsDev);
+
+    // app ipc
     ipcMain.on("app:notify", (event, txt) => {
         createAndShowNotification({ body: txt });
     });
 
+    // local-app ipc
+    ipcMain.handle("local-app:showLocalApp", () => {
+        hideAppView();
+    });
+
     ipcMain.handle("local-app:getServers", () => {
-        // TODO: remove
-        if (!settings.get("servers")) {
-            settings.set("servers", [
+        return (
+            settings.get("servers") || [
                 {
                     _id: "1",
                     name: "WA Demo",
                     url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
                 },
-                {
-                    _id: "2",
-                    name: "My Server",
-                    url: "http://play.workadventure.localhost/",
-                },
-            ]);
-        }
-
-        return settings.get("servers") || [];
+            ]
+        );
     });
 
     ipcMain.handle("local-app:selectServer", (event, serverId: string) => {
-        const appView = getAppView();
-        if (!appView) {
-            throw new Error("App view not found");
-        }
-
         const servers = settings.get("servers") || [];
         const selectedServer = servers.find((s) => s._id === serverId);
 
@@ -54,14 +51,23 @@ export default () => {
         return true;
     });
 
-    ipcMain.handle("local-app:addServer", (event, serverName: string, serverUrl: string) => {
+    ipcMain.handle("local-app:addServer", (event, server: Omit<Server, "_id">) => {
         const servers = settings.get("servers") || [];
-        servers.push({
+        const newServer = {
+            ...server,
             _id: `${servers.length + 1}`,
-            name: serverName,
-            url: serverUrl,
-        });
+        };
+        servers.push(newServer);
         settings.set("servers", servers);
+        return newServer;
+    });
+
+    ipcMain.handle("local-app:removeServer", (event, server: Server) => {
+        const servers = settings.get("servers") || [];
+        settings.set(
+            "servers",
+            servers.filter((s) => s._id !== server._id)
+        );
         return true;
     });
 };

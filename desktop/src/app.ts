@@ -7,6 +7,7 @@ import updateAutoLaunch from "./update-auto-launch";
 import ipc, { emitMutedKeyPress } from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
+import "./serve"; // prepare custom url scheme
 
 function init() {
     const appLock = app.requestSingleInstanceLock();
@@ -44,17 +45,18 @@ function init() {
         // enable auto launch
         updateAutoLaunch();
 
+        // load ipc handler
+        ipc();
+
         // Don't show the app in the doc
         // if (app.dock) {
         //   app.dock.hide();
         // }
 
-        createWindow();
+        await createWindow();
         createTray();
 
-        // load ipc handler
-        ipc();
-
+        // TODO
         globalShortcut.register("Alt+CommandOrControl+M", () => {
             emitMutedKeyPress();
         });
