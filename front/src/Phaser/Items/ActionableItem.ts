@@ -56,7 +56,7 @@ export class ActionableItem implements ActivatableInterface {
 
         this.getOutlinePlugin()?.add(this.sprite, {
             thickness: 2,
-            outlineColor: 0xffff00,
+            outlineColor: 0xf9e81e,
         });
     }
 

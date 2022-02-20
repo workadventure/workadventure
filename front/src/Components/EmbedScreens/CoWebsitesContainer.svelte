@@ -24,6 +24,7 @@
         left: 2%;
         overflow-x: auto;
         overflow-y: hidden;
+        overflow: visible;
 
         &.vertical {
             height: auto !important;
@@ -31,8 +32,6 @@
             bottom: auto !important;
             left: auto !important;
             position: relative;
-            overflow-x: hidden;
-            overflow-y: auto;
             flex-direction: column;
             align-items: center;
             padding-top: 4px;

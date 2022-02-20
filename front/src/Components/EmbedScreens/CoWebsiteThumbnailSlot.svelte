@@ -188,137 +188,173 @@
             />
         </rect>
     </svg>
+
+    <!-- TODO use trigger message property -->
+    <div class="cowebsite-hover"
+         class:hide={!isJitsi}
+         style="width: max-content;">
+        <label>Open / Close Jitsi meeting!</label>
+    </div>
+    
 </div>
 
 <style lang="scss">
     .cowebsite-thumbnail {
-        position: relative;
-        padding: 0;
-        background-color: rgba(#000000, 0.6);
-        margin: 12px;
-        margin-top: auto;
-        margin-bottom: auto;
+      cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+      position: relative;
+      padding: 0;
+      background-color: rgba(#000000, 0.6);
+      margin: 12px;
+      margin-top: auto;
+      margin-bottom: auto;
+
+      &::before {
+        content: "";
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        left: -8px;
+        top: -8px;
+
+        margin: 4px;
+
+        border-style: solid;
+        border-width: 4px;
+        border-image-slice: 3;
+        border-image-width: 3;
+        border-image-repeat: stretch;
+        border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(33,37,41)" /></svg>');
+        border-image-outset: 1;
+      }
+
+      &:not(.vertical) {
+        transition: all 300ms;
+        transform: translateY(0px);
+      }
+
+      &.vertical {
+        margin: 7px;
 
         &::before {
-            content: "";
-            position: absolute;
-            width: 58px;
-            height: 58px;
-            left: -8px;
-            top: -8px;
-
-            margin: 4px;
-
-            border-style: solid;
-            border-width: 4px;
-            border-image-slice: 3;
-            border-image-width: 3;
-            border-image-repeat: stretch;
-            border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(33,37,41)" /></svg>');
-            border-image-outset: 1;
-        }
-
-        &:not(.vertical) {
-            transition: all 300ms;
-            transform: translateY(0px);
-        }
-
-        &.vertical {
-            margin: 7px;
-
-            &::before {
-                width: 48px;
-                height: 48px;
-            }
-
-            .cowebsite-icon {
-                width: 40px;
-                height: 40px;
-            }
-
-            animation: shake 0.35s ease-in-out;
-        }
-
-        &.displayed {
-            &:not(.vertical) {
-                transform: translateY(-15px);
-            }
-        }
-
-        &.asleep {
-            filter: grayscale(100%);
-            --webkit-filter: grayscale(100%);
-        }
-
-        &.loading {
-            animation: 2500ms ease-in-out 0s infinite alternate backgroundLoading;
-        }
-
-        &.ready {
-            &::before {
-                border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(38, 74, 110)" /></svg>');
-            }
-        }
-
-        @keyframes backgroundLoading {
-            0% {
-                background-color: rgba(#000000, 0.6);
-            }
-
-            100% {
-                background-color: #25598e;
-            }
-        }
-
-        @keyframes bounce {
-            from {
-                transform: translateY(0);
-            }
-            to {
-                transform: translateY(-15px);
-            }
-        }
-
-        @keyframes shake {
-            0% {
-                transform: translateX(0);
-            }
-
-            20% {
-                transform: translateX(-10px);
-            }
-
-            40% {
-                transform: translateX(10px);
-            }
-
-            60% {
-                transform: translateX(-10px);
-            }
-
-            80% {
-                transform: translateX(10px);
-            }
-
-            100% {
-                transform: translateX(0);
-            }
+          width: 48px;
+          height: 48px;
         }
 
         .cowebsite-icon {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-
-            &.hide {
-                display: none;
-            }
-
-            &.jitsi {
-                filter: invert(100%);
-                -webkit-filter: invert(100%);
-                padding: 7px;
-            }
+          width: 40px;
+          height: 40px;
         }
+
+        .cowebsite-hover {
+          top: -4px;
+          left: 55px;
+        }
+
+        animation: shake 0.35s ease-in-out;
+      }
+
+      &.displayed {
+        &:not(.vertical) {
+          transform: translateY(-15px);
+        }
+      }
+
+      &.asleep {
+        filter: grayscale(100%);
+        --webkit-filter: grayscale(100%);
+      }
+
+      &.loading {
+        animation: 2500ms ease-in-out 0s infinite alternate backgroundLoading;
+      }
+
+      &.ready {
+        &::before {
+          border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="8" height="8" xmlns="http://www.w3.org/2000/svg"><path d="M3 1 h1 v1 h-1 z M4 1 h1 v1 h-1 z M2 2 h1 v1 h-1 z M5 2 h1 v1 h-1 z M1 3 h1 v1 h-1 z M6 3 h1 v1 h-1 z M1 4 h1 v1 h-1 z M6 4 h1 v1 h-1 z M2 5 h1 v1 h-1 z M5 5 h1 v1 h-1 z M3 6 h1 v1 h-1 z M4 6 h1 v1 h-1 z" fill="rgb(38, 74, 110)" /></svg>');
+        }
+      }
+
+      @keyframes backgroundLoading {
+        0% {
+          background-color: rgba(#000000, 0.6);
+        }
+
+        100% {
+          background-color: #25598e;
+        }
+      }
+
+      @keyframes bounce {
+        from {
+          transform: translateY(0);
+        }
+        to {
+          transform: translateY(-15px);
+        }
+      }
+
+      @keyframes shake {
+        0% {
+          transform: translateX(0);
+        }
+
+        20% {
+          transform: translateX(-10px);
+        }
+
+        40% {
+          transform: translateX(10px);
+        }
+
+        60% {
+          transform: translateX(-10px);
+        }
+
+        80% {
+          transform: translateX(10px);
+        }
+
+        100% {
+          transform: translateX(0);
+        }
+      }
+
+      .cowebsite-icon {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+
+        &.hide {
+          display: none;
+        }
+
+        &.jitsi {
+          filter: invert(100%);
+          -webkit-filter: invert(100%);
+          padding: 7px;
+        }
+      }
+
+      &:hover {
+        .cowebsite-hover {
+          display: block;
+          width: max-content !important;
+        }
+      }
+
+      .cowebsite-hover {
+        display: none;
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.6);
+        top: -30px;
+        left: -4px;
+        width: 0!important;
+        min-height: 20px;
+        transition: all 0.2s ease;
+        overflow: hidden;
+        color: white;
+        padding: 2px;
+        border-radius: 4px;
+      }
     }
 </style>
