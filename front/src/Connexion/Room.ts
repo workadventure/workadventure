@@ -32,6 +32,8 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport: boolean = false;
+    private _playerName: string | undefined;
+    private _constrainedName: boolean = false;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -128,6 +130,15 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._playerName = data.playerName;
+                this._constrainedName = data.constrainedName ?? false;
+
+                if (this._playerName === undefined && this._constrainedName) {
+                    throw new Error(
+                        "The backend did not send any user name. Yet, the user name can only be set by the backend for this map."
+                    );
+                }
+
                 return new MapDetail(data.mapUrl, data.textures);
             } else {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
@@ -238,5 +249,19 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
+    }
+
+    /**
+     * Returns the player name, as stored in the backend (if the backend stores it)
+     */
+    get playerName(): string | undefined {
+        return this._playerName;
+    }
+
+    /**
+     * If true, the backend has complete control of the player name and the player cannot change it.
+     */
+    get constrainedName(): boolean {
+        return this._constrainedName;
     }
 }

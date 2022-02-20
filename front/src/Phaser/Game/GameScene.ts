@@ -219,7 +219,7 @@ export class GameScene extends DirtyScene {
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
 
-    constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
+    constructor(public readonly room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
             key: customKey ?? room.key,
         });

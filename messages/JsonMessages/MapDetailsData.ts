@@ -24,6 +24,10 @@ export const isMapDetailsData = new tg.IsInterface()
         expireOn: tg.isString,
         // Whether the "report" feature is enabled or not on this room
         canReport: tg.isBoolean,
+        /// The name of the player to be displayed.
+        playerName: tg.isString,
+        /// If true, the "admin" component forces the name of the users. The "Select you name" screen will *never* be displayed.
+        constrainedName: tg.isBoolean,
     })
     .get();
 

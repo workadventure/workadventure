@@ -19,6 +19,8 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
 
+    let canEditName = !gameManager.getCurrentGameScene().room.constrainedName;
+
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
         menuIconVisiblilityStore.set(false);
@@ -62,10 +64,12 @@
 <div class="customize-main">
     <div class="submenu">
         <section>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>
-                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} />
-                <span class="btn-hover">{$LL.menu.profile.edit.name()}</span>
-            </button>
+            {#if canEditName}
+                <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>
+                    <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} />
+                    <span class="btn-hover">{$LL.menu.profile.edit.name()}</span>
+                </button>
+            {/if}
             <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>
                 <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
                 <span class="btn-hover">{$LL.menu.profile.edit.woka()}</span>

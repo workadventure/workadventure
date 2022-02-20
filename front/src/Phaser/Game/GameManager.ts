@@ -33,6 +33,13 @@ export class GameManager {
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
         this.startRoom = await connectionManager.initGameConnexion();
+
+        // If the backend sent a name to us, and if we don't already have a name set (or if the name is compulsory), let's store it in local storage.
+        if (this.startRoom.playerName && (!this.playerName || this.startRoom.constrainedName)) {
+            this.playerName = this.startRoom.playerName;
+            localUserStore.setName(this.playerName);
+        }
+
         this.loadMap(this.startRoom);
 
         //If player name was not set show login scene with player name
