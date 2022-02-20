@@ -52,6 +52,14 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-yarn-
 
+      - name: "local-app: Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop/local-app"
+
+      - name: "local-app: Build"
+        run: yarn build
+        working-directory: "desktop/local-app"
+
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
         working-directory: "desktop"

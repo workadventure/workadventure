@@ -8,7 +8,7 @@
     "scripts": {
         "build": "tsup-node ./src/main.ts ./src/preload-local-app/preload.ts ./src/preload-app/preload.ts",
         "dev": "yarn build --watch --onSuccess 'yarn electron dist/main.js'",
-        "build:local-app": "cd local-app && yarn build",
+        "build:local-app": "cd local-app && yarn && yarn build",
         "bundle": "yarn build:local-app && yarn build && electron-builder install-app-deps && electron-builder",
         "release": "yarn bundle",
         "typecheck": "tsc --noEmit",
