@@ -11,12 +11,36 @@ The desktop component is an electron app. It uses a hybrid setup based of two ma
 
 ```bash
 # start local-app
-cd local-app/
-yarn dev
+yarn dev:local-app
 
 # start electron app
 LOCAL_APP_URL=http://localhost:3000 yarn dev
 
 # or create an executable by running:
 yarn bundle
+```
+
+## API for front
+
+TODO:
+
+```ts
+if (window?.WorkAdventureDesktopApi?.desktop) {
+  alert('Yeah you are using the desktop app ;)');
+}
+
+let muted = false;
+
+window?.WorkAdventureDesktopApi?.onMutedKeyPress((event) => {
+  if (muted) {
+    document.getElementById("info-box").innerHTML =
+      "Ready to speak! Press ctrl-alt-m to mute.";
+  } else {
+    document.getElementById("info-box").innerHTML =
+      "Muted! Press ctrl-alt-m to unmute again.";
+  }
+  muted = !muted;
+});
+
+window.WorkAdventureDesktopApi.notify("Hello from front");
 ```

@@ -8,7 +8,7 @@
         "build": "vite build",
         "preview": "vite preview",
         "check": "svelte-check --tsconfig ./tsconfig.json",
-        "pretty": "yarn prettier --write 'src/**/*.{ts,tsx}'",
+        "pretty": "yarn prettier --write 'src/**/*.{ts,tsx,svelte}'",
         "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
     },
     "devDependencies": {
