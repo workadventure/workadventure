@@ -23,7 +23,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public readonly userUuid: string;
     public readonly activationRadius: number;
 
-    private registeredActions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
     private visitCardUrl: string | null;
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
@@ -71,11 +70,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public registerActionsMenuAction(action: ActionsMenuAction): void {
-        const prevAction = this.registeredActions.get(action.actionName);
-        if (prevAction && prevAction.protected) {
-            return;
-        }
-        this.registeredActions.set(action.actionName, action);
         actionsMenuStore.addAction({
             ...action,
             priority: action.priority ?? 0,
@@ -88,7 +82,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     public unregisterActionsMenuAction(actionName: string) {
-        this.registeredActions.delete(actionName);
         actionsMenuStore.removeAction(actionName);
         this.updateIsClickable();
     }
@@ -108,7 +101,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     }
 
     private updateIsClickable(): void {
-        this.setClickable(this.registeredActions.size > 0 || this.getDefaultActionsMenuActions().length > 0);
+        this.setClickable(this.getDefaultActionsMenuActions().length > 0);
     }
 
     private toggleActionsMenu(): void {
@@ -117,15 +110,11 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             return;
         }
         actionsMenuStore.initialize(this.playerName);
-        for (const action of this.registeredActions.values()) {
-            actionsMenuStore.addAction(action);
-        }
         for (const action of this.getDefaultActionsMenuActions()) {
             actionsMenuStore.addAction(action);
         }
     }
 
-    // TODO: Create objects every time because end-result may vary in time
     private getDefaultActionsMenuActions(): ActionsMenuAction[] {
         const actions: ActionsMenuAction[] = [];
         if (this.visitCardUrl) {
