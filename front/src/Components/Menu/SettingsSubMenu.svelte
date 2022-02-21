@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { videoConstraintStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";

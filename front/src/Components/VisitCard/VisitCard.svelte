@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import { requestVisitCardsStore } from "../../Stores/GameStore";
     import { onMount } from "svelte";

@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { LayoutMode } from "../../WebRtc/LayoutManager";

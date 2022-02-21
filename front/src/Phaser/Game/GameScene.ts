@@ -343,7 +343,6 @@ export class GameScene extends DirtyScene {
         (this.load as any).rexWebFont({
             custom: {
                 families: ["Press Start 2P"],
-                urls: ["/resources/fonts/fonts.css"],
                 testString: "abcdefg",
             },
         });

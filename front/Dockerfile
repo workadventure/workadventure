@@ -12,11 +12,7 @@ RUN cp -r ../messages/ts-proto-generated/protos/* src/Messages/ts-proto-generate
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/messages.ts
 RUN cp -r ../messages/JsonMessages/* src/Messages/JsonMessages
 
-RUN yarn install && yarn run typesafe-i18n && yarn build
-
-# Removing the iframe.html file from the final image as this adds a XSS attack.
-# iframe.html is only in dev mode to circumvent a limitation
-RUN rm dist/iframe.html
+RUN yarn install && yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
 
 FROM thecodingmachine/nodejs:14-apache
 

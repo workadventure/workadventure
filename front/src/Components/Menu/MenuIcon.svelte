@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import logoTalk from "../images/logo-message-pixel.png";
     import logoWA from "../images/logo-WA-pixel.png";
     import logoInvite from "../images/logo-invite-pixel.png";

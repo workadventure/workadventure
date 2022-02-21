@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     export let volume = 0;
     let display = true;
 </script>

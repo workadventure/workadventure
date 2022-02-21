@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
