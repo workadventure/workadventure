@@ -74,7 +74,6 @@ export class RemotePlayer implements RemotePlayerInterface {
     public callAction(key: string): void {
         const action = this.actions.get(key);
         if (action) {
-            console.log("call action");
             action.call();
         }
     }
@@ -171,8 +170,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
             type: "actionsMenuActionClickedEvent",
             typeChecker: isActionsMenuActionClickedEvent,
             callback: (payloadData: ActionsMenuActionClickedEvent) => {
-                console.log(`D1 ${payloadData.actionName}`);
-                console.log(this.currentlyClickedRemotePlayer);
                 this.currentlyClickedRemotePlayer?.callAction(payloadData.actionName);
             },
         }),

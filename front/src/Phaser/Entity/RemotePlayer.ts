@@ -48,7 +48,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.userId = userId;
         this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
-        this.updateIsClickable();
+        this.setClickable(this.getDefaultActionsMenuActions().length > 0);
         this.activationRadius = activationRadius ?? 96;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
@@ -78,12 +78,10 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 actionsMenuStore.clear();
             },
         });
-        this.updateIsClickable();
     }
 
     public unregisterActionsMenuAction(actionName: string) {
         actionsMenuStore.removeAction(actionName);
-        this.updateIsClickable();
     }
 
     public activate(): void {
@@ -98,10 +96,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
     public isActivatable(): boolean {
         return this.isClickable();
-    }
-
-    private updateIsClickable(): void {
-        this.setClickable(this.getDefaultActionsMenuActions().length > 0);
     }
 
     private toggleActionsMenu(): void {
