@@ -67,46 +67,20 @@ $ docker-compose exec back yarn run pretty
 
 WorkAdventure is based on a video game engine (Phaser), and video games are not the easiest programs to unit test.
 
-Nevertheless, if your code can be unit tested, please provide a unit test (we use Jasmine), or an end-to-end test (we use Testcafe).
+Nevertheless, if your code can be unit tested, please provide a unit test (we use Jasmine), or an end-to-end test (we use Playwright).
 
 If you are providing a new feature, you should setup a test map in the `maps/tests` directory. The test map should contain
 some description text describing how to test the feature.
 
 * if the features is meant to be manually tested, you should modify the `maps/tests/index.html` file to add a reference
   to your newly created test map
-* if the features can be automatically tested, please provide a testcafe test
+* if the features can be automatically tested, please provide an end-to-end test
 
-#### Running testcafe tests
+#### Running end-to-end tests
 
 End-to-end tests are available in the "/tests" directory.
 
-To run these tests locally:
-
-```console
-$ LIVE_RELOAD=0 docker-compose up -d
-$ cd tests
-$ npm install
-$ npm run test
-```
-
-Note: If your tests fail on a Javascript error in "sockjs", this is due to the
-Webpack live reload. The Webpack live reload feature is conflicting with testcafe. This is why we recommend starting
-WorkAdventure with the `LIVE_RELOAD=0` environment variable.
-
-End-to-end tests can take a while to run. To run only one test, use:
-
-```console
-$ npm run test -- tests/[name of the test file].ts
-```
-
-You can also run the tests inside a container (but you will not have visual feedbacks on your test, so we recommend using
-the local tests).
-
-```console
-$ LIVE_RELOAD=0 docker-compose up -d
-# Wait 2-3 minutes for the environment to start, then:
-$ PROJECT_DIR=$(pwd) docker-compose -f docker-compose.testcafe.yml up
-```
+More information on running end-to-end tests can be found in the [`/tests/README`](/tests/README.md).
 
 ### A bad wording or a missing language
 
