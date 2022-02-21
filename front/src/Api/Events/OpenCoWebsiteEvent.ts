@@ -9,6 +9,7 @@ export const isOpenCoWebsiteEvent = new tg.IsInterface()
         position: tg.isOptional(tg.isNumber),
         closable: tg.isOptional(tg.isBoolean),
         lazy: tg.isOptional(tg.isBoolean),
+        hint: tg.isOptional(tg.isString),
     })
     .get();
 

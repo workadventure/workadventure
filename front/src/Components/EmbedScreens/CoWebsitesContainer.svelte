@@ -22,8 +22,6 @@
         position: absolute;
         bottom: 5px;
         left: 2%;
-        overflow-x: auto;
-        overflow-y: hidden;
 
         &.vertical {
             height: auto !important;

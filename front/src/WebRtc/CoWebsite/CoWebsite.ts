@@ -12,6 +12,7 @@ export interface CoWebsite {
     getLoadIframe(): CancelablePromise<HTMLIFrameElement> | undefined;
     getWidthPercent(): number | undefined;
     isClosable(): boolean;
+    getHint(): string | undefined;
     load(): CancelablePromise<HTMLIFrameElement>;
     unload(): Promise<void>;
 }

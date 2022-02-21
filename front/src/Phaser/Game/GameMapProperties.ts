@@ -24,6 +24,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE_POSITION = "openWebsitePosition",
     OPEN_WEBSITE_TRIGGER = "openWebsiteTrigger",
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",
+    OPEN_WEBSITE_HINT = "openWebsiteHint",
     PLAY_AUDIO = "playAudio",
     PLAY_AUDIO_LOOP = "playAudioLoop",
     READABLE_BY = "readableBy",

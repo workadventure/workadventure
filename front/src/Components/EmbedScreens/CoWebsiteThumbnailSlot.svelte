@@ -4,7 +4,7 @@
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
     import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWebsite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
@@ -188,6 +188,12 @@
             />
         </rect>
     </svg>
+
+    {#if coWebsite.getHint() && !isMain && !isHighlight}
+        <div class="cowebsite-thumbnail-hint nes-balloon from-left">
+            <p>{coWebsite.getHint()}</p>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -319,6 +325,20 @@
                 -webkit-filter: invert(100%);
                 padding: 7px;
             }
+        }
+
+        .cowebsite-thumbnail-hint {
+            display: none;
+            position: absolute;
+            padding: 8px 4px;
+            text-align: center;
+            bottom: 50px;
+            width: clamp(150px, 15vw, 15vw);
+            left: -10px;
+        }
+
+        &:hover .cowebsite-thumbnail-hint {
+            display: inline-block;
         }
     }
 </style>

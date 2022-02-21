@@ -59,6 +59,10 @@ If you set `openWebsiteTrigger: onicon`, when the user walks on the layer, an ic
     <figcaption class="figure-caption">The iFrame will only open if the user clicks on icon</figcaption>
 </figure>
 
+### Showing a hint on minimized website
+
+If you close a website it will be minimized and is still accessible on it's icon on the bottom on the screen. Since there is no info except for it's favicon you can set `openWebsiteHint: your hint to the site`. On minimized websites the hint message will be shown on hover.
+
 ### Setting the iFrame "allow" attribute
 
 By default, iFrames have limited rights in browsers. For instance, they cannot put their content in fullscreen, they cannot start your webcam, etc...
