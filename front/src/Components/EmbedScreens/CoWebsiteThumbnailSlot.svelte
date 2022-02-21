@@ -326,8 +326,6 @@
             }
 
             &.jitsi {
-                filter: invert(100%);
-                -webkit-filter: invert(100%);
                 padding: 7px;
             }
         }
@@ -343,15 +341,18 @@
             display: none;
             position: absolute;
             background-color: rgba(0, 0, 0, 0.6);
-            top: -30px;
+            top: -40px;
             left: -4px;
             width: 0 !important;
             min-height: 20px;
             transition: all 0.2s ease;
             overflow: hidden;
             color: white;
-            padding: 2px;
+            padding: 4px;
             border-radius: 4px;
+            p {
+                margin-bottom: 0;
+            }
         }
     }
 </style>
