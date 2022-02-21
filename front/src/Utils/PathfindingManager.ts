@@ -122,15 +122,21 @@ export class PathfindingManager {
         this.easyStar.setAcceptableTiles([0]); // zeroes are walkable
     }
 
-    private async setWalkingCostGrid(grid: number[][]): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            for (let y = 0; y < grid.length; y += 1) {
-                for (let x = 0; x < grid[y].length; x += 1) {
-                    this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
-                }
-            }
-            resolve();
-        });
+    private async setWalkingCostGrid(grid: number[][]): Promise<void[]> {
+        const promises = [];
+        for (let y = 0; y < grid.length; y += 1) {
+            promises.push(
+                new Promise<void>((resolve, reject) => {
+                    setTimeout(() => {
+                        for (let x = 0; x < grid[y].length; x += 1) {
+                            this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
+                        }
+                        resolve();
+                    }, 0);
+                })
+            );
+        }
+        return Promise.all(promises);
     }
 
     private logGridToTheConsole(grid: number[][]): void {
