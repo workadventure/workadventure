@@ -21,6 +21,37 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     openIDLogin() {
+        /**
+         * @openapi
+         * /login-screen:
+         *   get:
+         *     description: Redirects the user to the OpenID login screen
+         *     parameters:
+         *      - name: "nonce"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "state"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "redirect"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       302:
+         *         description: Redirects the user to the OpenID login screen
+         *
+         */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-screen", async (req, res) => {
             try {
@@ -47,6 +78,37 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     openIDCallback() {
+        /**
+         * @openapi
+         * /login-callback:
+         *   get:
+         *     description: TODO
+         *     parameters:
+         *      - name: "nonce"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "state"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "redirect"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       200:
+         *         description: TODO
+         *
+         */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-callback", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
@@ -112,6 +174,22 @@ export class AuthenticateController extends BaseHttpController {
             }
         });
 
+        /**
+         * @openapi
+         * /logout-callback:
+         *   get:
+         *     description: TODO
+         *     parameters:
+         *      - name: "token"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       200:
+         *         description: TODO
+         *
+         */
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/logout-callback", async (req, res) => {
             const { token } = parse(req.path_query);
@@ -130,7 +208,56 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
-    //Try to login with an admin token
+    /**
+     * @openapi
+     * /register:
+     *   post:
+     *     description: Try to login with an admin token
+     *     parameters:
+     *      - name: "organizationMemberToken"
+     *        in: "body"
+     *        description: "A token allowing a user to connect to a given world"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: The details of the logged user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 authToken:
+     *                   type: string
+     *                   description: A unique identification JWT token
+     *                 userUuid:
+     *                   type: string
+     *                   description: Unique user ID
+     *                 email:
+     *                   type: string|null
+     *                   description: The email of the user
+     *                   example: john.doe@example.com
+     *                 roomUrl:
+     *                   type: string
+     *                   description: The room URL to connect to
+     *                   example: https://play.workadventu.re/@/foo/bar/baz
+     *                 organizationMemberToken:
+     *                   type: string|null
+     *                   description: TODO- unclear. It seems to be sent back from the request?
+     *                   example: ???
+     *                 mapUrlStart:
+     *                   type: string
+     *                   description: TODO- unclear. I cannot find any use of this
+     *                   example: ???
+     *                 textures:
+     *                   type: string
+     *                   description: TODO - document this is still needed
+     *                   example: ???
+     *                 messages:
+     *                   type: array
+     *                   description: The list of messages to be displayed when the user logs?
+     *                   example: ???
+     */
     private register() {
         this.app.post("/register", (req, res) => {
             (async () => {
@@ -166,7 +293,28 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
-    //permit to login on application. Return token to connect on Websocket IO.
+    /**
+     * @openapi
+     * /anonymLogin:
+     *   post:
+     *     description: Generates an "anonymous" JWT token allowing to connect to WorkAdventure anonymously.
+     *     responses:
+     *       200:
+     *         description: The details of the logged user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 authToken:
+     *                   type: string
+     *                   description: A unique identification JWT token
+     *                 userUuid:
+     *                   type: string
+     *                   description: Unique user ID
+     *       403:
+     *         description: Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)
+     */
     private anonymLogin() {
         this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
@@ -183,6 +331,21 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
+    /**
+     * @openapi
+     * /profile-callback:
+     *   get:
+     *     description: ???
+     *     parameters:
+     *      - name: "token"
+     *        in: "query"
+     *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       302:
+     *         description: Redirects the user to the profile screen of the admin
+     */
     profileCallback() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {

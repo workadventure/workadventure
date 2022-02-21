@@ -20,6 +20,9 @@ export const OPID_CLIENT_REDIRECT_URL = process.env.OPID_CLIENT_REDIRECT_URL || 
 export const OPID_PROFILE_SCREEN_PROVIDER = process.env.OPID_PROFILE_SCREEN_PROVIDER || ADMIN_URL + "/profile";
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
 
+// If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
+export const ENABLE_OPENAPI_ENDPOINT = process.env.ENABLE_OPENAPI_ENDPOINT === "true";
+
 export {
     SECRET_KEY,
     API_URL,

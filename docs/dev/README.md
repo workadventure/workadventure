@@ -16,3 +16,8 @@ Check out the [contributing guide](../../CONTRIBUTING.md)
 - [How to add translations](how-to-translate.md)
 - [How to add new functions in the scripting API](contributing-to-scripting-api.md)
 - [About Wokas](wokas.md)
+
+## Pusher documentation
+
+The Pusher is exposing its HTTP API as "OpenAPI" endpoint.
+You can browse this API at `http://pusher.workadventure.localhost/swagger-ui/`.
