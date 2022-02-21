@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import CoWebsiteThumbnail from "./CoWebsiteThumbnailSlot.svelte";
 

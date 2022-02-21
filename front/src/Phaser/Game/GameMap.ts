@@ -348,7 +348,7 @@ export class GameMap {
             if (!layer.visible) {
                 continue;
             }
-            if (layer.getTileAt(x, y)?.properties[GameMapProperties.COLLIDES]) {
+            if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
                 return true;
             }
         }

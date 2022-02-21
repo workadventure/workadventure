@@ -1,0 +1,47 @@
+version: '3.5'
+services:
+  # overrides for e2e tests to be closer to production
+  # use with command:
+  # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
+
+  front:
+    image: 'wa-front-e2e'
+    build:
+      context: ./
+      dockerfile: front/Dockerfile
+    environment:
+      STARTUP_COMMAND_1: 'envsubst < dist/env-config.template.js > dist/env-config.js'
+      STARTUP_COMMAND_2: ''
+    command: apache2-foreground
+    volumes: []
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front.entryPoints=web"
+      - "traefik.http.services.front.loadbalancer.server.port=80"
+      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+      - "traefik.http.routers.front-ssl.tls=true"
+      - "traefik.http.routers.front-ssl.service=front"
+
+  pusher:
+    image: 'wa-pusher-e2e'
+    build:
+      context: ./
+      dockerfile: pusher/Dockerfile
+    environment:
+      STARTUP_COMMAND_1: ''
+      STARTUP_COMMAND_2: ''
+    command: yarn run runprod
+    volumes: []
+
+  back:
+    image: 'wa-back-e2e'
+    build:
+      context: ./
+      dockerfile: back/Dockerfile
+    environment:
+      STARTUP_COMMAND_1: ''
+      STARTUP_COMMAND_2: ''
+    command: yarn run runprod
+    volumes: []

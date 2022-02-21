@@ -40,7 +40,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":11,
-                     "text":"Test:\nThis test is to be run automatically using testcafe\n\n(2nd file)",
+                     "text":"Test:\nThis test is to be run automatically using playwright\n\n(2nd file)",
                      "wrap":true
                     },
                  "type":"",

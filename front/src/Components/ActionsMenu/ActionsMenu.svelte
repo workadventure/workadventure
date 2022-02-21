@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { onDestroy } from "svelte";
 

@@ -1,4 +1,3 @@
-import type * as SimplePeerNamespace from "simple-peer";
 import { mediaManager } from "./MediaManager";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
@@ -13,8 +12,8 @@ import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AudioContext } from "standardized-audio-context";
 import { Console } from "console";
-
-const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
+import Peer from "simple-peer/simplepeer.min.js";
+import { Buffer } from "buffer";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
