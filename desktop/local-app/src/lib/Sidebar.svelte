@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { Link } from "svelte-navigator";
 
-    import Link from "~/lib/Link.svelte";
-    import { servers, selectedServer, selectServer, loadServers } from "~/store";
+    import { servers, selectedServer, loadServers } from "~/store";
     import CogIcon from "~/assets/nes.icons/cog.svg";
     import { api } from "~/lib/ipc";
 
@@ -34,17 +34,16 @@
 <aside class="flex flex-col bg-gray-700 items-center">
     <div class="flex flex-col mt-4 space-y-4 overflow-y-auto pb-4">
         {#each $servers as server, i}
-            <div class="flex flex-col items-center justify-center ">
+            <Link to="/server/{server._id}" class="flex flex-col items-center justify-center ">
                 <div
                     class={`w-16 h-16 p-1 rounded-md flex cursor-pointer text-light-50 border-4 border-transparent text-gray-200 hover:text-gray-500`}
                     class:border-gray-400={$selectedServer === server._id}
-                    on:click={() => selectServer(server)}
                 >
                     <div class={`flex w-full h-full text-center items-center justify-center rounded-md ${getServerColor(i)}`}>
                         {server.name.slice(0,2).toLocaleUpperCase()}
                     </div>
                 </div>
-            </div>
+            </Link>
         {/each}
     </div>
     <Link

@@ -16,4 +16,4 @@ const api: WorkAdventureLocalAppApi = {
     setShortcutsEnabled: (enabled) => ipcRenderer.invoke("local-app:setShortcutsEnabled", enabled),
 };
 
-contextBridge.exposeInMainWorld("WorkAdventureDesktopApi", api);
+contextBridge.exposeInMainWorld("WAD", api);

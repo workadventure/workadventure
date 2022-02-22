@@ -17,6 +17,19 @@ export function getAppView() {
     return appView;
 }
 
+function resizeAppView() {
+    if (!mainWindow || !appView) {
+        return;
+    }
+
+    appView.setBounds({
+        x: sidebarWidth,
+        y: 0,
+        width: mainWindow.getBounds().width - sidebarWidth,
+        height: mainWindow.getBounds().height,
+    });
+}
+
 export async function createWindow() {
     // do not re-create window if still existing
     if (mainWindow) {
@@ -41,6 +54,7 @@ export async function createWindow() {
             preload: path.resolve(__dirname, "..", "dist", "preload-local-app", "preload.js"),
         },
     });
+    mainWindow.setMenu(null);
 
     // Let us register listeners on the window, so we can update the state
     // automatically (the listeners will be removed when the window is closed)
@@ -74,16 +88,8 @@ export async function createWindow() {
             preload: path.resolve(__dirname, "..", "dist", "preload-app", "preload.js"),
         },
     });
-    appView.setBounds({
-        x: sidebarWidth,
-        y: 0,
-        width: mainWindow.getBounds().width - sidebarWidth,
-        height: mainWindow.getBounds().height,
-    });
-    appView.setAutoResize({
-        width: true,
-        height: true,
-    });
+    resizeAppView();
+    mainWindow.on("resize", resizeAppView);
 
     mainWindow.once("ready-to-show", () => {
         mainWindow?.show();
@@ -91,7 +97,7 @@ export async function createWindow() {
             // appView?.webContents.openDevTools({
             //     mode: "detach",
             // });
-            mainWindow?.webContents.openDevTools({ mode: "detach" });
+            // mainWindow?.webContents.openDevTools({ mode: "detach" });
         }
     });
 

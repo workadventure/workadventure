@@ -3,25 +3,26 @@ import electronIsDev from "electron-is-dev";
 import { createAndShowNotification } from "./notification";
 import { Server } from "./preload-local-app/types";
 import settings, { SettingsData } from "./settings";
-import { loadShortcuts, saveShortcut, setShortcutsEnabled } from "./shortcuts";
-import { getWindow, hideAppView, showAppView } from "./window";
+import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
+import { getAppView, getWindow, hideAppView, showAppView } from "./window";
+// import fetch from "node-fetch";
 
 export function emitMuteToggle() {
-    const mainWindow = getWindow();
-    if (!mainWindow) {
+    const appView = getAppView();
+    if (!appView) {
         throw new Error("Main window not found");
     }
 
-    mainWindow.webContents.send("app:on-camera-toggle");
+    appView.webContents.send("app:on-camera-toggle");
 }
 
 export function emitCameraToggle() {
-    const mainWindow = getWindow();
-    if (!mainWindow) {
+    const appView = getAppView();
+    if (!appView) {
         throw new Error("Main window not found");
     }
 
-    mainWindow.webContents.send("app:on-mute-toggle");
+    appView.webContents.send("app:on-mute-toggle");
 }
 
 export default () => {
@@ -68,7 +69,7 @@ export default () => {
 
         try {
             // TODO: add proper test to see if server url is valid and points to a real WA server
-            await fetch(`${server.url}/iframe_api.js`);
+            // await fetch(`${server.url}/iframe_api.js`);
         } catch (e) {
             console.error(e);
             return new Error("Invalid server url");
@@ -76,7 +77,7 @@ export default () => {
 
         const newServer = {
             ...server,
-            _id: `${servers.length + 1}`,
+            _id: `${Date.now()}-${servers.length + 1}`,
         };
         servers.push(newServer);
         settings.set("servers", servers);

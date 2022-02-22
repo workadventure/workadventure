@@ -8,6 +8,7 @@
     const Home = () => import("~/views/Home.svelte");
     const AddServer = () => import("~/views/AddServer.svelte");
     const Settings = () => import("~/views/Settings.svelte");
+    const Server = () => import("~/views/Server.svelte");
 
     let insideElectron = api.desktop;
 </script>
@@ -19,6 +20,7 @@
             <LazyRoute path="/" component={Home} delayMs={500}>Loading ...</LazyRoute>
             <LazyRoute path="/server/add" component={AddServer} delayMs={500}>Loading ...</LazyRoute>
             <LazyRoute path="/settings" component={Settings} delayMs={500}>Loading ...</LazyRoute>
+            <LazyRoute path="/server/:id" component={Server} delayMs={500}>Loading ...</LazyRoute>
             <Route>
                 <h3>404</h3>
                 <p>No Route could be matched.</p>

@@ -182,13 +182,6 @@ const wa = {
 
 export type WorkAdventureApi = typeof wa;
 
-declare global {
-    interface Window {
-        WA: WorkAdventureApi;
-    }
-    let WA: WorkAdventureApi;
-}
-
 window.WA = wa;
 
 window.addEventListener(

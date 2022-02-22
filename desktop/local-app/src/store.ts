@@ -6,11 +6,11 @@ export const newServer = writable<Omit<Server, "_id">>({
     url: "",
 });
 export const servers = writable<Server[]>([]);
-export const selectedServer = writable<string | undefined>("");
+export const selectedServer = writable<string>("");
 
-export async function selectServer(server: Server) {
-    await api.selectServer(server._id);
-    selectedServer.set(server._id);
+export async function selectServer(serverId: string) {
+    await api.selectServer(serverId);
+    selectedServer.set(serverId);
 }
 
 export async function addServer() {
@@ -20,7 +20,7 @@ export async function addServer() {
     }
     newServer.set({ name: "", url: "" });
     servers.update((s) => [...s, addedServer]);
-    await selectServer(addedServer);
+    await selectServer(addedServer._id);
 }
 
 export async function loadServers() {

@@ -10,4 +10,4 @@ const api: WorkAdventureDesktopApi = {
     onCameraToggle: (callback) => ipcRenderer.on("app:on-camera-toggle", callback),
 };
 
-contextBridge.exposeInMainWorld("WorkAdventureDesktopApi", api);
+contextBridge.exposeInMainWorld("WAD", api);
