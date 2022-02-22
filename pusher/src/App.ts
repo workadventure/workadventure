@@ -7,8 +7,10 @@ import { DebugController } from "./Controller/DebugController";
 import { AdminController } from "./Controller/AdminController";
 import { OpenIdProfileController } from "./Controller/OpenIdProfileController";
 import { WokaListController } from "./Controller/WokaListController";
+import { SwaggerController } from "./Controller/SwaggerController";
 import HyperExpress from "hyper-express";
 import { cors } from "./Middleware/Cors";
+import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
 
 class App {
     public app: HyperExpress.compressors.TemplatedApp;
@@ -31,6 +33,9 @@ class App {
         new AdminController(webserver);
         new OpenIdProfileController(webserver);
         new WokaListController(webserver);
+        if (ENABLE_OPENAPI_ENDPOINT) {
+            new SwaggerController(webserver);
+        }
     }
 }
 
