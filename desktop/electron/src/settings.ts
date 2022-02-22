@@ -6,13 +6,27 @@ export type SettingsData = {
     log_level: ElectronLog.LogLevel;
     auto_launch_enabled: boolean;
     servers: Server[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle", string | null>;
+    shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
 };
 
 let settings: SettingsData;
 
+const defaultSettings: SettingsData = {
+    log_level: "info",
+    auto_launch_enabled: true,
+    servers: [],
+    shortcuts: {
+        mute_toggle: "",
+        camera_toggle: "",
+    },
+};
+
 async function init() {
-    settings = (await Settings.get()) as SettingsData;
+    let _settings = await Settings.get();
+    if (_settings !== undefined) {
+        _settings = defaultSettings;
+    }
+    settings = _settings as SettingsData;
 }
 
 function get(): SettingsData;

@@ -41,15 +41,6 @@
     }
 
     main {
-        /* TODO */
         background-color: #30343d;
-
-        /* background-color: #2b2f37; */
-
-        /* color: #62727c;
-        border: 1px solid #62727c; */
-
-        /* border-color: #e1e4e8;
-        color: #e1e4e8; */
     }
 </style>

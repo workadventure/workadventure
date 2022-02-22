@@ -4,7 +4,7 @@ import { showAboutWindow } from "electron-util";
 
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
-import { getWindow } from "./window";
+import { getAppView, getWindow } from "./window";
 
 let tray: Tray | undefined;
 
@@ -44,6 +44,13 @@ export function createTray() {
             label: "Open Logs",
             click() {
                 log.openLog();
+            },
+        },
+        {
+            label: "Open DevTools",
+            click() {
+                getWindow()?.webContents.openDevTools({ mode: "detach" });
+                getAppView()?.webContents.openDevTools({ mode: "detach" });
             },
         },
         {

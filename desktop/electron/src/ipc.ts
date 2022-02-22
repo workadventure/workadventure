@@ -44,7 +44,7 @@ export default () => {
             settings.get("servers") || [
                 // TODO: remove this default server
                 {
-                    _id: "1",
+                    _id: `${Date.now()}-1`,
                     name: "WA Demo",
                     url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
                 },

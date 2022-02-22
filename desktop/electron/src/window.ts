@@ -93,12 +93,6 @@ export async function createWindow() {
 
     mainWindow.once("ready-to-show", () => {
         mainWindow?.show();
-        if (electronIsDev) {
-            // appView?.webContents.openDevTools({
-            //     mode: "detach",
-            // });
-            // mainWindow?.webContents.openDevTools({ mode: "detach" });
-        }
     });
 
     mainWindow.webContents.on("did-finish-load", () => {

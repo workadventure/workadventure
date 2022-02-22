@@ -7,12 +7,6 @@ import settings from "./settings";
 export async function updateAutoLaunch() {
     let isAutoLaunchEnabled = settings.get("auto_launch_enabled");
 
-    // set default to enabled
-    if (isAutoLaunchEnabled === undefined) {
-        settings.set("auto_launch_enabled", true);
-        isAutoLaunchEnabled = true;
-    }
-
     // Don't run this in development
     if (electronIsDev) {
         return;

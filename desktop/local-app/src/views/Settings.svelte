@@ -19,7 +19,7 @@
     });
 
     async function saveShortcut(key: keyof SettingsData["shortcuts"], value: string) {
-        const shortcuts = get(settings)['shortcuts'] || { "camera_toggle": "", "mute_toggle": "" };
+        const shortcuts = get(settings)['shortcuts'];
         shortcuts[key] = value;
         settings.update((s) => ({ ...s, shortcuts }));
         await api.saveSetting("shortcuts", shortcuts);

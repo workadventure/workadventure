@@ -21,10 +21,6 @@
         return serverColors[i % serverColors.length];
     }
 
-    selectedServer.subscribe((e) => {
-        console.log("selected server changed", e);
-    });
-
     $: serverWithSelection = $servers.map((s) => ({ ...s, isSelected: $selectedServer === s._id }))
 
     onMount(async () => {
