@@ -36,9 +36,9 @@ function set<T extends keyof SettingsData>(key: T | SettingsData, value?: Settin
         throw new Error("Settings not initialized");
     }
 
-    if (typeof key === "string") {
+    if (typeof key === "string" && value !== undefined) {
         settings[key] = value;
-    } else {
+    } else if (typeof key !== "string") {
         Object.assign(settings, key);
     }
 
