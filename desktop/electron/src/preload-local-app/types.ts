@@ -20,4 +20,5 @@ export type WorkAdventureLocalAppApi = {
     reloadShortcuts: () => Promise<void>;
     getSettings: () => Promise<SettingsData>;
     saveSetting: <T extends keyof SettingsData>(key: T, value: SettingsData[T]) => Promise<void>;
+    setShortcutsEnabled: (enabled: boolean) => Promise<void>;
 };

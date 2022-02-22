@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { writable, get } from "svelte/store";
 
     import ToggleSwitch from "~/lib/ToggleSwitch.svelte";
@@ -7,35 +7,35 @@
     import KeyRecord from "~/lib/KeyRecord.svelte";
     import { api, SettingsData } from "../lib/ipc";
 
-    type ShortCuts = Record<"mute_toggle" | "camera_toggle", string>;
-
-    const shortCuts = writable<ShortCuts>({
-        mute_toggle: "",
-                camera_toggle: "",
-    });
+    const settings = writable<SettingsData | undefined>();
 
     onMount(async () => {
-        const newShortCuts = await api.getSettings()?.["shortcuts"];
-        shortCuts.set({
-            ...get(shortCuts),
-            ...newShortCuts,
-        });
+        await api.setShortcutsEnabled(false);
+        $settings = await api.getSettings();
     });
 
-    async function saveShortcut(key: keyof SettingsData['shortcuts'], value: string) {
-        shortCuts.update((shortCuts) => ({
-            ...shortCuts,
-            [key]: value,
-        }));
-        await api.saveSetting('shortcuts', get(shortCuts));
+    onDestroy(async () => {
+        await api.setShortcutsEnabled(true);
+    });
+
+    async function saveShortcut(key: keyof SettingsData["shortcuts"], value: string) {
+        const shortcuts = get(settings)['shortcuts'] || { "camera_toggle": "", "mute_toggle": "" };
+        shortcuts[key] = value;
+        settings.update((s) => ({ ...s, shortcuts }));
+        await api.saveSetting("shortcuts", shortcuts);
+    }
+
+    async function saveAutoLaunch(auto_launch_enabled: boolean) {
+        settings.update((s) => ({ ...s, auto_launch_enabled }));
+        await api.saveSetting("auto_launch_enabled", auto_launch_enabled);
     }
 </script>
 
 <div class="flex flex-col w-full h-full justify-center items-center">
     <h1 class="text-gray-200 text-2xl mb-6">Settings</h1>
 
-    <div class="flex flex-col justify-start max-w-152">
-        {#if $shortCuts}
+    <div class="flex flex-col justify-start max-w-148">
+        {#if $settings}
             <InputField
                 id="toggle-camera"
                 title="Toggle Mute"
@@ -43,7 +43,7 @@
             >
                 <KeyRecord
                     id="toggle-mute"
-                    value={$shortCuts.mute_toggle}
+                    value={$settings.shortcuts.mute_toggle}
                     on:change={(e) => saveShortcut("mute_toggle", e.detail)}
                 />
             </InputField>
@@ -55,19 +55,21 @@
             >
                 <KeyRecord
                     id="toggle-camera"
-                    value={$shortCuts.camera_toggle}
+                    value={$settings.shortcuts.camera_toggle}
                     on:change={(e) => saveShortcut("camera_toggle", e.detail)}
                 />
             </InputField>
-        {/if}
 
-        <InputField id="toggle-autostart" title="Toggle autostart">
-            <ToggleSwitch
+            <InputField id="toggle-autostart" title="Toggle autostart">
+                <ToggleSwitch
                 id="toggle-autostart"
-                value={true}
+                value={$settings.auto_launch_enabled}
                 title="Autostart WorkAdventure after your PC started"
-                on:change={(e) => {}}
-            />
-        </InputField>
+                on:change={(e) => saveAutoLaunch(e.detail)}
+                />
+            </InputField>
+
+            <span class="mt-8 text-xs text-gray-200 max-w-128">Hint: Shortcuts are disabled while seeing this page</span>
+            {/if}
     </div>
 </div>

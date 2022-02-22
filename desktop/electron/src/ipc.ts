@@ -3,7 +3,7 @@ import electronIsDev from "electron-is-dev";
 import { createAndShowNotification } from "./notification";
 import { Server } from "./preload-local-app/types";
 import settings, { SettingsData } from "./settings";
-import { loadShortcuts, saveShortcut } from "./shortcuts";
+import { loadShortcuts, saveShortcut, setShortcutsEnabled } from "./shortcuts";
 import { getWindow, hideAppView, showAppView } from "./window";
 
 export function emitMuteToggle() {
@@ -92,10 +92,14 @@ export default () => {
         return true;
     });
 
-    ipcMain.handle("local-app:reloadShortcuts", (event, shortcut, key) => loadShortcuts());
+    ipcMain.handle("local-app:reloadShortcuts", (event) => loadShortcuts());
 
     ipcMain.handle("local-app:getSettings", (event) => settings.get() || {});
-    ipcMain.handle("local-app:saveSetting", <T extends keyof SettingsData>(event, key: T, value: SettingsData[T]) =>
-        settings.set(key, value)
+    ipcMain.handle(
+        "local-app:saveSetting",
+        <T extends keyof SettingsData>(event: Electron.IpcMainInvokeEvent, key: T, value: SettingsData[T]) =>
+            settings.set(key, value)
     );
+
+    ipcMain.handle("local-app:setShortcutsEnabled", (event, enabled: boolean) => setShortcutsEnabled(enabled));
 };

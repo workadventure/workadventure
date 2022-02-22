@@ -12,7 +12,8 @@ const api: WorkAdventureLocalAppApi = {
     removeServer: (serverId) => ipcRenderer.invoke("local-app:removeServer", serverId),
     reloadShortcuts: () => ipcRenderer.invoke("local-app:reloadShortcuts"),
     getSettings: () => ipcRenderer.invoke("local-app:getSettings"),
-    saveSetting: (key, value) => ipcRenderer.invoke("local-app:setSetting", key, value),
+    saveSetting: (key, value) => ipcRenderer.invoke("local-app:saveSetting", key, value),
+    setShortcutsEnabled: (enabled) => ipcRenderer.invoke("local-app:setShortcutsEnabled", enabled),
 };
 
 contextBridge.exposeInMainWorld("WorkAdventureDesktopApi", api);
