@@ -53,6 +53,7 @@ export class PlayerTextures {
         return new Promise<boolean>((resolve, reject) => {
             fetch(url, {
                 method: "GET",
+                // mode: 'no-cors',
                 headers: {
                     Host: "pusher.workadventure.localhost",
                 },
