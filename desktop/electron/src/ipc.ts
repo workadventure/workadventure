@@ -64,7 +64,7 @@ export default () => {
         return true;
     });
 
-    ipcMain.handle("local-app:addServer", async (event, server: Omit<Server, "_id">) => {
+    ipcMain.handle("local-app:addServer", (event, server: Omit<Server, "_id">) => {
         const servers = settings.get("servers") || [];
 
         try {

@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, IpcRendererEvent } from "electron";
+import { contextBridge, ipcRenderer } from "electron";
 import type { WorkAdventureDesktopApi } from "./types";
 
 const api: WorkAdventureDesktopApi = {
