@@ -29,7 +29,7 @@ const defaultSettings: SettingsData = {
 
 async function init() {
     let _settings = await Settings.get();
-    if (_settings !== undefined) {
+    if (Object.keys(_settings).length === 0) {
         _settings = defaultSettings;
     }
     settings = _settings as SettingsData;

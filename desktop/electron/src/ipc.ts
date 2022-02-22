@@ -58,13 +58,14 @@ export default () => {
     ipcMain.handle("local-app:addServer", (event, server: Omit<Server, "_id">) => {
         const servers = settings.get("servers") || [];
 
-        try {
-            // TODO: add proper test to see if server url is valid and points to a real WA server
-            // await fetch(`${server.url}/iframe_api.js`);
-        } catch (e) {
-            console.error(e);
-            return new Error("Invalid server url");
-        }
+        // TODO: add proper test to see if server url is valid and points to a real WA server
+        // try {
+        //
+        //     await fetch(`${server.url}/iframe_api.js`);
+        // } catch (e) {
+        //     console.error(e);
+        //     return new Error("Invalid server url");
+        // }
 
         const newServer = {
             ...server,
