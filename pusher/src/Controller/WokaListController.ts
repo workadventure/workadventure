@@ -16,7 +16,7 @@ export class WokaListController extends BaseHttpController {
 
     routes() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/woka-list", { middlewares: [hasToken] }, async (req, res) => {
+        this.app.get("/woka-list", {}, async (req, res) => {
             const token = req.header("Authorization");
             const wokaList = await this.wokaService.getWokaList(token);
 
