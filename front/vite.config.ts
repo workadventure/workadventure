@@ -6,7 +6,7 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 
 export default defineConfig({
     server: {
-        port: 8080,
+        port: 80,
         hmr: {
             // workaround for development in docker
             clientPort: 80,

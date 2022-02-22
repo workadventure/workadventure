@@ -2,8 +2,8 @@ import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
 const START_ROOM_URL: string =
-    getEnvConfig("START_ROOM_URL") || "/_/global/maps.workadventure.localhost/Floor1/floor1.json";
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
+    getEnvConfig("START_ROOM_URL") || "/_/global/shyoun0303.github.io/d2wo-office/map.json";
+const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//localhost:8080";
 export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "//workadventu.re";
 const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
 const ICON_URL = getEnvConfig("ICON_URL") || "//icon.workadventure.localhost";
