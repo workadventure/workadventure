@@ -28,7 +28,7 @@ export function loadShortcuts() {
     }
 }
 
-export function saveShortcut(shortcut: keyof SettingsData["shortcuts"], key: string | null) {
+export function saveShortcut(shortcut: keyof SettingsData["shortcuts"], key: string) {
     const shortcuts = settings.get("shortcuts") || <SettingsData["shortcuts"]>{};
     shortcuts[shortcut] = key;
     settings.set("shortcuts", shortcuts);
