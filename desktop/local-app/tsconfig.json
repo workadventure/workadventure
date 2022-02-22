@@ -15,7 +15,8 @@
     "allowJs": true,
     "checkJs": true,
     "paths": {
-      "~/*": ["./*"]
+      "~/*": ["./src/*"],
+      "@wa-preload-local-app": ["../electron/src/preload-local-app/types.ts"],
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],

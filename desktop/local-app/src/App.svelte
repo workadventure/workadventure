@@ -2,14 +2,14 @@
     import { Router, Route } from "svelte-navigator";
 
     import Sidebar from "~/lib/Sidebar.svelte";
-
     import LazyRoute from "~/lib/LazyRoute.svelte";
+    import { api } from "~/lib/ipc";
 
     const Home = () => import("~/views/Home.svelte");
     const AddServer = () => import("~/views/AddServer.svelte");
     const Settings = () => import("~/views/Settings.svelte");
 
-    let insideElectron = window?.WorkAdventureDesktopApi?.desktop;
+    let insideElectron = api.desktop;
 </script>
 
 {#if insideElectron}

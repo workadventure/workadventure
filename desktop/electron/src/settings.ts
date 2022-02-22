@@ -15,20 +15,33 @@ async function init() {
     settings = (await Settings.get()) as SettingsData;
 }
 
-function get<T extends keyof SettingsData>(key: T): SettingsData[T] | undefined {
+function get(): SettingsData;
+function get<T extends keyof SettingsData>(key: T): SettingsData[T] | undefined;
+function get<T extends keyof SettingsData>(key?: T): SettingsData | SettingsData[T] | undefined {
     if (settings === undefined) {
         throw new Error("Settings not initialized");
+    }
+
+    if (key === undefined) {
+        return settings;
     }
 
     return settings?.[key];
 }
 
-export function set<T extends keyof SettingsData>(key: T, value: SettingsData[T]) {
+function set(key: SettingsData): void;
+function set<T extends keyof SettingsData>(key: T, value: SettingsData[T]): void;
+function set<T extends keyof SettingsData>(key: T | SettingsData, value?: SettingsData[T]) {
     if (settings === undefined) {
         throw new Error("Settings not initialized");
     }
 
-    settings[key] = value;
+    if (typeof key === "string") {
+        settings[key] = value;
+    } else {
+        Object.assign(settings, key);
+    }
+
     void Settings.set(settings);
 }
 

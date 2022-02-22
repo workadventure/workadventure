@@ -1,5 +1,6 @@
 <script>
     import { navigate } from "svelte-navigator";
+    import { api } from "~/lib/ipc";
 
     let to = "/";
     let clazz = "";
@@ -7,7 +8,7 @@
     export { clazz as class, to };
 
     async function click() {
-        await window?.WorkAdventureDesktopApi?.showLocalApp();
+        await api.showLocalApp();
         navigate(to);
     }
 </script>

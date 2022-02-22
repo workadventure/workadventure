@@ -1,10 +1,12 @@
-import { SettingsData } from "src/settings";
+import { SettingsData } from "../settings";
 
 export type Server = {
     _id: string;
     name: string;
     url: string;
 };
+
+export { SettingsData };
 
 export type WorkAdventureLocalAppApi = {
     desktop: boolean;
@@ -13,8 +15,9 @@ export type WorkAdventureLocalAppApi = {
     showLocalApp: () => Promise<void>;
     getServers: () => Promise<Server[]>;
     selectServer: (serverId: string) => Promise<Error | boolean>;
-    addServer: (server: Omit<Server, "_id">) => Promise<Server>;
+    addServer: (server: Omit<Server, "_id">) => Promise<Server | Error>;
     removeServer: (serverId: Server["_id"]) => Promise<boolean>;
-    saveShortcut: (shortcut: keyof SettingsData["shortcuts"], key: string | null) => Promise<void>;
-    getShortcuts: () => Promise<SettingsData["shortcuts"]>;
+    reloadShortcuts: () => Promise<void>;
+    getSettings: () => Promise<SettingsData>;
+    saveSetting: <T extends keyof SettingsData>(key: T, value: SettingsData[T]) => Promise<void>;
 };

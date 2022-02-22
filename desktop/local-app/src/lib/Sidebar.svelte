@@ -2,8 +2,9 @@
     import { onMount } from "svelte";
 
     import Link from "~/lib/Link.svelte";
-    import { servers, selectedServer, selectServer, loadServers, Server } from "../store";
+    import { servers, selectedServer, selectServer, loadServers } from "~/store";
     import CogIcon from "~/assets/nes.icons/cog.svg";
+    import { api } from "~/lib/ipc";
 
     let isDevelopment = false;
 
@@ -26,7 +27,7 @@
 
     onMount(async () => {
         await loadServers();
-        isDevelopment = await window?.WorkAdventureDesktopApi?.isDevelopment();
+        isDevelopment = await api.isDevelopment();
     });
 </script>
 

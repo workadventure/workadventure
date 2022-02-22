@@ -1,6 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import { SettingsData } from "src/settings";
-import type { Server, WorkAdventureLocalAppApi } from "./types";
+import type { WorkAdventureLocalAppApi } from "./types";
 
 const api: WorkAdventureLocalAppApi = {
     desktop: true,
@@ -8,12 +7,12 @@ const api: WorkAdventureLocalAppApi = {
     getVersion: () => ipcRenderer.invoke("get-version"),
     showLocalApp: () => ipcRenderer.invoke("local-app:showLocalApp"),
     getServers: () => ipcRenderer.invoke("local-app:getServers"),
-    selectServer: (serverId: string) => ipcRenderer.invoke("local-app:selectServer", serverId),
-    addServer: (server: Omit<Server, "_id">) => ipcRenderer.invoke("local-app:addServer", server),
-    removeServer: (serverId: Server["_id"]) => ipcRenderer.invoke("local-app:removeServer", serverId),
-    saveShortcut: (shortcut: keyof SettingsData["shortcuts"], key: string | null) =>
-        ipcRenderer.invoke("local-app:saveShortcut", shortcut, key),
-    getShortcuts: () => ipcRenderer.invoke("local-app:getShortcuts"),
+    selectServer: (serverId) => ipcRenderer.invoke("local-app:selectServer", serverId),
+    addServer: (server) => ipcRenderer.invoke("local-app:addServer", server),
+    removeServer: (serverId) => ipcRenderer.invoke("local-app:removeServer", serverId),
+    reloadShortcuts: () => ipcRenderer.invoke("local-app:reloadShortcuts"),
+    getSettings: () => ipcRenderer.invoke("local-app:getSettings"),
+    saveSetting: (key, value) => ipcRenderer.invoke("local-app:setSetting", key, value),
 };
 
 contextBridge.exposeInMainWorld("WorkAdventureDesktopApi", api);

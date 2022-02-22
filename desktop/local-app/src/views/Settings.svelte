@@ -1,19 +1,33 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { writable } from "svelte/store";
+    import { writable, get } from "svelte/store";
 
     import ToggleSwitch from "~/lib/ToggleSwitch.svelte";
     import InputField from "~/lib/InputField.svelte";
     import KeyRecord from "~/lib/KeyRecord.svelte";
+    import { api, SettingsData } from "../lib/ipc";
 
-    const shortCuts = writable<Record<string, string> | undefined>({});
+    type ShortCuts = Record<"mute_toggle" | "camera_toggle", string>;
 
-    onMount(async () => {
-        shortCuts.set(await window?.WorkAdventureDesktopApi?.getShortcuts());
+    const shortCuts = writable<ShortCuts>({
+        mute_toggle: "",
+                camera_toggle: "",
     });
 
-    async function saveShortcut(key: string, value: string) {
-        await window?.WorkAdventureDesktopApi?.saveShortcut(key, value);
+    onMount(async () => {
+        const newShortCuts = await api.getSettings()?.["shortcuts"];
+        shortCuts.set({
+            ...get(shortCuts),
+            ...newShortCuts,
+        });
+    });
+
+    async function saveShortcut(key: keyof SettingsData['shortcuts'], value: string) {
+        shortCuts.update((shortCuts) => ({
+            ...shortCuts,
+            [key]: value,
+        }));
+        await api.saveSetting('shortcuts', get(shortCuts));
     }
 </script>
 

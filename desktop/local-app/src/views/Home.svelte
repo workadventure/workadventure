@@ -2,11 +2,12 @@
     import { onMount } from "svelte";
 
     import Logo from "~/../../electron/assets/icons/logo.svg";
+    import { api } from "~/lib/ipc";
 
     let version = "";
 
     onMount(async () => {
-        version = await window?.WorkAdventureDesktopApi?.getVersion();
+        version = await api.getVersion();
     });
 </script>
 

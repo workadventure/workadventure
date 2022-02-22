@@ -17,7 +17,6 @@
 
 <div class="flex w-full h-full justify-center items-center">
     <form class="flex flex-col justify-center" on:submit|preventDefault={_addServer}>
-        <!-- <input type="text" class="w-full h-12 px-4 py-2 bg-gray-200 rounded-lg" placeholder="Url" required > -->
         <InputField title="Name" id="name">
             <TextInput bind:value={$newServer.name} required id="name" />
         </InputField>
