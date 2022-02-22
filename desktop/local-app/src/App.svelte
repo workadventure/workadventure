@@ -10,7 +10,7 @@
     const Settings = () => import("~/views/Settings.svelte");
     const Server = () => import("~/views/Server.svelte");
 
-    let insideElectron = api.desktop;
+    let insideElectron = api?.desktop;
 </script>
 
 {#if insideElectron}
