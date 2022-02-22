@@ -40,16 +40,7 @@ export default () => {
     });
 
     ipcMain.handle("local-app:getServers", () => {
-        return (
-            settings.get("servers") || [
-                // TODO: remove this default server
-                {
-                    _id: `${Date.now()}-1`,
-                    name: "WA Demo",
-                    url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
-                },
-            ]
-        );
+        return settings.get("servers");
     });
 
     ipcMain.handle("local-app:selectServer", (event, serverId: string) => {

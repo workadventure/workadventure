@@ -14,7 +14,13 @@ let settings: SettingsData;
 const defaultSettings: SettingsData = {
     log_level: "info",
     auto_launch_enabled: true,
-    servers: [],
+    servers: [
+        {
+            _id: `${Date.now()}-1`,
+            name: "WA Demo",
+            url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
+        },
+    ],
     shortcuts: {
         mute_toggle: "",
         camera_toggle: "",

@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow } from "electron";
+import { BrowserView, BrowserWindow, app } from "electron";
 import electronIsDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
@@ -7,7 +7,7 @@ import { loadCustomScheme } from "./serve";
 let mainWindow: BrowserWindow | undefined;
 let appView: BrowserView | undefined;
 
-const sidebarWidth = 70;
+const sidebarWidth = 75;
 
 export function getWindow() {
     return mainWindow;
@@ -22,11 +22,13 @@ function resizeAppView() {
         return;
     }
 
+    const { width, height } = mainWindow.getBounds();
+
     appView.setBounds({
         x: sidebarWidth,
         y: 0,
-        width: mainWindow.getBounds().width - sidebarWidth,
-        height: mainWindow.getBounds().height,
+        width: width - sidebarWidth,
+        height: height,
     });
 }
 
@@ -89,7 +91,17 @@ export async function createWindow() {
         },
     });
     resizeAppView();
+    appView.setAutoResize({ width: true, height: true });
+
+    // TODO: workaround to fix appView resizing when window is resized
+    mainWindow.on("maximize", resizeAppView);
+    mainWindow.on("unmaximize", resizeAppView);
+    mainWindow.on("minimize", resizeAppView);
+    mainWindow.on("restore", resizeAppView);
     mainWindow.on("resize", resizeAppView);
+    mainWindow.on("show", resizeAppView);
+    mainWindow.on("enter-full-screen", resizeAppView);
+    mainWindow.on("leave-full-screen", resizeAppView);
 
     mainWindow.once("ready-to-show", () => {
         mainWindow?.show();
