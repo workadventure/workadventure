@@ -5,7 +5,7 @@ import electronIsDev from "electron-is-dev";
 import settings from "./settings";
 
 export async function updateAutoLaunch() {
-    let isAutoLaunchEnabled = settings.get("auto_launch_enabled");
+    const isAutoLaunchEnabled = settings.get("auto_launch_enabled");
 
     // Don't run this in development
     if (electronIsDev) {
