@@ -62,24 +62,24 @@ jobs:
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Build typescript"
         run: yarn build
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Build app"
         run: yarn bundle --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
         if: ${{ github.event_name != 'release' }}
 
       - name: "Build & publish App"
         run: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
         if: ${{ github.event_name == 'release' }}
 
       - name: Upload Linux .AppImage artifact
@@ -87,18 +87,18 @@ jobs:
         if: startsWith(matrix.os, 'ubuntu')
         with:
           name: workadventure-desktop-linux-x64.AppImage
-          path: desktop/build/workadventure-desktop-*-x86_64.AppImage
+          path: desktop/electron/build/workadventure-desktop-*-x86_64.AppImage
 
       - name: Upload Windows .exe artifact
         uses: actions/upload-artifact@v2
         if: startsWith(matrix.os, 'windows')
         with:
           name: workadventure-desktop-win-x64.exe
-          path: desktop/build/workadventure-desktop-*.exe
+          path: desktop/electron/build/workadventure-desktop-*.exe
 
       - name: Upload MacOS .dmg artifact
         uses: actions/upload-artifact@v2
         if: startsWith(matrix.os, 'macos')
         with:
           name: workadventure-mac.dmg
-          path: desktop/build/workadventure-desktop-*.dmg
+          path: desktop/electron/build/workadventure-desktop-*.dmg

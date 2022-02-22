@@ -53,12 +53,12 @@
     >
     <Link
         to="/settings"
-        class="flex mt-auto justify-center items-center text-4xl no-underline cursor-pointer"
+        class="flex mt-auto mb-4 justify-center items-center text-4xl no-underline cursor-pointer"
     >
         <CogIcon width="30" height="30" class="fill-gray-200 hover:fill-gray-500" />
     </Link>
     {#if isDevelopment}
-        <button class="text-8px text-red-500 mt-8 mb-4" on:click={() => location.reload()}>Refresh</button>
+        <button class="text-8px text-red-500 my-4" on:click={() => location.reload()}>Refresh</button>
     {/if}
 </aside>
 

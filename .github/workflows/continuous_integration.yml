@@ -194,23 +194,23 @@ jobs:
 
       - name: "Build"
         run: yarn build
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Typecheck"
         run: yarn typecheck
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Lint"
         run: yarn lint
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Jasmine"
         run: yarn test
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Prettier"
         run: yarn pretty-check
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
   continuous-integration-desktop-local-app:
     name: "Continuous Integration Desktop Local App"

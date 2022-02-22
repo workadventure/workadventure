@@ -3,7 +3,8 @@ appId: re.workadventu.desktop
 files:
     - "dist/**/*"
     - "assets/**/*"
-    - "local-app/dist/**/*"
+    - from: "../local-app/dist/"
+      to: "local-app/dist"
 
 directories:
     output: ./build

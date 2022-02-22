@@ -7,9 +7,9 @@
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
         "build": "tsup-node ./src/main.ts ./src/preload-local-app/preload.ts ./src/preload-app/preload.ts",
-        "build:local-app": "cd local-app && yarn && yarn build",
+        "build:local-app": "cd ../local-app && yarn && yarn build",
         "dev": "yarn build --watch --onSuccess 'yarn electron dist/main.js'",
-        "dev:local-app": "cd local-app && yarn && yarn dev",
+        "dev:local-app": "cd ../local-app && yarn && yarn dev",
         "bundle": "yarn build:local-app && yarn build && electron-builder install-app-deps && electron-builder",
         "release": "yarn bundle",
         "typecheck": "tsc --noEmit",
