@@ -4,7 +4,7 @@ WORKDIR /usr/src
 COPY messages/yarn.lock messages/package.json ./
 RUN yarn install
 COPY messages .
-RUN yarn proto
+RUN yarn ts-proto
 
 # typescript build
 FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as builder2
