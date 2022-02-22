@@ -2,10 +2,11 @@ import ElectronLog from "electron-log";
 import Settings from "electron-settings";
 import type { Server } from "./preload-local-app/types";
 
-type SettingsData = {
+export type SettingsData = {
     log_level: ElectronLog.LogLevel;
     auto_launch_enabled: boolean;
     servers: Server[];
+    shortcuts: Record<"mute_toggle" | "camera_toggle", string | null>;
 };
 
 let settings: SettingsData;

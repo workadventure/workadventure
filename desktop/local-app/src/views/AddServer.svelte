@@ -1,12 +1,36 @@
 <script lang="ts">
-import { newServer, addServer } from '../store';
+    import InputField from "~/lib/InputField.svelte";
+    import TextInput from "~/lib/TextInput.svelte";
+
+    import { newServer, addServer } from "~/store";
+
+    let error = "";
+    async function _addServer() {
+        try {
+            await addServer();
+        } catch(e) {
+            console.log(e);
+            error = e.message;
+        }
+    }
 </script>
 
 <div class="flex w-full h-full justify-center items-center">
-
-  <form class="flex flex-col justify-center space-y-2" on:submit|preventDefault={addServer}>
-    <input type="text" class="w-full h-12 px-4 py-2 bg-gray-200 rounded-lg" placeholder="Name" required bind:value={$newServer.name}>
-    <input type="text" class="w-full h-12 px-4 py-2 bg-gray-200 rounded-lg" placeholder="Url" required bind:value={$newServer.url}>
-    <input type="submit" value="Add server" />
-  </form>
+    <form class="flex flex-col justify-center" on:submit|preventDefault={_addServer}>
+        <!-- <input type="text" class="w-full h-12 px-4 py-2 bg-gray-200 rounded-lg" placeholder="Url" required > -->
+        <InputField title="Name" id="name">
+            <TextInput bind:value={$newServer.name} required id="name" />
+        </InputField>
+        <InputField title="Url" id="url">
+            <TextInput bind:value={$newServer.url} required id="url" />
+        </InputField>
+        {#if error}
+            <div class="text-red-500 text-center mb-2">{error}</div>
+        {/if}
+        <input
+            type="submit"
+            value="Add server"
+            class="mt-4 rounded-md p-2 bg-gray-300 cursor-pointer hover:bg-gray-400"
+        />
+    </form>
 </div>

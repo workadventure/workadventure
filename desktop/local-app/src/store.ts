@@ -1,6 +1,6 @@
 import { writable, get } from "svelte/store";
 
-type Server = {
+export type Server = {
     _id: string;
     name: string;
     url: string;
@@ -11,15 +11,19 @@ export const newServer = writable<Omit<Server, "_id">>({
     url: "",
 });
 export const servers = writable<Server[]>([]);
-export const selectedServer = writable<string | undefined>(undefined);
+export const selectedServer = writable<string | undefined>("");
 
 export async function selectServer(server: Server) {
     await window.WorkAdventureDesktopApi.selectServer(server._id);
     selectedServer.set(server._id);
 }
 
-export async function addServer(event: Event) {
+export async function addServer() {
     const addedServer = await window?.WorkAdventureDesktopApi?.addServer(get(newServer));
+    if (!addedServer?._id) {
+        console.log(addedServer);
+        throw new Error(addedServer);
+    }
     newServer.set({ name: "", url: "" });
     servers.update((s) => [...s, addedServer]);
     await selectServer(addedServer);

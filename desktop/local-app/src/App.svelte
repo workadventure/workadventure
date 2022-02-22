@@ -1,12 +1,13 @@
 <script lang="ts">
     import { Router, Route } from "svelte-navigator";
 
-    import Sidebar from "./lib/Sidebar.svelte";
+    import Sidebar from "~/lib/Sidebar.svelte";
 
-    import LazyRoute from "./lib/LazyRoute.svelte";
+    import LazyRoute from "~/lib/LazyRoute.svelte";
 
-    const Home = () => import("./views/Home.svelte");
-    const AddServer = () => import("./views/AddServer.svelte");
+    const Home = () => import("~/views/Home.svelte");
+    const AddServer = () => import("~/views/AddServer.svelte");
+    const Settings = () => import("~/views/Settings.svelte");
 
     let insideElectron = window?.WorkAdventureDesktopApi?.desktop;
 </script>
@@ -17,6 +18,7 @@
         <main class="flex flex-grow">
             <LazyRoute path="/" component={Home} delayMs={500}>Loading ...</LazyRoute>
             <LazyRoute path="/server/add" component={AddServer} delayMs={500}>Loading ...</LazyRoute>
+            <LazyRoute path="/settings" component={Settings} delayMs={500}>Loading ...</LazyRoute>
             <Route>
                 <h3>404</h3>
                 <p>No Route could be matched.</p>
@@ -28,9 +30,12 @@
 {/if}
 
 <style>
+    @import "@fontsource/press-start-2p/index.css";
+    @import "@16bits/nes.css/css/nes.min.css";
+
     :root {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
-            "Helvetica Neue", sans-serif;
+        font-family: "Press Start 2P", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+            "Open Sans", "Helvetica Neue", sans-serif;
     }
 
     main {

@@ -3,11 +3,12 @@ import { app, BrowserWindow, globalShortcut } from "electron";
 import { createWindow, getWindow } from "./window";
 import { createTray } from "./tray";
 import autoUpdater from "./auto-updater";
-import updateAutoLaunch from "./update-auto-launch";
-import ipc, { emitMutedKeyPress } from "./ipc";
+import { updateAutoLaunch } from "./auto-launch";
+import ipc from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
 import "./serve"; // prepare custom url scheme
+import { loadShortcuts } from "./shortcuts";
 
 function init() {
     const appLock = app.requestSingleInstanceLock();
@@ -56,10 +57,7 @@ function init() {
         await createWindow();
         createTray();
 
-        // TODO
-        globalShortcut.register("Alt+CommandOrControl+M", () => {
-            emitMutedKeyPress();
-        });
+        loadShortcuts();
     });
 
     // Quit when all windows are closed.
@@ -80,6 +78,10 @@ function init() {
 
     app.on("quit", () => {
         // TODO
+    });
+
+    app.on("will-quit", () => {
+        globalShortcut.unregisterAll();
     });
 }
 
