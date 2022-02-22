@@ -5,7 +5,7 @@
     import reportImg from "./images/report.svg";
     import blockSignImg from "./images/blockSign.svg";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-    import { getColorByString, srcObject } from "./utils";
+    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
@@ -19,6 +19,8 @@
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
+    let backGroundColor = getColorByString(peer.userName);
+    let textColor = getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
 
@@ -64,7 +66,7 @@
     {/if}
     <!-- {#if !$constraintStore || $constraintStore.video === false} -->
     <i class="container">
-        <span style="background-color: {getColorByString(name)};">{name}</span>
+        <span style="background-color: {backGroundColor}; color: {textColor};">{name}</span>
     </i>
     <div class="woka-icon {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
         <Woka userId={peer.userId} placeholderSrc={""} />
