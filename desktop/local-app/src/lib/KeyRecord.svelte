@@ -103,6 +103,7 @@
         recording = false;
         shortCut = [];
         value = "";
+        dispatch("change", value);
     }
 
     function stopRecording() {

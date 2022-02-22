@@ -13,7 +13,7 @@ export function emitMuteToggle() {
         throw new Error("Main window not found");
     }
 
-    appView.webContents.send("app:on-camera-toggle");
+    appView.webContents.send("app:on-mute-toggle");
 }
 
 export function emitCameraToggle() {
@@ -22,7 +22,7 @@ export function emitCameraToggle() {
         throw new Error("Main window not found");
     }
 
-    appView.webContents.send("app:on-mute-toggle");
+    appView.webContents.send("app:on-camera-toggle");
 }
 
 export default () => {
