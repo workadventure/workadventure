@@ -190,7 +190,7 @@ jobs:
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
-        working-directory: "desktop"
+        working-directory: "desktop/electron"
 
       - name: "Build"
         run: yarn build
