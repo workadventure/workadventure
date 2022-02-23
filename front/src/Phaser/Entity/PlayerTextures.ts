@@ -1,5 +1,7 @@
 //The list of all the player textures, both the default models and the partial textures used for customization
 
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+
 export interface BodyResourceDescriptionListInterface {
     [key: string]: BodyResourceDescriptionInterface;
 }
@@ -49,46 +51,30 @@ export class PlayerTextures {
     public static ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface;
     public static LAYERS: BodyResourceDescriptionListInterface[];
 
-    public static loadPlayerTexturesMetadata(url: string): Promise<boolean> {
-        return new Promise<boolean>((resolve, reject) => {
-            fetch(url, {
-                method: "GET",
-                // mode: 'no-cors',
-                headers: {
-                    Host: "pusher.workadventure.localhost",
-                },
-            })
-                .then((response) => response.json())
-                .then((data: PlayerTexturesMetadata) => {
-                    this.mapTexturesMetadataIntoResources(data);
-                    resolve(true);
-                })
-                .catch((reason) => {
-                    reject(reason);
-                });
-        });
+    public loadPlayerTexturesMetadata(metadata: PlayerTexturesMetadata): void {
+        this.mapTexturesMetadataIntoResources(metadata);
     }
 
-    private static mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
-        this.PLAYER_RESOURCES = this.getMappedResources(metadata.woka);
-        this.COLOR_RESOURCES = this.getMappedResources(metadata.body);
-        this.EYES_RESOURCES = this.getMappedResources(metadata.eyes);
-        this.HAIR_RESOURCES = this.getMappedResources(metadata.hair);
-        this.CLOTHES_RESOURCES = this.getMappedResources(metadata.clothes);
-        this.HATS_RESOURCES = this.getMappedResources(metadata.hat);
-        this.ACCESSORIES_RESOURCES = this.getMappedResources(metadata.accessory);
+    private mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
+        PlayerTextures.PLAYER_RESOURCES = this.getMappedResources(metadata.woka);
+        PlayerTextures.COLOR_RESOURCES = this.getMappedResources(metadata.body);
+        PlayerTextures.EYES_RESOURCES = this.getMappedResources(metadata.eyes);
+        PlayerTextures.HAIR_RESOURCES = this.getMappedResources(metadata.hair);
+        PlayerTextures.CLOTHES_RESOURCES = this.getMappedResources(metadata.clothes);
+        PlayerTextures.HATS_RESOURCES = this.getMappedResources(metadata.hat);
+        PlayerTextures.ACCESSORIES_RESOURCES = this.getMappedResources(metadata.accessory);
 
-        this.LAYERS = [
-            this.COLOR_RESOURCES,
-            this.EYES_RESOURCES,
-            this.HAIR_RESOURCES,
-            this.CLOTHES_RESOURCES,
-            this.HATS_RESOURCES,
-            this.ACCESSORIES_RESOURCES,
+        PlayerTextures.LAYERS = [
+            PlayerTextures.COLOR_RESOURCES,
+            PlayerTextures.EYES_RESOURCES,
+            PlayerTextures.HAIR_RESOURCES,
+            PlayerTextures.CLOTHES_RESOURCES,
+            PlayerTextures.HATS_RESOURCES,
+            PlayerTextures.ACCESSORIES_RESOURCES,
         ];
     }
 
-    private static getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
+    private getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
         const resources: BodyResourceDescriptionListInterface = {};
         for (const collection of category.collections) {
             for (const texture of collection.textures) {

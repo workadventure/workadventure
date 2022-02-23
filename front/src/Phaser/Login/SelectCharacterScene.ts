@@ -5,7 +5,7 @@ import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -14,6 +14,7 @@ import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterSt
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -32,28 +33,34 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
+    private playerTextures: PlayerTextures;
 
     constructor() {
         super({
             key: SelectCharacterSceneName,
         });
         this.loader = new Loader(this);
+        this.playerTextures = new PlayerTextures();
     }
 
     preload() {
-        this.loadSelectSceneCharacters()
-            .then((bodyResourceDescriptions) => {
-                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                    this.playerModels.push(bodyResourceDescription);
-                });
-                this.lazyloadingAttempt = true;
-            })
-            .catch((e) => console.error(e));
-        this.playerModels = loadAllDefaultModels(this.load);
-        this.lazyloadingAttempt = false;
+        this.load.json("woka-list", `${PUSHER_URL}/woka-list`);
+        this.load.on("filecomplete-json-woka-list", () => {
+            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get("woka-list"));
+            this.loadSelectSceneCharacters()
+                .then((bodyResourceDescriptions) => {
+                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                        this.playerModels.push(bodyResourceDescription);
+                    });
+                    this.lazyloadingAttempt = true;
+                })
+                .catch((e) => console.error(e));
+            this.playerModels = loadAllDefaultModels(this.load);
+            this.lazyloadingAttempt = false;
 
-        //this function must stay at the end of preload function
-        this.loader.addLoader();
+            //this function must stay at the end of preload function
+            this.loader.addLoader();
+        });
     }
 
     create() {
