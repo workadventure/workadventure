@@ -5,15 +5,11 @@ import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    ItemEventMessageInterface,
     MessageUserJoined,
-    OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PlayGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-    WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
@@ -21,31 +17,22 @@ import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
 import { warningContainerStore } from "../Stores/MenuStore";
-import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { localUserStore } from "./LocalUserStore";
 import {
-    RefreshRoomMessage,
     ServerToClientMessage as ServerToClientMessageTsProto,
     TokenExpiredMessage,
     WorldConnexionMessage,
-    WorldFullMessage,
     ErrorMessage as ErrorMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
-    ItemEventMessage as ItemEventMessageTsProto,
     EmoteEventMessage as EmoteEventMessageTsProto,
-    VariableMessage as VariableMessageTsProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
-    WorldFullWarningMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    PlayGlobalMessage as PlayGlobalMessageTsProto,
-    StopGlobalMessage as StopGlobalMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
-    SendUserMessage as SendUserMessageTsProto,
-    BanUserMessage as BanUserMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
@@ -54,8 +41,6 @@ import {
     PingMessage as PingMessageTsProto,
 } from "../Messages/ts-proto-generated/messages";
 import { Subject } from "rxjs";
-import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
-import { match } from "assert";
 
 const manualPingDelay = 20000;
 
