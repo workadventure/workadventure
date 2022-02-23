@@ -3,7 +3,7 @@ FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0
 WORKDIR /usr/src
 COPY front .
 
-RUN yarn install && yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
+RUN yarn install --network-timeout 1000000 && yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
 
 # final production image
 FROM nginx:1.21.6-alpine
