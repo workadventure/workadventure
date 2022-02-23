@@ -14,6 +14,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # messages
+      - name: Install messages dependencies
+        run: yarn install
+        working-directory: messages
+
+      - name: Build proto messages
+        run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
+        working-directory: messages
+
+      # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -26,7 +44,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Build and push
@@ -42,6 +59,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # messages
+      - name: Install messages dependencies
+        run: yarn install
+        working-directory: messages
+
+      - name: Build proto messages
+        run: yarn run proto && yarn run copy-to-back
+        working-directory: messages
+
+      # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -54,7 +89,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Build and push
@@ -70,6 +104,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      # messages
+      - name: Install messages dependencies
+        run: yarn install
+        working-directory: messages
+
+      - name: Build proto messages
+        run: yarn run proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher
+        working-directory: messages
+
+      # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -82,7 +134,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Build and push
@@ -110,14 +161,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           file: uploader/Dockerfile
-          platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
@@ -141,7 +190,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
       - name: Build and push
