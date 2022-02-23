@@ -6,131 +6,151 @@ on:
   release:
     types: [created]
   pull_request:
-    types: [ labeled, synchronize ]
-
-
-# Enables BuildKit
-env:
-  DOCKER_BUILDKIT: 1
+    types: [labeled, synchronize]
 
 jobs:
-
   build-front:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
 
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
-      - name: "Build and push front image"
-        uses: docker/build-push-action@v1
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: front/Dockerfile
-          path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-front
-          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          add_git_labels: true
+          file: front/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-back:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
-      - name: "Build and push back image"
-        uses: docker/build-push-action@v1
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: back/Dockerfile
-          path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-back
-          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          add_git_labels: true
+          file: back/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-pusher:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
-      - name: "Build and push back image"
-        uses: docker/build-push-action@v1
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: pusher/Dockerfile
-          path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-pusher
-          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          add_git_labels: true
+          file: pusher/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-uploader:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
 
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
-      - name: "Build and push back image"
-        uses: docker/build-push-action@v1
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: uploader/Dockerfile
-          path: ./
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-uploader
-          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          add_git_labels: true
+          file: uploader/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   build-maps:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Create a slugified value of the branch
       - uses: rlespinasse/github-slug-action@3.1.0
 
-      - name: "Build and push front image"
-        uses: docker/build-push-action@v1
+      - name: Build and push
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: maps/Dockerfile
-          path: maps/
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: thecodingmachine/workadventure-maps
-          tags: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
-          add_git_labels: true
+          context: maps/
+          file: maps/Dockerfile
+          push: true
+          tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
   deeploy:
     needs:
