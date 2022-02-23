@@ -48,7 +48,7 @@ services:
     labels:
       - "traefik.http.routers.front.rule=Host(`${FRONT_HOST}`)"
       - "traefik.http.routers.front.entryPoints=web"
-      - "traefik.http.services.front.loadbalancer.server.port=80"
+      - "traefik.http.services.front.loadbalancer.server.port=8080"
       - "traefik.http.routers.front-ssl.rule=Host(`${FRONT_HOST}`)"
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.service=front"
