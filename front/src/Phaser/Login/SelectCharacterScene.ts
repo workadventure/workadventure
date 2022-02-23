@@ -44,9 +44,11 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.load.json("woka-list", `${PUSHER_URL}/woka-list`);
-        this.load.on("filecomplete-json-woka-list", () => {
-            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get("woka-list"));
+        const wokaMetadataKey = "woka-list";
+        this.cache.json.remove(wokaMetadataKey);
+        this.load.json(wokaMetadataKey, `${PUSHER_URL}/${wokaMetadataKey}`);
+        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
+            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
             this.loadSelectSceneCharacters()
                 .then((bodyResourceDescriptions) => {
                     bodyResourceDescriptions.forEach((bodyResourceDescription) => {
@@ -254,9 +256,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     protected updateSelectedPlayer(): void {
-        this.selectedPlayer?.anims.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
+        this.selectedPlayer?.anims?.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
         const player = this.players[this.currentSelectUser];
-        player.play(this.playerModels[this.currentSelectUser].name);
+        player?.play(this.playerModels[this.currentSelectUser].name);
         this.selectedPlayer = player;
         localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
     }
