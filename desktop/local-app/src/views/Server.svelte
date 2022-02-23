@@ -2,7 +2,7 @@
   import { onDestroy, onMount } from "svelte";
   import { useParams } from "svelte-navigator";
 
-  import { selectServer, servers, selectedServer } from "~/store";
+  import { selectServer, servers } from "~/store";
   import { api } from "~/lib/ipc";
 
   const params = useParams();
@@ -11,13 +11,8 @@
     selectServer(_params.id);
   });
 
-  onMount(async () => {
-    await selectServer($params.id);
-  });
-
   onDestroy(async () => {
     await api.showLocalApp();
-    $selectedServer = "";
   });
 
   $: server = $servers.find(({ _id }) => _id === $params.id);

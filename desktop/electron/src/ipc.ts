@@ -4,7 +4,7 @@ import { createAndShowNotification } from "./notification";
 import { Server } from "./preload-local-app/types";
 import settings, { SettingsData } from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
-import { getAppView, getWindow, hideAppView, showAppView } from "./window";
+import { getAppView, hideAppView, showAppView } from "./window";
 // import fetch from "node-fetch";
 
 export function emitMuteToggle() {

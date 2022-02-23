@@ -6,8 +6,9 @@ import { loadCustomScheme } from "./serve";
 
 let mainWindow: BrowserWindow | undefined;
 let appView: BrowserView | undefined;
+let appViewUrl = "";
 
-const sidebarWidth = 75;
+const sidebarWidth = 80;
 
 export function getWindow() {
     return mainWindow;
@@ -128,8 +129,9 @@ export function showAppView(url?: string) {
     }
     mainWindow.addBrowserView(appView);
 
-    if (url) {
+    if (url && url !== appViewUrl) {
         appView.webContents.loadURL(url);
+        appViewUrl = url;
     }
 }
 
