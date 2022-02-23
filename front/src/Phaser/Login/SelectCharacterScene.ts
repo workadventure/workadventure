@@ -33,7 +33,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
-    private playerTextures: PlayerTextures;
 
     constructor() {
         super({

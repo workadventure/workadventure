@@ -273,7 +273,6 @@ export class AuthenticateController extends BaseHttpController {
                     const email = data.email;
                     const roomUrl = data.roomUrl;
                     const mapUrlStart = data.mapUrlStart;
-                    const textures = data.textures;
 
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
                     res.json({
@@ -283,7 +282,6 @@ export class AuthenticateController extends BaseHttpController {
                         roomUrl,
                         mapUrlStart,
                         organizationMemberToken,
-                        textures,
                     } as RegisterData);
                 } catch (e) {
                     console.error("register => ERROR", e);

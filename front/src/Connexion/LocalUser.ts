@@ -1,10 +1,11 @@
 import { MAX_USERNAME_LENGTH } from "../Enum/EnvironmentVariable";
 
+export type LayerNames = "woka" | "body" | "eyes" | "hair" | "clothes" | "hat" | "accessory";
+
 export interface CharacterTexture {
-    id: number;
-    level: number;
+    id: string;
+    layer: LayerNames;
     url: string;
-    rights: string;
 }
 
 export const maxUserNameLength: number = MAX_USERNAME_LENGTH;
@@ -24,9 +25,5 @@ export function areCharacterLayersValid(value: string[] | null): boolean {
 }
 
 export class LocalUser {
-    constructor(
-        public readonly uuid: string,
-        public textures: CharacterTexture[],
-        public email: string | null = null
-    ) {}
+    constructor(public readonly uuid: string, public email: string | null = null) {}
 }

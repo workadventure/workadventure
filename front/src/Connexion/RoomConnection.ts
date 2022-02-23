@@ -20,7 +20,7 @@ import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTe
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { warningContainerStore } from "../Stores/MenuStore";
+import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { localUserStore } from "./LocalUserStore";
 import {
@@ -52,10 +52,14 @@ import {
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
+    CharacterLayerMessage,
 } from "../Messages/ts-proto-generated/messages";
 import { Subject } from "rxjs";
 import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
 import { match } from "assert";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 
 const manualPingDelay = 20000;
 
@@ -336,18 +340,31 @@ export class RoomConnection implements RoomConnection {
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
+                    const characterLayers = roomJoinedMessage.characterLayer.map(
+                        this.mapCharactgerLayerToBodyResourceDescription.bind(this)
+                    );
 
                     this._roomJoinedMessageStream.next({
                         connection: this,
                         room: {
                             items,
                             variables,
+                            characterLayers,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
                 }
                 case "worldFullMessage": {
                     this._worldFullMessageStream.next(null);
+                    this.closed = true;
+                    break;
+                }
+                case "invalidTextureMessage": {
+                    menuVisiblilityStore.set(false);
+                    menuIconVisiblilityStore.set(false);
+                    selectCharacterSceneVisibleStore.set(true);
+                    gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+
                     this.closed = true;
                     break;
                 }
@@ -591,6 +608,15 @@ export class RoomConnection implements RoomConnection {
         });
     }*/
 
+    private mapCharactgerLayerToBodyResourceDescription(
+        characterLayer: CharacterLayerMessage
+    ): BodyResourceDescriptionInterface {
+        return {
+            name: characterLayer.name,
+            img: characterLayer.url,
+        };
+    }
+
     // TODO: move this to protobuf utils
     private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
         const position = message.position;
@@ -598,12 +624,9 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message.characterLayers.map((characterLayer): BodyResourceDescriptionInterface => {
-            return {
-                name: characterLayer.name,
-                img: characterLayer.url,
-            };
-        });
+        const characterLayers = message.characterLayers.map(
+            this.mapCharactgerLayerToBodyResourceDescription.bind(this)
+        );
 
         const companion = message.companion;
 

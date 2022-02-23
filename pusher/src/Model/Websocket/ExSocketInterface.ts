@@ -13,13 +13,9 @@ import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
 import { CharacterTexture } from "../../Messages/JsonMessages/CharacterTexture";
 import { compressors } from "hyper-express";
+import { WokaDetail } from "_Enum/PlayerTextures";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
-
-export interface CharacterLayer {
-    name: string;
-    url: string | undefined;
-}
 
 export interface ExSocketInterface extends compressors.WebSocket, Identificable {
     token: string;
@@ -28,7 +24,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     userUuid: string; // A unique identifier for this user
     IPAddress: string; // IP address
     name: string;
-    characterLayers: CharacterLayer[];
+    characterLayers: WokaDetail[];
     position: PointInterface;
     viewport: ViewportInterface;
     companion?: CompanionMessage;
@@ -42,7 +38,6 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     messages: unknown;
     tags: string[];
     visitCardUrl: string | null;
-    textures: CharacterTexture[];
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;

@@ -1,25 +1,33 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
-import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import Axios, { AxiosResponse } from "axios";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import * as tg from "generic-type-guard";
+import { isNumber } from "generic-type-guard";
+import { isWokaDetail } from "../Enum/PlayerTextures";
 
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
 }
 
-export interface FetchMemberDataByUuidResponse {
-    email: string;
-    userUuid: string;
-    tags: string[];
-    visitCardUrl: string | null;
-    textures: CharacterTexture[];
-    messages: unknown[];
-    anonymous?: boolean;
-    userRoomToken: string | undefined;
-}
+const isFetchMemberDataByUuidResponse = new tg.IsInterface()
+    .withProperties({
+        email: tg.isString,
+        userUuid: tg.isString,
+        tags: tg.isArray(tg.isString),
+        visitCardUrl: tg.isNullable(tg.isString),
+        textures: tg.isArray(isWokaDetail),
+        messages: tg.isArray(tg.isUnknown),
+    })
+    .withOptionalProperties({
+        anonymous: tg.isBoolean,
+        userRoomToken: tg.isString,
+    })
+    .get();
+
+export type FetchMemberDataByUuidResponse = tg.GuardedType<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi {
     /**
@@ -52,10 +60,16 @@ class AdminApi {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
-        const res = await Axios.get(ADMIN_API_URL + "/api/room/access", {
+        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: { userIdentifier, roomId, ipAddress },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
+        if (!isFetchMemberDataByUuidResponse(res.data)) {
+            throw new Error(
+                "Invalid answer received from the admin for the /api/map endpoint. Received: " +
+                    JSON.stringify(res.data)
+            );
+        }
         return res.data;
     }
 

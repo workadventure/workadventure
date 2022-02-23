@@ -1,5 +1,5 @@
 import * as tg from "generic-type-guard";
-import { isCharacterTexture } from "./CharacterTexture";
+//import { isCharacterTexture } from "./CharacterTexture";
 import { isNumber } from "generic-type-guard";
 
 /*
@@ -12,7 +12,7 @@ export const isMapDetailsData = new tg.IsInterface()
         mapUrl: tg.isString,
         policy_type: isNumber, //isNumericEnum(GameRoomPolicyTypes),
         tags: tg.isArray(tg.isString),
-        textures: tg.isArray(isCharacterTexture),
+//        textures: tg.isArray(isCharacterTexture),
         authenticationMandatory: tg.isUnion(tg.isNullable(tg.isBoolean), tg.isUndefined),
         roomSlug: tg.isNullable(tg.isString), // deprecated
         contactPage: tg.isNullable(tg.isString),

@@ -5,7 +5,7 @@ import Sprite = Phaser.GameObjects.Sprite;
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { Loader } from "../Components/Loader";
-import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
+import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
@@ -32,14 +32,12 @@ export class CustomizeScene extends AbstractCharacterScene {
     private moveVertically: number = 0;
 
     private loader: Loader;
-    private playerTextures: PlayerTextures;
 
     constructor() {
         super({
             key: CustomizeSceneName,
         });
         this.loader = new Loader(this);
-        this.playerTextures = new PlayerTextures();
     }
 
     preload() {

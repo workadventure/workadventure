@@ -14,5 +14,5 @@ export interface WokaServiceInterface {
      *
      * If one of the textures cannot be found, undefined is returned (and the user should be redirected to Woka choice page!)
      */
-    fetchWokaDetails(textureIds: string[]): Promise<WokaDetailsResult | undefined>;
+    //fetchWokaDetails(textureIds: string[]): Promise<WokaDetailsResult | undefined>;
 }

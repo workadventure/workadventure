@@ -49,16 +49,11 @@ export const isWokaDetail = new tg.IsInterface()
         id: tg.isString,
     })
     .withOptionalProperties({
-        texture: tg.isString,
+        url: tg.isString,
+        layer: tg.isString,
     })
     .get();
 
 export type WokaDetail = tg.GuardedType<typeof isWokaDetail>;
 
-export const isWokaDetailsResult = new tg.IsInterface()
-    .withProperties({
-        details: tg.isArray(isWokaDetail),
-    })
-    .get();
-
-export type WokaDetailsResult = tg.GuardedType<typeof isWokaDetailsResult>;
+export type WokaDetailsResult = WokaDetail[];

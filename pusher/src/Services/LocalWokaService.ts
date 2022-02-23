@@ -23,7 +23,13 @@ class LocalWokaService implements WokaServiceInterface {
      */
     async fetchWokaDetails(textureIds: string[]): Promise<WokaDetailsResult | undefined> {
         const wokaData: WokaList = await require("../../data/woka.json");
-        const textures = new Map<string, string>();
+        const textures = new Map<
+            string,
+            {
+                url: string;
+                layer: string;
+            }
+        >();
         const searchIds = new Set(textureIds);
 
         for (const part of wokaPartNames) {
@@ -37,7 +43,10 @@ class LocalWokaService implements WokaServiceInterface {
                     const texture = collection.textures.find((texture) => texture.id === id);
 
                     if (texture) {
-                        textures.set(id, texture.url);
+                        textures.set(id, {
+                            url: texture.url,
+                            layer: part,
+                        });
                         searchIds.delete(id);
                     }
                 }
@@ -53,11 +62,12 @@ class LocalWokaService implements WokaServiceInterface {
         textures.forEach((value, key) => {
             details.push({
                 id: key,
-                texture: value,
+                url: value.url,
+                layer: value.layer,
             });
         });
 
-        return { details };
+        return details;
     }
 }
 

@@ -1,5 +1,5 @@
 import * as tg from "generic-type-guard";
-import { isCharacterTexture } from "./CharacterTexture";
+//import { isCharacterTexture } from "./CharacterTexture";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -13,7 +13,7 @@ export const isRegisterData = new tg.IsInterface()
         organizationMemberToken: tg.isNullable(tg.isString),
         mapUrlStart: tg.isString,
         userUuid: tg.isString,
-        textures: tg.isArray(isCharacterTexture),
+//        textures: tg.isArray(isCharacterTexture),
         authToken: tg.isString,
     })
     .withOptionalProperties({

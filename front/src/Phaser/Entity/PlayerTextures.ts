@@ -1,7 +1,5 @@
 //The list of all the player textures, both the default models and the partial textures used for customization
 
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-
 export interface BodyResourceDescriptionListInterface {
     [key: string]: BodyResourceDescriptionInterface;
 }
@@ -11,6 +9,19 @@ export interface BodyResourceDescriptionInterface {
     img: string;
     level?: number;
 }
+
+/**
+ * Temporary object to map layers to the old "level" concept.
+ */
+export const mapLayerToLevel = {
+    woka: -1,
+    body: 0,
+    eyes: 1,
+    hair: 2,
+    clothes: 3,
+    hat: 4,
+    accessory: 5,
+};
 
 enum PlayerTexturesKey {
     Accessory = "accessory",

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
-import { isWokaDetailsResult, isWokaList, WokaDetailsResult, WokaList } from "../Enum/PlayerTextures";
+import { isWokaList, WokaList } from "../Enum/PlayerTextures";
 import { WokaServiceInterface } from "./WokaServiceInterface";
 
 class AdminWokaService implements WokaServiceInterface {
@@ -32,7 +32,7 @@ class AdminWokaService implements WokaServiceInterface {
      *
      * If one of the textures cannot be found, undefined is returned
      */
-    fetchWokaDetails(textureIds: string[]): Promise<WokaDetailsResult | undefined> {
+    /*fetchWokaDetails(textureIds: string[]): Promise<WokaDetailsResult | undefined> {
         return axios
             .post(
                 `${ADMIN_API_URL}/api/woka-details`,
@@ -49,11 +49,11 @@ class AdminWokaService implements WokaServiceInterface {
                 }
 
                 const result: WokaDetailsResult = res.data;
-                if (result.details.length !== textureIds.length) {
+                if (result.length !== textureIds.length) {
                     return undefined;
                 }
 
-                for (const detail of result.details) {
+                for (const detail of result) {
                     if (!detail.texture) {
                         return undefined;
                     }
@@ -65,7 +65,7 @@ class AdminWokaService implements WokaServiceInterface {
                 console.error(`Cannot get woka details from admin API with ids: ${textureIds}`, err);
                 return undefined;
             });
-    }
+    }*/
 }
 
 export const adminWokaService = new AdminWokaService();

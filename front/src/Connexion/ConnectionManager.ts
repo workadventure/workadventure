@@ -134,7 +134,7 @@ class ConnectionManager {
                 console.error("Invalid data received from /register route. Data: ", data);
                 throw new Error("Invalid data received from /register route.");
             }
-            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
+            this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
@@ -214,32 +214,6 @@ class ConnectionManager {
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
-
-            if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
-                //check if texture was changed
-                if (this.localUser.textures.length === 0) {
-                    this.localUser.textures = this._currentRoom.textures;
-                } else {
-                    // TODO: the local store should NOT be used as a buffer for all the texture we were authorized to have. Bad idea.
-                    // Instead, it is the responsibility of the ADMIN to return the EXACT list of textures we can have in a given context
-                    // + this list can change over time or over rooms.
-
-                    // 1- a room could forbid a particular dress code. In this case, the user MUST change its skin.
-                    // 2- a room can allow "external skins from other maps" => important: think about fediverse! => switch to URLs? (with a whitelist mechanism?) => but what about NFTs?
-
-                    // Note: stocker des URL dans le localstorage pour les utilisateurs actuels: mauvaise idée (empêche de mettre l'URL à jour dans le futur) => en même temps, problème avec le portage de user d'un serveur à l'autre
-                    // Réfléchir à une notion de "character server" ??
-
-                    this._currentRoom.textures.forEach((newTexture) => {
-                        const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
-                        if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
-                            return;
-                        }
-                        this.localUser.textures.push(newTexture);
-                    });
-                }
-                localUserStore.saveUser(this.localUser);
-            }
         }
         if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
@@ -265,7 +239,7 @@ class ConnectionManager {
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, [], data.email);
+        this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -275,7 +249,7 @@ class ConnectionManager {
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser("", []);
+        this.localUser = new LocalUser("");
     }
 
     public connectToRoomSocket(
@@ -352,13 +326,13 @@ class ConnectionManager {
                 throw new Error("No Auth code provided");
             }
         }
-        const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+        const { authToken, userUuid, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
             params: { code, nonce, token, playUri: this.currentRoom?.key },
         }).then((res) => {
             return res.data;
         });
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, textures, email);
+        this.localUser = new LocalUser(userUuid, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 

@@ -83,7 +83,16 @@ export abstract class Character extends Container implements OutlineableInterfac
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
+                return lazyLoadPlayerCharacterTextures(scene.load, [
+                    {
+                        name: "color_22",
+                        img: "resources/customisation/character_color/character_color21.png",
+                    },
+                    {
+                        name: "eyes_23",
+                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                    },
+                ]).then((textures) => {
                     this.addTextures(textures, frame);
                     this.invisible = false;
                     this.playAnimation(direction, moving);

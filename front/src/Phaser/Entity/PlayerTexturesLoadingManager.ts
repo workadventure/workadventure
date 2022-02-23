@@ -1,6 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import type { CharacterTexture } from "../../Connexion/LocalUser";
-import { BodyResourceDescriptionInterface, PlayerTextures } from "./PlayerTextures";
+import { BodyResourceDescriptionInterface, mapLayerToLevel, PlayerTextures } from "./PlayerTextures";
 import CancelablePromise from "cancelable-promise";
 
 export interface FrameConfig {
@@ -28,13 +28,11 @@ export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptio
     return returnArray;
 };
 
-export const loadCustomTexture = (
+export const loadWokaTexture = (
     loaderPlugin: LoaderPlugin,
-    texture: CharacterTexture
+    texture: BodyResourceDescriptionInterface
 ): CancelablePromise<BodyResourceDescriptionInterface> => {
-    const name = "customCharacterTexture" + texture.id;
-    const playerResourceDescriptor: BodyResourceDescriptionInterface = { name, img: texture.url, level: texture.level };
-    return createLoadingPromise(loaderPlugin, playerResourceDescriptor, {
+    return createLoadingPromise(loaderPlugin, texture, {
         frameWidth: 32,
         frameHeight: 32,
     });
@@ -42,16 +40,15 @@ export const loadCustomTexture = (
 
 export const lazyLoadPlayerCharacterTextures = (
     loadPlugin: LoaderPlugin,
-    texturekeys: Array<string | BodyResourceDescriptionInterface>
+    textures: BodyResourceDescriptionInterface[]
 ): CancelablePromise<string[]> => {
     const promisesList: CancelablePromise<unknown>[] = [];
-    texturekeys.forEach((textureKey: string | BodyResourceDescriptionInterface) => {
+    textures.forEach((texture) => {
         try {
             //TODO refactor
-            const playerResourceDescriptor = getRessourceDescriptor(textureKey);
-            if (playerResourceDescriptor && !loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
+            if (!loadPlugin.textureManager.exists(texture.name)) {
                 promisesList.push(
-                    createLoadingPromise(loadPlugin, playerResourceDescriptor, {
+                    createLoadingPromise(loadPlugin, texture, {
                         frameWidth: 32,
                         frameHeight: 32,
                     })
@@ -64,9 +61,9 @@ export const lazyLoadPlayerCharacterTextures = (
     let returnPromise: CancelablePromise<Array<string | BodyResourceDescriptionInterface>>;
     if (promisesList.length > 0) {
         loadPlugin.start();
-        returnPromise = CancelablePromise.all(promisesList).then(() => texturekeys);
+        returnPromise = CancelablePromise.all(promisesList).then(() => textures);
     } else {
-        returnPromise = CancelablePromise.resolve(texturekeys);
+        returnPromise = CancelablePromise.resolve(textures);
     }
 
     //If the loading fail, we render the default model instead.
@@ -75,23 +72,6 @@ export const lazyLoadPlayerCharacterTextures = (
             return typeof key !== "string" ? key.name : key;
         })
     );
-};
-
-export const getRessourceDescriptor = (
-    textureKey: string | BodyResourceDescriptionInterface
-): BodyResourceDescriptionInterface => {
-    if (typeof textureKey !== "string" && textureKey.img) {
-        return textureKey;
-    }
-    const textureName: string = typeof textureKey === "string" ? textureKey : textureKey.name;
-    const playerResource = PlayerTextures.PLAYER_RESOURCES[textureName];
-    if (playerResource !== undefined) return playerResource;
-
-    for (let i = 0; i < PlayerTextures.LAYERS.length; i++) {
-        const playerResource = PlayerTextures.LAYERS[i][textureName];
-        if (playerResource !== undefined) return playerResource;
-    }
-    throw new Error("Could not find a data for texture " + textureName);
 };
 
 export const createLoadingPromise = (
