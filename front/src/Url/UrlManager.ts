@@ -58,6 +58,10 @@ class UrlManager {
         return this.getHashParameters()[name];
     }
 
+    public clearHashParameter(): void {
+        window.location.hash = "";
+    }
+
     private getHashParameters(): Record<string, string> {
         return window.location.hash
             .substring(1)
