@@ -38,7 +38,7 @@ export class SwaggerController extends BaseHttpController {
                 if (err) {
                     return response.status(500).send(err.message);
                 }
-                const result = data.replace(/https:\/\/petstore.swagger.io\/v2\/swagger.json/g, "/openapi");
+                const result = data.replace(/https:\/\/petstore\.swagger\.io\/v2\/swagger.json/g, "/openapi");
 
                 response.send(result);
 
