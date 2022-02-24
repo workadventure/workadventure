@@ -297,7 +297,7 @@ export class IoSocketController {
                         if (ADMIN_API_URL) {
                             try {
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(userIdentifier, roomId, IPAddress);
+                                    userData = await adminApi.fetchMemberDataByUuid(userIdentifier, roomId, IPAddress, characterLayers);
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
                                         if (err?.response?.status == 404) {

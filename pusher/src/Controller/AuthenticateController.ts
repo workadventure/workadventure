@@ -397,7 +397,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
         };
         try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
+            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, characterLayers);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

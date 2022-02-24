@@ -6,6 +6,7 @@ import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiD
 import * as tg from "generic-type-guard";
 import { isNumber } from "generic-type-guard";
 import { isWokaDetail } from "../Enum/PlayerTextures";
+import qs from "qs";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -55,14 +56,17 @@ class AdminApi {
     async fetchMemberDataByUuid(
         userIdentifier: string | null,
         roomId: string,
-        ipAddress: string
-    ): Promise<FetchMemberDataByUuidResponse> {
+        ipAddress: string,
+        characterLayers: string[]): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
-            params: { userIdentifier, roomId, ipAddress },
+            params: { userIdentifier, roomId, ipAddress, characterLayers },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            paramsSerializer: p => {
+                return qs.stringify(p, {arrayFormat: 'brackets'})
+            }
         });
         if (!isFetchMemberDataByUuidResponse(res.data)) {
             throw new Error(
