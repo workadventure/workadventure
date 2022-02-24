@@ -133,6 +133,8 @@ export function showAppView(url?: string) {
         appView.webContents.loadURL(url);
         appViewUrl = url;
     }
+
+    appView.webContents.focus();
 }
 
 export function hideAppView() {
