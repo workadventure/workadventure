@@ -5,7 +5,7 @@ class LocalWokaService implements WokaServiceInterface {
     /**
      * Returns the list of all available Wokas & Woka Parts for the current user.
      */
-    async getWokaList(token: string): Promise<WokaList | undefined> {
+    async getWokaList(roomId: string, token: string): Promise<WokaList | undefined> {
         const wokaData: WokaList = await require("../../data/woka.json");
         if (!wokaData) {
             return undefined;
