@@ -71,7 +71,7 @@ class AdminApi {
         });
         if (!isFetchMemberDataByUuidResponse(res.data)) {
             throw new Error(
-                "Invalid answer received from the admin for the /api/map endpoint. Received: " +
+                "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
                     JSON.stringify(res.data)
             );
         }
