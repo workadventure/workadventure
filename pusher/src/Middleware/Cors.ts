@@ -10,6 +10,7 @@ export function cors(req: Request, res: Response, next?: MiddlewareNext): Middle
     );
     res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
     res.setHeader("access-control-allow-origin", FRONT_URL);
+    res.setHeader("access-control-allow-credentials", "true");
 
     if (next) {
         next();

@@ -1,7 +1,7 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import { isMapDetailsData, MapDetailsData } from "./AdminApi/MapDetailsData";
-import { isRoomRedirect, RoomRedirect } from "./AdminApi/RoomRedirect";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 class AdminApi {
     async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {

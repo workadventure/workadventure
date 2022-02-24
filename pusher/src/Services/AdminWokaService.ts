@@ -7,10 +7,14 @@ class AdminWokaService implements WokaServiceInterface {
     /**
      * Returns the list of all available Wokas for the current user.
      */
-    getWokaList(roomId: string, token: string): Promise<WokaList | undefined> {
+    getWokaList(roomUrl: string, token: string): Promise<WokaList | undefined> {
         return axios
-            .get(`${ADMIN_API_URL}/api/woka/list/${roomId}/${token}`, {
+            .get(`${ADMIN_API_URL}/api/woka/list`, {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                params: {
+                    roomUrl,
+                    uuid: token,
+                },
             })
             .then((res) => {
                 if (isWokaList(res.data)) {

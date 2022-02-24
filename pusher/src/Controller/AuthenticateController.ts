@@ -68,7 +68,7 @@ export class AuthenticateController extends BaseHttpController {
                 );
                 res.status(302);
                 res.setHeader("Location", loginUri);
-                return res;
+                return res.send("");
             } catch (e) {
                 console.error("openIDLogin => e", e);
                 this.castErrorToResponse(e, res);

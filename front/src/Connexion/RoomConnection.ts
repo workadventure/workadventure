@@ -340,8 +340,21 @@ export class RoomConnection implements RoomConnection {
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
+
+                    // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
+                    for (const characterLayer of roomJoinedMessage.characterLayer) {
+                        if (!characterLayer.url) {
+                            this.goToSelectYourWokaScene();
+                            this.closed = true;
+                            break;
+                        }
+                    }
+                    if (this.closed) {
+                        break;
+                    }
+
                     const characterLayers = roomJoinedMessage.characterLayer.map(
-                        this.mapCharactgerLayerToBodyResourceDescription.bind(this)
+                        this.mapCharacterLayerToBodyResourceDescription.bind(this)
                     );
 
                     this._roomJoinedMessageStream.next({
@@ -360,10 +373,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "invalidTextureMessage": {
-                    menuVisiblilityStore.set(false);
-                    menuIconVisiblilityStore.set(false);
-                    selectCharacterSceneVisibleStore.set(true);
-                    gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
+                    this.goToSelectYourWokaScene();
 
                     this.closed = true;
                     break;
@@ -608,7 +618,7 @@ export class RoomConnection implements RoomConnection {
         });
     }*/
 
-    private mapCharactgerLayerToBodyResourceDescription(
+    private mapCharacterLayerToBodyResourceDescription(
         characterLayer: CharacterLayerMessage
     ): BodyResourceDescriptionInterface {
         return {
@@ -624,9 +634,7 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message.characterLayers.map(
-            this.mapCharactgerLayerToBodyResourceDescription.bind(this)
-        );
+        const characterLayers = message.characterLayers.map(this.mapCharacterLayerToBodyResourceDescription.bind(this));
 
         const companion = message.companion;
 
@@ -885,5 +893,12 @@ export class RoomConnection implements RoomConnection {
 
     public get userRoomToken(): string | undefined {
         return this._userRoomToken;
+    }
+
+    private goToSelectYourWokaScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 }
