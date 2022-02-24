@@ -582,6 +582,7 @@ export class SocketManager {
 
     public async handleJoinBBBMeetingMessage(user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
+        const meetingName = joinBBBMeetingMessage.getMeetingname();
         const userdata = joinBBBMeetingMessage.getUserdataMap();
 
         const api = Bbb.api(BBB_URL, BBB_SECRET);
@@ -600,8 +601,7 @@ export class SocketManager {
                                 .slice(0, maxPWLen)
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
-        const meetingName = meetingId;
-        await Bbb.http(api.administration.create(meetingId, meetingId, { attendeePW, moderatorPW }));
+        await Bbb.http(api.administration.create(meetingName, meetingId, { attendeePW, moderatorPW }));
 
         // Add userdata properties sent by the client.
         const joinParams: Record<string, string> = {};

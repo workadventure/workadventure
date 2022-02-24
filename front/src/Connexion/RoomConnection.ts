@@ -799,11 +799,13 @@ export class RoomConnection implements RoomConnection {
             }
         });
 
+        const meetingName = props.get("meetingName") as string;
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "joinBBBMeetingMessage",
                 joinBBBMeetingMessage: {
                     meetingId,
+                    meetingName,
                     userdata: userdataMap
                 },
             },
