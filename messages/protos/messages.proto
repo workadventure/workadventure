@@ -86,7 +86,8 @@ message QueryJitsiJwtMessage {
 
 message JoinBBBMeetingMessage {
   string meetingId = 1;
-  map<string, string> userdata = 2;
+  string meetingName = 2;
+  map<string, string> userdata = 3;
 }
 
 message FollowRequestMessage {

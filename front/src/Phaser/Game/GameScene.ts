@@ -25,6 +25,7 @@ import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -97,6 +98,7 @@ import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { coWebsites } from "../../Stores/CoWebsiteStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -850,17 +852,7 @@ export class GameScene extends DirtyScene {
                  * Triggered when we receive the URL to join a meeting on BBB
                  */
                 this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
-                    this.connection?.setSilent(true);
-                    const clientOrigin = new URL(message.clientURL);
-
-                    const coWebsite = new SimpleCoWebsite(
-                        clientOrigin,
-                        true,
-                        "microphone *; camera *; display-capture *; clipboard-read *; clipboard-write *;",
-                        undefined,
-                        false);
-                    coWebsiteManager.loadCoWebsite(coWebsite)
-                        .catch((e) => console.error(`Error on opening co-website: ${e}`));
+                    bbbFactory.start(message.clientURL);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
