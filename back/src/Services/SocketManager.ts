@@ -601,7 +601,12 @@ export class SocketManager {
                                 .slice(0, maxPWLen)
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
-        await Bbb.http(api.administration.create(meetingName, meetingId, { attendeePW, moderatorPW }));
+        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createURL = api.administration.create(
+            meetingName,
+            meetingId,
+            createOptions);
+        await Bbb.http(createURL);
 
         // Add userdata properties sent by the client.
         const joinParams: Record<string, string> = {};
