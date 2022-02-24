@@ -59,14 +59,6 @@ export class MapController extends BaseHttpController {
          *                   items:
          *                     type: string
          *                     example: speaker
-         *                 textures:
-         *                   type: array
-         *                   description: The list of public textures for this map (TODO remove this)
-         *                   items:
-         *                     type: object
-         *                     properties:
-         *                       todo:
-         *                         type: string
          *                 authenticationMandatory:
          *                   type: boolean|null
          *                   description: Whether the authentication is mandatory or not for this map.
@@ -126,7 +118,6 @@ export class MapController extends BaseHttpController {
                     roomSlug: null, // Deprecated
                     group: null,
                     tags: [],
-                    textures: [],
                     contactPage: null,
                     authenticationMandatory: DISABLE_ANONYMOUS,
                 } as MapDetailsData);

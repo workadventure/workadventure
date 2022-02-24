@@ -249,10 +249,6 @@ export class AuthenticateController extends BaseHttpController {
      *                   type: string
      *                   description: TODO- unclear. I cannot find any use of this
      *                   example: ???
-     *                 textures:
-     *                   type: string
-     *                   description: TODO - document this is still needed
-     *                   example: ???
      *                 messages:
      *                   type: array
      *                   description: The list of messages to be displayed when the user logs?
@@ -397,7 +393,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
         };
         try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, characterLayers);
+            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, []);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

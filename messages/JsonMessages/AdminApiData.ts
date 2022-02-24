@@ -1,5 +1,4 @@
 import * as tg from "generic-type-guard";
-//import { isCharacterTexture } from "./CharacterTexture";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -12,7 +11,6 @@ export const isAdminApiData = new tg.IsInterface()
         email: tg.isNullable(tg.isString),
         roomUrl: tg.isString,
         mapUrlStart: tg.isString,
-//        textures: tg.isArray(isCharacterTexture),
     })
     .withOptionalProperties({
         messages: tg.isArray(tg.isUnknown),
