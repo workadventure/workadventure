@@ -61,7 +61,7 @@ If you set `openWebsiteTrigger: onicon`, when the user walks on the layer, an ic
 
 ### Showing a hint on minimized website
 
-If you close a website it will be minimized and is still accessible on it's icon on the bottom on the screen. Since there is no info except for it's favicon you can set `openWebsiteHint: your hint to the site`. On minimized websites the hint message will be shown on hover.
+If you close a website it will be minimized and is still accessible on its icon on the bottom on the screen. Since there is no info except for its favicon you can set `openWebsiteHint: your hint to the site`. When moving your mouse over the icon, the hint message will be shown.
 
 ### Setting the iFrame "allow" attribute
 
