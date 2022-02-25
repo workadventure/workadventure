@@ -85,11 +85,11 @@ export abstract class Character extends Container implements OutlineableInterfac
             .catch(() => {
                 return lazyLoadPlayerCharacterTextures(scene.load, [
                     {
-                        name: "color_22",
+                        id: "color_22",
                         img: "resources/customisation/character_color/character_color21.png",
                     },
                     {
-                        name: "eyes_23",
+                        id: "eyes_23",
                         img: "resources/customisation/character_eyes/character_eyes23.png",
                     },
                 ]).then((textures) => {

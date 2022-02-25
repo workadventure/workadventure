@@ -199,13 +199,13 @@ export class CustomizeScene extends AbstractCharacterScene {
         const children: Array<string> = new Array<string>();
         for (let j = 0; j <= layerNumber; j++) {
             if (j === layerNumber) {
-                children.push(this.layers[j][selectedItem].name);
+                children.push(this.layers[j][selectedItem].id);
             } else {
                 const layer = this.selectedLayers[j];
                 if (layer === undefined) {
                     continue;
                 }
-                children.push(this.layers[j][layer].name);
+                children.push(this.layers[j][layer].id);
             }
         }
         return children;
@@ -283,7 +283,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             if (layerItem !== undefined) {
-                layers.push(this.layers[i][layerItem].name);
+                layers.push(this.layers[i][layerItem].id);
             }
             i++;
         }

@@ -151,16 +151,16 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             const playerResource = this.playerModels[i];
 
             //check already exist texture
-            if (this.players.find((c) => c.texture.key === playerResource.name)) {
+            if (this.players.find((c) => c.texture.key === playerResource.id)) {
                 continue;
             }
 
             const [middleX, middleY] = this.getCharacterPosition();
-            const player = this.physics.add.sprite(middleX, middleY, playerResource.name, 0);
+            const player = this.physics.add.sprite(middleX, middleY, playerResource.id, 0);
             this.setUpPlayer(player, i);
             this.anims.create({
-                key: playerResource.name,
-                frames: this.anims.generateFrameNumbers(playerResource.name, { start: 0, end: 11 }),
+                key: playerResource.id,
+                frames: this.anims.generateFrameNumbers(playerResource.id, { start: 0, end: 11 }),
                 frameRate: 8,
                 repeat: -1,
             });
@@ -185,7 +185,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             this.currentSelectUser = 0;
         }
         this.selectedPlayer = this.players[this.currentSelectUser];
-        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
+        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].id);
     }
 
     protected moveUser() {
@@ -270,7 +270,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected updateSelectedPlayer(): void {
         this.selectedPlayer?.anims?.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
         const player = this.players[this.currentSelectUser];
-        player?.play(this.playerModels[this.currentSelectUser].name);
+        player?.play(this.playerModels[this.currentSelectUser].id);
         this.selectedPlayer = player;
         localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
     }

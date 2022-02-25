@@ -5,7 +5,8 @@ export interface BodyResourceDescriptionListInterface {
 }
 
 export interface BodyResourceDescriptionInterface {
-    name: string;
+    id: string;
+    label: string;
     img: string;
     level?: number;
 }
@@ -89,7 +90,7 @@ export class PlayerTextures {
         const resources: BodyResourceDescriptionListInterface = {};
         for (const collection of category.collections) {
             for (const texture of collection.textures) {
-                resources[texture.id] = { name: texture.name, img: texture.url };
+                resources[texture.id] = { id: texture.id, label: texture.name, img: texture.url };
             }
         }
         return resources;
@@ -97,5 +98,5 @@ export class PlayerTextures {
 }
 
 export const OBJECTS: BodyResourceDescriptionInterface[] = [
-    { name: "teleportation", img: "resources/objects/teleportation.png" },
+    { id: "teleportation", label: "Teleport", img: "resources/objects/teleportation.png" },
 ];

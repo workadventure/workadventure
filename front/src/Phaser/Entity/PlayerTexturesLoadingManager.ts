@@ -14,7 +14,7 @@ export const loadAllLayers = (load: LoaderPlugin): BodyResourceDescriptionInterf
         const layerArray: BodyResourceDescriptionInterface[] = [];
         Object.values(layer).forEach((textureDescriptor) => {
             layerArray.push(textureDescriptor);
-            load.spritesheet(textureDescriptor.name, textureDescriptor.img, { frameWidth: 32, frameHeight: 32 });
+            load.spritesheet(textureDescriptor.id, textureDescriptor.img, { frameWidth: 32, frameHeight: 32 });
         });
         returnArray.push(layerArray);
     });
@@ -23,7 +23,7 @@ export const loadAllLayers = (load: LoaderPlugin): BodyResourceDescriptionInterf
 export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptionInterface[] => {
     const returnArray = Object.values(PlayerTextures.PLAYER_RESOURCES);
     returnArray.forEach((playerResource: BodyResourceDescriptionInterface) => {
-        load.spritesheet(playerResource.name, playerResource.img, { frameWidth: 32, frameHeight: 32 });
+        load.spritesheet(playerResource.id, playerResource.img, { frameWidth: 32, frameHeight: 32 });
     });
     return returnArray;
 };
@@ -46,7 +46,7 @@ export const lazyLoadPlayerCharacterTextures = (
     textures.forEach((texture) => {
         try {
             //TODO refactor
-            if (!loadPlugin.textureManager.exists(texture.name)) {
+            if (!loadPlugin.textureManager.exists(texture.id)) {
                 promisesList.push(
                     createLoadingPromise(loadPlugin, texture, {
                         frameWidth: 32,
@@ -69,7 +69,7 @@ export const lazyLoadPlayerCharacterTextures = (
     //If the loading fail, we render the default model instead.
     return returnPromise.then((keys) =>
         keys.map((key) => {
-            return typeof key !== "string" ? key.name : key;
+            return typeof key !== "string" ? key.id : key;
         })
     );
 };
@@ -80,22 +80,22 @@ export const createLoadingPromise = (
     frameConfig: FrameConfig
 ) => {
     return new CancelablePromise<BodyResourceDescriptionInterface>((res, rej, cancel) => {
-        if (loadPlugin.textureManager.exists(playerResourceDescriptor.name)) {
+        if (loadPlugin.textureManager.exists(playerResourceDescriptor.id)) {
             return res(playerResourceDescriptor);
         }
 
         cancel(() => {
             loadPlugin.off("loaderror");
-            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.name);
+            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.id);
             return;
         });
 
-        loadPlugin.spritesheet(playerResourceDescriptor.name, playerResourceDescriptor.img, frameConfig);
+        loadPlugin.spritesheet(playerResourceDescriptor.id, playerResourceDescriptor.img, frameConfig);
         const errorCallback = (file: { src: string }) => {
             if (file.src !== playerResourceDescriptor.img) return;
             console.error("failed loading player resource: ", playerResourceDescriptor);
             rej(playerResourceDescriptor);
-            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.name, successCallback);
+            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.id, successCallback);
             loadPlugin.off("loaderror", errorCallback);
         };
         const successCallback = () => {
@@ -103,7 +103,7 @@ export const createLoadingPromise = (
             res(playerResourceDescriptor);
         };
 
-        loadPlugin.once("filecomplete-spritesheet-" + playerResourceDescriptor.name, successCallback);
+        loadPlugin.once("filecomplete-spritesheet-" + playerResourceDescriptor.id, successCallback);
         loadPlugin.on("loaderror", errorCallback);
     });
 };

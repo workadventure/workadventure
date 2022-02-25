@@ -1,46 +1,35 @@
 import * as tg from "generic-type-guard";
+import { z } from "zod";
 
 //The list of all the player textures, both the default models and the partial textures used for customization
 
-export const isWokaTexture = new tg.IsInterface()
-    .withProperties({
-        id: tg.isString,
-        name: tg.isString,
-        url: tg.isString,
-        position: tg.isNumber,
-    })
-    .withOptionalProperties({
-        tags: tg.isArray(tg.isString),
-        tintable: tg.isBoolean,
-    })
-    .get();
+const wokaTexture = z.object({
+    id: z.string(),
+    name: z.string(),
+    url: z.string(),
+    tags: z.array(z.string()).optional(),
+    tintable: z.boolean().optional(),
+});
 
-export type WokaTexture = tg.GuardedType<typeof isWokaTexture>;
+export type WokaTexture = z.infer<typeof wokaTexture>;
 
-export const isWokaTextureCollection = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-        position: tg.isNumber,
-        textures: tg.isArray(isWokaTexture),
-    })
-    .get();
+const wokaTextureCollection = z.object({
+    name: z.string(),
+    textures: z.array(wokaTexture),
+});
 
-export type WokaTextureCollection = tg.GuardedType<typeof isWokaTextureCollection>;
+export type WokaTextureCollection = z.infer<typeof wokaTextureCollection>;
 
-export const isWokaPartType = new tg.IsInterface()
-    .withProperties({
-        collections: tg.isArray(isWokaTextureCollection),
-    })
-    .withOptionalProperties({
-        required: tg.isBoolean,
-    })
-    .get();
+const wokaPartType = z.object({
+    collections: z.array(wokaTextureCollection),
+    required: z.boolean().optional(),
+});
 
-export type WokaPartType = tg.GuardedType<typeof isWokaPartType>;
+export type WokaPartType = z.infer<typeof wokaPartType>;
 
-export const isWokaList = new tg.IsInterface().withStringIndexSignature(isWokaPartType).get();
+export const wokaList = z.record(wokaPartType);
 
-export type WokaList = tg.GuardedType<typeof isWokaList>;
+export type WokaList = z.infer<typeof wokaList>;
 
 export const wokaPartNames = ["woka", "body", "eyes", "hair", "clothes", "hat", "accessory"];
 

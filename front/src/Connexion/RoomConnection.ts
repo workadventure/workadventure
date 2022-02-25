@@ -622,7 +622,7 @@ export class RoomConnection implements RoomConnection {
         characterLayer: CharacterLayerMessage
     ): BodyResourceDescriptionInterface {
         return {
-            name: characterLayer.name,
+            id: characterLayer.name,
             img: characterLayer.url,
         };
     }
