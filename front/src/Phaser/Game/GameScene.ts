@@ -1598,6 +1598,8 @@ ${escapedMessage}
                         }
                     })
                     .catch((reason) => console.warn(reason));
+
+                urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
