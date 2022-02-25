@@ -18,18 +18,11 @@ COPY --from=builder /usr/src/JsonMessages src/Messages/JsonMessages
 RUN yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
 
 # final production image
-FROM thecodingmachine/nodejs:14-apache
+FROM nginx:1.21.6-alpine
 
-USER root
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && apt-get install -y \
-    gettext-base \
-    && rm -rf /var/lib/apt/lists/*
-USER docker
+COPY front/nginx.conf /etc/nginx/conf.d/default.conf
+COPY front/templater.sh /
+COPY --from=builder2 /usr/src/dist /usr/share/nginx/html
 
-COPY --from=builder2 --chown=docker:docker /usr/src/dist dist
-COPY front/templater.sh .
-
-ENV STARTUP_COMMAND_0="./templater.sh"
-ENV STARTUP_COMMAND_1="envsubst < dist/env-config.template.js > dist/env-config.js"
-ENV APACHE_DOCUMENT_ROOT=dist/
+EXPOSE 80
+CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"]
