@@ -1,6 +1,7 @@
 const SECRET_KEY = process.env.SECRET_KEY || "THECODINGMACHINE_SECRET_KEY";
 const ALLOW_ARTILLERY = process.env.ALLOW_ARTILLERY ? process.env.ALLOW_ARTILLERY == "true" : false;
 const API_URL = process.env.API_URL || "localhost:50051";
+//const API_URL = process.env.API_URL || "wa-api.d2wo.com:50051";
 const ADMIN_API_URL = process.env.ADMIN_API_URL || "";
 const ADMIN_URL = process.env.ADMIN_URL || "";
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || "";
@@ -13,6 +14,7 @@ const PUSHER_HTTP_PORT = parseInt(process.env.PUSHER_HTTP_PORT || "8080") || 808
 export const SOCKET_IDLE_TIMER = parseInt(process.env.SOCKET_IDLE_TIMER as string) || 120; // maximum time (in second) without activity before a socket is closed. Should be greater than 60 seconds in order to cope for Chrome intensive throttling (https://developer.chrome.com/blog/timer-throttling-in-chrome-88/#intensive-throttling)
 
 export const FRONT_URL = process.env.FRONT_URL || "http://localhost";
+//export const FRONT_URL = process.env.FRONT_URL || "https://wa-front.d2wo.com";
 export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = process.env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
