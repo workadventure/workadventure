@@ -49,6 +49,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-front
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -100,6 +102,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-back
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -151,6 +155,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-pusher
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -184,6 +190,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-uploader
 
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -218,6 +226,8 @@ jobs:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-maps
 
       - name: Build and push
         uses: docker/build-push-action@v2
