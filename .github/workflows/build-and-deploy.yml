@@ -46,6 +46,10 @@ jobs:
 
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -54,6 +58,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   build-back:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
@@ -92,6 +97,10 @@ jobs:
 
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -100,6 +109,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   build-pusher:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
@@ -138,6 +148,10 @@ jobs:
 
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -146,6 +160,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   build-uploader:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
@@ -166,12 +181,17 @@ jobs:
 
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           file: uploader/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   build-maps:
     if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
@@ -195,6 +215,10 @@ jobs:
 
       - uses: rlespinasse/github-slug-action@3.1.0
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -202,6 +226,7 @@ jobs:
           file: maps/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   deeploy:
     needs:
