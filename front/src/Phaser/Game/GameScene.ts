@@ -1220,6 +1220,8 @@ ${escapedMessage}
                 openCoWebsite.closable ?? true
             );
 
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
+
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
@@ -1596,6 +1598,8 @@ ${escapedMessage}
                         }
                     })
                     .catch((reason) => console.warn(reason));
+
+                urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
@@ -1715,7 +1719,7 @@ ${escapedMessage}
                 }
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-                this.CurrentPlayer.pointerOverOutline(0x00ffff);
+                this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();

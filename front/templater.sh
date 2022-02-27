@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 set -x
 set -o nounset errexit
-index_file=dist/index.html
+index_file=/usr/share/nginx/html/index.html
 tmp_trackcodefile=/tmp/trackcode
 
 # To inject tracking code, you have two choices:
@@ -10,12 +10,12 @@ tmp_trackcodefile=/tmp/trackcode
 # The ANALYTICS_CODE_PATH is the location of a file inside the container
 ANALYTICS_CODE_PATH="${ANALYTICS_CODE_PATH:-dist/ga.html.tmpl}"
 
-if [[ "${INSERT_ANALYTICS:-NO}" == "NO" ]]; then
+if [ "${INSERT_ANALYTICS:-NO}" = "NO" ]; then
     echo "" > "${tmp_trackcodefile}"
 fi
 
 # Automatically insert analytics if GA_TRACKING_ID is set
-if [[ "${GA_TRACKING_ID:-}" != ""  || "${INSERT_ANALYTICS:-NO}" != "NO" ]]; then
+if [ "${GA_TRACKING_ID:-}" != "" ] || [ "${INSERT_ANALYTICS:-NO}" != "NO" ]; then
     echo "Templating code from ${ANALYTICS_CODE_PATH}"
     sed "s#<!-- TRACKING NUMBER -->#${GA_TRACKING_ID:-}#g" "${ANALYTICS_CODE_PATH}" > "$tmp_trackcodefile"
 fi

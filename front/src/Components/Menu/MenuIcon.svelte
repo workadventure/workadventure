@@ -61,15 +61,15 @@
             on:dragstart|preventDefault={noDrag}
             on:click|preventDefault={showMenu}
         />
-        <img
-            src={logoTalk}
-            alt={$LL.menu.icon.open.chat()}
-            class="nes-pointer"
-            draggable="false"
-            on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showChat}
-        />
     {/if}
+    <img
+        src={logoTalk}
+        alt={$LL.menu.icon.open.chat()}
+        class="nes-pointer"
+        draggable="false"
+        on:dragstart|preventDefault={noDrag}
+        on:click|preventDefault={showChat}
+    />
 </main>
 
 <style lang="scss">
