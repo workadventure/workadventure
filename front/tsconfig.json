@@ -1,5 +1,5 @@
 {
-//  "include": ["src/**/*", "webpack.config.ts"],
+//  "include": ["src/**/*"],
 
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
@@ -15,7 +15,7 @@
     "allowJs": true,
     "esModuleInterop": true,
 
-    "importsNotUsedAsValues": "error",
+    "importsNotUsedAsValues": "remove",
 
     "strict": true,                        /* Enable all strict type-checking options. */
     "noImplicitAny": true,                 /* Raise error on expressions and declarations with an implied 'any' type. */
@@ -28,5 +28,11 @@
 
     "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
     "noFallthroughCasesInSwitch": true     /* Report errors for fallthrough cases in switch statement. */
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "public/iframe_api.js",
+    "packages/iframe-api-typings"
+  ]
 }

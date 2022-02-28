@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";

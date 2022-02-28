@@ -1,4 +1,3 @@
-import type * as SimplePeerNamespace from "simple-peer";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
@@ -6,8 +5,8 @@ import { Readable, readable, writable, Writable } from "svelte/store";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-
-const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
+import Peer from "simple-peer/simplepeer.min.js";
+import { Buffer } from "buffer";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.

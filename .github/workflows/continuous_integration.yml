@@ -56,6 +56,14 @@ jobs:
           ADMIN_URL: "//localhost:80"
         working-directory: "front"
 
+      - name: "Build iframe-api"
+        run: yarn run build-iframe-api
+        working-directory: "front"
+
+      - name: "Typecheck"
+        run: yarn run typecheck
+        working-directory: "front"
+
       - name: "Svelte check"
         run: yarn run svelte-check
         working-directory: "front"
@@ -165,4 +173,3 @@ jobs:
       - name: "Prettier"
         run: yarn run pretty-check
         working-directory: "back"
-

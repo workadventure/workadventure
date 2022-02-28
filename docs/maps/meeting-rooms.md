@@ -9,9 +9,11 @@ On your map, you can define special zones (meeting rooms) that will trigger the 
 
 In order to create Jitsi meet zones:
 
-*   You must create a specific layer.
-*   In layer properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with the name of the instance of the map (so that different instances of the map have different rooms)
-*   You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
+* You must create a specific layer.
+* In layer properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with the name of the instance of the map (so that different instances of the map have different rooms)
+* You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
+
+You can have this layer (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
 
 ## Triggering of the "Jitsi meet" action
 

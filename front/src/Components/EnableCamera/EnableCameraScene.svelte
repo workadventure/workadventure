@@ -1,10 +1,11 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import {
         audioConstraintStore,
         cameraListStore,
         localStreamStore,
+        localVolumeStore,
         microphoneListStore,
         videoConstraintStore,
     } from "../../Stores/MediaStore";
@@ -38,7 +39,7 @@
 
     let stream: MediaStream | null;
 
-    const unsubscribe = localStreamStore.subscribe((value) => {
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
         if (value.type === "success") {
             stream = value.stream;
 
@@ -59,7 +60,9 @@
         }
     });
 
-    onDestroy(unsubscribe);
+    onDestroy(() => {
+        unsubscribeLocalStreamStore();
+    });
 
     function normalizeDeviceName(label: string): string {
         // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
@@ -86,7 +89,7 @@
             <img class="background-img" src={cinemaCloseImg} alt="" />
         </div>
     {/if}
-    <HorizontalSoundMeterWidget {stream} />
+    <HorizontalSoundMeterWidget volume={$localVolumeStore} />
 
     <section class="selectWebcamForm">
         {#if $cameraListStore.length > 1}

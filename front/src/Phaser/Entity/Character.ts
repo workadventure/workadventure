@@ -17,6 +17,7 @@ import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
+import { TalkIcon } from "../Components/TalkIcon";
 
 const playerNameY = -25;
 
@@ -33,6 +34,7 @@ const interactiveRadius = 35;
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
+    private readonly talkIcon: TalkIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -95,13 +97,24 @@ export abstract class Character extends Container implements OutlineableInterfac
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
-            stroke: "gray",
+            stroke: "#14304C",
             metrics: {
                 ascent: 20,
                 descent: 10,
                 fontSize: 35,
             },
         });
+
+        this.talkIcon = new TalkIcon(scene, 0, -45);
+        this.add(this.talkIcon);
+
+        if (isClickable) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+        }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerNameText);
 
@@ -198,6 +211,10 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             return "male1";
         });
+    }
+
+    public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
+        this.talkIcon.show(show, forceClose);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {

@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
     import firefoxImg from "./images/help-setting-camera-permission-firefox.png";

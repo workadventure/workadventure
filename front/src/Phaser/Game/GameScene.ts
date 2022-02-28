@@ -91,6 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import { localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -172,6 +173,9 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
+
+    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
+    private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
@@ -247,6 +251,7 @@ export class GameScene extends DirtyScene {
                 loadCustomTexture(this.load, texture).catch((e) => console.error(e));
             }
         }
+        this.load.image("iconTalk", "/resources/icons/icon_talking.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -338,7 +343,6 @@ export class GameScene extends DirtyScene {
         (this.load as any).rexWebFont({
             custom: {
                 families: ["Press Start 2P"],
-                urls: ["/resources/fonts/fonts.css"],
                 testString: "abcdefg",
             },
         });
@@ -567,6 +571,7 @@ export class GameScene extends DirtyScene {
         this.pathfindingManager = new PathfindingManager(
             this,
             this.gameMap.getCollisionGrid(),
+            this.gameMap.getWalkingCostGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -580,12 +585,6 @@ export class GameScene extends DirtyScene {
             this,
             { x: this.Map.widthInPixels, y: this.Map.heightInPixels },
             waScaleManager
-        );
-
-        this.pathfindingManager = new PathfindingManager(
-            this,
-            this.gameMap.getCollisionGrid(),
-            this.gameMap.getTileDimensions()
         );
 
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
@@ -641,13 +640,44 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        const talkIconVolumeTreshold = 10;
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
+            this.volumeStoreUnsubscribers.clear();
+
+            for (const [key, videoStream] of peers) {
+                this.volumeStoreUnsubscribers.set(
+                    key,
+                    videoStream.volumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
+                        }
+                    })
+                );
+            }
+
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeerNumber) {
                 this.playSound("audio-webrtc-out");
+            }
+            if (newPeerNumber > 0) {
+                if (!this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        }
+                    });
+                }
+            } else {
+                this.CurrentPlayer.showTalkIcon(false, true);
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
+                if (this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber();
+                    this.localVolumeStoreUnsubscriber = undefined;
+                }
             }
             oldPeerNumber = newPeerNumber;
         });
@@ -1190,6 +1220,8 @@ ${escapedMessage}
                 openCoWebsite.closable ?? true
             );
 
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
+
             if (openCoWebsite.lazy === undefined || !openCoWebsite.lazy) {
                 await coWebsiteManager.loadCoWebsite(coWebsite);
             }
@@ -1418,7 +1450,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid(), this.gameMap.getWalkingCostGrid());
         this.markDirty();
     }
 
@@ -1566,6 +1598,8 @@ ${escapedMessage}
                         }
                     })
                     .catch((reason) => console.warn(reason));
+
+                urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
@@ -1685,7 +1719,7 @@ ${escapedMessage}
                 }
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
-                this.CurrentPlayer.pointerOverOutline(0x00ffff);
+                this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();

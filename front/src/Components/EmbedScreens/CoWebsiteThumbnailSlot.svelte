@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
@@ -21,7 +21,7 @@
 
     onMount(() => {
         icon.src = isJitsi
-            ? "/resources/logos/meet.svg"
+            ? "/resources/logos/jitsi.png"
             : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
         icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
@@ -73,9 +73,9 @@
             $mainCoWebsite !== undefined &&
             $mainCoWebsite.getId() === coWebsite.getId();
         isHighlight =
-            $highlightedEmbedScreen !== null &&
-            $highlightedEmbedScreen.type === "cowebsite" &&
-            $highlightedEmbedScreen.embed.getId() === coWebsite.getId();
+            $highlightedEmbedScreen !== undefined &&
+            $highlightedEmbedScreen?.type === "cowebsite" &&
+            $highlightedEmbedScreen?.embed.getId() === coWebsite.getId();
     }
 </script>
 
@@ -188,10 +188,16 @@
             />
         </rect>
     </svg>
+
+    <!-- TODO use trigger message property -->
+    <div class="cowebsite-hover" class:hide={!isJitsi} style="width: max-content;">
+        <p>Open / Close Jitsi meeting!</p>
+    </div>
 </div>
 
 <style lang="scss">
     .cowebsite-thumbnail {
+        cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         position: relative;
         padding: 0;
         background-color: rgba(#000000, 0.6);
@@ -234,6 +240,11 @@
             .cowebsite-icon {
                 width: 40px;
                 height: 40px;
+            }
+
+            .cowebsite-hover {
+                top: -4px;
+                left: 55px;
             }
 
             animation: shake 0.35s ease-in-out;
@@ -315,9 +326,32 @@
             }
 
             &.jitsi {
-                filter: invert(100%);
-                -webkit-filter: invert(100%);
                 padding: 7px;
+            }
+        }
+
+        &:hover {
+            .cowebsite-hover {
+                display: block;
+                width: max-content !important;
+            }
+        }
+
+        .cowebsite-hover {
+            display: none;
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.6);
+            top: -40px;
+            left: -4px;
+            width: 0 !important;
+            min-height: 20px;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            color: white;
+            padding: 4px;
+            border-radius: 4px;
+            p {
+                margin-bottom: 0;
             }
         }
     }

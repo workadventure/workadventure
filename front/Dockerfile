@@ -1,35 +1,28 @@
+# protobuf build
 FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as builder
-
-WORKDIR /usr/src/messages
+WORKDIR /usr/src
+COPY messages/yarn.lock messages/package.json ./
+RUN yarn install
 COPY messages .
-RUN yarn install && yarn ts-proto
+RUN yarn ts-proto
 
-WORKDIR /usr/src/front
+# typescript build
+FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as builder2
+WORKDIR /usr/src
+COPY front/yarn.lock front/package.json ./
+RUN yarn install
 COPY front .
-
-# move messages to front
-RUN cp -r ../messages/ts-proto-generated/protos/* src/Messages/ts-proto-generated
+COPY --from=builder /usr/src/ts-proto-generated/protos src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/messages.ts
-RUN cp -r ../messages/JsonMessages/* src/Messages/JsonMessages
+COPY --from=builder /usr/src/JsonMessages src/Messages/JsonMessages
+RUN yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
 
-RUN yarn install && yarn run typesafe-i18n && yarn build
+# final production image
+FROM nginx:1.21.6-alpine
 
-# Removing the iframe.html file from the final image as this adds a XSS attack.
-# iframe.html is only in dev mode to circumvent a limitation
-RUN rm dist/iframe.html
+COPY front/nginx.conf /etc/nginx/conf.d/default.conf
+COPY front/templater.sh /
+COPY --from=builder2 /usr/src/dist /usr/share/nginx/html
 
-FROM thecodingmachine/nodejs:14-apache
-
-COPY --from=builder --chown=docker:docker /usr/src/front/dist dist
-COPY front/templater.sh .
-
-USER root
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && apt-get install -y \
-    gettext-base \
-    && rm -rf /var/lib/apt/lists/*
-USER docker
-
-ENV STARTUP_COMMAND_0="./templater.sh"
-ENV STARTUP_COMMAND_1="envsubst < dist/env-config.template.js > dist/env-config.js"
-ENV APACHE_DOCUMENT_ROOT=dist/
+EXPOSE 80
+CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"]

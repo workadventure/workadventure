@@ -159,9 +159,17 @@ class CoWebsiteManager {
         });
 
         buttonSwipe.addEventListener("click", () => {
+            const mainCoWebsite = this.getMainCoWebsite();
             const highlightedEmbed = get(highlightedEmbedScreen);
             if (highlightedEmbed?.type === "cowebsite") {
                 this.goToMain(highlightedEmbed.embed);
+
+                if (mainCoWebsite) {
+                    highlightedEmbedScreen.toggleHighlight({
+                        type: "cowebsite",
+                        embed: mainCoWebsite,
+                    });
+                }
             }
         });
     }
@@ -553,6 +561,13 @@ class CoWebsiteManager {
         coWebsites.remove(coWebsite);
         coWebsites.add(coWebsite, 0);
 
+        if (mainCoWebsite) {
+            const iframe = mainCoWebsite.getIframe();
+            if (iframe) {
+                iframe.style.display = "block";
+            }
+        }
+
         if (
             isMediaBreakpointDown("lg") &&
             get(embedScreenLayout) === LayoutMode.Presentation &&
@@ -596,12 +611,20 @@ class CoWebsiteManager {
             .load()
             .then(() => {
                 const mainCoWebsite = this.getMainCoWebsite();
-                if (mainCoWebsite && mainCoWebsite.getId() === coWebsite.getId()) {
-                    this.openMain();
+                const highlightedEmbed = get(highlightedEmbedScreen);
+                if (mainCoWebsite) {
+                    if (mainCoWebsite.getId() === coWebsite.getId()) {
+                        this.openMain();
 
-                    setTimeout(() => {
-                        this.fire();
-                    }, animationTime);
+                        setTimeout(() => {
+                            this.fire();
+                        }, animationTime);
+                    } else if (!highlightedEmbed) {
+                        highlightedEmbedScreen.toggleHighlight({
+                            type: "cowebsite",
+                            embed: coWebsite,
+                        });
+                    }
                 }
                 this.resizeAllIframes();
             })
