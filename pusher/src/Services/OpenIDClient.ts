@@ -6,7 +6,7 @@ import {
     OPID_CLIENT_REDIRECT_URL,
     OPID_USERNAME_CLAIM,
     OPID_LOCALE_CLAIM,
-    OPID_ADDITIONAL_SCOPES,
+    OPID_SCOPE,
 } from "../Enum/EnvironmentVariable";
 
 class OpenIDClient {
@@ -28,8 +28,11 @@ class OpenIDClient {
 
     public authorizationUrl(state: string, nonce: string, playUri?: string, redirect?: string) {
         return this.initClient().then((client) => {
+            if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
+                throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
+            }
             return client.authorizationUrl({
-                scope: "openid email " + OPID_ADDITIONAL_SCOPES,
+                scope: OPID_SCOPE,
                 prompt: "login",
                 state: state,
                 nonce: nonce,
