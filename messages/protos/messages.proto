@@ -215,6 +215,11 @@ message ItemStateMessage {
   string stateJson = 2;
 }
 
+message GroupUsersUpdateMessage {
+  int32 groupId = 1;
+  repeated int32 userIds = 2;
+}
+
 message RoomJoinedMessage {
   //repeated UserJoinedMessage user = 1;
   //repeated GroupUpdateMessage group = 2;
@@ -310,6 +315,7 @@ message ServerToClientMessage {
     FollowRequestMessage followRequestMessage = 21;
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
   }
 }
 

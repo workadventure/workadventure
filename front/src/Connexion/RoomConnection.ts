@@ -5,6 +5,7 @@ import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
+    GroupUsersUpdateMessageInterface,
     MessageUserJoined,
     PlayGlobalMessageInterface,
     PositionInterface,
@@ -96,6 +97,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _groupUpdateMessageStream = new Subject<GroupCreatedUpdatedMessageInterface>();
     public readonly groupUpdateMessageStream = this._groupUpdateMessageStream.asObservable();
+
+    private readonly _groupUsersUpdateMessageStream = new Subject<GroupUsersUpdateMessageInterface>();
+    public readonly groupUsersUpdateMessageStream = this._groupUsersUpdateMessageStream.asObservable();
 
     private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
     public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
@@ -396,6 +400,12 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "sendJitsiJwtMessage": {
                     this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
+                    break;
+                }
+                case "groupUsersUpdateMessage": {
+                    console.log("GOT GROUP USERS UPDATE MESSAGE");
+                    console.log(message.groupUsersUpdateMessage);
+                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
                 }
                 case "sendUserMessage": {

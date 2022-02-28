@@ -38,6 +38,7 @@ import {
     SubToPusherRoomMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
+    GroupUsersUpdateMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -265,8 +266,14 @@ export class SocketManager {
         if (roomPromise === undefined) {
             roomPromise = GameRoom.create(
                 roomId,
-                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                (user: User, group: Group) => this.disConnectedUser(user, group),
+                (user: User, group: Group) => {
+                    this.joinWebRtcRoom(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
+                (user: User, group: Group) => {
+                    this.disConnectedUser(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
                 (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
@@ -436,6 +443,19 @@ export class SocketManager {
             return zoneMessage;
         }
         return undefined;
+    }
+
+    private sendGroupUsersUpdateToGroupMembers(group: Group) {
+        const groupUserUpdateMessage = new GroupUsersUpdateMessage();
+        groupUserUpdateMessage.setGroupid(group.getId());
+        groupUserUpdateMessage.setUseridsList(group.getUsers().map((user) => user.id));
+
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setGroupusersupdatemessage(groupUserUpdateMessage);
+
+        group.getUsers().forEach((currentUser: User) => {
+            currentUser.socket.write(clientMessage);
+        });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {

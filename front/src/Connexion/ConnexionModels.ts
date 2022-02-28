@@ -47,6 +47,11 @@ export interface GroupCreatedUpdatedMessageInterface {
     groupSize: number;
 }
 
+export interface GroupUsersUpdateMessageInterface {
+    groupId: number;
+    userIds: number[];
+}
+
 export interface WebRtcDisconnectMessageInterface {
     userId: number;
 }

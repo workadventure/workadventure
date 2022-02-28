@@ -147,9 +147,9 @@ export class Group implements Movable {
 
     join(user: User): void {
         // Broadcast on the right event
-        this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
+        this.connectCallback(user, this);
     }
 
     leave(user: User): void {
