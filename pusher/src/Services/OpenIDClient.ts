@@ -18,8 +18,8 @@ class OpenIDClient {
                 return new issuer.Client({
                     client_id: OPID_CLIENT_ID,
                     client_secret: OPID_CLIENT_SECRET,
-                    redirect_uris: [ OPID_CLIENT_REDIRECT_URL ],
-                    response_types: [ "code" ],
+                    redirect_uris: [OPID_CLIENT_REDIRECT_URL],
+                    response_types: ["code"],
                 });
             });
         }
@@ -28,7 +28,7 @@ class OpenIDClient {
 
     public authorizationUrl(state: string, nonce: string, playUri?: string, redirect?: string) {
         return this.initClient().then((client) => {
-            if (OPID_SCOPE == undefined || !OPID_SCOPE.includes('email') || !OPID_SCOPE.includes('openid')) {
+            if (OPID_SCOPE != undefined && (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid"))) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
             }
             return client.authorizationUrl({
@@ -54,8 +54,8 @@ class OpenIDClient {
                         email: res.email as string,
                         sub: res.sub,
                         access_token: tokenSet.access_token as string,
-                        username: res[ OPID_USERNAME_CLAIM ] as string,
-                        locale: res[ OPID_LOCALE_CLAIM ] as string,
+                        username: res[OPID_USERNAME_CLAIM] as string,
+                        locale: res[OPID_LOCALE_CLAIM] as string,
                     };
                 });
             });
