@@ -28,7 +28,7 @@ class OpenIDClient {
 
     public authorizationUrl(state: string, nonce: string, playUri?: string, redirect?: string) {
         return this.initClient().then((client) => {
-            if (OPID_SCOPE.indexOf("email") === -1 || OPID_SCOPE.indexOf("openid") === -1) {
+            if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
             }
             return client.authorizationUrl({
