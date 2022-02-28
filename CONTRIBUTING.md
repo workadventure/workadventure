@@ -28,7 +28,7 @@ You can use [GitHub issue tracker](https://github.com/thecodingmachine/workadven
 - File bug reports
 - Ask for feature requests
 
-If you have more general questions, a good place to ask is [our Discord server](https://discord.gg/YGtngdh9gt).
+If you have more general questions, a good place to ask is [our Discord server](https://discord.gg/G6Xh9ZM9aR).
 
 Finally, you can come and talk to the WorkAdventure core team... on WorkAdventure, of course! [Our offices are here](https://play.staging.workadventu.re/@/tcm/workadventure/wa-village).
 
@@ -41,7 +41,7 @@ Please ask first before embarking on any significant pull request (e.g. implemen
 otherwise you risk spending a lot of time working on something that the project's developers might not want to merge
 into the project.
 
-You can ask us on [Discord](https://discord.gg/YGtngdh9gt) or in the [GitHub issues](https://github.com/thecodingmachine/workadventure/issues).
+You can ask us on [Discord](https://discord.gg/G6Xh9ZM9aR) or in the [GitHub issues](https://github.com/thecodingmachine/workadventure/issues).
 
 ### Linting your code
 
