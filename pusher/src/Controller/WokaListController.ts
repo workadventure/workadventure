@@ -5,7 +5,7 @@ import { jwtTokenManager } from "../Services/JWTTokenManager";
 
 export class WokaListController extends BaseHttpController {
     routes() {
-        this.app.options("/woka/list/:roomUrl", {}, async (req, res) => {
+        this.app.options("/woka/list/:roomUrl", {}, (req, res) => {
             res.status(200).send("");
         });
 
