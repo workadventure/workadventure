@@ -3006,10 +3006,10 @@ type-fest@^0.21.3:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.21.3.tgz#d260a24b0198436e133fa26a524a6d65fa3b2e37"
   integrity sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==
 
-typesafe-i18n@^2.59.0:
-  version "2.59.0"
-  resolved "https://registry.yarnpkg.com/typesafe-i18n/-/typesafe-i18n-2.59.0.tgz#09a9a32e61711418d927a389fa52e1c06a5fa5c4"
-  integrity sha512-Qv3Mrwmb8b73VNzQDPHPECzwymdBRVyDiZ3w2qnp4c2iv/7TGuiJegNHT/l3MooEN7IPbSpc5tbXw2x3MbGtFg==
+typesafe-i18n@^4.3.1:
+  version "4.3.1"
+  resolved "https://registry.yarnpkg.com/typesafe-i18n/-/typesafe-i18n-4.3.1.tgz#2adc9e995bbfc40a8f716ca7ebced832492b9613"
+  integrity sha512-Si5kFpbi5fDLlLV4H5FqEx8NQKxpPrV362+uL9bzS8K7/PKvgEL5kHm4DBWfdS6KKmN7tKWIMnodD/7ok/mTyw==
 
 typescript@*:
   version "4.3.2"
@@ -3192,8 +3192,3 @@ yn@3.1.1:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/yn/-/yn-3.1.1.tgz#1e87401a09d767c1d5eab26a6e4c185182d2eb50"
   integrity sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==
-
-zod@^3.11.6:
-  version "3.11.6"
-  resolved "https://registry.yarnpkg.com/zod/-/zod-3.11.6.tgz#e43a5e0c213ae2e02aefe7cb2b1a6fa3d7f1f483"
-  integrity sha512-daZ80A81I3/9lIydI44motWe6n59kRBfNzTuS2bfzVh1nAXi667TOTWWtatxyG+fwgNUiagSj/CWZwRRbevJIg==

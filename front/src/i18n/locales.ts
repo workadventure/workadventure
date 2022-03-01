@@ -1,52 +1,46 @@
 import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors";
 import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
-import { initI18n, setLocale } from "./i18n-svelte";
-import type { Locales, Translation } from "./i18n-types";
-import { baseLocale, getTranslationForLocale, locales } from "./i18n-util";
+import { setLocale } from "./i18n-svelte";
+import type { Locales } from "./i18n-types";
+import { baseLocale, i18n, locales } from "./i18n-util";
+import { loadAllLocalesAsync, loadLocaleAsync } from "./i18n-util.async";
 
-const fallbackLocale = FALLBACK_LOCALE || baseLocale;
+const fallbackLocale = (FALLBACK_LOCALE || baseLocale) as Locales;
 const localStorageProperty = "language";
 
 export const localeDetector = async () => {
     const exist = localStorage.getItem(localStorageProperty);
-    let detectedLocale: Locales = fallbackLocale as Locales;
+    let detectedLocale: Locales = fallbackLocale;
 
     if (exist) {
         const localStorageDetector = initLocalStorageDetector(localStorageProperty);
-        detectedLocale = detectLocale(fallbackLocale, locales, localStorageDetector) as Locales;
+        detectedLocale = detectLocale(fallbackLocale, locales, localStorageDetector);
     } else {
-        detectedLocale = detectLocale(fallbackLocale, locales, navigatorDetector) as Locales;
+        detectedLocale = detectLocale(fallbackLocale, locales, navigatorDetector);
     }
 
-    await initI18n(detectedLocale);
+    await setCurrentLocale(detectedLocale);
 };
 
-export const setCurrentLocale = (locale: Locales) => {
+export const setCurrentLocale = async (locale: Locales) => {
     localStorage.setItem(localStorageProperty, locale);
-    setLocale(locale).catch(() => {
-        console.log("Cannot reload the locale!");
-    });
+    await loadLocaleAsync(locale);
+    setLocale(locale);
 };
 
 export type DisplayableLocale = { id: Locales; language: string; country: string };
 
-function getDisplayableLocales() {
+export async function getDisplayableLocales() {
     const localesObject: DisplayableLocale[] = [];
+    await loadAllLocalesAsync();
+    const L = i18n();
     locales.forEach((locale) => {
-        getTranslationForLocale(locale)
-            .then((translations) => {
-                localesObject.push({
-                    id: locale,
-                    language: translations.language,
-                    country: translations.country,
-                });
-            })
-            .catch((error) => {
-                console.log(error);
-            });
+        localesObject.push({
+            id: locale,
+            language: L[locale].language(),
+            country: L[locale].country(),
+        });
     });
 
     return localesObject;
 }
-
-export const displayableLocales = getDisplayableLocales();

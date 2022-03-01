@@ -58,9 +58,8 @@
     "socket.io-client": "^2.3.0",
     "standardized-audio-context": "^25.2.4",
     "ts-proto": "^1.96.0",
-    "typesafe-i18n": "^2.59.0",
-    "uuidv4": "^6.2.10",
-    "zod": "^3.11.6"
+    "typesafe-i18n": "^4.3.1",
+    "uuidv4": "^6.2.10"
   },
   "scripts": {
     "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",

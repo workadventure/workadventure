@@ -5,8 +5,9 @@
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import type { Locales } from "../../i18n/i18n-types";
-    import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
+    import { DisplayableLocale, getDisplayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { onMount } from "svelte";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -18,13 +19,18 @@
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
+    let displayableLocales: DisplayableLocale[] = [];
 
-    function saveSetting() {
+    onMount(async () => {
+        displayableLocales = await getDisplayableLocales();
+    });
+
+    async function saveSetting() {
         let change = false;
 
         if (valueLocale !== previewValueLocale) {
             previewValueLocale = valueLocale;
-            setCurrentLocale(valueLocale as Locales);
+            await setCurrentLocale(valueLocale as Locales);
         }
 
         if (valueVideo !== previewValueVideo) {
