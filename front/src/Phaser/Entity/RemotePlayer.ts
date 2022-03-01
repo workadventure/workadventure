@@ -4,7 +4,7 @@ import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
 import type { PlayerAnimationDirections } from "../Player/Animation";
-import type { Unsubscriber } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
@@ -108,7 +108,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     private registerDefaultActionsMenuActions(): void {
         if (this.visitCardUrl) {
             this.registeredActions.push({
-                actionName: LL.woka.menu.businessCard(),
+                actionName: get(LL).woka.menu.businessCard(),
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();
