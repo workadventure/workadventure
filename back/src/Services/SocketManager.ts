@@ -39,6 +39,7 @@ import {
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
+    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -404,6 +405,7 @@ export class SocketManager {
         groupUpdateMessage.setPosition(pointMessage);
         groupUpdateMessage.setGroupsize(group.getSize);
         groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
+        groupUpdateMessage.setLocked(group.isLocked());
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -888,6 +890,11 @@ export class SocketManager {
             const leader = room.getUserById(message.getLeader());
             leader?.delFollower(user);
         }
+    }
+
+    handleLockGroupMessage(user: User, message: LockGroupMessage) {
+        console.log(`lock group: ${message.getLock()}`);
+        user.group?.lock(message.getLock());
     }
 }
 

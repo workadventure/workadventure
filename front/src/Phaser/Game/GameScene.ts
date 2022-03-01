@@ -718,6 +718,16 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
+
+        this.input.keyboard.on("keydown-L", (event: Event) => {
+            console.log("group locked");
+            this.connection?.emitLockGroup(1, true);
+        });
+
+        this.input.keyboard.on("keydown-U", (event: Event) => {
+            console.log("group unlocked");
+            this.connection?.emitLockGroup(1, false);
+        });
     }
 
     /**
@@ -782,6 +792,7 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUpdateMessageStream.subscribe(
                     (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
+                        console.log(groupPositionMessage);
                         this.shareGroupPosition(groupPositionMessage);
                     }
                 );
@@ -1809,8 +1820,13 @@ ${escapedMessage}
                     break;
                 }
                 case "GroupCreatedUpdatedEvent":
+                    console.log("CREATE OR UPDATE GROUP");
                     this.doShareGroupPosition(event.event);
                     break;
+                // TODO: CALL THIS ON GROUP LOCK CHANGE
+                // case "GroupCreatedUpdatedEvent":
+                //     this.doShareGroupPosition(event.event);
+                //     break;
                 case "DeleteGroupEvent":
                     this.doDeleteGroup(event.groupId);
                     break;
@@ -1985,7 +2001,9 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === MAX_PER_GROUP ? "circleSprite-red" : "circleSprite-white"
+            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
+                ? "circleSprite-red"
+                : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48);
         this.add.existing(sprite);

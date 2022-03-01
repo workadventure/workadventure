@@ -418,7 +418,7 @@ export class GameRoom {
         });
 
         this.groups.forEach((group: Group) => {
-            if (group.isFull()) {
+            if (group.isFull() || group.isLocked()) {
                 return;
             }
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());

@@ -636,6 +636,7 @@ export class RoomConnection implements RoomConnection {
             groupId: message.groupId,
             position: position,
             groupSize: message.groupSize,
+            locked: message.locked,
         };
     }
 
@@ -844,6 +845,20 @@ export class RoomConnection implements RoomConnection {
                 followAbortMessage: {
                     leader: isLeader ? this.userId : get(followUsersStore)[0],
                     follower: isLeader ? 0 : this.userId,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitLockGroup(groupId: number, lock: boolean = true): void {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "lockGroupMessage",
+                lockGroupMessage: {
+                    groupId,
+                    lock,
                 },
             },
         }).finish();

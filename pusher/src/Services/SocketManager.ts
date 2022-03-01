@@ -38,6 +38,7 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
+    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -289,6 +290,12 @@ export class SocketManager implements ZoneEventListener {
     handleFollowAbort(client: ExSocketInterface, message: FollowAbortMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setFollowabortmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleLockGroup(client: ExSocketInterface, message: LockGroupMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setLockgroupmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 

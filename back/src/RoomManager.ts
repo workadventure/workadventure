@@ -29,6 +29,7 @@ import {
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
     ZoneMessage,
+    LockGroupMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -135,6 +136,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getFollowabortmessage() as FollowAbortMessage
                             );
+                        } else if (message.hasLockgroupmessage()) {
+                            socketManager.handleLockGroupMessage(
+                                user,
+                                message.getLockgroupmessage() as LockGroupMessage
+                            );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
@@ -148,6 +154,8 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
                             );
+                        } else if (message.hasLockgroupmessage()) {
+                            console.log("===== GOT LOCK GROUP MESSAGE FROM CLIENT =====");
                         } else {
                             throw new Error("Unhandled message type");
                         }

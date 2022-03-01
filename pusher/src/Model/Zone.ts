@@ -32,6 +32,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
+    // onGroupLock(groupId: number, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
@@ -123,19 +124,25 @@ export class UserDescriptor {
 }
 
 export class GroupDescriptor {
-    private constructor(public readonly groupId: number, private groupSize: number, private position: PointMessage) {}
+    private constructor(
+        public readonly groupId: number,
+        private groupSize: number,
+        private position: PointMessage,
+        private locked: boolean
+    ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
         const position = message.getPosition();
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position);
+        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
     public update(groupDescriptor: GroupDescriptor) {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
+        this.locked = groupDescriptor.locked;
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
@@ -146,6 +153,7 @@ export class GroupDescriptor {
         groupUpdateMessage.setGroupid(this.groupId);
         groupUpdateMessage.setGroupsize(this.groupSize);
         groupUpdateMessage.setPosition(this.position);
+        groupUpdateMessage.setLocked(this.locked);
 
         return groupUpdateMessage;
     }
@@ -235,6 +243,9 @@ export class Zone {
                     userDescriptor.update(userMovedMessage);
 
                     this.notifyUserMove(userDescriptor);
+                } else if (message.hasEmoteeventmessage()) {
+                    const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
+                    this.notifyEmote(emoteEventMessage);
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);

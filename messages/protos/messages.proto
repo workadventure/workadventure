@@ -98,6 +98,11 @@ message FollowAbortMessage {
   int32 follower = 2;
 }
 
+message LockGroupMessage {
+  int32 groupId = 1;
+  bool lock = 2;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -116,6 +121,7 @@ message ClientToServerMessage {
     FollowRequestMessage followRequestMessage = 15;
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
+    LockGroupMessage lockGroupMessage = 18;
   }
 }
 
@@ -172,6 +178,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
+    LockGroupMessage lockGroupMessage = 11;
   }
 }
 
@@ -184,6 +191,7 @@ message GroupUpdateMessage {
   int32 groupId = 1;
   PointMessage position = 2;
   int32 groupSize = 3;
+  bool locked = 4;
 }
 
 message GroupDeleteMessage {
@@ -316,6 +324,7 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
+    LockGroupMessage lockGroupMessage = 25;
   }
 }
 
@@ -358,6 +367,7 @@ message GroupUpdateZoneMessage {
   PointMessage position = 2;
   int32 groupSize = 3;
   Zone fromZone = 4;
+  bool locked = 5;
 }
 
 message GroupLeftZoneMessage {
@@ -403,6 +413,7 @@ message PusherToBackMessage {
     FollowRequestMessage followRequestMessage = 16;
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
+    LockGroupMessage lockGroupMessage = 19;
   }
 }
 
