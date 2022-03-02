@@ -31,6 +31,8 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
+      BBB_URL: $BBB_URL
+      BBB_SECRET: $BBB_SECRET
       HOST: "0.0.0.0"
       NODE_ENV: development
       PUSHER_URL: //pusher.workadventure.localhost
@@ -80,6 +82,8 @@ services:
       API_URL: back:50051
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      BBB_URL: $BBB_URL
+      BBB_SECRET: $BBB_SECRET
       FRONT_URL: http://play.workadventure.localhost
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
@@ -139,6 +143,8 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      BBB_URL: $BBB_URL
+      BBB_SECRET: $BBB_SECRET
       TURN_STATIC_AUTH_SECRET: SomeStaticAuthSecret
       MAX_PER_GROUP: "MAX_PER_GROUP"
       REDIS_HOST: redis

@@ -13,6 +13,7 @@ import {
     PlayGlobalMessage,
     ReportPlayerMessage,
     QueryJitsiJwtMessage,
+    JoinBBBMeetingMessage,
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
@@ -477,6 +478,10 @@ export class IoSocketController {
                         client,
                         message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                     );
+                } else if (message.hasJoinbbbmeetingmessage()){
+                    socketManager.handleJoinBBBMeetingMessage(
+                        client,
+                        message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,

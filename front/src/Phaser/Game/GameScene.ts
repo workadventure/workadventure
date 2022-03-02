@@ -818,6 +818,13 @@ export class GameScene extends DirtyScene {
                     this.startJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });
 
+                /**
+                 * Triggered when we receive the URL to join a meeting on BBB
+                 */
+                this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
+                    this.startBBBMeeting(message.meetingId, message.clientURL);
+                });
+
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
@@ -1026,6 +1033,16 @@ export class GameScene extends DirtyScene {
                 }
             }
         });
+
+        this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction('bbbMeeting');
+                this.stopBBBMeeting();
+            } else {
+                this.connection?.emitJoinBBBMeeting(newValue as string, allProps);
+            }
+        });
+
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue, oldValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.connection?.setSilent(false);
@@ -2170,6 +2187,36 @@ ${escapedMessage}
 
     public stopJitsi(): void {
         const coWebsite = coWebsiteManager.searchJitsi();
+        if (coWebsite) {
+            coWebsiteManager.closeCoWebsite(coWebsite);
+        }
+    }
+
+    public startBBBMeeting(meetingId: string, clientURL: string): void {
+        this.connection?.setSilent(true);
+        // mediaManager.hideGameOverlay();
+        const clientOrigin = new URL(clientURL);
+
+        const coWebsite = new SimpleCoWebsite(
+            clientOrigin,
+            true,
+            `microphone ${clientOrigin}; camera ${clientOrigin}`,
+            undefined,
+            false);
+        coWebsiteManager.loadCoWebsite(coWebsite)
+            .catch((e) => console.error(`Error on opening co-website: ${e}`));
+    }
+
+    public stopBBBMeeting(): void {
+        const coWebsite = coWebsiteManager.getCoWebsites().find((coWebsite: CoWebsite) => {
+            const iframe = coWebsite.getIframe();
+            if (!iframe) {
+                return false;
+            }
+
+            return iframe.id.toLowerCase().includes("bbbMeeting");
+        });
+
         if (coWebsite) {
             coWebsiteManager.closeCoWebsite(coWebsite);
         }
