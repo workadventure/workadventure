@@ -50,7 +50,7 @@ export interface GroupCreatedUpdatedMessageInterface {
 
 export interface LockGroupMessageInterface {
     groupId: number;
-    locked: boolean;
+    lock: boolean;
 }
 
 export interface GroupUsersUpdateMessageInterface {

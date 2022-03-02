@@ -324,7 +324,6 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
-    LockGroupMessage lockGroupMessage = 25;
   }
 }
 

@@ -155,8 +155,6 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
                             );
-                        } else if (message.hasLockgroupmessage()) {
-                            console.log("===== GOT LOCK GROUP MESSAGE FROM CLIENT =====");
                         } else {
                             throw new Error("Unhandled message type");
                         }

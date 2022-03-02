@@ -143,8 +143,6 @@ export class PositionNotifier {
     public emitLockGroupEvent(user: User, lockGroupMessage: LockGroupMessage) {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
-        console.log("D3 emit from ZONE");
-        console.log(lockGroupMessage.getGroupid());
         zone.emitLockGroupEvent(lockGroupMessage);
     }
 

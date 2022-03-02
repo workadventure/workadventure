@@ -551,8 +551,6 @@ export class GameRoom {
     }
 
     public emitLockGroupMessage(user: User, lockGroupMessage: LockGroupMessage) {
-        console.log("D2 GAME ROOM EMIT LOCK GROUP MESSAGE");
-        console.log(lockGroupMessage.getGroupid());
         this.positionNotifier.emitLockGroupEvent(user, lockGroupMessage);
     }
 

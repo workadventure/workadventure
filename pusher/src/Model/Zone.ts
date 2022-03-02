@@ -155,7 +155,6 @@ export class GroupDescriptor {
         groupUpdateMessage.setGroupsize(this.groupSize);
         groupUpdateMessage.setPosition(this.position);
         groupUpdateMessage.setLocked(this.locked);
-
         return groupUpdateMessage;
     }
 }

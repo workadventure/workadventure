@@ -112,7 +112,6 @@ export class Zone {
     }
 
     public emitLockGroupEvent(lockGroupMessage: LockGroupMessage) {
-        console.log("D4 ZONE ON LOCK GROUP CALLBACK");
         for (const listener of this.listeners) {
             this.onLockGroup(lockGroupMessage, listener);
         }

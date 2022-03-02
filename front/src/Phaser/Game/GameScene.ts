@@ -77,6 +77,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
+import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -153,7 +154,6 @@ export class GameScene extends DirtyScene {
     mapFile!: ITiledMap;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
-    currentPlayerGroupId?: number;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
     pendingEvents = new Queue<
@@ -185,6 +185,7 @@ export class GameScene extends DirtyScene {
     private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
@@ -226,6 +227,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private currentPlayerGroupId?: number;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -233,7 +235,6 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.currentPlayerGroupId = undefined;
         this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
@@ -717,6 +718,10 @@ export class GameScene extends DirtyScene {
             }
         });
 
+        this.currentPlayerGroupIdStoreUnsubscribe = currentPlayerGroupIdStore.subscribe((groupId) => {
+            this.currentPlayerGroupId = groupId;
+        });
+
         Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises])
             .then(() => {
                 this.scene.wake();
@@ -727,20 +732,6 @@ export class GameScene extends DirtyScene {
                     e
                 )
             );
-
-        this.input.keyboard.on("keydown-L", (event: Event) => {
-            if (this.currentPlayerGroupId !== undefined) {
-                console.log("group locked");
-                this.connection?.emitLockGroup(this.currentPlayerGroupId, true);
-            }
-        });
-
-        this.input.keyboard.on("keydown-U", (event: Event) => {
-            if (this.currentPlayerGroupId !== undefined) {
-                console.log("group unlocked");
-                this.connection?.emitLockGroup(this.currentPlayerGroupId, false);
-            }
-        });
     }
 
     /**
@@ -855,9 +846,8 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
-                    this.currentPlayerGroupId = message.groupId;
-                    console.log("GOT GROUP USERS UPDATE MESSAGE");
-                    console.log(message);
+                    // TODO: how else can we deduce our current group?
+                    currentPlayerGroupIdStore.set(message.groupId);
                 });
 
                 /**
@@ -1849,9 +1839,8 @@ ${escapedMessage}
                     break;
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
-                    if (this.currentPlayerGroupId === event.groupId) {
-                        this.currentPlayerGroupId = undefined;
-                    }
+                    currentPlayerGroupIdStore.set(undefined);
+                    currentPlayerGroupLockStateStore.set(undefined);
                     break;
                 }
                 case "LockGroupEvent": {
@@ -2033,6 +2022,9 @@ ${escapedMessage}
         sprite.setDisplayOrigin(48, 48);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
+        if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
+            currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
+        }
         return sprite;
     }
 
@@ -2064,6 +2056,7 @@ ${escapedMessage}
         if (!group) {
             return;
         }
+        currentPlayerGroupLockStateStore.set(event.lock);
         group.setTexture(event.lock ? "circleSprite-red" : "circleSprite-white");
     }
 

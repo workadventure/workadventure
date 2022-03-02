@@ -70,7 +70,6 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
     batchMessage.addPayload(subMessage);
-
     socket.write(batchMessage);
 }
 
@@ -277,8 +276,9 @@ export class SocketManager {
                 },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
-                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
-                    this.onZoneEnter(thing, fromZone, listener),
+                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => {
+                    this.onZoneEnter(thing, fromZone, listener);
+                },
                 (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
                     this.onClientMove(thing, position, listener),
                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
@@ -393,17 +393,12 @@ export class SocketManager {
     private onLockGroup(lockGroupMessage: LockGroupMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setLockgroupmessage(lockGroupMessage);
-        console.log("D5 SOCKET MANAGER ON LOCK GROUP");
-        console.log(lockGroupMessage.getGroupid());
-        console.log(lockGroupMessage.getLock());
-
         emitZoneMessage(subMessage, client);
     }
 
     private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -433,7 +428,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupleftzonemessage(groupDeleteMessage);
-
         emitZoneMessage(subMessage, client);
         //user.emitInBatch(subMessage);
     }
@@ -445,7 +439,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setUserleftzonemessage(userLeftMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -667,6 +660,7 @@ export class SocketManager {
                 const groupUpdateMessage = new GroupUpdateZoneMessage();
                 groupUpdateMessage.setGroupid(thing.getId());
                 groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
+                groupUpdateMessage.setLocked(thing.isLocked());
 
                 const subMessage = new SubToPusherMessage();
                 subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -905,7 +899,6 @@ export class SocketManager {
     }
 
     handleLockGroupMessage(room: GameRoom, user: User, message: LockGroupMessage) {
-        console.log("D1 HANDLE LOCK GROUP MESSAGE");
         const group = user.group;
         if (!group) {
             return;
