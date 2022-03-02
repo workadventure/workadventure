@@ -6,6 +6,7 @@ import {
     EmoteCallback,
     EntersCallback,
     LeavesCallback,
+    LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
 } from "_Model/Zone";
@@ -22,6 +23,7 @@ import {
     VariableMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
@@ -66,6 +68,7 @@ export class GameRoom {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
+        onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {
         // A zone is 10 sprites wide.
@@ -76,6 +79,7 @@ export class GameRoom {
             onMoves,
             onLeaves,
             onEmote,
+            onLockGroup,
             onPlayerDetailsUpdated
         );
     }
@@ -90,6 +94,7 @@ export class GameRoom {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
+        onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
@@ -105,6 +110,7 @@ export class GameRoom {
             onMoves,
             onLeaves,
             onEmote,
+            onLockGroup,
             onPlayerDetailsUpdated
         );
 
@@ -542,6 +548,12 @@ export class GameRoom {
 
     public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    public emitLockGroupMessage(user: User, lockGroupMessage: LockGroupMessage) {
+        console.log("D2 GAME ROOM EMIT LOCK GROUP MESSAGE");
+        console.log(lockGroupMessage.getGroupid());
+        this.positionNotifier.emitLockGroupEvent(user, lockGroupMessage);
     }
 
     public addRoomListener(socket: RoomSocket) {

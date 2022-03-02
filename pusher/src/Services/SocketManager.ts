@@ -306,6 +306,13 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
+    onLockGroup(lockGroupMessage: LockGroupMessage, listener: ExSocketInterface): void {
+        const subMessage = new SubMessage();
+        subMessage.setLockgroupmessage(lockGroupMessage);
+
+        emitInBatch(listener, subMessage);
+    }
+
     onPlayerDetailsUpdated(
         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
         listener: ExSocketInterface

@@ -12,6 +12,7 @@ import {
     EmoteCallback,
     EntersCallback,
     LeavesCallback,
+    LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
     Zone,
@@ -20,7 +21,7 @@ import { Movable } from "_Model/Movable";
 import { PositionInterface } from "_Model/PositionInterface";
 import { ZoneSocket } from "../RoomManager";
 import { User } from "../Model/User";
-import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
+import { EmoteEventMessage, LockGroupMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
 
 interface ZoneDescriptor {
     i: number;
@@ -50,6 +51,7 @@ export class PositionNotifier {
         private onUserMoves: MovesCallback,
         private onUserLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {}
 
@@ -111,6 +113,7 @@ export class PositionNotifier {
                 this.onUserMoves,
                 this.onUserLeaves,
                 this.onEmote,
+                this.onLockGroup,
                 this.onPlayerDetailsUpdated,
                 i,
                 j
@@ -135,6 +138,14 @@ export class PositionNotifier {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
         zone.emitEmoteEvent(emoteEventMessage);
+    }
+
+    public emitLockGroupEvent(user: User, lockGroupMessage: LockGroupMessage) {
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        console.log("D3 emit from ZONE");
+        console.log(lockGroupMessage.getGroupid());
+        zone.emitLockGroupEvent(lockGroupMessage);
     }
 
     public *getAllUsersInSquareAroundZone(zone: Zone): Generator<User> {

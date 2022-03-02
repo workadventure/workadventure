@@ -51,6 +51,7 @@ import { PathfindingManager } from "../../Utils/PathfindingManager";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
+    LockGroupMessageInterface,
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
@@ -132,6 +133,11 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
+interface LockGroupEventInterface {
+    type: "LockGroupEvent";
+    event: LockGroupMessageInterface;
+}
+
 interface PlayerDetailsUpdatedInterface {
     type: "PlayerDetailsUpdated";
     details: PlayerDetailsUpdatedMessageInterface;
@@ -147,6 +153,7 @@ export class GameScene extends DirtyScene {
     mapFile!: ITiledMap;
     animatedTiles!: AnimatedTiles;
     groups: Map<number, Sprite>;
+    currentPlayerGroupId?: number;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
     pendingEvents = new Queue<
@@ -156,6 +163,7 @@ export class GameScene extends DirtyScene {
         | UserMovedEventInterface
         | GroupCreatedUpdatedEventInterface
         | DeleteGroupEventInterface
+        | LockGroupEventInterface
         | PlayerDetailsUpdatedInterface
     >();
     private initPosition: PositionInterface | null = null;
@@ -225,6 +233,7 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
+        this.currentPlayerGroupId = undefined;
         this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
@@ -720,13 +729,17 @@ export class GameScene extends DirtyScene {
             );
 
         this.input.keyboard.on("keydown-L", (event: Event) => {
-            console.log("group locked");
-            this.connection?.emitLockGroup(1, true);
+            if (this.currentPlayerGroupId !== undefined) {
+                console.log("group locked");
+                this.connection?.emitLockGroup(this.currentPlayerGroupId, true);
+            }
         });
 
         this.input.keyboard.on("keydown-U", (event: Event) => {
-            console.log("group unlocked");
-            this.connection?.emitLockGroup(1, false);
+            if (this.currentPlayerGroupId !== undefined) {
+                console.log("group unlocked");
+                this.connection?.emitLockGroup(this.currentPlayerGroupId, false);
+            }
         });
     }
 
@@ -792,7 +805,6 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUpdateMessageStream.subscribe(
                     (groupPositionMessage: GroupCreatedUpdatedMessageInterface) => {
-                        console.log(groupPositionMessage);
                         this.shareGroupPosition(groupPositionMessage);
                     }
                 );
@@ -803,6 +815,10 @@ export class GameScene extends DirtyScene {
                     } catch (e) {
                         console.error(e);
                     }
+                });
+
+                this.connection.lockGroupMessageStream.subscribe((message) => {
+                    this.lockGroup(message);
                 });
 
                 this.connection.onServerDisconnected(() => {
@@ -836,6 +852,12 @@ export class GameScene extends DirtyScene {
                             removeOutlineColor: message.details.removeOutlineColor,
                         },
                     });
+                });
+
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    this.currentPlayerGroupId = message.groupId;
+                    console.log("GOT GROUP USERS UPDATE MESSAGE");
+                    console.log(message);
                 });
 
                 /**
@@ -1820,19 +1842,22 @@ ${escapedMessage}
                     break;
                 }
                 case "GroupCreatedUpdatedEvent":
-                    console.log("CREATE OR UPDATE GROUP");
                     this.doShareGroupPosition(event.event);
-                    break;
-                // TODO: CALL THIS ON GROUP LOCK CHANGE
-                // case "GroupCreatedUpdatedEvent":
-                //     this.doShareGroupPosition(event.event);
-                //     break;
-                case "DeleteGroupEvent":
-                    this.doDeleteGroup(event.groupId);
                     break;
                 case "PlayerDetailsUpdated":
                     this.doUpdatePlayerDetails(event.details);
                     break;
+                case "DeleteGroupEvent": {
+                    this.doDeleteGroup(event.groupId);
+                    if (this.currentPlayerGroupId === event.groupId) {
+                        this.currentPlayerGroupId = undefined;
+                    }
+                    break;
+                }
+                case "LockGroupEvent": {
+                    this.doLockGroup(event.event);
+                    break;
+                }
                 default: {
                     const tmp: never = event;
                 }
@@ -2025,6 +2050,21 @@ ${escapedMessage}
         }
         group.destroy();
         this.groups.delete(groupId);
+    }
+
+    lockGroup(event: LockGroupMessageInterface): void {
+        this.pendingEvents.enqueue({
+            type: "LockGroupEvent",
+            event,
+        });
+    }
+
+    doLockGroup(event: LockGroupMessageInterface): void {
+        const group = this.groups.get(event.groupId);
+        if (!group) {
+            return;
+        }
+        group.setTexture(event.lock ? "circleSprite-red" : "circleSprite-white");
     }
 
     doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {

@@ -138,6 +138,7 @@ const roomManager: IRoomManagerServer = {
                             );
                         } else if (message.hasLockgroupmessage()) {
                             socketManager.handleLockGroupMessage(
+                                room,
                                 user,
                                 message.getLockgroupmessage() as LockGroupMessage
                             );

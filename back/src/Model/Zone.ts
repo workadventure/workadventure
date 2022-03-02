@@ -7,12 +7,14 @@ import {
     EmoteEventMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
+    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
 export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
+export type LockGroupCallback = (lockGroupMessage: LockGroupMessage, listener: ZoneSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
     listener: ZoneSocket
@@ -27,6 +29,7 @@ export class Zone {
         private onMoves: MovesCallback,
         private onLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         public readonly x: number,
         public readonly y: number
@@ -105,6 +108,13 @@ export class Zone {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, listener);
+        }
+    }
+
+    public emitLockGroupEvent(lockGroupMessage: LockGroupMessage) {
+        console.log("D4 ZONE ON LOCK GROUP CALLBACK");
+        for (const listener of this.listeners) {
+            this.onLockGroup(lockGroupMessage, listener);
         }
     }
 

@@ -285,6 +285,8 @@ export class SocketManager {
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
+                (lockGroupMessage: LockGroupMessage, listener: ZoneSocket) =>
+                    this.onLockGroup(lockGroupMessage, listener),
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
@@ -384,6 +386,16 @@ export class SocketManager {
     private onEmote(emoteEventMessage: EmoteEventMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setEmoteeventmessage(emoteEventMessage);
+
+        emitZoneMessage(subMessage, client);
+    }
+
+    private onLockGroup(lockGroupMessage: LockGroupMessage, client: ZoneSocket) {
+        const subMessage = new SubToPusherMessage();
+        subMessage.setLockgroupmessage(lockGroupMessage);
+        console.log("D5 SOCKET MANAGER ON LOCK GROUP");
+        console.log(lockGroupMessage.getGroupid());
+        console.log(lockGroupMessage.getLock());
 
         emitZoneMessage(subMessage, client);
     }
@@ -892,9 +904,17 @@ export class SocketManager {
         }
     }
 
-    handleLockGroupMessage(user: User, message: LockGroupMessage) {
-        console.log(`lock group: ${message.getLock()}`);
-        user.group?.lock(message.getLock());
+    handleLockGroupMessage(room: GameRoom, user: User, message: LockGroupMessage) {
+        console.log("D1 HANDLE LOCK GROUP MESSAGE");
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        group.lock(message.getLock());
+        const lockGroupMessage = new LockGroupMessage();
+        lockGroupMessage.setLock(message.getLock());
+        lockGroupMessage.setGroupid(message.getGroupid());
+        room.emitLockGroupMessage(user, lockGroupMessage);
     }
 }
 

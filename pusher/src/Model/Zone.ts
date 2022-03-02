@@ -18,6 +18,7 @@ import {
     ErrorMessage,
     PlayerDetailsUpdatedMessage,
     SetPlayerDetailsMessage,
+    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
@@ -32,7 +33,7 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
-    // onGroupLock(groupId: number, listener: ExSocketInterface): void;
+    onLockGroup(lockGroupMessage: LockGroupMessage, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
@@ -246,9 +247,9 @@ export class Zone {
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);
-                } else if (message.hasEmoteeventmessage()) {
-                    const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
-                    this.notifyEmote(emoteEventMessage);
+                } else if (message.hasLockgroupmessage()) {
+                    const lockGroupMessage = message.getLockgroupmessage() as LockGroupMessage;
+                    this.notifyLockGroup(lockGroupMessage);
                 } else if (message.hasPlayerdetailsupdatedmessage()) {
                     const playerDetailsUpdatedMessage =
                         message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
@@ -356,6 +357,12 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
+        }
+    }
+
+    private notifyLockGroup(lockGroupMessage: LockGroupMessage) {
+        for (const listener of this.listeners) {
+            this.socketListener.onLockGroup(lockGroupMessage, listener);
         }
     }
 
