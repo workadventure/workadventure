@@ -103,7 +103,7 @@
 
     <div
         class="btn-lock"
-        class:hide={$peerStore.size === 0 || $currentPlayerGroupLockStateStore === undefined || isSilent}
+        class:hide={$peerStore.size === 0 || isSilent}
         class:disabled={$currentPlayerGroupLockStateStore}
         on:click={lockClick}
     >
