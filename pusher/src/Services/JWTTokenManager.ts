@@ -5,6 +5,8 @@ import { InvalidTokenError } from "../Controller/InvalidTokenError";
 export interface AuthTokenData {
     identifier: string; //will be a email if logged in or an uuid if anonymous
     accessToken?: string;
+    username?: string;
+    locale?: string;
 }
 export interface AdminSocketTokenData {
     authorizedRoomIds: string[]; //the list of rooms the client is authorized to read from.
@@ -16,8 +18,8 @@ class JWTTokenManager {
         return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
     }
 
-    public createAuthToken(identifier: string, accessToken?: string) {
-        return Jwt.sign({ identifier, accessToken }, SECRET_KEY, { expiresIn: "30d" });
+    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string) {
+        return Jwt.sign({ identifier, accessToken, username, locale }, SECRET_KEY, { expiresIn: "30d" });
     }
 
     public verifyJWTToken(token: string, ignoreExpiration: boolean = false): AuthTokenData {
