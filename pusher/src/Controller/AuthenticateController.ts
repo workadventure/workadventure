@@ -93,7 +93,15 @@ export class AuthenticateController extends BaseController {
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
                         res.writeHeader("Content-Type", "application/json");
-                        return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
+                        return res.end(
+                            JSON.stringify({
+                                ...resCheckTokenAuth,
+                                ...resUserData,
+                                authToken: token,
+                                username: authTokenData?.username,
+                                locale: authTokenData?.locale,
+                            })
+                        );
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -115,7 +123,12 @@ export class AuthenticateController extends BaseController {
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo?.access_token);
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
@@ -124,7 +137,9 @@ export class AuthenticateController extends BaseController {
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
                 res.writeHeader("Content-Type", "application/json");
-                return res.end(JSON.stringify({ ...data, authToken }));
+                return res.end(
+                    JSON.stringify({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale })
+                );
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
                 return this.errorToResponse(e, res);
