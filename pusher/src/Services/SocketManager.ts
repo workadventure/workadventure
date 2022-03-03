@@ -615,7 +615,6 @@ export class SocketManager implements ZoneEventListener {
 
     public onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
-        console.log("ON GROUP ENTERS");
         subMessage.setGroupupdatemessage(group.toGroupUpdateMessage());
 
         emitInBatch(listener, subMessage);

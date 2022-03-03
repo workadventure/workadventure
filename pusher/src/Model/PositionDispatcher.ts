@@ -63,7 +63,6 @@ export class PositionDispatcher {
         const addedZones = [...newZones].filter((x) => !oldZones.has(x));
         const removedZones = [...oldZones].filter((x) => !newZones.has(x));
 
-        console.log("START LISTENING");
         for (const zone of addedZones) {
             zone.startListening(socket);
         }
