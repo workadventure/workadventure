@@ -140,6 +140,10 @@ export class GroupDescriptor {
         return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
+    public updateFromLockGroupMessage(message: LockGroupMessage): void {
+        this.locked = message.getLock();
+    }
+
     public update(groupDescriptor: GroupDescriptor) {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
@@ -214,10 +218,16 @@ export class Zone {
                         this.notifyGroupMove(groupDescriptor);
                     } else {
                         this.groups.set(groupId, groupDescriptor);
-
                         const fromZone = groupUpdateZoneMessage.getFromzone();
-
                         this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
+                    }
+                } else if (message.hasLockgroupmessage()) {
+                    const lockGroupMessage = message.getLockgroupmessage() as LockGroupMessage;
+                    const groupId = lockGroupMessage.getGroupid();
+                    const oldGroupDescriptor = this.groups.get(groupId);
+                    if (oldGroupDescriptor !== undefined) {
+                        oldGroupDescriptor.updateFromLockGroupMessage(lockGroupMessage);
+                        this.notifyLockGroup(lockGroupMessage);
                     }
                 } else if (message.hasUserleftzonemessage()) {
                     const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;

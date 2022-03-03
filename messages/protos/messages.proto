@@ -98,6 +98,10 @@ message FollowAbortMessage {
   int32 follower = 2;
 }
 
+message LockGroupPromptMessage {
+  bool lock = 1;
+}
+
 message LockGroupMessage {
   int32 groupId = 1;
   bool lock = 2;
@@ -121,7 +125,7 @@ message ClientToServerMessage {
     FollowRequestMessage followRequestMessage = 15;
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
-    LockGroupMessage lockGroupMessage = 18;
+    LockGroupPromptMessage lockGroupPromptMessage = 18;
   }
 }
 
@@ -412,7 +416,7 @@ message PusherToBackMessage {
     FollowRequestMessage followRequestMessage = 16;
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
-    LockGroupMessage lockGroupMessage = 19;
+    LockGroupPromptMessage lockGroupPromptMessage = 19;
   }
 }
 

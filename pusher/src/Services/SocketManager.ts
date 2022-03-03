@@ -39,6 +39,7 @@ import {
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
     LockGroupMessage,
+    LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -293,9 +294,9 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleLockGroup(client: ExSocketInterface, message: LockGroupMessage): void {
+    handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setLockgroupmessage(message);
+        pusherToBackMessage.setLockgrouppromptmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 
@@ -614,6 +615,7 @@ export class SocketManager implements ZoneEventListener {
 
     public onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
+        console.log("ON GROUP ENTERS");
         subMessage.setGroupupdatemessage(group.toGroupUpdateMessage());
 
         emitInBatch(listener, subMessage);

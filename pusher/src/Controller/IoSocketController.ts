@@ -22,6 +22,7 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupMessage,
+    LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { TemplatedApp } from "uWebSockets.js";
@@ -495,8 +496,11 @@ export class IoSocketController {
                     );
                 } else if (message.hasFollowabortmessage()) {
                     socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
-                } else if (message.hasLockgroupmessage()) {
-                    socketManager.handleLockGroup(client, message.getLockgroupmessage() as LockGroupMessage);
+                } else if (message.hasLockgrouppromptmessage()) {
+                    socketManager.handleLockGroup(
+                        client,
+                        message.getLockgrouppromptmessage() as LockGroupPromptMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

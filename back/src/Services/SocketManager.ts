@@ -40,6 +40,7 @@ import {
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupMessage,
+    LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -898,7 +899,7 @@ export class SocketManager {
         }
     }
 
-    handleLockGroupMessage(room: GameRoom, user: User, message: LockGroupMessage) {
+    handleLockGroupMessage(room: GameRoom, user: User, message: LockGroupPromptMessage) {
         const group = user.group;
         if (!group) {
             return;
@@ -906,7 +907,7 @@ export class SocketManager {
         group.lock(message.getLock());
         const lockGroupMessage = new LockGroupMessage();
         lockGroupMessage.setLock(message.getLock());
-        lockGroupMessage.setGroupid(message.getGroupid());
+        lockGroupMessage.setGroupid(group.getId());
         room.emitLockGroupMessage(user, lockGroupMessage);
     }
 }

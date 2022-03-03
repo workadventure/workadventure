@@ -858,12 +858,11 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitLockGroup(groupId: number, lock: boolean = true): void {
+    public emitLockGroup(lock: boolean = true): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
-                $case: "lockGroupMessage",
-                lockGroupMessage: {
-                    groupId,
+                $case: "lockGroupPromptMessage",
+                lockGroupPromptMessage: {
                     lock,
                 },
             },

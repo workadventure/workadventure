@@ -17,7 +17,7 @@
     import { embedScreenLayout } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
-    import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
+    import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -73,12 +73,7 @@
     }
 
     function lockClick() {
-        console.log($currentPlayerGroupIdStore);
-        console.log($currentPlayerGroupLockStateStore);
-        if ($currentPlayerGroupIdStore === undefined) {
-            return;
-        }
-        gameScene.connection?.emitLockGroup($currentPlayerGroupIdStore, !$currentPlayerGroupLockStateStore);
+        gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
 
     let isSilent: boolean;
