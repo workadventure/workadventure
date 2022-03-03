@@ -980,7 +980,9 @@ export class GameScene extends DirtyScene {
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
         // context.lineWidth = 5;
         context.strokeStyle = "#ffffff";
+        context.fillStyle = "#ffffff44";
         context.stroke();
+        context.fill();
         this.circleTexture.refresh();
 
         //create red circle canvas use to create sprite
@@ -990,7 +992,9 @@ export class GameScene extends DirtyScene {
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
         //context.lineWidth = 5;
         contextRed.strokeStyle = "#ff0000";
+        contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
+        contextRed.fill();
         this.circleRedTexture.refresh();
     }
 
