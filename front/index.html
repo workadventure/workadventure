@@ -27,9 +27,8 @@
         <meta name="msapplication-TileImage" content="static/images/favicons/ms-icon-144x144.png">
         <meta name="theme-color" content="#000000">
 
-        <script src="/env-config.js"></script>
         <base href="/">
-        <link href="https://unpkg.com/nes.css@2.3.0/css/nes.min.css" rel="stylesheet" />
+        <style>/*hide cowebsite container before scss is loaded*/#cowebsite { visibility: collapse };</style>
 
         <title>WorkAdventure</title>
     </head>
@@ -64,5 +63,6 @@
             </div>
             <div id="cowebsite-buffer"></div>
         </div>
+        <script type="module" src="/src/index.ts"></script>
     </body>
 </html>

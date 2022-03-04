@@ -10,6 +10,13 @@ import type { ITiledMapLayer } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
+import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
+import { iframeListener } from "../../Api/IframeListener";
+import { Room } from "../../Connexion/Room";
+import LL from "../../i18n/i18n-svelte";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -23,6 +30,7 @@ export class GameMapPropertiesListener {
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
     register() {
+        // Website on new tab
         this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openTab");
@@ -33,7 +41,7 @@ export class GameMapPropertiesListener {
                 if (forceTrigger || openWebsiteTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
                     let message = allProps.get(GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE);
                     if (message === undefined) {
-                        message = "Press SPACE or touch here to open web site in new tab";
+                        message = get(LL).trigger.newTab();
                     }
                     layoutManagerActionStore.addAction({
                         uuid: "openTab",
@@ -45,6 +53,149 @@ export class GameMapPropertiesListener {
                 } else {
                     scriptUtils.openTab(newValue);
                 }
+            }
+        });
+
+        // Jitsi room
+        this.gameMap.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction("jitsi");
+                coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
+                    if (coWebsite instanceof JitsiCoWebsite) {
+                        coWebsiteManager.closeCoWebsite(coWebsite);
+                    }
+                });
+            } else {
+                const openJitsiRoomFunction = () => {
+                    const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.instance);
+                    const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
+
+                    if (JITSI_PRIVATE_MODE && !jitsiUrl) {
+                        const adminTag = allProps.get(GameMapProperties.JITSI_ADMIN_ROOM_TAG) as string | undefined;
+
+                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
+                    } else {
+                        let domain = jitsiUrl || JITSI_URL;
+                        if (domain === undefined) {
+                            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                        }
+
+                        if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                            domain = `${location.protocol}//${domain}`;
+                        }
+
+                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
+
+                        coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                        this.scene.initialiseJitsi(coWebsite, roomName, undefined);
+                    }
+                    layoutManagerActionStore.removeAction("jitsi");
+                };
+
+                const jitsiTriggerValue = allProps.get(GameMapProperties.JITSI_TRIGGER);
+                const forceTrigger = localUserStore.getForceCowebsiteTrigger();
+                if (forceTrigger || jitsiTriggerValue === ON_ACTION_TRIGGER_BUTTON) {
+                    let message = allProps.get(GameMapProperties.JITSI_TRIGGER_MESSAGE);
+                    if (message === undefined) {
+                        message = get(LL).trigger.jitsiRoom();
+                    }
+                    layoutManagerActionStore.addAction({
+                        uuid: "jitsi",
+                        type: "message",
+                        message: message,
+                        callback: () => openJitsiRoomFunction(),
+                        userInputManager: this.scene.userInputManager,
+                    });
+                } else {
+                    openJitsiRoomFunction();
+                }
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction('bbbMeeting');
+                const coWebsite = coWebsiteManager.getCoWebsites().find((coWebsite: CoWebsite) => {
+                    const iframe = coWebsite.getIframe();
+                    if (!iframe) {
+                        return false;
+                    }
+
+                    return iframe.id.toLowerCase().includes("bbbMeeting");
+                });
+
+                if (coWebsite) {
+                    coWebsiteManager.closeCoWebsite(coWebsite);
+                }
+            } else {
+                this.scene.connection?.emitJoinBBBMeeting(newValue as string, allProps);
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue, oldValue) => {
+            if (newValue) {
+                this.scene
+                    .onMapExit(
+                        Room.getRoomPathFromExitSceneUrl(
+                            newValue as string,
+                            window.location.toString(),
+                            this.scene.MapUrlFile
+                        )
+                    )
+                    .catch((e) => console.error(e));
+            } else {
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                }, 2000);
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.EXIT_URL, (newValue, oldValue) => {
+            if (newValue) {
+                this.scene
+                    .onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()))
+                    .catch((e) => console.error(e));
+            } else {
+                setTimeout(() => {
+                    layoutManagerActionStore.removeAction("roomAccessDenied");
+                }, 2000);
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue, oldValue) => {
+            if (newValue === undefined || newValue === false || newValue === "") {
+                this.scene.connection?.setSilent(false);
+                this.scene.CurrentPlayer.noSilent();
+            } else {
+                this.scene.connection?.setSilent(true);
+                this.scene.CurrentPlayer.isSilent();
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
+            const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
+            const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
+            newValue === undefined
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.scene.getMapDirUrl(), volume, loop);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
+        });
+
+        // TODO: This legacy property should be removed at some point
+        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue, oldValue) => {
+            newValue === undefined
+                ? audioManagerFileStore.unloadAudio()
+                : audioManagerFileStore.playAudio(newValue, this.scene.getMapDirUrl(), undefined, true);
+            audioManagerVisibilityStore.set(!(newValue === undefined));
+        });
+
+        // TODO: Legacy functionnality replace by layer change
+        this.gameMap.onPropertyChange(GameMapProperties.ZONE, (newValue, oldValue) => {
+            if (oldValue) {
+                iframeListener.sendLeaveEvent(oldValue as string);
+            }
+            if (newValue) {
+                iframeListener.sendEnterEvent(newValue as string);
             }
         });
 
@@ -135,7 +286,7 @@ export class GameMapPropertiesListener {
                         websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON
                     ) {
                         if (!websiteTriggerMessageProperty) {
-                            websiteTriggerMessageProperty = "Press SPACE or touch here to open web site";
+                            websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
                         }
 
                         this.coWebsitesActionTriggerByLayer.set(layer, actionId);

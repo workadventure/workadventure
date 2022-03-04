@@ -13,7 +13,7 @@ export class ActivatablesManager {
 
     private canSelectByDistance: boolean = true;
 
-    private readonly outlineColor = 0xffff00;
+    private readonly outlineColor = 0xf9e81e;
     private readonly directionalActivationPositionShift = 50;
 
     constructor(currentPlayer: Player) {

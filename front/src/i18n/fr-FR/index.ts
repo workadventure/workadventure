@@ -12,9 +12,10 @@ import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
+import trigger from "./trigger";
 
 const fr_FR: Translation = {
-    ...en_US,
+    ...(en_US as Translation),
     language: "Français",
     country: "France",
     audio,
@@ -29,6 +30,7 @@ const fr_FR: Translation = {
     report,
     warning,
     emoji,
+    trigger,
 };
 
 export default fr_FR;

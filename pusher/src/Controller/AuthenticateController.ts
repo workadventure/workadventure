@@ -79,6 +79,7 @@ export class AuthenticateController extends BaseController {
                             if (!code && !nonce) {
                                 res.writeStatus("200");
                                 this.addCorsHeaders(res);
+                                res.writeHeader("Content-Type", "application/json");
                                 return res.end(JSON.stringify({ ...resUserData, authToken: token }));
                             }
                             console.error("Token cannot to be check on OpenId provider");
@@ -91,7 +92,16 @@ export class AuthenticateController extends BaseController {
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
                         res.writeStatus("200");
                         this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
+                        res.writeHeader("Content-Type", "application/json");
+                        return res.end(
+                            JSON.stringify({
+                                ...resCheckTokenAuth,
+                                ...resUserData,
+                                authToken: token,
+                                username: authTokenData?.username,
+                                locale: authTokenData?.locale,
+                            })
+                        );
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -113,7 +123,12 @@ export class AuthenticateController extends BaseController {
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo?.access_token);
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
@@ -121,7 +136,10 @@ export class AuthenticateController extends BaseController {
 
                 res.writeStatus("200");
                 this.addCorsHeaders(res);
-                return res.end(JSON.stringify({ ...data, authToken }));
+                res.writeHeader("Content-Type", "application/json");
+                return res.end(
+                    JSON.stringify({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale })
+                );
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
                 return this.errorToResponse(e, res);
@@ -183,6 +201,7 @@ export class AuthenticateController extends BaseController {
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);
+                    res.writeHeader("Content-Type", "application/json");
                     res.end(
                         JSON.stringify({
                             authToken,
@@ -222,6 +241,7 @@ export class AuthenticateController extends BaseController {
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
                 res.writeStatus("200 OK");
                 this.addCorsHeaders(res);
+                res.writeHeader("Content-Type", "application/json");
                 res.end(
                     JSON.stringify({
                         authToken,

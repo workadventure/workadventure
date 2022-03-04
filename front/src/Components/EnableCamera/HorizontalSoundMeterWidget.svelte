@@ -1,49 +1,7 @@
-<script lang="typescript">
-    import { AudioContext } from "standardized-audio-context";
-    import { SoundMeter } from "../../Phaser/Components/SoundMeter";
-    import { onDestroy } from "svelte";
-
-    export let stream: MediaStream | null;
-    let volume = 0;
+<script lang="ts">
+    export let volume = 0;
 
     const NB_BARS = 20;
-
-    let timeout: ReturnType<typeof setTimeout>;
-    const soundMeter = new SoundMeter();
-    let display = false;
-    let error = false;
-
-    $: {
-        if (stream && stream.getAudioTracks().length > 0) {
-            display = true;
-            soundMeter.connectToSource(stream, new AudioContext());
-
-            if (timeout) {
-                clearInterval(timeout);
-                error = false;
-            }
-
-            timeout = setInterval(() => {
-                try {
-                    volume = parseInt(((soundMeter.getVolume() / 100) * NB_BARS).toFixed(0));
-                } catch (err) {
-                    if (!error) {
-                        console.error(err);
-                        error = true;
-                    }
-                }
-            }, 100);
-        } else {
-            display = false;
-        }
-    }
-
-    onDestroy(() => {
-        soundMeter.stop();
-        if (timeout) {
-            clearInterval(timeout);
-        }
-    });
 
     function color(i: number, volume: number) {
         const red = (255 * i) / NB_BARS;
@@ -58,7 +16,7 @@
     }
 </script>
 
-<div class="horizontal-sound-meter" class:active={display}>
+<div class="horizontal-sound-meter" class:active={volume !== undefined}>
     {#each [...Array(NB_BARS).keys()] as i (i)}
         <div style={color(i, volume)} />
     {/each}

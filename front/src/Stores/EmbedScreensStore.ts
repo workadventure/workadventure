@@ -15,7 +15,7 @@ export type EmbedScreen =
       };
 
 function createHighlightedEmbedScreenStore() {
-    const { subscribe, set, update } = writable<EmbedScreen | null>(null);
+    const { subscribe, set, update } = writable<EmbedScreen | undefined>(undefined);
 
     return {
         subscribe,
@@ -23,7 +23,7 @@ function createHighlightedEmbedScreenStore() {
             set(embedScreen);
         },
         removeHighlight: () => {
-            set(null);
+            set(undefined);
         },
         toggleHighlight: (embedScreen: EmbedScreen) => {
             update((currentEmbedScreen) =>
@@ -36,7 +36,7 @@ function createHighlightedEmbedScreenStore() {
                     currentEmbedScreen.type === "streamable" &&
                     embedScreen.embed.uniqueId !== currentEmbedScreen.embed.uniqueId)
                     ? embedScreen
-                    : null
+                    : undefined
             );
         },
     };
