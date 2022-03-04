@@ -43,7 +43,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     preload() {
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
-        this.load.json(wokaMetadataKey, `${PUSHER_URL}/${wokaMetadataKey}`);
+        this.load.json(wokaMetadataKey, `${PUSHER_URL}/woka/list`);
         this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
             this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
             this.loadCustomSceneSelectCharacters()

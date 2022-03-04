@@ -43,13 +43,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        const wokaMetadataKey = "woka/list";
+        const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
 
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
         this.load.json(
             wokaMetadataKey,
-            `${PUSHER_URL}/${wokaMetadataKey}/` + encodeURIComponent(window.location.href),
+            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
             undefined,
             {
                 responseType: "text",
