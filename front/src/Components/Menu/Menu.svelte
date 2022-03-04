@@ -89,16 +89,11 @@
         }
     }
 
-    function translateMenuName(menu: MenuItem) {
-        if (menu.type === "scripting") {
-            return menu.label;
-        }
-
-        // Bypass the proxy of typesafe for getting the menu name : https://github.com/ivanhofer/typesafe-i18n/issues/156
-        const getMenuName = $LL.menu.sub[menu.key];
-
-        return getMenuName();
-    }
+    $: subMenuTranslations = $subMenusStore.map((subMenu) =>
+        subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]()
+    );
+    $: activeSubMenuTranslation =
+        activeSubMenu.type === "scripting" ? activeSubMenu.label : $LL.menu.sub[activeSubMenu.key]();
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -107,20 +102,20 @@
     <div class="menu-nav-sidebar nes-container is-rounded" transition:fly={{ x: -1000, duration: 500 }}>
         <h2>{$LL.menu.title()}</h2>
         <nav>
-            {#each $subMenusStore as submenu}
+            {#each $subMenusStore as submenu, i}
                 <button
                     type="button"
                     class="nes-btn {activeSubMenu === submenu ? 'is-disabled' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
-                    {translateMenuName(submenu)}
+                    {subMenuTranslations[i]}
                 </button>
             {/each}
         </nav>
     </div>
     <div class="menu-submenu-container nes-container is-rounded" transition:fly={{ y: -1000, duration: 500 }}>
         <button type="button" class="nes-btn is-error close" on:click={closeMenu}>&times</button>
-        <h2>{translateMenuName(activeSubMenu)}</h2>
+        <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>
 </div>
