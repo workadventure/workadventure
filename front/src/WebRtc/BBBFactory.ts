@@ -26,11 +26,11 @@ class BBBFactory {
     }
 
     public stop() {
-        const coWebsite = coWebsiteManager.searchBBB();
-
-        if (coWebsite) {
-            coWebsiteManager.closeCoWebsite(coWebsite);
-        }
+        coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
+            if (coWebsite instanceof BBBCoWebsite) {
+                coWebsiteManager.closeCoWebsite(coWebsite);
+            }
+        });
     }
 
     public isStopped(): boolean {
