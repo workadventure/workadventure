@@ -57,6 +57,14 @@ const menu: BaseTranslation = {
         language: {
             title: "Language",
         },
+        privacySettings: {
+            title: "Privacy settings",
+            explaination: "Here you can set an option to keep your microphone/camera enabled when switching active tabs.",
+            allEnabled: "Camera and microphone always enabled",
+            onlyCameraEnabled: "Microphone disabled when the WA tab is not focused",
+            onlyMicrophoneEnabled: "Camera disabled when the WA tab is not focused",
+            allDisabled: "Both disabled when the WA tab is not focused"
+        },
         save: {
             warning: "(Saving these settings will restart the game)",
             button: "Save",

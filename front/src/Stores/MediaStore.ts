@@ -12,6 +12,7 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AudioContext } from "standardized-audio-context";
+import { visibilityStore } from "./VisibilityStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -242,6 +243,8 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         isSilentStore,
+        visibilityStore,
+        //TODO: optionState
     ],
     (
         [
@@ -254,6 +257,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $isSilentStore,
+            $visibilityStore
         ],
         set
     ) => {
@@ -307,6 +311,11 @@ export const mediaStreamConstraintsStore = derived(
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
+
+        // if ($visibilityStore === false && $option) {
+        //
+        // }
+        //TODO
 
         // Let's make the changes only if the new value is different from the old one.
         if (
