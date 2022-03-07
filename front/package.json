@@ -58,7 +58,7 @@
     "socket.io-client": "^2.3.0",
     "standardized-audio-context": "^25.2.4",
     "ts-proto": "^1.96.0",
-    "typesafe-i18n": "^4.3.1",
+    "typesafe-i18n": "^4.3.5",
     "uuidv4": "^6.2.10"
   },
   "scripts": {

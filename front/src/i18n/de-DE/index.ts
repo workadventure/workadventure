@@ -16,8 +16,6 @@ import trigger from "./trigger";
 
 const de_DE: Translation = {
     ...(en_US as Translation),
-    language: "Deutsch",
-    country: "Deutschland",
     audio,
     camera,
     chat,

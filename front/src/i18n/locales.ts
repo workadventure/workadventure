@@ -3,7 +3,7 @@ import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
 import { setLocale } from "./i18n-svelte";
 import type { Locales } from "./i18n-types";
 import { baseLocale, i18n, locales } from "./i18n-util";
-import { loadAllLocalesAsync, loadLocaleAsync } from "./i18n-util.async";
+import { loadLocaleAsync, loadNamespaceAsync } from "./i18n-util.async";
 
 const fallbackLocale = (FALLBACK_LOCALE || baseLocale) as Locales;
 const localStorageProperty = "language";
@@ -32,13 +32,13 @@ export type DisplayableLocale = { id: Locales; language: string; country: string
 
 export async function getDisplayableLocales() {
     const localesObject: DisplayableLocale[] = [];
-    await loadAllLocalesAsync();
     const L = i18n();
+    await Promise.all(locales.map((locale) => loadNamespaceAsync(locale, "meta")));
     locales.forEach((locale) => {
         localesObject.push({
             id: locale,
-            language: L[locale].language(),
-            country: L[locale].country(),
+            language: L[locale].meta.language(),
+            country: L[locale].meta.country(),
         });
     });
 
