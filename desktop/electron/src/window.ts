@@ -103,7 +103,7 @@ export async function createWindow() {
     });
 
     mainWindow.webContents.on("did-finish-load", () => {
-        mainWindow?.setTitle("WorkAdventure Desktop");
+        mainWindow?.setTitle("WorkAdventure Desktop (alpha release)");
     });
 
     if (electronIsDev && process.env.LOCAL_APP_URL) {
