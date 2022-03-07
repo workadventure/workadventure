@@ -25,6 +25,7 @@ const code = "code";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
+const privacySettings = "privacySettings";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -229,6 +230,14 @@ class LocalUserStore {
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    setPrivacySettings(option: string) {
+        localStorage.setItem(privacySettings, option)
+    }
+
+    getPrivacySettings() {
+        return localStorage.getItem(privacySettings);
     }
 
     getAllUserProperties(): Map<string, unknown> {
