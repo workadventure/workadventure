@@ -5,9 +5,8 @@
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import LL, { locale } from "../../i18n/i18n-svelte";
     import type { Locales } from "../../i18n/i18n-types";
-    import { DisplayableLocale, getDisplayableLocales, setCurrentLocale } from "../../i18n/locales";
+    import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { onMount } from "svelte";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -19,11 +18,6 @@
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
-    let displayableLocales: DisplayableLocale[] = [];
-
-    onMount(async () => {
-        displayableLocales = await getDisplayableLocales();
-    });
 
     async function saveSetting() {
         let change = false;
@@ -155,7 +149,7 @@
         <div class="nes-select is-dark">
             <select class="languages-switcher" bind:value={valueLocale}>
                 {#each displayableLocales as locale (locale.id)}
-                    <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
+                    <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
                 {/each}
             </select>
         </div>
