@@ -12,7 +12,6 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import CameraControls from "./CameraControls.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -38,6 +37,7 @@
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
+    import Lazy from "./Lazy.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -116,9 +116,7 @@
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if $emoteMenuStore}
-            <EmoteMenu />
-        {/if}
+        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
 
         {#if hasEmbedScreen}
             <EmbedScreensContainer />
