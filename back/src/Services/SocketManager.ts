@@ -58,7 +58,6 @@ import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
 const Bbb = require("bigbluebutton-js"); // @types/bigbluebutton-js doesn't exist yet
 import {BBB_URL, BBB_SECRET} from "../Enum/EnvironmentVariable";
-const hashjs = require('hash.js'); // @types/hash.js doesn't exist yet
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -589,16 +588,14 @@ export class SocketManager {
 
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
-        const attendeePW = hashjs
-                               .sha256()
-                               .update(`attendee-${meetingId}-${BBB_SECRET}`)
-                               .digest('hex')
-                               .slice(0, maxPWLen);
-        const moderatorPW = hashjs
-                                .sha256()
-                                .update(`moderator-${meetingId}-${BBB_SECRET}`)
-                                .digest('hex')
-                                .slice(0, maxPWLen)
+        const attendeePW = crypto.createHmac('sha256', BBB_SECRET)
+                                 .update(`attendee-${meetingId}`)
+                                 .digest('hex')
+                                 .slice(0, maxPWLen);
+        const moderatorPW = crypto.createHmac('sha256', BBB_SECRET)
+                                  .update(`moderator-${meetingId}`)
+                                  .digest('hex')
+                                  .slice(0, maxPWLen)
 
         // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
         const createOptions = { attendeePW, moderatorPW, record: true };
