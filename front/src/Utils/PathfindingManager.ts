@@ -92,7 +92,7 @@ export class PathfindingManager {
 
         return MathUtils.isBetween(tile.x, 0, mapWidth) && MathUtils.isBetween(tile.y, 0, mapHeight);
     }
-    a;
+
     /**
      * Returns empty array if path was not found
      */
