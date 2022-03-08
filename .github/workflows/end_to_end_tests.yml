@@ -23,12 +23,6 @@ jobs:
         run: npx playwright install --with-deps
       - name: 'Setup .env file'
         run: cp .env.template .env
-      - name: Install messages dependencies
-        run: yarn install
-        working-directory: messages
-      - name: Build proto messages
-        run: yarn run proto-all
-        working-directory: messages
       - name: Build WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml build --parallel
       - name: Start WorkAdventure
