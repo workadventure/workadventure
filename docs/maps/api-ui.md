@@ -165,13 +165,13 @@ class ActionMessage {
 
 ### Adding custom ActionsMenu Action
 
-When clicking on other player's WOKA, we can display ActionsMenu with some default possible Actions. It is possible to add custom actions right when player is clicked
+When clicking on other player's WOKA, the contextual menu (we call it ActionsMenu) is displayed with some default Actions. It is possible to add custom actions right when player is clicked:
 
 <div class="col">
     <img src="images/actions-menu-1.png" class="figure-img img-fluid rounded" alt="" />
 </div>
 
-To do that, wee need to listen for `onRemotePlayerClicked` event and make use of remotePlayer object that is passed by as a payload
+To do that, we need to listen for the `onRemotePlayerClicked` stream and make use of the `remotePlayer` object that is passed by as a payload.
 
 ```javascript
 WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
