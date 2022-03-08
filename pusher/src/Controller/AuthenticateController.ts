@@ -255,6 +255,9 @@ export class AuthenticateController extends BaseHttpController {
      *                   example: ???
      */
     private register() {
+        this.app.options("/register", {}, (req, res) => {
+            res.status(200).send("");
+        });
         this.app.post("/register", (req, res) => {
             (async () => {
                 const param = await req.json();
