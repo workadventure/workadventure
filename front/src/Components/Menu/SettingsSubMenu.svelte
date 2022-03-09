@@ -20,7 +20,7 @@
   let previewValueGame = valueGame;
   let previewValueVideo = valueVideo;
   let previewValueLocale = valueLocale;
-  let previewPrivacySettings = valuePrivacySettings; // TODO: retreive from local storage
+  let previewPrivacySettings = valuePrivacySettings;
 
   function saveSetting() {
     let change = false;
@@ -42,7 +42,6 @@
     }
 
     if (valuePrivacySettings !== previewPrivacySettings) {
-      console.log(`was: ${previewPrivacySettings} | is: ${valuePrivacySettings}`)
       localUserStore.setPrivacySettings(valuePrivacySettings);
     }
 

@@ -11,7 +11,6 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
 import { visibilityStore } from "./VisibilityStore";
 
 /**
@@ -244,7 +243,6 @@ export const mediaStreamConstraintsStore = derived(
         cameraEnergySavingStore,
         isSilentStore,
         visibilityStore,
-        //TODO: optionState
     ],
     (
         [
@@ -257,7 +255,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $isSilentStore,
-            $visibilityStore
+            $visibilityStore,
         ],
         set
     ) => {
@@ -296,7 +294,19 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            currentVideoConstraint = false;
+            const userSetting = localUserStore.getPrivacySettings();
+            switch (userSetting) {
+                case "cameraEnabled":
+                    currentAudioConstraint = false;
+                    break;
+                case "microphoneEnabled":
+                    currentVideoConstraint = false;
+                    break;
+                case "noneEnabled":
+                    currentVideoConstraint = false;
+                    currentAudioConstraint = false;
+                    break;
+            }
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
@@ -312,10 +322,6 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // if ($visibilityStore === false && $option) {
-        //
-        // }
-        //TODO
 
         // Let's make the changes only if the new value is different from the old one.
         if (
