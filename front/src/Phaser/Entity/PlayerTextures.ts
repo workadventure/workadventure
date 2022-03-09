@@ -43,7 +43,6 @@ interface PlayerTexturesCategory {
 
 interface PlayerTexturesCollection {
     name: string;
-    position: number;
     textures: PlayerTexturesRecord[];
 }
 
