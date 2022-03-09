@@ -88,6 +88,9 @@ export class PlayerTextures {
 
     private getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
         const resources: BodyResourceDescriptionListInterface = {};
+        if (!category) {
+            return {};
+        }
         for (const collection of category.collections) {
             for (const texture of collection.textures) {
                 resources[texture.id] = { id: texture.id, label: texture.name, img: texture.url };

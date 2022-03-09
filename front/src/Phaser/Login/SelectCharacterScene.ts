@@ -15,6 +15,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -78,6 +79,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     create() {
+        customizeAvailableStore.set(this.isCustomizationAvailable());
         selectCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
@@ -294,5 +296,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     public onResize(): void {
         //move position of user
         this.moveUser();
+    }
+
+    private isCustomizationAvailable(): boolean {
+        for (const layer of PlayerTextures.LAYERS) {
+            if (Object.keys(layer).length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }
