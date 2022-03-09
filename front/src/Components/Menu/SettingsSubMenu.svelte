@@ -9,19 +9,20 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
-    let fullscreen: boolean = localUserStore.getFullscreen();
-    let notification: boolean = localUserStore.getNotification() === "granted";
-    let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
-    let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
-    let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
-    let valueGame: number = localUserStore.getGameQualityValue();
-    let valueVideo: number = localUserStore.getVideoQualityValue();
-    let valueLocale: string = $locale;
-    let valuePrivacySettings = localUserStore.getPrivacySettings();
-    let previewValueGame = valueGame;
-    let previewValueVideo = valueVideo;
-    let previewValueLocale = valueLocale;
-    let previewPrivacySettings = valuePrivacySettings; // TODO: retreive from local storage
+  let fullscreen: boolean = localUserStore.getFullscreen();
+  let notification: boolean = localUserStore.getNotification() === "granted";
+  let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
+  let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
+  let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
+  let valueGame: number = localUserStore.getGameQualityValue();
+  let valueVideo: number = localUserStore.getVideoQualityValue();
+  let valueLocale: string = $locale;
+  let valuePrivacySettings = localUserStore.getPrivacySettings();
+
+  let previewValueGame = valueGame;
+  let previewValueVideo = valueVideo;
+  let previewValueLocale = valueLocale;
+  let previewPrivacySettings = valuePrivacySettings;
 
   function saveSetting() {
     let change = false;
@@ -43,7 +44,6 @@
     }
 
     if (valuePrivacySettings !== previewPrivacySettings) {
-      console.log(`was: ${previewPrivacySettings} | is: ${valuePrivacySettings}`)
       localUserStore.setPrivacySettings(valuePrivacySettings);
     }
 
