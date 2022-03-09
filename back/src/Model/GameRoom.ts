@@ -46,7 +46,7 @@ export class GameRoom {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, User>();
-    private readonly groups = new Set<Group>();
+    private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
     private itemsState = new Map<number, unknown>();
@@ -250,7 +250,7 @@ export class GameRoom {
                         this.disconnectCallback,
                         this.positionNotifier
                     );
-                    this.groups.add(group);
+                    this.groups.set(group.getId(), group);
                 }
             }
         } else {
@@ -334,7 +334,7 @@ export class GameRoom {
                         this.disconnectCallback,
                         this.positionNotifier
                     );
-                    this.groups.add(newGroup);
+                    this.groups.set(newGroup.getId(), newGroup);
                 } else {
                     this.leaveGroup(user);
                 }
@@ -381,10 +381,10 @@ export class GameRoom {
         group.leave(user);
         if (group.isEmpty()) {
             group.destroy();
-            if (!this.groups.has(group)) {
+            if (!this.groups.has(group.getId())) {
                 throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
-            this.groups.delete(group);
+            this.groups.delete(group.getId());
             //todo: is the group garbage collected?
         } else {
             group.updatePosition();
@@ -663,5 +663,9 @@ export class GameRoom {
     public async getVariablesForTags(tags: string[]): Promise<Map<string, string>> {
         const variablesManager = await this.getVariableManager();
         return variablesManager.getVariablesForTags(tags);
+    }
+
+    public getGroupById(id: number): Group | undefined {
+        return this.groups.get(id);
     }
 }

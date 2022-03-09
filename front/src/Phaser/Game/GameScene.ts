@@ -2010,6 +2010,7 @@ ${escapedMessage}
     }
 
     private doShareGroupPosition(groupPositionMessage: GroupCreatedUpdatedMessageInterface) {
+        console.log(groupPositionMessage);
         //delete previous group
         this.doDeleteGroup(groupPositionMessage.groupId);
 

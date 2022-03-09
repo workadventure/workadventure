@@ -41,6 +41,7 @@ import {
     GroupUsersUpdateMessage,
     LockGroupMessage,
     LockGroupPromptMessage,
+    RoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -287,7 +288,7 @@ export class SocketManager {
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
                 (lockGroupMessage: LockGroupMessage, listener: ZoneSocket) =>
-                    this.onLockGroup(lockGroupMessage, listener),
+                    this.onLockGroup(lockGroupMessage, listener, roomPromise),
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
@@ -391,10 +392,19 @@ export class SocketManager {
         emitZoneMessage(subMessage, client);
     }
 
-    private onLockGroup(lockGroupMessage: LockGroupMessage, client: ZoneSocket) {
-        const subMessage = new SubToPusherMessage();
-        subMessage.setLockgroupmessage(lockGroupMessage);
-        emitZoneMessage(subMessage, client);
+    private async onLockGroup(
+        lockGroupMessage: LockGroupMessage,
+        client: ZoneSocket,
+        roomPromise: PromiseLike<GameRoom> | undefined
+    ) {
+        if (!roomPromise) {
+            return;
+        }
+        const group = (await roomPromise).getGroupById(lockGroupMessage.getGroupid());
+        if (!group) {
+            return;
+        }
+        this.emitCreateUpdateGroupEvent(client, null, group);
     }
 
     private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
