@@ -43,7 +43,19 @@ export class CustomizeScene extends AbstractCharacterScene {
     preload() {
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
-        this.load.json(wokaMetadataKey, `${PUSHER_URL}/woka/list`);
+        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
+        this.load.json(
+            wokaMetadataKey,
+            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
+            undefined,
+            {
+                responseType: "text",
+                headers: {
+                    Authorization: localUserStore.getAuthToken() ?? "",
+                },
+                withCredentials: true,
+            }
+        );
         this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
             this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
             this.loadCustomSceneSelectCharacters()
