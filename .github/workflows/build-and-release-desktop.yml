@@ -1,0 +1,104 @@
+name: Build & release desktop app
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+  release:
+    types: [created]
+
+env:
+  YARN_CACHE_FOLDER: ~/.yarn
+
+jobs:
+  build_on_linux:
+    name: "Build & release desktop app for ${{ matrix.os }}"
+
+    strategy:
+      matrix:
+        node-version: [14.x]
+        runtime: [ linux-x64, win-x64, osx-x64 ]
+        include:
+        - runtime: linux-x64
+          os: ubuntu-latest
+
+        - runtime: osx-x64
+          os: macos-latest
+
+        - runtime: win-x64
+          os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Caching
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ env.YARN_CACHE_FOLDER }}
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.OS }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.OS }}-yarn-
+
+      - name: "local-app: Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop/local-app"
+
+      - name: "local-app: Build"
+        run: yarn build
+        working-directory: "desktop/local-app"
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop/electron"
+
+      - name: "Build typescript"
+        run: yarn build
+        working-directory: "desktop/electron"
+
+      - name: "Build app"
+        run: yarn bundle --publish never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: "desktop/electron"
+        if: ${{ github.event_name != 'release' }}
+
+      - name: "Build & publish App"
+        run: yarn release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: "desktop/electron"
+        if: ${{ github.event_name == 'release' }}
+
+      - name: Upload Linux .AppImage artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          name: workadventure-desktop-linux-x64.AppImage
+          path: desktop/electron/build/workadventure-desktop-*-x86_64.AppImage
+
+      - name: Upload Windows .exe artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'windows')
+        with:
+          name: workadventure-desktop-win-x64.exe
+          path: desktop/electron/build/workadventure-desktop-*.exe
+
+      - name: Upload MacOS .dmg artifact
+        uses: actions/upload-artifact@v2
+        if: startsWith(matrix.os, 'macos')
+        with:
+          name: workadventure-mac.dmg
+          path: desktop/electron/build/workadventure-desktop-*.dmg

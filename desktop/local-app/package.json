@@ -1,0 +1,36 @@
+{
+    "name": "vite-project",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "check": "svelte-check --tsconfig ./tsconfig.json",
+        "lint": "exit 0",
+        "test": "exit 0",
+        "pretty": "yarn prettier --write 'src/**/*.{ts,tsx,svelte}'",
+        "pretty-check": "yarn prettier --check 'src/**/*.{ts,tsx}'"
+    },
+    "devDependencies": {
+        "@sveltejs/vite-plugin-svelte": "^1.0.0-next.30",
+        "@tsconfig/svelte": "^2.0.1",
+        "prettier": "^2.5.1",
+        "prettier-plugin-svelte": "^2.6.0",
+        "rollup-plugin-svelte-svg": "^1.0.0-beta.6",
+        "svelte": "^3.44.0",
+        "svelte-check": "^2.2.7",
+        "svelte-navigator": "^3.1.5",
+        "svelte-preprocess": "^4.9.8",
+        "tslib": "^2.3.1",
+        "typescript": "^4.5.4",
+        "vite": "^2.8.0",
+        "vite-plugin-windicss": "^1.7.1",
+        "windicss": "^3.4.3"
+    },
+    "dependencies": {
+        "@16bits/nes.css": "^2.3.2",
+        "@fontsource/press-start-2p": "^4.5.2"
+    }
+}

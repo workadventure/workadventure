@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";

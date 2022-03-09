@@ -97,7 +97,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
-            stroke: "gray",
+            stroke: "#14304C",
             metrics: {
                 ascent: 20,
                 descent: 10,
