@@ -137,7 +137,7 @@ const roomManager: IRoomManagerServer = {
                                 message.getFollowabortmessage() as FollowAbortMessage
                             );
                         } else if (message.hasLockgrouppromptmessage()) {
-                            socketManager.handleLockGroupMessage(
+                            socketManager.handleLockGroupPromptMessage(
                                 room,
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage

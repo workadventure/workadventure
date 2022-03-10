@@ -21,7 +21,6 @@ import {
     FollowConfirmationMessage,
     FollowAbortMessage,
     VariableMessage,
-    LockGroupMessage,
     LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";

@@ -18,7 +18,6 @@ import {
     ErrorMessage,
     PlayerDetailsUpdatedMessage,
     SetPlayerDetailsMessage,
-    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
@@ -33,7 +32,6 @@ export interface ZoneEventListener {
     onGroupEnters(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupMoves(group: GroupDescriptor, listener: ExSocketInterface): void;
     onGroupLeaves(groupId: number, listener: ExSocketInterface): void;
-    onLockGroup(lockGroupMessage: LockGroupMessage, listener: ExSocketInterface): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void;
     onError(errorMessage: ErrorMessage, listener: ExSocketInterface): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ExSocketInterface): void;
@@ -140,10 +138,6 @@ export class GroupDescriptor {
         return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
-    public updateFromLockGroupMessage(message: LockGroupMessage): void {
-        this.locked = message.getLock();
-    }
-
     public update(groupDescriptor: GroupDescriptor) {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
@@ -221,14 +215,6 @@ export class Zone {
                         const fromZone = groupUpdateZoneMessage.getFromzone();
                         this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
                     }
-                } else if (message.hasLockgroupmessage()) {
-                    const lockGroupMessage = message.getLockgroupmessage() as LockGroupMessage;
-                    const groupId = lockGroupMessage.getGroupid();
-                    const oldGroupDescriptor = this.groups.get(groupId);
-                    if (oldGroupDescriptor !== undefined) {
-                        oldGroupDescriptor.updateFromLockGroupMessage(lockGroupMessage);
-                        this.notifyLockGroup(lockGroupMessage);
-                    }
                 } else if (message.hasUserleftzonemessage()) {
                     const userLeftMessage = message.getUserleftzonemessage() as UserLeftZoneMessage;
                     this.users.delete(userLeftMessage.getUserid());
@@ -256,9 +242,6 @@ export class Zone {
                 } else if (message.hasEmoteeventmessage()) {
                     const emoteEventMessage = message.getEmoteeventmessage() as EmoteEventMessage;
                     this.notifyEmote(emoteEventMessage);
-                } else if (message.hasLockgroupmessage()) {
-                    const lockGroupMessage = message.getLockgroupmessage() as LockGroupMessage;
-                    this.notifyLockGroup(lockGroupMessage);
                 } else if (message.hasPlayerdetailsupdatedmessage()) {
                     const playerDetailsUpdatedMessage =
                         message.getPlayerdetailsupdatedmessage() as PlayerDetailsUpdatedMessage;
@@ -366,12 +349,6 @@ export class Zone {
                 continue;
             }
             this.socketListener.onEmote(emoteMessage, listener);
-        }
-    }
-
-    private notifyLockGroup(lockGroupMessage: LockGroupMessage) {
-        for (const listener of this.listeners) {
-            this.socketListener.onLockGroup(lockGroupMessage, listener);
         }
     }
 

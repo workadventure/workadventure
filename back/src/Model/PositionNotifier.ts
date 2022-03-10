@@ -21,7 +21,7 @@ import { Movable } from "_Model/Movable";
 import { PositionInterface } from "_Model/PositionInterface";
 import { ZoneSocket } from "../RoomManager";
 import { User } from "../Model/User";
-import { EmoteEventMessage, LockGroupMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
+import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
 
 interface ZoneDescriptor {
     i: number;
@@ -140,10 +140,10 @@ export class PositionNotifier {
         zone.emitEmoteEvent(emoteEventMessage);
     }
 
-    public emitLockGroupEvent(user: User, lockGroupMessage: LockGroupMessage) {
+    public emitLockGroupEvent(user: User, groupId: number) {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
-        zone.emitLockGroupEvent(lockGroupMessage);
+        zone.emitLockGroupEvent(groupId);
     }
 
     public *getAllUsersInSquareAroundZone(zone: Zone): Generator<User> {

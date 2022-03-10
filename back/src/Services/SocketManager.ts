@@ -39,7 +39,6 @@ import {
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
-    LockGroupMessage,
     LockGroupPromptMessage,
     RoomMessage,
 } from "../Messages/generated/messages_pb";
@@ -287,8 +286,7 @@ export class SocketManager {
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
-                (lockGroupMessage: LockGroupMessage, listener: ZoneSocket) =>
-                    this.onLockGroup(lockGroupMessage, listener, roomPromise),
+                (groupId: number, listener: ZoneSocket) => this.onLockGroup(groupId, listener, roomPromise),
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
@@ -392,15 +390,11 @@ export class SocketManager {
         emitZoneMessage(subMessage, client);
     }
 
-    private async onLockGroup(
-        lockGroupMessage: LockGroupMessage,
-        client: ZoneSocket,
-        roomPromise: PromiseLike<GameRoom> | undefined
-    ) {
+    private async onLockGroup(groupId: number, client: ZoneSocket, roomPromise: PromiseLike<GameRoom> | undefined) {
         if (!roomPromise) {
             return;
         }
-        const group = (await roomPromise).getGroupById(lockGroupMessage.getGroupid());
+        const group = (await roomPromise).getGroupById(groupId);
         if (!group) {
             return;
         }
@@ -915,10 +909,7 @@ export class SocketManager {
             return;
         }
         group.lock(message.getLock());
-        const lockGroupMessage = new LockGroupMessage();
-        lockGroupMessage.setLock(message.getLock());
-        lockGroupMessage.setGroupid(group.getId());
-        room.emitLockGroupMessage(user, lockGroupMessage);
+        room.emitLockGroupEvent(user, group.getId());
     }
 }
 

@@ -102,11 +102,6 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
-message LockGroupMessage {
-  int32 groupId = 1;
-  bool lock = 2;
-}
-
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -182,7 +177,6 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
-    LockGroupMessage lockGroupMessage = 11;
   }
 }
 
@@ -437,7 +431,6 @@ message SubToPusherMessage {
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
-    LockGroupMessage lockGroupMessage = 12;
   }
 }
 

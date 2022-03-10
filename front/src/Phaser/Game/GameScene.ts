@@ -51,7 +51,6 @@ import { PathfindingManager } from "../../Utils/PathfindingManager";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    LockGroupMessageInterface,
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
@@ -134,11 +133,6 @@ interface DeleteGroupEventInterface {
     groupId: number;
 }
 
-interface LockGroupEventInterface {
-    type: "LockGroupEvent";
-    event: LockGroupMessageInterface;
-}
-
 interface PlayerDetailsUpdatedInterface {
     type: "PlayerDetailsUpdated";
     details: PlayerDetailsUpdatedMessageInterface;
@@ -163,7 +157,6 @@ export class GameScene extends DirtyScene {
         | UserMovedEventInterface
         | GroupCreatedUpdatedEventInterface
         | DeleteGroupEventInterface
-        | LockGroupEventInterface
         | PlayerDetailsUpdatedInterface
     >();
     private initPosition: PositionInterface | null = null;
@@ -806,10 +799,6 @@ export class GameScene extends DirtyScene {
                     } catch (e) {
                         console.error(e);
                     }
-                });
-
-                this.connection.lockGroupMessageStream.subscribe((message) => {
-                    this.lockGroup(message);
                 });
 
                 this.connection.onServerDisconnected(() => {
@@ -1847,10 +1836,6 @@ ${escapedMessage}
                     currentPlayerGroupLockStateStore.set(undefined);
                     break;
                 }
-                case "LockGroupEvent": {
-                    this.doLockGroup(event.event);
-                    break;
-                }
                 default: {
                     const tmp: never = event;
                 }
@@ -2047,22 +2032,6 @@ ${escapedMessage}
         }
         group.destroy();
         this.groups.delete(groupId);
-    }
-
-    lockGroup(event: LockGroupMessageInterface): void {
-        this.pendingEvents.enqueue({
-            type: "LockGroupEvent",
-            event,
-        });
-    }
-
-    doLockGroup(event: LockGroupMessageInterface): void {
-        const group = this.groups.get(event.groupId);
-        if (!group) {
-            return;
-        }
-        currentPlayerGroupLockStateStore.set(event.lock);
-        group.setTexture(event.lock ? "circleSprite-red" : "circleSprite-white");
     }
 
     doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {

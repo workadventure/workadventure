@@ -7,14 +7,13 @@ import {
     EmoteEventMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
-    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 
 export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => void;
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
 export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
-export type LockGroupCallback = (lockGroupMessage: LockGroupMessage, listener: ZoneSocket) => void;
+export type LockGroupCallback = (groupId: number, listener: ZoneSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
     listener: ZoneSocket
@@ -111,9 +110,9 @@ export class Zone {
         }
     }
 
-    public emitLockGroupEvent(lockGroupMessage: LockGroupMessage) {
+    public emitLockGroupEvent(groupId: number) {
         for (const listener of this.listeners) {
-            this.onLockGroup(lockGroupMessage, listener);
+            this.onLockGroup(groupId, listener);
         }
     }
 

@@ -38,7 +38,6 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
-    LockGroupMessage,
     LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -303,13 +302,6 @@ export class SocketManager implements ZoneEventListener {
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setEmoteeventmessage(emoteMessage);
-
-        emitInBatch(listener, subMessage);
-    }
-
-    onLockGroup(lockGroupMessage: LockGroupMessage, listener: ExSocketInterface): void {
-        const subMessage = new SubMessage();
-        subMessage.setLockgroupmessage(lockGroupMessage);
 
         emitInBatch(listener, subMessage);
     }

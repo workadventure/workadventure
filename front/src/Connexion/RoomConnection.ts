@@ -40,7 +40,6 @@ import {
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
-    LockGroupMessage,
 } from "../Messages/ts-proto-generated/messages";
 import { Subject } from "rxjs";
 
@@ -101,9 +100,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _groupUsersUpdateMessageStream = new Subject<GroupUsersUpdateMessageInterface>();
     public readonly groupUsersUpdateMessageStream = this._groupUsersUpdateMessageStream.asObservable();
-
-    private readonly _lockGroupMessageStream = new Subject<LockGroupMessage>();
-    public readonly lockGroupMessageStream = this._lockGroupMessageStream.asObservable();
 
     private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
     public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
@@ -266,10 +262,6 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "emoteEventMessage": {
                                 this._emoteEventMessageStream.next(subMessage.emoteEventMessage);
-                                break;
-                            }
-                            case "lockGroupMessage": {
-                                this._lockGroupMessageStream.next(subMessage.lockGroupMessage);
                                 break;
                             }
                             case "playerDetailsUpdatedMessage": {

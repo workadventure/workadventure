@@ -23,7 +23,6 @@ import {
     VariableMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
-    LockGroupMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
@@ -550,8 +549,8 @@ export class GameRoom {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
     }
 
-    public emitLockGroupMessage(user: User, lockGroupMessage: LockGroupMessage) {
-        this.positionNotifier.emitLockGroupEvent(user, lockGroupMessage);
+    public emitLockGroupEvent(user: User, groupId: number) {
+        this.positionNotifier.emitLockGroupEvent(user, groupId);
     }
 
     public addRoomListener(socket: RoomSocket) {

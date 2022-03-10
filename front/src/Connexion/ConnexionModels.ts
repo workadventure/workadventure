@@ -48,11 +48,6 @@ export interface GroupCreatedUpdatedMessageInterface {
     locked: boolean;
 }
 
-export interface LockGroupMessageInterface {
-    groupId: number;
-    lock: boolean;
-}
-
 export interface GroupUsersUpdateMessageInterface {
     groupId: number;
     userIds: number[];
