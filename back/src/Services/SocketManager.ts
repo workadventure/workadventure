@@ -56,7 +56,7 @@ import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
-const Bbb = require("bigbluebutton-js"); // @types/bigbluebutton-js doesn't exist yet
+import { BigbluebuttonJs } from "bigbluebutton-js";
 import {BBB_URL, BBB_SECRET} from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
@@ -584,7 +584,7 @@ export class SocketManager {
         const meetingName = joinBBBMeetingMessage.getMeetingname();
         const userdata = joinBBBMeetingMessage.getUserdataMap();
 
-        const api = Bbb.api(BBB_URL, BBB_SECRET);
+        const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
 
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
@@ -603,7 +603,7 @@ export class SocketManager {
             meetingName,
             meetingId,
             createOptions);
-        await Bbb.http(createURL);
+        await BigbluebuttonJs.http(createURL);
 
         // Add userdata properties sent by the client.
         const joinParams: Record<string, string> = {};

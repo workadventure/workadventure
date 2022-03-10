@@ -88,6 +88,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@types/bigbluebutton-js@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@types/bigbluebutton-js/-/bigbluebutton-js-0.2.0.tgz#966463203ae8222552437c8eb39ab1ee9588bd57"
+  integrity sha512-NeozGYDlC80P11Qfdw/qLgDHV4h6U/DOlR0Aadsa8tY7161khYO0pbx2y8g3BvbxriVNFRtGpU3YaKwNNL+kwA==
+
 "@types/busboy@^0.2.3":
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/@types/busboy/-/busboy-0.2.4.tgz#19922f8c7076ad6d47b2565da8c0a94c88776315"
