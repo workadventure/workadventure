@@ -903,7 +903,7 @@ export class SocketManager {
         }
     }
 
-    handleLockGroupMessage(room: GameRoom, user: User, message: LockGroupPromptMessage) {
+    handleLockGroupPromptMessage(room: GameRoom, user: User, message: LockGroupPromptMessage) {
         const group = user.group;
         if (!group) {
             return;
