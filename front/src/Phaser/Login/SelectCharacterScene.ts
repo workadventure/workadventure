@@ -70,7 +70,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                     this.lazyloadingAttempt = true;
                 })
                 .catch((e) => console.error(e));
-            this.playerModels = loadAllDefaultModels(this.load);
+            this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
             this.lazyloadingAttempt = false;
 
             //this function must stay at the end of preload function
@@ -299,7 +299,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private isCustomizationAvailable(): boolean {
-        for (const layer of PlayerTextures.LAYERS) {
+        for (const layer of this.playerTextures.getLayers()) {
             if (Object.keys(layer).length > 0) {
                 return true;
             }

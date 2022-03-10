@@ -1,6 +1,6 @@
 import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import type { CharacterTexture } from "../../Connexion/LocalUser";
-import { BodyResourceDescriptionInterface, mapLayerToLevel, PlayerTextures } from "./PlayerTextures";
+import { BodyResourceDescriptionInterface, mapLayerToLevel, PlayerTextures, PlayerTexturesKey } from "./PlayerTextures";
 import CancelablePromise from "cancelable-promise";
 
 export interface FrameConfig {
@@ -8,9 +8,12 @@ export interface FrameConfig {
     frameHeight: number;
 }
 
-export const loadAllLayers = (load: LoaderPlugin): BodyResourceDescriptionInterface[][] => {
+export const loadAllLayers = (
+    load: LoaderPlugin,
+    playerTextures: PlayerTextures
+): BodyResourceDescriptionInterface[][] => {
     const returnArray: BodyResourceDescriptionInterface[][] = [];
-    PlayerTextures.LAYERS.forEach((layer) => {
+    playerTextures.getLayers().forEach((layer) => {
         const layerArray: BodyResourceDescriptionInterface[] = [];
         Object.values(layer).forEach((textureDescriptor) => {
             layerArray.push(textureDescriptor);
@@ -20,8 +23,11 @@ export const loadAllLayers = (load: LoaderPlugin): BodyResourceDescriptionInterf
     });
     return returnArray;
 };
-export const loadAllDefaultModels = (load: LoaderPlugin): BodyResourceDescriptionInterface[] => {
-    const returnArray = Object.values(PlayerTextures.PLAYER_RESOURCES);
+export const loadAllDefaultModels = (
+    load: LoaderPlugin,
+    playerTextures: PlayerTextures
+): BodyResourceDescriptionInterface[] => {
+    const returnArray = Object.values(playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
     returnArray.forEach((playerResource: BodyResourceDescriptionInterface) => {
         load.spritesheet(playerResource.id, playerResource.img, { frameWidth: 32, frameHeight: 32 });
     });

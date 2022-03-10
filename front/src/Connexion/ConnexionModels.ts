@@ -1,8 +1,6 @@
 import type { SignalData } from "simple-peer";
 import type { RoomConnection } from "./RoomConnection";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { PositionMessage_Direction } from "../Messages/ts-proto-generated/messages";
-import { CharacterLayer } from "../../../back/src/Model/Websocket/CharacterLayer";
 
 export interface PointInterface {
     x: number;

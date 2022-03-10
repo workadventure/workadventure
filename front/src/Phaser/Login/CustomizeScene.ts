@@ -74,7 +74,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                 })
                 .catch((e) => console.error(e));
 
-            this.layers = loadAllLayers(this.load);
+            this.layers = loadAllLayers(this.load, this.playerTextures);
             this.lazyloadingAttempt = false;
 
             //this function must stay at the end of preload function

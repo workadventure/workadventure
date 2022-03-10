@@ -1,12 +1,8 @@
 import { ResizableScene } from "./ResizableScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { BodyResourceDescriptionInterface, PlayerTexturesKey } from "../Entity/PlayerTextures";
 import { loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
-import type { CharacterTexture } from "../../Connexion/LocalUser";
 import type CancelablePromise from "cancelable-promise";
 import { PlayerTextures } from "../Entity/PlayerTextures";
-import { Loader } from "../Components/Loader";
-import { CustomizeSceneName } from "./CustomizeScene";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
     protected playerTextures: PlayerTextures;
@@ -17,7 +13,7 @@ export abstract class AbstractCharacterScene extends ResizableScene {
     }
 
     loadCustomSceneSelectCharacters(): Promise<BodyResourceDescriptionInterface[]> {
-        const textures = PlayerTextures.PLAYER_RESOURCES;
+        const textures = this.playerTextures.getTexturesResources(PlayerTexturesKey.Woka);
         const promises: CancelablePromise<BodyResourceDescriptionInterface>[] = [];
         if (textures) {
             for (const texture of Object.values(textures)) {
@@ -32,7 +28,7 @@ export abstract class AbstractCharacterScene extends ResizableScene {
 
     loadSelectSceneCharacters(): Promise<BodyResourceDescriptionInterface[]> {
         const promises: CancelablePromise<BodyResourceDescriptionInterface>[] = [];
-        for (const textures of PlayerTextures.LAYERS) {
+        for (const textures of this.playerTextures.getLayers()) {
             for (const texture of Object.values(textures)) {
                 if (texture.level !== -1) {
                     continue;
