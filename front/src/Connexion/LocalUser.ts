@@ -15,7 +15,14 @@ export function isUserNameValid(value: unknown): boolean {
 }
 
 export function areCharacterLayersValid(value: string[] | null): boolean {
-    if (!value || !value.length) return false;
+    if (!value || !value.length) {
+        return false;
+    }
+    for (const layerName of value) {
+        if (layerName.length === 0 || layerName === " ") {
+            return false;
+        }
+    }
     return true;
 }
 
