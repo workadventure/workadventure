@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/wrappers.proto";
+
 /*********** PARTIAL MESSAGES **************/
 
 message PositionMessage {
@@ -362,9 +364,9 @@ message UserLeftZoneMessage {
 message GroupUpdateZoneMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  int32 groupSize = 3;
+  google.protobuf.UInt32Value  groupSize = 3;
   Zone fromZone = 4;
-  bool locked = 5;
+  google.protobuf.BoolValue locked = 5;
 }
 
 message GroupLeftZoneMessage {
