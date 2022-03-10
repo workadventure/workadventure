@@ -10,19 +10,11 @@ class BBBFactory {
             return;
         }
 
-        const allowPolicy = "microphone *; " +
-                            "camera *; " +
-                            "display-capture *; " +
-                            "clipboard-read *; " +
-                            "clipboard-write *;";
-        const coWebsite = new BBBCoWebsite(new URL(clientURL),
-                                           false,
-                                           allowPolicy,
-                                           undefined,
-                                           false);
+        const allowPolicy =
+            "microphone *; " + "camera *; " + "display-capture *; " + "clipboard-read *; " + "clipboard-write *;";
+        const coWebsite = new BBBCoWebsite(new URL(clientURL), false, allowPolicy, undefined, false);
         coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-        coWebsiteManager.loadCoWebsite(coWebsite)
-            .catch((e) => console.error(`Error on opening co-website: ${e}`));
+        coWebsiteManager.loadCoWebsite(coWebsite).catch((e) => console.error(`Error on opening co-website: ${e}`));
     }
 
     public stop() {

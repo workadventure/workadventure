@@ -115,7 +115,7 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
-                layoutManagerActionStore.removeAction('bbbMeeting');
+                layoutManagerActionStore.removeAction("bbbMeeting");
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
             } else {

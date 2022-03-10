@@ -113,7 +113,7 @@ const roomManager: IRoomManagerServer = {
                                 message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
                             );
                         } else if (message.hasJoinbbbmeetingmessage()) {
-                            socketManager.handleJoinBBBMeetingMessage(
+                            await socketManager.handleJoinBBBMeetingMessage(
                                 user,
                                 message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
                             );

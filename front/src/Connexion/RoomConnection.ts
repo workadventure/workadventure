@@ -794,7 +794,7 @@ export class RoomConnection implements RoomConnection {
         const userdataMap = <{ [key: string]: string }>{};
 
         props.forEach((value, key) => {
-            if (key.startsWith('userdata-bbb_')) {
+            if (key.startsWith("userdata-bbb_")) {
                 userdataMap[key] = value.toString();
             }
         });
@@ -806,7 +806,7 @@ export class RoomConnection implements RoomConnection {
                 joinBBBMeetingMessage: {
                     meetingId,
                     meetingName,
-                    userdata: userdataMap
+                    userdata: userdataMap,
                 },
             },
         }).finish();
