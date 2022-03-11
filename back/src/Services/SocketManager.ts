@@ -582,10 +582,8 @@ export class SocketManager {
     public async handleJoinBBBMeetingMessage(user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
         const meetingName = joinBBBMeetingMessage.getMeetingname();
-        const userdata = joinBBBMeetingMessage.getUserdataMap();
 
         const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
-
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
         const attendeePW = crypto
@@ -604,13 +602,7 @@ export class SocketManager {
         const createURL = api.administration.create(meetingName, meetingId, createOptions);
         await BigbluebuttonJs.http(createURL);
 
-        // Add userdata properties sent by the client.
         const joinParams: Record<string, string> = {};
-        userdata.forEach((value, key) => {
-            if (key.startsWith("userdata-bbb_")) {
-                joinParams[key] = value;
-            }
-        });
 
         // XXX: figure out how to know if the user has admin status and use the moderatorPW
         // in that case

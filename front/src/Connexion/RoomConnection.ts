@@ -45,7 +45,6 @@ import {
     StopGlobalMessage as StopGlobalMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
     JoinBBBMeetingMessage as JoinBBBMeetingMessageTsProto,
-    JoinBBBMeetingMessage_UserdataEntry,
     BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     SendUserMessage as SendUserMessageTsProto,
     BanUserMessage as BanUserMessageTsProto,
@@ -791,14 +790,6 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitJoinBBBMeeting(meetingId: string, props: Map<string, string | number | boolean>): void {
-        const userdataMap = <{ [key: string]: string }>{};
-
-        props.forEach((value, key) => {
-            if (key.startsWith("userdata-bbb_")) {
-                userdataMap[key] = value.toString();
-            }
-        });
-
         const meetingName = props.get("meetingName") as string;
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -806,7 +797,6 @@ export class RoomConnection implements RoomConnection {
                 joinBBBMeetingMessage: {
                     meetingId,
                     meetingName,
-                    userdata: userdataMap,
                 },
             },
         }).finish();
