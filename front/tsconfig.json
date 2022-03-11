@@ -27,7 +27,10 @@
     "alwaysStrict": true,                  /* Parse in strict mode and emit "use strict" for each source file. */
 
     "noImplicitReturns": true,             /* Report error when not all code paths in function return a value. */
-    "noFallthroughCasesInSwitch": true     /* Report errors for fallthrough cases in switch statement. */
+    "noFallthroughCasesInSwitch": true,     /* Report errors for fallthrough cases in switch statement. */
+    "paths": {
+      "@wa-preload-app": ["../desktop/electron/src/preload-app/types.ts"],
+    }
   },
   "exclude": [
     "node_modules",

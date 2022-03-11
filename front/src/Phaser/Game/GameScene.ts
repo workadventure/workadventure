@@ -566,7 +566,6 @@ export class GameScene extends DirtyScene {
         this.pathfindingManager = new PathfindingManager(
             this,
             this.gameMap.getCollisionGrid(),
-            this.gameMap.getWalkingCostGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -1453,7 +1452,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid(), this.gameMap.getWalkingCostGrid());
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
         this.markDirty();
     }
 
@@ -1601,6 +1600,8 @@ ${escapedMessage}
                         }
                     })
                     .catch((reason) => console.warn(reason));
+
+                urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
