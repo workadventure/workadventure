@@ -21,34 +21,7 @@ export class CustomizedCharacter extends Container {
         for (const texture of layers) {
             const newSprite = new Sprite(this.scene, 0, 0, texture);
             this.sprites.push(newSprite);
-            getPlayerAnimations(texture).forEach((d) => {
-                this.scene.anims.create({
-                    key: d.key,
-                    frames: this.scene.anims.generateFrameNumbers(d.frameModel, { frames: d.frames }),
-                    frameRate: d.frameRate,
-                    repeat: d.repeat,
-                });
-            });
-            // Needed, otherwise, animations are not handled correctly.
-            if (this.scene) {
-                this.scene.sys.updateList.add(newSprite);
-            }
         }
         this.add(this.sprites);
-    }
-
-    public playAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
-        for (const sprite of this.sprites) {
-            if (!sprite.anims) {
-                console.error("ANIMS IS NOT DEFINED!!!");
-                return;
-            }
-            const textureKey = sprite.texture.key;
-            if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
-                sprite.play(textureKey + "-" + direction + "-" + PlayerAnimationTypes.Walk, true);
-            } else if (!moving) {
-                sprite.anims.play(textureKey + "-" + direction + "-" + PlayerAnimationTypes.Idle, true);
-            }
-        }
     }
 }

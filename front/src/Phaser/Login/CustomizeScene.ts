@@ -125,6 +125,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     public update(time: number, dt: number): void {
         this.customWokaPreviewer.update();
+
         if (this.lazyloadingAttempt) {
             this.moveLayers();
             this.doMoveCursorHorizontally(this.moveHorizontally);
