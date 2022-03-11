@@ -149,9 +149,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     createCurrentPlayer(): void {
+        console.log("CREATE CURRENT PLAYER");
         for (let i = 0; i < this.playerModels.length; i++) {
             const playerResource = this.playerModels[i];
-
             //check already exist texture
             if (this.players.find((c) => c.texture.key === playerResource.id)) {
                 continue;

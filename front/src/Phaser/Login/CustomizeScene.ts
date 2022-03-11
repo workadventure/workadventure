@@ -9,18 +9,21 @@ import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures"
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
-import { activeRowStore, customCharacterSceneVisibleStore } from "../../Stores/CustomCharacterStore";
+import { activeRowStore } from "../../Stores/CustomCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { CustomWokaPreviewer } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 
 export const CustomizeSceneName = "CustomizeScene";
 
 export class CustomizeScene extends AbstractCharacterScene {
     private Rectangle!: Rectangle;
+
+    private customWokaPreviewer: CustomWokaPreviewer;
 
     private selectedLayers: number[] = [0];
     private containersRow: CustomizedCharacter[][] = [];
@@ -40,7 +43,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.loader = new Loader(this);
     }
 
-    preload() {
+    public preload(): void {
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
@@ -82,13 +85,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         });
     }
 
-    create() {
-        customCharacterSceneVisibleStore.set(true);
-        this.events.addListener("wake", () => {
-            waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
-            customCharacterSceneVisibleStore.set(true);
-        });
+    public create(): void {
+        console.log(this.layers);
 
         waScaleManager.saveZoom();
         waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
@@ -100,7 +98,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             33
         );
         this.Rectangle.setStrokeStyle(2, 0xffffff);
-        this.add.existing(this.Rectangle);
 
         this.createCustomizeLayer(0, 0, 0);
         this.createCustomizeLayer(0, 0, 1);
@@ -110,6 +107,91 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.createCustomizeLayer(0, 0, 5);
 
         this.moveLayers();
+
+        const customCursorPosition = localUserStore.getCustomCursorPosition();
+        if (customCursorPosition) {
+            activeRowStore.set(customCursorPosition.activeRow);
+            this.selectedLayers = customCursorPosition.selectedLayers;
+            this.moveLayers();
+            this.updateSelectedLayer();
+        }
+
+        this.customWokaPreviewer = new CustomWokaPreviewer(this, 300, 300);
+
+        this.onResize();
+
+        this.bindEventHandlers();
+    }
+
+    public update(time: number, dt: number): void {
+        this.customWokaPreviewer.update();
+        if (this.lazyloadingAttempt) {
+            this.moveLayers();
+            this.doMoveCursorHorizontally(this.moveHorizontally);
+            this.lazyloadingAttempt = false;
+        }
+
+        if (this.moveHorizontally !== 0) {
+            this.doMoveCursorHorizontally(this.moveHorizontally);
+            this.moveHorizontally = 0;
+        }
+        if (this.moveVertically !== 0) {
+            this.doMoveCursorVertically(this.moveVertically);
+            this.moveVertically = 0;
+        }
+    }
+
+    public moveCursorHorizontally(index: number): void {
+        this.moveHorizontally = index;
+    }
+
+    public moveCursorVertically(index: number): void {
+        this.moveVertically = index;
+    }
+
+    public onResize(): void {
+        this.moveLayers();
+
+        this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
+
+        this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.customWokaPreviewer.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+    }
+
+    public nextSceneToCamera() {
+        const layers: string[] = [];
+        let i = 0;
+        for (const layerItem of this.selectedLayers) {
+            if (layerItem !== undefined) {
+                layers.push(this.layers[i][layerItem].id);
+            }
+            i++;
+        }
+        if (!areCharacterLayersValid(layers)) {
+            return;
+        }
+
+        analyticsClient.validationWoka("CustomizeWoka");
+
+        gameManager.setCharacterLayers(layers);
+        this.scene.stop(CustomizeSceneName);
+        waScaleManager.restoreZoom();
+        gameManager.tryResumingGame(EnableCameraSceneName);
+    }
+
+    public backToPreviousScene() {
+        this.scene.stop(CustomizeSceneName);
+        waScaleManager.restoreZoom();
+        this.scene.run(SelectCharacterSceneName);
+    }
+
+    private bindEventHandlers(): void {
+        this.events.addListener("wake", () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
+        });
+
         this.input.keyboard.on("keyup-ENTER", () => {
             this.nextSceneToCamera();
         });
@@ -124,24 +206,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.input.keyboard.on("keyup-LEFT", () => (this.moveHorizontally = -1));
         this.input.keyboard.on("keyup-DOWN", () => (this.moveVertically = 1));
         this.input.keyboard.on("keyup-UP", () => (this.moveVertically = -1));
-
-        const customCursorPosition = localUserStore.getCustomCursorPosition();
-        if (customCursorPosition) {
-            activeRowStore.set(customCursorPosition.activeRow);
-            this.selectedLayers = customCursorPosition.selectedLayers;
-            this.moveLayers();
-            this.updateSelectedLayer();
-        }
-
-        this.onResize();
-    }
-
-    public moveCursorHorizontally(index: number): void {
-        this.moveHorizontally = index;
-    }
-
-    public moveCursorVertically(index: number): void {
-        this.moveVertically = index;
     }
 
     private doMoveCursorHorizontally(index: number): void {
@@ -246,17 +310,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    /**
-     * @param x, the sprite's vertical position
-     * @param y, the sprites's horizontal position
-     * @param name, the sprite's name
-     * @return a new sprite
-     */
-    private generateLayers(x: number, y: number, name: string): Sprite {
-        //return new Sprite(this, x, y, name);
-        return this.add.sprite(0, 0, name);
-    }
-
     private updateSelectedLayer() {
         for (let i = 0; i < this.containersRow.length; i++) {
             for (let j = 0; j < this.containersRow[i].length; j++) {
@@ -264,58 +317,5 @@ export class CustomizeScene extends AbstractCharacterScene {
                 this.containersRow[i][j].updateSprites(children);
             }
         }
-    }
-
-    update(time: number, delta: number): void {
-        if (this.lazyloadingAttempt) {
-            this.moveLayers();
-            this.doMoveCursorHorizontally(this.moveHorizontally);
-            this.lazyloadingAttempt = false;
-        }
-
-        if (this.moveHorizontally !== 0) {
-            this.doMoveCursorHorizontally(this.moveHorizontally);
-            this.moveHorizontally = 0;
-        }
-        if (this.moveVertically !== 0) {
-            this.doMoveCursorVertically(this.moveVertically);
-            this.moveVertically = 0;
-        }
-    }
-
-    public onResize(): void {
-        this.moveLayers();
-
-        this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
-    }
-
-    public nextSceneToCamera() {
-        const layers: string[] = [];
-        let i = 0;
-        for (const layerItem of this.selectedLayers) {
-            if (layerItem !== undefined) {
-                layers.push(this.layers[i][layerItem].id);
-            }
-            i++;
-        }
-        if (!areCharacterLayersValid(layers)) {
-            return;
-        }
-
-        analyticsClient.validationWoka("CustomizeWoka");
-
-        gameManager.setCharacterLayers(layers);
-        this.scene.stop(CustomizeSceneName);
-        waScaleManager.restoreZoom();
-        gameManager.tryResumingGame(EnableCameraSceneName);
-        customCharacterSceneVisibleStore.set(false);
-    }
-
-    public backToPreviousScene() {
-        this.scene.stop(CustomizeSceneName);
-        waScaleManager.restoreZoom();
-        this.scene.run(SelectCharacterSceneName);
-        customCharacterSceneVisibleStore.set(false);
     }
 }
