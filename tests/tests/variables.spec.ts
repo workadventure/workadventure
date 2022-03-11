@@ -142,6 +142,9 @@ test.describe('Variables', () => {
 
     await login(page, 'Alice', 2);
 
+    // Wait for page to load before copying file (it seems the await above does not 100% fills its role otherwise).
+    await timeout(3000);
+
     // Let's REPLACE the map by a map that has a new variable
     // At this point, the back server contains a cache of the old map (with no variables)
     fs.copyFileSync(
@@ -162,3 +165,8 @@ test.describe('Variables', () => {
     await assertLogMessage(page2, 'SUCCESS!');
   });
 });
+
+
+function timeout(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
