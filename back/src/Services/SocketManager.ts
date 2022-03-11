@@ -56,7 +56,7 @@ import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
-import { BigbluebuttonJs } from "bigbluebutton-js";
+import BigbluebuttonJs from "bigbluebutton-js";
 import { BBB_URL, BBB_SECRET } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
