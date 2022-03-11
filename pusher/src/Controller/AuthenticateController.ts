@@ -204,7 +204,7 @@ export class AuthenticateController extends BaseHttpController {
                 console.error("openIDCallback => logout-callback", error);
             }
 
-            return res;
+            return res.status(200).send('');
         });
     }
 
