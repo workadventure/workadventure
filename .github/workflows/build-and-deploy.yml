@@ -81,7 +81,7 @@ jobs:
         working-directory: messages
 
       - name: Build proto messages
-        run: yarn run proto && yarn run copy-to-back
+        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
         working-directory: messages
 
       # docker

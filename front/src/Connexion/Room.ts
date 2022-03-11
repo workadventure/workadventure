@@ -9,7 +9,7 @@ import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
-    constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
+    constructor(public readonly mapUrl: string) {}
 }
 
 export interface RoomRedirect {
@@ -25,7 +25,6 @@ export class Room {
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
-    private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
@@ -118,7 +117,6 @@ export class Room {
             } else if (isMapDetailsData(data)) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
-                this._textures = data.textures;
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
@@ -128,7 +126,7 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
-                return new MapDetail(data.mapUrl, data.textures);
+                return new MapDetail(data.mapUrl);
             } else {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
@@ -203,10 +201,6 @@ export class Room {
 
     public get href(): string {
         return this.roomUrl.toString();
-    }
-
-    get textures(): CharacterTexture[] | undefined {
-        return this._textures;
     }
 
     get mapUrl(): string {

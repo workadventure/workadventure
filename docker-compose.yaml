@@ -89,6 +89,7 @@ services:
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      ENABLE_OPENAPI_ENDPOINT: "true"
     volumes:
       - ./pusher:/usr/src/app
     labels:

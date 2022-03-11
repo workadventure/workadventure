@@ -5,7 +5,7 @@ import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -14,6 +14,8 @@ import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterSt
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
+import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -38,25 +40,46 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             key: SelectCharacterSceneName,
         });
         this.loader = new Loader(this);
+        this.playerTextures = new PlayerTextures();
     }
 
     preload() {
-        this.loadSelectSceneCharacters()
-            .then((bodyResourceDescriptions) => {
-                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                    this.playerModels.push(bodyResourceDescription);
-                });
-                this.lazyloadingAttempt = true;
-            })
-            .catch((e) => console.error(e));
-        this.playerModels = loadAllDefaultModels(this.load);
-        this.lazyloadingAttempt = false;
+        const wokaMetadataKey = "woka-list";
+        this.cache.json.remove(wokaMetadataKey);
 
-        //this function must stay at the end of preload function
-        this.loader.addLoader();
+        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
+        this.load.json(
+            wokaMetadataKey,
+            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
+            undefined,
+            {
+                responseType: "text",
+                headers: {
+                    Authorization: localUserStore.getAuthToken() ?? "",
+                },
+                withCredentials: true,
+            }
+        );
+        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
+            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
+            this.loadSelectSceneCharacters()
+                .then((bodyResourceDescriptions) => {
+                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                        this.playerModels.push(bodyResourceDescription);
+                    });
+                    this.lazyloadingAttempt = true;
+                })
+                .catch((e) => console.error(e));
+            this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
+            this.lazyloadingAttempt = false;
+
+            //this function must stay at the end of preload function
+            this.loader.addLoader();
+        });
     }
 
     create() {
+        customizeAvailableStore.set(this.isCustomizationAvailable());
         selectCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
@@ -130,16 +153,16 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             const playerResource = this.playerModels[i];
 
             //check already exist texture
-            if (this.players.find((c) => c.texture.key === playerResource.name)) {
+            if (this.players.find((c) => c.texture.key === playerResource.id)) {
                 continue;
             }
 
             const [middleX, middleY] = this.getCharacterPosition();
-            const player = this.physics.add.sprite(middleX, middleY, playerResource.name, 0);
+            const player = this.physics.add.sprite(middleX, middleY, playerResource.id, 0);
             this.setUpPlayer(player, i);
             this.anims.create({
-                key: playerResource.name,
-                frames: this.anims.generateFrameNumbers(playerResource.name, { start: 0, end: 11 }),
+                key: playerResource.id,
+                frames: this.anims.generateFrameNumbers(playerResource.id, { start: 0, end: 11 }),
                 frameRate: 8,
                 repeat: -1,
             });
@@ -164,7 +187,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             this.currentSelectUser = 0;
         }
         this.selectedPlayer = this.players[this.currentSelectUser];
-        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].name);
+        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].id);
     }
 
     protected moveUser() {
@@ -247,9 +270,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     protected updateSelectedPlayer(): void {
-        this.selectedPlayer?.anims.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
+        this.selectedPlayer?.anims?.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
         const player = this.players[this.currentSelectUser];
-        player.play(this.playerModels[this.currentSelectUser].name);
+        player?.play(this.playerModels[this.currentSelectUser].id);
         this.selectedPlayer = player;
         localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
     }
@@ -273,5 +296,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     public onResize(): void {
         //move position of user
         this.moveUser();
+    }
+
+    private isCustomizationAvailable(): boolean {
+        for (const layer of this.playerTextures.getLayers()) {
+            if (Object.keys(layer).length > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -15,6 +15,7 @@ import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { get } from "svelte/store";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -40,27 +41,45 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     preload() {
-        this.loadCustomSceneSelectCharacters()
-            .then((bodyResourceDescriptions) => {
-                bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                    if (
-                        bodyResourceDescription.level == undefined ||
-                        bodyResourceDescription.level < 0 ||
-                        bodyResourceDescription.level > 5
-                    ) {
-                        throw new Error("Texture level is null");
-                    }
-                    this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
-                });
-                this.lazyloadingAttempt = true;
-            })
-            .catch((e) => console.error(e));
+        const wokaMetadataKey = "woka-list";
+        this.cache.json.remove(wokaMetadataKey);
+        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
+        this.load.json(
+            wokaMetadataKey,
+            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
+            undefined,
+            {
+                responseType: "text",
+                headers: {
+                    Authorization: localUserStore.getAuthToken() ?? "",
+                },
+                withCredentials: true,
+            }
+        );
+        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
+            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
+            this.loadCustomSceneSelectCharacters()
+                .then((bodyResourceDescriptions) => {
+                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
+                        if (
+                            bodyResourceDescription.level == undefined ||
+                            bodyResourceDescription.level < 0 ||
+                            bodyResourceDescription.level > 5
+                        ) {
+                            throw new Error("Texture level is null");
+                        }
+                        this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
+                    });
+                    this.lazyloadingAttempt = true;
+                })
+                .catch((e) => console.error(e));
 
-        this.layers = loadAllLayers(this.load);
-        this.lazyloadingAttempt = false;
+            this.layers = loadAllLayers(this.load, this.playerTextures);
+            this.lazyloadingAttempt = false;
 
-        //this function must stay at the end of preload function
-        this.loader.addLoader();
+            //this function must stay at the end of preload function
+            this.loader.addLoader();
+        });
     }
 
     create() {
@@ -192,13 +211,13 @@ export class CustomizeScene extends AbstractCharacterScene {
         const children: Array<string> = new Array<string>();
         for (let j = 0; j <= layerNumber; j++) {
             if (j === layerNumber) {
-                children.push(this.layers[j][selectedItem].name);
+                children.push(this.layers[j][selectedItem].id);
             } else {
                 const layer = this.selectedLayers[j];
                 if (layer === undefined) {
                     continue;
                 }
-                children.push(this.layers[j][layer].name);
+                children.push(this.layers[j][layer].id);
             }
         }
         return children;
@@ -276,7 +295,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             if (layerItem !== undefined) {
-                layers.push(this.layers[i][layerItem].name);
+                layers.push(this.layers[i][layerItem].id);
             }
             i++;
         }
@@ -287,14 +306,14 @@ export class CustomizeScene extends AbstractCharacterScene {
         analyticsClient.validationWoka("CustomizeWoka");
 
         gameManager.setCharacterLayers(layers);
-        this.scene.sleep(CustomizeSceneName);
+        this.scene.stop(CustomizeSceneName);
         waScaleManager.restoreZoom();
         gameManager.tryResumingGame(EnableCameraSceneName);
         customCharacterSceneVisibleStore.set(false);
     }
 
     public backToPreviousScene() {
-        this.scene.sleep(CustomizeSceneName);
+        this.scene.stop(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
         customCharacterSceneVisibleStore.set(false);
