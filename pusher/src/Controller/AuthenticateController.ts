@@ -140,7 +140,13 @@ export class AuthenticateController extends BaseHttpController {
                         }
 
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                        return res.json({ ...resCheckTokenAuth, ...resUserData, authToken: token });
+                        return res.json({
+                            ...resCheckTokenAuth,
+                            ...resUserData,
+                            authToken: token,
+                            username: authTokenData?.username,
+                            locale: authTokenData?.locale,
+                        });
                     } catch (err) {
                         console.info("User was not connected", err);
                     }
@@ -161,13 +167,18 @@ export class AuthenticateController extends BaseHttpController {
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo?.access_token);
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
                 const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
 
-                return res.json({ ...data, authToken });
+                return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
                 return this.castErrorToResponse(e, res);
@@ -204,7 +215,7 @@ export class AuthenticateController extends BaseHttpController {
                 console.error("openIDCallback => logout-callback", error);
             }
 
-            return res;
+            return res.status(200).send("");
         });
     }
 
