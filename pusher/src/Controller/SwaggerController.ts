@@ -1,12 +1,11 @@
-import swaggerJsdoc from "swagger-jsdoc";
 import { BaseHttpController } from "./BaseHttpController";
-// @ts-ignore
-import LiveDirectory from "live-directory";
 import * as fs from "fs";
 
 export class SwaggerController extends BaseHttpController {
     routes() {
         this.app.get("/openapi", (req, res) => {
+            // Let's load the module dynamically (it may not exist in prod because part of the -dev packages)
+            const swaggerJsdoc = require("swagger-jsdoc");
             const options = {
                 swaggerDefinition: {
                     openapi: "3.0.0",
@@ -22,6 +21,8 @@ export class SwaggerController extends BaseHttpController {
         });
 
         // Create a LiveDirectory instance to virtualize directory with our assets
+        // @ts-ignore
+        const LiveDirectory = require("live-directory");
         const LiveAssets = new LiveDirectory({
             path: __dirname + "/../../node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
             keep: {

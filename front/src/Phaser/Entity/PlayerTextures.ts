@@ -6,7 +6,6 @@ export interface BodyResourceDescriptionListInterface {
 
 export interface BodyResourceDescriptionInterface {
     id: string;
-    label: string;
     img: string;
     level?: number;
 }
@@ -24,7 +23,7 @@ export const mapLayerToLevel = {
     accessory: 5,
 };
 
-enum PlayerTexturesKey {
+export enum PlayerTexturesKey {
     Accessory = "accessory",
     Body = "body",
     Clothes = "clothes",
@@ -43,7 +42,6 @@ interface PlayerTexturesCategory {
 
 interface PlayerTexturesCollection {
     name: string;
-    position: number;
     textures: PlayerTexturesRecord[];
 }
 
@@ -54,43 +52,69 @@ interface PlayerTexturesRecord {
 }
 
 export class PlayerTextures {
-    public static PLAYER_RESOURCES: BodyResourceDescriptionListInterface;
-    public static COLOR_RESOURCES: BodyResourceDescriptionListInterface;
-    public static EYES_RESOURCES: BodyResourceDescriptionListInterface;
-    public static HAIR_RESOURCES: BodyResourceDescriptionListInterface;
-    public static CLOTHES_RESOURCES: BodyResourceDescriptionListInterface;
-    public static HATS_RESOURCES: BodyResourceDescriptionListInterface;
-    public static ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface;
-    public static LAYERS: BodyResourceDescriptionListInterface[];
+    private PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private COLOR_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private EYES_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private HAIR_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private CLOTHES_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private HATS_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface = {};
+    private LAYERS: BodyResourceDescriptionListInterface[] = [];
 
     public loadPlayerTexturesMetadata(metadata: PlayerTexturesMetadata): void {
         this.mapTexturesMetadataIntoResources(metadata);
     }
 
-    private mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
-        PlayerTextures.PLAYER_RESOURCES = this.getMappedResources(metadata.woka);
-        PlayerTextures.COLOR_RESOURCES = this.getMappedResources(metadata.body);
-        PlayerTextures.EYES_RESOURCES = this.getMappedResources(metadata.eyes);
-        PlayerTextures.HAIR_RESOURCES = this.getMappedResources(metadata.hair);
-        PlayerTextures.CLOTHES_RESOURCES = this.getMappedResources(metadata.clothes);
-        PlayerTextures.HATS_RESOURCES = this.getMappedResources(metadata.hat);
-        PlayerTextures.ACCESSORIES_RESOURCES = this.getMappedResources(metadata.accessory);
+    public getTexturesResources(key: PlayerTexturesKey): BodyResourceDescriptionListInterface {
+        switch (key) {
+            case PlayerTexturesKey.Accessory:
+                return this.ACCESSORIES_RESOURCES;
+            case PlayerTexturesKey.Body:
+                return this.COLOR_RESOURCES;
+            case PlayerTexturesKey.Clothes:
+                return this.CLOTHES_RESOURCES;
+            case PlayerTexturesKey.Eyes:
+                return this.EYES_RESOURCES;
+            case PlayerTexturesKey.Hair:
+                return this.HAIR_RESOURCES;
+            case PlayerTexturesKey.Hat:
+                return this.HATS_RESOURCES;
+            case PlayerTexturesKey.Woka:
+                return this.PLAYER_RESOURCES;
+        }
+    }
 
-        PlayerTextures.LAYERS = [
-            PlayerTextures.COLOR_RESOURCES,
-            PlayerTextures.EYES_RESOURCES,
-            PlayerTextures.HAIR_RESOURCES,
-            PlayerTextures.CLOTHES_RESOURCES,
-            PlayerTextures.HATS_RESOURCES,
-            PlayerTextures.ACCESSORIES_RESOURCES,
+    public getLayers(): BodyResourceDescriptionListInterface[] {
+        return this.LAYERS;
+    }
+
+    private mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
+        this.PLAYER_RESOURCES = this.getMappedResources(metadata.woka);
+        this.COLOR_RESOURCES = this.getMappedResources(metadata.body);
+        this.EYES_RESOURCES = this.getMappedResources(metadata.eyes);
+        this.HAIR_RESOURCES = this.getMappedResources(metadata.hair);
+        this.CLOTHES_RESOURCES = this.getMappedResources(metadata.clothes);
+        this.HATS_RESOURCES = this.getMappedResources(metadata.hat);
+        this.ACCESSORIES_RESOURCES = this.getMappedResources(metadata.accessory);
+
+        this.LAYERS = [
+            this.COLOR_RESOURCES,
+            this.EYES_RESOURCES,
+            this.HAIR_RESOURCES,
+            this.CLOTHES_RESOURCES,
+            this.HATS_RESOURCES,
+            this.ACCESSORIES_RESOURCES,
         ];
     }
 
     private getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
         const resources: BodyResourceDescriptionListInterface = {};
+        if (!category) {
+            return {};
+        }
         for (const collection of category.collections) {
             for (const texture of collection.textures) {
-                resources[texture.id] = { id: texture.id, label: texture.name, img: texture.url };
+                resources[texture.id] = { id: texture.id, img: texture.url };
             }
         }
         return resources;
@@ -98,5 +122,5 @@ export class PlayerTextures {
 }
 
 export const OBJECTS: BodyResourceDescriptionInterface[] = [
-    { id: "teleportation", label: "Teleport", img: "resources/objects/teleportation.png" },
+    { id: "teleportation", img: "resources/objects/teleportation.png" },
 ];

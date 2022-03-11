@@ -28,6 +28,8 @@ services:
       dockerfile: pusher/Dockerfile
     command: yarn run runprod
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
     image: 'wa-back-e2e'

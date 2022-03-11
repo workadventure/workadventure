@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "tsc": "tsc",
+    "tsc": "tsc && cp -rf ./data ./dist/",
     "dev": "ts-node-dev --respawn ./server.ts",
-    "prod": "tsc && node --max-old-space-size=4096 ./dist/server.js",
+    "prod": "tsc && cp -rf ./data ./dist/ && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
