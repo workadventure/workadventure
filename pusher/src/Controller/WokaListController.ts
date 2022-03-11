@@ -7,6 +7,7 @@ export class WokaListController extends BaseHttpController {
     routes() {
         this.app.options("/woka/list/:roomUrl", {}, (req, res) => {
             res.status(200).send("");
+            return;
         });
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
