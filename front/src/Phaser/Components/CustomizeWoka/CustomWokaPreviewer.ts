@@ -10,20 +10,24 @@ export enum CustomWokaBodyPart {
 }
 
 export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
-    private background: Phaser.GameObjects.Rectangle;
-
+    private background: Phaser.GameObjects.Graphics;
     private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
+
+    private currentAnimationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
+    private currentlyMoving: boolean = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y);
 
+        const spritesOffset = -2;
+
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add.sprite(0, 0, "").setScale(4),
-            [CustomWokaBodyPart.Body]: this.scene.add.sprite(0, 0, "").setScale(4),
-            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(0, 0, "").setScale(4),
-            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(0, 0, "").setScale(4),
-            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(0, 0, "").setScale(4),
-            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(0, 0, "").setScale(4),
+            [CustomWokaBodyPart.Accessory]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Body]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
         };
 
         this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
@@ -33,8 +37,11 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.updateSprite("hair3", CustomWokaBodyPart.Hair);
         this.updateSprite("hat2", CustomWokaBodyPart.Hat);
 
-        this.background = this.createBackground();
-        this.setSize(this.background.displayWidth, this.background.displayHeight);
+        const width = 150;
+        const height = 200;
+
+        this.background = this.createBackground(width, height);
+        this.setSize(width, height);
 
         this.add([
             this.background,
@@ -50,14 +57,26 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     }
 
     public update(): void {
-        this.playAnimation(PlayerAnimationDirections.Down, true);
+        this.animate();
     }
 
-    private createBackground(): Phaser.GameObjects.Rectangle {
-        return this.scene.add.rectangle(0, 0, 150, 300, 0xbfbfbf, 0.5);
+    public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
+        this.currentAnimationDirection = direction;
+        this.currentlyMoving = moving;
     }
 
-    public playAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
+    private createBackground(width: number, height: number): Phaser.GameObjects.Graphics {
+        const background = this.scene.add.graphics();
+        background.fillStyle(0xffffff);
+        background.lineStyle(5, 0xadafbc);
+
+        background.fillRect(-width / 2, -height / 2, width, height);
+        background.strokeRect(-width / 2, -height / 2, width, height);
+
+        return background;
+    }
+
+    private animate(): void {
         for (const bodyPartKey in this.sprites) {
             const sprite = this.sprites[bodyPartKey as CustomWokaBodyPart];
             if (!sprite.anims) {
@@ -65,10 +84,16 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
                 return;
             }
             const textureKey = sprite.texture.key;
-            if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
-                sprite.play(textureKey + "-" + direction + "-" + PlayerAnimationTypes.Walk, true);
-            } else if (!moving) {
-                sprite.anims.play(textureKey + "-" + direction + "-" + PlayerAnimationTypes.Idle, true);
+            if (
+                this.currentlyMoving &&
+                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.currentAnimationDirection)
+            ) {
+                sprite.play(textureKey + "-" + this.currentAnimationDirection + "-" + PlayerAnimationTypes.Walk, true);
+            } else if (!this.currentlyMoving) {
+                sprite.anims.play(
+                    textureKey + "-" + this.currentAnimationDirection + "-" + PlayerAnimationTypes.Idle,
+                    true
+                );
             }
         }
     }

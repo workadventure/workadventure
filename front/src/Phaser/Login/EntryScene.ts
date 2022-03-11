@@ -47,8 +47,8 @@ export class EntryScene extends Scene {
                         // We can do it at this stage.
                         waScaleManager.applyNewSize();
                         // this.scene.start(nextSceneName);
-                        // this.scene.start(CustomizeSceneName);
-                        this.scene.start(SelectCharacterSceneName);
+                        this.scene.start(CustomizeSceneName);
+                        // this.scene.start(SelectCharacterSceneName);
                     })
                     .catch((err) => {
                         const $LL = get(LL);

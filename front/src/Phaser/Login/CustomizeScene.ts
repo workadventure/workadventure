@@ -16,7 +16,7 @@ import { get } from "svelte/store";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-import { CustomWokaPreviewer } from "../Components/CustomizeWoka/CustomWokaPreviewer";
+import { CustomWokaBodyPart, CustomWokaPreviewer } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -207,6 +207,37 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.input.keyboard.on("keyup-LEFT", () => (this.moveHorizontally = -1));
         this.input.keyboard.on("keyup-DOWN", () => (this.moveVertically = 1));
         this.input.keyboard.on("keyup-UP", () => (this.moveVertically = -1));
+
+        this.input.keyboard.on("keydown-R", () => {
+            this.randomizeOutfit();
+        });
+    }
+
+    private randomizeOutfit(): void {
+        this.customWokaPreviewer.updateSprite(
+            this.layers[0][Math.floor(Math.random() * this.layers[0].length)].id,
+            CustomWokaBodyPart.Body
+        );
+        this.customWokaPreviewer.updateSprite(
+            this.layers[1][Math.floor(Math.random() * this.layers[1].length)].id,
+            CustomWokaBodyPart.Eyes
+        );
+        this.customWokaPreviewer.updateSprite(
+            this.layers[2][Math.floor(Math.random() * this.layers[2].length)].id,
+            CustomWokaBodyPart.Hair
+        );
+        this.customWokaPreviewer.updateSprite(
+            this.layers[3][Math.floor(Math.random() * this.layers[3].length)].id,
+            CustomWokaBodyPart.Clothes
+        );
+        this.customWokaPreviewer.updateSprite(
+            this.layers[4][Math.floor(Math.random() * this.layers[4].length)].id,
+            CustomWokaBodyPart.Hat
+        );
+        this.customWokaPreviewer.updateSprite(
+            this.layers[5][Math.floor(Math.random() * this.layers[5].length)].id,
+            CustomWokaBodyPart.Accessory
+        );
     }
 
     private doMoveCursorHorizontally(index: number): void {
