@@ -364,8 +364,6 @@ class ConnectionManager {
             }
         }
 
-        console.log("textures", textures);
-
         if (textures) {
             const layers: string[] = [];
             for (const texture of textures) {
