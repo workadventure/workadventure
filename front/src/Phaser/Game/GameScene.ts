@@ -30,7 +30,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -1109,6 +1109,23 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                    actionName: data.actionKey,
+                    callback: () => {
+                        iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
+                    },
+                });
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
                     this.cameraManager.on(
@@ -1893,6 +1910,7 @@ ${escapedMessage}
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
+            addPlayerData.userUuid,
             this,
             addPlayerData.position.x,
             addPlayerData.position.y,
@@ -1919,6 +1937,10 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
+        });
+
+        player.on(RemotePlayerEvent.Clicked, () => {
+            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
         });
     }
 
