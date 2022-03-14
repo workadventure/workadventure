@@ -32,7 +32,7 @@ export class WokaListController extends BaseHttpController {
             let { roomUrl } = parse(req.path_query);
 
             if (typeof roomUrl !== "string") {
-                throw new Error("missing roomUrl URL parameter");
+                return res.status(400).send("missing roomUrl URL parameter");
             }
 
             roomUrl = decodeURIComponent(roomUrl);
