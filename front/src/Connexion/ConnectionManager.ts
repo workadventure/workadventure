@@ -330,9 +330,12 @@ class ConnectionManager {
                 throw new Error("No Auth code provided");
             }
         }
-        const { authToken, userUuid, email, username, locale } = await Axios.get(`${PUSHER_URL}/login-callback`, {
-            params: { code, nonce, token, playUri: this.currentRoom?.key },
-        }).then((res) => {
+        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(
+            `${PUSHER_URL}/login-callback`,
+            {
+                params: { code, nonce, token, playUri: this.currentRoom?.key },
+            }
+        ).then((res) => {
             return res.data;
         });
         localUserStore.setAuthToken(authToken);
@@ -358,6 +361,18 @@ class ConnectionManager {
                 }
             } catch (err) {
                 console.warn("Could not set locale", err);
+            }
+        }
+
+        if (textures) {
+            const layers: string[] = [];
+            for (const texture of textures) {
+                if (texture !== undefined) {
+                    layers.push(texture.id);
+                }
+            }
+            if (layers.length > 0) {
+                gameManager.setCharacterLayers(layers);
             }
         }
 
