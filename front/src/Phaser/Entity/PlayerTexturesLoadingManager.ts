@@ -96,6 +96,12 @@ export const createLoadingPromise = (
             return;
         });
 
+        // If for some reason, the "img" is empty, let's reject the promise.
+        if (!playerResourceDescriptor.img) {
+            console.warn("Tried to load an empty texture for a Woka");
+            rej(playerResourceDescriptor);
+            return;
+        }
         loadPlugin.spritesheet(playerResourceDescriptor.id, playerResourceDescriptor.img, frameConfig);
         const errorCallback = (file: { src: string }) => {
             if (file.src !== playerResourceDescriptor.img) return;

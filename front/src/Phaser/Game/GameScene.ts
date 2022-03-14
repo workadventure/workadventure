@@ -18,7 +18,7 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
-import { lazyLoadPlayerCharacterTextures, loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
