@@ -16,6 +16,7 @@ import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
+import { desktopApi } from "./Api/desktop/index";
 import { SelectCharacterMobileScene } from "./Phaser/Login/SelectCharacterMobileScene";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
@@ -154,6 +155,7 @@ coWebsiteManager.onResize.subscribe(() => {
 });
 
 iframeListener.init();
+desktopApi.init();
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),

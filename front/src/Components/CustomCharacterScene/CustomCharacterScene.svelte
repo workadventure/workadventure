@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { CustomizeScene, CustomizeSceneName } from "../../Phaser/Login/CustomizeScene";
     import { activeRowStore } from "../../Stores/CustomCharacterStore";

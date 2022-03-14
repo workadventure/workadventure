@@ -126,7 +126,7 @@ export class GameMap {
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
             for (let x = 0; x < this.map.width; x += 1) {
-                row.push(this.isCollidingAt(x, y) ? 1 : 0);
+                row.push(this.isCollidingAt(x, y) ? 1 : this.isExitTile(x, y) ? 2 : 0);
             }
             grid.push(row);
         }
@@ -336,8 +336,33 @@ export class GameMap {
             if (!layer.visible) {
                 continue;
             }
-            if (layer.getTileAt(x, y)?.properties[GameMapProperties.COLLIDES]) {
+            if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    private isExitTile(x: number, y: number): boolean {
+        for (const layer of this.phaserLayers) {
+            if (!layer.visible) {
+                continue;
+            }
+            const tile = layer.getTileAt(x, y);
+            if (!tile) {
+                continue;
+            }
+            if (
+                tile &&
+                (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL])
+            ) {
+                return true;
+            }
+            for (const property of layer.layer.properties) {
+                //@ts-ignore
+                if (property.name && property.name === "exitUrl") {
+                    return true;
+                }
             }
         }
         return false;

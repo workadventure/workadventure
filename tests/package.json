@@ -1,14 +1,13 @@
 {
   "devDependencies": {
+    "@playwright/test": "^1.19.1",
+    "@types/dockerode": "^3.3.0",
+    "axios": "^0.24.0",
     "dockerode": "^3.3.1",
-    "testcafe": "^1.18.0"
+    "dotenv-cli": "^5.0.0"
   },
   "scripts": {
-    "test": "testcafe"
-  },
-  "dependencies": {
-    "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "@types/dockerode": "^3.3.0",
-    "axios": "^0.24.0"
+    "test": "dotenv -e ../.env -- playwright test",
+    "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test"
   }
 }

@@ -4,31 +4,38 @@ import { AuthenticateController } from "./Controller/AuthenticateController"; //
 import { MapController } from "./Controller/MapController";
 import { PrometheusController } from "./Controller/PrometheusController";
 import { DebugController } from "./Controller/DebugController";
-import { App as uwsApp } from "./Server/sifrr.server";
 import { AdminController } from "./Controller/AdminController";
 import { OpenIdProfileController } from "./Controller/OpenIdProfileController";
+import { WokaListController } from "./Controller/WokaListController";
+import { SwaggerController } from "./Controller/SwaggerController";
+import HyperExpress from "hyper-express";
+import { cors } from "./Middleware/Cors";
+import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
 
 class App {
-    public app: uwsApp;
-    public ioSocketController: IoSocketController;
-    public authenticateController: AuthenticateController;
-    public mapController: MapController;
-    public prometheusController: PrometheusController;
-    private debugController: DebugController;
-    private adminController: AdminController;
-    private openIdProfileController: OpenIdProfileController;
+    public app: HyperExpress.compressors.TemplatedApp;
 
     constructor() {
-        this.app = new uwsApp();
+        const webserver = new HyperExpress.Server();
+        this.app = webserver.uws_instance;
 
-        //create socket controllers
-        this.ioSocketController = new IoSocketController(this.app);
-        this.authenticateController = new AuthenticateController(this.app);
-        this.mapController = new MapController(this.app);
-        this.prometheusController = new PrometheusController(this.app);
-        this.debugController = new DebugController(this.app);
-        this.adminController = new AdminController(this.app);
-        this.openIdProfileController = new OpenIdProfileController(this.app);
+        // Global middlewares
+        webserver.use(cors);
+
+        // Socket controllers
+        new IoSocketController(this.app);
+
+        // Http controllers
+        new AuthenticateController(webserver);
+        new MapController(webserver);
+        new PrometheusController(webserver);
+        new DebugController(webserver);
+        new AdminController(webserver);
+        new OpenIdProfileController(webserver);
+        new WokaListController(webserver);
+        if (ENABLE_OPENAPI_ENDPOINT) {
+            new SwaggerController(webserver);
+        }
     }
 }
 

@@ -27,10 +27,7 @@ services:
 
 
   front:
-    build:
-      context: ../..
-      dockerfile: front/Dockerfile
-    #image: thecodingmachine/workadventure-front:${VERSION}
+    image: thecodingmachine/workadventure-front:${VERSION}
     environment:
       - DEBUG_MODE
       - JITSI_URL
@@ -60,10 +57,7 @@ services:
     restart: ${RESTART_POLICY}
 
   pusher:
-    build:
-      context: ../..
-      dockerfile: pusher/Dockerfile
-    #image: thecodingmachine/workadventure-pusher:${VERSION}
+    image: thecodingmachine/workadventure-pusher:${VERSION}
     command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
@@ -77,7 +71,7 @@ services:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(${PUSHER_HOST}`)"
+      - "traefik.http.routers.pusher-ssl.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
       - "traefik.http.routers.pusher-ssl.service=pusher"
       - "traefik.http.routers.pusher-ssl.tls=true"
@@ -85,10 +79,7 @@ services:
     restart: ${RESTART_POLICY}
 
   back:
-    build:
-      context: ../..
-      dockerfile: back/Dockerfile
-    #image: thecodingmachine/workadventure-back:${VERSION}
+    image: thecodingmachine/workadventure-back:${VERSION}
     command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
@@ -119,7 +110,7 @@ services:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
       - "traefik.http.routers.icon.rule=Host(`${ICON_HOST}`)"
-      - "traefik.http.routers.icon.entryPoints=web,traefik"
+      - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
       - "traefik.http.routers.icon-ssl.rule=Host(`${ICON_HOST}`)"
       - "traefik.http.routers.icon-ssl.entryPoints=websecure"

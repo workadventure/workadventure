@@ -76,7 +76,3 @@
 <section class="section-input-send-text">
     <div class="input-send-text" bind:this={QUILL_EDITOR} />
 </section>
-
-<style lang="scss">
-    @import "https://cdn.quilljs.com/1.3.7/quill.snow.css";
-</style>

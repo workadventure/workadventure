@@ -18,7 +18,7 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures, loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
@@ -30,7 +30,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -91,11 +91,14 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
+import { localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import CancelablePromise from "cancelable-promise";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -172,6 +175,9 @@ export class GameScene extends DirtyScene {
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
+
+    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
+    private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
@@ -240,13 +246,7 @@ export class GameScene extends DirtyScene {
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
-        const localUser = localUserStore.getLocalUser();
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                loadCustomTexture(this.load, texture).catch((e) => console.error(e));
-            }
-        }
+        this.load.image("iconTalk", "/resources/icons/icon_talking.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -338,7 +338,6 @@ export class GameScene extends DirtyScene {
         (this.load as any).rexWebFont({
             custom: {
                 families: ["Press Start 2P"],
-                urls: ["/resources/fonts/fonts.css"],
                 testString: "abcdefg",
             },
         });
@@ -582,12 +581,6 @@ export class GameScene extends DirtyScene {
             waScaleManager
         );
 
-        this.pathfindingManager = new PathfindingManager(
-            this,
-            this.gameMap.getCollisionGrid(),
-            this.gameMap.getTileDimensions()
-        );
-
         this.activatablesManager = new ActivatablesManager(this.CurrentPlayer);
 
         biggestAvailableAreaStore.recompute();
@@ -641,13 +634,44 @@ export class GameScene extends DirtyScene {
             this.connect();
         }
 
+        const talkIconVolumeTreshold = 10;
         let oldPeerNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
+            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
+            this.volumeStoreUnsubscribers.clear();
+
+            for (const [key, videoStream] of peers) {
+                this.volumeStoreUnsubscribers.set(
+                    key,
+                    videoStream.volumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
+                        }
+                    })
+                );
+            }
+
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeerNumber) {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeerNumber) {
                 this.playSound("audio-webrtc-out");
+            }
+            if (newPeerNumber > 0) {
+                if (!this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
+                        if (volume) {
+                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        }
+                    });
+                }
+            } else {
+                this.CurrentPlayer.showTalkIcon(false, true);
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
+                if (this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber();
+                    this.localVolumeStoreUnsubscriber = undefined;
+                }
             }
             oldPeerNumber = newPeerNumber;
         });
@@ -714,6 +738,14 @@ export class GameScene extends DirtyScene {
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                lazyLoadPlayerCharacterTextures(this.load, onConnect.room.characterLayers)
+                    .then((layers) => {
+                        this.currentPlayerTexturesResolve(layers);
+                    })
+                    .catch((e) => {
+                        this.currentPlayerTexturesReject(e);
+                    });
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
@@ -1077,6 +1109,23 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                    actionName: data.actionKey,
+                    callback: () => {
+                        iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
+                    },
+                });
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
                     this.cameraManager.on(
@@ -1407,7 +1456,7 @@ ${escapedMessage}
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
         } else {
             const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
-            if (phaserLayers === []) {
+            if (phaserLayers.length === 0) {
                 console.warn(
                     'Could not find layer with name that contains "' +
                         layerName +
@@ -1502,7 +1551,7 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
-        this.emoteManager.destroy();
+        this.emoteManager?.destroy();
         this.cameraManager.destroy();
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
@@ -1568,6 +1617,8 @@ ${escapedMessage}
                         }
                     })
                     .catch((reason) => console.warn(reason));
+
+                urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
@@ -1659,16 +1710,23 @@ ${escapedMessage}
         }
     }
 
+    // The promise that will resolve to the current player texture. This will be available only after connection is established.
+    private currentPlayerTexturesResolve!: (value: string[]) => void;
+    private currentPlayerTexturesReject!: (reason: unknown) => void;
+    private currentPlayerTexturesPromise: CancelablePromise<string[]> = new CancelablePromise((resolve, reject) => {
+        this.currentPlayerTexturesResolve = resolve;
+        this.currentPlayerTexturesReject = reject;
+    });
+
     private createCurrentPlayer() {
         //TODO create animation moving between exit and start
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
                 this.startPositionCalculator.startPosition.x,
                 this.startPositionCalculator.startPosition.y,
                 this.playerName,
-                texturesPromise,
+                this.currentPlayerTexturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
                 this.companion,
@@ -1852,6 +1910,7 @@ ${escapedMessage}
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
+            addPlayerData.userUuid,
             this,
             addPlayerData.position.x,
             addPlayerData.position.y,
@@ -1878,6 +1937,10 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
+        });
+
+        player.on(RemotePlayerEvent.Clicked, () => {
+            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
         });
     }
 

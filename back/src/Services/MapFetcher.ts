@@ -43,6 +43,15 @@ class MapFetcher {
      * @private
      */
     async isLocalUrl(url: string): Promise<boolean> {
+        if (
+            url ===
+            "http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json"
+        ) {
+            // This is an ugly exception case needed for the E2E test at "tests/tests/variables.spec.ts"
+            // Otherwise, we cannot test locally maps that are... not local.
+            return false;
+        }
+
         const urlObj = new URL(url);
         if (urlObj.hostname === "localhost" || urlObj.hostname.endsWith(".localhost")) {
             return true;

@@ -34,6 +34,16 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
 import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
+import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
+import {
+    AddActionsMenuKeyToRemotePlayerEvent,
+    isAddActionsMenuKeyToRemotePlayerEvent,
+} from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
+import {
+    isRemoveActionsMenuKeyFromRemotePlayerEvent,
+    RemoveActionsMenuKeyFromRemotePlayerEvent,
+} from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -62,6 +72,15 @@ class IframeListener {
 
     private readonly _cameraFollowPlayerStream: Subject<CameraFollowPlayerEvent> = new Subject();
     public readonly cameraFollowPlayerStream = this._cameraFollowPlayerStream.asObservable();
+
+    private readonly _addActionsMenuKeyToRemotePlayerStream: Subject<AddActionsMenuKeyToRemotePlayerEvent> =
+        new Subject();
+    public readonly addActionsMenuKeyToRemotePlayerStream = this._addActionsMenuKeyToRemotePlayerStream.asObservable();
+
+    private readonly _removeActionsMenuKeyFromRemotePlayerEvent: Subject<RemoveActionsMenuKeyFromRemotePlayerEvent> =
+        new Subject();
+    public readonly removeActionsMenuKeyFromRemotePlayerEvent =
+        this._removeActionsMenuKeyFromRemotePlayerEvent.asObservable();
 
     private readonly _enablePlayerControlStream: Subject<void> = new Subject();
     public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
@@ -241,6 +260,16 @@ class IframeListener {
                         this._removeBubbleStream.next();
                     } else if (payload.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
+                    } else if (
+                        payload.type == "addActionsMenuKeyToRemotePlayer" &&
+                        isAddActionsMenuKeyToRemotePlayerEvent(payload.data)
+                    ) {
+                        this._addActionsMenuKeyToRemotePlayerStream.next(payload.data);
+                    } else if (
+                        payload.type == "removeActionsMenuKeyFromRemotePlayer" &&
+                        isRemoveActionsMenuKeyFromRemotePlayerEvent(payload.data)
+                    ) {
+                        this._removeActionsMenuKeyFromRemotePlayerEvent.next(payload.data);
                     } else if (payload.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
                     } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
@@ -289,68 +318,42 @@ class IframeListener {
         return new Promise<void>((resolve, reject) => {
             console.info("Loading map related script at ", scriptUrl);
 
-            if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
-                // Using external iframe mode (
-                const iframe = document.createElement("iframe");
-                iframe.id = IframeListener.getIFrameId(scriptUrl);
-                iframe.style.display = "none";
-                iframe.src =
-                    "/iframe.html?script=" +
-                    encodeURIComponent(scriptUrl) +
-                    "&moduleMode=" +
-                    (enableModuleMode ? "true" : "false");
+            const iframe = document.createElement("iframe");
+            iframe.id = IframeListener.getIFrameId(scriptUrl);
+            iframe.style.display = "none";
 
-                // We are putting a sandbox on this script because it will run in the same domain as the main website.
-                iframe.sandbox.add("allow-scripts");
-                iframe.sandbox.add("allow-top-navigation-by-user-activation");
+            // We are putting a sandbox on this script because it will run in the same domain as the main website.
+            iframe.sandbox.add("allow-scripts");
+            iframe.sandbox.add("allow-top-navigation-by-user-activation");
 
-                iframe.addEventListener("load", () => {
-                    resolve();
-                });
+            //iframe.src = "data:text/html;charset=utf-8," + escape(html);
+            iframe.srcdoc =
+                "<!doctype html>\n" +
+                "\n" +
+                '<html lang="en">\n' +
+                "<head>\n" +
+                '<script src="' +
+                window.location.protocol +
+                "//" +
+                window.location.host +
+                '/iframe_api.js" ></script>\n' +
+                "<script " +
+                (enableModuleMode ? 'type="module" ' : "") +
+                'src="' +
+                scriptUrl +
+                '" ></script>\n' +
+                "<title></title>\n" +
+                "</head>\n" +
+                "</html>\n";
 
-                document.body.prepend(iframe);
+            iframe.addEventListener("load", () => {
+                resolve();
+            });
 
-                this.scripts.set(scriptUrl, iframe);
-                this.registerIframe(iframe);
-            } else {
-                // production code
-                const iframe = document.createElement("iframe");
-                iframe.id = IframeListener.getIFrameId(scriptUrl);
-                iframe.style.display = "none";
+            document.body.prepend(iframe);
 
-                // We are putting a sandbox on this script because it will run in the same domain as the main website.
-                iframe.sandbox.add("allow-scripts");
-                iframe.sandbox.add("allow-top-navigation-by-user-activation");
-
-                //iframe.src = "data:text/html;charset=utf-8," + escape(html);
-                iframe.srcdoc =
-                    "<!doctype html>\n" +
-                    "\n" +
-                    '<html lang="en">\n' +
-                    "<head>\n" +
-                    '<script src="' +
-                    window.location.protocol +
-                    "//" +
-                    window.location.host +
-                    '/iframe_api.js" ></script>\n' +
-                    "<script " +
-                    (enableModuleMode ? 'type="module" ' : "") +
-                    'src="' +
-                    scriptUrl +
-                    '" ></script>\n' +
-                    "<title></title>\n" +
-                    "</head>\n" +
-                    "</html>\n";
-
-                iframe.addEventListener("load", () => {
-                    resolve();
-                });
-
-                document.body.prepend(iframe);
-
-                this.scripts.set(scriptUrl, iframe);
-                this.registerIframe(iframe);
-            }
+            this.scripts.set(scriptUrl, iframe);
+            this.registerIframe(iframe);
         });
     }
 
@@ -463,6 +466,20 @@ class IframeListener {
                 data: event,
             });
         }
+    }
+
+    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
+        this.postMessage({
+            type: "remotePlayerClickedEvent",
+            data: event,
+        });
+    }
+
+    sendActionsMenuActionClickedEvent(event: ActionsMenuActionClickedEvent) {
+        this.postMessage({
+            type: "actionsMenuActionClickedEvent",
+            data: event,
+        });
     }
 
     sendCameraUpdated(event: WasCameraUpdatedEvent) {

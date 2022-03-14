@@ -18,6 +18,7 @@
 
     export let peer: VideoPeer;
     let streamStore = peer.streamStore;
+    let volumeStore = peer.volumeStore;
     let name = peer.userName;
     let backGroundColor = getColorByString(peer.userName);
     let textColor = getTextColorByBackgroundColor(backGroundColor);
@@ -95,7 +96,7 @@
     />
     <img src={blockSignImg} draggable="false" on:dragstart|preventDefault={noDrag} class="block-logo" alt="Block" />
     {#if $constraintStore && $constraintStore.audio !== false}
-        <SoundMeterWidget stream={$streamStore} />
+        <SoundMeterWidget volume={$volumeStore} />
     {/if}
 </div>
 

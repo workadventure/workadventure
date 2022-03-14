@@ -10,13 +10,14 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
 import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
+import { TalkIcon } from "../Components/TalkIcon";
 
 const playerNameY = -25;
 
@@ -33,6 +34,7 @@ const interactiveRadius = 35;
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
+    private readonly talkIcon: TalkIcon;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -81,7 +83,16 @@ export abstract class Character extends Container implements OutlineableInterfac
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
+                return lazyLoadPlayerCharacterTextures(scene.load, [
+                    {
+                        id: "color_22",
+                        img: "resources/customisation/character_color/character_color21.png",
+                    },
+                    {
+                        id: "eyes_23",
+                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                    },
+                ]).then((textures) => {
                     this.addTextures(textures, frame);
                     this.invisible = false;
                     this.playAnimation(direction, moving);
@@ -102,6 +113,17 @@ export abstract class Character extends Container implements OutlineableInterfac
                 fontSize: 35,
             },
         });
+
+        this.talkIcon = new TalkIcon(scene, 0, -45);
+        this.add(this.talkIcon);
+
+        if (isClickable) {
+            this.setInteractive({
+                hitArea: new Phaser.Geom.Circle(0, 0, interactiveRadius),
+                hitAreaCallback: Phaser.Geom.Circle.Contains, //eslint-disable-line @typescript-eslint/unbound-method
+                useHandCursor: true,
+            });
+        }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
         this.add(this.playerNameText);
 
@@ -198,6 +220,10 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             return "male1";
         });
+    }
+
+    public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
+        this.talkIcon.show(show, forceClose);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
