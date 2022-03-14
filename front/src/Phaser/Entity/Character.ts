@@ -10,7 +10,7 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
@@ -83,7 +83,16 @@ export abstract class Character extends Container implements OutlineableInterfac
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
+                return lazyLoadPlayerCharacterTextures(scene.load, [
+                    {
+                        id: "color_22",
+                        img: "resources/customisation/character_color/character_color21.png",
+                    },
+                    {
+                        id: "eyes_23",
+                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                    },
+                ]).then((textures) => {
                     this.addTextures(textures, frame);
                     this.invisible = false;
                     this.playAnimation(direction, moving);

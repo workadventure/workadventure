@@ -1,5 +1,5 @@
-import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
-import { GameRoomPolicyTypes, PusherRoom } from "../Model/PusherRoom";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
+import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -24,7 +24,6 @@ import {
     VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
-import { TemplatedApp } from "uWebSockets.js";
 import { parse } from "query-string";
 import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
@@ -33,15 +32,51 @@ import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "_Model/Zone";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
 import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
+import HyperExpress from "hyper-express";
+import { localWokaService } from "../Services/LocalWokaService";
+import { WebSocket } from "uWebSockets.js";
+import { WokaDetail } from "../Enum/PlayerTextures";
+
+/**
+ * The object passed between the "open" and the "upgrade" methods when opening a websocket
+ */
+interface UpgradeData {
+    // Data passed here is accessible on the "websocket" socket object.
+    rejected: false;
+    token: string;
+    userUuid: string;
+    IPAddress: string;
+    roomId: string;
+    name: string;
+    companion: CompanionMessage | undefined;
+    characterLayers: WokaDetail[];
+    messages: unknown[];
+    tags: string[];
+    visitCardUrl: string | null;
+    userRoomToken: string | undefined;
+    position: PointInterface;
+    viewport: {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
+}
+
+interface UpgradeFailedData {
+    rejected: true;
+    reason: "tokenInvalid" | "textureInvalid" | null;
+    message: string;
+    roomId: string;
+}
 
 export class IoSocketController {
     private nextUserId: number = 1;
 
-    constructor(private readonly app: TemplatedApp) {
+    constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
         if (ADMIN_SOCKETS_TOKEN) {
             this.adminRoomSocket();
@@ -245,7 +280,7 @@ export class IoSocketController {
                         let memberVisitCardUrl: string | null = null;
                         let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
-                        let memberTextures: CharacterTexture[] = [];
+                        let memberTextures: WokaDetail[] = [];
                         const room = await socketManager.getOrCreateRoom(roomId);
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
@@ -257,10 +292,18 @@ export class IoSocketController {
                             anonymous: true,
                             userRoomToken: undefined,
                         };
+
+                        let characterLayerObjs: WokaDetail[];
+
                         if (ADMIN_API_URL) {
                             try {
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(userIdentifier, roomId, IPAddress);
+                                    userData = await adminApi.fetchMemberDataByUuid(
+                                        userIdentifier,
+                                        roomId,
+                                        IPAddress,
+                                        characterLayers
+                                    );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
                                         if (err?.response?.status == 404) {
@@ -309,6 +352,8 @@ export class IoSocketController {
                                 ) {
                                     throw new Error("Use the login URL to connect");
                                 }
+
+                                characterLayerObjs = memberTextures;
                             } catch (e) {
                                 console.log(
                                     "access not granted for user " +
@@ -319,11 +364,31 @@ export class IoSocketController {
                                 console.error(e);
                                 throw new Error("User cannot access this world");
                             }
+                        } else {
+                            const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
+                            if (fetchedTextures === undefined) {
+                                // The textures we want to use do not exist!
+                                // We need to go in error.
+                                res.upgrade(
+                                    {
+                                        rejected: true,
+                                        reason: "textureInvalid",
+                                        message: "",
+                                        roomId,
+                                    } as UpgradeFailedData,
+                                    websocketKey,
+                                    websocketProtocol,
+                                    websocketExtensions,
+                                    context
+                                );
+                                return;
+                            }
+                            characterLayerObjs = fetchedTextures;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
-                        const characterLayerObjs: CharacterLayer[] =
-                            SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);
+                        /*const characterLayerObjs: CharacterLayer[] =
+                            SocketManager.mergeCharacterLayersAndCustomTextures(characterLayers, memberTextures);*/
 
                         if (upgradeAborted.aborted) {
                             console.log("Ouch! Client disconnected before we could upgrade it!");
@@ -335,7 +400,7 @@ export class IoSocketController {
                         res.upgrade(
                             {
                                 // Data passed here is accessible on the "websocket" socket object.
-                                url,
+                                rejected: false,
                                 token,
                                 userUuid: userData.userUuid,
                                 IPAddress,
@@ -347,7 +412,6 @@ export class IoSocketController {
                                 tags: memberTags,
                                 visitCardUrl: memberVisitCardUrl,
                                 userRoomToken: memberUserRoomToken,
-                                textures: memberTextures,
                                 position: {
                                     x: x,
                                     y: y,
@@ -360,7 +424,7 @@ export class IoSocketController {
                                     bottom,
                                     left,
                                 },
-                            },
+                            } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,
                             websocketProtocol,
@@ -375,7 +439,7 @@ export class IoSocketController {
                                     reason: e instanceof InvalidTokenError ? tokenInvalidException : null,
                                     message: e.message,
                                     roomId,
-                                },
+                                } as UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -388,7 +452,7 @@ export class IoSocketController {
                                     reason: null,
                                     message: "500 Internal Server Error",
                                     roomId,
-                                },
+                                } as UpgradeFailedData,
                                 websocketKey,
                                 websocketProtocol,
                                 websocketExtensions,
@@ -399,20 +463,23 @@ export class IoSocketController {
                 })();
             },
             /* Handlers */
-            open: (ws) => {
+            open: (_ws: WebSocket) => {
+                const ws = _ws as WebSocket & (UpgradeData | UpgradeFailedData);
                 if (ws.rejected === true) {
                     // If there is a room in the error, let's check if we need to clean it.
                     if (ws.roomId) {
-                        socketManager.deleteRoomIfEmptyFromId(ws.roomId as string);
+                        socketManager.deleteRoomIfEmptyFromId(ws.roomId);
                     }
 
                     //FIX ME to use status code
                     if (ws.reason === tokenInvalidException) {
                         socketManager.emitTokenExpiredMessage(ws);
+                    } else if (ws.reason === "textureInvalid") {
+                        socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.message === "World is full") {
                         socketManager.emitWorldFullMessage(ws);
                     } else {
-                        socketManager.emitConnexionErrorMessage(ws, ws.message as string);
+                        socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }
                     setTimeout(() => ws.close(), 0);
                     return;
@@ -540,7 +607,6 @@ export class IoSocketController {
         client.name = ws.name;
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
-        client.textures = ws.textures;
         client.characterLayers = ws.characterLayers;
         client.companion = ws.companion;
         client.roomId = ws.roomId;

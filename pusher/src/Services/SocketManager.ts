@@ -1,5 +1,5 @@
 import { PusherRoom } from "../Model/PusherRoom";
-import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
     AdminMessage,
     AdminPusherToBackMessage,
@@ -39,6 +39,7 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
+    InvalidTextureMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -53,7 +54,8 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 import { WebSocket } from "uWebSockets.js";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+//import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { compressors } from "hyper-express";
 
 const debug = Debug("socket");
 
@@ -175,9 +177,12 @@ export class SocketManager implements ZoneEventListener {
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
-                characterLayerMessage.setName(characterLayer.name);
+                characterLayerMessage.setName(characterLayer.id);
                 if (characterLayer.url !== undefined) {
                     characterLayerMessage.setUrl(characterLayer.url);
+                }
+                if (characterLayer.layer !== undefined) {
+                    characterLayerMessage.setLayer(characterLayer.layer);
                 }
 
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
@@ -552,36 +557,6 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    /**
-     * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
-     */
-    static mergeCharacterLayersAndCustomTextures(
-        characterLayers: string[],
-        memberTextures: CharacterTexture[]
-    ): CharacterLayer[] {
-        const characterLayerObjs: CharacterLayer[] = [];
-        for (const characterLayer of characterLayers) {
-            if (characterLayer.startsWith("customCharacterTexture")) {
-                const customCharacterLayerId: number = +characterLayer.substr(22);
-                for (const memberTexture of memberTextures) {
-                    if (memberTexture.id == customCharacterLayerId) {
-                        characterLayerObjs.push({
-                            name: characterLayer,
-                            url: memberTexture.url,
-                        });
-                        break;
-                    }
-                }
-            } else {
-                characterLayerObjs.push({
-                    name: characterLayer,
-                    url: undefined,
-                });
-            }
-        }
-        return characterLayerObjs;
-    }
-
     public onUserEnters(user: UserDescriptor, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setUserjoinedmessage(user.toUserJoinedMessage());
@@ -627,7 +602,7 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
-    public emitWorldFullMessage(client: WebSocket) {
+    public emitWorldFullMessage(client: compressors.WebSocket) {
         const errorMessage = new WorldFullMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -638,7 +613,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: WebSocket) {
+    public emitTokenExpiredMessage(client: compressors.WebSocket) {
         const errorMessage = new TokenExpiredMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -649,7 +624,18 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+    public emitInvalidTextureMessage(client: compressors.WebSocket) {
+        const errorMessage = new InvalidTextureMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setInvalidtexturemessage(errorMessage);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+
+    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string) {
         const errorMessage = new WorldConnexionMessage();
         errorMessage.setMessage(message);
 

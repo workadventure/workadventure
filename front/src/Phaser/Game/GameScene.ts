@@ -18,7 +18,7 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
-import { lazyLoadPlayerCharacterTextures, loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures, loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
@@ -31,7 +31,7 @@ import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
-import { RemotePlayer } from "../Entity/RemotePlayer";
+import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
@@ -98,7 +98,8 @@ import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import { coWebsites } from "../../Stores/CoWebsiteStore";
+import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import CancelablePromise from "cancelable-promise";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -246,13 +247,6 @@ export class GameScene extends DirtyScene {
         //initialize frame event of scripting API
         this.listenToIframeEvents();
 
-        const localUser = localUserStore.getLocalUser();
-        const textures = localUser?.textures;
-        if (textures) {
-            for (const texture of textures) {
-                loadCustomTexture(this.load, texture).catch((e) => console.error(e));
-            }
-        }
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
 
         if (touchScreenManager.supportTouchScreen) {
@@ -573,7 +567,6 @@ export class GameScene extends DirtyScene {
         this.pathfindingManager = new PathfindingManager(
             this,
             this.gameMap.getCollisionGrid(),
-            this.gameMap.getWalkingCostGrid(),
             this.gameMap.getTileDimensions()
         );
 
@@ -746,6 +739,14 @@ export class GameScene extends DirtyScene {
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                lazyLoadPlayerCharacterTextures(this.load, onConnect.room.characterLayers)
+                    .then((layers) => {
+                        this.currentPlayerTexturesResolve(layers);
+                    })
+                    .catch((e) => {
+                        this.currentPlayerTexturesReject(e);
+                    });
 
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
@@ -1116,6 +1117,23 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
+                    actionName: data.actionKey,
+                    callback: () => {
+                        iframeListener.sendActionsMenuActionClickedEvent({ actionName: data.actionKey, id: data.id });
+                    },
+                });
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.removeActionsMenuKeyFromRemotePlayerEvent.subscribe((data) => {
+                this.MapPlayersByKey.get(data.id)?.unregisterActionsMenuAction(data.actionKey);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.trackCameraUpdateStream.subscribe(() => {
                 if (!this.firstCameraUpdateSent) {
                     this.cameraManager.on(
@@ -1459,7 +1477,7 @@ ${escapedMessage}
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid(), this.gameMap.getWalkingCostGrid());
+        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
         this.markDirty();
     }
 
@@ -1541,7 +1559,7 @@ ${escapedMessage}
         this.messageSubscription?.unsubscribe();
         this.userInputManager.destroy();
         this.pinchManager?.destroy();
-        this.emoteManager.destroy();
+        this.emoteManager?.destroy();
         this.cameraManager.destroy();
         this.peerStoreUnsubscribe();
         this.emoteUnsubscribe();
@@ -1700,16 +1718,23 @@ ${escapedMessage}
         }
     }
 
+    // The promise that will resolve to the current player texture. This will be available only after connection is established.
+    private currentPlayerTexturesResolve!: (value: string[]) => void;
+    private currentPlayerTexturesReject!: (reason: unknown) => void;
+    private currentPlayerTexturesPromise: CancelablePromise<string[]> = new CancelablePromise((resolve, reject) => {
+        this.currentPlayerTexturesResolve = resolve;
+        this.currentPlayerTexturesReject = reject;
+    });
+
     private createCurrentPlayer() {
         //TODO create animation moving between exit and start
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, this.characterLayers);
         try {
             this.CurrentPlayer = new Player(
                 this,
                 this.startPositionCalculator.startPosition.x,
                 this.startPositionCalculator.startPosition.y,
                 this.playerName,
-                texturesPromise,
+                this.currentPlayerTexturesPromise,
                 PlayerAnimationDirections.Down,
                 false,
                 this.companion,
@@ -1893,6 +1918,7 @@ ${escapedMessage}
         const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
+            addPlayerData.userUuid,
             this,
             addPlayerData.position.x,
             addPlayerData.position.y,
@@ -1919,6 +1945,10 @@ ${escapedMessage}
         player.on(Phaser.Input.Events.POINTER_OUT, () => {
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
+        });
+
+        player.on(RemotePlayerEvent.Clicked, () => {
+            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
         });
     }
 
