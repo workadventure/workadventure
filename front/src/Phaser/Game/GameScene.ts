@@ -702,7 +702,11 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises])
+        Promise.all([
+            this.connectionAnswerPromise as Promise<unknown>,
+            ...scriptPromises,
+            this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
+        ])
             .then(() => {
                 this.scene.wake();
             })
