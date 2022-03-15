@@ -13,6 +13,8 @@
     let name = gameManager.getPlayerName() || "";
     let startValidating = false;
 
+    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
+
     function submit() {
         startValidating = true;
 
@@ -25,7 +27,7 @@
 
 <form class="loginScene" on:submit|preventDefault={submit}>
     <section class="text-center">
-        <img src={logoImg} alt="WorkAdventure logo" />
+        <img src={logo} alt="" />
     </section>
     <section class="text-center">
         <h2>{$LL.login.input.name.placeholder()}</h2>
