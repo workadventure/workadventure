@@ -18,6 +18,7 @@ import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
+import { Deferred } from "ts-deferred";
 
 const playerNameY = -25;
 
@@ -50,6 +51,11 @@ export abstract class Character extends Container implements OutlineableInterfac
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
 
+    /**
+     * A deferred promise that resolves when the texture of the character is actually displayed.
+     */
+    private textureLoadedDeferred = new Deferred<void>();
+
     constructor(
         scene: GameScene,
         x: number,
@@ -78,6 +84,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
                 });
@@ -92,11 +99,20 @@ export abstract class Character extends Container implements OutlineableInterfac
                         id: "eyes_23",
                         img: "resources/customisation/character_eyes/character_eyes23.png",
                     },
-                ]).then((textures) => {
-                    this.addTextures(textures, frame);
-                    this.invisible = false;
-                    this.playAnimation(direction, moving);
-                });
+                ])
+                    .then((textures) => {
+                        this.addTextures(textures, frame);
+                        this.invisible = false;
+                        this.playAnimation(direction, moving);
+                        this.textureLoadedDeferred.resolve();
+                        return this.getSnapshot().then((htmlImageElementSrc) => {
+                            this._pictureStore.set(htmlImageElementSrc);
+                        });
+                    })
+                    .catch((e) => {
+                        this.textureLoadedDeferred.reject(e);
+                        throw e;
+                    });
             })
             .finally(() => {
                 this.texturePromise = undefined;
@@ -516,5 +532,14 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
+    }
+
+    /**
+     * Returns a promise that resolves as soon as a texture is displayed for the user.
+     * The promise will return when the required texture is loaded OR when the fallback texture is loaded (in case
+     * the required texture could not be loaded).
+     */
+    public getTextureLoadedPromise(): PromiseLike<void> {
+        return this.textureLoadedDeferred.promise;
     }
 }

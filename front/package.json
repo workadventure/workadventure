@@ -57,6 +57,7 @@
     "simple-peer": "^9.11.0",
     "socket.io-client": "^2.3.0",
     "standardized-audio-context": "^25.2.4",
+    "ts-deferred": "^1.0.4",
     "ts-proto": "^1.96.0",
     "typesafe-i18n": "^2.59.0",
     "uuidv4": "^6.2.10",
