@@ -76,7 +76,7 @@ export class Player extends Character {
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
-        // take collider offset into consideraton
+        // take collider offset into consideration
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
         this.pathWalkingSpeed = speed;
         return new Promise((resolve) => {
