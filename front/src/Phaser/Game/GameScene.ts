@@ -99,6 +99,7 @@ import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 import CancelablePromise from "cancelable-promise";
+import { Deferred } from "ts-deferred";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -164,13 +165,9 @@ export class GameScene extends DirtyScene {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
-    private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
-    private connectionAnswerPromiseResolve!: (
-        value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
-    ) => void;
+    private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
-    private createPromise: Promise<void>;
-    private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
+    private createPromiseDeferred: Deferred<void>;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
@@ -232,12 +229,8 @@ export class GameScene extends DirtyScene {
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
 
-        this.createPromise = new Promise<void>((resolve, reject): void => {
-            this.createPromiseResolve = resolve;
-        });
-        this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
-            this.connectionAnswerPromiseResolve = resolve;
-        });
+        this.createPromiseDeferred = new Deferred<void>();
+        this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
     }
 
@@ -408,11 +401,11 @@ export class GameScene extends DirtyScene {
             this.load.on("complete", () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
-                this.createPromise
+                this.createPromiseDeferred.promise
                     .then(async () => {
                         itemFactory.create(this);
 
-                        const roomJoinedAnswer = await this.connectionAnswerPromise;
+                        const roomJoinedAnswer = await this.connectionAnswerPromiseDeferred.promise;
 
                         for (const object of objectsOfType) {
                             // TODO: we should pass here a factory to create sprites (maybe?)
@@ -609,7 +602,7 @@ export class GameScene extends DirtyScene {
             }
         }
 
-        this.createPromiseResolve();
+        this.createPromiseDeferred.resolve();
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
@@ -703,7 +696,7 @@ export class GameScene extends DirtyScene {
         });
 
         Promise.all([
-            this.connectionAnswerPromise as Promise<unknown>,
+            this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
             this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
         ])
@@ -872,7 +865,7 @@ export class GameScene extends DirtyScene {
                 );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
-                this.connectionAnswerPromiseResolve(onConnect.room);
+                this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 if (this.scene.isSleeping()) {
@@ -1287,7 +1280,7 @@ ${escapedMessage}
         iframeListener.registerAnswerer("getState", async () => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
-            await this.connectionAnswerPromise;
+            await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
@@ -1310,7 +1303,7 @@ ${escapedMessage}
             })
         );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
-            return this.connectionAnswerPromise.then(() => {
+            return this.connectionAnswerPromiseDeferred.promise.then(() => {
                 const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
                 //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
                 let newFirstgid = 1;
