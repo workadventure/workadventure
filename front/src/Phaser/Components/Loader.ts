@@ -1,9 +1,8 @@
 import ImageFrameConfig = Phaser.Types.Loader.FileTypes.ImageFrameConfig;
 import { DirtyScene } from "../Game/DirtyScene";
+import { gameManager } from "../Game/GameManager";
 
-const LogoNameIndex: string = "logoLoading";
 const TextName: string = "Loading...";
-const LogoResource: string = "static/images/logo.png";
 const LogoFrame: ImageFrameConfig = { frameWidth: 310, frameHeight: 60 };
 
 const loadingBarHeight: number = 16;
@@ -15,6 +14,7 @@ export class Loader {
     private progressAmount: number = 0;
     private logo: Phaser.GameObjects.Image | undefined;
     private loadingText: Phaser.GameObjects.Text | null = null;
+    private logoNameIndex!: string;
 
     public constructor(private scene: Phaser.Scene) {}
 
@@ -24,15 +24,18 @@ export class Loader {
             return;
         }
 
+        const logoResource = gameManager.currentStartedRoom.loadingLogo ?? "static/images/logo.png";
+        this.logoNameIndex = "logoLoading" + logoResource;
+
         const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
 
         const promiseLoadLogoTexture = new Promise<Phaser.GameObjects.Image>((res) => {
-            if (this.scene.load.textureManager.exists(LogoNameIndex)) {
+            if (this.scene.load.textureManager.exists(this.logoNameIndex)) {
                 return res(
                     (this.logo = this.scene.add.image(
                         this.scene.game.renderer.width / 2,
                         this.scene.game.renderer.height / 2 - 150,
-                        LogoNameIndex
+                        this.logoNameIndex
                     ))
                 );
             } else {
@@ -43,8 +46,8 @@ export class Loader {
                     TextName
                 );
             }
-            this.scene.load.spritesheet(LogoNameIndex, LogoResource, LogoFrame);
-            this.scene.load.once(`filecomplete-spritesheet-${LogoNameIndex}`, () => {
+            this.scene.load.spritesheet(this.logoNameIndex, logoResource, LogoFrame);
+            this.scene.load.once(`filecomplete-spritesheet-${this.logoNameIndex}`, () => {
                 if (this.loadingText) {
                     this.loadingText.destroy();
                 }
@@ -52,7 +55,7 @@ export class Loader {
                     (this.logo = this.scene.add.image(
                         this.scene.game.renderer.width / 2,
                         this.scene.game.renderer.height / 2 - 150,
-                        LogoNameIndex
+                        this.logoNameIndex
                     ))
                 );
             });
@@ -86,8 +89,8 @@ export class Loader {
     }
 
     public removeLoader(): void {
-        if (this.scene.load.textureManager.exists(LogoNameIndex)) {
-            this.scene.load.textureManager.remove(LogoNameIndex);
+        if (this.scene.load.textureManager.exists(this.logoNameIndex)) {
+            this.scene.load.textureManager.remove(this.logoNameIndex);
         }
     }
 

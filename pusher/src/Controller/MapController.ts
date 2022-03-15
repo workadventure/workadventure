@@ -88,6 +88,14 @@ export class MapController extends BaseHttpController {
          *                   type: boolean|undefined
          *                   description: Whether the "report" feature is enabled or not on this room
          *                   example: true
+         *                 loadingLogo:
+         *                   type: string
+         *                   description: The URL of the image to be used on the loading page
+         *                   example: https://example.com/logo.png
+         *                 loginSceneLogo:
+         *                   type: string
+         *                   description: The URL of the image to be used on the LoginScene
+         *                   example: https://example.com/logo_login.png
          *
          */
         this.app.get("/map", (req, res) => {
