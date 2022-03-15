@@ -5,6 +5,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
     "@geprog/vite-plugin-env-config": "^4.0.0",
+    "@home-based-studio/phaser3-utils": "0.3.0",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
     "@tsconfig/svelte": "^1.0.10",
     "@types/google-protobuf": "^3.7.3",

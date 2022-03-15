@@ -9,25 +9,49 @@ export enum CustomWokaBodyPart {
     Accessory = "Accessory",
 }
 
+export interface CustomWokaPreviewerConfig {
+    width: number;
+    height: number;
+    color: number;
+    borderThickness: number;
+    borderColor: number;
+    bodyPartsScaleModifier: number;
+    bodyPartsOffsetX: number;
+}
+
 export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     private background: Phaser.GameObjects.Graphics;
     private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
 
-    private currentAnimationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
-    private currentlyMoving: boolean = true;
+    private animationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
+    private moving: boolean = true;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    private config: CustomWokaPreviewerConfig;
+
+    constructor(scene: Phaser.Scene, x: number, y: number, config: CustomWokaPreviewerConfig) {
         super(scene, x, y);
 
-        const spritesOffset = -2;
+        this.config = config;
 
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
-            [CustomWokaBodyPart.Body]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
-            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
-            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
-            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
-            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(spritesOffset, 0, "").setScale(4),
+            [CustomWokaBodyPart.Accessory]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Body]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Clothes]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Eyes]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Hair]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Hat]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setScale(this.config.bodyPartsScaleModifier),
         };
 
         this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
@@ -37,11 +61,8 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.updateSprite("hair3", CustomWokaBodyPart.Hair);
         this.updateSprite("hat2", CustomWokaBodyPart.Hat);
 
-        const width = 150;
-        const height = 200;
-
-        this.background = this.createBackground(width, height);
-        this.setSize(width, height);
+        this.background = this.createBackground();
+        this.setSize(this.config.width, this.config.height);
 
         this.add([
             this.background,
@@ -61,14 +82,17 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     }
 
     public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
-        this.currentAnimationDirection = direction;
-        this.currentlyMoving = moving;
+        this.animationDirection = direction;
+        this.moving = moving;
     }
 
-    private createBackground(width: number, height: number): Phaser.GameObjects.Graphics {
+    private createBackground(): Phaser.GameObjects.Graphics {
         const background = this.scene.add.graphics();
         background.fillStyle(0xffffff);
-        background.lineStyle(5, 0xadafbc);
+        background.lineStyle(this.config.borderThickness, 0xadafbc);
+
+        const width = this.config.width;
+        const height = this.config.height;
 
         background.fillRect(-width / 2, -height / 2, width, height);
         background.strokeRect(-width / 2, -height / 2, width, height);
@@ -85,15 +109,12 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             }
             const textureKey = sprite.texture.key;
             if (
-                this.currentlyMoving &&
-                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.currentAnimationDirection)
+                this.moving &&
+                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.animationDirection)
             ) {
-                sprite.play(textureKey + "-" + this.currentAnimationDirection + "-" + PlayerAnimationTypes.Walk, true);
-            } else if (!this.currentlyMoving) {
-                sprite.anims.play(
-                    textureKey + "-" + this.currentAnimationDirection + "-" + PlayerAnimationTypes.Idle,
-                    true
-                );
+                sprite.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Walk, true);
+            } else if (!this.moving) {
+                sprite.anims.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Idle, true);
             }
         }
     }
@@ -112,5 +133,13 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         if (this.scene) {
             this.scene.sys.updateList.add(this.sprites[bodyPart]);
         }
+    }
+
+    public isMoving(): boolean {
+        return this.moving;
+    }
+
+    public getAnimationDirection(): PlayerAnimationDirections {
+        return this.animationDirection;
     }
 }

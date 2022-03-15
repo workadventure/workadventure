@@ -1,7 +1,5 @@
 import { EnableCameraSceneName } from "./EnableCameraScene";
-import Rectangle = Phaser.GameObjects.Rectangle;
 import { loadAllLayers } from "../Entity/PlayerTexturesLoadingManager";
-import Sprite = Phaser.GameObjects.Sprite;
 import { gameManager } from "../Game/GameManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { Loader } from "../Components/Loader";
@@ -17,13 +15,17 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { CustomWokaBodyPart, CustomWokaPreviewer } from "../Components/CustomizeWoka/CustomWokaPreviewer";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { WokaBodyPartSlot, WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 
 export const CustomizeSceneName = "CustomizeScene";
 
 export class CustomizeScene extends AbstractCharacterScene {
-    private Rectangle!: Rectangle;
+    private Rectangle!: Phaser.GameObjects.Rectangle;
 
-    private customWokaPreviewer: CustomWokaPreviewer;
+    private customWokaPreviewer!: CustomWokaPreviewer;
+    private bodyPartsDraggableGrid!: DraggableGrid;
+    private bodyPartsSlots!: Record<CustomWokaBodyPart, WokaBodyPartSlot>;
 
     private selectedLayers: number[] = [0];
     private containersRow: CustomizedCharacter[][] = [];
@@ -88,8 +90,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     public create(): void {
         console.log(this.layers);
 
-        waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
+        const isVertical = isMediaBreakpointUp("md");
 
         this.Rectangle = this.add.rectangle(
             this.cameras.main.worldView.x + this.cameras.main.width / 2,
@@ -116,7 +117,55 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.updateSelectedLayer();
         }
 
-        this.customWokaPreviewer = new CustomWokaPreviewer(this, 300, 300);
+        this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, {
+            width: 150,
+            height: 200,
+            color: 0xffffff,
+            borderThickness: 5,
+            borderColor: 0xadafbc,
+            bodyPartsScaleModifier: 4,
+            bodyPartsOffsetX: -2,
+        });
+        this.bodyPartsDraggableGrid = new DraggableGrid(this, {
+            position: { x: 0, y: 0 },
+            maskPosition: { x: 0, y: 0 },
+            dimension: { x: 485, y: 165 },
+            horizontal: true,
+            repositionToCenter: true,
+            itemsInRow: 2,
+            margin: {
+                left: 5,
+                right: 5,
+            },
+            spacing: 5,
+            debug: {
+                showDraggableSpace: false,
+            },
+        });
+
+        const defaultWokaBodyPartSlotConfig: WokaBodyPartSlotConfig = {
+            width: 72.5,
+            height: 72.5,
+            color: 0xffffff,
+            borderThickness: 2.5,
+            borderColor: 0xadafbc,
+            borderSelectedColor: 0x00ffff,
+            offsetX: -3,
+            offsetY: -2,
+        };
+
+        for (let i = 0; i < 50; i += 1) {
+            this.bodyPartsDraggableGrid.addItem(new WokaBodyPartSlot(this, 0, 0, defaultWokaBodyPartSlotConfig));
+        }
+
+        this.bodyPartsSlots = {
+            [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 220, 50, defaultWokaBodyPartSlotConfig),
+            [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 220, 130, defaultWokaBodyPartSlotConfig),
+            [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 220, 210, defaultWokaBodyPartSlotConfig),
+            [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 520, 50, defaultWokaBodyPartSlotConfig),
+            [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 520, 130, defaultWokaBodyPartSlotConfig),
+            [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 520, 210, defaultWokaBodyPartSlotConfig),
+        };
 
         this.onResize();
 
@@ -151,13 +200,16 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public onResize(): void {
+        const isVertical = this.cameras.main.height > this.cameras.main.width;
+        console.log(`isVertical: ${isVertical}`);
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
         this.Rectangle.y = this.cameras.main.worldView.y + this.cameras.main.height / 3;
 
-        this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.customWokaPreviewer.y = this.cameras.main.worldView.y + this.cameras.main.height / 2;
+        this.repositionCustomWokaPreviewer(isVertical);
+        this.repositionBodyPartSlots(isVertical);
+        this.repositionBodyPartsDraggableGrid(isVertical);
     }
 
     public nextSceneToCamera() {
@@ -185,6 +237,43 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.stop(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
+    }
+
+    private repositionCustomWokaPreviewer(isVertical: boolean): void {
+        this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
+        this.customWokaPreviewer.y =
+            this.cameras.main.worldView.y +
+            this.customWokaPreviewer.displayHeight * 0.5 +
+            this.cameras.main.height * 0.1;
+    }
+
+    private repositionBodyPartSlots(isVertical: boolean): void {
+        const slotWidth = this.bodyPartsSlots.Accessory.displayWidth;
+
+        const left = this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotWidth;
+        const right = this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotWidth;
+        const top = this.customWokaPreviewer.y - this.customWokaPreviewer.displayHeight * 0.5;
+        const middle = this.customWokaPreviewer.y;
+        const bottom = this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5;
+
+        this.bodyPartsSlots.Hair.setPosition(left, top);
+        this.bodyPartsSlots.Body.setPosition(left, middle);
+        this.bodyPartsSlots.Accessory.setPosition(left, bottom);
+        this.bodyPartsSlots.Hat.setPosition(right, top);
+        this.bodyPartsSlots.Clothes.setPosition(right, middle);
+        this.bodyPartsSlots.Eyes.setPosition(right, bottom);
+    }
+
+    private repositionBodyPartsDraggableGrid(isVertical: boolean): void {
+        const gridPos = {
+            x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            y:
+                this.cameras.main.worldView.y +
+                this.cameras.main.height -
+                this.bodyPartsDraggableGrid.displayHeight * 0.5 -
+                this.cameras.main.height * 0.02,
+        };
+        this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: 485, y: 165 }, gridPos);
     }
 
     private bindEventHandlers(): void {
