@@ -140,12 +140,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             },
         });
 
-        for (let i = 0; i < 50; i += 1) {
-            this.bodyPartsDraggableGrid.addItem(
-                new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(isVertical))
-            );
-        }
-
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(
                 this,
@@ -218,7 +212,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public onResize(): void {
-        const isVertical = this.cameras.main.height > this.cameras.main.width;
+        const isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
         this.moveLayers();
 
         this.Rectangle.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
@@ -257,7 +251,9 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleCustomWokaPreviewerOnResize(isVertical: boolean): void {
-        const boxDimension = Math.min(innerWidth * 0.3, innerHeight * 0.3) / waScaleManager.getActualZoom();
+        const boxDimension =
+            Math.min(innerWidth * (isVertical ? 0.4 : 0.3), innerHeight * (isVertical ? 0.4 : 0.3)) /
+            waScaleManager.getActualZoom();
         const boxScale = boxDimension / this.customWokaPreviewer.SIZE;
 
         this.customWokaPreviewer.setScale(boxScale);
@@ -266,7 +262,9 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleBodyPartSlotsOnResize(isVertical: boolean): void {
-        const slotDimension = Math.min(innerWidth * 0.15, innerHeight * 0.15) / waScaleManager.getActualZoom();
+        const slotDimension =
+            Math.min(innerWidth * (isVertical ? 0.2 : 0.15), innerHeight * (isVertical ? 0.2 : 0.15)) /
+            waScaleManager.getActualZoom();
         const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
 
         for (const part in this.bodyPartsSlots) {
@@ -276,11 +274,11 @@ export class CustomizeScene extends AbstractCharacterScene {
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 
         if (isVertical) {
-            const left = this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5;
-            const right = this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5;
             const middle = this.customWokaPreviewer.x;
-            const top = this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5;
-            const bottom = top + slotSize;
+            const left = middle - slotSize - 10;
+            const right = middle + slotSize + 10;
+            const top = this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 0.5 + 10;
+            const bottom = top + slotSize + 10;
 
             this.bodyPartsSlots.Hair.setPosition(left, top);
             this.bodyPartsSlots.Hat.setPosition(middle, top);
@@ -307,8 +305,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleBodyPartsDraggableGridOnResize(isVertical: boolean): void {
-        const gridHeight = (innerHeight * 0.35) / waScaleManager.getActualZoom();
-        const gridWidth = (innerWidth * 0.7) / waScaleManager.getActualZoom();
+        const gridHeight = (innerHeight * (isVertical ? 0.3 : 0.35)) / waScaleManager.getActualZoom();
+        const gridWidth = (innerWidth * (isVertical ? 0.9 : 0.8)) / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
             y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5 - 10,
@@ -316,7 +314,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: gridWidth, y: gridHeight }, gridPos);
 
-        const slotDimension = Math.min(innerWidth * 0.15, innerHeight * 0.15) / waScaleManager.getActualZoom();
+        const slotDimension = (innerHeight * (isVertical ? 0.125 : 0.15)) / waScaleManager.getActualZoom();
         const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
 
         this.bodyPartsDraggableGrid.clearAllItems();
