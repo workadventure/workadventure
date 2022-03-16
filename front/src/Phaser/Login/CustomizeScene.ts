@@ -323,6 +323,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                 new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(isVertical)).setScale(slotScale)
             );
         }
+        this.bodyPartsDraggableGrid.moveContentToBeginning();
     }
 
     private getCustomWokaPreviewerConfig(): CustomWokaPreviewerConfig {
