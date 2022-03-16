@@ -10,12 +10,9 @@ export enum CustomWokaBodyPart {
 }
 
 export interface CustomWokaPreviewerConfig {
-    width: number;
-    height: number;
     color: number;
     borderThickness: number;
     borderColor: number;
-    bodyPartsScaleModifier: number;
     bodyPartsOffsetX: number;
 }
 
@@ -28,30 +25,20 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
 
     private config: CustomWokaPreviewerConfig;
 
+    public readonly SIZE: number = 50;
+
     constructor(scene: Phaser.Scene, x: number, y: number, config: CustomWokaPreviewerConfig) {
         super(scene, x, y);
 
         this.config = config;
 
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
-            [CustomWokaBodyPart.Body]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
-            [CustomWokaBodyPart.Clothes]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
-            [CustomWokaBodyPart.Eyes]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
-            [CustomWokaBodyPart.Hair]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
-            [CustomWokaBodyPart.Hat]: this.scene.add
-                .sprite(this.config.bodyPartsOffsetX, 0, "")
-                .setScale(this.config.bodyPartsScaleModifier),
+            [CustomWokaBodyPart.Accessory]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Body]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
         };
 
         this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
@@ -61,8 +48,9 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.updateSprite("hair3", CustomWokaBodyPart.Hair);
         this.updateSprite("hat2", CustomWokaBodyPart.Hat);
 
-        this.background = this.createBackground();
-        this.setSize(this.config.width, this.config.height);
+        this.background = this.scene.add.graphics();
+        this.drawBackground();
+        this.setSize(this.SIZE, this.SIZE);
 
         this.add([
             this.background,
@@ -86,18 +74,13 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.moving = moving;
     }
 
-    private createBackground(): Phaser.GameObjects.Graphics {
-        const background = this.scene.add.graphics();
-        background.fillStyle(0xffffff);
-        background.lineStyle(this.config.borderThickness, 0xadafbc);
+    private drawBackground(): void {
+        this.background.clear();
+        this.background.fillStyle(0xffffff);
+        this.background.lineStyle(this.config.borderThickness, 0xadafbc);
 
-        const width = this.config.width;
-        const height = this.config.height;
-
-        background.fillRect(-width / 2, -height / 2, width, height);
-        background.strokeRect(-width / 2, -height / 2, width, height);
-
-        return background;
+        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
     }
 
     private animate(): void {

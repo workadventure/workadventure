@@ -2,8 +2,6 @@ import { GridItem } from "@home-based-studio/phaser3-utils";
 import { GridItemEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/GridItem";
 
 export interface WokaBodyPartSlotConfig {
-    width: number;
-    height: number;
     color: number;
     borderThickness: number;
     borderColor: number;
@@ -24,6 +22,8 @@ export class WokaBodyPartSlot extends GridItem {
 
     private selected: boolean;
 
+    public readonly SIZE: number = 50;
+
     constructor(scene: Phaser.Scene, x: number, y: number, config: WokaBodyPartSlotConfig) {
         super(scene, undefined, { x, y });
 
@@ -34,19 +34,20 @@ export class WokaBodyPartSlot extends GridItem {
         this.selected = this.config.selected ?? false;
 
         this.background = this.scene.add
-            .rectangle(0, 0, this.config.width, this.config.height, this.config.color)
+            .rectangle(0, 0, this.SIZE, this.SIZE, this.config.color)
             .setStrokeStyle(this.config.borderThickness, this.config.borderColor);
 
-        this.bodyImage = this.scene.add
-            .image(offsetX, offsetY, config.bodyImageKey ?? `body${Math.floor(Math.random() * 33) + 1}`)
-            .setScale(2);
+        this.bodyImage = this.scene.add.image(
+            offsetX,
+            offsetY,
+            config.bodyImageKey ?? `body${Math.floor(Math.random() * 33) + 1}`
+        );
 
         this.image = this.scene.add
             .image(offsetX, offsetY, config.imageKey ?? "")
-            .setScale(2)
             .setVisible(config.imageKey !== undefined);
 
-        this.setSize(this.config.width + this.config.borderThickness, this.config.height + this.config.borderThickness);
+        this.setSize(this.SIZE + this.config.borderThickness, this.SIZE + this.config.borderThickness);
 
         this.add([this.background, this.bodyImage, this.image]);
 
