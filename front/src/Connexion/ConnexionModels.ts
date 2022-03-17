@@ -1,7 +1,6 @@
 import type { SignalData } from "simple-peer";
 import type { RoomConnection } from "./RoomConnection";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { PositionMessage_Direction } from "../Messages/ts-proto-generated/messages";
 
 export interface PointInterface {
     x: number;
@@ -83,6 +82,7 @@ export interface RoomJoinedMessageInterface {
     //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
+    characterLayers: BodyResourceDescriptionInterface[];
 }
 
 export interface PlayGlobalMessageInterface {

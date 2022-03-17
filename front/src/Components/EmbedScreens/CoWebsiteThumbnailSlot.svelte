@@ -1,10 +1,11 @@
-<script lang="typescript">
+<script lang="ts">
     import { onMount } from "svelte";
 
     import { ICON_URL } from "../../Enum/EnvironmentVariable";
-    import { coWebsitesNotAsleep, mainCoWebsite } from "../../Stores/CoWebsiteStore";
+    import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-    import type { CoWebsite } from "../../WebRtc/CoWebsiteManager";
+    import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
+    import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
@@ -14,16 +15,15 @@
 
     let icon: HTMLImageElement;
     let iconLoaded = false;
-    let state = coWebsite.state;
-
-    const coWebsiteUrl = coWebsite.iframe.src;
-    const urlObject = new URL(coWebsiteUrl);
+    let state = coWebsite.getStateSubscriber();
+    let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
+    const mainState = coWebsiteManager.getMainStateSubscriber();
 
     onMount(() => {
-        icon.src = coWebsite.jitsi
-            ? "/resources/logos/meet.svg"
-            : `${ICON_URL}/icon?url=${urlObject.hostname}&size=64..96..256&fallback_icon_color=14304c`;
-        icon.alt = coWebsite.altMessage ?? urlObject.hostname;
+        icon.src = isJitsi
+            ? "/resources/logos/jitsi.png"
+            : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
+        icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
             iconLoaded = true;
         };
@@ -33,21 +33,24 @@
         if (vertical) {
             coWebsiteManager.goToMain(coWebsite);
         } else if ($mainCoWebsite) {
-            if ($mainCoWebsite.iframe.id === coWebsite.iframe.id) {
-                const coWebsites = $coWebsitesNotAsleep;
-                const newMain = $highlightedEmbedScreen ?? coWebsites.length > 1 ? coWebsites[1] : undefined;
-                if (newMain && newMain.iframe.id !== $mainCoWebsite.iframe.id) {
-                    coWebsiteManager.goToMain(newMain);
-                } else if (coWebsiteManager.getMainState() === iframeStates.closed) {
+            if ($mainCoWebsite.getId() === coWebsite.getId()) {
+                if (coWebsiteManager.getMainState() === iframeStates.closed) {
                     coWebsiteManager.displayMain();
+                } else if ($highlightedEmbedScreen?.type === "cowebsite") {
+                    coWebsiteManager.goToMain($highlightedEmbedScreen.embed);
                 } else {
                     coWebsiteManager.hideMain();
                 }
             } else {
-                highlightedEmbedScreen.toggleHighlight({
-                    type: "cowebsite",
-                    embed: coWebsite,
-                });
+                if (coWebsiteManager.getMainState() === iframeStates.closed) {
+                    coWebsiteManager.goToMain(coWebsite);
+                    coWebsiteManager.displayMain();
+                } else {
+                    highlightedEmbedScreen.toggleHighlight({
+                        type: "cowebsite",
+                        embed: coWebsite,
+                    });
+                }
             }
         }
 
@@ -65,11 +68,14 @@
     let isHighlight: boolean = false;
     let isMain: boolean = false;
     $: {
-        isMain = $mainCoWebsite !== undefined && $mainCoWebsite.iframe === coWebsite.iframe;
+        isMain =
+            $mainState === iframeStates.opened &&
+            $mainCoWebsite !== undefined &&
+            $mainCoWebsite.getId() === coWebsite.getId();
         isHighlight =
-            $highlightedEmbedScreen !== null &&
-            $highlightedEmbedScreen.type === "cowebsite" &&
-            $highlightedEmbedScreen.embed.iframe === coWebsite.iframe;
+            $highlightedEmbedScreen !== undefined &&
+            $highlightedEmbedScreen?.type === "cowebsite" &&
+            $highlightedEmbedScreen?.embed.getId() === coWebsite.getId();
     }
 </script>
 
@@ -86,7 +92,7 @@
     <img
         class="cowebsite-icon noselect nes-pointer"
         class:hide={!iconLoaded}
-        class:jitsi={coWebsite.jitsi}
+        class:jitsi={isJitsi}
         bind:this={icon}
         on:dragstart|preventDefault={noDrag}
         alt=""
@@ -182,10 +188,16 @@
             />
         </rect>
     </svg>
+
+    <!-- TODO use trigger message property -->
+    <div class="cowebsite-hover" class:hide={!isJitsi} style="width: max-content;">
+        <p>Open / Close Jitsi meeting!</p>
+    </div>
 </div>
 
 <style lang="scss">
     .cowebsite-thumbnail {
+        cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         position: relative;
         padding: 0;
         background-color: rgba(#000000, 0.6);
@@ -213,7 +225,8 @@
         }
 
         &:not(.vertical) {
-            animation: bounce 0.35s ease 6 alternate;
+            transition: all 300ms;
+            transform: translateY(0px);
         }
 
         &.vertical {
@@ -229,12 +242,17 @@
                 height: 40px;
             }
 
+            .cowebsite-hover {
+                top: -4px;
+                left: 55px;
+            }
+
             animation: shake 0.35s ease-in-out;
         }
 
         &.displayed {
             &:not(.vertical) {
-                animation: activeThumbnail 300ms ease-in 0s forwards;
+                transform: translateY(-15px);
             }
         }
 
@@ -260,16 +278,6 @@
 
             100% {
                 background-color: #25598e;
-            }
-        }
-
-        @keyframes activeThumbnail {
-            0% {
-                transform: translateY(0);
-            }
-
-            100% {
-                transform: translateY(-15px);
             }
         }
 
@@ -318,9 +326,32 @@
             }
 
             &.jitsi {
-                filter: invert(100%);
-                -webkit-filter: invert(100%);
                 padding: 7px;
+            }
+        }
+
+        &:hover {
+            .cowebsite-hover {
+                display: block;
+                width: max-content !important;
+            }
+        }
+
+        .cowebsite-hover {
+            display: none;
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.6);
+            top: -40px;
+            left: -4px;
+            width: 0 !important;
+            min-height: 20px;
+            transition: all 0.2s ease;
+            overflow: hidden;
+            color: white;
+            padding: 4px;
+            border-radius: 4px;
+            p {
+                margin-bottom: 0;
             }
         }
     }

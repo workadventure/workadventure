@@ -36,6 +36,10 @@ import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
+import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
+import type { AddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
+import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -45,6 +49,8 @@ export interface TypedMessageEvent<T> extends MessageEvent {
  * List event types sent from an iFrame to WorkAdventure
  */
 export type IframeEventMap = {
+    addActionsMenuKeyToRemotePlayer: AddActionsMenuKeyToRemotePlayerEvent;
+    removeActionsMenuKeyFromRemotePlayer: RemoveActionsMenuKeyFromRemotePlayerEvent;
     loadPage: LoadPageEvent;
     chat: ChatEvent;
     cameraFollowPlayer: CameraFollowPlayerEvent;
@@ -58,6 +64,7 @@ export type IframeEventMap = {
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
+    onOpenActionMenu: undefined;
     onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
@@ -90,6 +97,8 @@ export interface IframeResponseEventMap {
     enterZoneEvent: ChangeZoneEvent;
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
+    remotePlayerClickedEvent: RemotePlayerClickedEvent;
+    actionsMenuActionClickedEvent: ActionsMenuActionClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;

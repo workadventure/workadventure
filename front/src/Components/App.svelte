@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../Phaser/Game/Game";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { customCharacterSceneVisibleStore } from "../Stores/CustomCharacterStore";

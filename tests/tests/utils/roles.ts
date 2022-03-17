@@ -1,20 +1,20 @@
-import { Role, ClientFunction } from 'testcafe';
+import { Page } from '@playwright/test';
 
-export const resetLanguage = ClientFunction((browserLanguage) => window.localStorage.setItem('language', browserLanguage));
+export async function login(
+  page: Page,
+  userName: string = 'Alice',
+  characterNumber: number = 2,
+  browserLanguage: string | null = 'en-US'
+) {
+  // window.localStorage.setItem('language', browserLanguage)
 
-export async function login(t: TestController, url: string, userName: string = "Alice", characterNumber: number = 2, browserLanguage: string|null = 'en-US') {
+  await page.fill('input[name="loginSceneName"]', userName);
+  await page.click('button.loginSceneFormSubmit');
 
-    await resetLanguage(browserLanguage);
+  for (let i = 0; i < characterNumber; i++) {
+    await page.click('button.selectCharacterButtonRight');
+  }
 
-    t = t
-        .navigateTo(url)
-        .typeText('input[name="loginSceneName"]', userName)
-        .click('button.loginSceneFormSubmit');
-
-    for (let i = 0; i < characterNumber; i++) {
-        t = t.click('button.selectCharacterButtonRight');
-    }
-
-    return t.click('button.selectCharacterSceneFormSubmit')
-        .click('button.letsgo');
+  await page.click('button.selectCharacterSceneFormSubmit');
+  await page.click('button.letsgo');
 }

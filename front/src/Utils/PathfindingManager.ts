@@ -13,10 +13,16 @@ export class PathfindingManager {
 
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
+        this.easyStar.disableCornerCutting();
+        this.easyStar.setTileCost(2, 100);
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
+    }
+
+    public setCollisionGrid(collisionGrid: number[][]): void {
+        this.setEasyStarGrid(collisionGrid);
     }
 
     public async findPath(
@@ -108,7 +114,7 @@ export class PathfindingManager {
 
     private setEasyStarGrid(grid: number[][]): void {
         this.easyStar.setGrid(grid);
-        this.easyStar.setAcceptableTiles([0]); // zeroes are walkable
+        this.easyStar.setAcceptableTiles([0, 2]); // zeroes are walkable, 2 are exits, also walkable
     }
 
     private logGridToTheConsole(grid: number[][]): void {

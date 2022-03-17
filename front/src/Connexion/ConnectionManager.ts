@@ -16,6 +16,10 @@ import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { locales } from "../i18n/i18n-util";
+import type { Locales } from "../i18n/i18n-types";
+import { setCurrentLocale } from "../i18n/locales";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -171,7 +175,7 @@ class ConnectionManager {
                 console.error("Invalid data received from /register route. Data: ", data);
                 throw new Error("Invalid data received from /register route.");
             }
-            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
+            this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
@@ -251,22 +255,6 @@ class ConnectionManager {
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
-
-            if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
-                //check if texture was changed
-                if (this.localUser.textures.length === 0) {
-                    this.localUser.textures = this._currentRoom.textures;
-                } else {
-                    this._currentRoom.textures.forEach((newTexture) => {
-                        const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
-                        if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
-                            return;
-                        }
-                        this.localUser.textures.push(newTexture);
-                    });
-                }
-                localUserStore.saveUser(this.localUser);
-            }
         }
         if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
@@ -292,7 +280,7 @@ class ConnectionManager {
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, [], data.email);
+        this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -302,7 +290,7 @@ class ConnectionManager {
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser("", []);
+        this.localUser = new LocalUser("");
     }
 
     public connectToRoomSocket(
@@ -379,15 +367,51 @@ class ConnectionManager {
                 throw new Error("No Auth code provided");
             }
         }
-        const { authToken, userUuid, textures, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
-            params: { code, nonce, token, playUri: this.currentRoom?.key },
-        }).then((res) => {
+        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(
+            `${PUSHER_URL}/login-callback`,
+            {
+                params: { code, nonce, token, playUri: this.currentRoom?.key },
+            }
+        ).then((res) => {
             return res.data;
         });
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, textures, email);
+        this.localUser = new LocalUser(userUuid, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
+
+        if (username) {
+            gameManager.setPlayerName(username);
+        }
+
+        if (locale) {
+            try {
+                if (locales.indexOf(locale) == -1) {
+                    locales.forEach((l) => {
+                        if (l.startsWith(locale.split("-")[0])) {
+                            setCurrentLocale(l);
+                            return;
+                        }
+                    });
+                } else {
+                    setCurrentLocale(locale as Locales);
+                }
+            } catch (err) {
+                console.warn("Could not set locale", err);
+            }
+        }
+
+        if (textures) {
+            const layers: string[] = [];
+            for (const texture of textures) {
+                if (texture !== undefined) {
+                    layers.push(texture.id);
+                }
+            }
+            if (layers.length > 0) {
+                gameManager.setCharacterLayers(layers);
+            }
+        }
 
         //user connected, set connected store for menu at true
         userIsConnected.set(true);

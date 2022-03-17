@@ -15,6 +15,9 @@ const woka: BaseTranslation = {
         continue: "Continue",
         customize: "Customize your WOKA",
     },
+    menu: {
+        businessCard: "Business Card",
+    },
 };
 
 export default woka;

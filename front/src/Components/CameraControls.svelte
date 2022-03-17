@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
     import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";

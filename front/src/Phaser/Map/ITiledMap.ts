@@ -78,6 +78,8 @@ export interface ITiledMapTileLayer {
     width: number;
     x: number;
     y: number;
+    parallaxx?: number;
+    parallaxy?: number;
 
     /**
      * Draw order (topdown (default), index)

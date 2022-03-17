@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { coWebsites } from "../../Stores/CoWebsiteStore";
     import CoWebsiteThumbnail from "./CoWebsiteThumbnailSlot.svelte";
 
@@ -7,7 +7,7 @@
 
 {#if $coWebsites.length > 0}
     <div id="cowebsite-thumbnail-container" class:vertical>
-        {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.iframe.id)}
+        {#each [...$coWebsites.values()] as coWebsite, index (coWebsite.getId())}
             <CoWebsiteThumbnail {index} {coWebsite} {vertical} />
         {/each}
     </div>
@@ -24,6 +24,7 @@
         left: 2%;
         overflow-x: auto;
         overflow-y: hidden;
+        overflow: visible;
 
         &.vertical {
             height: auto !important;
@@ -31,8 +32,6 @@
             bottom: auto !important;
             left: auto !important;
             position: relative;
-            overflow-x: hidden;
-            overflow-y: auto;
             flex-direction: column;
             align-items: center;
             padding-top: 4px;
