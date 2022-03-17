@@ -261,6 +261,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             .setStrokeStyle(4, 0xaaaaaa);
         this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: gridWidth, y: gridHeight }, gridPos);
 
+        this.populateGrid();
         this.bodyPartsDraggableGrid.moveContentToBeginning();
     }
 
@@ -315,7 +316,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                     this.selectedBodyPartType = bodyPart as CustomWokaBodyPart;
                     this.deselectAllSlots();
                     slot.select(true);
-                    this.populateGrid(bodyPart as CustomWokaBodyPart);
+                    this.populateGrid();
                 } else {
                     this.selectedBodyPartType = undefined;
                     slot.select(false);
@@ -345,18 +346,21 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.selectedLayers[CustomWokaBodyPartOrder[this.selectedBodyPartType]] = index;
     }
 
-    private populateGrid(bodyParts: CustomWokaBodyPart): void {
+    private populateGrid(): void {
+        if (this.selectedBodyPartType === undefined) {
+            return;
+        }
         const slotDimension = (innerHeight * (this.isVertical ? 0.125 : 0.15)) / waScaleManager.getActualZoom();
         const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
 
-        const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[bodyParts]];
+        const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
 
         this.bodyPartsDraggableGrid.clearAllItems();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
             const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(), i).setScale(
                 slotScale
             );
-            if (bodyParts === CustomWokaBodyPart.Body) {
+            if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
                 slot.setBodyTexture(bodyPartsLayer[i].id);
                 slot.setImageTexture();
             } else {
