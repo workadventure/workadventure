@@ -10,12 +10,12 @@ export enum CustomWokaBodyPart {
 }
 
 export enum CustomWokaBodyPartOrder {
-    Body = 0,
-    Eyes = 1,
-    Hair = 2,
-    Clothes = 3,
-    Hat = 4,
-    Accessory = 5,
+    Body,
+    Eyes,
+    Hair,
+    Clothes,
+    Hat,
+    Accessory,
 }
 
 export interface CustomWokaPreviewerConfig {
@@ -87,7 +87,6 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
 
     public updateSprite(textureKey: string, bodyPart: CustomWokaBodyPart): void {
         this.sprites[bodyPart].setTexture(textureKey).setVisible(textureKey !== "");
-        console.log(this.sprites[bodyPart].texture.key);
         if (textureKey === "") {
             return;
         }

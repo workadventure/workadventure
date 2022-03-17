@@ -46,6 +46,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public preload(): void {
+        this.input.dragDistanceThreshold = 10;
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
@@ -335,33 +336,17 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.input.keyboard.on("keydown-R", () => {
             this.randomizeOutfit();
+            this.setPlayerCurrentOutfit();
         });
     }
 
     private randomizeOutfit(): void {
-        this.customWokaPreviewer.updateSprite(
-            this.layers[0][Math.floor(Math.random() * this.layers[0].length)].id,
-            CustomWokaBodyPart.Body
-        );
-        this.customWokaPreviewer.updateSprite(
-            this.layers[1][Math.floor(Math.random() * this.layers[1].length)].id,
-            CustomWokaBodyPart.Eyes
-        );
-        this.customWokaPreviewer.updateSprite(
-            this.layers[2][Math.floor(Math.random() * this.layers[2].length)].id,
-            CustomWokaBodyPart.Hair
-        );
-        this.customWokaPreviewer.updateSprite(
-            this.layers[3][Math.floor(Math.random() * this.layers[3].length)].id,
-            CustomWokaBodyPart.Clothes
-        );
-        this.customWokaPreviewer.updateSprite(
-            this.layers[4][Math.floor(Math.random() * this.layers[4].length)].id,
-            CustomWokaBodyPart.Hat
-        );
-        this.customWokaPreviewer.updateSprite(
-            this.layers[5][Math.floor(Math.random() * this.layers[5].length)].id,
-            CustomWokaBodyPart.Accessory
-        );
+        for (let i = 0; i < 6; i += 1) {
+            this.selectedLayers[i] = Math.floor(Math.random() * this.layers[i].length);
+            this.customWokaPreviewer.updateSprite(
+                this.layers[i][Math.floor(Math.random() * this.layers[i].length)].id,
+                CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart]
+            );
+        }
     }
 }
