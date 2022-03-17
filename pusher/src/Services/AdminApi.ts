@@ -65,7 +65,7 @@ class AdminApi {
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
                 userIdentifier,
-                roomId: playUri,
+                playUri,
                 ipAddress,
                 characterLayers,
             },

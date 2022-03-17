@@ -144,7 +144,7 @@ class ConnectionManager {
                 console.error("Invalid data received from /register route. Data: ", data);
                 throw new Error("Invalid data received from /register route.");
             }
-            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
+            this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
