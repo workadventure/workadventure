@@ -9,6 +9,15 @@ export enum CustomWokaBodyPart {
     Accessory = "Accessory",
 }
 
+export enum CustomWokaBodyPartOrder {
+    Body = 0,
+    Eyes = 1,
+    Hair = 2,
+    Clothes = 3,
+    Hat = 4,
+    Accessory = 5,
+}
+
 export interface CustomWokaPreviewerConfig {
     color: number;
     borderThickness: number;
@@ -33,20 +42,22 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.config = config;
 
         this.sprites = {
-            [CustomWokaBodyPart.Accessory]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
-            [CustomWokaBodyPart.Body]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
-            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
-            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
-            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
-            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, ""),
+            [CustomWokaBodyPart.Accessory]: this.scene.add
+                .sprite(this.config.bodyPartsOffsetX, 0, "")
+                .setVisible(false),
+            [CustomWokaBodyPart.Body]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [CustomWokaBodyPart.Clothes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [CustomWokaBodyPart.Eyes]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [CustomWokaBodyPart.Hair]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
+            [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
-        this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
-        this.updateSprite("body1", CustomWokaBodyPart.Body);
-        this.updateSprite("clothes4", CustomWokaBodyPart.Clothes);
-        this.updateSprite("eyes5", CustomWokaBodyPart.Eyes);
-        this.updateSprite("hair3", CustomWokaBodyPart.Hair);
-        this.updateSprite("hat2", CustomWokaBodyPart.Hat);
+        // this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
+        // this.updateSprite("body1", CustomWokaBodyPart.Body);
+        // this.updateSprite("clothes4", CustomWokaBodyPart.Clothes);
+        // this.updateSprite("eyes5", CustomWokaBodyPart.Eyes);
+        // this.updateSprite("hair3", CustomWokaBodyPart.Hair);
+        // this.updateSprite("hat2", CustomWokaBodyPart.Hat);
 
         this.background = this.scene.add.graphics();
         this.drawBackground();
@@ -74,36 +85,12 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.moving = moving;
     }
 
-    private drawBackground(): void {
-        this.background.clear();
-        this.background.fillStyle(0xffffff);
-        this.background.lineStyle(this.config.borderThickness, 0xadafbc);
-
-        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
-        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
-    }
-
-    private animate(): void {
-        for (const bodyPartKey in this.sprites) {
-            const sprite = this.sprites[bodyPartKey as CustomWokaBodyPart];
-            if (!sprite.anims) {
-                console.error("ANIMS IS NOT DEFINED!!!");
-                return;
-            }
-            const textureKey = sprite.texture.key;
-            if (
-                this.moving &&
-                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.animationDirection)
-            ) {
-                sprite.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Walk, true);
-            } else if (!this.moving) {
-                sprite.anims.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Idle, true);
-            }
-        }
-    }
-
     public updateSprite(textureKey: string, bodyPart: CustomWokaBodyPart): void {
-        this.sprites[bodyPart].setTexture(textureKey);
+        this.sprites[bodyPart].setTexture(textureKey).setVisible(textureKey !== "");
+        console.log(this.sprites[bodyPart].texture.key);
+        if (textureKey === "") {
+            return;
+        }
         getPlayerAnimations(textureKey).forEach((d) => {
             this.scene.anims.create({
                 key: d.key,
@@ -124,5 +111,36 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
 
     public getAnimationDirection(): PlayerAnimationDirections {
         return this.animationDirection;
+    }
+
+    private drawBackground(): void {
+        this.background.clear();
+        this.background.fillStyle(0xffffff);
+        this.background.lineStyle(this.config.borderThickness, 0xadafbc);
+
+        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+    }
+
+    private animate(): void {
+        for (const bodyPartKey in this.sprites) {
+            const sprite = this.sprites[bodyPartKey as CustomWokaBodyPart];
+            if (!sprite.anims) {
+                console.error("ANIMS IS NOT DEFINED!!!");
+                return;
+            }
+            const textureKey = sprite.texture.key;
+            if (textureKey === "__MISSING") {
+                continue;
+            }
+            if (
+                this.moving &&
+                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.animationDirection)
+            ) {
+                sprite.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Walk, true);
+            } else if (!this.moving) {
+                sprite.anims.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Idle, true);
+            }
+        }
     }
 }
