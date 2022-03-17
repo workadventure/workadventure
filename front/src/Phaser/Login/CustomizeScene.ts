@@ -24,6 +24,7 @@ import {
     WokaBodyPartSlotConfig,
     WokaBodyPartSlotEvent,
 } from "../Components/CustomizeWoka/WokaBodyPartSlot";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -37,6 +38,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private selectedLayers: number[] = [0, 1, 2, 3, 4, 5];
     private containersRow: CustomizedCharacter[][] = [];
     private layers: BodyResourceDescriptionInterface[][] = [];
+    private selectedBodyPartType?: CustomWokaBodyPart;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
@@ -96,7 +98,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     public create(): void {
         this.isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
-        console.log(this.layers);
 
         this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, this.getCustomWokaPreviewerConfig());
 
@@ -128,7 +129,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
         };
 
-        this.setPlayerCurrentOutfit();
+        this.refreshPlayerCurrentOutfit();
 
         this.onResize();
 
@@ -174,7 +175,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.run(SelectCharacterSceneName);
     }
 
-    private setPlayerCurrentOutfit(): void {
+    private refreshPlayerCurrentOutfit(): void {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
             const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
@@ -304,28 +305,44 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.randomizeOutfit();
             this.clearGrid();
             this.deselectAllSlots();
-            this.setPlayerCurrentOutfit();
+            this.refreshPlayerCurrentOutfit();
         });
 
         for (const bodyPart in CustomWokaBodyPart) {
             const slot = this.bodyPartsSlots[bodyPart as CustomWokaBodyPart];
             slot.on(WokaBodyPartSlotEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
+                    this.selectedBodyPartType = bodyPart as CustomWokaBodyPart;
                     this.deselectAllSlots();
                     slot.select(true);
                     this.populateGrid(bodyPart as CustomWokaBodyPart);
                 } else {
+                    this.selectedBodyPartType = undefined;
                     slot.select(false);
                     this.clearGrid();
                 }
             });
         }
+
+        this.bodyPartsDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaBodyPartSlot) => {
+            this.bodyPartsDraggableGrid.getAllItems().forEach((slot) => (slot as WokaBodyPartSlot).select(false));
+            this.changeOutfitPart(Number(item.getId()));
+            this.refreshPlayerCurrentOutfit();
+            item.select(true);
+        });
     }
 
     private randomizeOutfit(): void {
         for (let i = 0; i < 6; i += 1) {
             this.selectedLayers[i] = Math.floor(Math.random() * this.layers[i].length);
         }
+    }
+
+    private changeOutfitPart(index: number): void {
+        if (this.selectedBodyPartType === undefined) {
+            return;
+        }
+        this.selectedLayers[CustomWokaBodyPartOrder[this.selectedBodyPartType]] = index;
     }
 
     private populateGrid(bodyParts: CustomWokaBodyPart): void {
@@ -336,7 +353,9 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bodyPartsDraggableGrid.clearAllItems();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
-            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()).setScale(slotScale);
+            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(), i).setScale(
+                slotScale
+            );
             if (bodyParts === CustomWokaBodyPart.Body) {
                 slot.setBodyTexture(bodyPartsLayer[i].id);
                 slot.setImageTexture();
@@ -348,6 +367,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             }
             this.bodyPartsDraggableGrid.addItem(slot);
         }
+        this.bodyPartsDraggableGrid.moveContentToBeginning();
     }
 
     private clearGrid(): void {

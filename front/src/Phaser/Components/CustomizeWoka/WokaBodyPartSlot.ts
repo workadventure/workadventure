@@ -28,8 +28,8 @@ export class WokaBodyPartSlot extends GridItem {
 
     public readonly SIZE: number = 50;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, config: WokaBodyPartSlotConfig) {
-        super(scene, undefined, { x, y });
+    constructor(scene: Phaser.Scene, x: number, y: number, config: WokaBodyPartSlotConfig, id?: number) {
+        super(scene, `${id}`, { x, y });
 
         this.config = config;
 
