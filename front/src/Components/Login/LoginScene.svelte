@@ -3,6 +3,7 @@
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
+    import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../i18n/i18n-svelte";
 
@@ -62,6 +63,11 @@
     <section class="action">
         <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{$LL.login.continue()}</button>
     </section>
+    {#if logo !== logoImg}
+        <section class="text-center powered-by">
+            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" />
+        </section>
+    {/if}
 </form>
 
 <style lang="scss">
@@ -133,6 +139,11 @@
             img {
                 width: 100%;
                 margin: 20px 0;
+            }
+
+            &.powered-by {
+                position: fixed;
+                bottom: 0;
             }
         }
     }
