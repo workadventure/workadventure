@@ -97,7 +97,7 @@ import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
@@ -635,7 +635,7 @@ export class GameScene extends DirtyScene {
         }
 
         const talkIconVolumeTreshold = 10;
-        let oldPeerNumber = 0;
+        const oldPeers = new Map<number, VideoPeer>();
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
             this.volumeStoreUnsubscribers.clear();
@@ -652,10 +652,17 @@ export class GameScene extends DirtyScene {
             }
 
             const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeerNumber) {
+            if (newPeerNumber > oldPeers.size) {
                 this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeerNumber) {
+            } else if (newPeerNumber < oldPeers.size) {
                 this.playSound("audio-webrtc-out");
+                const oldPeersKeys = oldPeers.keys();
+                const newPeersKeys = Array.from(peers.keys());
+                for (const oldKey of oldPeersKeys) {
+                    if (!newPeersKeys.includes(oldKey)) {
+                        this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
+                    }
+                }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
@@ -673,7 +680,10 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
-            oldPeerNumber = newPeerNumber;
+            oldPeers.clear();
+            for (const [key, val] of peers) {
+                oldPeers.set(key, val);
+            }
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
