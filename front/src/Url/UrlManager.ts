@@ -40,7 +40,7 @@ class UrlManager {
     /**
      * @return string
      */
-    get getPrivateAccessToken(): string | null {
+    get privateAccessToken(): string | null {
         const urlParams = new URLSearchParams(window.location.search.toString());
         return urlParams.get(queryPrivateAccessToken);
     }

@@ -129,7 +129,7 @@ class ConnectionManager {
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.privateAccessToken) {
-            const organizationMemberToken = urlManager.getPrivateAccessToken;
+            const organizationMemberToken = urlManager.privateAccessToken;
 
             //clear queryPrivateAccessToken query in window location
             urlParams.delete(queryPrivateAccessToken);
