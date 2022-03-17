@@ -13,6 +13,10 @@ export interface WokaBodyPartSlotConfig {
     selected?: boolean;
 }
 
+export enum WokaBodyPartSlotEvent {
+    Clicked = "WokaBodyPartSlotEvent:Clicked",
+}
+
 export class WokaBodyPartSlot extends GridItem {
     private background: Phaser.GameObjects.Rectangle;
     private bodyImage: Phaser.GameObjects.Image;
@@ -92,8 +96,7 @@ export class WokaBodyPartSlot extends GridItem {
         super.bindEventHandlers();
 
         this.on(GridItemEvent.Clicked, () => {
-            this.select(!this.selected);
-            // this.emit(CategoryGridItemEvent.Selected, this.categoryName);
+            this.emit(WokaBodyPartSlotEvent.Clicked, this.selected);
         });
     }
 

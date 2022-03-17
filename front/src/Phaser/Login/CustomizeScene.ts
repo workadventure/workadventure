@@ -19,7 +19,11 @@ import {
     CustomWokaPreviewerConfig,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
-import { WokaBodyPartSlot, WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
+import {
+    WokaBodyPartSlot,
+    WokaBodyPartSlotConfig,
+    WokaBodyPartSlotEvent,
+} from "../Components/CustomizeWoka/WokaBodyPartSlot";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -35,6 +39,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     private layers: BodyResourceDescriptionInterface[][] = [];
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
+
+    private isVertical: boolean = false;
 
     private loader: Loader;
 
@@ -89,9 +95,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        this.isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
         console.log(this.layers);
-
-        const isVertical = isMediaBreakpointUp("md");
 
         this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, this.getCustomWokaPreviewerConfig());
 
@@ -115,42 +120,12 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.bodyPartsDraggableGridForeground = this.add.rectangle(0, 0, 485, 165, 0xffffff, 0);
 
         this.bodyPartsSlots = {
-            [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
-            [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
-            [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
-            [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
-            [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
-            [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(
-                this,
-                0,
-                0,
-                this.getDefaultWokaBodyPartSlotConfig(isVertical)
-            ),
+            [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
         };
 
         this.setPlayerCurrentOutfit();
@@ -165,11 +140,11 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public onResize(): void {
-        const isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
+        this.isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
 
-        this.handleCustomWokaPreviewerOnResize(isVertical);
-        this.handleBodyPartSlotsOnResize(isVertical);
-        this.handleBodyPartsDraggableGridOnResize(isVertical);
+        this.handleCustomWokaPreviewerOnResize();
+        this.handleBodyPartSlotsOnResize();
+        this.handleBodyPartsDraggableGridOnResize();
     }
 
     public nextSceneToCamera() {
@@ -212,25 +187,25 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    private handleCustomWokaPreviewerOnResize(isVertical: boolean): void {
+    private handleCustomWokaPreviewerOnResize(): void {
         const slotDimension =
-            Math.min(innerWidth * (isVertical ? 0.2 : 0.15), innerHeight * (isVertical ? 0.2 : 0.15)) /
+            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.15), innerHeight * (this.isVertical ? 0.2 : 0.15)) /
             waScaleManager.getActualZoom();
 
         const boxDimension =
-            Math.min(innerWidth * (isVertical ? 0.4 : 0.3), innerHeight * (isVertical ? 0.4 : 0.3)) /
+            Math.min(innerWidth * (this.isVertical ? 0.4 : 0.3), innerHeight * (this.isVertical ? 0.4 : 0.3)) /
             waScaleManager.getActualZoom();
 
         this.customWokaPreviewer.setDisplaySize(boxDimension, boxDimension);
         this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.customWokaPreviewer.y = isVertical
+        this.customWokaPreviewer.y = this.isVertical
             ? this.customWokaPreviewer.displayHeight * 0.5 + 20
             : slotDimension * 1.5 + 20;
     }
 
-    private handleBodyPartSlotsOnResize(isVertical: boolean): void {
+    private handleBodyPartSlotsOnResize(): void {
         const slotDimension =
-            Math.min(innerWidth * (isVertical ? 0.2 : 0.15), innerHeight * (isVertical ? 0.2 : 0.15)) /
+            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.15), innerHeight * (this.isVertical ? 0.2 : 0.15)) /
             waScaleManager.getActualZoom();
 
         for (const part in this.bodyPartsSlots) {
@@ -239,7 +214,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 
-        if (isVertical) {
+        if (this.isVertical) {
             const middle = this.customWokaPreviewer.x;
             const left = middle - slotSize - 10;
             const right = middle + slotSize + 10;
@@ -270,9 +245,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.bodyPartsSlots.Eyes.setPosition(right, bottom);
     }
 
-    private handleBodyPartsDraggableGridOnResize(isVertical: boolean): void {
-        const gridHeight = (innerHeight * (isVertical ? 0.3 : 0.35)) / waScaleManager.getActualZoom();
-        const gridWidth = (innerWidth * (isVertical ? 1 : 0.8)) / waScaleManager.getActualZoom();
+    private handleBodyPartsDraggableGridOnResize(): void {
+        const gridHeight = (innerHeight * (this.isVertical ? 0.3 : 0.35)) / waScaleManager.getActualZoom();
+        const gridWidth = (innerWidth * (this.isVertical ? 1 : 0.8)) / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
             y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
@@ -285,15 +260,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             .setStrokeStyle(4, 0xaaaaaa);
         this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: gridWidth, y: gridHeight }, gridPos);
 
-        const slotDimension = (innerHeight * (isVertical ? 0.125 : 0.15)) / waScaleManager.getActualZoom();
-        const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
-
-        // this.bodyPartsDraggableGrid.clearAllItems();
-        // for (let i = 0; i < 50; i += 1) {
-        //     this.bodyPartsDraggableGrid.addItem(
-        //         new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(isVertical)).setScale(slotScale)
-        //     );
-        // }
         this.bodyPartsDraggableGrid.moveContentToBeginning();
     }
 
@@ -306,14 +272,14 @@ export class CustomizeScene extends AbstractCharacterScene {
         };
     }
 
-    private getDefaultWokaBodyPartSlotConfig(isVertical: boolean): WokaBodyPartSlotConfig {
+    private getDefaultWokaBodyPartSlotConfig(): WokaBodyPartSlotConfig {
         return {
             color: 0xffffff,
-            borderThickness: this.countZoom(isVertical ? 4 : 4),
+            borderThickness: this.countZoom(this.isVertical ? 4 : 4),
             borderColor: 0xadafbc,
             borderSelectedColor: 0x00ffff,
-            offsetX: this.countZoom(isVertical ? -4 : -3),
-            offsetY: this.countZoom(isVertical ? -3 : -2),
+            offsetX: this.countZoom(this.isVertical ? -4 : -3),
+            offsetY: this.countZoom(this.isVertical ? -3 : -2),
         };
     }
 
@@ -336,17 +302,61 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.input.keyboard.on("keydown-R", () => {
             this.randomizeOutfit();
+            this.clearGrid();
+            this.deselectAllSlots();
             this.setPlayerCurrentOutfit();
         });
+
+        for (const bodyPart in CustomWokaBodyPart) {
+            const slot = this.bodyPartsSlots[bodyPart as CustomWokaBodyPart];
+            slot.on(WokaBodyPartSlotEvent.Clicked, (selected: boolean) => {
+                if (!selected) {
+                    this.deselectAllSlots();
+                    slot.select(true);
+                    this.populateGrid(bodyPart as CustomWokaBodyPart);
+                } else {
+                    slot.select(false);
+                    this.clearGrid();
+                }
+            });
+        }
     }
 
     private randomizeOutfit(): void {
         for (let i = 0; i < 6; i += 1) {
             this.selectedLayers[i] = Math.floor(Math.random() * this.layers[i].length);
-            this.customWokaPreviewer.updateSprite(
-                this.layers[i][Math.floor(Math.random() * this.layers[i].length)].id,
-                CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart]
-            );
+        }
+    }
+
+    private populateGrid(bodyParts: CustomWokaBodyPart): void {
+        const slotDimension = (innerHeight * (this.isVertical ? 0.125 : 0.15)) / waScaleManager.getActualZoom();
+        const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
+
+        const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[bodyParts]];
+
+        this.bodyPartsDraggableGrid.clearAllItems();
+        for (let i = 0; i < bodyPartsLayer.length; i += 1) {
+            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()).setScale(slotScale);
+            if (bodyParts === CustomWokaBodyPart.Body) {
+                slot.setBodyTexture(bodyPartsLayer[i].id);
+                slot.setImageTexture();
+            } else {
+                slot.setBodyTexture(
+                    this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id
+                );
+                slot.setImageTexture(bodyPartsLayer[i].id);
+            }
+            this.bodyPartsDraggableGrid.addItem(slot);
+        }
+    }
+
+    private clearGrid(): void {
+        this.bodyPartsDraggableGrid.clearAllItems();
+    }
+
+    private deselectAllSlots(): void {
+        for (const bodyPart in CustomWokaBodyPart) {
+            this.bodyPartsSlots[bodyPart as CustomWokaBodyPart].select(false);
         }
     }
 }

@@ -52,13 +52,6 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
-        // this.updateSprite("accessory1", CustomWokaBodyPart.Accessory);
-        // this.updateSprite("body1", CustomWokaBodyPart.Body);
-        // this.updateSprite("clothes4", CustomWokaBodyPart.Clothes);
-        // this.updateSprite("eyes5", CustomWokaBodyPart.Eyes);
-        // this.updateSprite("hair3", CustomWokaBodyPart.Hair);
-        // this.updateSprite("hat2", CustomWokaBodyPart.Hat);
-
         this.background = this.scene.add.graphics();
         this.drawBackground();
         this.setSize(this.SIZE, this.SIZE);
