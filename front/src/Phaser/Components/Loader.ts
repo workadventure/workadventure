@@ -45,15 +45,17 @@ export class Loader {
         );
 
         const logoPromise = this.superLoad.image(this.logoNameIndex, logoResource);
-        logoPromise.then((texture) => {
-            this.logo = this.scene.add.image(
-                this.scene.game.renderer.width / 2,
-                this.scene.game.renderer.height / 2 - 150,
-                texture
-            );
+        logoPromise
+            .then((texture) => {
+                this.logo = this.scene.add.image(
+                    this.scene.game.renderer.width / 2,
+                    this.scene.game.renderer.height / 2 - 150,
+                    texture
+                );
 
-            this.loadingText?.destroy();
-        });
+                this.loadingText?.destroy();
+            })
+            .catch((e) => console.warn("Could not load logo: ", logoResource, e));
 
         let poweredByLogoPromise: CancelablePromise<Texture> | undefined;
         if (gameManager.currentStartedRoom.loadingLogo) {
@@ -61,13 +63,17 @@ export class Loader {
                 "poweredByLogo",
                 "static/images/Powered_By_WorkAdventure_Small.png"
             );
-            poweredByLogoPromise.then((texture) => {
-                this.poweredByLogo = this.scene.add.image(
-                    this.scene.game.renderer.width / 2,
-                    this.scene.game.renderer.height - 50,
-                    texture
+            poweredByLogoPromise
+                .then((texture) => {
+                    this.poweredByLogo = this.scene.add.image(
+                        this.scene.game.renderer.width / 2,
+                        this.scene.game.renderer.height - 50,
+                        texture
+                    );
+                })
+                .catch((e) =>
+                    console.warn('Could not load image "static/images/Powered_By_WorkAdventure_Small.png"', e)
                 );
-            });
         }
 
         this.progressContainer = this.scene.add.graphics();
