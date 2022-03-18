@@ -2,7 +2,7 @@ import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import type { CharacterTexture } from "../../Connexion/LocalUser";
 import { BodyResourceDescriptionInterface, mapLayerToLevel, PlayerTextures, PlayerTexturesKey } from "./PlayerTextures";
 import CancelablePromise from "cancelable-promise";
-import {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import Texture = Phaser.Textures.Texture;
 
 export interface FrameConfig {
@@ -52,11 +52,13 @@ export const lazyLoadPlayerCharacterTextures = (
 ): CancelablePromise<string[]> => {
     const promisesList: CancelablePromise<Texture>[] = [];
     for (const texture of textures) {
-        promisesList.push(superLoaderPlugin.spritesheet(texture.id, texture.img, {
-            frameWidth: 32,
-            frameHeight: 32,
-        }));
-    };
+        promisesList.push(
+            superLoaderPlugin.spritesheet(texture.id, texture.img, {
+                frameWidth: 32,
+                frameHeight: 32,
+            })
+        );
+    }
     const returnPromise: CancelablePromise<Texture[]> = CancelablePromise.all(promisesList);
 
     return returnPromise.then(() =>

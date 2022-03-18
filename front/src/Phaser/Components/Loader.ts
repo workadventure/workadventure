@@ -1,9 +1,12 @@
 import ImageFrameConfig = Phaser.Types.Loader.FileTypes.ImageFrameConfig;
 import { DirtyScene } from "../Game/DirtyScene";
 import { gameManager } from "../Game/GameManager";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import CancelablePromise from "cancelable-promise";
+import Image = Phaser.GameObjects.Image;
+import Texture = Phaser.Textures.Texture;
 
 const TextName: string = "Loading...";
-const LogoFrame: ImageFrameConfig = { frameWidth: 310, frameHeight: 60 };
 
 const loadingBarHeight: number = 16;
 const padding: number = 5;
@@ -13,10 +16,15 @@ export class Loader {
     private progress!: Phaser.GameObjects.Graphics;
     private progressAmount: number = 0;
     private logo: Phaser.GameObjects.Image | undefined;
+    private logoPoweredBy: Phaser.GameObjects.Image | undefined;
+    private poweredByLogo: Phaser.GameObjects.Image | undefined;
     private loadingText: Phaser.GameObjects.Text | null = null;
     private logoNameIndex!: string;
+    private superLoad: SuperLoaderPlugin;
 
-    public constructor(private scene: Phaser.Scene) {}
+    public constructor(private scene: Phaser.Scene) {
+        this.superLoad = new SuperLoaderPlugin(scene);
+    }
 
     public addLoader(): void {
         // If there is nothing to load, do not display the loader.
@@ -29,41 +37,42 @@ export class Loader {
 
         const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
 
-        const promiseLoadLogoTexture = new Promise<Phaser.GameObjects.Image>((res) => {
-            if (this.scene.load.textureManager.exists(this.logoNameIndex)) {
-                return res(
-                    (this.logo = this.scene.add.image(
-                        this.scene.game.renderer.width / 2,
-                        this.scene.game.renderer.height / 2 - 150,
-                        this.logoNameIndex
-                    ))
-                );
-            } else {
-                //add loading if logo image is not ready
-                this.loadingText = this.scene.add.text(
-                    this.scene.game.renderer.width / 2,
-                    this.scene.game.renderer.height / 2 - 50,
-                    TextName
-                );
-            }
-            this.scene.load.spritesheet(this.logoNameIndex, logoResource, LogoFrame);
-            this.scene.load.once(`filecomplete-spritesheet-${this.logoNameIndex}`, () => {
-                if (this.loadingText) {
-                    this.loadingText.destroy();
-                }
-                return res(
-                    (this.logo = this.scene.add.image(
-                        this.scene.game.renderer.width / 2,
-                        this.scene.game.renderer.height / 2 - 150,
-                        this.logoNameIndex
-                    ))
-                );
-            });
+        //add loading if logo image until logo image is ready
+        this.loadingText = this.scene.add.text(
+            this.scene.game.renderer.width / 2,
+            this.scene.game.renderer.height / 2 - 50,
+            TextName
+        );
+
+        const logoPromise = this.superLoad.image(this.logoNameIndex, logoResource);
+        logoPromise.then((texture) => {
+            this.logo = this.scene.add.image(
+                this.scene.game.renderer.width / 2,
+                this.scene.game.renderer.height / 2 - 150,
+                texture
+            );
+
+            this.loadingText?.destroy();
         });
 
+        let poweredByLogoPromise: CancelablePromise<Texture> | undefined;
+        if (gameManager.currentStartedRoom.loadingLogo) {
+            poweredByLogoPromise = this.superLoad.image(
+                "poweredByLogo",
+                "static/images/Powered_By_WorkAdventure_Small.png"
+            );
+            poweredByLogoPromise.then((texture) => {
+                this.poweredByLogo = this.scene.add.image(
+                    this.scene.game.renderer.width / 2,
+                    this.scene.game.renderer.height - 50,
+                    texture
+                );
+            });
+        }
+
         this.progressContainer = this.scene.add.graphics();
-        this.progress = this.scene.add.graphics();
         this.progressContainer.fillStyle(0x444444, 0.8);
+        this.progress = this.scene.add.graphics();
 
         this.resize();
 
@@ -71,20 +80,26 @@ export class Loader {
             this.progressAmount = value;
             this.drawProgress();
         });
+
+        const resizeFunction = this.resize.bind(this);
+        this.scene.scale.on(Phaser.Scale.Events.RESIZE, resizeFunction);
+
         this.scene.load.on("complete", () => {
             if (this.loadingText) {
                 this.loadingText.destroy();
             }
-            promiseLoadLogoTexture
-                .then((resLoadingImage: Phaser.GameObjects.Image) => {
-                    resLoadingImage.destroy();
-                })
-                .catch((e) => console.error(e));
+            logoPromise.cancel();
+            poweredByLogoPromise?.cancel();
+
+            this.logo?.destroy();
+            this.poweredByLogo?.destroy();
+
             this.progress.destroy();
             this.progressContainer.destroy();
             if (this.scene instanceof DirtyScene) {
                 this.scene.markDirty();
             }
+            this.scene.scale.off(Phaser.Scale.Events.RESIZE, resizeFunction);
         });
     }
 
@@ -92,9 +107,13 @@ export class Loader {
         if (this.scene.load.textureManager.exists(this.logoNameIndex)) {
             this.scene.load.textureManager.remove(this.logoNameIndex);
         }
+        if (this.scene.load.textureManager.exists("poweredByLogo")) {
+            this.scene.load.textureManager.remove("poweredByLogo");
+        }
     }
 
     public resize(): void {
+        console.log("RESIZE TRIGGERED");
         const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
 
         this.progressContainer.clear();
@@ -116,6 +135,11 @@ export class Loader {
         if (this.logo) {
             this.logo.x = this.scene.game.renderer.width / 2;
             this.logo.y = this.scene.game.renderer.height / 2 - 150;
+        }
+
+        if (this.poweredByLogo) {
+            this.poweredByLogo.x = this.scene.game.renderer.width / 2;
+            this.poweredByLogo.y = this.scene.game.renderer.height - 40;
         }
     }
 

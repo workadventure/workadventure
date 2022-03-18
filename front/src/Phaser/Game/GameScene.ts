@@ -100,7 +100,7 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
-import {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1917,7 +1917,7 @@ ${escapedMessage}
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
             addPlayerData.userUuid,
@@ -2088,8 +2088,6 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         });
-
-        this.loader.resize();
     }
 
     private getObjectLayerData(objectName: string): ITiledMapObject | undefined {

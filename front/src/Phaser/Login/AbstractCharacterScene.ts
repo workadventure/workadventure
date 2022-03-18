@@ -4,7 +4,7 @@ import { loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
 import type CancelablePromise from "cancelable-promise";
 import { PlayerTextures } from "../Entity/PlayerTextures";
 import Texture = Phaser.Textures.Texture;
-import {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
     protected playerTextures: PlayerTextures;
