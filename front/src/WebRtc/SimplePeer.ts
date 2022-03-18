@@ -125,6 +125,7 @@ export class SimplePeer {
                 if (!peerConnexionDeleted) {
                     throw new Error("Error to delete peer connection");
                 }
+                //return this.createPeerConnection(user, localStream);
             } else {
                 peerConnection.toClose = false;
                 return null;
@@ -170,7 +171,6 @@ export class SimplePeer {
         stream: MediaStream | null
     ): ScreenSharingPeer | null {
         const peerConnection = this.PeerScreenSharingConnectionArray.get(user.userId);
-
         if (peerConnection) {
             if (peerConnection.destroyed) {
                 peerConnection.toClose = true;
@@ -182,8 +182,8 @@ export class SimplePeer {
                 this.createPeerConnection(user);
             } else {
                 peerConnection.toClose = false;
-                return null;
             }
+            return null;
         }
 
         // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
@@ -201,9 +201,6 @@ export class SimplePeer {
             this.Connection,
             stream
         );
-
-        peer.toClose = false;
-
         this.PeerScreenSharingConnectionArray.set(user.userId, peer);
 
         screenSharingPeerStore.pushNewPeer(peer);
@@ -268,13 +265,10 @@ export class SimplePeer {
             }
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
-            peer.toClose = true;
             peer.destroy();
         } catch (err) {
             console.error("closeConnection", err);
         }
-
-        screenSharingPeerStore.removePeer(userId);
     }
 
     public closeAllConnections() {
@@ -382,6 +376,11 @@ export class SimplePeer {
     private sendLocalScreenSharingStreamToUser(userId: number, localScreenCapture: MediaStream): void {
         const uuid = playersStore.getPlayerById(userId)?.userUuid || "";
         if (blackListManager.isBlackListed(uuid)) return;
+        // If a connection already exists with user (because it is already sharing a screen with us... let's use this connection)
+        if (this.PeerScreenSharingConnectionArray.has(userId)) {
+            this.pushScreenSharingToRemoteUser(userId, localScreenCapture);
+            return;
+        }
 
         const screenSharingUser: UserSimplePeerInterface = {
             userId,
