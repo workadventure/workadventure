@@ -90,7 +90,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, [
+                return lazyLoadPlayerCharacterTextures(scene.superLoad, [
                     {
                         id: "color_22",
                         img: "resources/customisation/character_color/character_color21.png",

@@ -100,6 +100,7 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
+import {SuperLoaderPlugin} from "../Services/SuperLoaderPlugin";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -217,6 +218,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -232,6 +234,7 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
+        this.superLoad = new SuperLoaderPlugin(this);
     }
 
     //hook preload scene
@@ -746,7 +749,7 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
-                lazyLoadPlayerCharacterTextures(this.load, onConnect.room.characterLayers)
+                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterLayers)
                     .then((layers) => {
                         this.currentPlayerTexturesResolve(layers);
                     })
