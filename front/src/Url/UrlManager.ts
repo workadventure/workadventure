@@ -6,12 +6,9 @@ export enum GameConnexionTypes {
     register /*@deprecated*/,
     empty,
     unknown,
-    jwt,
+    jwt /*@deprecated*/,
     login,
-    privateAccessToken,
 }
-
-export const queryPrivateAccessToken = "privateAccessToken";
 
 //this class is responsible with analysing and editing the game's url
 class UrlManager {
@@ -19,15 +16,14 @@ class UrlManager {
         const url = window.location.pathname.toString();
         if (url === "/login") {
             return GameConnexionTypes.login;
-        } else if (url === "/jwt") {
+        }
+        //@deprecated jwt url will be replace by "?token=<private access token>"
+        else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
-            if (window.location.search.includes(queryPrivateAccessToken)) {
-                return GameConnexionTypes.privateAccessToken;
-            }
             return GameConnexionTypes.room;
         }
-        //@deprecated register url will be replace by "?privateAccessToken=<private access token>"
+        //@deprecated register url will be replace by "?token=<private access token>"
         else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
@@ -35,14 +31,6 @@ class UrlManager {
         } else {
             return GameConnexionTypes.unknown;
         }
-    }
-
-    /**
-     * @return string
-     */
-    get privateAccessToken(): string | null {
-        const urlParams = new URLSearchParams(window.location.search.toString());
-        return urlParams.get(queryPrivateAccessToken);
     }
 
     /**

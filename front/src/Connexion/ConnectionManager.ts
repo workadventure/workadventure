@@ -2,7 +2,7 @@ import Axios from "axios";
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
-import { GameConnexionTypes, queryPrivateAccessToken, urlManager } from "../Url/UrlManager";
+import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import { localUserStore } from "./LocalUserStore";
 import { CharacterTexture, LocalUser } from "./LocalUser";
 import { Room } from "./Room";
@@ -127,42 +127,6 @@ class ConnectionManager {
                 this.loadOpenIDScreen();
                 return Promise.reject(new Error("You will be redirect on login page"));
             }
-            urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.privateAccessToken) {
-            const organizationMemberToken = urlManager.privateAccessToken;
-
-            //clear queryPrivateAccessToken query in window location
-            urlParams.delete(queryPrivateAccessToken);
-
-            //create play uri parameter
-            const playUri = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            const data = await Axios.post(`${PUSHER_URL}/register`, {
-                organizationMemberToken,
-                playUri,
-            }).then((res) => res.data);
-            if (!isRegisterData(data)) {
-                console.error("Invalid data received from /register route. Data: ", data);
-                throw new Error("Invalid data received from /register route.");
-            }
-            this.localUser = new LocalUser(data.userUuid, data.email);
-            this.authToken = data.authToken;
-            localUserStore.saveUser(this.localUser);
-            localUserStore.setAuthToken(this.authToken);
-            analyticsClient.loggedWithToken();
-
-            const roomUrl = data.roomUrl;
-
-            const query = urlParams.toString();
-            this._currentRoom = await Room.createRoom(
-                new URL(
-                    window.location.protocol +
-                        "//" +
-                        window.location.host +
-                        roomUrl +
-                        (query ? "?" + query : "") + //use urlParams because the token param must be deleted
-                        window.location.hash
-                )
-            );
             urlManager.pushRoomIdToUrl(this._currentRoom);
         }
         //@deprecated
