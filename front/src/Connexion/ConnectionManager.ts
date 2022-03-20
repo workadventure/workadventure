@@ -85,8 +85,7 @@ class ConnectionManager {
      * Tries to login to the node server and return the starting map url to be loaded
      */
     public async initGameConnexion(): Promise<Room> {
-        const connexionType = urlManager.getGameConnexionType();
-        this.connexionType = connexionType;
+        this.connexionType = urlManager.getGameConnexionType();
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -99,13 +98,14 @@ class ConnectionManager {
             urlParams.delete("token");
         }
 
-        if (connexionType === GameConnexionTypes.login) {
+        if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             if (this.loadOpenIDScreen() !== null) {
                 return Promise.reject(new Error("You will be redirect on login page"));
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.jwt) {
+        } else if (this.connexionType === GameConnexionTypes.jwt) {
+        /** @deprecated */
             if (!token) {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
@@ -130,7 +130,7 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(this._currentRoom);
         }
         //@deprecated
-        else if (connexionType === GameConnexionTypes.register) {
+        else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
@@ -159,11 +159,11 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
+        } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
-            if (connexionType === GameConnexionTypes.empty) {
+            if (this.connexionType === GameConnexionTypes.empty) {
                 roomPath = localUserStore.getLastRoomUrl();
                 //get last room path from cache api
                 try {
