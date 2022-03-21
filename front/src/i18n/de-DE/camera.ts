@@ -13,6 +13,10 @@ const camera: NonNullable<Translation["camera"]> = {
             'Bitte klicke auf "Diese Entscheidungen speichern" Schaltfläche um erneute Nachfragen nach der Freigabe in Firefox zu verhindern.',
         refresh: "Aktualisieren",
         continue: "Ohne Kamera fortfahren",
+        screen: {
+            firefox: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+            chrome: "/resources/help-setting-camera-permission/de-DE-chrome.png",
+        },
     },
     my: {
         silentZone: "Stiller Bereich",

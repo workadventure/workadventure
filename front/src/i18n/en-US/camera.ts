@@ -13,6 +13,10 @@ const camera: BaseTranslation = {
             'Please click the "Remember this decision" checkbox, if you don\'t want Firefox to keep asking you the authorization.',
         refresh: "Refresh",
         continue: "Continue without webcam",
+        screen: {
+            firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
+            chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",
+        },
     },
     my: {
         silentZone: "Silent zone",

@@ -1,4 +1,4 @@
-import { WokaDetail, WokaDetailsResult, WokaList, wokaPartNames } from "../Enum/PlayerTextures";
+import { WokaDetail, WokaDetailsResult, WokaList, wokaPartNames } from "../Messages/JsonMessages/PlayerTextures";
 import { WokaServiceInterface } from "./WokaServiceInterface";
 
 class LocalWokaService implements WokaServiceInterface {

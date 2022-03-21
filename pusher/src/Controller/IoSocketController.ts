@@ -37,7 +37,7 @@ import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
-import { WokaDetail } from "../Enum/PlayerTextures";
+import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
