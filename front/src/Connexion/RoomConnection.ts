@@ -349,7 +349,9 @@ export class RoomConnection implements RoomConnection {
                             break;
                         }
                     }
+
                     if (this.closed) {
+                        this.closeConnection();
                         break;
                     }
 

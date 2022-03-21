@@ -19,7 +19,7 @@ export class GameManager {
     private companion: string | null;
     private startRoom!: Room;
     private cameraSetup?: { video: unknown; audio: unknown };
-    currentGameSceneName: string | null = null;
+    private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
 

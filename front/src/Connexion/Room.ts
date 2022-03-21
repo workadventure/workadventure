@@ -31,6 +31,8 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport: boolean = false;
+    private _loadingLogo: string | undefined;
+    private _loginSceneLogo: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -126,6 +128,8 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._loadingLogo = data.loadingLogo ?? undefined;
+                this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 return new MapDetail(data.mapUrl);
             } else {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
@@ -232,5 +236,13 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
+    }
+
+    get loadingLogo(): string | undefined {
+        return this._loadingLogo;
+    }
+
+    get loginSceneLogo(): string | undefined {
+        return this._loginSceneLogo;
     }
 }
