@@ -119,7 +119,6 @@ export class Loader {
     }
 
     public resize(): void {
-        console.log("RESIZE TRIGGERED");
         const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
 
         this.progressContainer.clear();

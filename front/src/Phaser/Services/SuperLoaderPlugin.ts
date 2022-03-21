@@ -52,10 +52,42 @@ export class SuperLoaderPlugin {
     }
 
     /**
+     * @param key
+     * @param url
+     * @param dataKey
+     * @param xhrSettings
+     * @param immediateCallback The function returns a promise BUT the "then" promise will be triggered after the current Javascript thread finishes. In case of Phaser loader, this can be a problem if you want to add additional resources to the loader in the callback. The "immediateCallback" triggers directly in the
+     */
+    public json(
+        key: string,
+        url: string,
+        dataKey?: string,
+        xhrSettings?: Phaser.Types.Loader.XHRSettingsObject,
+        immediateCallback?: (key: string, type: string, data: unknown) => void
+    ) {
+        return this.loadResource<unknown>(
+            () => {
+                this.scene.load.json(key, url, dataKey, xhrSettings);
+            },
+            key,
+            url,
+            () => {
+                if (this.scene.load.cacheManager.json.exists(key)) {
+                    return this.scene.load.cacheManager.json.get(key);
+                }
+                return undefined;
+            },
+            "json",
+            immediateCallback
+        );
+    }
+
+    /**
      * @param callback The function that calls the loader to load a resource
      * @param key The key of the resource to be loaded
      * @param fromCache A function that checks in the cache if the resource is already available
      * @param type The type of resource loaded
+     * @param immediateCallback The function returns a promise BUT the "then" promise will be triggered after the current Javascript thread finishes. In case of Phaser loader, this can be a problem if you want to add additional resources to the loader in the callback. The "immediateCallback" triggers directly in the
      * @private
      */
     private loadResource<T>(
@@ -63,7 +95,8 @@ export class SuperLoaderPlugin {
         key: string,
         url: string,
         fromCache: () => T | undefined,
-        type: string
+        type: string,
+        immediateCallback?: (key: string, type: string, data: unknown) => void
     ): CancelablePromise<T> {
         // If for some reason, the "url" is empty, let's reject the promise.
         if (!url) {
@@ -98,7 +131,7 @@ export class SuperLoaderPlugin {
                 unloadCallbacks();
             };
 
-            const successCallback = () => {
+            const successCallback = (key: string, type: string, data: unknown) => {
                 this.scene.load.off("loaderror", errorCallback);
                 this.scene.events.off(Phaser.Scenes.Events.DESTROY, unloadCallbacks);
                 const resource = fromCache();
@@ -106,6 +139,15 @@ export class SuperLoaderPlugin {
                     return rej(new Error("Newly loaded resource not available in cache"));
                 }
                 res(resource);
+
+                // The "then" callbacks registered on the promise are not executed immediately when "res" is called.
+                // Instead, they are called after the current JS thread finishes.
+                // In some cases, we want the callbacks to execute right now. In particular if we load a map / json file
+                // that contains references to other files that needs to be loaded.
+                if (immediateCallback) {
+                    immediateCallback(key, type, data);
+                }
+                console.log("Resolve done for ", url);
             };
 
             cancel(() => {

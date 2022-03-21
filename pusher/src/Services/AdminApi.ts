@@ -5,7 +5,7 @@ import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedir
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import * as tg from "generic-type-guard";
 import { isNumber } from "generic-type-guard";
-import { isWokaDetail } from "../Enum/PlayerTextures";
+import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 
 export interface AdminBannedData {
