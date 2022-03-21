@@ -7,11 +7,13 @@
     import type { Locales } from "../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
+    let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
@@ -37,6 +39,8 @@
             localUserStore.setGameQualityValue(valueGame);
             change = true;
         }
+
+        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
 
         if (change) {
             window.location.reload();
@@ -80,6 +84,10 @@
 
     function changeIgnoreFollowRequests() {
         localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
+    }
+
+    function changeDecreaseAudioPlayerVolumeWhileTalking() {
+        localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
     }
 
     function closeMenu() {
@@ -196,6 +204,15 @@
                 on:change={changeIgnoreFollowRequests}
             />
             <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
+        </label>
+        <label>
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+            />
+            <span>{$LL.audio.manager.reduce()}</span>
         </label>
     </section>
 </div>
