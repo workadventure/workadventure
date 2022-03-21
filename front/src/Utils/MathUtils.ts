@@ -62,14 +62,16 @@ export class MathUtils {
         const spriteWidth = Math.floor(unitSizeWidth * newScaleW);
         const spriteHeight = Math.floor(unitSizeHeight * newScaleH);
 
+        const restWidth = spriteWidth % unitSizeWidth;
+        const restHeight = spriteWidth % unitSizeHeight;
+
         // Expected nearest sprite size to maintain crisp pixels
-        const expectedSpriteWidth = spriteWidth - (spriteWidth % unitSizeWidth);
-        const expectedSpriteHeight = spriteHeight - (spriteHeight % unitSizeHeight);
+        const expectedSpriteWidth = spriteWidth - restWidth + (restWidth > unitSizeWidth / 2 ? unitSizeWidth : 0);
+        const expectedSpriteHeight = spriteHeight - restHeight + (restHeight > unitSizeHeight / 2 ? unitSizeHeight : 0);
 
         // Expected nearest scale
         const neededScaleWidth = expectedSpriteWidth / unitSizeWidth;
         const neededScaleHeight = expectedSpriteHeight / unitSizeHeight;
-        console.log(neededScaleWidth, neededScaleHeight);
 
         // Calculate new width and height and apply it to the whole container
         return [baseWidth * neededScaleWidth, baseHeight * neededScaleHeight];

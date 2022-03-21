@@ -97,7 +97,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
-        this.isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
+        this.isVertical = innerHeight / innerWidth > 1;
 
         this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, this.getCustomWokaPreviewerConfig());
 
@@ -108,7 +108,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             dimension: { x: 485, y: 165 },
             horizontal: true,
             repositionToCenter: true,
-            itemsInRow: 2,
+            itemsInRow: 1,
             margin: {
                 left: 5,
                 right: 5,
@@ -141,7 +141,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public onResize(): void {
-        this.isVertical = this.cameras.main.width / this.cameras.main.height < 0.75;
+        this.isVertical = innerHeight / innerWidth > 1;
 
         this.handleCustomWokaPreviewerOnResize();
         this.handleBodyPartSlotsOnResize();
@@ -205,17 +205,11 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleBodyPartSlotsOnResize(): void {
-        const slotDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.25), innerHeight * (this.isVertical ? 0.2 : 0.25)) /
-            waScaleManager.getActualZoom();
-        // 1;
+        const slotDimension = 100;
 
-        console.log("zoom: ", waScaleManager.getActualZoom());
-        console.log("slotDimension: ", slotDimension);
         for (const part in this.bodyPartsSlots) {
             this.bodyPartsSlots[part as CustomWokaBodyPart].setDisplaySize(slotDimension, slotDimension);
         }
-        console.log(this.bodyPartsSlots.Body.displayWidth);
 
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 
@@ -236,22 +230,26 @@ export class CustomizeScene extends AbstractCharacterScene {
             return;
         }
 
+        const ratio = innerHeight / innerWidth;
+
         const left = this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize;
+        const leftEdge = left - slotSize - 10;
         const right = this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize;
+        const rightEdge = right + slotSize + 10;
         const top = 0 + slotSize * 0.5 + 10;
         const middle = top + slotSize + 10;
         const bottom = middle + slotSize + 10;
 
         this.bodyPartsSlots.Hair.setPosition(left, top);
         this.bodyPartsSlots.Body.setPosition(left, middle);
-        this.bodyPartsSlots.Accessory.setPosition(left, bottom);
+        this.bodyPartsSlots.Accessory.setPosition(ratio < 0.6 ? leftEdge : left, ratio < 0.6 ? middle : bottom);
         this.bodyPartsSlots.Hat.setPosition(right, top);
         this.bodyPartsSlots.Clothes.setPosition(right, middle);
-        this.bodyPartsSlots.Eyes.setPosition(right, bottom);
+        this.bodyPartsSlots.Eyes.setPosition(ratio < 0.6 ? rightEdge : right, ratio < 0.6 ? middle : bottom);
     }
 
     private handleBodyPartsDraggableGridOnResize(): void {
-        const gridHeight = (innerHeight * (this.isVertical ? 0.3 : 0.35)) / waScaleManager.getActualZoom();
+        const gridHeight = 125;
         const gridWidth = (innerWidth * (this.isVertical ? 1 : 0.8)) / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
@@ -354,15 +352,15 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (this.selectedBodyPartType === undefined) {
             return;
         }
-        const slotDimension = (innerHeight * (this.isVertical ? 0.125 : 0.15)) / waScaleManager.getActualZoom();
-        const slotScale = slotDimension / this.customWokaPreviewer.SIZE;
+        const slotDimension = 100;
 
         const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
 
         this.bodyPartsDraggableGrid.clearAllItems();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
-            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(), i).setScale(
-                slotScale
+            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(), i).setDisplaySize(
+                slotDimension,
+                slotDimension
             );
             if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
                 slot.setBodyTexture(bodyPartsLayer[i].id);
