@@ -58,12 +58,11 @@ const menu: NonNullable<Translation["menu"]> = {
             title: "Langage",
         },
         privacySettings: {
-            title: "Paramètres de confidentialité",
-            explaination: "Vous pouvez définir ici si vous souhaitez conserver ou non l'activation du microphone/de la caméra au passage sur un autre onglet.",
-            allEnabled: "Camera et microphone toujours actifs",
-            onlyCameraEnabled: "Seul le microphone est activé quand l'onglet WA n'est pas sélectionné",
-            onlyMicrophoneEnabled: "Seule la caméra est activé quand l'onglet WA n'est pas sélectionné",
-            allDisabled: "Tout désactiver quand l'onglet WA n'est pas sélectionné"
+            title: "Paramètres du mode absent",
+            explanation:
+                "Quand l'onglet WorkAdventure n'est pas visible, vous passez en \"mode absent\". Lorsque ce mode est actif, vous pouvez décider de garder vos webcam et/ou micro désactivés tant que vous ne revenez pas sur l'onglet",
+            cameraToggle: "Camera",
+            microphoneToggle: "Microphone",
         },
         save: {
             warning: "(La sauvegarde de ces paramètres redémarre le jeu)",
