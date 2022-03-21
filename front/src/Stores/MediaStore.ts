@@ -294,18 +294,13 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            const userSetting = localUserStore.getPrivacySettings();
-            switch (userSetting) {
-                case "cameraEnabled":
-                    currentAudioConstraint = false;
-                    break;
-                case "microphoneEnabled":
-                    currentVideoConstraint = false;
-                    break;
-                case "noneEnabled":
-                    currentVideoConstraint = false;
-                    currentAudioConstraint = false;
-                    break;
+            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+            if (!userMicrophonePrivacySetting) {
+                currentAudioConstraint = false;
+            }
+            if (!userCameraPrivacySetting) {
+                currentVideoConstraint = false;
             }
         }
 
@@ -321,7 +316,6 @@ export const mediaStreamConstraintsStore = derived(
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
-
 
         // Let's make the changes only if the new value is different from the old one.
         if (

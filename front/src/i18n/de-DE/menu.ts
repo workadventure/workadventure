@@ -57,13 +57,12 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Sprache",
         },
+        //TODO: complete translation
         privacySettings: {
-            title: "Datenschutzeinstellungen", //TODO: confirm & complete translation
-            explaination: "",
-            allEnabled: "",
-            onlyCameraEnabled: "",
-            onlyMicrophoneEnabled: "",
-            allDisabled: ""
+            title: "",
+            explanation: "",
+            cameraToggle: "",
+            microphoneToggle: "",
         },
         save: {
             warning: "(Das Spiel wird nach dem Speichern neugestartet)",

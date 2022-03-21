@@ -58,12 +58,11 @@ const menu: BaseTranslation = {
             title: "Language",
         },
         privacySettings: {
-            title: "Privacy settings",
-            explaination: "Here you can set an option to keep your microphone/camera enabled when switching active tabs.",
-            allEnabled: "Camera and microphone always enabled",
-            onlyCameraEnabled: "Microphone disabled when the WA tab is not focused",
-            onlyMicrophoneEnabled: "Camera disabled when the WA tab is not focused",
-            allDisabled: "Both disabled when the WA tab is not focused"
+            title: "Away mode settings",
+            explanation:
+                'When the WorkAdventure tab is not visible, it switches to "away mode". In this mode, you can decide to automatically disable your webcam and/or microphone for as long as the tab stays hidden.',
+            cameraToggle: "Camera",
+            microphoneToggle: "Microphone",
         },
         save: {
             warning: "(Saving these settings will restart the game)",
