@@ -1,3 +1,4 @@
+import { MathUtils } from "../../../Utils/MathUtils";
 import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../../Player/Animation";
 
 export enum CustomWokaBodyPart {
@@ -71,6 +72,11 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
 
     public update(): void {
         this.animate();
+    }
+
+    public setDisplaySize(width: number, height: number): this {
+        const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height);
+        return super.setDisplaySize(newWidth, newHeight);
     }
 
     public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {

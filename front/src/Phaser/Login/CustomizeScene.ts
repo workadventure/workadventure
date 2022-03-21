@@ -190,11 +190,11 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleCustomWokaPreviewerOnResize(): void {
         const slotDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.15), innerHeight * (this.isVertical ? 0.2 : 0.15)) /
+            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.2), innerHeight * (this.isVertical ? 0.2 : 0.2)) /
             waScaleManager.getActualZoom();
 
         const boxDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.4 : 0.3), innerHeight * (this.isVertical ? 0.4 : 0.3)) /
+            Math.min(innerWidth * (this.isVertical ? 0.4 : 0.5), innerHeight * (this.isVertical ? 0.4 : 0.5)) /
             waScaleManager.getActualZoom();
 
         this.customWokaPreviewer.setDisplaySize(boxDimension, boxDimension);
@@ -206,12 +206,16 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleBodyPartSlotsOnResize(): void {
         const slotDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.15), innerHeight * (this.isVertical ? 0.2 : 0.15)) /
+            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.25), innerHeight * (this.isVertical ? 0.2 : 0.25)) /
             waScaleManager.getActualZoom();
+        // 1;
 
+        console.log("zoom: ", waScaleManager.getActualZoom());
+        console.log("slotDimension: ", slotDimension);
         for (const part in this.bodyPartsSlots) {
             this.bodyPartsSlots[part as CustomWokaBodyPart].setDisplaySize(slotDimension, slotDimension);
         }
+        console.log(this.bodyPartsSlots.Body.displayWidth);
 
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 

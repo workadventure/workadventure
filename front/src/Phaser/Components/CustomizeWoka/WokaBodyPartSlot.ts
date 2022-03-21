@@ -1,5 +1,6 @@
 import { GridItem } from "@home-based-studio/phaser3-utils";
 import { GridItemEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/GridItem";
+import { MathUtils } from "../../../Utils/MathUtils";
 
 export interface WokaBodyPartSlotConfig {
     color: number;
@@ -59,6 +60,11 @@ export class WokaBodyPartSlot extends GridItem {
         this.bindEventHandlers();
 
         this.scene.add.existing(this);
+    }
+
+    public setDisplaySize(width: number, height: number): this {
+        const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height, 32, 32);
+        return super.setDisplaySize(newWidth, newHeight);
     }
 
     public setTextures(bodyTextureKey?: string, imageTextureKey?: string): void {
