@@ -30,8 +30,8 @@ export const CustomizeSceneName = "CustomizeScene";
 
 export class CustomizeScene extends AbstractCharacterScene {
     private customWokaPreviewer!: CustomWokaPreviewer;
-    private bodyPartsDraggableGridBackground!: Phaser.GameObjects.Rectangle;
-    private bodyPartsDraggableGridForeground!: Phaser.GameObjects.Rectangle;
+    private bodyPartsDraggableGridBackground!: Phaser.GameObjects.Graphics;
+    private bodyPartsDraggableGridForeground!: Phaser.GameObjects.Graphics;
     private bodyPartsDraggableGrid!: DraggableGrid;
     private bodyPartsSlots!: Record<CustomWokaBodyPart, WokaBodyPartSlot>;
 
@@ -101,7 +101,18 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, this.getCustomWokaPreviewerConfig());
 
-        this.bodyPartsDraggableGridBackground = this.add.rectangle(0, 0, 485, 165, 0xf9f9f9);
+        this.bodyPartsDraggableGridBackground = this.add.graphics();
+
+        const gridBackgroundWidth = 500;
+        const gridBackgroundHeight = 170;
+        this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
+        this.bodyPartsDraggableGridBackground.fillRect(
+            -gridBackgroundWidth / 2,
+            -gridBackgroundHeight / 2,
+            gridBackgroundWidth,
+            gridBackgroundHeight
+        );
+
         this.bodyPartsDraggableGrid = new DraggableGrid(this, {
             position: { x: 0, y: 0 },
             maskPosition: { x: 0, y: 0 },
@@ -115,10 +126,10 @@ export class CustomizeScene extends AbstractCharacterScene {
             },
             spacing: 5,
             debug: {
-                showDraggableSpace: false,
+                showDraggableSpace: true,
             },
         });
-        this.bodyPartsDraggableGridForeground = this.add.rectangle(0, 0, 485, 165, 0xffffff, 0);
+        this.bodyPartsDraggableGridForeground = this.add.graphics();
 
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
@@ -137,7 +148,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public update(time: number, dt: number): void {
-        this.customWokaPreviewer.update();
+        // this.customWokaPreviewer.update();
     }
 
     public onResize(): void {
@@ -175,6 +186,32 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.run(SelectCharacterSceneName);
     }
 
+    private drawGridBackground(gridPosition: { x: number; y: number }): void {
+        const gridBackgroundWidth = 500;
+        const gridBackgroundHeight = 170;
+        this.bodyPartsDraggableGridBackground.clear();
+        this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
+        this.bodyPartsDraggableGridBackground.fillRect(
+            gridPosition.x - gridBackgroundWidth / 2,
+            gridPosition.y - gridBackgroundHeight / 2,
+            gridBackgroundWidth,
+            gridBackgroundHeight
+        );
+    }
+
+    private drawGridForeground(gridPosition: { x: number; y: number }): void {
+        const gridBackgroundWidth = 500;
+        const gridBackgroundHeight = 170;
+        this.bodyPartsDraggableGridForeground.clear();
+        this.bodyPartsDraggableGridForeground.lineStyle(2, 0xadafbc);
+        this.bodyPartsDraggableGridForeground.strokeRect(
+            gridPosition.x - gridBackgroundWidth / 2,
+            gridPosition.y - gridBackgroundHeight / 2,
+            gridBackgroundWidth,
+            gridBackgroundHeight
+        );
+    }
+
     private refreshPlayerCurrentOutfit(): void {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
@@ -189,13 +226,9 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
-        const slotDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.2 : 0.2), innerHeight * (this.isVertical ? 0.2 : 0.2)) /
-            waScaleManager.getActualZoom();
+        const slotDimension = 100;
 
-        const boxDimension =
-            Math.min(innerWidth * (this.isVertical ? 0.4 : 0.5), innerHeight * (this.isVertical ? 0.4 : 0.5)) /
-            waScaleManager.getActualZoom();
+        const boxDimension = 200;
 
         this.customWokaPreviewer.setDisplaySize(boxDimension, boxDimension);
         this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
@@ -214,11 +247,13 @@ export class CustomizeScene extends AbstractCharacterScene {
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 
         if (this.isVertical) {
-            const middle = this.customWokaPreviewer.x;
-            const left = middle - slotSize - 10;
-            const right = middle + slotSize + 10;
-            const top = this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 0.5 + 10;
-            const bottom = top + slotSize + 10;
+            const middle = Math.floor(this.customWokaPreviewer.x);
+            const left = Math.floor(middle - slotSize - 10);
+            const right = Math.floor(middle + slotSize + 10);
+            const top = Math.floor(
+                this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 0.5 + 10
+            );
+            const bottom = Math.floor(top + slotSize + 10);
 
             this.bodyPartsSlots.Hair.setPosition(left, top);
             this.bodyPartsSlots.Hat.setPosition(middle, top);
@@ -232,13 +267,13 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const ratio = innerHeight / innerWidth;
 
-        const left = this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize;
-        const leftEdge = left - slotSize - 10;
-        const right = this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize;
-        const rightEdge = right + slotSize + 10;
-        const top = 0 + slotSize * 0.5 + 10;
-        const middle = top + slotSize + 10;
-        const bottom = middle + slotSize + 10;
+        const left = Math.floor(this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize);
+        const leftEdge = Math.floor(left - slotSize - 10);
+        const right = Math.floor(this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize);
+        const rightEdge = Math.floor(right + slotSize + 10);
+        const top = Math.floor(0 + slotSize * 0.5 + 10);
+        const middle = Math.floor(top + slotSize + 10);
+        const bottom = Math.floor(middle + slotSize + 10);
 
         this.bodyPartsSlots.Hair.setPosition(left, top);
         this.bodyPartsSlots.Body.setPosition(left, middle);
@@ -256,11 +291,8 @@ export class CustomizeScene extends AbstractCharacterScene {
             y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
         };
 
-        this.bodyPartsDraggableGridBackground.setPosition(gridPos.x, gridPos.y).setDisplaySize(gridWidth, gridHeight);
-        this.bodyPartsDraggableGridForeground
-            .setPosition(gridPos.x, gridPos.y)
-            .setDisplaySize(gridWidth, gridHeight)
-            .setStrokeStyle(4, 0xaaaaaa);
+        this.drawGridBackground(gridPos);
+        this.drawGridForeground(gridPos);
         this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: gridWidth, y: gridHeight }, gridPos);
 
         this.populateGrid();
@@ -270,7 +302,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private getCustomWokaPreviewerConfig(): CustomWokaPreviewerConfig {
         return {
             color: 0xffffff,
-            borderThickness: 2.5,
+            borderThickness: 1,
             borderColor: 0xadafbc,
             bodyPartsOffsetX: -1,
         };
@@ -279,16 +311,12 @@ export class CustomizeScene extends AbstractCharacterScene {
     private getDefaultWokaBodyPartSlotConfig(): WokaBodyPartSlotConfig {
         return {
             color: 0xffffff,
-            borderThickness: this.countZoom(this.isVertical ? 4 : 4),
+            borderThickness: 1,
             borderColor: 0xadafbc,
             borderSelectedColor: 0x00ffff,
-            offsetX: this.countZoom(this.isVertical ? -4 : -3),
-            offsetY: this.countZoom(this.isVertical ? -3 : -2),
+            offsetX: -4,
+            offsetY: -3,
         };
-    }
-
-    private countZoom(value: number): number {
-        return Math.floor(value / waScaleManager.getActualZoom());
     }
 
     private bindEventHandlers(): void {

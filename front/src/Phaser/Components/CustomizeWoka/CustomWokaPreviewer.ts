@@ -74,10 +74,10 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.animate();
     }
 
-    public setDisplaySize(width: number, height: number): this {
-        const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height);
-        return super.setDisplaySize(newWidth, newHeight);
-    }
+    // public setDisplaySize(width: number, height: number): this {
+    //     const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height);
+    //     return super.setDisplaySize(newWidth, newHeight);
+    // }
 
     public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
         this.animationDirection = direction;

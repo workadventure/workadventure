@@ -19,7 +19,7 @@ export enum WokaBodyPartSlotEvent {
 }
 
 export class WokaBodyPartSlot extends GridItem {
-    private background: Phaser.GameObjects.Rectangle;
+    private background: Phaser.GameObjects.Graphics;
     private bodyImage: Phaser.GameObjects.Image;
     private image: Phaser.GameObjects.Image;
 
@@ -38,9 +38,8 @@ export class WokaBodyPartSlot extends GridItem {
         const offsetX = -2;
         this.selected = this.config.selected ?? false;
 
-        this.background = this.scene.add
-            .rectangle(0, 0, this.SIZE, this.SIZE, this.config.color)
-            .setStrokeStyle(this.config.borderThickness, this.config.borderColor);
+        this.background = this.scene.add.graphics();
+        this.drawBackground();
 
         this.bodyImage = this.scene.add
             .image(offsetX, offsetY, config.bodyImageKey ?? "")
@@ -50,7 +49,7 @@ export class WokaBodyPartSlot extends GridItem {
             .image(offsetX, offsetY, config.imageKey ?? "")
             .setVisible(config.bodyImageKey !== undefined);
 
-        this.setSize(this.SIZE + this.config.borderThickness, this.SIZE + this.config.borderThickness);
+        this.setSize(this.SIZE, this.SIZE);
 
         this.add([this.background, this.bodyImage, this.image]);
 
@@ -60,11 +59,6 @@ export class WokaBodyPartSlot extends GridItem {
         this.bindEventHandlers();
 
         this.scene.add.existing(this);
-    }
-
-    public setDisplaySize(width: number, height: number): this {
-        const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height, 32, 32);
-        return super.setDisplaySize(newWidth, newHeight);
     }
 
     public setTextures(bodyTextureKey?: string, imageTextureKey?: string): void {
@@ -106,7 +100,19 @@ export class WokaBodyPartSlot extends GridItem {
         });
     }
 
+    private drawBackground(): void {
+        this.background.clear();
+        this.background.fillStyle(0xffffff);
+        this.background.lineStyle(
+            this.config.borderThickness,
+            this.selected ? this.config.borderSelectedColor : this.config.borderColor
+        );
+
+        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+    }
+
     private updateSelected(): void {
-        this.background.setStrokeStyle(2.5, this.selected ? this.config.borderSelectedColor : this.config.borderColor);
+        this.drawBackground();
     }
 }
