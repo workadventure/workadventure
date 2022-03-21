@@ -105,53 +105,49 @@
 <div class="main-audio-manager nes-container is-rounded">
     <div class:hidden={!isAudioAllowed}>
         <div class="audio-manager-player-volume">
-        <span
-                id="audioplayer_volume_icon_playing"
-                bind:this={audioPlayerVolumeIcon}
-                on:click={onMute}
-        >
-            <svg
+            <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
+                <svg
                     width="2em"
                     height="2em"
                     viewBox="0 0 16 16"
                     class="bi bi-volume-up"
                     fill="white"
                     xmlns="http://www.w3.org/2000/svg"
-            >
-                <path
+                >
+                    <path
                         fill-rule="evenodd"
                         d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06zM6 5.04L4.312 6.39A.5.5 0 0 1 4 6.5H2v3h2a.5.5 0 0 1 .312.11L6 10.96V5.04z"
-                />
-                <g id="audioplayer_volume_icon_playing_high">
-                    <path
+                    />
+                    <g id="audioplayer_volume_icon_playing_high">
+                        <path
                             d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l-.708.707A7.476 7.476 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303l.708.707z"
-                    />
-                </g>
-                <g id="audioplayer_volume_icon_playing_mid">
-                    <path
+                        />
+                    </g>
+                    <g id="audioplayer_volume_icon_playing_mid">
+                        <path
                             d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.483 5.483 0 0 1 11.025 8a5.483 5.483 0 0 1-1.61 3.89l.706.706z"
-                    />
-                </g>
-                <g id="audioplayer_volume_icon_playing_low">
-                    <path
+                        />
+                    </g>
+                    <g id="audioplayer_volume_icon_playing_low">
+                        <path
                             d="M8.707 11.182A4.486 4.486 0 0 0 10.025 8a4.486 4.486 0 0 0-1.318-3.182L8 5.525A3.489 3.489 0 0 1 9.025 8 3.49 3.49 0 0 1 8 10.475l.707.707z"
-                    />
-                </g>
-            </svg>
-        </span>
+                        />
+                    </g>
+                </svg>
+            </span>
             <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.025"
-                    bind:this={audioPlayerVol}
-                    on:change={setVolume}
-                    on:keydown={disallowKeys}
+                type="range"
+                min="0"
+                max="1"
+                step="0.025"
+                bind:this={audioPlayerVol}
+                on:change={setVolume}
+                on:keydown={disallowKeys}
             />
         </div>
         <section class="audio-manager-file">
             <!-- svelte-ignore a11y-media-has-caption -->
-            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
+            <audio class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer} />
         </section>
     </div>
     <div class:hidden={isAudioAllowed}>
@@ -160,74 +156,74 @@
 </div>
 
 <style lang="scss">
-  .hidden {
-    display: none;
-  }
+    .hidden {
+        display: none;
+    }
 
-  div.main-audio-manager {
-    position: absolute;
-    top: 1%;
-    max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
-    width: clamp(200px, 15vw, 15vw);
-    padding: 3px 3px;
-    margin-left: auto;
-    margin-right: auto;
-    left: 0;
-    right: 0;
-    z-index: 550;
+    div.main-audio-manager {
+        position: absolute;
+        top: 1%;
+        max-height: clamp(150px, 10vh, 15vh); //replace @media for small screen
+        width: clamp(200px, 15vw, 15vw);
+        padding: 3px 3px;
+        margin-left: auto;
+        margin-right: auto;
+        left: 0;
+        right: 0;
+        z-index: 550;
 
-    background-color: rgb(0, 0, 0, 0.5);
-    display: grid;
-    grid-template-rows: 50% 50%;
-    color: whitesmoke;
-    text-align: center;
-    pointer-events: auto;
-
-    div.audio-manager-player-volume {
+        background-color: rgb(0, 0, 0, 0.5);
         display: grid;
-        grid-template-columns: 50px 1fr;
+        grid-template-rows: 50% 50%;
+        color: whitesmoke;
+        text-align: center;
+        pointer-events: auto;
 
-        span svg {
-            height: 100%;
-            width: calc(100% - 10px);
-            margin-right: 10px;
+        div.audio-manager-player-volume {
+            display: grid;
+            grid-template-columns: 50px 1fr;
+
+            span svg {
+                height: 100%;
+                width: calc(100% - 10px);
+                margin-right: 10px;
+            }
         }
-    }
 
-    section.audio-manager-file {
-        display: none;
-    }
+        section.audio-manager-file {
+            display: none;
+        }
 
-    #audioplayer_volume_icon_playing.muted {
-        #audioplayer_volume_icon_playing_low {
+        #audioplayer_volume_icon_playing.muted {
+            #audioplayer_volume_icon_playing_low {
+                visibility: hidden;
+                display: none;
+            }
+
+            #audioplayer_volume_icon_playing_mid {
+                visibility: hidden;
+                display: none;
+            }
+
+            #audioplayer_volume_icon_playing_high {
+                visibility: hidden;
+                display: none;
+            }
+        }
+
+        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
             visibility: hidden;
             display: none;
         }
 
-        #audioplayer_volume_icon_playing_mid {
+        #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_mid {
             visibility: hidden;
             display: none;
         }
 
-        #audioplayer_volume_icon_playing_high {
+        #audioplayer_volume_icon_playing.mid #audioplayer_volume_icon_playing_high {
             visibility: hidden;
             display: none;
         }
     }
-
-    #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_high {
-        visibility: hidden;
-        display: none;
-    }
-
-    #audioplayer_volume_icon_playing.low #audioplayer_volume_icon_playing_mid {
-        visibility: hidden;
-        display: none;
-    }
-
-    #audioplayer_volume_icon_playing.mid #audioplayer_volume_icon_playing_high {
-        visibility: hidden;
-        display: none;
-    }
-  }
 </style>

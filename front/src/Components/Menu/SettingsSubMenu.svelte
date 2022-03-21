@@ -7,7 +7,7 @@
     import type { Locales } from "../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import {audioManagerVolumeStore} from "../../Stores/AudioManagerStore";
+    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -207,10 +207,10 @@
         </label>
         <label>
             <input
-                    type="checkbox"
-                    class="nes-checkbox is-dark"
-                    bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                    on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
             />
             <span>{$LL.audio.manager.reduce()}</span>
         </label>
