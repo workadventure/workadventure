@@ -25,6 +25,7 @@ import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -856,6 +857,13 @@ export class GameScene extends DirtyScene {
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
                     this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
+                });
+
+                /**
+                 * Triggered when we receive the URL to join a meeting on BBB
+                 */
+                this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
+                    bbbFactory.start(message.clientURL);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {

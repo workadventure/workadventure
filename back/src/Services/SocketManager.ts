@@ -16,6 +16,8 @@ import {
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
+    JoinBBBMeetingMessage,
+    BBBMeetingClientURLMessage,
     SendUserMessage,
     JoinRoomMessage,
     Zone as ProtoZone,
@@ -54,6 +56,8 @@ import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
 import { JITSI_URL } from "../Enum/EnvironmentVariable";
+import BigbluebuttonJs from "bigbluebutton-js";
+import { BBB_URL, BBB_SECRET } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -572,6 +576,49 @@ export class SocketManager {
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+        user.socket.write(serverToClientMessage);
+    }
+
+    public async handleJoinBBBMeetingMessage(user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
+        const meetingId = joinBBBMeetingMessage.getMeetingid();
+        const meetingName = joinBBBMeetingMessage.getMeetingname();
+
+        const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
+        // It seems bbb-api is limiting password length to 50 chars
+        const maxPWLen = 50;
+        const attendeePW = crypto
+            .createHmac("sha256", BBB_SECRET)
+            .update(`attendee-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+        const moderatorPW = crypto
+            .createHmac("sha256", BBB_SECRET)
+            .update(`moderator-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+
+        // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
+        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createURL = api.administration.create(meetingName, meetingId, createOptions);
+        await BigbluebuttonJs.http(createURL);
+
+        const joinParams: Record<string, string> = {};
+
+        // XXX: figure out how to know if the user has admin status and use the moderatorPW
+        // in that case
+        const clientURL = api.administration.join(user.name, meetingId, moderatorPW, {
+            ...joinParams,
+            userID: user.id,
+            joinViaHtml5: true,
+        });
+
+        const bbbMeetingClientURLMessage = new BBBMeetingClientURLMessage();
+        bbbMeetingClientURLMessage.setMeetingid(meetingId);
+        bbbMeetingClientURLMessage.setClienturl(clientURL);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setBbbmeetingclienturlmessage(bbbMeetingClientURLMessage);
 
         user.socket.write(serverToClientMessage);
     }

@@ -44,6 +44,7 @@
     "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
     "jasmine": "^3.5.0",
+    "generic-type-guard": "^3.2.0",
     "@workadventure/iframe-api-typings": "^1.4.15"
   }
 }

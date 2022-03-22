@@ -44,6 +44,8 @@ import {
     PlayGlobalMessage as PlayGlobalMessageTsProto,
     StopGlobalMessage as StopGlobalMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
+    JoinBBBMeetingMessage as JoinBBBMeetingMessageTsProto,
+    BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     SendUserMessage as SendUserMessageTsProto,
     BanUserMessage as BanUserMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
@@ -100,6 +102,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _sendJitsiJwtMessageStream = new Subject<SendJitsiJwtMessageTsProto>();
     public readonly sendJitsiJwtMessageStream = this._sendJitsiJwtMessageStream.asObservable();
+
+    private readonly _bbbMeetingClientURLMessageStream = new Subject<BBBMeetingClientURLMessageTsProto>();
+    public readonly bbbMeetingClientURLMessageStream = this._bbbMeetingClientURLMessageStream.asObservable();
 
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
@@ -440,6 +445,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "sendJitsiJwtMessage": {
                     this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
+                    break;
+                }
+                case "bbbMeetingClientURLMessage": {
+                    this._bbbMeetingClientURLMessageStream.next(message.bbbMeetingClientURLMessage);
                     break;
                 }
                 case "sendUserMessage": {
@@ -806,6 +815,21 @@ export class RoomConnection implements RoomConnection {
                     jitsiRoom,
                     tag: tag ?? "", // empty string is sent as "undefined" by ts-proto
                     // TODO: when we migrated "pusher" to ts-proto, migrate this to a StringValue
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitJoinBBBMeeting(meetingId: string, props: Map<string, string | number | boolean>): void {
+        const meetingName = props.get("meetingName") as string;
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "joinBBBMeetingMessage",
+                joinBBBMeetingMessage: {
+                    meetingId,
+                    meetingName,
                 },
             },
         }).finish();

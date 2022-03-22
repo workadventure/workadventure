@@ -85,6 +85,13 @@ message QueryJitsiJwtMessage {
   string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
 }
 
+message JoinBBBMeetingMessage {
+  string meetingId = 1;
+  string meetingName = 2;
+  // Fix me Pusher linter fails because eslint-plugin version < 3.0
+  // map<string, string> userdata = 3;
+}
+
 message FollowRequestMessage {
   int32 leader = 1;
 }
@@ -117,6 +124,7 @@ message ClientToServerMessage {
     FollowRequestMessage followRequestMessage = 15;
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
+    JoinBBBMeetingMessage joinBBBMeetingMessage = 18;
   }
 }
 
@@ -255,6 +263,11 @@ message SendJitsiJwtMessage {
   string jwt = 2;
 }
 
+message BBBMeetingClientURLMessage {
+  string meetingId = 1;
+  string clientURL = 2;
+}
+
 message SendUserMessage{
   string type = 1;
   string message = 2;
@@ -316,6 +329,7 @@ message ServerToClientMessage {
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
     InvalidTextureMessage invalidTextureMessage = 24;
+    BBBMeetingClientURLMessage bbbMeetingClientURLMessage = 25;
   }
 }
 
@@ -403,6 +417,7 @@ message PusherToBackMessage {
     FollowRequestMessage followRequestMessage = 16;
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
+    JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
   }
 }
 

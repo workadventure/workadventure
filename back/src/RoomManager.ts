@@ -14,6 +14,7 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
+    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -110,6 +111,11 @@ const roomManager: IRoomManagerServer = {
                             socketManager.handleQueryJitsiJwtMessage(
                                 user,
                                 message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
+                            );
+                        } else if (message.hasJoinbbbmeetingmessage()) {
+                            await socketManager.handleJoinBBBMeetingMessage(
+                                user,
+                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
