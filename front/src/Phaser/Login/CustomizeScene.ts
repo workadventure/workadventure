@@ -25,6 +25,7 @@ import {
     WokaBodyPartSlotEvent,
 } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { Button } from "../Components/Ui/Button";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -35,14 +36,15 @@ export class CustomizeScene extends AbstractCharacterScene {
     private bodyPartsDraggableGrid!: DraggableGrid;
     private bodyPartsSlots!: Record<CustomWokaBodyPart, WokaBodyPartSlot>;
 
+    private randomizeButton!: Button;
+    private finishButton!: Button;
+
     private selectedLayers: number[] = [0, 1, 2, 3, 4, 5];
     private containersRow: CustomizedCharacter[][] = [];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
-
-    private isVertical: boolean = false;
 
     private loader: Loader;
 
@@ -97,9 +99,12 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
-        this.isVertical = innerHeight / innerWidth > 1;
-
-        this.customWokaPreviewer = new CustomWokaPreviewer(this, 0, 0, this.getCustomWokaPreviewerConfig());
+        this.customWokaPreviewer = new CustomWokaPreviewer(
+            this,
+            0,
+            0,
+            this.getCustomWokaPreviewerConfig()
+        ).setDisplaySize(200, 200);
 
         this.bodyPartsDraggableGridBackground = this.add.graphics();
 
@@ -140,6 +145,9 @@ export class CustomizeScene extends AbstractCharacterScene {
             [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
         };
 
+        this.initializeRandomizeButton();
+        this.initializeFinishButton();
+
         this.refreshPlayerCurrentOutfit();
 
         this.onResize();
@@ -148,15 +156,15 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public update(time: number, dt: number): void {
-        // this.customWokaPreviewer.update();
+        this.customWokaPreviewer.update();
     }
 
     public onResize(): void {
-        this.isVertical = innerHeight / innerWidth > 1;
-
         this.handleCustomWokaPreviewerOnResize();
         this.handleBodyPartSlotsOnResize();
         this.handleBodyPartsDraggableGridOnResize();
+        this.handleRandomizeButtonOnResize();
+        this.handleFinishButtonOnResize();
     }
 
     public nextSceneToCamera() {
@@ -212,6 +220,52 @@ export class CustomizeScene extends AbstractCharacterScene {
         );
     }
 
+    private initializeRandomizeButton(): void {
+        this.randomizeButton = new Button(this, 50, 50, {
+            width: 95,
+            height: 50,
+            idle: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+            hover: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+            pressed: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+        });
+        this.randomizeButton.setText("Randomize");
+    }
+
+    private initializeFinishButton(): void {
+        this.finishButton = new Button(this, 50, 50, {
+            width: 95,
+            height: 50,
+            idle: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+            hover: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+            pressed: {
+                color: 0xffffff,
+                borderThickness: 1,
+                borderColor: 0xadafbc,
+            },
+        });
+        this.finishButton.setText("Finish");
+    }
+
     private refreshPlayerCurrentOutfit(): void {
         let i = 0;
         for (const layerItem of this.selectedLayers) {
@@ -226,18 +280,13 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
-        const slotDimension = 100;
-
-        const boxDimension = 200;
-
-        this.customWokaPreviewer.setDisplaySize(boxDimension, boxDimension);
         this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.customWokaPreviewer.y = this.isVertical
-            ? this.customWokaPreviewer.displayHeight * 0.5 + 20
-            : slotDimension * 1.5 + 20;
+        this.customWokaPreviewer.y = this.customWokaPreviewer.displayHeight * 0.5 + 20;
     }
 
     private handleBodyPartSlotsOnResize(): void {
+        const ratio = innerHeight / innerWidth;
+        console.log(ratio);
         const slotDimension = 100;
 
         for (const part in this.bodyPartsSlots) {
@@ -246,12 +295,12 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const slotSize = this.bodyPartsSlots.Accessory.displayHeight;
 
-        if (this.isVertical) {
+        if (ratio > 1.6) {
             const middle = Math.floor(this.customWokaPreviewer.x);
             const left = Math.floor(middle - slotSize - 10);
             const right = Math.floor(middle + slotSize + 10);
             const top = Math.floor(
-                this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 0.5 + 10
+                this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 1.5 + 10
             );
             const bottom = Math.floor(top + slotSize + 10);
 
@@ -265,11 +314,13 @@ export class CustomizeScene extends AbstractCharacterScene {
             return;
         }
 
-        const ratio = innerHeight / innerWidth;
-
-        const left = Math.floor(this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize);
+        const left = Math.floor(
+            this.customWokaPreviewer.x - this.customWokaPreviewer.displayWidth * 0.5 - slotSize * 0.5 - 10
+        );
         const leftEdge = Math.floor(left - slotSize - 10);
-        const right = Math.floor(this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize);
+        const right = Math.floor(
+            this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize * 0.5 + 10
+        );
         const rightEdge = Math.floor(right + slotSize + 10);
         const top = Math.floor(0 + slotSize * 0.5 + 10);
         const middle = Math.floor(top + slotSize + 10);
@@ -297,6 +348,28 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.populateGrid();
         this.bodyPartsDraggableGrid.moveContentToBeginning();
+    }
+
+    private handleRandomizeButtonOnResize(): void {
+        const x =
+            this.customWokaPreviewer.x +
+            (this.customWokaPreviewer.displayWidth - this.randomizeButton.displayWidth) * 0.5;
+        const y =
+            this.customWokaPreviewer.y +
+            (this.customWokaPreviewer.displayHeight + this.randomizeButton.displayHeight) * 0.5 +
+            10;
+        this.randomizeButton.setPosition(x, y);
+    }
+
+    private handleFinishButtonOnResize(): void {
+        const x =
+            this.customWokaPreviewer.x -
+            (this.customWokaPreviewer.displayWidth - this.randomizeButton.displayWidth) * 0.5;
+        const y =
+            this.customWokaPreviewer.y +
+            (this.customWokaPreviewer.displayHeight + this.randomizeButton.displayHeight) * 0.5 +
+            10;
+        this.finishButton.setPosition(x, y);
     }
 
     private getCustomWokaPreviewerConfig(): CustomWokaPreviewerConfig {
@@ -332,11 +405,15 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.backToPreviousScene();
         });
 
-        this.input.keyboard.on("keydown-R", () => {
+        this.randomizeButton.on(Phaser.Input.Events.POINTER_UP, () => {
             this.randomizeOutfit();
             this.clearGrid();
             this.deselectAllSlots();
             this.refreshPlayerCurrentOutfit();
+        });
+
+        this.finishButton.on(Phaser.Input.Events.POINTER_UP, () => {
+            this.nextSceneToCamera();
         });
 
         for (const bodyPart in CustomWokaBodyPart) {

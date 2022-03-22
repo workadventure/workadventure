@@ -53,7 +53,7 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.add([this.background, this.bodyImage, this.image]);
 
-        this.setInteractive();
+        this.setInteractive({ cursor: "pointer" });
         this.scene.input.setDraggable(this);
 
         this.bindEventHandlers();

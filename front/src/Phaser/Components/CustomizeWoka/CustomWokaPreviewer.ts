@@ -56,6 +56,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.background = this.scene.add.graphics();
         this.drawBackground();
         this.setSize(this.SIZE, this.SIZE);
+        this.setInteractive({ cursor: "pointer" });
 
         this.add([
             this.background,
@@ -67,17 +68,14 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             this.sprites.Accessory,
         ]);
 
+        this.bindEventHandlers();
+
         this.scene.add.existing(this);
     }
 
     public update(): void {
         this.animate();
     }
-
-    // public setDisplaySize(width: number, height: number): this {
-    //     const [newWidth, newHeight] = MathUtils.getWholePixelsNewSize(this.SIZE, this.SIZE, width, height);
-    //     return super.setDisplaySize(newWidth, newHeight);
-    // }
 
     public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
         this.animationDirection = direction;
@@ -112,6 +110,14 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         return this.animationDirection;
     }
 
+    private bindEventHandlers(): void {
+        this.on(Phaser.Input.Events.POINTER_UP, () => {
+            const direction = this.getNextAnimationDirection();
+            const moving = direction === PlayerAnimationDirections.Down ? !this.moving : this.moving;
+            this.changeAnimation(direction, moving);
+        });
+    }
+
     private drawBackground(): void {
         this.background.clear();
         this.background.fillStyle(0xffffff);
@@ -140,6 +146,19 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             } else if (!this.moving) {
                 sprite.anims.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Idle, true);
             }
+        }
+    }
+
+    private getNextAnimationDirection(): PlayerAnimationDirections {
+        switch (this.animationDirection) {
+            case PlayerAnimationDirections.Down:
+                return PlayerAnimationDirections.Left;
+            case PlayerAnimationDirections.Left:
+                return PlayerAnimationDirections.Up;
+            case PlayerAnimationDirections.Up:
+                return PlayerAnimationDirections.Right;
+            case PlayerAnimationDirections.Right:
+                return PlayerAnimationDirections.Down;
         }
     }
 }
