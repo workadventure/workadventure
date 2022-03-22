@@ -45,8 +45,10 @@ class ConnectionManager {
 
     /**
      * TODO fix me to be move in game manager
+     *
+     * Returns the URL that we need to redirect to to load the OpenID screen, or "null" if no redirection needs to happen.
      */
-    public loadOpenIDScreen() {
+    public loadOpenIDScreen(): URL | null {
         const state = localUserStore.generateState();
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
@@ -59,7 +61,6 @@ class ConnectionManager {
         redirectUrl.searchParams.append("state", state);
         redirectUrl.searchParams.append("nonce", nonce);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
-        window.location.assign(redirectUrl.toString());
         return redirectUrl;
     }
 
@@ -83,8 +84,10 @@ class ConnectionManager {
 
     /**
      * Tries to login to the node server and return the starting map url to be loaded
+     *
+     * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
-    public async initGameConnexion(): Promise<Room> {
+    public async initGameConnexion(): Promise<Room | URL> {
         const connexionType = urlManager.getGameConnexionType();
         this.connexionType = connexionType;
         this._currentRoom = null;
@@ -101,8 +104,9 @@ class ConnectionManager {
 
         if (connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            if (this.loadOpenIDScreen() !== null) {
-                return Promise.reject(new Error("You will be redirect on login page"));
+            const redirect = this.loadOpenIDScreen();
+            if (redirect !== null) {
+                return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.jwt) {
@@ -124,8 +128,11 @@ class ConnectionManager {
                 analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
-                this.loadOpenIDScreen();
-                return Promise.reject(new Error("You will be redirect on login page"));
+                const redirect = this.loadOpenIDScreen();
+                if (redirect === null) {
+                    throw new Error("Unable to redirect on login page.");
+                }
+                return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (connexionType === GameConnexionTypes.register) {
@@ -212,8 +219,11 @@ class ConnectionManager {
                             err.response?.data &&
                             err.response.data !== "User cannot to be connected on openid provider")
                     ) {
-                        this.loadOpenIDScreen();
-                        return Promise.reject(new Error("You will be redirect on login page"));
+                        const redirect = this.loadOpenIDScreen();
+                        if (redirect === null) {
+                            throw new Error("Unable to redirect on login page.");
+                        }
+                        return redirect;
                     }
                 }
             }
