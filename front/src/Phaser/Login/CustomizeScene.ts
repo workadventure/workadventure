@@ -8,7 +8,6 @@ import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { waScaleManager } from "../Services/WaScaleManager";
-import { CustomizedCharacter } from "../Entity/CustomizedCharacter";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
@@ -40,7 +39,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     private finishButton!: Button;
 
     private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
-    private containersRow: CustomizedCharacter[][] = [];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
 
