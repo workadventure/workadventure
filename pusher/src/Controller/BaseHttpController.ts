@@ -37,9 +37,11 @@ export class BaseHttpController {
                     " " +
                     (e.response.data && e.response.data.message ? e.response.data.message : e.response.statusText)
             );
+            return;
         } else {
             res.status(500);
             res.send("An error occurred");
+            return;
         }
     }
 }

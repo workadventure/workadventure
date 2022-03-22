@@ -61,6 +61,7 @@ export class AdminController extends BaseHttpController {
             }
 
             res.send("ok");
+            return;
         });
     }
 

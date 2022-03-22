@@ -9,10 +9,7 @@ services:
     build:
       context: ./
       dockerfile: front/Dockerfile
-    environment:
-      STARTUP_COMMAND_1: 'envsubst < dist/env-config.template.js > dist/env-config.js'
-      STARTUP_COMMAND_2: ''
-    command: apache2-foreground
+    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
       - "traefik.enable=true"
@@ -29,19 +26,15 @@ services:
     build:
       context: ./
       dockerfile: pusher/Dockerfile
-    environment:
-      STARTUP_COMMAND_1: ''
-      STARTUP_COMMAND_2: ''
     command: yarn run runprod
     volumes: []
+    environment:
+      ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
     image: 'wa-back-e2e'
     build:
       context: ./
       dockerfile: back/Dockerfile
-    environment:
-      STARTUP_COMMAND_1: ''
-      STARTUP_COMMAND_2: ''
     command: yarn run runprod
     volumes: []

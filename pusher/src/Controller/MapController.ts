@@ -159,6 +159,7 @@ export class MapController extends BaseHttpController {
                     }
 
                     res.json(mapDetails);
+                    return;
                 } catch (e) {
                     this.castErrorToResponse(e, res);
                 }

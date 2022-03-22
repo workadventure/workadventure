@@ -23,6 +23,7 @@ export class OpenIdProfileController extends BaseHttpController {
                         resCheckTokenAuth.picture as string | undefined
                     )
                 );
+                return;
             } catch (error) {
                 console.error("profileCallback => ERROR", error);
                 this.castErrorToResponse(error, res);

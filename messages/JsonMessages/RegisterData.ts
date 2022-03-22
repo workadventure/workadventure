@@ -13,7 +13,6 @@ export const isRegisterData = new tg.IsInterface()
         organizationMemberToken: tg.isNullable(tg.isString),
         mapUrlStart: tg.isString,
         userUuid: tg.isString,
-//        textures: tg.isArray(isCharacterTexture),
         authToken: tg.isString,
     })
     .withOptionalProperties({

@@ -16,6 +16,10 @@ import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { locales } from "../i18n/i18n-util";
+import type { Locales } from "../i18n/i18n-types";
+import { setCurrentLocale } from "../i18n/locales";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -326,7 +330,7 @@ class ConnectionManager {
                 throw new Error("No Auth code provided");
             }
         }
-        const { authToken, userUuid, email } = await Axios.get(`${PUSHER_URL}/login-callback`, {
+        const { authToken, userUuid, email, username, locale } = await Axios.get(`${PUSHER_URL}/login-callback`, {
             params: { code, nonce, token, playUri: this.currentRoom?.key },
         }).then((res) => {
             return res.data;
@@ -335,6 +339,27 @@ class ConnectionManager {
         this.localUser = new LocalUser(userUuid, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
+
+        if (username) {
+            gameManager.setPlayerName(username);
+        }
+
+        if (locale) {
+            try {
+                if (locales.indexOf(locale) == -1) {
+                    locales.forEach((l) => {
+                        if (l.startsWith(locale.split("-")[0])) {
+                            setCurrentLocale(l);
+                            return;
+                        }
+                    });
+                } else {
+                    setCurrentLocale(locale as Locales);
+                }
+            } catch (err) {
+                console.warn("Could not set locale", err);
+            }
+        }
 
         //user connected, set connected store for menu at true
         userIsConnected.set(true);
