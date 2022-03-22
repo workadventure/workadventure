@@ -10,6 +10,7 @@ export interface WokaBodyPartSlotConfig {
     offsetX: number;
     offsetY: number;
     bodyImageKey?: string;
+    categoryImageKey?: string;
     imageKey?: string;
     selected?: boolean;
 }
@@ -20,6 +21,7 @@ export enum WokaBodyPartSlotEvent {
 
 export class WokaBodyPartSlot extends GridItem {
     private background: Phaser.GameObjects.Graphics;
+    private categoryImage?: Phaser.GameObjects.Image;
     private bodyImage: Phaser.GameObjects.Image;
     private image: Phaser.GameObjects.Image;
 
@@ -40,6 +42,15 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.background = this.scene.add.graphics();
         this.drawBackground();
+        this.add(this.background);
+
+        if (this.config.categoryImageKey) {
+            this.categoryImage = this.scene.add
+                .image(this.SIZE / 2 - 1, -this.SIZE / 2 + 1, this.config.categoryImageKey)
+                .setDisplaySize(16, 16)
+                .setOrigin(1, 0);
+            this.add(this.categoryImage);
+        }
 
         this.bodyImage = this.scene.add
             .image(offsetX, offsetY, config.bodyImageKey ?? "")
@@ -51,7 +62,7 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.setSize(this.SIZE, this.SIZE);
 
-        this.add([this.background, this.bodyImage, this.image]);
+        this.add([this.bodyImage, this.image]);
 
         this.setInteractive({ cursor: "pointer" });
         this.scene.input.setDraggable(this);

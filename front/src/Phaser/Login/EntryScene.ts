@@ -1,14 +1,12 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ErrorScene } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
-import { CustomizeSceneName } from "./CustomizeScene";
-import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const EntrySceneName = "EntryScene";
 
@@ -46,9 +44,7 @@ export class EntryScene extends Scene {
                         // Let's rescale before starting the game
                         // We can do it at this stage.
                         waScaleManager.applyNewSize();
-                        // this.scene.start(nextSceneName);
-                        this.scene.start(CustomizeSceneName);
-                        // this.scene.start(SelectCharacterSceneName);
+                        this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
                         const $LL = get(LL);

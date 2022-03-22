@@ -137,12 +137,30 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.bodyPartsDraggableGridForeground = this.add.graphics();
 
         this.bodyPartsSlots = {
-            [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
-            [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
-            [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
-            [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
-            [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
-            [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig()),
+            [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
+            [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
+            [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
+            [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
+            [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
+            [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, {
+                ...this.getDefaultWokaBodyPartSlotConfig(),
+                categoryImageKey: "iconTalk",
+            }),
         };
 
         this.initializeRandomizeButton();
@@ -257,7 +275,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                 borderColor: 0x006bb3,
             },
             hover: {
-                color: 0x209cee,
+                color: 0x0987db,
                 textColor: "#ffffff",
                 borderThickness: 3,
                 borderColor: 0x006bb3,
