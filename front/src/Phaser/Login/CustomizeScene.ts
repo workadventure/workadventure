@@ -126,7 +126,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             },
             spacing: 5,
             debug: {
-                showDraggableSpace: true,
+                showDraggableSpace: false,
             },
         });
         this.bodyPartsDraggableGridForeground = this.add.graphics();
@@ -187,8 +187,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private drawGridBackground(gridPosition: { x: number; y: number }): void {
-        const gridBackgroundWidth = 500;
-        const gridBackgroundHeight = 170;
+        const gridBackgroundWidth = innerWidth / waScaleManager.getActualZoom();
+        const gridBackgroundHeight = 130;
         this.bodyPartsDraggableGridBackground.clear();
         this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
         this.bodyPartsDraggableGridBackground.fillRect(
@@ -200,8 +200,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private drawGridForeground(gridPosition: { x: number; y: number }): void {
-        const gridBackgroundWidth = 500;
-        const gridBackgroundHeight = 170;
+        const gridBackgroundWidth = innerWidth / waScaleManager.getActualZoom();
+        const gridBackgroundHeight = 130;
         this.bodyPartsDraggableGridForeground.clear();
         this.bodyPartsDraggableGridForeground.lineStyle(2, 0xadafbc);
         this.bodyPartsDraggableGridForeground.strokeRect(
@@ -285,7 +285,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleBodyPartsDraggableGridOnResize(): void {
         const gridHeight = 125;
-        const gridWidth = (innerWidth * (this.isVertical ? 1 : 0.8)) / waScaleManager.getActualZoom();
+        const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
             y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
