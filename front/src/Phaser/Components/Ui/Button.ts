@@ -7,6 +7,7 @@ export interface ButtonConfig {
 }
 
 export interface ButtonAppearanceConfig {
+    textColor: string;
     color: number;
     borderThickness: number;
     borderColor: number;
@@ -18,25 +19,42 @@ export class Button extends Phaser.GameObjects.Container {
 
     private config: ButtonConfig;
 
+    private hovered: boolean = false;
+    private pressed: boolean = false;
+
     constructor(scene: Phaser.Scene, x: number, y: number, config: ButtonConfig) {
         super(scene, x, y);
 
         this.config = config;
 
         this.background = this.scene.add.graphics();
-        this.drawBackground(this.config.idle);
         this.text = this.scene.add.text(0, 0, "", { color: "0x000000" }).setOrigin(0.5);
+        this.drawBackground(this.config.idle);
 
         this.add([this.background, this.text]);
 
         this.setSize(this.config.width, this.config.height);
         this.setInteractive({ cursor: "pointer" });
 
+        this.bindEventHandlers();
+
         this.scene.add.existing(this);
     }
 
     public setText(text: string): void {
         this.text.setText(text);
+    }
+
+    private updateButtonAppearance(): void {
+        if (this.pressed) {
+            this.drawBackground(this.config.pressed);
+            return;
+        }
+        if (this.hovered) {
+            this.drawBackground(this.config.hover);
+            return;
+        }
+        this.drawBackground(this.config.idle);
     }
 
     private drawBackground(appearance: ButtonAppearanceConfig): void {
@@ -49,5 +67,27 @@ export class Button extends Phaser.GameObjects.Container {
 
         this.background.fillRect(-w / 2, -h / 2, w, h);
         this.background.strokeRect(-w / 2, -h / 2, w, h);
+
+        this.text.setColor(appearance.textColor);
+    }
+
+    private bindEventHandlers(): void {
+        this.on(Phaser.Input.Events.POINTER_OVER, () => {
+            this.hovered = true;
+            this.updateButtonAppearance();
+        });
+        this.on(Phaser.Input.Events.POINTER_OUT, () => {
+            this.hovered = false;
+            this.pressed = false;
+            this.updateButtonAppearance();
+        });
+        this.on(Phaser.Input.Events.POINTER_DOWN, () => {
+            this.pressed = true;
+            this.updateButtonAppearance();
+        });
+        this.on(Phaser.Input.Events.POINTER_UP, () => {
+            this.pressed = false;
+            this.updateButtonAppearance();
+        });
     }
 }

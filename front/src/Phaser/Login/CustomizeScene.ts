@@ -196,7 +196,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private drawGridBackground(gridPosition: { x: number; y: number }): void {
         const gridBackgroundWidth = innerWidth / waScaleManager.getActualZoom();
-        const gridBackgroundHeight = 130;
+        const gridBackgroundHeight = 115;
         this.bodyPartsDraggableGridBackground.clear();
         this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
         this.bodyPartsDraggableGridBackground.fillRect(
@@ -208,10 +208,10 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private drawGridForeground(gridPosition: { x: number; y: number }): void {
-        const gridBackgroundWidth = innerWidth / waScaleManager.getActualZoom();
-        const gridBackgroundHeight = 130;
+        const gridBackgroundWidth = (innerWidth + 10) / waScaleManager.getActualZoom();
+        const gridBackgroundHeight = 115;
         this.bodyPartsDraggableGridForeground.clear();
-        this.bodyPartsDraggableGridForeground.lineStyle(2, 0xadafbc);
+        this.bodyPartsDraggableGridForeground.lineStyle(4, 0xadafbc);
         this.bodyPartsDraggableGridForeground.strokeRect(
             gridPosition.x - gridBackgroundWidth / 2,
             gridPosition.y - gridBackgroundHeight / 2,
@@ -226,17 +226,20 @@ export class CustomizeScene extends AbstractCharacterScene {
             height: 50,
             idle: {
                 color: 0xffffff,
-                borderThickness: 1,
-                borderColor: 0xadafbc,
+                textColor: "#000000",
+                borderThickness: 3,
+                borderColor: 0xe7e7e7,
             },
             hover: {
-                color: 0xffffff,
-                borderThickness: 1,
+                color: 0xe7e7e7,
+                textColor: "#000000",
+                borderThickness: 3,
                 borderColor: 0xadafbc,
             },
             pressed: {
-                color: 0xffffff,
-                borderThickness: 1,
+                color: 0xadafbc,
+                textColor: "#000000",
+                borderThickness: 3,
                 borderColor: 0xadafbc,
             },
         });
@@ -248,19 +251,22 @@ export class CustomizeScene extends AbstractCharacterScene {
             width: 95,
             height: 50,
             idle: {
-                color: 0xffffff,
-                borderThickness: 1,
-                borderColor: 0xadafbc,
+                color: 0x209cee,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
             },
             hover: {
-                color: 0xffffff,
-                borderThickness: 1,
-                borderColor: 0xadafbc,
+                color: 0x209cee,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
             },
             pressed: {
-                color: 0xffffff,
-                borderThickness: 1,
-                borderColor: 0xadafbc,
+                color: 0x006bb3,
+                textColor: "#ffffff",
+                borderThickness: 3,
+                borderColor: 0x006bb3,
             },
         });
         this.finishButton.setText("Finish");
@@ -281,7 +287,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleCustomWokaPreviewerOnResize(): void {
         this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.customWokaPreviewer.y = this.customWokaPreviewer.displayHeight * 0.5 + 20;
+        this.customWokaPreviewer.y = this.customWokaPreviewer.displayHeight * 0.5 + 10;
     }
 
     private handleBodyPartSlotsOnResize(): void {
@@ -335,7 +341,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleBodyPartsDraggableGridOnResize(): void {
-        const gridHeight = 125;
+        const gridHeight = 110;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
@@ -386,7 +392,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             color: 0xffffff,
             borderThickness: 1,
             borderColor: 0xadafbc,
-            borderSelectedColor: 0x00ffff,
+            borderSelectedColor: 0x209cee,
             offsetX: -4,
             offsetY: -3,
         };
