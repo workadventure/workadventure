@@ -61,7 +61,7 @@ const menu: NonNullable<Translation["menu"]> = {
         privacySettings: {
             title: "Away mode settings",
             explanation:
-              'When the WorkAdventure tab is not visible, it switches to "away mode". In this mode, you can decide to automatically disable your webcam and/or microphone for as long as the tab stays hidden.',
+                'When the WorkAdventure tab is not visible, it switches to "away mode". In this mode, you can decide to automatically disable your webcam and/or microphone for as long as the tab stays hidden.',
             cameraToggle: "Camera",
             microphoneToggle: "Microphone",
         },
