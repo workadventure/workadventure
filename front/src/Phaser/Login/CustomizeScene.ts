@@ -39,7 +39,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private randomizeButton!: Button;
     private finishButton!: Button;
 
-    private selectedLayers: number[] = [0, 1, 2, 3, 4, 5];
+    private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
     private containersRow: CustomizedCharacter[][] = [];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
@@ -292,7 +292,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleBodyPartSlotsOnResize(): void {
         const ratio = innerHeight / innerWidth;
-        console.log(ratio);
         const slotDimension = 100;
 
         for (const part in this.bodyPartsSlots) {
@@ -306,7 +305,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             const left = Math.floor(middle - slotSize - 10);
             const right = Math.floor(middle + slotSize + 10);
             const top = Math.floor(
-                this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 1.5 + 10
+                this.customWokaPreviewer.y + this.customWokaPreviewer.displayHeight * 0.5 + slotSize * 1.5 + 9
             );
             const bottom = Math.floor(top + slotSize + 10);
 
@@ -328,7 +327,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.customWokaPreviewer.x + this.customWokaPreviewer.displayWidth * 0.5 + slotSize * 0.5 + 10
         );
         const rightEdge = Math.floor(right + slotSize + 10);
-        const top = Math.floor(0 + slotSize * 0.5 + 10);
+        const top = Math.floor(0 + slotSize * 0.5 + 9);
         const middle = Math.floor(top + slotSize + 10);
         const bottom = Math.floor(middle + slotSize + 10);
 
@@ -350,7 +349,15 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.drawGridBackground(gridPos);
         this.drawGridForeground(gridPos);
-        this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(gridPos, { x: gridWidth, y: gridHeight }, gridPos);
+        try {
+            this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(
+                gridPos,
+                { x: gridWidth, y: gridHeight },
+                gridPos
+            );
+        } catch (error) {
+            console.warn(error);
+        }
 
         this.populateGrid();
         this.bodyPartsDraggableGrid.moveContentToBeginning();
