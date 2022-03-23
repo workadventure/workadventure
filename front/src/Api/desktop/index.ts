@@ -1,5 +1,12 @@
 import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
 import { get } from "svelte/store";
+import { WorkAdventureDesktopApi } from "@wa-preload-app";
+
+declare global {
+    interface Window {
+        WAD: WorkAdventureDesktopApi;
+    }
+}
 
 class DesktopApi {
     isSilent: boolean = false;
