@@ -16,6 +16,8 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -31,6 +33,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected currentSelectUser = 0;
     protected pointerClicked: boolean = false;
     protected pointerTimer: number = 0;
+
+    private charactersDraggableGrid!: DraggableGrid;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
@@ -79,6 +83,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     create() {
+        console.log(this.cache.json.get("woka-list"));
+        console.log(this.playerModels);
         customizeAvailableStore.set(this.isCustomizationAvailable());
         selectCharacterSceneVisibleStore.set(true);
         this.events.addListener("wake", () => {
@@ -101,22 +107,26 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         /*create user*/
         this.createCurrentPlayer();
 
-        this.input.keyboard.on("keyup-ENTER", () => {
-            return this.nextSceneToCameraScene();
+        this.charactersDraggableGrid = new DraggableGrid(this, {
+            position: { x: 0, y: 0 },
+            maskPosition: { x: 0, y: 0 },
+            dimension: { x: 485, y: 165 },
+            horizontal: true,
+            repositionToCenter: true,
+            itemsInRow: 1,
+            margin: {
+                left: this.cameras.main.width * 0.5 - 50,
+                right: this.cameras.main.width * 0.5 - 50,
+            },
+            spacing: 5,
+            debug: {
+                showDraggableSpace: true,
+            },
         });
 
-        this.input.keyboard.on("keydown-RIGHT", () => {
-            this.moveToRight();
-        });
-        this.input.keyboard.on("keydown-LEFT", () => {
-            this.moveToLeft();
-        });
-        this.input.keyboard.on("keydown-UP", () => {
-            this.moveToUp();
-        });
-        this.input.keyboard.on("keydown-DOWN", () => {
-            this.moveToDown();
-        });
+        this.bindEventHandlers();
+
+        this.onResize();
     }
 
     public nextSceneToCameraScene(): void {
@@ -296,6 +306,59 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     public onResize(): void {
         //move position of user
         this.moveUser();
+        this.handleCharactersGridOnResize();
+    }
+
+    private handleCharactersGridOnResize(): void {
+        const gridHeight = 110;
+        const gridWidth = innerWidth / waScaleManager.getActualZoom();
+        const gridPos = {
+            x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
+        };
+
+        try {
+            this.charactersDraggableGrid.changeDraggableSpacePosAndSize(
+                gridPos,
+                { x: gridWidth, y: gridHeight },
+                gridPos
+            );
+        } catch (error) {
+            console.warn(error);
+        }
+
+        this.populateGrid();
+        this.charactersDraggableGrid.moveContentToBeginning();
+    }
+
+    private populateGrid(): void {
+        const wokaDimension = 100;
+
+        this.charactersDraggableGrid.clearAllItems();
+        for (let i = 0; i < this.playerModels.length; i += 1) {
+            const slot = new WokaSlot(this, this.playerModels[i].id).setDisplaySize(wokaDimension, wokaDimension);
+            this.charactersDraggableGrid.addItem(slot);
+        }
+        this.charactersDraggableGrid.moveContentToBeginning();
+    }
+
+    private bindEventHandlers(): void {
+        this.input.keyboard.on("keyup-ENTER", () => {
+            return this.nextSceneToCameraScene();
+        });
+
+        this.input.keyboard.on("keydown-RIGHT", () => {
+            this.moveToRight();
+        });
+        this.input.keyboard.on("keydown-LEFT", () => {
+            this.moveToLeft();
+        });
+        this.input.keyboard.on("keydown-UP", () => {
+            this.moveToUp();
+        });
+        this.input.keyboard.on("keydown-DOWN", () => {
+            this.moveToDown();
+        });
     }
 
     private isCustomizationAvailable(): boolean {
