@@ -256,6 +256,10 @@ class LocalUserStore {
     }
 
     getCameraPrivacySettings() {
+        //if this setting doesn't exist in LocalUserStore, we set a default value
+        if (localStorage.getItem(cameraPrivacySettings) == null) {
+            localStorage.setItem(cameraPrivacySettings, "false");
+        }
         return localStorage.getItem(cameraPrivacySettings) === "true";
     }
 
@@ -264,6 +268,10 @@ class LocalUserStore {
     }
 
     getMicrophonePrivacySettings() {
+        //if this setting doesn't exist in LocalUserStore, we set a default value
+        if (localStorage.getItem(microphonePrivacySettings) == null) {
+            localStorage.setItem(microphonePrivacySettings, "true");
+        }
         return localStorage.getItem(microphonePrivacySettings) === "true";
     }
 
