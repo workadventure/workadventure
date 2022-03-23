@@ -98,7 +98,7 @@
   resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-4.0.0.tgz#989d95f23fbab5eae7c4c96d04a18abdc289b81e"
   integrity sha512-25ZMNdpssqkyv1sxfa6gBhmL8yCxCqjRRc1c05GJfhPkqD6Cn9dnG6xnHHHfJaEqrDFCViD0Bcnr+tgs76OZ2Q==
 
-"@home-based-studio/phaser3-utils@^0.3.2":
+"@home-based-studio/phaser3-utils@0.3.2":
   version "0.3.2"
   resolved "https://registry.yarnpkg.com/@home-based-studio/phaser3-utils/-/phaser3-utils-0.3.2.tgz#2240819473fbdb66123cee4b37b3d18be03d1dbe"
   integrity sha512-qbv2H2IOSCyG+8hzBsZHPx4HWvlH1G4AfXuc3DyorI4QQMlvcVq5sZIjVaz6RIzeC7czivXOWsW5bApVhGa55A==

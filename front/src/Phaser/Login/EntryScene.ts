@@ -1,14 +1,12 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ErrorScene } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
-import { PlayerTextures } from "../Entity/PlayerTextures";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 
 export const EntrySceneName = "EntryScene";
