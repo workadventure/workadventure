@@ -21,7 +21,6 @@ import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
 import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
 import camera from "./Api/iframe/camera";
-import {} from "./window";
 
 const globalState = createState("global");
 
@@ -182,6 +181,13 @@ const wa = {
 };
 
 export type WorkAdventureApi = typeof wa;
+
+declare global {
+    interface Window {
+        WA: WorkAdventureApi;
+    }
+    let WA: WorkAdventureApi;
+}
 
 window.WA = wa;
 
