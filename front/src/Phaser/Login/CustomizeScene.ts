@@ -54,7 +54,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public preload(): void {
-        this.input.dragDistanceThreshold = 10;
+        super.preload();
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)

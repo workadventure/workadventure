@@ -9,11 +9,11 @@
     const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
 
     function selectLeft() {
-        selectCharacterScene.moveToLeft();
+        // selectCharacterScene.moveToLeft();
     }
 
     function selectRight() {
-        selectCharacterScene.moveToRight();
+        // selectCharacterScene.moveToRight();
     }
 
     function cameraScene() {
@@ -56,7 +56,7 @@
 
     form.selectCharacterScene {
         font-family: "Press Start 2P";
-        pointer-events: auto;
+        // pointer-events: visiblePainted;
         color: #ebeeee;
 
         section {
@@ -64,7 +64,7 @@
 
             &.action {
                 text-align: center;
-                margin-top: 55vh;
+                margin-top: 75vh;
             }
 
             h2 {
@@ -78,13 +78,14 @@
 
             button.selectCharacterButton {
                 position: absolute;
-                top: 33vh;
+                top: 15vh;
                 margin: 0;
             }
         }
 
         button {
             font-family: "Press Start 2P";
+            pointer-events: auto;
 
             &.selectCharacterButtonLeft {
                 left: 33vw;

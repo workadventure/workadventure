@@ -12,6 +12,10 @@ export abstract class AbstractCharacterScene extends ResizableScene {
         this.playerTextures = new PlayerTextures();
     }
 
+    public preload(): void {
+        this.input.dragDistanceThreshold = 10;
+    }
+
     loadCustomSceneSelectCharacters(): Promise<BodyResourceDescriptionInterface[]> {
         const textures = this.playerTextures.getTexturesResources(PlayerTexturesKey.Woka);
         const promises: CancelablePromise<BodyResourceDescriptionInterface>[] = [];
