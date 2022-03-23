@@ -16,13 +16,16 @@ import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
-import { desktopApi } from "./Api/desktop/index";
+import { desktopApi } from "./Api/desktop";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
+import { DeviceUtils } from "./Utils/DeviceUtils";
+import { analyticsClient } from "./Administration/AnalyticsClient";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -134,6 +137,7 @@ const config: GameConfig = {
     },
 };
 
+// Start Phaser
 const game = new Game(config);
 
 waScaleManager.setGame(game);
@@ -161,6 +165,12 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 desktopApi.init();
 
+analyticsClient.enteredWorkAdventure(DeviceUtils.getDevice(), DeviceUtils.getOS(), DeviceUtils.getBrowser(), DeviceUtils.getVersion())
+if (!DeviceUtils.isCompatible()) {
+    alert(DeviceUtils.getMessage());
+}
+
+// Start Svelte
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),
     props: {

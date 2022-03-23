@@ -3,7 +3,7 @@ export class BrowserTooOldError extends Error {
 
     constructor() {
         super(
-            "Unable to access your camera or microphone. Your browser is too old. Please consider upgrading your browser or try using a recent version of Chrome."
+            "Unable to access your camera or microphone. Your browser is too old. Please consider upgrading your browser or try using another browser (we recommend Chrome)."
         );
         this.name = BrowserTooOldError.NAME;
     }
