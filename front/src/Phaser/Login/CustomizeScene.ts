@@ -55,6 +55,14 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     public preload(): void {
         this.input.dragDistanceThreshold = 10;
+
+        this.load.image("iconClothes", "/resources/icons/icon_clothes.png");
+        this.load.image("iconAccessory", "/resources/icons/icon_accessory.png");
+        this.load.image("iconHat", "/resources/icons/icon_hat.png");
+        this.load.image("iconHair", "/resources/icons/icon_hair.png");
+        this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
+        this.load.image("iconBody", "/resources/icons/icon_body.png");
+
         const wokaMetadataKey = "woka-list";
         this.cache.json.remove(wokaMetadataKey);
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
@@ -137,27 +145,27 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconHair",
             }),
             [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconBody",
             }),
             [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconAccessory",
             }),
             [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconHat",
             }),
             [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconClothes",
             }),
             [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, {
                 ...this.getDefaultWokaBodyPartSlotConfig(),
-                categoryImageKey: "iconTalk",
+                categoryImageKey: "iconEyes",
             }),
         };
 
@@ -417,7 +425,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             borderColor: 0xadafbc,
             borderSelectedColor: 0x209cee,
             offsetX: -4,
-            offsetY: -3,
+            offsetY: 2,
         };
     }
 
@@ -492,10 +500,17 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bodyPartsDraggableGrid.clearAllItems();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
-            const slot = new WokaBodyPartSlot(this, 0, 0, this.getDefaultWokaBodyPartSlotConfig(), i).setDisplaySize(
-                slotDimension,
-                slotDimension
-            );
+            const slot = new WokaBodyPartSlot(
+                this,
+                0,
+                0,
+                {
+                    ...this.getDefaultWokaBodyPartSlotConfig(),
+                    offsetX: 0,
+                    offsetY: 0,
+                },
+                i
+            ).setDisplaySize(slotDimension, slotDimension);
             if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
                 slot.setBodyTexture(bodyPartsLayer[i].id);
                 slot.setImageTexture();
