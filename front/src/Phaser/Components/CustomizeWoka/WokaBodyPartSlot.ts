@@ -36,8 +36,6 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.config = config;
 
-        const offsetY = -3;
-        const offsetX = -2;
         this.selected = this.config.selected ?? false;
 
         this.background = this.scene.add.graphics();
@@ -48,16 +46,17 @@ export class WokaBodyPartSlot extends GridItem {
             this.categoryImage = this.scene.add
                 .image(this.SIZE / 2 - 1, -this.SIZE / 2 + 1, this.config.categoryImageKey)
                 .setDisplaySize(16, 16)
+                .setAlpha(0.4)
                 .setOrigin(1, 0);
             this.add(this.categoryImage);
         }
 
         this.bodyImage = this.scene.add
-            .image(offsetX, offsetY, config.bodyImageKey ?? "")
+            .image(this.config.offsetX, this.config.offsetY, config.bodyImageKey ?? "")
             .setVisible(config.imageKey !== undefined);
 
         this.image = this.scene.add
-            .image(offsetX, offsetY, config.imageKey ?? "")
+            .image(this.config.offsetX, this.config.offsetY, config.imageKey ?? "")
             .setVisible(config.bodyImageKey !== undefined);
 
         this.setSize(this.SIZE, this.SIZE);
