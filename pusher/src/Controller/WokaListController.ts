@@ -1,17 +1,17 @@
 import { BaseHttpController } from "./BaseHttpController";
+import { parse } from "query-string";
 import { wokaService } from "../Services/WokaService";
-import * as tg from "generic-type-guard";
 import { jwtTokenManager } from "../Services/JWTTokenManager";
 
 export class WokaListController extends BaseHttpController {
     routes() {
-        this.app.options("/woka/list/:roomUrl", {}, (req, res) => {
+        this.app.options("/woka/list", {}, (req, res) => {
             res.status(200).send("");
             return;
         });
 
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/woka/list/:roomUrl", {}, async (req, res) => {
+        this.app.get("/woka/list", {}, async (req, res) => {
             const token = req.header("Authorization");
 
             if (!token) {
@@ -29,17 +29,13 @@ export class WokaListController extends BaseHttpController {
                 return;
             }
 
-            const isParameters = new tg.IsInterface()
-                .withProperties({
-                    roomUrl: tg.isString,
-                })
-                .get();
+            let { roomUrl } = parse(req.path_query);
 
-            if (!isParameters(req.path_parameters)) {
-                return res.status(400).send("Unknown parameters");
+            if (typeof roomUrl !== "string") {
+                return res.status(400).send("missing roomUrl URL parameter");
             }
 
-            const roomUrl = decodeURIComponent(req.path_parameters.roomUrl);
+            roomUrl = decodeURIComponent(roomUrl);
             const wokaList = await wokaService.getWokaList(roomUrl, req.params["uuid"]);
 
             if (!wokaList) {

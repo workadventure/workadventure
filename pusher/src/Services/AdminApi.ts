@@ -1,11 +1,11 @@
 import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios, { AxiosResponse } from "axios";
-import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import * as tg from "generic-type-guard";
 import { isNumber } from "generic-type-guard";
-import { isWokaDetail } from "../Enum/PlayerTextures";
+import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 
 export interface AdminBannedData {
@@ -46,10 +46,16 @@ class AdminApi {
             userId,
         };
 
-        const res = await Axios.get(ADMIN_API_URL + "/api/map", {
+        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params,
         });
+        if (!isMapDetailsData(res.data) && !isRoomRedirect(res.data)) {
+            throw new Error(
+                "Invalid answer received from the admin for the /api/map endpoint. Received: " +
+                    JSON.stringify(res.data)
+            );
+        }
         return res.data;
     }
 

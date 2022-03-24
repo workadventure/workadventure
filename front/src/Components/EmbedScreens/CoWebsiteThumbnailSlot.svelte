@@ -9,6 +9,8 @@
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
+    import uploadFile from "../images/jitsi.png";
+
     export let index: number;
     export let coWebsite: CoWebsite;
     export let vertical: boolean;
@@ -21,7 +23,7 @@
 
     onMount(() => {
         icon.src = isJitsi
-            ? "/resources/logos/jitsi.png"
+            ? uploadFile
             : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
         icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
@@ -350,8 +352,13 @@
             color: white;
             padding: 4px;
             border-radius: 4px;
+
             p {
                 margin-bottom: 0;
+            }
+
+            &.hide {
+                display: none;
             }
         }
     }

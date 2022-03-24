@@ -9,7 +9,7 @@ import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
 import { ItemEventMessageInterface } from "_Model/Websocket/ItemEventMessage";
 import { PositionInterface } from "_Model/PositionInterface";
-import { WokaDetail } from "_Enum/PlayerTextures";
+import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

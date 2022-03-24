@@ -619,7 +619,10 @@ class CoWebsiteManager {
                         setTimeout(() => {
                             this.fire();
                         }, animationTime);
-                    } else if (!highlightedEmbed) {
+                    } else if (
+                        !highlightedEmbed &&
+                        this.getCoWebsites().find((searchCoWebsite) => searchCoWebsite.getId() === coWebsite.getId())
+                    ) {
                         highlightedEmbedScreen.toggleHighlight({
                             type: "cowebsite",
                             embed: coWebsite,

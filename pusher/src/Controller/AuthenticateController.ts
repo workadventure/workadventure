@@ -84,30 +84,75 @@ export class AuthenticateController extends BaseHttpController {
          *   get:
          *     description: TODO
          *     parameters:
+         *      - name: "code"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
          *      - name: "nonce"
          *        in: "query"
          *        description: "todo"
-         *        required: true
+         *        required: false
          *        type: "string"
-         *      - name: "state"
+         *      - name: "token"
          *        in: "query"
          *        description: "todo"
-         *        required: true
+         *        required: false
          *        type: "string"
          *      - name: "playUri"
          *        in: "query"
          *        description: "todo"
-         *        required: false
-         *        type: "string"
-         *      - name: "redirect"
-         *        in: "query"
-         *        description: "todo"
-         *        required: false
+         *        required: true
          *        type: "string"
          *     responses:
          *       200:
-         *         description: TODO
-         *
+         *         description: NOTE - THERE ARE ADDITIONAL PROPERTIES NOT DISPLAYED HERE. THEY COME FROM THE CALL TO openIDClient.checkTokenAuth
+         *         content:
+         *           application/json:
+         *             schema:
+         *               type: object
+         *               properties:
+         *                 authToken:
+         *                   type: string
+         *                   description: A new JWT token (if no token was passed in parameter), or returns the token that was passed in parameter if one was supplied
+         *                 username:
+         *                   type: string|undefined
+         *                   description: Contains the username stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
+         *                   example: John Doe
+         *                 locale:
+         *                   type: string|undefined
+         *                   description: Contains the locale stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
+         *                   example: fr_FR
+         *                 email:
+         *                   type: string
+         *                   description: TODO
+         *                   example: TODO
+         *                 userUuid:
+         *                   type: string
+         *                   description: TODO
+         *                   example: TODO
+         *                 visitCardUrl:
+         *                   type: string|null
+         *                   description: TODO
+         *                   example: TODO
+         *                 tags:
+         *                   type: array
+         *                   description: The list of tags of the user
+         *                   items:
+         *                     type: string
+         *                     example: speaker
+         *                 textures:
+         *                   type: array
+         *                   description: The list of textures of the user
+         *                   items:
+         *                     type: TODO
+         *                     example: TODO
+         *                 messages:
+         *                   type: array
+         *                   description: The list of messages to be displayed to the user
+         *                   items:
+         *                     type: TODO
+         *                     example: TODO
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-callback", async (req, res) => {

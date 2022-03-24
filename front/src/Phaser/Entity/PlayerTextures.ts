@@ -1,5 +1,7 @@
 //The list of all the player textures, both the default models and the partial textures used for customization
 
+import { WokaList, WokaPartType } from "../../Messages/JsonMessages/PlayerTextures";
+
 export interface BodyResourceDescriptionListInterface {
     [key: string]: BodyResourceDescriptionInterface;
 }
@@ -33,24 +35,6 @@ export enum PlayerTexturesKey {
     Woka = "woka",
 }
 
-type PlayerTexturesMetadata = Record<PlayerTexturesKey, PlayerTexturesCategory>;
-
-interface PlayerTexturesCategory {
-    collections: PlayerTexturesCollection[];
-    required?: boolean;
-}
-
-interface PlayerTexturesCollection {
-    name: string;
-    textures: PlayerTexturesRecord[];
-}
-
-interface PlayerTexturesRecord {
-    id: string;
-    name: string;
-    url: string;
-}
-
 export class PlayerTextures {
     private wokaResources: BodyResourceDescriptionListInterface = {};
     private colorResources: BodyResourceDescriptionListInterface = {};
@@ -61,9 +45,9 @@ export class PlayerTextures {
     private accessoriesResources: BodyResourceDescriptionListInterface = {};
     private layers: BodyResourceDescriptionListInterface[] = [];
 
-    private wokaCollections = new Map<string, PlayerTexturesRecord[]>();
+    private wokaCollections = new Map<string, BodyResourceDescriptionInterface[]>();
 
-    public loadPlayerTexturesMetadata(metadata: PlayerTexturesMetadata): void {
+    public loadPlayerTexturesMetadata(metadata: WokaList): void {
         this.mapTexturesMetadataIntoResources(metadata);
     }
 
@@ -94,11 +78,11 @@ export class PlayerTextures {
         return Array.from(this.wokaCollections.keys());
     }
 
-    public getWokaCollectionTextures(key: string): PlayerTexturesRecord[] {
+    public getWokaCollectionTextures(key: string): BodyResourceDescriptionInterface[] {
         return this.wokaCollections.get(key) ?? [];
     }
 
-    private mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
+    private mapTexturesMetadataIntoResources(metadata: WokaList): void {
         this.wokaResources = this.getMappedResources(metadata.woka);
         this.colorResources = this.getMappedResources(metadata.body);
         this.eyesResources = this.getMappedResources(metadata.eyes);
@@ -119,7 +103,7 @@ export class PlayerTextures {
         this.mapWokaCollections(metadata.woka);
     }
 
-    private getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
+    private getMappedResources(category: WokaPartType): BodyResourceDescriptionListInterface {
         const resources: BodyResourceDescriptionListInterface = {};
         if (!category) {
             return {};
@@ -132,24 +116,28 @@ export class PlayerTextures {
         return resources;
     }
 
-    private mapWokaCollections(category: PlayerTexturesCategory): void {
+    private mapWokaCollections(category: WokaPartType): void {
         if (!category) {
             return;
         }
         for (const collection of category.collections) {
-            this.wokaCollections.set(collection.name, collection.textures);
+            const textures: BodyResourceDescriptionInterface[] = [];
+            for (const texture of collection.textures) {
+                textures.push({ id: texture.id, img: texture.url });
+            }
+            this.wokaCollections.set(collection.name, textures);
         }
 
         // some mock data for testing
-        const handsomeMalesArray: PlayerTexturesRecord[] = [];
-        const averageFemalesArray: PlayerTexturesRecord[] = [];
+        const handsomeMalesArray: BodyResourceDescriptionInterface[] = [];
+        const averageFemalesArray: BodyResourceDescriptionInterface[] = [];
         for (const collection of category.collections) {
             for (const texture of collection.textures) {
                 if (texture.id.includes("female")) {
-                    averageFemalesArray.push(texture);
+                    averageFemalesArray.push({ id: texture.id, img: texture.url });
                     continue;
                 }
-                handsomeMalesArray.push(texture);
+                handsomeMalesArray.push({ id: texture.id, img: texture.url });
             }
         }
         this.wokaCollections.set("handome males", handsomeMalesArray);

@@ -18,6 +18,7 @@ import { customizeAvailableStore, selectedCollection } from "../../Stores/Select
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
+import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -33,8 +34,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
 
-    private readonly WOKA_METADATA_KEY = "woka-list";
-
     constructor() {
         super({
             key: SelectCharacterSceneName,
@@ -45,37 +44,33 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     public preload() {
         super.preload();
-        this.cache.json.remove(this.WOKA_METADATA_KEY);
+        const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
+        this.cache.json.remove(wokaMetadataKey);
 
-        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
-        this.load.json(
-            this.WOKA_METADATA_KEY,
-            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
-            undefined,
-            {
-                responseType: "text",
-                headers: {
-                    Authorization: localUserStore.getAuthToken() ?? "",
+        this.superLoad
+            .json(
+                wokaMetadataKey,
+                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                undefined,
+                {
+                    responseType: "text",
+                    headers: {
+                        Authorization: localUserStore.getAuthToken() ?? "",
+                    },
+                    withCredentials: true,
                 },
-                withCredentials: true,
-            }
-        );
-        this.load.once(`filecomplete-json-${this.WOKA_METADATA_KEY}`, () => {
-            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(this.WOKA_METADATA_KEY));
-            this.loadSelectSceneCharacters()
-                .then((bodyResourceDescriptions) => {
-                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                        this.playerModels.push(bodyResourceDescription);
-                    });
-                    this.lazyloadingAttempt = true;
-                })
-                .catch((e) => console.error(e));
-            this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
-            this.lazyloadingAttempt = false;
+                (key, type, data) => {
+                    this.playerTextures.loadPlayerTexturesMetadata(wokaList.parse(data));
+                    this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
+                    this.lazyloadingAttempt = false;
+                }
+            )
+            .catch((e) => console.error(e));
+        this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
+        this.lazyloadingAttempt = false;
 
-            //this function must stay at the end of preload function
-            this.loader.addLoader();
-        });
+        //this function must stay at the end of preload function
+        this.loader.addLoader();
     }
 
     public create() {
@@ -86,7 +81,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         console.log(this.playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
 
-        console.log(this.cache.json.get(this.WOKA_METADATA_KEY));
+        console.log(this.cache.json.get("woka-list" + gameManager.currentStartedRoom.href));
         console.log(this.playerModels);
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
