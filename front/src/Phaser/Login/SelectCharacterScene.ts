@@ -112,8 +112,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             repositionToCenter: true,
             itemsInRow: 1,
             margin: {
-                left: 5,
-                right: 5,
+                left: ((innerWidth - 200) / waScaleManager.getActualZoom()) * 0.5,
+                right: ((innerWidth - 200) / waScaleManager.getActualZoom()) * 0.5,
             },
             spacing: 5,
             debug: {
@@ -184,11 +184,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private handleCharactersGridOnResize(): void {
-        const gridHeight = 105;
+        const ratio = innerHeight / innerWidth;
+        const twoRows = ratio > 1 || innerHeight > 900;
+        const gridHeight = twoRows ? 210 : 105;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
-            y: this.cameras.main.worldView.y + this.cameras.main.height * 0.575,
+            y: this.cameras.main.worldView.y + this.cameras.main.height * (ratio > 1 ? 0.5 : 0.575),
         };
 
         try {
@@ -200,9 +202,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         } catch (error) {
             console.warn(error);
         }
-
+        this.charactersDraggableGrid.setItemsInRow(twoRows ? 2 : 1);
         this.populateGrid();
-        this.charactersDraggableGrid.moveContentToBeginning();
     }
 
     private populateGrid(): void {
@@ -216,6 +217,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
+        void this.charactersDraggableGrid.moveContentTo(0.5, textures.length * 50);
     }
 
     private bindEventHandlers(): void {
@@ -224,6 +226,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
 
         this.charactersDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaSlot) => {
+            if (this.charactersDraggableGrid.getDraggableSpaceWidth() < this.charactersDraggableGrid.getGridSize().x) {
+                void this.charactersDraggableGrid.centerOnItem(
+                    this.charactersDraggableGrid.getAllItems().indexOf(item),
+                    500
+                );
+            }
             this.charactersDraggableGrid.getAllItems().forEach((slot) => (slot as WokaSlot).select(false));
             this.selectedWoka?.stop()?.setFrame(0);
             this.selectedWoka = item.getSprite();
