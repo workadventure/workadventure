@@ -2,18 +2,18 @@
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../i18n/i18n-svelte";
-    import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+    import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 
     export let game: Game;
 
     const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
 
     function selectLeft() {
-        // selectCharacterScene.moveToLeft();
+        selectCharacterScene.selectPreviousCollection();
     }
 
     function selectRight() {
-        // selectCharacterScene.moveToRight();
+        selectCharacterScene.selectNextCollection();
     }
 
     function cameraScene() {
@@ -28,9 +28,12 @@
 <form class="selectCharacterScene">
     <section class="text-center">
         <h2>{$LL.woka.selectWoka.title()}</h2>
+    </section>
+    <section class="category">
         <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
+        <strong class="category-text">{$selectedCollection}</strong>
         <button class="selectCharacterButton selectCharacterButtonRight nes-btn" on:click|preventDefault={selectRight}>
             &gt;
         </button>
@@ -60,11 +63,21 @@
         color: #ebeeee;
 
         section {
-            margin: 10px;
+            margin: 5px;
+
+            &.category {
+                text-align: center;
+                margin-top: 8vh;
+                .category-text {
+                    font-family: "Press Start 2P";
+                    display: inline-block;
+                    width: 70%;
+                }
+            }
 
             &.action {
                 text-align: center;
-                margin-top: 75vh;
+                margin-top: 55vh;
             }
 
             h2 {
@@ -77,8 +90,8 @@
             }
 
             button.selectCharacterButton {
-                position: absolute;
-                top: 15vh;
+                // position: absolute;
+                // top: 15vh;
                 margin: 0;
             }
         }
@@ -86,14 +99,6 @@
         button {
             font-family: "Press Start 2P";
             pointer-events: auto;
-
-            &.selectCharacterButtonLeft {
-                left: 33vw;
-            }
-
-            &.selectCharacterButtonRight {
-                right: 33vw;
-            }
         }
     }
 

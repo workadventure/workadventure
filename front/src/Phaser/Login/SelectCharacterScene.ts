@@ -4,7 +4,7 @@ import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
+import { BodyResourceDescriptionInterface, PlayerTextures, PlayerTexturesKey } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -14,7 +14,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
@@ -26,14 +26,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectedWoka!: Phaser.GameObjects.Sprite | null; // null if we are selecting the "customize" option
     protected playerModels!: BodyResourceDescriptionInterface[];
 
-    protected currentSelectUser = 0;
-    protected pointerClicked: boolean = false;
-    protected pointerTimer: number = 0;
-
     private charactersDraggableGrid!: DraggableGrid;
+    private collectionKeys!: string[];
+    private selectedCollectionIndex!: number;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
+
+    private readonly WOKA_METADATA_KEY = "woka-list";
 
     constructor() {
         super({
@@ -43,14 +43,13 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.playerTextures = new PlayerTextures();
     }
 
-    preload() {
+    public preload() {
         super.preload();
-        const wokaMetadataKey = "woka-list";
-        this.cache.json.remove(wokaMetadataKey);
+        this.cache.json.remove(this.WOKA_METADATA_KEY);
 
         // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
         this.load.json(
-            wokaMetadataKey,
+            this.WOKA_METADATA_KEY,
             `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
             undefined,
             {
@@ -61,8 +60,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 withCredentials: true,
             }
         );
-        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
-            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
+        this.load.once(`filecomplete-json-${this.WOKA_METADATA_KEY}`, () => {
+            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(this.WOKA_METADATA_KEY));
             this.loadSelectSceneCharacters()
                 .then((bodyResourceDescriptions) => {
                     bodyResourceDescriptions.forEach((bodyResourceDescription) => {
@@ -79,10 +78,15 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
     }
 
-    create() {
+    public create() {
         this.selectedWoka = null;
+        this.selectedCollectionIndex = 0;
+        this.collectionKeys = this.playerTextures.getCollectionsKeys();
+        selectedCollection.set(this.getSelectedCollectionName());
 
-        console.log(this.cache.json.get("woka-list"));
+        console.log(this.playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
+
+        console.log(this.cache.json.get(this.WOKA_METADATA_KEY));
         console.log(this.playerModels);
 
         customizeAvailableStore.set(this.isCustomizationAvailable());
@@ -106,14 +110,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             dimension: { x: 485, y: 165 },
             horizontal: true,
             repositionToCenter: true,
-            itemsInRow: 2,
+            itemsInRow: 1,
             margin: {
                 left: 5,
                 right: 5,
             },
             spacing: 5,
             debug: {
-                showDraggableSpace: true,
+                showDraggableSpace: false,
             },
         });
 
@@ -135,6 +139,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.scene.stop(SelectCharacterSceneName);
         waScaleManager.restoreZoom();
         gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
+        this.selectedWoka = null;
         gameManager.tryResumingGame(EnableCameraSceneName);
         selectCharacterSceneVisibleStore.set(false);
         this.events.removeListener("wake");
@@ -144,20 +149,14 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (this.selectedWoka !== null && !areCharacterLayersValid([this.selectedWoka.texture.key])) {
             return;
         }
+        this.selectedWoka = null;
         this.scene.sleep(SelectCharacterSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
     }
 
-    update(time: number, delta: number): void {
-        // pointerTimer is set to 250 when pointerdown events is trigger
-        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
-        this.pointerTimer -= delta;
-        if (this.pointerTimer <= 0) {
-            this.pointerClicked = false;
-        }
-
+    public update(time: number, delta: number): void {
         if (this.lazyloadingAttempt) {
             this.lazyloadingAttempt = false;
         }
@@ -167,12 +166,29 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.handleCharactersGridOnResize();
     }
 
+    public getSelectedCollectionName(): string {
+        return this.collectionKeys[this.selectedCollectionIndex] ?? "";
+    }
+
+    public selectPreviousCollection(): void {
+        this.selectedCollectionIndex = (this.selectedCollectionIndex + 1) % this.collectionKeys.length;
+        selectedCollection.set(this.getSelectedCollectionName());
+        this.populateGrid();
+    }
+
+    public selectNextCollection(): void {
+        this.selectedCollectionIndex =
+            this.selectedCollectionIndex - 1 < 0 ? this.collectionKeys.length - 1 : this.selectedCollectionIndex - 1;
+        selectedCollection.set(this.getSelectedCollectionName());
+        this.populateGrid();
+    }
+
     private handleCharactersGridOnResize(): void {
-        const gridHeight = 220;
+        const gridHeight = 105;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
-            y: this.cameras.main.worldView.y + this.cameras.main.height * 0.5,
+            y: this.cameras.main.worldView.y + this.cameras.main.height * 0.575,
         };
 
         try {
@@ -192,9 +208,11 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     private populateGrid(): void {
         const wokaDimension = 100;
 
+        this.selectedWoka = null;
         this.charactersDraggableGrid.clearAllItems();
-        for (let i = 0; i < this.playerModels.length; i += 1) {
-            const slot = new WokaSlot(this, this.playerModels[i].id).setDisplaySize(wokaDimension, wokaDimension);
+        const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
+        for (let i = 0; i < textures.length; i += 1) {
+            const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
