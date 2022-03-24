@@ -1,5 +1,7 @@
 //The list of all the player textures, both the default models and the partial textures used for customization
 
+import { WokaList, WokaPartType } from "../../Messages/JsonMessages/PlayerTextures";
+
 export interface BodyResourceDescriptionListInterface {
     [key: string]: BodyResourceDescriptionInterface;
 }
@@ -33,24 +35,6 @@ export enum PlayerTexturesKey {
     Woka = "woka",
 }
 
-type PlayerTexturesMetadata = Record<PlayerTexturesKey, PlayerTexturesCategory>;
-
-interface PlayerTexturesCategory {
-    collections: PlayerTexturesCollection[];
-    required?: boolean;
-}
-
-interface PlayerTexturesCollection {
-    name: string;
-    textures: PlayerTexturesRecord[];
-}
-
-interface PlayerTexturesRecord {
-    id: string;
-    name: string;
-    url: string;
-}
-
 export class PlayerTextures {
     private PLAYER_RESOURCES: BodyResourceDescriptionListInterface = {};
     private COLOR_RESOURCES: BodyResourceDescriptionListInterface = {};
@@ -61,7 +45,7 @@ export class PlayerTextures {
     private ACCESSORIES_RESOURCES: BodyResourceDescriptionListInterface = {};
     private LAYERS: BodyResourceDescriptionListInterface[] = [];
 
-    public loadPlayerTexturesMetadata(metadata: PlayerTexturesMetadata): void {
+    public loadPlayerTexturesMetadata(metadata: WokaList): void {
         this.mapTexturesMetadataIntoResources(metadata);
     }
 
@@ -88,7 +72,7 @@ export class PlayerTextures {
         return this.LAYERS;
     }
 
-    private mapTexturesMetadataIntoResources(metadata: PlayerTexturesMetadata): void {
+    private mapTexturesMetadataIntoResources(metadata: WokaList): void {
         this.PLAYER_RESOURCES = this.getMappedResources(metadata.woka);
         this.COLOR_RESOURCES = this.getMappedResources(metadata.body);
         this.EYES_RESOURCES = this.getMappedResources(metadata.eyes);
@@ -107,7 +91,7 @@ export class PlayerTextures {
         ];
     }
 
-    private getMappedResources(category: PlayerTexturesCategory): BodyResourceDescriptionListInterface {
+    private getMappedResources(category: WokaPartType): BodyResourceDescriptionListInterface {
         const resources: BodyResourceDescriptionListInterface = {};
         if (!category) {
             return {};

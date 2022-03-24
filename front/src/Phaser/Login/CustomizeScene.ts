@@ -25,6 +25,7 @@ import {
 } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
+import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -63,45 +64,30 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
         this.load.image("iconBody", "/resources/icons/icon_body.png");
 
-        const wokaMetadataKey = "woka-list";
+        const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
         this.cache.json.remove(wokaMetadataKey);
-        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
-        this.load.json(
-            wokaMetadataKey,
-            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
-            undefined,
-            {
-                responseType: "text",
-                headers: {
-                    Authorization: localUserStore.getAuthToken() ?? "",
+        this.superLoad
+            .json(
+                wokaMetadataKey,
+                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                undefined,
+                {
+                    responseType: "text",
+                    headers: {
+                        Authorization: localUserStore.getAuthToken() ?? "",
+                    },
+                    withCredentials: true,
                 },
-                withCredentials: true,
-            }
-        );
-        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
-            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
-            this.loadCustomSceneSelectCharacters()
-                .then((bodyResourceDescriptions) => {
-                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                        if (
-                            bodyResourceDescription.level == undefined ||
-                            bodyResourceDescription.level < 0 ||
-                            bodyResourceDescription.level > 5
-                        ) {
-                            throw new Error("Texture level is null");
-                        }
-                        this.layers[bodyResourceDescription.level].unshift(bodyResourceDescription);
-                    });
-                    this.lazyloadingAttempt = true;
-                })
-                .catch((e) => console.error(e));
+                (key, type, data) => {
+                    this.playerTextures.loadPlayerTexturesMetadata(wokaList.parse(data));
 
-            this.layers = loadAllLayers(this.load, this.playerTextures);
-            this.lazyloadingAttempt = false;
-
-            //this function must stay at the end of preload function
-            this.loader.addLoader();
-        });
+                    this.layers = loadAllLayers(this.load, this.playerTextures);
+                    this.lazyloadingAttempt = false;
+                }
+            )
+            .catch((e) => console.error(e));
+        //this function must stay at the end of preload function
+        this.loader.addLoader();
     }
 
     public create(): void {

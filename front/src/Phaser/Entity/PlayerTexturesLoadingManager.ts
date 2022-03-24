@@ -2,6 +2,8 @@ import LoaderPlugin = Phaser.Loader.LoaderPlugin;
 import type { CharacterTexture } from "../../Connexion/LocalUser";
 import { BodyResourceDescriptionInterface, mapLayerToLevel, PlayerTextures, PlayerTexturesKey } from "./PlayerTextures";
 import CancelablePromise from "cancelable-promise";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import Texture = Phaser.Textures.Texture;
 
 export interface FrameConfig {
     frameWidth: number;
@@ -35,81 +37,33 @@ export const loadAllDefaultModels = (
 };
 
 export const loadWokaTexture = (
-    loaderPlugin: LoaderPlugin,
+    superLoaderPlugin: SuperLoaderPlugin,
     texture: BodyResourceDescriptionInterface
-): CancelablePromise<BodyResourceDescriptionInterface> => {
-    return createLoadingPromise(loaderPlugin, texture, {
+): CancelablePromise<Texture> => {
+    return superLoaderPlugin.spritesheet(texture.id, texture.img, {
         frameWidth: 32,
         frameHeight: 32,
     });
 };
 
 export const lazyLoadPlayerCharacterTextures = (
-    loadPlugin: LoaderPlugin,
+    superLoaderPlugin: SuperLoaderPlugin,
     textures: BodyResourceDescriptionInterface[]
 ): CancelablePromise<string[]> => {
-    const promisesList: CancelablePromise<unknown>[] = [];
-    textures.forEach((texture) => {
-        try {
-            //TODO refactor
-            if (!loadPlugin.textureManager.exists(texture.id)) {
-                promisesList.push(
-                    createLoadingPromise(loadPlugin, texture, {
-                        frameWidth: 32,
-                        frameHeight: 32,
-                    })
-                );
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    });
-    let returnPromise: CancelablePromise<Array<string | BodyResourceDescriptionInterface>>;
-    if (promisesList.length > 0) {
-        loadPlugin.start();
-        returnPromise = CancelablePromise.all(promisesList).then(() => textures);
-    } else {
-        returnPromise = CancelablePromise.resolve(textures);
+    const promisesList: CancelablePromise<Texture>[] = [];
+    for (const texture of textures) {
+        promisesList.push(
+            superLoaderPlugin.spritesheet(texture.id, texture.img, {
+                frameWidth: 32,
+                frameHeight: 32,
+            })
+        );
     }
+    const returnPromise: CancelablePromise<Texture[]> = CancelablePromise.all(promisesList);
 
-    //If the loading fail, we render the default model instead.
-    return returnPromise.then((keys) =>
-        keys.map((key) => {
-            return typeof key !== "string" ? key.id : key;
+    return returnPromise.then(() =>
+        textures.map((key) => {
+            return key.id;
         })
     );
-};
-
-export const createLoadingPromise = (
-    loadPlugin: LoaderPlugin,
-    playerResourceDescriptor: BodyResourceDescriptionInterface,
-    frameConfig: FrameConfig
-) => {
-    return new CancelablePromise<BodyResourceDescriptionInterface>((res, rej, cancel) => {
-        if (loadPlugin.textureManager.exists(playerResourceDescriptor.id)) {
-            return res(playerResourceDescriptor);
-        }
-
-        cancel(() => {
-            loadPlugin.off("loaderror");
-            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.id);
-            return;
-        });
-
-        loadPlugin.spritesheet(playerResourceDescriptor.id, playerResourceDescriptor.img, frameConfig);
-        const errorCallback = (file: { src: string }) => {
-            if (file.src !== playerResourceDescriptor.img) return;
-            console.error("failed loading player resource: ", playerResourceDescriptor);
-            rej(playerResourceDescriptor);
-            loadPlugin.off("filecomplete-spritesheet-" + playerResourceDescriptor.id, successCallback);
-            loadPlugin.off("loaderror", errorCallback);
-        };
-        const successCallback = () => {
-            loadPlugin.off("loaderror", errorCallback);
-            res(playerResourceDescriptor);
-        };
-
-        loadPlugin.once("filecomplete-spritesheet-" + playerResourceDescriptor.id, successCallback);
-        loadPlugin.on("loaderror", errorCallback);
-    });
 };

@@ -2,10 +2,12 @@
     import { actionsMenuStore } from "../../Stores/ActionsMenuStore";
     import { onDestroy } from "svelte";
 
+    import type { ActionsMenuAction } from "../../Stores/ActionsMenuStore";
     import type { Unsubscriber } from "svelte/store";
     import type { ActionsMenuData } from "../../Stores/ActionsMenuStore";
 
     let actionsMenuData: ActionsMenuData | undefined;
+    let sortedActions: ActionsMenuAction[] | undefined;
 
     let actionsMenuStoreUnsubscriber: Unsubscriber | null;
 
@@ -21,6 +23,20 @@
 
     actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value) => {
         actionsMenuData = value;
+        if (actionsMenuData) {
+            sortedActions = [...actionsMenuData.actions.values()].sort((a, b) => {
+                const ap = a.priority ?? 0;
+                const bp = b.priority ?? 0;
+                if (ap > bp) {
+                    return -1;
+                }
+                if (ap < bp) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
+        }
     });
 
     onDestroy(() => {
@@ -37,15 +53,15 @@
         <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
         <h2>{actionsMenuData.playerName}</h2>
         <div class="actions">
-            {#each [...actionsMenuData.actions] as { actionName, callback }}
+            {#each sortedActions ?? [] as action}
                 <button
                     type="button"
-                    class="nes-btn"
+                    class="nes-btn {action.style ?? ''}"
                     on:click|preventDefault={() => {
-                        callback();
+                        action.callback();
                     }}
                 >
-                    {actionName}
+                    {action.actionName}
                 </button>
             {/each}
         </div>
@@ -61,6 +77,7 @@
         height: max-content !important;
         max-height: 40vh;
         margin-top: 200px;
+        z-index: 425;
 
         pointer-events: auto;
         font-family: "Press Start 2P";
@@ -68,7 +85,7 @@
         color: whitesmoke;
 
         .actions {
-            max-height: calc(100% - 50px);
+            max-height: 30vh;
             width: 100%;
             display: block;
             overflow-x: hidden;

@@ -197,7 +197,10 @@ class JitsiFactory {
 
                 options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
                 this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-                this.jitsiApi.executeCommand("displayName", playerName);
+
+                this.jitsiApi.addListener("videoConferenceJoined", () => {
+                    this.jitsiApi?.executeCommand("displayName", playerName);
+                });
 
                 this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
                 this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);

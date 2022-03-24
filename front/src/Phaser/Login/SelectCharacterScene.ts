@@ -16,6 +16,7 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -44,38 +45,31 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     preload() {
-        const wokaMetadataKey = "woka-list";
+        const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
         this.cache.json.remove(wokaMetadataKey);
 
-        // FIXME: window.location.href is wrong. We need the URL of the main room (so we need to apply any redirect before!)
-        this.load.json(
-            wokaMetadataKey,
-            `${PUSHER_URL}/woka/list/` + encodeURIComponent(window.location.href),
-            undefined,
-            {
-                responseType: "text",
-                headers: {
-                    Authorization: localUserStore.getAuthToken() ?? "",
+        this.superLoad
+            .json(
+                wokaMetadataKey,
+                `${PUSHER_URL}/woka/list?roomUrl=` + encodeURIComponent(gameManager.currentStartedRoom.href),
+                undefined,
+                {
+                    responseType: "text",
+                    headers: {
+                        Authorization: localUserStore.getAuthToken() ?? "",
+                    },
+                    withCredentials: true,
                 },
-                withCredentials: true,
-            }
-        );
-        this.load.once(`filecomplete-json-${wokaMetadataKey}`, () => {
-            this.playerTextures.loadPlayerTexturesMetadata(this.cache.json.get(wokaMetadataKey));
-            this.loadSelectSceneCharacters()
-                .then((bodyResourceDescriptions) => {
-                    bodyResourceDescriptions.forEach((bodyResourceDescription) => {
-                        this.playerModels.push(bodyResourceDescription);
-                    });
-                    this.lazyloadingAttempt = true;
-                })
-                .catch((e) => console.error(e));
-            this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
-            this.lazyloadingAttempt = false;
+                (key, type, data) => {
+                    this.playerTextures.loadPlayerTexturesMetadata(wokaList.parse(data));
+                    this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
+                    this.lazyloadingAttempt = false;
+                }
+            )
+            .catch((e) => console.error(e));
 
-            //this function must stay at the end of preload function
-            this.loader.addLoader();
-        });
+        //this function must stay at the end of preload function
+        this.loader.addLoader();
     }
 
     create() {
