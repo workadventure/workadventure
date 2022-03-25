@@ -55,10 +55,11 @@
             localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
         }
 
-    if (change) {
-      window.location.reload();
-    }
-    audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+
+        if (change) {
+            window.location.reload();
+        }
 
         closeMenu();
     }
@@ -100,11 +101,12 @@
         localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
     }
 
-  function closeMenu() {
-    menuVisiblilityStore.set(false);
-  }
     function changeDecreaseAudioPlayerVolumeWhileTalking() {
         localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+    }
+
+    function closeMenu() {
+        menuVisiblilityStore.set(false);
     }
 
     const isMobile = isMediaBreakpointUp("md");
@@ -230,15 +232,15 @@
                 on:change={changeIgnoreFollowRequests}
             />
             <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
-          <label>
-            <input
-              type="checkbox"
-              class="nes-checkbox is-dark"
-              bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-              on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
-            />
-            <span>{$LL.audio.manager.reduce()}</span>
-          </label>
+            <label>
+                <input
+                    type="checkbox"
+                    class="nes-checkbox is-dark"
+                    bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                    on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+                />
+                <span>{$LL.audio.manager.reduce()}</span>
+            </label>
         </label>
     </section>
 </div>
