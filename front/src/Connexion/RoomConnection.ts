@@ -220,6 +220,7 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
+            const initCharacterLayers = characterLayers;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
@@ -342,14 +343,16 @@ export class RoomConnection implements RoomConnection {
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
-                    for (const characterLayer of roomJoinedMessage.characterLayer) {
-                        if (!characterLayer.url) {
-                            this.goToSelectYourWokaScene();
-                            this.closed = true;
-                            break;
-                        }
+                    if (
+                        roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
+                        roomJoinedMessage.characterLayer.find((layer) => !layer.url)
+                    ) {
+                        this.goToSelectYourWokaScene();
+                        this.closed = true;
                     }
+
                     if (this.closed) {
+                        this.closeConnection();
                         break;
                     }
 

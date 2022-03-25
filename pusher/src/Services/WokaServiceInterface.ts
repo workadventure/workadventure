@@ -1,4 +1,4 @@
-import { WokaDetailsResult, WokaList } from "../Enum/PlayerTextures";
+import { WokaList } from "../Messages/JsonMessages/PlayerTextures";
 
 export interface WokaServiceInterface {
     /**

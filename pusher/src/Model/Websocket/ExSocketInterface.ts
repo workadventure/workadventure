@@ -11,7 +11,7 @@ import {
 import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
 import { compressors } from "hyper-express";
-import { WokaDetail } from "_Enum/PlayerTextures";
+import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

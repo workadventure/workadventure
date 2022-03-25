@@ -22,6 +22,10 @@ export const isMapDetailsData = new tg.IsInterface()
         expireOn: tg.isString,
         // Whether the "report" feature is enabled or not on this room
         canReport: tg.isBoolean,
+        // The URL of the logo image on the loading screen
+        loadingLogo: tg.isNullable(tg.isString),
+        // The URL of the logo image on "LoginScene"
+        loginSceneLogo: tg.isNullable(tg.isString),
     })
     .get();
 
