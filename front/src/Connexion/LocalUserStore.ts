@@ -15,6 +15,7 @@ const helpCameraSettingsShown = "helpCameraSettingsShown";
 const fullscreenKey = "fullscreen";
 const forceCowebsiteTriggerKey = "forceCowebsiteTrigger";
 const ignoreFollowRequests = "ignoreFollowRequests";
+const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const state = "state";
@@ -134,6 +135,12 @@ class LocalUserStore {
     }
     getIgnoreFollowRequests(): boolean {
         return localStorage.getItem(ignoreFollowRequests) === "true";
+    }
+    setDecreaseAudioPlayerVolumeWhileTalking(value: boolean): void {
+        localStorage.setItem(decreaseAudioPlayerVolumeWhileTalking, value.toString());
+    }
+    getDecreaseAudioPlayerVolumeWhileTalking(): boolean {
+        return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) === "true";
     }
 
     async setLastRoomUrl(roomUrl: string): Promise<void> {
