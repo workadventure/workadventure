@@ -25,11 +25,14 @@ const code = "code";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
+const cameraPrivacySettings = "cameraPrivacySettings";
+const microphonePrivacySettings = "microphonePrivacySettings";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
     }
+
     getLocalUser(): LocalUser | null {
         const data = localStorage.getItem("localUser");
         return data ? JSON.parse(data) : null;
@@ -38,6 +41,7 @@ class LocalUserStore {
     setName(name: string): void {
         localStorage.setItem(playerNameKey, name);
     }
+
     getName(): string | null {
         const value = localStorage.getItem(playerNameKey) || "";
         return isUserNameValid(value) ? value : null;
@@ -46,6 +50,7 @@ class LocalUserStore {
     setPlayerCharacterIndex(playerCharacterIndex: number): void {
         localStorage.setItem(selectedPlayerKey, "" + playerCharacterIndex);
     }
+
     getPlayerCharacterIndex(): number {
         return parseInt(localStorage.getItem(selectedPlayerKey) || "");
     }
@@ -53,6 +58,7 @@ class LocalUserStore {
     setCustomCursorPosition(activeRow: number, selectedLayers: number[]): void {
         localStorage.setItem(customCursorPositionKey, JSON.stringify({ activeRow, selectedLayers }));
     }
+
     getCustomCursorPosition(): { activeRow: number; selectedLayers: number[] } | null {
         return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
     }
@@ -60,6 +66,7 @@ class LocalUserStore {
     setCharacterLayers(layers: string[]): void {
         localStorage.setItem(characterLayersKey, JSON.stringify(layers));
     }
+
     getCharacterLayers(): string[] | null {
         const value = JSON.parse(localStorage.getItem(characterLayersKey) || "null");
         return areCharacterLayersValid(value) ? value : null;
@@ -68,6 +75,7 @@ class LocalUserStore {
     setCompanion(companion: string | null): void {
         return localStorage.setItem(companionKey, JSON.stringify(companion));
     }
+
     getCompanion(): string | null {
         const companion = JSON.parse(localStorage.getItem(companionKey) || "null");
 
@@ -77,6 +85,7 @@ class LocalUserStore {
 
         return companion;
     }
+
     wasCompanionSet(): boolean {
         return localStorage.getItem(companionKey) ? true : false;
     }
@@ -84,6 +93,7 @@ class LocalUserStore {
     setGameQualityValue(value: number): void {
         localStorage.setItem(gameQualityKey, "" + value);
     }
+
     getGameQualityValue(): number {
         return parseInt(localStorage.getItem(gameQualityKey) || "60");
     }
@@ -91,6 +101,7 @@ class LocalUserStore {
     setVideoQualityValue(value: number): void {
         localStorage.setItem(videoQualityKey, "" + value);
     }
+
     getVideoQualityValue(): number {
         return parseInt(localStorage.getItem(videoQualityKey) || "20");
     }
@@ -98,6 +109,7 @@ class LocalUserStore {
     setAudioPlayerVolume(value: number): void {
         localStorage.setItem(audioPlayerVolumeKey, "" + value);
     }
+
     getAudioPlayerVolume(): number {
         return parseFloat(localStorage.getItem(audioPlayerVolumeKey) || "1");
     }
@@ -105,6 +117,7 @@ class LocalUserStore {
     setAudioPlayerMuted(value: boolean): void {
         localStorage.setItem(audioPlayerMuteKey, value.toString());
     }
+
     getAudioPlayerMuted(): boolean {
         return localStorage.getItem(audioPlayerMuteKey) === "true";
     }
@@ -112,6 +125,7 @@ class LocalUserStore {
     setHelpCameraSettingsShown(): void {
         localStorage.setItem(helpCameraSettingsShown, "1");
     }
+
     getHelpCameraSettingsShown(): boolean {
         return localStorage.getItem(helpCameraSettingsShown) === "1";
     }
@@ -119,6 +133,7 @@ class LocalUserStore {
     setFullscreen(value: boolean): void {
         localStorage.setItem(fullscreenKey, value.toString());
     }
+
     getFullscreen(): boolean {
         return localStorage.getItem(fullscreenKey) === "true";
     }
@@ -126,6 +141,7 @@ class LocalUserStore {
     setForceCowebsiteTrigger(value: boolean): void {
         localStorage.setItem(forceCowebsiteTriggerKey, value.toString());
     }
+
     getForceCowebsiteTrigger(): boolean {
         return localStorage.getItem(forceCowebsiteTriggerKey) === "true";
     }
@@ -133,6 +149,7 @@ class LocalUserStore {
     setIgnoreFollowRequests(value: boolean): void {
         localStorage.setItem(ignoreFollowRequests, value.toString());
     }
+
     getIgnoreFollowRequests(): boolean {
         return localStorage.getItem(ignoreFollowRequests) === "true";
     }
@@ -155,11 +172,13 @@ class LocalUserStore {
             }
         }
     }
+
     getLastRoomUrl(): string {
         return (
             localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + START_ROOM_URL
         );
     }
+
     getLastRoomUrlCacheApi(): Promise<string | undefined> {
         if (!("caches" in window)) {
             return Promise.resolve(undefined);
@@ -176,6 +195,7 @@ class LocalUserStore {
     setAuthToken(value: string | null) {
         value ? localStorage.setItem(authToken, value) : localStorage.removeItem(authToken);
     }
+
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
     }
@@ -202,23 +222,29 @@ class LocalUserStore {
         }
         return oldValue === value;
     }
+
     setState(value: string) {
         localStorage.setItem(state, value);
     }
+
     getState(): string | null {
         return localStorage.getItem(state);
     }
+
     generateNonce(): string {
         const newNonce = uuidv4();
         localStorage.setItem(nonce, newNonce);
         return newNonce;
     }
+
     getNonce(): string | null {
         return localStorage.getItem(nonce);
     }
+
     setCode(value: string): void {
         localStorage.setItem(code, value);
     }
+
     getCode(): string | null {
         return localStorage.getItem(code);
     }
@@ -226,9 +252,34 @@ class LocalUserStore {
     setCameraSetup(cameraId: string) {
         localStorage.setItem(cameraSetup, cameraId);
     }
+
     getCameraSetup(): { video: unknown; audio: unknown } | undefined {
         const cameraSetupValues = localStorage.getItem(cameraSetup);
         return cameraSetupValues != undefined ? JSON.parse(cameraSetupValues) : undefined;
+    }
+
+    setCameraPrivacySettings(option: boolean) {
+        localStorage.setItem(cameraPrivacySettings, option.toString());
+    }
+
+    getCameraPrivacySettings() {
+        //if this setting doesn't exist in LocalUserStore, we set a default value
+        if (localStorage.getItem(cameraPrivacySettings) == null) {
+            localStorage.setItem(cameraPrivacySettings, "false");
+        }
+        return localStorage.getItem(cameraPrivacySettings) === "true";
+    }
+
+    setMicrophonePrivacySettings(option: boolean) {
+        localStorage.setItem(microphonePrivacySettings, option.toString());
+    }
+
+    getMicrophonePrivacySettings() {
+        //if this setting doesn't exist in LocalUserStore, we set a default value
+        if (localStorage.getItem(microphonePrivacySettings) == null) {
+            localStorage.setItem(microphonePrivacySettings, "true");
+        }
+        return localStorage.getItem(microphonePrivacySettings) === "true";
     }
 
     getAllUserProperties(): Map<string, unknown> {
