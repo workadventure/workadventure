@@ -29,7 +29,7 @@ export class WokaBodyPartSlot extends GridItem {
 
     private selected: boolean;
 
-    public readonly SIZE: number = 50;
+    public static readonly SIZE: number = 50;
 
     constructor(scene: Phaser.Scene, x: number, y: number, config: WokaBodyPartSlotConfig, id?: number) {
         super(scene, `${id}`, { x, y });
@@ -44,9 +44,9 @@ export class WokaBodyPartSlot extends GridItem {
 
         if (this.config.categoryImageKey) {
             this.categoryImage = this.scene.add
-                .image(this.SIZE / 2 - 1, -this.SIZE / 2 + 1, this.config.categoryImageKey)
+                .image(WokaBodyPartSlot.SIZE / 2 - 1, -WokaBodyPartSlot.SIZE / 2 + 1, this.config.categoryImageKey)
                 .setDisplaySize(16, 16)
-                .setAlpha(0.4)
+                .setAlpha(0.75)
                 .setOrigin(1, 0);
             this.add(this.categoryImage);
         }
@@ -59,7 +59,7 @@ export class WokaBodyPartSlot extends GridItem {
             .image(this.config.offsetX, this.config.offsetY, config.imageKey ?? "")
             .setVisible(config.bodyImageKey !== undefined);
 
-        this.setSize(this.SIZE, this.SIZE);
+        this.setSize(WokaBodyPartSlot.SIZE, WokaBodyPartSlot.SIZE);
 
         this.add([this.bodyImage, this.image]);
 
@@ -118,8 +118,10 @@ export class WokaBodyPartSlot extends GridItem {
             this.selected ? this.config.borderSelectedColor : this.config.borderColor
         );
 
-        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
-        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+        const size = WokaBodyPartSlot.SIZE;
+
+        this.background.fillRect(-size / 2, -size / 2, size, size);
+        this.background.strokeRect(-size / 2, -size / 2, size, size);
     }
 
     private updateSelected(): void {

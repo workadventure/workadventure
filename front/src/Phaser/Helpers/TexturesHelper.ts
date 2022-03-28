@@ -31,4 +31,16 @@ export class TexturesHelper {
             throw new Error("Could not get the snapshot");
         }
     }
+
+    public static createRectangleTexture(
+        scene: Phaser.Scene,
+        textureKey: string,
+        width: number,
+        height: number,
+        color: number
+    ): void {
+        const rectangleTexture = scene.add.graphics().fillStyle(color, 1).fillRect(0, 0, width, height);
+        rectangleTexture.generateTexture(textureKey, width, height);
+        rectangleTexture.destroy();
+    }
 }

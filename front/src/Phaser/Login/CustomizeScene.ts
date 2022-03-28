@@ -26,6 +26,7 @@ import {
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
+import { TexturesHelper } from "../Helpers/TexturesHelper";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -33,6 +34,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     private customWokaPreviewer!: CustomWokaPreviewer;
     private bodyPartsDraggableGridBackground!: Phaser.GameObjects.Graphics;
     private bodyPartsDraggableGridForeground!: Phaser.GameObjects.Graphics;
+    private bodyPartsDraggableGridLeftShadow!: Phaser.GameObjects.Image;
+    private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
     private bodyPartsSlots!: Record<CustomWokaBodyPart, WokaBodyPartSlot>;
 
@@ -46,6 +49,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
     private loader: Loader;
+
+    private readonly SLOT_DIMENSION = 100;
 
     constructor() {
         super({
@@ -63,6 +68,8 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.load.image("iconHair", "/resources/icons/icon_hair.png");
         this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
         this.load.image("iconBody", "/resources/icons/icon_body.png");
+
+        TexturesHelper.createRectangleTexture(this, "gridEdgeShadow", 200, 115, 0x000000);
 
         const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
         this.cache.json.remove(wokaMetadataKey);
@@ -91,6 +98,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        this.selectedBodyPartType = CustomWokaBodyPart.Body;
         this.customWokaPreviewer = new CustomWokaPreviewer(
             this,
             0,
@@ -118,8 +126,8 @@ export class CustomizeScene extends AbstractCharacterScene {
             repositionToCenter: true,
             itemsInRow: 1,
             margin: {
-                left: 5,
-                right: 5,
+                left: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
+                right: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
             },
             spacing: 5,
             debug: {
@@ -127,6 +135,21 @@ export class CustomizeScene extends AbstractCharacterScene {
             },
         });
         this.bodyPartsDraggableGridForeground = this.add.graphics();
+
+        this.bodyPartsDraggableGridLeftShadow = this.add
+            .image(0, this.cameras.main.worldView.y + this.cameras.main.height, "gridEdgeShadow")
+            .setAlpha(1, 0, 1, 0)
+            .setOrigin(0, 1);
+
+        this.bodyPartsDraggableGridRightShadow = this.add
+            .image(
+                this.cameras.main.worldView.x + this.cameras.main.width,
+                this.cameras.main.worldView.y + this.cameras.main.height,
+                "gridEdgeShadow"
+            )
+            .setAlpha(1, 0, 1, 0)
+            .setFlipX(true)
+            .setOrigin(1, 1);
 
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, {
@@ -319,11 +342,11 @@ export class CustomizeScene extends AbstractCharacterScene {
             );
             const bottom = Math.floor(top + slotSize + 10);
 
-            this.bodyPartsSlots.Hair.setPosition(left, top);
-            this.bodyPartsSlots.Hat.setPosition(middle, top);
-            this.bodyPartsSlots.Eyes.setPosition(right, top);
-            this.bodyPartsSlots.Body.setPosition(left, bottom);
-            this.bodyPartsSlots.Clothes.setPosition(middle, bottom);
+            this.bodyPartsSlots.Body.setPosition(left, top);
+            this.bodyPartsSlots.Eyes.setPosition(middle, top);
+            this.bodyPartsSlots.Hair.setPosition(right, top);
+            this.bodyPartsSlots.Clothes.setPosition(left, bottom);
+            this.bodyPartsSlots.Hat.setPosition(middle, bottom);
             this.bodyPartsSlots.Accessory.setPosition(right, bottom);
 
             return;
@@ -341,12 +364,12 @@ export class CustomizeScene extends AbstractCharacterScene {
         const middle = Math.floor(top + slotSize + 10);
         const bottom = Math.floor(middle + slotSize + 10);
 
-        this.bodyPartsSlots.Hair.setPosition(left, top);
-        this.bodyPartsSlots.Body.setPosition(left, middle);
-        this.bodyPartsSlots.Accessory.setPosition(ratio < 0.6 ? leftEdge : left, ratio < 0.6 ? middle : bottom);
-        this.bodyPartsSlots.Hat.setPosition(right, top);
-        this.bodyPartsSlots.Clothes.setPosition(right, middle);
-        this.bodyPartsSlots.Eyes.setPosition(ratio < 0.6 ? rightEdge : right, ratio < 0.6 ? middle : bottom);
+        this.bodyPartsSlots.Body.setPosition(left, top);
+        this.bodyPartsSlots.Eyes.setPosition(left, middle);
+        this.bodyPartsSlots.Hair.setPosition(ratio < 0.6 ? leftEdge : left, ratio < 0.6 ? middle : bottom);
+        this.bodyPartsSlots.Clothes.setPosition(right, top);
+        this.bodyPartsSlots.Hat.setPosition(right, middle);
+        this.bodyPartsSlots.Accessory.setPosition(ratio < 0.6 ? rightEdge : right, ratio < 0.6 ? middle : bottom);
     }
 
     private handleBodyPartsDraggableGridOnResize(): void {
@@ -356,6 +379,12 @@ export class CustomizeScene extends AbstractCharacterScene {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
             y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
         };
+
+        this.bodyPartsDraggableGridLeftShadow.setPosition(0, this.cameras.main.worldView.y + this.cameras.main.height);
+        this.bodyPartsDraggableGridRightShadow.setPosition(
+            this.cameras.main.worldView.x + this.cameras.main.width,
+            this.cameras.main.worldView.y + this.cameras.main.height
+        );
 
         this.drawGridBackground(gridPos);
         this.drawGridForeground(gridPos);
@@ -371,6 +400,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.populateGrid();
         this.bodyPartsDraggableGrid.moveContentToBeginning();
+        void this.bodyPartsDraggableGrid.moveContentTo(0.5, 500);
     }
 
     private handleRandomizeButtonOnResize(): void {
@@ -456,6 +486,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
 
         this.bodyPartsDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaBodyPartSlot) => {
+            void this.bodyPartsDraggableGrid.centerOnItem(this.bodyPartsDraggableGrid.getAllItems().indexOf(item), 500);
             this.bodyPartsDraggableGrid.getAllItems().forEach((slot) => (slot as WokaBodyPartSlot).select(false));
             this.changeOutfitPart(Number(item.getId()));
             this.refreshPlayerCurrentOutfit();
@@ -480,7 +511,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         if (this.selectedBodyPartType === undefined) {
             return;
         }
-        const slotDimension = 100;
 
         const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
 
@@ -496,7 +526,7 @@ export class CustomizeScene extends AbstractCharacterScene {
                     offsetY: 0,
                 },
                 i
-            ).setDisplaySize(slotDimension, slotDimension);
+            ).setDisplaySize(this.SLOT_DIMENSION, this.SLOT_DIMENSION);
             if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
                 slot.setBodyTexture(bodyPartsLayer[i].id);
                 slot.setImageTexture();
@@ -509,6 +539,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.bodyPartsDraggableGrid.addItem(slot);
         }
         this.bodyPartsDraggableGrid.moveContentToBeginning();
+        void this.bodyPartsDraggableGrid.moveContentTo(0.5, 500);
     }
 
     private clearGrid(): void {

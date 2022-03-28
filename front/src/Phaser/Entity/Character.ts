@@ -255,7 +255,6 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
             this.add(sprite);
-            console.log(texture);
             getPlayerAnimations(texture).forEach((d) => {
                 this.scene.anims.create({
                     key: d.key,
