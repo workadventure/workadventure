@@ -57,15 +57,13 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Sprache",
         },
-        //TODO: German translation
         privacySettings: {
-            title: "Away mode settings",
+            title: "Einstellungen Abwesenheitsmodus",
             explanation:
-                'When the WorkAdventure tab is not visible, it switches to "away mode". In this mode, you can decide to automatically disable your webcam and/or microphone for as long as the tab stays hidden.',
-            cameraToggle: "Camera",
-            microphoneToggle: "Microphone",
+                "Falls der WorkAdventure Tab nicht aktiv ist wird in den Abwesenheitsmodus umgeschaltet. Für diesen Modus kann eingestellt werden, ob die Kamera und/oder das Mikrofon deaktiviert sind solange der Tab nicht sichtbar ist.",
+            cameraToggle: "Kamera",
+            microphoneToggle: "Mikrofon",
         },
-        //END-TODO: German translation
         save: {
             warning: "(Das Spiel wird nach dem Speichern neugestartet)",
             button: "Speichern",
