@@ -9,6 +9,7 @@ import { EnableCameraSceneName } from "../Login/EnableCameraScene";
 import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { GameScene } from "./GameScene";
+import { EmptySceneName } from "../Login/EmptyScene";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -32,7 +33,14 @@ export class GameManager {
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
         this.scenePlugin = scenePlugin;
-        this.startRoom = await connectionManager.initGameConnexion();
+        const result = await connectionManager.initGameConnexion();
+        if (result instanceof URL) {
+            window.location.assign(result.toString());
+            // window.location.assign is not immediate and Javascript keeps running after.
+            // so we need to redirect to an empty Phaser scene, waiting for the redirection to take place
+            return EmptySceneName;
+        }
+        this.startRoom = result;
         this.loadMap(this.startRoom);
 
         //If player name was not set show login scene with player name
