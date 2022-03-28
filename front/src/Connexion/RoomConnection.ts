@@ -17,8 +17,8 @@ import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTe
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { warningContainerStore } from "../Stores/MenuStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -40,8 +40,12 @@ import {
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
+    CharacterLayerMessage,
 } from "../Messages/ts-proto-generated/messages";
 import { Subject } from "rxjs";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 
 const manualPingDelay = 20000;
 
@@ -205,6 +209,7 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
+            const initCharacterLayers = characterLayers;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
@@ -326,17 +331,42 @@ export class RoomConnection implements RoomConnection {
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
 
+                    // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
+                    if (
+                        roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
+                        roomJoinedMessage.characterLayer.find((layer) => !layer.url)
+                    ) {
+                        this.goToSelectYourWokaScene();
+                        this.closed = true;
+                    }
+
+                    if (this.closed) {
+                        this.closeConnection();
+                        break;
+                    }
+
+                    const characterLayers = roomJoinedMessage.characterLayer.map(
+                        this.mapCharacterLayerToBodyResourceDescription.bind(this)
+                    );
+
                     this._roomJoinedMessageStream.next({
                         connection: this,
                         room: {
                             items,
                             variables,
+                            characterLayers,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
                 }
                 case "worldFullMessage": {
                     this._worldFullMessageStream.next(null);
+                    this.closed = true;
+                    break;
+                }
+                case "invalidTextureMessage": {
+                    this.goToSelectYourWokaScene();
+
                     this.closed = true;
                     break;
                 }
@@ -584,6 +614,15 @@ export class RoomConnection implements RoomConnection {
         });
     }*/
 
+    private mapCharacterLayerToBodyResourceDescription(
+        characterLayer: CharacterLayerMessage
+    ): BodyResourceDescriptionInterface {
+        return {
+            id: characterLayer.name,
+            img: characterLayer.url,
+        };
+    }
+
     // TODO: move this to protobuf utils
     private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
         const position = message.position;
@@ -591,12 +630,7 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message.characterLayers.map((characterLayer): BodyResourceDescriptionInterface => {
-            return {
-                name: characterLayer.name,
-                img: characterLayer.url,
-            };
-        });
+        const characterLayers = message.characterLayers.map(this.mapCharacterLayerToBodyResourceDescription.bind(this));
 
         const companion = message.companion;
 
@@ -869,5 +903,12 @@ export class RoomConnection implements RoomConnection {
 
     public get userRoomToken(): string | undefined {
         return this._userRoomToken;
+    }
+
+    private goToSelectYourWokaScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 }

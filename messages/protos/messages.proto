@@ -1,7 +1,5 @@
 syntax = "proto3";
 
-import "google/protobuf/wrappers.proto";
-
 /*********** PARTIAL MESSAGES **************/
 
 message PositionMessage {
@@ -36,6 +34,7 @@ message SilentMessage {
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
+  string layer = 3;
 }
 
 message CompanionMessage {
@@ -236,6 +235,8 @@ message RoomJoinedMessage {
   repeated string tag = 5;
   repeated VariableMessage variable = 6;
   string userRoomToken = 7;
+  // We send the current skin of the current player.
+  repeated CharacterLayerMessage characterLayer = 8;
 }
 
 message WebRtcStartMessage {
@@ -287,6 +288,8 @@ message WorldFullMessage{
 }
 message TokenExpiredMessage{
 }
+message InvalidTextureMessage{
+}
 
 message WorldConnexionMessage{
   string message = 2;
@@ -323,7 +326,8 @@ message ServerToClientMessage {
     FollowRequestMessage followRequestMessage = 21;
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
-    GroupUsersUpdateMessage groupUsersUpdateMessage = 24;
+    InvalidTextureMessage invalidTextureMessage = 24;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
   }
 }
 
@@ -364,9 +368,9 @@ message UserLeftZoneMessage {
 message GroupUpdateZoneMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  google.protobuf.UInt32Value  groupSize = 3;
+  int32  groupSize = 3;
   Zone fromZone = 4;
-  google.protobuf.BoolValue locked = 5;
+  bool locked = 5;
 }
 
 message GroupLeftZoneMessage {

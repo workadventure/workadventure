@@ -92,8 +92,10 @@ export class PositionDispatcher {
 
     public removeViewport(socket: ExSocketInterface): void {
         // Also, let's stop listening on viewports
-        for (const zone of socket.listenedZones) {
-            this.stopListening(zone, socket);
+        if (socket.listenedZones) {
+            for (const zone of socket.listenedZones) {
+                this.stopListening(zone, socket);
+            }
         }
     }
 

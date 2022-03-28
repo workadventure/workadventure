@@ -11,7 +11,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
+import { visibilityStore } from "./VisibilityStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -242,6 +242,7 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         isSilentStore,
+        visibilityStore,
     ],
     (
         [
@@ -254,6 +255,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $isSilentStore,
+            $visibilityStore,
         ],
         set
     ) => {
@@ -292,7 +294,14 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            currentVideoConstraint = false;
+            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+            if (!userMicrophonePrivacySetting) {
+                currentAudioConstraint = false;
+            }
+            if (!userCameraPrivacySetting) {
+                currentVideoConstraint = false;
+            }
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
@@ -545,8 +554,12 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 
 export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
+    let soundMeter: SoundMeter;
     const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
         if (localStreamStoreValue.type === "error") {
             set(undefined);
             return;
@@ -557,7 +570,7 @@ export const localVolumeStore = readable<number | undefined>(undefined, (set) =>
             set(undefined);
             return;
         }
-        const soundMeter = new SoundMeter(mediaStream);
+        soundMeter = new SoundMeter(mediaStream);
         let error = false;
 
         timeout = setInterval(() => {
@@ -575,6 +588,9 @@ export const localVolumeStore = readable<number | undefined>(undefined, (set) =>
     return () => {
         unsubscribe();
         clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
     };
 });
 

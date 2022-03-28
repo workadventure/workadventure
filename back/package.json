@@ -55,7 +55,8 @@
     "query-string": "^6.13.3",
     "redis": "^3.1.2",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
-    "uuidv4": "^6.0.7"
+    "uuidv4": "^6.0.7",
+    "zod": "^3.12.0"
   },
   "devDependencies": {
     "@types/busboy": "^0.2.3",

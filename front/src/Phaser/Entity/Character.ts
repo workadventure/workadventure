@@ -10,7 +10,7 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
@@ -18,6 +18,7 @@ import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
+import { Deferred } from "ts-deferred";
 
 const playerNameY = -25;
 
@@ -50,6 +51,11 @@ export abstract class Character extends Container implements OutlineableInterfac
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
 
+    /**
+     * A deferred promise that resolves when the texture of the character is actually displayed.
+     */
+    private textureLoadedDeferred = new Deferred<void>();
+
     constructor(
         scene: GameScene,
         x: number,
@@ -78,16 +84,35 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
-                    this.addTextures(textures, frame);
-                    this.invisible = false;
-                    this.playAnimation(direction, moving);
-                });
+                return lazyLoadPlayerCharacterTextures(scene.superLoad, [
+                    {
+                        id: "color_22",
+                        img: "resources/customisation/character_color/character_color21.png",
+                    },
+                    {
+                        id: "eyes_23",
+                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                    },
+                ])
+                    .then((textures) => {
+                        this.addTextures(textures, frame);
+                        this.invisible = false;
+                        this.playAnimation(direction, moving);
+                        this.textureLoadedDeferred.resolve();
+                        return this.getSnapshot().then((htmlImageElementSrc) => {
+                            this._pictureStore.set(htmlImageElementSrc);
+                        });
+                    })
+                    .catch((e) => {
+                        this.textureLoadedDeferred.reject(e);
+                        throw e;
+                    });
             })
             .finally(() => {
                 this.texturePromise = undefined;
@@ -507,5 +532,14 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
+    }
+
+    /**
+     * Returns a promise that resolves as soon as a texture is displayed for the user.
+     * The promise will return when the required texture is loaded OR when the fallback texture is loaded (in case
+     * the required texture could not be loaded).
+     */
+    public getTextureLoadedPromise(): PromiseLike<void> {
+        return this.textureLoadedDeferred.promise;
     }
 }

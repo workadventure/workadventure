@@ -105,6 +105,7 @@ export class SocketManager {
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
+        roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
 
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();

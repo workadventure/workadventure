@@ -28,7 +28,7 @@ import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "src/RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetailsData";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
@@ -36,7 +36,7 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
-import { isRoomRedirect } from "../Services/AdminApi/RoomRedirect";
+import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -580,8 +580,11 @@ export class GameRoom {
             return {
                 mapUrl,
                 policy_type: 1,
-                textures: [],
                 tags: [],
+                authenticationMandatory: null,
+                roomSlug: null,
+                contactPage: null,
+                group: null,
             };
         }
 
