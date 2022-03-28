@@ -44,7 +44,6 @@
 
     async function logOut() {
         disableMenuStores();
-        loginSceneVisibleStore.set(true);
         return connectionManager.logout();
     }
 

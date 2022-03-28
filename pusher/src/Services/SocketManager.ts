@@ -39,6 +39,7 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
+    LockGroupPromptMessage,
     InvalidTextureMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -295,6 +296,12 @@ export class SocketManager implements ZoneEventListener {
     handleFollowAbort(client: ExSocketInterface, message: FollowAbortMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setFollowabortmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setLockgrouppromptmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 

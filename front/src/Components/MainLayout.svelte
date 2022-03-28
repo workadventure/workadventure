@@ -54,6 +54,7 @@
     });
 </script>
 
+<!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
     <aside id="main-layout-left-aside">
         {#if $menuIconVisiblilityStore}
@@ -104,12 +105,12 @@
             <ShareLinkMapModal />
         {/if}
 
-        {#if $followStateStore !== "off" || $peerStore.size > 0}
-            <FollowMenu />
-        {/if}
-
         {#if $actionsMenuStore}
             <ActionsMenu />
+        {/if}
+
+        {#if $followStateStore !== "off" || $peerStore.size > 0}
+            <FollowMenu />
         {/if}
 
         {#if $requestVisitCardsStore}

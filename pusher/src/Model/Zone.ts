@@ -123,19 +123,25 @@ export class UserDescriptor {
 }
 
 export class GroupDescriptor {
-    private constructor(public readonly groupId: number, private groupSize: number, private position: PointMessage) {}
+    private constructor(
+        public readonly groupId: number,
+        private groupSize: number,
+        private position: PointMessage,
+        private locked: boolean
+    ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
         const position = message.getPosition();
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position);
+        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
     public update(groupDescriptor: GroupDescriptor) {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
+        this.locked = groupDescriptor.locked;
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
@@ -146,7 +152,7 @@ export class GroupDescriptor {
         groupUpdateMessage.setGroupid(this.groupId);
         groupUpdateMessage.setGroupsize(this.groupSize);
         groupUpdateMessage.setPosition(this.position);
-
+        groupUpdateMessage.setLocked(this.locked);
         return groupUpdateMessage;
     }
 }
@@ -206,9 +212,7 @@ export class Zone {
                         this.notifyGroupMove(groupDescriptor);
                     } else {
                         this.groups.set(groupId, groupDescriptor);
-
                         const fromZone = groupUpdateZoneMessage.getFromzone();
-
                         this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
                     }
                 } else if (message.hasUserleftzonemessage()) {
