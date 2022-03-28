@@ -539,11 +539,6 @@ functional-red-black-tree@^1.0.1:
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
   integrity sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=
 
-generic-type-guard@^3.2.0:
-  version "3.6.0"
-  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.6.0.tgz#4c398bba04040280eca222ad218790b471bea6fc"
-  integrity sha512-GqQfDGvTtT6etPRBkfbarOl2RIYVgr7b+uGzrKaEW/jW62SHTjcNbTsZwR1CXwLBnNDV6kPJD4563WJuZDhFMw==
-
 glob-parent@^5.0.0, glob-parent@~5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"
