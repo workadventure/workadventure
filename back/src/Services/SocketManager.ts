@@ -287,7 +287,9 @@ export class SocketManager {
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
-                (groupId: number, listener: ZoneSocket) => this.onLockGroup(groupId, listener, roomPromise),
+                (groupId: number, listener: ZoneSocket) => {
+                    void this.onLockGroup(groupId, listener, roomPromise);
+                },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
@@ -391,7 +393,11 @@ export class SocketManager {
         emitZoneMessage(subMessage, client);
     }
 
-    private async onLockGroup(groupId: number, client: ZoneSocket, roomPromise: PromiseLike<GameRoom> | undefined) {
+    private async onLockGroup(
+        groupId: number,
+        client: ZoneSocket,
+        roomPromise: PromiseLike<GameRoom> | undefined
+    ): Promise<void> {
         if (!roomPromise) {
             return;
         }
