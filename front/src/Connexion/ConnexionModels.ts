@@ -43,8 +43,8 @@ export interface PositionInterface {
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface;
     groupId: number;
-    groupSize: number;
-    locked: boolean;
+    groupSize?: number;
+    locked?: boolean;
 }
 
 export interface GroupUsersUpdateMessageInterface {
