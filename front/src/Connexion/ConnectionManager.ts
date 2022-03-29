@@ -88,8 +88,7 @@ class ConnectionManager {
      * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
     public async initGameConnexion(): Promise<Room | URL> {
-        const connexionType = urlManager.getGameConnexionType();
-        this.connexionType = connexionType;
+        this.connexionType = urlManager.getGameConnexionType();
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -102,14 +101,15 @@ class ConnectionManager {
             urlParams.delete("token");
         }
 
-        if (connexionType === GameConnexionTypes.login) {
+        if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
             const redirect = this.loadOpenIDScreen();
             if (redirect !== null) {
                 return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.jwt) {
+        } else if (this.connexionType === GameConnexionTypes.jwt) {
+            /** @deprecated */
             if (!token) {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
@@ -135,8 +135,9 @@ class ConnectionManager {
                 return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.register) {
-            //@deprecated
+        }
+        //@deprecated
+        else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
             const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
@@ -165,11 +166,11 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
+        } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
-            if (connexionType === GameConnexionTypes.empty) {
+            if (this.connexionType === GameConnexionTypes.empty) {
                 roomPath = localUserStore.getLastRoomUrl();
                 //get last room path from cache api
                 try {

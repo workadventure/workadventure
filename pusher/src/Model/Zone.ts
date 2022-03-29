@@ -22,6 +22,7 @@ import {
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "_Model/PositionDispatcher";
 import Debug from "debug";
+import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("zone");
 
@@ -123,19 +124,25 @@ export class UserDescriptor {
 }
 
 export class GroupDescriptor {
-    private constructor(public readonly groupId: number, private groupSize: number, private position: PointMessage) {}
+    private constructor(
+        public readonly groupId: number,
+        private groupSize: number | undefined,
+        private position: PointMessage,
+        private locked: boolean | undefined
+    ) {}
 
     public static createFromGroupUpdateZoneMessage(message: GroupUpdateZoneMessage): GroupDescriptor {
         const position = message.getPosition();
         if (position === undefined) {
             throw new Error("Missing position");
         }
-        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position);
+        return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
     public update(groupDescriptor: GroupDescriptor) {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
+        this.locked = groupDescriptor.locked;
     }
 
     public toGroupUpdateMessage(): GroupUpdateMessage {
@@ -144,9 +151,13 @@ export class GroupDescriptor {
             throw new Error("GroupDescriptor.groupId is not an integer: " + this.groupId);
         }
         groupUpdateMessage.setGroupid(this.groupId);
-        groupUpdateMessage.setGroupsize(this.groupSize);
+        if (this.groupSize !== undefined) {
+            groupUpdateMessage.setGroupsize(new UInt32Value().setValue(this.groupSize));
+        }
         groupUpdateMessage.setPosition(this.position);
-
+        if (this.locked !== undefined) {
+            groupUpdateMessage.setLocked(new BoolValue().setValue(this.locked));
+        }
         return groupUpdateMessage;
     }
 }
@@ -206,9 +217,7 @@ export class Zone {
                         this.notifyGroupMove(groupDescriptor);
                     } else {
                         this.groups.set(groupId, groupDescriptor);
-
                         const fromZone = groupUpdateZoneMessage.getFromzone();
-
                         this.notifyGroupEnter(groupDescriptor, fromZone?.toObject());
                     }
                 } else if (message.hasUserleftzonemessage()) {

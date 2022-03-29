@@ -14,6 +14,7 @@ export class Group implements Movable {
     private x!: number;
     private y!: number;
     private wasDestroyed: boolean = false;
+    private locked: boolean = false;
     private roomId: string;
     private currentZone: Zone | null = null;
     /**
@@ -141,15 +142,19 @@ export class Group implements Movable {
         return this.users.size >= MAX_PER_GROUP;
     }
 
+    isLocked(): boolean {
+        return this.locked;
+    }
+
     isEmpty(): boolean {
         return this.users.size <= 1;
     }
 
     join(user: User): void {
         // Broadcast on the right event
-        this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
+        this.connectCallback(user, this);
     }
 
     leave(user: User): void {
@@ -165,6 +170,10 @@ export class Group implements Movable {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
+    }
+
+    lock(lock: boolean = true): void {
+        this.locked = lock;
     }
 
     /**

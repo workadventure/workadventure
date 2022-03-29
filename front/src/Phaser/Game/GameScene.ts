@@ -76,6 +76,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
+import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -177,6 +178,7 @@ export class GameScene extends DirtyScene {
     private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
@@ -218,6 +220,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private currentPlayerGroupId?: number;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -839,6 +842,10 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    this.currentPlayerGroupId = message.groupId;
+                });
+
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
@@ -969,7 +976,9 @@ export class GameScene extends DirtyScene {
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
         // context.lineWidth = 5;
         context.strokeStyle = "#ffffff";
+        context.fillStyle = "#ffffff44";
         context.stroke();
+        context.fill();
         this.circleTexture.refresh();
 
         //create red circle canvas use to create sprite
@@ -979,7 +988,9 @@ export class GameScene extends DirtyScene {
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
         //context.lineWidth = 5;
         contextRed.strokeStyle = "#ff0000";
+        contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
+        contextRed.fill();
         this.circleRedTexture.refresh();
     }
 
@@ -1849,12 +1860,14 @@ ${escapedMessage}
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
-                case "DeleteGroupEvent":
-                    this.doDeleteGroup(event.groupId);
-                    break;
                 case "PlayerDetailsUpdated":
                     this.doUpdatePlayerDetails(event.details);
                     break;
+                case "DeleteGroupEvent": {
+                    this.doDeleteGroup(event.groupId);
+                    currentPlayerGroupLockStateStore.set(undefined);
+                    break;
+                }
                 default: {
                     const tmp: never = event;
                 }
@@ -2028,11 +2041,16 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === MAX_PER_GROUP ? "circleSprite-red" : "circleSprite-white"
+            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
+                ? "circleSprite-red"
+                : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
+        if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
+            currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
+        }
         return sprite;
     }
 
