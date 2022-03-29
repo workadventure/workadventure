@@ -109,7 +109,7 @@ class ConnectionManager {
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (this.connexionType === GameConnexionTypes.jwt) {
-        /** @deprecated */
+            /** @deprecated */
             if (!token) {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");

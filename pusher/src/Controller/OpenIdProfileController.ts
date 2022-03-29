@@ -19,7 +19,7 @@ export class OpenIdProfileController extends BaseHttpController {
                 res.send(
                     this.buildHtml(
                         OPID_CLIENT_ISSUER,
-                        resCheckTokenAuth.sub as string
+                        resCheckTokenAuth.sub
                         /*resCheckTokenAuth.picture as string | undefined*/
                     )
                 );
