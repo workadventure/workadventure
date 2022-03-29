@@ -41,7 +41,7 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
-} from "../Messages/ts-proto-generated/messages";
+} from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
