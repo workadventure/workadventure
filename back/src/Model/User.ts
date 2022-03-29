@@ -15,6 +15,7 @@ import {
     SubMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
+import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -120,9 +121,9 @@ export class User implements Movable {
 
         const playerDetails = new SetPlayerDetailsMessage();
         if (value === undefined) {
-            playerDetails.setRemoveoutlinecolor(true);
+            playerDetails.setRemoveoutlinecolor(new BoolValue().setValue(true));
         } else {
-            playerDetails.setOutlinecolor(value);
+            playerDetails.setOutlinecolor(new UInt32Value().setValue(value));
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

@@ -213,7 +213,7 @@ export class GameRoom {
         if (playerDetailsMessage.getRemoveoutlinecolor()) {
             user.outlineColor = undefined;
         } else {
-            user.outlineColor = playerDetailsMessage.getOutlinecolor();
+            user.outlineColor = playerDetailsMessage.getOutlinecolor()?.getValue();
         }
     }
 

@@ -87,7 +87,7 @@ export class UserDescriptor {
         if (playerDetails.getRemoveoutlinecolor()) {
             this.outlineColor = undefined;
         } else {
-            this.outlineColor = playerDetails.getOutlinecolor();
+            this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
     }
 
