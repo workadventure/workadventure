@@ -18,7 +18,7 @@ import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
 
-import { lazyLoadPlayerCharacterTextures, loadWokaTexture } from "../Entity/PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
@@ -76,6 +76,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
+import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -97,8 +98,10 @@ import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
+import { Deferred } from "ts-deferred";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -164,13 +167,9 @@ export class GameScene extends DirtyScene {
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
-    private connectionAnswerPromise: Promise<RoomJoinedMessageInterface>;
-    private connectionAnswerPromiseResolve!: (
-        value: RoomJoinedMessageInterface | PromiseLike<RoomJoinedMessageInterface>
-    ) => void;
+    private connectionAnswerPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
-    private createPromise: Promise<void>;
-    private createPromiseResolve!: (value?: void | PromiseLike<void>) => void;
+    private createPromiseDeferred: Deferred<void>;
     private iframeSubscriptionList!: Array<Subscription>;
     private peerStoreUnsubscribe!: Unsubscriber;
     private emoteUnsubscribe!: Unsubscriber;
@@ -179,6 +178,7 @@ export class GameScene extends DirtyScene {
     private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
@@ -220,6 +220,8 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private currentPlayerGroupId?: number;
+    public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -232,13 +234,10 @@ export class GameScene extends DirtyScene {
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
 
-        this.createPromise = new Promise<void>((resolve, reject): void => {
-            this.createPromiseResolve = resolve;
-        });
-        this.connectionAnswerPromise = new Promise<RoomJoinedMessageInterface>((resolve, reject): void => {
-            this.connectionAnswerPromiseResolve = resolve;
-        });
+        this.createPromiseDeferred = new Deferred<void>();
+        this.connectionAnswerPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
         this.loader = new Loader(this);
+        this.superLoad = new SuperLoaderPlugin(this);
     }
 
     //hook preload scene
@@ -408,11 +407,11 @@ export class GameScene extends DirtyScene {
             this.load.on("complete", () => {
                 // FIXME: the factory might fail because the resources might not be loaded yet...
                 // We would need to add a loader ended event in addition to the createPromise
-                this.createPromise
+                this.createPromiseDeferred.promise
                     .then(async () => {
                         itemFactory.create(this);
 
-                        const roomJoinedAnswer = await this.connectionAnswerPromise;
+                        const roomJoinedAnswer = await this.connectionAnswerPromiseDeferred.promise;
 
                         for (const object of objectsOfType) {
                             // TODO: we should pass here a factory to create sprites (maybe?)
@@ -609,7 +608,7 @@ export class GameScene extends DirtyScene {
             }
         }
 
-        this.createPromiseResolve();
+        this.createPromiseDeferred.resolve();
         // Now, let's load the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
@@ -635,7 +634,7 @@ export class GameScene extends DirtyScene {
         }
 
         const talkIconVolumeTreshold = 10;
-        let oldPeerNumber = 0;
+        const oldPeers = new Map<number, VideoPeer>();
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
             this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
             this.volumeStoreUnsubscribers.clear();
@@ -652,10 +651,17 @@ export class GameScene extends DirtyScene {
             }
 
             const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeerNumber) {
+            if (newPeerNumber > oldPeers.size) {
                 this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeerNumber) {
+            } else if (newPeerNumber < oldPeers.size) {
                 this.playSound("audio-webrtc-out");
+                const oldPeersKeys = oldPeers.keys();
+                const newPeersKeys = Array.from(peers.keys());
+                for (const oldKey of oldPeersKeys) {
+                    if (!newPeersKeys.includes(oldKey)) {
+                        this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
+                    }
+                }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
@@ -673,7 +679,10 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
-            oldPeerNumber = newPeerNumber;
+            oldPeers.clear();
+            for (const [key, val] of peers) {
+                oldPeers.set(key, val);
+            }
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
@@ -702,7 +711,15 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        Promise.all([this.connectionAnswerPromise as Promise<unknown>, ...scriptPromises])
+        this.currentPlayerGroupIdStoreUnsubscribe = currentPlayerGroupIdStore.subscribe((groupId) => {
+            this.currentPlayerGroupId = groupId;
+        });
+
+        Promise.all([
+            this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
+            ...scriptPromises,
+            this.CurrentPlayer.getTextureLoadedPromise() as Promise<unknown>,
+        ])
             .then(() => {
                 this.scene.wake();
             })
@@ -739,7 +756,7 @@ export class GameScene extends DirtyScene {
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
 
-                lazyLoadPlayerCharacterTextures(this.load, onConnect.room.characterLayers)
+                lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterLayers)
                     .then((layers) => {
                         this.currentPlayerTexturesResolve(layers);
                     })
@@ -829,6 +846,11 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    // TODO: how else can we deduce our current group?
+                    currentPlayerGroupIdStore.set(message.groupId);
+                });
+
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
@@ -868,7 +890,7 @@ export class GameScene extends DirtyScene {
                 );
 
                 //this.initUsersPosition(roomJoinedMessage.users);
-                this.connectionAnswerPromiseResolve(onConnect.room);
+                this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 if (this.scene.isSleeping()) {
@@ -959,7 +981,9 @@ export class GameScene extends DirtyScene {
         context.arc(48, 48, 48, 0, 2 * Math.PI, false);
         // context.lineWidth = 5;
         context.strokeStyle = "#ffffff";
+        context.fillStyle = "#ffffff44";
         context.stroke();
+        context.fill();
         this.circleTexture.refresh();
 
         //create red circle canvas use to create sprite
@@ -969,7 +993,9 @@ export class GameScene extends DirtyScene {
         contextRed.arc(48, 48, 48, 0, 2 * Math.PI, false);
         //context.lineWidth = 5;
         contextRed.strokeStyle = "#ff0000";
+        contextRed.fillStyle = "#ff000044";
         contextRed.stroke();
+        contextRed.fill();
         this.circleRedTexture.refresh();
     }
 
@@ -1283,7 +1309,7 @@ ${escapedMessage}
         iframeListener.registerAnswerer("getState", async () => {
             // The sharedVariablesManager is not instantiated before the connection is established. So we need to wait
             // for the connection to send back the answer.
-            await this.connectionAnswerPromise;
+            await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
                 startLayerName: this.startPositionCalculator.startLayerName,
@@ -1306,7 +1332,7 @@ ${escapedMessage}
             })
         );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
-            return this.connectionAnswerPromise.then(() => {
+            return this.connectionAnswerPromiseDeferred.promise.then(() => {
                 const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
                 //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
                 let newFirstgid = 1;
@@ -1839,12 +1865,15 @@ ${escapedMessage}
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
-                case "DeleteGroupEvent":
-                    this.doDeleteGroup(event.groupId);
-                    break;
                 case "PlayerDetailsUpdated":
                     this.doUpdatePlayerDetails(event.details);
                     break;
+                case "DeleteGroupEvent": {
+                    this.doDeleteGroup(event.groupId);
+                    currentPlayerGroupIdStore.set(undefined);
+                    currentPlayerGroupLockStateStore.set(undefined);
+                    break;
+                }
                 default: {
                     const tmp: never = event;
                 }
@@ -1907,7 +1936,7 @@ ${escapedMessage}
             return;
         }
 
-        const texturesPromise = lazyLoadPlayerCharacterTextures(this.load, addPlayerData.characterLayers);
+        const texturesPromise = lazyLoadPlayerCharacterTextures(this.superLoad, addPlayerData.characterLayers);
         const player = new RemotePlayer(
             addPlayerData.userId,
             addPlayerData.userUuid,
@@ -2018,11 +2047,16 @@ ${escapedMessage}
             this,
             Math.round(groupPositionMessage.position.x),
             Math.round(groupPositionMessage.position.y),
-            groupPositionMessage.groupSize === MAX_PER_GROUP ? "circleSprite-red" : "circleSprite-white"
+            groupPositionMessage.groupSize === MAX_PER_GROUP || groupPositionMessage.locked
+                ? "circleSprite-red"
+                : "circleSprite-white"
         );
         sprite.setDisplayOrigin(48, 48);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
+        if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
+            currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
+        }
         return sprite;
     }
 
@@ -2078,8 +2112,6 @@ ${escapedMessage}
             right: camera.scrollX + camera.width,
             bottom: camera.scrollY + camera.height,
         });
-
-        this.loader.resize();
     }
 
     private getObjectLayerData(objectName: string): ITiledMapObject | undefined {

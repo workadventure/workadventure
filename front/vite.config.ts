@@ -12,6 +12,9 @@ export default defineConfig({
             clientPort: 80,
         },
     },
+    build: {
+        sourcemap: true,
+    },
     plugins: [
         svelte({
             preprocess: sveltePreprocess(),

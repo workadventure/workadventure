@@ -21,6 +21,7 @@ import {
     FollowConfirmationMessage,
     FollowAbortMessage,
     VariableMessage,
+    LockGroupPromptMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -37,7 +38,7 @@ import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
-import { WokaDetail } from "../Enum/PlayerTextures";
+import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -561,6 +562,11 @@ export class IoSocketController {
                     );
                 } else if (message.hasFollowabortmessage()) {
                     socketManager.handleFollowAbort(client, message.getFollowabortmessage() as FollowAbortMessage);
+                } else if (message.hasLockgrouppromptmessage()) {
+                    socketManager.handleLockGroup(
+                        client,
+                        message.getLockgrouppromptmessage() as LockGroupPromptMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

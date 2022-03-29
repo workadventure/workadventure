@@ -44,6 +44,12 @@ export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface;
     groupId: number;
     groupSize: number;
+    locked: boolean;
+}
+
+export interface GroupUsersUpdateMessageInterface {
+    groupId: number;
+    userIds: number[];
 }
 
 export interface WebRtcDisconnectMessageInterface {

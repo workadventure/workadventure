@@ -38,6 +38,9 @@ import {
     SubToPusherRoomMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
+    GroupUsersUpdateMessage,
+    LockGroupPromptMessage,
+    RoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -68,7 +71,6 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
     batchMessage.addPayload(subMessage);
-
     socket.write(batchMessage);
 }
 
@@ -266,18 +268,28 @@ export class SocketManager {
         if (roomPromise === undefined) {
             roomPromise = GameRoom.create(
                 roomId,
-                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                (user: User, group: Group) => this.disConnectedUser(user, group),
+                (user: User, group: Group) => {
+                    this.joinWebRtcRoom(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
+                (user: User, group: Group) => {
+                    this.disConnectedUser(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
-                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
-                    this.onZoneEnter(thing, fromZone, listener),
+                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => {
+                    this.onZoneEnter(thing, fromZone, listener);
+                },
                 (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
                     this.onClientMove(thing, position, listener),
                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
+                (groupId: number, listener: ZoneSocket) => {
+                    void this.onLockGroup(groupId, listener, roomPromise);
+                },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
@@ -381,10 +393,24 @@ export class SocketManager {
         emitZoneMessage(subMessage, client);
     }
 
+    private async onLockGroup(
+        groupId: number,
+        client: ZoneSocket,
+        roomPromise: PromiseLike<GameRoom> | undefined
+    ): Promise<void> {
+        if (!roomPromise) {
+            return;
+        }
+        const group = (await roomPromise).getGroupById(groupId);
+        if (!group) {
+            return;
+        }
+        this.emitCreateUpdateGroupEvent(client, null, group);
+    }
+
     private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -398,6 +424,7 @@ export class SocketManager {
         groupUpdateMessage.setPosition(pointMessage);
         groupUpdateMessage.setGroupsize(group.getSize);
         groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
+        groupUpdateMessage.setLocked(group.isLocked());
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -413,7 +440,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupleftzonemessage(groupDeleteMessage);
-
         emitZoneMessage(subMessage, client);
         //user.emitInBatch(subMessage);
     }
@@ -425,7 +451,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setUserleftzonemessage(userLeftMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -437,6 +462,19 @@ export class SocketManager {
             return zoneMessage;
         }
         return undefined;
+    }
+
+    private sendGroupUsersUpdateToGroupMembers(group: Group) {
+        const groupUserUpdateMessage = new GroupUsersUpdateMessage();
+        groupUserUpdateMessage.setGroupid(group.getId());
+        groupUserUpdateMessage.setUseridsList(group.getUsers().map((user) => user.id));
+
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setGroupusersupdatemessage(groupUserUpdateMessage);
+
+        group.getUsers().forEach((currentUser: User) => {
+            currentUser.socket.write(clientMessage);
+        });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
@@ -634,6 +672,7 @@ export class SocketManager {
                 const groupUpdateMessage = new GroupUpdateZoneMessage();
                 groupUpdateMessage.setGroupid(thing.getId());
                 groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
+                groupUpdateMessage.setLocked(thing.isLocked());
 
                 const subMessage = new SubToPusherMessage();
                 subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -869,6 +908,15 @@ export class SocketManager {
             const leader = room.getUserById(message.getLeader());
             leader?.delFollower(user);
         }
+    }
+
+    handleLockGroupPromptMessage(room: GameRoom, user: User, message: LockGroupPromptMessage) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        group.lock(message.getLock());
+        room.emitLockGroupEvent(user, group.getId());
     }
 }
 

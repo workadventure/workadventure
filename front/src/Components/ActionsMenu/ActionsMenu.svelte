@@ -77,6 +77,7 @@
         height: max-content !important;
         max-height: 40vh;
         margin-top: 200px;
+        z-index: 425;
 
         pointer-events: auto;
         font-family: "Press Start 2P";
