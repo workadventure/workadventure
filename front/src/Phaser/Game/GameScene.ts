@@ -76,7 +76,7 @@ import { userIsAdminStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
-import { currentPlayerGroupIdStore, currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -711,10 +711,6 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        this.currentPlayerGroupIdStoreUnsubscribe = currentPlayerGroupIdStore.subscribe((groupId) => {
-            this.currentPlayerGroupId = groupId;
-        });
-
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
@@ -847,8 +843,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
-                    // TODO: how else can we deduce our current group?
-                    currentPlayerGroupIdStore.set(message.groupId);
+                    this.currentPlayerGroupId = message.groupId;
                 });
 
                 /**
@@ -1870,7 +1865,6 @@ ${escapedMessage}
                     break;
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
-                    currentPlayerGroupIdStore.set(undefined);
                     currentPlayerGroupLockStateStore.set(undefined);
                     break;
                 }
