@@ -43,6 +43,7 @@ import {
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
     RoomMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -622,6 +623,22 @@ export class SocketManager {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
         const meetingName = joinBBBMeetingMessage.getMeetingname();
 
+        if (BBB_URL.length == 0 || BBB_SECRET.length == 0) {
+            const errorStr =
+                "Unable to join the conference because either " +
+                "the BBB_URL or BBB_SECRET environment variables are not set.";
+
+            console.error(errorStr);
+
+            const errorMessage = new ErrorMessage();
+            errorMessage.setMessage(errorStr);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setErrormessage(errorMessage);
+            user.socket.write(serverToClientMessage);
+
+            return;
+        }
         const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
