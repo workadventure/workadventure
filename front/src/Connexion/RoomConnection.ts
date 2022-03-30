@@ -440,6 +440,7 @@ export class RoomConnection implements RoomConnection {
                 case "bbbMeetingClientURLMessage": {
                     this._bbbMeetingClientURLMessageStream.next(message.bbbMeetingClientURLMessage);
                     break;
+                }
                 case "groupUsersUpdateMessage": {
                     this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
