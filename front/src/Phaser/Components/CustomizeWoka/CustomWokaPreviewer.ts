@@ -53,7 +53,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
-        this.background = this.scene.add.image(0, 0, "floorTexture");
+        this.background = this.scene.add.image(0, 0, "floorTexture1");
         this.frame = this.scene.add.graphics();
         this.drawFrame();
         this.setSize(this.SIZE, this.SIZE);
