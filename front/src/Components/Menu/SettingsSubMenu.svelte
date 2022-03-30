@@ -17,9 +17,14 @@
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
+    let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
+    let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
+    let previewCameraPrivacySettings = valueCameraPrivacySettings;
+    let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
     function saveSetting() {
         let change = false;
@@ -38,6 +43,16 @@
             previewValueGame = valueGame;
             localUserStore.setGameQualityValue(valueGame);
             change = true;
+        }
+
+        if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
+            previewCameraPrivacySettings = valueCameraPrivacySettings;
+            localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
+        }
+
+        if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
+            previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+            localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
         }
 
         audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
@@ -162,6 +177,19 @@
             </select>
         </div>
     </section>
+
+    <section>
+        <h3>{$LL.menu.settings.privacySettings.title()}</h3>
+        <p>{$LL.menu.settings.privacySettings.explanation()}</p>
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueCameraPrivacySettings} />
+            <span>{$LL.menu.settings.privacySettings.cameraToggle()}</span>
+        </label>
+        <label>
+            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueMicrophonePrivacySettings} />
+            <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
+        </label>
+    </section>
     <section class="settings-section-save">
         <p>{$LL.menu.settings.save.warning()}</p>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
@@ -204,15 +232,15 @@
                 on:change={changeIgnoreFollowRequests}
             />
             <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
-            />
-            <span>{$LL.audio.manager.reduce()}</span>
+            <label>
+                <input
+                    type="checkbox"
+                    class="nes-checkbox is-dark"
+                    bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                    on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+                />
+                <span>{$LL.audio.manager.reduce()}</span>
+            </label>
         </label>
     </section>
 </div>
@@ -234,12 +262,15 @@
                 outline: none;
             }
         }
+
         section.settings-section-save {
             text-align: center;
+
             p {
                 margin: 16px 0;
             }
         }
+
         section.settings-section-noSaveOption {
             display: flex;
             align-items: center;

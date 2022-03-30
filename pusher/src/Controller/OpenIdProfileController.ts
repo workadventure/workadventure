@@ -13,14 +13,14 @@ export class OpenIdProfileController extends BaseHttpController {
             }
             try {
                 const resCheckTokenAuth = await openIDClient.checkTokenAuth(accessToken as string);
-                if (!resCheckTokenAuth.email) {
+                if (!resCheckTokenAuth.sub) {
                     throw new Error("Email was not found");
                 }
                 res.send(
                     this.buildHtml(
                         OPID_CLIENT_ISSUER,
-                        resCheckTokenAuth.email as string,
-                        resCheckTokenAuth.picture as string | undefined
+                        resCheckTokenAuth.sub
+                        /*resCheckTokenAuth.picture as string | undefined*/
                     )
                 );
                 return;

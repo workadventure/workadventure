@@ -280,6 +280,9 @@ export class UserInputManager {
         );
 
         this.scene.input.keyboard.on("keyup-SPACE", (event: Event) => {
+            if (this.isInputDisabled) {
+                return;
+            }
             this.userInputHandler.handleSpaceKeyUpEvent(event);
         });
     }

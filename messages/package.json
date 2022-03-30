@@ -6,7 +6,7 @@
     "proto": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --grpc_out=generated --js_out=\"import_style=commonjs,binary:generated\" --ts_out=generated -I ./protos protos/*.proto",
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=ts-proto-generated --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true protos/*.proto",
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
-    "copy-to-front-ts-proto": "sed 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ts-proto-generated/protos/messages.ts > ../front/src/Messages/ts-proto-generated/messages.ts",
+    "copy-to-front-ts-proto": "cp -rf ts-proto-generated/* ../front/src/Messages/ts-proto-generated/ && sed -i 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ../front/src/Messages/ts-proto-generated/protos/messages.ts",
     "copy-to-pusher": "rm -rf ../pusher/src/Messages/generated && cp -rf generated/ ../pusher/src/Messages/generated",
     "json-copy-to-pusher": "rm -rf ../pusher/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../pusher/src/Messages/JsonMessages/",
     "json-copy-to-back": "rm -rf ../back/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../back/src/Messages/JsonMessages/",
