@@ -140,27 +140,27 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconHair",
             }),
             [CustomWokaBodyPart.Body]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconBody",
             }),
             [CustomWokaBodyPart.Accessory]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconAccessory",
             }),
             [CustomWokaBodyPart.Hat]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconHat",
             }),
             [CustomWokaBodyPart.Clothes]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconClothes",
             }),
             [CustomWokaBodyPart.Eyes]: new WokaBodyPartSlot(this, 0, 0, {
-                ...this.getDefaultWokaBodyPartSlotConfig(),
+                ...this.getWokaBodyPartSlotConfig(),
                 categoryImageKey: "iconEyes",
             }),
         };
@@ -275,12 +275,27 @@ export class CustomizeScene extends AbstractCharacterScene {
         for (const layerItem of this.selectedLayers) {
             const bodyPart = CustomWokaBodyPart[CustomWokaBodyPartOrder[i] as CustomWokaBodyPart];
             this.customWokaPreviewer.updateSprite(this.layers[i][layerItem].id, bodyPart);
-            this.bodyPartsSlots[bodyPart].setTextures(
-                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id,
-                this.layers[i][layerItem].id
-            );
             i += 1;
+            this.bodyPartsSlots[bodyPart].setTextures(this.getCurrentlySelectedWokaTexturesRecord());
         }
+    }
+
+    private getCurrentlySelectedWokaTexturesRecord(): Record<CustomWokaBodyPart, string> {
+        return {
+            [CustomWokaBodyPart.Accessory]:
+                this.layers[CustomWokaBodyPartOrder.Accessory][this.selectedLayers[CustomWokaBodyPartOrder.Accessory]]
+                    .id,
+            [CustomWokaBodyPart.Body]:
+                this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id,
+            [CustomWokaBodyPart.Clothes]:
+                this.layers[CustomWokaBodyPartOrder.Clothes][this.selectedLayers[CustomWokaBodyPartOrder.Clothes]].id,
+            [CustomWokaBodyPart.Eyes]:
+                this.layers[CustomWokaBodyPartOrder.Eyes][this.selectedLayers[CustomWokaBodyPartOrder.Eyes]].id,
+            [CustomWokaBodyPart.Hair]:
+                this.layers[CustomWokaBodyPartOrder.Hair][this.selectedLayers[CustomWokaBodyPartOrder.Hair]].id,
+            [CustomWokaBodyPart.Hat]:
+                this.layers[CustomWokaBodyPartOrder.Hat][this.selectedLayers[CustomWokaBodyPartOrder.Hat]].id,
+        };
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
@@ -408,12 +423,17 @@ export class CustomizeScene extends AbstractCharacterScene {
         };
     }
 
-    private getDefaultWokaBodyPartSlotConfig(): WokaBodyPartSlotConfig {
+    private getWokaBodyPartSlotConfig(bodyPart?: CustomWokaBodyPart, newTextureKey?: string): WokaBodyPartSlotConfig {
+        const textures = this.getCurrentlySelectedWokaTexturesRecord();
+        if (bodyPart && newTextureKey) {
+            textures[bodyPart] = newTextureKey;
+        }
         return {
             color: 0xffffff,
             borderThickness: 1,
             borderColor: 0xadafbc,
             borderSelectedColor: 0x209cee,
+            textureKeys: textures,
             offsetX: -4,
             offsetY: 2,
         };
@@ -448,7 +468,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             slot.on(WokaBodyPartSlotEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
                     this.selectedBodyPartType = bodyPart as CustomWokaBodyPart;
-                    this.selectedItemTextureKey = slot.getContentData().key ?? slot.getContentData().bodyImageKey;
+                    this.selectedItemTextureKey = slot.getContentData()[this.selectedBodyPartType];
                     this.deselectAllSlots();
                     slot.select(true);
                     this.populateGrid();
@@ -479,13 +499,12 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private selectGridItem(): WokaBodyPartSlot | undefined {
-        const items = this.bodyPartsDraggableGrid.getAllItems() as WokaBodyPartSlot[];
-        let item: WokaBodyPartSlot | undefined;
-        if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
-            item = items.find((item) => item.getContentData().bodyImageKey === this.selectedItemTextureKey);
-        } else {
-            item = items.find((item) => item.getContentData().key === this.selectedItemTextureKey);
+        const bodyPartType = this.selectedBodyPartType;
+        if (!bodyPartType) {
+            return;
         }
+        const items = this.bodyPartsDraggableGrid.getAllItems() as WokaBodyPartSlot[];
+        const item = items.find((item) => item.getContentData()[bodyPartType] === this.selectedItemTextureKey);
         item?.select();
         return item;
     }
@@ -524,21 +543,12 @@ export class CustomizeScene extends AbstractCharacterScene {
                 0,
                 0,
                 {
-                    ...this.getDefaultWokaBodyPartSlotConfig(),
+                    ...this.getWokaBodyPartSlotConfig(this.selectedBodyPartType, bodyPartsLayer[i].id),
                     offsetX: 0,
                     offsetY: 0,
                 },
                 i
             ).setDisplaySize(this.SLOT_DIMENSION, this.SLOT_DIMENSION);
-            if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
-                slot.setBodyTexture(bodyPartsLayer[i].id);
-                slot.setImageTexture();
-            } else {
-                slot.setBodyTexture(
-                    this.layers[CustomWokaBodyPartOrder.Body][this.selectedLayers[CustomWokaBodyPartOrder.Body]].id
-                );
-                slot.setImageTexture(bodyPartsLayer[i].id);
-            }
             this.bodyPartsDraggableGrid.addItem(slot);
         }
     }

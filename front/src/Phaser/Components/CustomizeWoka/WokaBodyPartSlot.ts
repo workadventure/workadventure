@@ -1,5 +1,6 @@
 import { GridItem } from "@home-based-studio/phaser3-utils";
 import { GridItemEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/GridItem";
+import { CustomWokaBodyPart } from "./CustomWokaPreviewer";
 
 export interface WokaBodyPartSlotConfig {
     color: number;
@@ -8,9 +9,8 @@ export interface WokaBodyPartSlotConfig {
     borderSelectedColor: number;
     offsetX: number;
     offsetY: number;
-    bodyImageKey?: string;
+    textureKeys: Record<CustomWokaBodyPart, string>;
     categoryImageKey?: string;
-    imageKey?: string;
     selected?: boolean;
 }
 
@@ -22,8 +22,7 @@ export class WokaBodyPartSlot extends GridItem {
     private background: Phaser.GameObjects.Image;
     private frame: Phaser.GameObjects.Graphics;
     private categoryImage?: Phaser.GameObjects.Image;
-    private bodyImage: Phaser.GameObjects.Image;
-    private image: Phaser.GameObjects.Image;
+    private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
 
     private config: WokaBodyPartSlotConfig;
 
@@ -36,12 +35,43 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.config = config;
 
+        const textures = this.config.textureKeys;
+        this.sprites = {
+            [CustomWokaBodyPart.Accessory]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Accessory)
+                .setVisible(textures.Accessory !== ""),
+            [CustomWokaBodyPart.Body]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Body)
+                .setVisible(textures.Body !== ""),
+            [CustomWokaBodyPart.Clothes]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Clothes)
+                .setVisible(textures.Clothes !== ""),
+            [CustomWokaBodyPart.Eyes]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Eyes)
+                .setVisible(textures.Eyes !== ""),
+            [CustomWokaBodyPart.Hair]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Hair)
+                .setVisible(textures.Hair !== ""),
+            [CustomWokaBodyPart.Hat]: this.scene.add
+                .sprite(this.config.offsetX, this.config.offsetY, textures.Hat)
+                .setVisible(textures.Hat !== ""),
+        };
+
         this.selected = this.config.selected ?? false;
 
         this.background = this.background = this.scene.add.image(0, 0, "floorTexture");
         this.frame = this.scene.add.graphics();
         this.drawFrame();
-        this.add([this.background, this.frame]);
+        this.add([
+            this.background,
+            this.frame,
+            this.sprites.Body,
+            this.sprites.Eyes,
+            this.sprites.Hair,
+            this.sprites.Clothes,
+            this.sprites.Hat,
+            this.sprites.Accessory,
+        ]);
 
         if (this.config.categoryImageKey) {
             this.categoryImage = this.scene.add
@@ -52,18 +82,7 @@ export class WokaBodyPartSlot extends GridItem {
             this.add(this.categoryImage);
         }
 
-        this.bodyImage = this.scene.add
-            .image(this.config.offsetX, this.config.offsetY, this.config.bodyImageKey ?? "")
-            .setVisible(this.config.imageKey !== undefined);
-
-        this.image = this.scene.add
-            .image(this.config.offsetX, this.config.offsetY, this.config.imageKey ?? "")
-            .setVisible(this.config.bodyImageKey !== undefined);
-
         this.setSize(WokaBodyPartSlot.SIZE, WokaBodyPartSlot.SIZE);
-
-        this.add([this.bodyImage, this.image]);
-
         this.setInteractive({ cursor: "pointer" });
         this.scene.input.setDraggable(this);
 
@@ -72,29 +91,18 @@ export class WokaBodyPartSlot extends GridItem {
         this.scene.add.existing(this);
     }
 
-    public getContentData(): { bodyImageKey?: string; key?: string } {
-        return { bodyImageKey: this.config.bodyImageKey, key: this.config.imageKey };
+    public getContentData(): Record<CustomWokaBodyPart, string> {
+        return this.config.textureKeys;
     }
 
-    public setTextures(bodyTextureKey?: string, imageTextureKey?: string): void {
-        this.setBodyTexture(bodyTextureKey);
-        this.setImageTexture(imageTextureKey);
-    }
-
-    public setBodyTexture(textureKey?: string, frame?: string | number): void {
-        this.bodyImage.setVisible(textureKey !== undefined && textureKey !== "");
-        if (textureKey) {
-            this.bodyImage.setTexture(textureKey, frame);
-            this.config.bodyImageKey = textureKey;
-        }
-    }
-
-    public setImageTexture(textureKey?: string, frame?: string | number): void {
-        this.image.setVisible(textureKey !== undefined && textureKey !== "");
-        if (textureKey) {
-            this.image.setTexture(textureKey, frame);
-            this.config.imageKey = textureKey;
-        }
+    public setTextures(textureKeys: Record<CustomWokaBodyPart, string>): void {
+        this.config.textureKeys = textureKeys;
+        this.sprites.Accessory.setTexture(textureKeys.Accessory).setVisible(textureKeys.Accessory !== "");
+        this.sprites.Body.setTexture(textureKeys.Body).setVisible(textureKeys.Body !== "");
+        this.sprites.Clothes.setTexture(textureKeys.Clothes).setVisible(textureKeys.Clothes !== "");
+        this.sprites.Eyes.setTexture(textureKeys.Eyes).setVisible(textureKeys.Eyes !== "");
+        this.sprites.Hair.setTexture(textureKeys.Hair).setVisible(textureKeys.Hair !== "");
+        this.sprites.Hat.setTexture(textureKeys.Hat).setVisible(textureKeys.Hat !== "");
     }
 
     public select(select: boolean = true): void {

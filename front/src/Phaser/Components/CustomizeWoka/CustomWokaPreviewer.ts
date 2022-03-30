@@ -1,4 +1,3 @@
-import { MathUtils } from "../../../Utils/MathUtils";
 import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../../Player/Animation";
 
 export enum CustomWokaBodyPart {
