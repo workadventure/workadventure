@@ -126,7 +126,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.bodyPartsDraggableGridLeftShadow = this.add
             .image(0, this.cameras.main.worldView.y + this.cameras.main.height, "gridEdgeShadow")
             .setAlpha(1, 0, 1, 0)
-            .setOrigin(0, 1);
+            .setOrigin(0, 0.5);
 
         this.bodyPartsDraggableGridRightShadow = this.add
             .image(
@@ -136,7 +136,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             )
             .setAlpha(1, 0, 1, 0)
             .setFlipX(true)
-            .setOrigin(1, 1);
+            .setOrigin(1, 0.5);
 
         this.bodyPartsSlots = {
             [CustomWokaBodyPart.Hair]: new WokaBodyPartSlot(this, 0, 0, {
@@ -186,9 +186,9 @@ export class CustomizeScene extends AbstractCharacterScene {
     public onResize(): void {
         this.handleCustomWokaPreviewerOnResize();
         this.handleBodyPartSlotsOnResize();
-        this.handleBodyPartsDraggableGridOnResize();
         this.handleRandomizeButtonOnResize();
         this.handleFinishButtonOnResize();
+        this.handleBodyPartsDraggableGridOnResize();
     }
 
     public nextSceneToCamera() {
@@ -340,15 +340,24 @@ export class CustomizeScene extends AbstractCharacterScene {
     private handleBodyPartsDraggableGridOnResize(): void {
         const gridHeight = 110;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
+
+        const gridTopMargin = Math.max(
+            this.finishButton.y + this.finishButton.displayHeight * 0.5,
+            this.bodyPartsSlots.Hair.y + this.bodyPartsSlots.Hair.displayHeight * 0.5
+        );
+        const gridBottomMargin = this.cameras.main.worldView.y + this.cameras.main.height;
+
+        const yPos = gridTopMargin + (gridBottomMargin - gridTopMargin) * 0.5;
+
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
-            y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5 - 5,
+            y: yPos,
         };
 
-        this.bodyPartsDraggableGridLeftShadow.setPosition(0, this.cameras.main.worldView.y + this.cameras.main.height);
+        this.bodyPartsDraggableGridLeftShadow.setPosition(0, yPos);
         this.bodyPartsDraggableGridRightShadow.setPosition(
             this.cameras.main.worldView.x + this.cameras.main.width,
-            this.cameras.main.worldView.y + this.cameras.main.height
+            yPos
         );
 
         try {
