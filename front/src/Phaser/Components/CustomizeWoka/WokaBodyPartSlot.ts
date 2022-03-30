@@ -19,7 +19,8 @@ export enum WokaBodyPartSlotEvent {
 }
 
 export class WokaBodyPartSlot extends GridItem {
-    private background: Phaser.GameObjects.Graphics;
+    private background: Phaser.GameObjects.Image;
+    private frame: Phaser.GameObjects.Graphics;
     private categoryImage?: Phaser.GameObjects.Image;
     private bodyImage: Phaser.GameObjects.Image;
     private image: Phaser.GameObjects.Image;
@@ -37,9 +38,10 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.selected = this.config.selected ?? false;
 
-        this.background = this.scene.add.graphics();
-        this.drawBackground();
-        this.add(this.background);
+        this.background = this.background = this.scene.add.image(0, 0, "floorTexture");
+        this.frame = this.scene.add.graphics();
+        this.drawFrame();
+        this.add([this.background, this.frame]);
 
         if (this.config.categoryImageKey) {
             this.categoryImage = this.scene.add
@@ -115,21 +117,19 @@ export class WokaBodyPartSlot extends GridItem {
         });
     }
 
-    private drawBackground(): void {
-        this.background.clear();
-        this.background.fillStyle(0xffffff);
-        this.background.lineStyle(
+    private drawFrame(): void {
+        this.frame.clear();
+        this.frame.lineStyle(
             this.config.borderThickness,
             this.selected ? this.config.borderSelectedColor : this.config.borderColor
         );
 
         const size = WokaBodyPartSlot.SIZE;
 
-        this.background.fillRect(-size / 2, -size / 2, size, size);
-        this.background.strokeRect(-size / 2, -size / 2, size, size);
+        this.frame.strokeRect(-size / 2, -size / 2, size, size);
     }
 
     private updateSelected(): void {
-        this.drawBackground();
+        this.drawFrame();
     }
 }

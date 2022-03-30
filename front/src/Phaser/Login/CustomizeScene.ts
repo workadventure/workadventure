@@ -32,8 +32,6 @@ export const CustomizeSceneName = "CustomizeScene";
 
 export class CustomizeScene extends AbstractCharacterScene {
     private customWokaPreviewer!: CustomWokaPreviewer;
-    private bodyPartsDraggableGridBackground!: Phaser.GameObjects.Graphics;
-    private bodyPartsDraggableGridForeground!: Phaser.GameObjects.Graphics;
     private bodyPartsDraggableGridLeftShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGridRightShadow!: Phaser.GameObjects.Image;
     private bodyPartsDraggableGrid!: DraggableGrid;
@@ -69,8 +67,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.load.image("iconHair", "/resources/icons/icon_hair.png");
         this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
         this.load.image("iconBody", "/resources/icons/icon_body.png");
+        this.load.spritesheet("floorTiles", "/resources/tilesets/floor_tiles.png", { frameWidth: 32, frameHeight: 32 });
 
-        TexturesHelper.createRectangleTexture(this, "gridEdgeShadow", 200, 115, 0x000000);
+        TexturesHelper.createRectangleTexture(this, "gridEdgeShadow", this.cameras.main.width * 0.2, 115, 0x000000);
 
         const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
         this.cache.json.remove(wokaMetadataKey);
@@ -99,24 +98,13 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        TexturesHelper.createFloorRectangleTexture(this, "floorTexture", 50, 50, "floorTiles", 0);
         this.customWokaPreviewer = new CustomWokaPreviewer(
             this,
             0,
             0,
             this.getCustomWokaPreviewerConfig()
         ).setDisplaySize(200, 200);
-
-        this.bodyPartsDraggableGridBackground = this.add.graphics();
-
-        const gridBackgroundWidth = 500;
-        const gridBackgroundHeight = 170;
-        this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
-        this.bodyPartsDraggableGridBackground.fillRect(
-            -gridBackgroundWidth / 2,
-            -gridBackgroundHeight / 2,
-            gridBackgroundWidth,
-            gridBackgroundHeight
-        );
 
         this.bodyPartsDraggableGrid = new DraggableGrid(this, {
             position: { x: 0, y: 0 },
@@ -134,7 +122,6 @@ export class CustomizeScene extends AbstractCharacterScene {
                 showDraggableSpace: false,
             },
         });
-        this.bodyPartsDraggableGridForeground = this.add.graphics();
 
         this.bodyPartsDraggableGridLeftShadow = this.add
             .image(0, this.cameras.main.worldView.y + this.cameras.main.height, "gridEdgeShadow")
@@ -229,32 +216,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.stop(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
-    }
-
-    private drawGridBackground(gridPosition: { x: number; y: number }): void {
-        const gridBackgroundWidth = innerWidth / waScaleManager.getActualZoom();
-        const gridBackgroundHeight = 115;
-        this.bodyPartsDraggableGridBackground.clear();
-        this.bodyPartsDraggableGridBackground.fillStyle(0xf9f9f9);
-        this.bodyPartsDraggableGridBackground.fillRect(
-            gridPosition.x - gridBackgroundWidth / 2,
-            gridPosition.y - gridBackgroundHeight / 2,
-            gridBackgroundWidth,
-            gridBackgroundHeight
-        );
-    }
-
-    private drawGridForeground(gridPosition: { x: number; y: number }): void {
-        const gridBackgroundWidth = (innerWidth + 10) / waScaleManager.getActualZoom();
-        const gridBackgroundHeight = 115;
-        this.bodyPartsDraggableGridForeground.clear();
-        this.bodyPartsDraggableGridForeground.lineStyle(4, 0xadafbc);
-        this.bodyPartsDraggableGridForeground.strokeRect(
-            gridPosition.x - gridBackgroundWidth / 2,
-            gridPosition.y - gridBackgroundHeight / 2,
-            gridBackgroundWidth,
-            gridBackgroundHeight
-        );
     }
 
     private initializeRandomizeButton(): void {
@@ -381,7 +342,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
-            y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5,
+            y: this.cameras.main.worldView.y + this.cameras.main.height - gridHeight * 0.5 - 5,
         };
 
         this.bodyPartsDraggableGridLeftShadow.setPosition(0, this.cameras.main.worldView.y + this.cameras.main.height);
@@ -390,8 +351,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.cameras.main.worldView.y + this.cameras.main.height
         );
 
-        this.drawGridBackground(gridPos);
-        this.drawGridForeground(gridPos);
         try {
             this.bodyPartsDraggableGrid.changeDraggableSpacePosAndSize(
                 gridPos,

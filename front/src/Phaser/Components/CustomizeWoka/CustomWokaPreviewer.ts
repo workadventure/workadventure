@@ -27,7 +27,8 @@ export interface CustomWokaPreviewerConfig {
 }
 
 export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
-    private background: Phaser.GameObjects.Graphics;
+    private background: Phaser.GameObjects.Image;
+    private frame: Phaser.GameObjects.Graphics;
     private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
 
     private animationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -53,13 +54,15 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
-        this.background = this.scene.add.graphics();
-        this.drawBackground();
+        this.background = this.scene.add.image(0, 0, "floorTexture");
+        this.frame = this.scene.add.graphics();
+        this.drawFrame();
         this.setSize(this.SIZE, this.SIZE);
         this.setInteractive({ cursor: "pointer" });
 
         this.add([
             this.background,
+            this.frame,
             this.sprites.Body,
             this.sprites.Eyes,
             this.sprites.Hair,
@@ -118,13 +121,10 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         });
     }
 
-    private drawBackground(): void {
-        this.background.clear();
-        this.background.fillStyle(0xffffff);
-        this.background.lineStyle(this.config.borderThickness, 0xadafbc);
-
-        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
-        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+    private drawFrame(): void {
+        this.frame.clear();
+        this.frame.lineStyle(this.config.borderThickness, 0xadafbc);
+        this.frame.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
     }
 
     private animate(): void {
