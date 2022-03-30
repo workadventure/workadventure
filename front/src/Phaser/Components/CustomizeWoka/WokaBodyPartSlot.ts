@@ -1,6 +1,5 @@
 import { GridItem } from "@home-based-studio/phaser3-utils";
 import { GridItemEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/GridItem";
-import { MathUtils } from "../../../Utils/MathUtils";
 
 export interface WokaBodyPartSlotConfig {
     color: number;
@@ -52,12 +51,12 @@ export class WokaBodyPartSlot extends GridItem {
         }
 
         this.bodyImage = this.scene.add
-            .image(this.config.offsetX, this.config.offsetY, config.bodyImageKey ?? "")
-            .setVisible(config.imageKey !== undefined);
+            .image(this.config.offsetX, this.config.offsetY, this.config.bodyImageKey ?? "")
+            .setVisible(this.config.imageKey !== undefined);
 
         this.image = this.scene.add
-            .image(this.config.offsetX, this.config.offsetY, config.imageKey ?? "")
-            .setVisible(config.bodyImageKey !== undefined);
+            .image(this.config.offsetX, this.config.offsetY, this.config.imageKey ?? "")
+            .setVisible(this.config.bodyImageKey !== undefined);
 
         this.setSize(WokaBodyPartSlot.SIZE, WokaBodyPartSlot.SIZE);
 
@@ -71,6 +70,10 @@ export class WokaBodyPartSlot extends GridItem {
         this.scene.add.existing(this);
     }
 
+    public getContentData(): { bodyImageKey?: string; key?: string } {
+        return { bodyImageKey: this.config.bodyImageKey, key: this.config.imageKey };
+    }
+
     public setTextures(bodyTextureKey?: string, imageTextureKey?: string): void {
         this.setBodyTexture(bodyTextureKey);
         this.setImageTexture(imageTextureKey);
@@ -80,6 +83,7 @@ export class WokaBodyPartSlot extends GridItem {
         this.bodyImage.setVisible(textureKey !== undefined && textureKey !== "");
         if (textureKey) {
             this.bodyImage.setTexture(textureKey, frame);
+            this.config.bodyImageKey = textureKey;
         }
     }
 
@@ -87,6 +91,7 @@ export class WokaBodyPartSlot extends GridItem {
         this.image.setVisible(textureKey !== undefined && textureKey !== "");
         if (textureKey) {
             this.image.setTexture(textureKey, frame);
+            this.config.imageKey = textureKey;
         }
     }
 

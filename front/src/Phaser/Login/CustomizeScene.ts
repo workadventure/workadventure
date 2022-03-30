@@ -45,6 +45,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
+    private selectedItemTextureKey?: string;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
 
@@ -98,7 +99,6 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
-        this.selectedBodyPartType = CustomWokaBodyPart.Body;
         this.customWokaPreviewer = new CustomWokaPreviewer(
             this,
             0,
@@ -177,6 +177,10 @@ export class CustomizeScene extends AbstractCharacterScene {
                 categoryImageKey: "iconEyes",
             }),
         };
+
+        this.selectedBodyPartType = CustomWokaBodyPart.Body;
+        this.selectedItemTextureKey = this.layers[CustomWokaBodyPartOrder.Body][0].id;
+        this.bodyPartsSlots.Body.select();
 
         this.initializeRandomizeButton();
         this.initializeFinishButton();
@@ -399,8 +403,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
 
         this.populateGrid();
-        this.bodyPartsDraggableGrid.moveContentToBeginning();
-        void this.bodyPartsDraggableGrid.moveContentTo(0.5, 500);
+        const selectedGridItem = this.selectGridItem();
+        if (selectedGridItem) {
+            this.centerGridOnItem(selectedGridItem);
+        }
     }
 
     private handleRandomizeButtonOnResize(): void {
@@ -474,9 +480,19 @@ export class CustomizeScene extends AbstractCharacterScene {
             slot.on(WokaBodyPartSlotEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
                     this.selectedBodyPartType = bodyPart as CustomWokaBodyPart;
+                    this.selectedItemTextureKey = slot.getContentData().key ?? slot.getContentData().bodyImageKey;
                     this.deselectAllSlots();
                     slot.select(true);
                     this.populateGrid();
+                    if (!this.selectedItemTextureKey) {
+                        return;
+                    }
+                    const selectedGridItem = this.selectGridItem();
+                    if (!selectedGridItem) {
+                        return;
+                    }
+                    this.bodyPartsDraggableGrid.moveContentToBeginning();
+                    this.centerGridOnItem(selectedGridItem);
                 } else {
                     this.selectedBodyPartType = undefined;
                     slot.select(false);
@@ -492,6 +508,25 @@ export class CustomizeScene extends AbstractCharacterScene {
             this.refreshPlayerCurrentOutfit();
             item.select(true);
         });
+    }
+
+    private selectGridItem(): WokaBodyPartSlot | undefined {
+        const items = this.bodyPartsDraggableGrid.getAllItems() as WokaBodyPartSlot[];
+        let item: WokaBodyPartSlot | undefined;
+        if (this.selectedBodyPartType === CustomWokaBodyPart.Body) {
+            item = items.find((item) => item.getContentData().bodyImageKey === this.selectedItemTextureKey);
+        } else {
+            item = items.find((item) => item.getContentData().key === this.selectedItemTextureKey);
+        }
+        item?.select();
+        return item;
+    }
+
+    private centerGridOnItem(item: WokaBodyPartSlot, duration: number = 500): void {
+        void this.bodyPartsDraggableGrid.centerOnItem(
+            this.bodyPartsDraggableGrid.getAllItems().indexOf(item),
+            duration
+        );
     }
 
     private randomizeOutfit(): void {
@@ -514,7 +549,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         const bodyPartsLayer = this.layers[CustomWokaBodyPartOrder[this.selectedBodyPartType]];
 
-        this.bodyPartsDraggableGrid.clearAllItems();
+        this.clearGrid();
         for (let i = 0; i < bodyPartsLayer.length; i += 1) {
             const slot = new WokaBodyPartSlot(
                 this,
@@ -538,8 +573,6 @@ export class CustomizeScene extends AbstractCharacterScene {
             }
             this.bodyPartsDraggableGrid.addItem(slot);
         }
-        this.bodyPartsDraggableGrid.moveContentToBeginning();
-        void this.bodyPartsDraggableGrid.moveContentTo(0.5, 500);
     }
 
     private clearGrid(): void {
