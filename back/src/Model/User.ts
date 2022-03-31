@@ -124,7 +124,7 @@ export class User implements Movable {
     public updateDetails(details: SetPlayerDetailsMessage) {
         if (details.getRemoveoutlinecolor()) {
             this.outlineColor = undefined;
-        } else if (details.getOutlinecolor()) {
+        } else if (details.getOutlinecolor()?.getValue() !== undefined) {
             this.outlineColor = details.getOutlinecolor()?.getValue();
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
