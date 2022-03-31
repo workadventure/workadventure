@@ -504,6 +504,20 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }*/
 
+    public emitPlayerShowVoiceIndicator(show: boolean): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            showVoiceIndicator: show,
+        });
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
     public emitPlayerOutlineColor(color: number | null) {
         let message: SetPlayerDetailsMessageTsProto;
         if (color === null) {

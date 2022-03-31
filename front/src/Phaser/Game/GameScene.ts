@@ -220,6 +220,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private showVoiceIndicatorChangeMessageSent: boolean = false;
     private currentPlayerGroupId?: number;
     public readonly superLoad: SuperLoaderPlugin;
 
@@ -639,35 +640,45 @@ export class GameScene extends DirtyScene {
             this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
             this.volumeStoreUnsubscribers.clear();
 
-            for (const [key, videoStream] of peers) {
-                this.volumeStoreUnsubscribers.set(
-                    key,
-                    videoStream.volumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
-                        }
-                    })
-                );
-            }
+            // for (const [key, videoStream] of peers) {
+            //     this.volumeStoreUnsubscribers.set(
+            //         key,
+            //         videoStream.volumeStore.subscribe((volume) => {
+            //             if (volume) {
+            //                 this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
+            //             }
+            //         })
+            //     );
+            // }
 
             const newPeerNumber = peers.size;
             if (newPeerNumber > oldPeers.size) {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeers.size) {
                 this.playSound("audio-webrtc-out");
-                const oldPeersKeys = oldPeers.keys();
-                const newPeersKeys = Array.from(peers.keys());
-                for (const oldKey of oldPeersKeys) {
-                    if (!newPeersKeys.includes(oldKey)) {
-                        this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
-                    }
-                }
+                // const oldPeersKeys = oldPeers.keys();
+                // const newPeersKeys = Array.from(peers.keys());
+                // for (const oldKey of oldPeersKeys) {
+                //     if (!newPeersKeys.includes(oldKey)) {
+                //         this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
+                //     }
+                // }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        if (volume === undefined) {
+                            return;
+                        }
+                        const aboveTreshold = volume > talkIconVolumeTreshold;
+                        this.CurrentPlayer.showTalkIcon(aboveTreshold);
+
+                        if (this.showVoiceIndicatorChangeMessageSent && !aboveTreshold) {
+                            this.connection?.emitPlayerShowVoiceIndicator(false);
+                            this.showVoiceIndicatorChangeMessageSent = false;
+                        } else if (!this.showVoiceIndicatorChangeMessageSent && aboveTreshold) {
+                            this.connection?.emitPlayerShowVoiceIndicator(true);
+                            this.showVoiceIndicatorChangeMessageSent = true;
                         }
                     });
                 }
@@ -842,6 +853,7 @@ export class GameScene extends DirtyScene {
                             userId: message.userId,
                             outlineColor: message.details.outlineColor,
                             removeOutlineColor: message.details.removeOutlineColor,
+                            showVoiceIndicator: message.details.showVoiceIndicator,
                         },
                     });
                 });
@@ -2077,6 +2089,7 @@ ${escapedMessage}
     }
 
     doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+        console.log(message);
         const character = this.MapPlayersByKey.get(message.userId);
         if (character === undefined) {
             console.log(
@@ -2090,6 +2103,9 @@ ${escapedMessage}
             character.removeApiOutlineColor();
         } else {
             character.setApiOutlineColor(message.outlineColor);
+        }
+        if (message.showVoiceIndicator !== undefined) {
+            character.showTalkIcon(message.showVoiceIndicator);
         }
     }
 

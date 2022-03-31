@@ -81,6 +81,7 @@ export interface PlayerDetailsUpdatedMessageInterface {
     userId: number;
     outlineColor: number;
     removeOutlineColor: boolean;
+    showVoiceIndicator: boolean;
 }
 
 export interface RoomJoinedMessageInterface {

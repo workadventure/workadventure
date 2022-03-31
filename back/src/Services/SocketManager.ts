@@ -338,11 +338,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
-            if (thing.outlineColor === undefined) {
+            const outlineColor = thing.getOutlineColor();
+            if (outlineColor === undefined) {
                 userJoinedZoneMessage.setHasoutline(false);
             } else {
                 userJoinedZoneMessage.setHasoutline(true);
-                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+                userJoinedZoneMessage.setOutlinecolor(outlineColor);
             }
 
             const subMessage = new SubToPusherMessage();
