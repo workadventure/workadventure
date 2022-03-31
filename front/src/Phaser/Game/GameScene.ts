@@ -175,7 +175,6 @@ export class GameScene extends DirtyScene {
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
 
-    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
@@ -635,34 +634,13 @@ export class GameScene extends DirtyScene {
         }
 
         const talkIconVolumeTreshold = 10;
-        const oldPeers = new Map<number, VideoPeer>();
+        let oldPeersNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
-            this.volumeStoreUnsubscribers.clear();
-
-            // for (const [key, videoStream] of peers) {
-            //     this.volumeStoreUnsubscribers.set(
-            //         key,
-            //         videoStream.volumeStore.subscribe((volume) => {
-            //             if (volume) {
-            //                 this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
-            //             }
-            //         })
-            //     );
-            // }
-
             const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeers.size) {
+            if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeers.size) {
+            } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
-                // const oldPeersKeys = oldPeers.keys();
-                // const newPeersKeys = Array.from(peers.keys());
-                // for (const oldKey of oldPeersKeys) {
-                //     if (!newPeersKeys.includes(oldKey)) {
-                //         this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
-                //     }
-                // }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
@@ -690,10 +668,7 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
-            oldPeers.clear();
-            for (const [key, val] of peers) {
-                oldPeers.set(key, val);
-            }
+            oldPeersNumber = peers.size;
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
@@ -2089,7 +2064,6 @@ ${escapedMessage}
     }
 
     doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
-        console.log(message);
         const character = this.MapPlayersByKey.get(message.userId);
         if (character === undefined) {
             console.log(

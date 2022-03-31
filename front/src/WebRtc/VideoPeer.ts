@@ -35,7 +35,6 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
-    public readonly volumeStore: Readable<number | undefined>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
@@ -69,42 +68,6 @@ export class VideoPeer extends Peer {
 
             return () => {
                 this.off("stream", onStream);
-            };
-        });
-
-        this.volumeStore = readable<number | undefined>(undefined, (set) => {
-            let timeout: ReturnType<typeof setTimeout>;
-            let soundMeter: SoundMeter;
-            const unsubscribe = this.streamStore.subscribe((mediaStream) => {
-                clearInterval(timeout);
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
-                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
-                    set(undefined);
-                    return;
-                }
-                soundMeter = new SoundMeter(mediaStream);
-                let error = false;
-
-                timeout = setInterval(() => {
-                    try {
-                        set(soundMeter.getVolume());
-                    } catch (err) {
-                        if (!error) {
-                            console.error(err);
-                            error = true;
-                        }
-                    }
-                }, 100);
-            });
-
-            return () => {
-                unsubscribe();
-                clearInterval(timeout);
-                if (soundMeter) {
-                    soundMeter.stop();
-                }
             };
         });
 
