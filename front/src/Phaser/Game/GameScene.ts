@@ -2075,7 +2075,7 @@ ${escapedMessage}
         }
         if (message.removeOutlineColor) {
             character.removeApiOutlineColor();
-        } else {
+        } else if (message.outlineColor !== undefined) {
             character.setApiOutlineColor(message.outlineColor);
         }
         if (message.showVoiceIndicator !== undefined) {
