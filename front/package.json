@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
-    "@geprog/vite-plugin-env-config": "^4.0.2",
+    "@geprog/vite-plugin-env-config": "^4.0.3",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
     "@tsconfig/svelte": "^1.0.10",
     "@types/google-protobuf": "^3.7.3",
