@@ -1,5 +1,5 @@
 import { User } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
+import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
 import { ZoneSocket } from "../RoomManager";

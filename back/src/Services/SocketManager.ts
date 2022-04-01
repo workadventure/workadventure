@@ -60,9 +60,9 @@ import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Zone } from "_Model/Zone";
+import { Zone } from "../Model/Zone";
 import Debug from "debug";
-import { Admin } from "_Model/Admin";
+import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 
 const debug = Debug("sockermanager");

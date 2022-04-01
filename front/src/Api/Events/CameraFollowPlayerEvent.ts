@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isCameraFollowPlayerEvent = new tg.IsInterface()
-    .withProperties({
-        smooth: tg.isBoolean,
-    })
-    .get();
+export const isCameraFollowPlayerEvent = z.object({
+    smooth: z.boolean(),
+});
+
 /**
  * A message sent from the iFrame to the game to make the camera follow player.
  */
-export type CameraFollowPlayerEvent = tg.GuardedType<typeof isCameraFollowPlayerEvent>;
+export type CameraFollowPlayerEvent = z.infer<typeof isCameraFollowPlayerEvent>;

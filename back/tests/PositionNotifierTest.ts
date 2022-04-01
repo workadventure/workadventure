@@ -1,9 +1,9 @@
 import "jasmine";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import { User, UserSocket } from "../src/Model/User";
-import { Zone } from "_Model/Zone";
-import { Movable } from "_Model/Movable";
-import { PositionInterface } from "_Model/PositionInterface";
+import { Zone } from "../src/Model/Zone";
+import { Movable } from "../src/Model/Movable";
+import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
 
 describe("PositionNotifier", () => {

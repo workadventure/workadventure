@@ -1,7 +1,4 @@
-import * as rax from "retry-axios";
-import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
-import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -106,17 +103,20 @@ export class Room {
                 },
             });
 
-            const data = result.data;
+            const data = result.data.data;
 
             if (data.authenticationMandatory !== undefined) {
                 data.authenticationMandatory = Boolean(data.authenticationMandatory);
             }
 
-            if (isRoomRedirect(data)) {
+            const roomRedirectChecking = isRoomRedirect.safeParse(data);
+            const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
+
+            if (roomRedirectChecking.success) {
                 return {
                     redirectUrl: data.redirectUrl,
                 };
-            } else if (isMapDetailsData(data)) {
+            } else if (mapDetailsDataChecking.success) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._group = data.group;
@@ -132,6 +132,9 @@ export class Room {
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 return new MapDetail(data.mapUrl);
             } else {
+                console.log(data);
+                console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
+                console.error("mapDetailsDataChecking", mapDetailsDataChecking.error.issues);
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {

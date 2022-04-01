@@ -1,7 +1,7 @@
 import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
+import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
     EntersCallback,
@@ -9,9 +9,9 @@ import {
     LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
-} from "_Model/Zone";
+} from "../Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
-import { Movable } from "_Model/Movable";
+import { Movable } from "../Model/Movable";
 import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
@@ -25,7 +25,7 @@ import {
     ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "src/RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
@@ -36,7 +36,6 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -585,12 +584,15 @@ export class GameRoom {
             };
         }
 
-        const result = await adminApi.fetchMapDetails(roomUrl);
-        if (isRoomRedirect(result)) {
-            console.error("Unexpected room redirect received while querying map details", result);
-            throw new Error("Unexpected room redirect received while querying map details");
+        const result = isMapDetailsData.safeParse(await adminApi.fetchMapDetails(roomUrl));
+
+        if (result.success) {
+            return result.data;
         }
-        return result;
+
+        console.error(result.error.issues);
+        console.error("Unexpected room redirect received while querying map details", result);
+        throw new Error("Unexpected room redirect received while querying map details");
     }
 
     private mapPromise: Promise<ITiledMap> | undefined;

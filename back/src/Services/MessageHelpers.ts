@@ -7,7 +7,7 @@ import {
     SubToPusherMessage,
     SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
-import { UserSocket } from "_Model/User";
+import { UserSocket } from "../Model/User";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 
 function getMessageFromError(error: unknown): string {

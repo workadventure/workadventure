@@ -1,28 +1,18 @@
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
 import { arrayIntersect } from "../Services/ArrayHelper";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { ZoneEventListener } from "../Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmoteEventMessage,
     ErrorMessage,
-    GroupLeftZoneMessage,
-    GroupUpdateZoneMessage,
     RoomMessage,
     SubMessage,
-    UserJoinedZoneMessage,
-    UserLeftZoneMessage,
-    UserMovedMessage,
-    VariableMessage,
     VariableWithTagMessage,
-    ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
 
 const debug = Debug("room");
 

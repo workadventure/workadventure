@@ -1,5 +1,9 @@
-import * as tg from "generic-type-guard";
 import { z } from "zod";
+
+/*
+ * WARNING! The original file is in /messages/JsonMessages.
+ * All other files are automatically copied from this file on container startup / build
+ */
 
 //The list of all the player textures, both the default models and the partial textures used for customization
 
@@ -33,16 +37,12 @@ export type WokaList = z.infer<typeof wokaList>;
 
 export const wokaPartNames = ["woka", "body", "eyes", "hair", "clothes", "hat", "accessory"];
 
-export const isWokaDetail = new tg.IsInterface()
-    .withProperties({
-        id: tg.isString,
-    })
-    .withOptionalProperties({
-        url: tg.isString,
-        layer: tg.isString,
-    })
-    .get();
+export const isWokaDetail = z.object({
+    id: z.string(),
+    url: z.optional(z.string()),
+    layer: z.optional(z.string()),
+});
 
-export type WokaDetail = tg.GuardedType<typeof isWokaDetail>;
+export type WokaDetail = z.infer<typeof isWokaDetail>;
 
 export type WokaDetailsResult = WokaDetail[];

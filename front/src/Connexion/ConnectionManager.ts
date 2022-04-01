@@ -4,7 +4,7 @@ import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import { localUserStore } from "./LocalUserStore";
-import { CharacterTexture, LocalUser } from "./LocalUser";
+import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -13,7 +13,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
-import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -139,13 +138,19 @@ class ConnectionManager {
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
+            const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            if (!isRegisterData(data)) {
-                console.error("Invalid data received from /register route. Data: ", data);
+
+            const registerDataChecking = isRegisterData.safeParse(result);
+
+            if (!registerDataChecking.success) {
+                console.error("Invalid data received from /register route. Data: ", result);
                 throw new Error("Invalid data received from /register route.");
             }
+
+            const data = registerDataChecking.data;
+
             this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);

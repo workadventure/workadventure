@@ -1,4 +1,4 @@
-import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface"; //TODO fix import by "_Model/.."
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
@@ -30,15 +30,16 @@ import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { SocketManager, socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
-import { Zone } from "_Model/Zone";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
+import { Zone } from "../Model/Zone";
+import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
+import { AdminMessageInterface, isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
+import { z } from "zod";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -98,9 +99,16 @@ export class IoSocketController {
             },
             message: (ws, arrayBuffer, isBinary): void => {
                 try {
-                    const message = JSON.parse(new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer)));
+                    const message: AdminMessageInterface = JSON.parse(
+                        new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
+                    );
 
-                    if (!isAdminMessageInterface(message)) {
+                    try {
+                        isAdminMessageInterface.parse(message);
+                    } catch (err) {
+                        if (err instanceof z.ZodError) {
+                            console.error(err.issues);
+                        }
                         console.error("Invalid message received.", message);
                         ws.send(
                             JSON.stringify({
@@ -186,8 +194,6 @@ export class IoSocketController {
                                     .catch((error) => console.error(error));
                             }
                         }
-                    } else {
-                        const tmp: never = message.event;
                     }
                 } catch (err) {
                     console.error(err);

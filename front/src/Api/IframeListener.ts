@@ -15,6 +15,7 @@ import {
     IframeResponseEventMap,
     isIframeEventWrapper,
     isIframeQueryWrapper,
+    isLookingLikeIframeEventWrapper,
 } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
@@ -150,8 +151,10 @@ class IframeListener {
 
                 const payload = message.data;
 
+                const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
+
                 if (foundSrc === undefined || iframe === undefined) {
-                    if (isIframeEventWrapper(payload)) {
+                    if (lookingLikeEvent.success) {
                         console.warn(
                             "It seems an iFrame is trying to communicate with WorkAdventure but was not explicitly granted the permission to do so. " +
                                 "If you are looking to use the WorkAdventure Scripting API inside an iFrame, you should allow the " +
@@ -221,63 +224,70 @@ class IframeListener {
                     } catch (reason) {
                         errorHandler(reason);
                     }
-                } else if (isIframeEventWrapper(payload)) {
-                    if (payload.type === "showLayer" && isLayerEvent(payload.data)) {
-                        this._showLayerStream.next(payload.data);
-                    } else if (payload.type === "hideLayer" && isLayerEvent(payload.data)) {
-                        this._hideLayerStream.next(payload.data);
-                    } else if (payload.type === "setProperty" && isSetPropertyEvent(payload.data)) {
-                        this._setPropertyStream.next(payload.data);
-                    } else if (payload.type === "cameraSet" && isCameraSetEvent(payload.data)) {
-                        this._cameraSetStream.next(payload.data);
-                    } else if (payload.type === "cameraFollowPlayer" && isCameraFollowPlayerEvent(payload.data)) {
-                        this._cameraFollowPlayerStream.next(payload.data);
-                    } else if (payload.type === "chat" && isChatEvent(payload.data)) {
-                        scriptUtils.sendAnonymousChat(payload.data);
-                    } else if (payload.type === "openPopup" && isOpenPopupEvent(payload.data)) {
-                        this._openPopupStream.next(payload.data);
-                    } else if (payload.type === "closePopup" && isClosePopupEvent(payload.data)) {
-                        this._closePopupStream.next(payload.data);
-                    } else if (payload.type === "openTab" && isOpenTabEvent(payload.data)) {
-                        scriptUtils.openTab(payload.data.url);
-                    } else if (payload.type === "goToPage" && isGoToPageEvent(payload.data)) {
-                        scriptUtils.goToPage(payload.data.url);
-                    } else if (payload.type === "loadPage" && isLoadPageEvent(payload.data)) {
-                        this._loadPageStream.next(payload.data.url);
-                    } else if (payload.type === "playSound" && isPlaySoundEvent(payload.data)) {
-                        this._playSoundStream.next(payload.data);
-                    } else if (payload.type === "stopSound" && isStopSoundEvent(payload.data)) {
-                        this._stopSoundStream.next(payload.data);
-                    } else if (payload.type === "loadSound" && isLoadSoundEvent(payload.data)) {
-                        this._loadSoundStream.next(payload.data);
-                    } else if (payload.type === "disablePlayerControls") {
+                } else if (lookingLikeEvent.success) {
+                    const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
+
+                    if (!iframeEventGuarded.success) {
+                        console.error(
+                            `Invalid event "${lookingLikeEvent.data.type}" received from Iframe: `,
+                            lookingLikeEvent.data,
+                            iframeEventGuarded.error.issues
+                        );
+                        return;
+                    }
+
+                    const iframeEvent = iframeEventGuarded.data;
+
+                    if (iframeEvent.type === "showLayer") {
+                        this._showLayerStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "hideLayer") {
+                        this._hideLayerStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "setProperty") {
+                        this._setPropertyStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "cameraSet") {
+                        this._cameraSetStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "cameraFollowPlayer") {
+                        this._cameraFollowPlayerStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "chat") {
+                        scriptUtils.sendAnonymousChat(iframeEvent.data);
+                    } else if (iframeEvent.type === "openPopup") {
+                        this._openPopupStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "closePopup") {
+                        this._closePopupStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "openTab") {
+                        scriptUtils.openTab(iframeEvent.data.url);
+                    } else if (iframeEvent.type === "goToPage") {
+                        scriptUtils.goToPage(iframeEvent.data.url);
+                    } else if (iframeEvent.type === "loadPage") {
+                        this._loadPageStream.next(iframeEvent.data.url);
+                    } else if (iframeEvent.type === "playSound") {
+                        this._playSoundStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "stopSound") {
+                        this._stopSoundStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "loadSound") {
+                        this._loadSoundStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "disablePlayerControls") {
                         this._disablePlayerControlStream.next();
-                    } else if (payload.type === "restorePlayerControls") {
+                    } else if (iframeEvent.type === "restorePlayerControls") {
                         this._enablePlayerControlStream.next();
-                    } else if (payload.type === "displayBubble") {
+                    } else if (iframeEvent.type === "displayBubble") {
                         this._displayBubbleStream.next();
-                    } else if (payload.type === "removeBubble") {
+                    } else if (iframeEvent.type === "removeBubble") {
                         this._removeBubbleStream.next();
-                    } else if (payload.type == "onPlayerMove") {
+                    } else if (iframeEvent.type == "onPlayerMove") {
                         this.sendPlayerMove = true;
-                    } else if (
-                        payload.type == "addActionsMenuKeyToRemotePlayer" &&
-                        isAddActionsMenuKeyToRemotePlayerEvent(payload.data)
-                    ) {
-                        this._addActionsMenuKeyToRemotePlayerStream.next(payload.data);
-                    } else if (
-                        payload.type == "removeActionsMenuKeyFromRemotePlayer" &&
-                        isRemoveActionsMenuKeyFromRemotePlayerEvent(payload.data)
-                    ) {
-                        this._removeActionsMenuKeyFromRemotePlayerEvent.next(payload.data);
-                    } else if (payload.type == "onCameraUpdate") {
+                    } else if (iframeEvent.type == "addActionsMenuKeyToRemotePlayer") {
+                        this._addActionsMenuKeyToRemotePlayerStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "removeActionsMenuKeyFromRemotePlayer") {
+                        this._removeActionsMenuKeyFromRemotePlayerEvent.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "onCameraUpdate") {
                         this._trackCameraUpdateStream.next();
-                    } else if (payload.type == "setTiles" && isSetTilesEvent(payload.data)) {
-                        this._setTilesStream.next(payload.data);
-                    } else if (payload.type == "modifyEmbeddedWebsite" && isEmbeddedWebsiteEvent(payload.data)) {
-                        this._modifyEmbeddedWebsiteStream.next(payload.data);
-                    } else if (payload.type == "registerMenu" && isMenuRegisterEvent(payload.data)) {
-                        const dataName = payload.data.name;
+                    } else if (iframeEvent.type == "setTiles") {
+                        this._setTilesStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
+                        this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "registerMenu") {
+                        const dataName = iframeEvent.data.name;
                         this.iframeCloseCallbacks.get(iframe)?.push(() => {
                             handleMenuUnregisterEvent(dataName);
                         });
@@ -285,13 +295,16 @@ class IframeListener {
                         foundSrc = this.getBaseUrl(foundSrc, message.source);
 
                         handleMenuRegistrationEvent(
-                            payload.data.name,
-                            payload.data.iframe,
+                            iframeEvent.data.name,
+                            iframeEvent.data.iframe,
                             foundSrc,
-                            payload.data.options
+                            iframeEvent.data.options
                         );
-                    } else if (payload.type == "unregisterMenu" && isUnregisterMenuEvent(payload.data)) {
-                        handleMenuUnregisterEvent(payload.data.name);
+                    } else if (iframeEvent.type == "unregisterMenu") {
+                        handleMenuUnregisterEvent(iframeEvent.data.name);
+                    } else {
+                        // Keep the line below. It will throw an error if we forget to handle one of the possible values.
+                        const _exhaustiveCheck: never = iframeEvent;
                     }
                 }
             },

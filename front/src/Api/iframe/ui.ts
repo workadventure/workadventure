@@ -277,11 +277,11 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     }
 
     public displayBubble(): void {
-        sendToWorkadventure({ type: "displayBubble", data: null });
+        sendToWorkadventure({ type: "displayBubble", data: undefined });
     }
 
     public removeBubble(): void {
-        sendToWorkadventure({ type: "removeBubble", data: null });
+        sendToWorkadventure({ type: "removeBubble", data: undefined });
     }
 
     public displayActionMessage(actionMessageOptions: ActionMessageOptions): ActionMessage {

@@ -5,10 +5,10 @@ import {
     PointMessage,
     PositionMessage,
 } from "../../Messages/generated/messages_pb";
-import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
+import { CharacterLayer } from "../../Model/Websocket/CharacterLayer";
 import Direction = PositionMessage.Direction;
-import { ItemEventMessageInterface } from "_Model/Websocket/ItemEventMessage";
-import { PositionInterface } from "_Model/PositionInterface";
+import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
+import { PositionInterface } from "../../Model/PositionInterface";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {

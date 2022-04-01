@@ -20,7 +20,7 @@ import {
     SetPlayerDetailsMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
-import { PositionDispatcher } from "_Model/PositionDispatcher";
+import { PositionDispatcher } from "../Model/PositionDispatcher";
 import Debug from "debug";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 

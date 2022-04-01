@@ -18,12 +18,21 @@ class AdminApi {
             params,
         });
 
-        if (!isMapDetailsData(res.data) && !isRoomRedirect(res.data)) {
-            console.error("Unexpected answer from the /api/map admin endpoint.", res.data);
-            throw new Error("Unexpected answer from the /api/map admin endpoint.");
+        const mapDetailData = isMapDetailsData.safeParse(res.data);
+        const roomRedirect = isRoomRedirect.safeParse(res.data);
+
+        if (mapDetailData.success) {
+            return mapDetailData.data;
         }
 
-        return res.data;
+        if (roomRedirect.success) {
+            return roomRedirect.data;
+        }
+
+        console.error(mapDetailData.error.issues);
+        console.error(roomRedirect.error.issues);
+        console.error("Unexpected answer from the /api/map admin endpoint.", res.data);
+        throw new Error("Unexpected answer from the /api/map admin endpoint.");
     }
 }
 
