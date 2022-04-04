@@ -7,9 +7,6 @@ import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
-import { PlayerTextures } from "../Entity/PlayerTextures";
-import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-import { CustomizeSceneName } from "./CustomizeScene";
 
 export const EntrySceneName = "EntryScene";
 
