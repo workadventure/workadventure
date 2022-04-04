@@ -45,8 +45,8 @@ export class PositionNotifier {
     private zones: Zone[][] = [];
 
     constructor(
-        private zoneWidth: number,
-        private zoneHeight: number,
+        private readonly zoneWidth: number,
+        private readonly zoneHeight: number,
         private onUserEnters: EntersCallback,
         private onUserMoves: MovesCallback,
         private onUserLeaves: LeavesCallback,
