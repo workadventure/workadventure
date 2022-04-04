@@ -54,7 +54,6 @@ import type {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -102,6 +101,7 @@ import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -139,7 +139,7 @@ interface DeleteGroupEventInterface {
 
 interface PlayerDetailsUpdatedInterface {
     type: "PlayerDetailsUpdated";
-    details: PlayerDetailsUpdatedMessageInterface;
+    details: PlayerDetailsUpdatedMessage;
 }
 
 export class GameScene extends DirtyScene {
@@ -175,7 +175,6 @@ export class GameScene extends DirtyScene {
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
 
-    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
@@ -220,6 +219,7 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
+    private showVoiceIndicatorChangeMessageSent: boolean = false;
     private currentPlayerGroupId?: number;
     public readonly superLoad: SuperLoaderPlugin;
 
@@ -634,55 +634,43 @@ export class GameScene extends DirtyScene {
         }
 
         const talkIconVolumeTreshold = 10;
-        const oldPeers = new Map<number, VideoPeer>();
+        let oldPeersNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
-            this.volumeStoreUnsubscribers.clear();
-
-            for (const [key, videoStream] of peers) {
-                this.volumeStoreUnsubscribers.set(
-                    key,
-                    videoStream.volumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
-                        }
-                    })
-                );
-            }
-
             const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeers.size) {
+            if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeers.size) {
+            } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
-                const oldPeersKeys = oldPeers.keys();
-                const newPeersKeys = Array.from(peers.keys());
-                for (const oldKey of oldPeersKeys) {
-                    if (!newPeersKeys.includes(oldKey)) {
-                        this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
-                    }
-                }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        if (volume === undefined) {
+                            return;
+                        }
+                        const aboveTreshold = volume > talkIconVolumeTreshold;
+                        this.CurrentPlayer.showTalkIcon(aboveTreshold);
+
+                        if (this.showVoiceIndicatorChangeMessageSent && !aboveTreshold) {
+                            this.connection?.emitPlayerShowVoiceIndicator(false);
+                            this.showVoiceIndicatorChangeMessageSent = false;
+                        } else if (!this.showVoiceIndicatorChangeMessageSent && aboveTreshold) {
+                            this.connection?.emitPlayerShowVoiceIndicator(true);
+                            this.showVoiceIndicatorChangeMessageSent = true;
                         }
                     });
                 }
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
+                this.connection?.emitPlayerShowVoiceIndicator(false);
+                this.showVoiceIndicatorChangeMessageSent = false;
                 this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
-            oldPeers.clear();
-            for (const [key, val] of peers) {
-                oldPeers.set(key, val);
-            }
+            oldPeersNumber = peers.size;
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
@@ -834,11 +822,7 @@ export class GameScene extends DirtyScene {
                     }
                     this.pendingEvents.enqueue({
                         type: "PlayerDetailsUpdated",
-                        details: {
-                            userId: message.userId,
-                            outlineColor: message.details.outlineColor,
-                            removeOutlineColor: message.details.removeOutlineColor,
-                        },
+                        details: message,
                     });
                 });
 
@@ -2070,7 +2054,7 @@ ${escapedMessage}
         this.groups.delete(groupId);
     }
 
-    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessage): void {
         const character = this.MapPlayersByKey.get(message.userId);
         if (character === undefined) {
             console.log(
@@ -2080,10 +2064,13 @@ ${escapedMessage}
             );
             return;
         }
-        if (message.removeOutlineColor) {
+        if (message.details?.removeOutlineColor) {
             character.removeApiOutlineColor();
-        } else {
-            character.setApiOutlineColor(message.outlineColor);
+        } else if (message.details?.outlineColor !== undefined) {
+            character.setApiOutlineColor(message.details?.outlineColor);
+        }
+        if (message.details?.showVoiceIndicator !== undefined) {
+            character.showTalkIcon(message.details?.showVoiceIndicator);
         }
     }
 

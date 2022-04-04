@@ -15,6 +15,7 @@ import {
     SubMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
+import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -37,7 +38,8 @@ export class User implements Movable {
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage,
-        private _outlineColor?: number | undefined
+        private outlineColor?: number,
+        private voiceIndicatorShown?: boolean
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -83,6 +85,10 @@ export class User implements Movable {
         return this.followedBy.size !== 0;
     }
 
+    public getOutlineColor(): number | undefined {
+        return this.outlineColor;
+    }
+
     get following(): User | undefined {
         return this._following;
     }
@@ -115,14 +121,21 @@ export class User implements Movable {
         }
     }
 
-    public set outlineColor(value: number | undefined) {
-        this._outlineColor = value;
+    public updateDetails(details: SetPlayerDetailsMessage) {
+        if (details.getRemoveoutlinecolor()) {
+            this.outlineColor = undefined;
+        } else if (details.getOutlinecolor()?.getValue() !== undefined) {
+            this.outlineColor = details.getOutlinecolor()?.getValue();
+        }
+        this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
         const playerDetails = new SetPlayerDetailsMessage();
-        if (value === undefined) {
-            playerDetails.setRemoveoutlinecolor(true);
-        } else {
-            playerDetails.setOutlinecolor(value);
+
+        if (this.outlineColor !== undefined) {
+            playerDetails.setOutlinecolor(new UInt32Value().setValue(this.outlineColor));
+        }
+        if (this.voiceIndicatorShown !== undefined) {
+            playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

@@ -210,11 +210,7 @@ export class GameRoom {
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
-        if (playerDetailsMessage.getRemoveoutlinecolor()) {
-            user.outlineColor = undefined;
-        } else {
-            user.outlineColor = playerDetailsMessage.getOutlinecolor();
-        }
+        user.updateDetails(playerDetailsMessage);
     }
 
     private updateUserGroup(user: User): void {
