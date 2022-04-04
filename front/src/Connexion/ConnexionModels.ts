@@ -77,13 +77,6 @@ export interface ItemEventMessageInterface {
     parameters: unknown;
 }
 
-export interface PlayerDetailsUpdatedMessageInterface {
-    userId: number;
-    outlineColor?: number;
-    removeOutlineColor?: boolean;
-    showVoiceIndicator?: boolean;
-}
-
 export interface RoomJoinedMessageInterface {
     //users: MessageUserPositionInterface[],
     //groups: GroupCreatedUpdatedMessageInterface[],

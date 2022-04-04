@@ -50,9 +50,6 @@ message PingMessage {
 }
 
 message SetPlayerDetailsMessage {
-  //string name = 1;
-  //repeated string characterLayers = 2;
-
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;

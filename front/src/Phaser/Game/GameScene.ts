@@ -54,7 +54,6 @@ import type {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -102,6 +101,7 @@ import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -139,7 +139,7 @@ interface DeleteGroupEventInterface {
 
 interface PlayerDetailsUpdatedInterface {
     type: "PlayerDetailsUpdated";
-    details: PlayerDetailsUpdatedMessageInterface;
+    details: PlayerDetailsUpdatedMessage;
 }
 
 export class GameScene extends DirtyScene {
@@ -662,6 +662,8 @@ export class GameScene extends DirtyScene {
                 }
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
+                this.connection?.emitPlayerShowVoiceIndicator(false);
+                this.showVoiceIndicatorChangeMessageSent = false;
                 this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
@@ -824,12 +826,7 @@ export class GameScene extends DirtyScene {
                     }
                     this.pendingEvents.enqueue({
                         type: "PlayerDetailsUpdated",
-                        details: {
-                            userId: message.userId,
-                            outlineColor: message.details.outlineColor,
-                            removeOutlineColor: message.details.removeOutlineColor,
-                            showVoiceIndicator: message.details.showVoiceIndicator,
-                        },
+                        details: message,
                     });
                 });
 
@@ -2063,7 +2060,7 @@ ${escapedMessage}
         this.groups.delete(groupId);
     }
 
-    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessage): void {
         const character = this.MapPlayersByKey.get(message.userId);
         if (character === undefined) {
             console.log(
@@ -2073,13 +2070,13 @@ ${escapedMessage}
             );
             return;
         }
-        if (message.removeOutlineColor) {
+        if (message.details?.removeOutlineColor) {
             character.removeApiOutlineColor();
-        } else if (message.outlineColor !== undefined) {
-            character.setApiOutlineColor(message.outlineColor);
+        } else if (message.details?.outlineColor !== undefined) {
+            character.setApiOutlineColor(message.details?.outlineColor);
         }
-        if (message.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.showVoiceIndicator);
+        if (message.details?.showVoiceIndicator !== undefined) {
+            character.showTalkIcon(message.details?.showVoiceIndicator);
         }
     }
 
