@@ -67,6 +67,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.load.image("iconHair", "/resources/icons/icon_hair.png");
         this.load.image("iconEyes", "/resources/icons/icon_eyes.png");
         this.load.image("iconBody", "/resources/icons/icon_body.png");
+        this.load.image("iconTurn", "/resources/icons/icon_turn.png");
         this.load.spritesheet("floorTiles", "/resources/tilesets/floor_tiles.png", { frameWidth: 32, frameHeight: 32 });
 
         TexturesHelper.createRectangleTexture(this, "gridEdgeShadow", this.cameras.main.width * 0.2, 115, 0x000000);
