@@ -9,7 +9,6 @@ import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
 import { PlayerTextures } from "../Entity/PlayerTextures";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-import { CustomizeSceneName } from "./CustomizeScene";
 
 export const EntrySceneName = "EntryScene";
 
@@ -47,8 +46,7 @@ export class EntryScene extends Scene {
                         // Let's rescale before starting the game
                         // We can do it at this stage.
                         waScaleManager.applyNewSize();
-                        // this.scene.start(nextSceneName);
-                        this.scene.start(CustomizeSceneName);
+                        this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
                         const $LL = get(LL);
