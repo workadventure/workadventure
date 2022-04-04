@@ -59,7 +59,7 @@ export class WokaBodyPartSlot extends GridItem {
 
         this.selected = this.config.selected ?? false;
 
-        this.background = this.background = this.scene.add.image(0, 0, `floorTexture1`);
+        this.background = this.background = this.scene.add.image(0, 0, `floorTexture0`);
         this.frame = this.scene.add.graphics();
         this.drawFrame();
         this.add([

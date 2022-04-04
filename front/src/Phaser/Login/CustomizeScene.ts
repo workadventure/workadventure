@@ -18,11 +18,7 @@ import {
     CustomWokaPreviewerConfig,
 } from "../Components/CustomizeWoka/CustomWokaPreviewer";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
-import {
-    WokaBodyPartSlot,
-    WokaBodyPartSlotConfig,
-    WokaBodyPartSlotEvent,
-} from "../Components/CustomizeWoka/WokaBodyPartSlot";
+import { WokaBodyPartSlot, WokaBodyPartSlotConfig } from "../Components/CustomizeWoka/WokaBodyPartSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { Button } from "../Components/Ui/Button";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
@@ -99,74 +95,21 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
-        TexturesHelper.createFloorRectangleTexture(this, "floorTexture1", 50, 50, "floorTiles", 0);
-        TexturesHelper.createFloorRectangleTexture(this, "floorTexture2", 50, 50, "floorTiles", 1);
-        TexturesHelper.createFloorRectangleTexture(this, "floorTexture3", 50, 50, "floorTiles", 2);
-        TexturesHelper.createFloorRectangleTexture(this, "floorTexture4", 50, 50, "floorTiles", 3);
-        this.customWokaPreviewer = new CustomWokaPreviewer(
-            this,
-            0,
-            0,
-            this.getCustomWokaPreviewerConfig()
-        ).setDisplaySize(200, 200);
-
-        this.bodyPartsDraggableGrid = new DraggableGrid(this, {
-            position: { x: 0, y: 0 },
-            maskPosition: { x: 0, y: 0 },
-            dimension: { x: 485, y: 165 },
-            horizontal: true,
-            repositionToCenter: true,
-            itemsInRow: 1,
-            margin: {
-                left: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
-                right: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
-            },
-            spacing: 5,
-            debug: {
-                showDraggableSpace: false,
-            },
-        });
-
-        this.bodyPartsDraggableGridLeftShadow = this.add
-            .image(0, this.cameras.main.worldView.y + this.cameras.main.height, "gridEdgeShadow")
-            .setAlpha(1, 0, 1, 0)
-            .setOrigin(0, 0.5);
-
-        this.bodyPartsDraggableGridRightShadow = this.add
-            .image(
-                this.cameras.main.worldView.x + this.cameras.main.width,
-                this.cameras.main.worldView.y + this.cameras.main.height,
-                "gridEdgeShadow"
-            )
-            .setAlpha(1, 0, 1, 0)
-            .setFlipX(true)
-            .setOrigin(1, 0.5);
-
-        this.bodyPartsButtons = {
-            [CustomWokaBodyPart.Accessory]: new IconButton(
-                this,
-                0,
-                0,
-                this.getDefaultIconButtonConfig("iconAccessory")
-            ),
-            [CustomWokaBodyPart.Body]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconBody")),
-            [CustomWokaBodyPart.Clothes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconClothes")),
-            [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes")),
-            [CustomWokaBodyPart.Hair]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHair")),
-            [CustomWokaBodyPart.Hat]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHat")),
-        };
+        this.createSlotBackgroundTextures();
+        this.initializeCustomWokaPreviewer();
+        this.initializeBodyPartsDraggableGrid();
+        this.initializeEdgeShadows();
+        this.initializeBodyPartsButtons();
+        this.initializeRandomizeButton();
+        this.initializeFinishButton();
 
         this.selectedBodyPartType = CustomWokaBodyPart.Body;
         this.bodyPartsButtons.Body.select();
 
-        this.initializeRandomizeButton();
-        this.initializeFinishButton();
+        this.bindEventHandlers();
 
         this.refreshPlayerCurrentOutfit();
-
         this.onResize();
-
-        this.bindEventHandlers();
     }
 
     public update(time: number, dt: number): void {
@@ -206,6 +149,73 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.scene.stop(CustomizeSceneName);
         waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
+    }
+
+    private createSlotBackgroundTextures(): void {
+        for (let i = 0; i < 4; i += 1) {
+            TexturesHelper.createFloorRectangleTexture(this, `floorTexture${i}`, 50, 50, "floorTiles", i);
+        }
+    }
+
+    private initializeCustomWokaPreviewer(): void {
+        this.customWokaPreviewer = new CustomWokaPreviewer(
+            this,
+            0,
+            0,
+            this.getCustomWokaPreviewerConfig()
+        ).setDisplaySize(200, 200);
+    }
+
+    private initializeBodyPartsDraggableGrid(): void {
+        this.bodyPartsDraggableGrid = new DraggableGrid(this, {
+            position: { x: 0, y: 0 },
+            maskPosition: { x: 0, y: 0 },
+            dimension: { x: 485, y: 165 },
+            horizontal: true,
+            repositionToCenter: true,
+            itemsInRow: 1,
+            margin: {
+                left: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
+                right: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
+            },
+            spacing: 5,
+            debug: {
+                showDraggableSpace: false,
+            },
+        });
+    }
+
+    private initializeEdgeShadows(): void {
+        this.bodyPartsDraggableGridLeftShadow = this.add
+            .image(0, this.cameras.main.worldView.y + this.cameras.main.height, "gridEdgeShadow")
+            .setAlpha(1, 0, 1, 0)
+            .setOrigin(0, 0.5);
+
+        this.bodyPartsDraggableGridRightShadow = this.add
+            .image(
+                this.cameras.main.worldView.x + this.cameras.main.width,
+                this.cameras.main.worldView.y + this.cameras.main.height,
+                "gridEdgeShadow"
+            )
+            .setAlpha(1, 0, 1, 0)
+            .setFlipX(true)
+            .setOrigin(1, 0.5);
+    }
+
+    private initializeBodyPartsButtons(): void {
+        this.bodyPartsButtons = {
+            [CustomWokaBodyPart.Accessory]: new IconButton(
+                this,
+                0,
+                0,
+                this.getDefaultIconButtonConfig("iconAccessory")
+            ),
+            [CustomWokaBodyPart.Body]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconBody")),
+            [CustomWokaBodyPart.Clothes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconClothes")),
+            [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes")),
+            [CustomWokaBodyPart.Hair]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHair")),
+            [CustomWokaBodyPart.Hat]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHat")),
+        };
     }
 
     private getDefaultIconButtonConfig(iconTextureKey: string): IconButtonConfig {
@@ -456,6 +466,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private bindEventHandlers(): void {
         this.bindKeyboardEventHandlers();
+
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
             waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
@@ -489,20 +500,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         });
     }
 
-    private selectBodyPartType(bodyPart: CustomWokaBodyPart): void {
-        this.selectedBodyPartType = bodyPart;
-        this.deselectAllButtons();
-        const button = this.bodyPartsButtons[bodyPart];
-        button.select(true);
-        this.populateGrid();
-        const selectedGridItem = this.selectGridItem();
-        if (!selectedGridItem) {
-            return;
-        }
-        this.bodyPartsDraggableGrid.moveContentToBeginning();
-        this.centerGridOnItem(selectedGridItem);
-    }
-
     private bindKeyboardEventHandlers(): void {
         this.input.keyboard.on("keyup-ENTER", () => {
             this.nextSceneToCamera();
@@ -534,6 +531,20 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.input.keyboard.on("keydown-D", () => {
             this.selectNextGridItem();
         });
+    }
+
+    private selectBodyPartType(bodyPart: CustomWokaBodyPart): void {
+        this.selectedBodyPartType = bodyPart;
+        this.deselectAllButtons();
+        const button = this.bodyPartsButtons[bodyPart];
+        button.select(true);
+        this.populateGrid();
+        const selectedGridItem = this.selectGridItem();
+        if (!selectedGridItem) {
+            return;
+        }
+        this.bodyPartsDraggableGrid.moveContentToBeginning();
+        this.centerGridOnItem(selectedGridItem);
     }
 
     private setNewBodyPart(bodyPartIndex: number) {
@@ -611,7 +622,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private randomizeOutfit(): void {
-        for (let i = 0; i < 6; i += 1) {
+        for (let i = 0; i < this.selectedLayers.length; i += 1) {
             this.selectedLayers[i] = Math.floor(Math.random() * this.layers[i].length);
         }
     }
