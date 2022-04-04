@@ -10,8 +10,6 @@ import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
-import { Console } from "console";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
 
