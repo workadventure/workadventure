@@ -7,6 +7,7 @@
     export let game: Game;
 
     const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
+    const showArrows = selectCharacterScene.getCollectionKeysSize() > 1;
 
     function selectLeft() {
         selectCharacterScene.selectPreviousCollection();
@@ -29,9 +30,13 @@
     <h2>{$LL.woka.selectWoka.title()}</h2>
 </section>
 <section class="category">
-    <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
-    <strong class="category-text">{$selectedCollection}</strong>
-    <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
+    {#if showArrows}
+        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
+        <strong class="category-text">{$selectedCollection}</strong>
+        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
+    {:else}
+        <strong class="category-text">{$selectedCollection}</strong>
+    {/if}
 </section>
 <section class="action">
     <button

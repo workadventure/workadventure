@@ -127,21 +127,6 @@ export class PlayerTextures {
             }
             this.wokaCollections.set(collection.name, textures);
         }
-
-        // some mock data for testing
-        const handsomeMalesArray: BodyResourceDescriptionInterface[] = [];
-        const averageFemalesArray: BodyResourceDescriptionInterface[] = [];
-        for (const collection of category.collections) {
-            for (const texture of collection.textures) {
-                if (texture.id.includes("female")) {
-                    averageFemalesArray.push({ id: texture.id, img: texture.url });
-                    continue;
-                }
-                handsomeMalesArray.push({ id: texture.id, img: texture.url });
-            }
-        }
-        this.wokaCollections.set("handome males", handsomeMalesArray);
-        this.wokaCollections.set("average females", averageFemalesArray);
     }
 }
 

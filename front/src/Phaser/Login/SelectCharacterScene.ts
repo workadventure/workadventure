@@ -79,18 +79,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
         selectedCollection.set(this.getSelectedCollectionName());
 
-        console.log(this.playerTextures.getTexturesResources(PlayerTexturesKey.Woka));
-
-        console.log(this.cache.json.get("woka-list" + gameManager.currentStartedRoom.href));
-        console.log(this.playerModels);
-
         customizeAvailableStore.set(this.isCustomizationAvailable());
         selectCharacterSceneVisibleStore.set(true);
-        this.events.addListener("wake", () => {
-            waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
-            selectCharacterSceneVisibleStore.set(true);
-        });
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
@@ -165,6 +155,10 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         return this.collectionKeys[this.selectedCollectionIndex] ?? "";
     }
 
+    public getCollectionKeysSize(): number {
+        return this.collectionKeys.length;
+    }
+
     public selectPreviousCollection(): void {
         this.selectedCollectionIndex = (this.selectedCollectionIndex + 1) % this.collectionKeys.length;
         selectedCollection.set(this.getSelectedCollectionName());
@@ -216,6 +210,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private bindEventHandlers(): void {
+        this.events.addListener("wake", () => {
+            waScaleManager.saveZoom();
+            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
+            selectCharacterSceneVisibleStore.set(true);
+        });
+
         this.input.keyboard.on("keyup-ENTER", () => {
             return this.nextSceneToCameraScene();
         });
