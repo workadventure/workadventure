@@ -5,6 +5,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
     "@geprog/vite-plugin-env-config": "^4.0.3",
+    "@home-based-studio/phaser3-utils": "^0.4.2",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
     "@tsconfig/svelte": "^1.0.10",
     "@types/google-protobuf": "^3.7.3",
@@ -45,7 +46,7 @@
     "easystarjs": "^0.4.4",
     "generic-type-guard": "^3.4.2",
     "google-protobuf": "^3.13.0",
-    "phaser": "^3.54.0",
+    "phaser": "3.55.1",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#da68bbededd605925621dd4f03bd27e69284b254",
     "phaser3-rex-plugins": "^1.1.42",
     "posthog-js": "^1.14.1",

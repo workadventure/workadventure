@@ -77,6 +77,13 @@
   resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-4.0.3.tgz#ca04bd9ad9f55fe568917db79266afe8e766e25e"
   integrity sha512-2HDCV+6XXJjSuBAhDWLRr111buMQ3bIZrKo3dymIhEJ4oJCC/3yDqg7HDQIn8Y8KKbsM0AtuHMZW4yz2tPBsYg==
 
+"@home-based-studio/phaser3-utils@^0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@home-based-studio/phaser3-utils/-/phaser3-utils-0.4.2.tgz#b2c1815a6b51321ea8dab027b5badcf714d99fd6"
+  integrity sha512-S0VkAq3z0Kf0vEUUyCDes911icvc+nkUq7lGp23zD/5lk7LTGM51NswSAfel7Rm/DLY8IBxvDTBJADTf/De82w==
+  dependencies:
+    phaser "3.55.1"
+
 "@humanwhocodes/config-array@^0.9.2":
   version "0.9.2"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.9.2.tgz#68be55c737023009dfc5fe245d51181bb6476914"
@@ -2161,10 +2168,10 @@ phaser3-rex-plugins@^1.1.42:
     papaparse "^5.3.0"
     webfontloader "^1.6.28"
 
-phaser@^3.54.0:
-  version "3.54.0"
-  resolved "https://registry.yarnpkg.com/phaser/-/phaser-3.54.0.tgz#46b191e46059aab2a9a57f78525c60b595767eee"
-  integrity sha512-/1XVI6J2siS0OGwJez7vLbRjars1zb//EvJdYMVyd3wNTUf5DHrvYUj1f6TsEISr4vjnbrNtS66QIuPbGU8x6A==
+phaser@3.55.1:
+  version "3.55.1"
+  resolved "https://registry.yarnpkg.com/phaser/-/phaser-3.55.1.tgz#25923fe845f6598aec57cfb37a5641834e9943a7"
+  integrity sha512-A5J9/diRz05qc498UNJAaXp85JVkBAEMqxP8pmcRMu1RCLBs4Kx7axd7YxNbXnQuK58JBhTRucngLt8LSpsUlQ==
   dependencies:
     eventemitter3 "^4.0.7"
     path "^0.12.7"
