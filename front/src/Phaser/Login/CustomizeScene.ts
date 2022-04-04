@@ -454,16 +454,10 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private bindEventHandlers(): void {
+        this.bindKeyboardEventHandlers();
         this.events.addListener("wake", () => {
             waScaleManager.saveZoom();
             waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
-        });
-
-        this.input.keyboard.on("keyup-ENTER", () => {
-            this.nextSceneToCamera();
-        });
-        this.input.keyboard.on("keyup-BACKSPACE", () => {
-            this.backToPreviousScene();
         });
 
         this.randomizeButton.on(Phaser.Input.Events.POINTER_UP, () => {
@@ -481,28 +475,69 @@ export class CustomizeScene extends AbstractCharacterScene {
             const button = this.bodyPartsButtons[bodyPart as CustomWokaBodyPart];
             button.on(IconButtonEvent.Clicked, (selected: boolean) => {
                 if (!selected) {
-                    this.selectedBodyPartType = bodyPart as CustomWokaBodyPart;
-                    this.deselectAllButtons();
-                    button.select(true);
-                    this.populateGrid();
-                    const selectedGridItem = this.selectGridItem();
-                    if (!selectedGridItem) {
-                        return;
-                    }
-                    this.bodyPartsDraggableGrid.moveContentToBeginning();
-                    this.centerGridOnItem(selectedGridItem);
+                    this.selectBodyPartType(bodyPart as CustomWokaBodyPart);
                 }
             });
         }
 
         this.bodyPartsDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaBodyPartSlot) => {
             void this.bodyPartsDraggableGrid.centerOnItem(this.bodyPartsDraggableGrid.getAllItems().indexOf(item), 500);
-            this.bodyPartsDraggableGrid.getAllItems().forEach((slot) => (slot as WokaBodyPartSlot).select(false));
+            this.deselectAllSlots();
             item.select(true);
-            const bodyPartIndex = Number(item.getId());
-            this.changeOutfitPart(bodyPartIndex);
-            this.refreshPlayerCurrentOutfit();
+            this.setNewBodyPart(Number(item.getId()));
         });
+    }
+
+    private selectBodyPartType(bodyPart: CustomWokaBodyPart): void {
+        this.selectedBodyPartType = bodyPart;
+        this.deselectAllButtons();
+        const button = this.bodyPartsButtons[bodyPart];
+        button.select(true);
+        this.populateGrid();
+        const selectedGridItem = this.selectGridItem();
+        if (!selectedGridItem) {
+            return;
+        }
+        this.bodyPartsDraggableGrid.moveContentToBeginning();
+        this.centerGridOnItem(selectedGridItem);
+    }
+
+    private bindKeyboardEventHandlers(): void {
+        this.input.keyboard.on("keyup-ENTER", () => {
+            this.nextSceneToCamera();
+        });
+        this.input.keyboard.on("keyup-BACKSPACE", () => {
+            this.backToPreviousScene();
+        });
+        this.input.keyboard.on("keydown-LEFT", () => {
+            this.selectNextGridItem(true);
+        });
+        this.input.keyboard.on("keydown-RIGHT", () => {
+            this.selectNextGridItem();
+        });
+        this.input.keyboard.on("keydown-UP", () => {
+            this.selectNextCategory(true);
+        });
+        this.input.keyboard.on("keydown-DOWN", () => {
+            this.selectNextCategory();
+        });
+        this.input.keyboard.on("keydown-W", () => {
+            this.selectNextCategory(true);
+        });
+        this.input.keyboard.on("keydown-S", () => {
+            this.selectNextCategory();
+        });
+        this.input.keyboard.on("keydown-A", () => {
+            this.selectNextGridItem(true);
+        });
+        this.input.keyboard.on("keydown-D", () => {
+            this.selectNextGridItem();
+        });
+    }
+
+    private setNewBodyPart(bodyPartIndex: number) {
+        this.changeOutfitPart(bodyPartIndex);
+        this.refreshPlayerCurrentOutfit();
     }
 
     private selectGridItem(): WokaBodyPartSlot | undefined {
@@ -521,6 +556,50 @@ export class CustomizeScene extends AbstractCharacterScene {
     private getBodyPartSelectedItemId(bodyPartType: CustomWokaBodyPart): string {
         const categoryIndex = CustomWokaBodyPartOrder[bodyPartType];
         return this.layers[categoryIndex][this.selectedLayers[categoryIndex]].id;
+    }
+
+    private selectNextGridItem(previous: boolean = false): void {
+        if (!this.selectedBodyPartType) {
+            return;
+        }
+        const currentIndex = this.getCurrentlySelectedItemIndex();
+        if (previous ? currentIndex > 0 : currentIndex < this.bodyPartsDraggableGrid.getAllItems().length - 1) {
+            this.deselectAllSlots();
+            const item = this.bodyPartsDraggableGrid.getAllItems()[
+                currentIndex + (previous ? -1 : 1)
+            ] as WokaBodyPartSlot;
+            if (item) {
+                item.select();
+                this.setNewBodyPart(Number(item.getId()));
+                this.centerGridOnItem(item);
+            }
+        }
+    }
+
+    private selectNextCategory(previous: boolean = false): void {
+        if (!this.selectedBodyPartType) {
+            this.selectBodyPartType(CustomWokaBodyPart.Body);
+            return;
+        }
+        if (previous && this.selectedBodyPartType === CustomWokaBodyPart.Body) {
+            return;
+        }
+        if (!previous && this.selectedBodyPartType === CustomWokaBodyPart.Accessory) {
+            return;
+        }
+        const index = CustomWokaBodyPartOrder[this.selectedBodyPartType] + (previous ? -1 : 1);
+        this.selectBodyPartType(CustomWokaBodyPart[CustomWokaBodyPartOrder[index] as CustomWokaBodyPart]);
+    }
+
+    private getCurrentlySelectedItemIndex(): number {
+        const bodyPartType = this.selectedBodyPartType;
+        if (!bodyPartType) {
+            return -1;
+        }
+        const items = this.bodyPartsDraggableGrid.getAllItems() as WokaBodyPartSlot[];
+        return items.findIndex(
+            (item) => item.getContentData()[bodyPartType] === this.getBodyPartSelectedItemId(bodyPartType)
+        );
     }
 
     private centerGridOnItem(item: WokaBodyPartSlot, duration: number = 500): void {
@@ -575,5 +654,9 @@ export class CustomizeScene extends AbstractCharacterScene {
         for (const bodyPart in CustomWokaBodyPart) {
             this.bodyPartsButtons[bodyPart as CustomWokaBodyPart].select(false);
         }
+    }
+
+    private deselectAllSlots(): void {
+        this.bodyPartsDraggableGrid.getAllItems().forEach((slot) => (slot as WokaBodyPartSlot).select(false));
     }
 }
