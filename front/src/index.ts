@@ -103,7 +103,6 @@ const config: GameConfig = {
     dom: {
         createContainer: true,
     },
-    disableContextMenu: true,
     render: {
         pixelArt: true,
         roundPixels: true,
@@ -140,6 +139,14 @@ const config: GameConfig = {
 const game = new Game(config);
 
 waScaleManager.setGame(game);
+
+/*
+TODO: replace with disableContextMenu when Phaser does not disable context menu on document.body
+see https://github.com/photonstorm/phaser/issues/6064
+*/
+HtmlUtils.querySelectorOrFail("#game canvas").addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+});
 
 window.addEventListener("resize", function (event) {
     coWebsiteManager.resetStyleMain();

@@ -5,47 +5,35 @@ import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    ItemEventMessageInterface,
+    GroupUsersUpdateMessageInterface,
     MessageUserJoined,
-    OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PlayGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-    WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
-import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { localUserStore } from "./LocalUserStore";
 import {
-    RefreshRoomMessage,
     ServerToClientMessage as ServerToClientMessageTsProto,
     TokenExpiredMessage,
     WorldConnexionMessage,
-    WorldFullMessage,
     ErrorMessage as ErrorMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
-    ItemEventMessage as ItemEventMessageTsProto,
     EmoteEventMessage as EmoteEventMessageTsProto,
-    VariableMessage as VariableMessageTsProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
-    WorldFullWarningMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    PlayGlobalMessage as PlayGlobalMessageTsProto,
-    StopGlobalMessage as StopGlobalMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
-    SendUserMessage as SendUserMessageTsProto,
-    BanUserMessage as BanUserMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
@@ -53,10 +41,8 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
-} from "../Messages/ts-proto-generated/messages";
+} from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
-import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
-import { match } from "assert";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -115,6 +101,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _groupUpdateMessageStream = new Subject<GroupCreatedUpdatedMessageInterface>();
     public readonly groupUpdateMessageStream = this._groupUpdateMessageStream.asObservable();
+
+    private readonly _groupUsersUpdateMessageStream = new Subject<GroupUsersUpdateMessageInterface>();
+    public readonly groupUsersUpdateMessageStream = this._groupUsersUpdateMessageStream.asObservable();
 
     private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
     public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
@@ -220,6 +209,7 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
+            const initCharacterLayers = characterLayers;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
@@ -342,12 +332,12 @@ export class RoomConnection implements RoomConnection {
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
-                    for (const characterLayer of roomJoinedMessage.characterLayer) {
-                        if (!characterLayer.url) {
-                            this.goToSelectYourWokaScene();
-                            this.closed = true;
-                            break;
-                        }
+                    if (
+                        roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
+                        roomJoinedMessage.characterLayer.find((layer) => !layer.url)
+                    ) {
+                        this.goToSelectYourWokaScene();
+                        this.closed = true;
                     }
 
                     if (this.closed) {
@@ -442,6 +432,10 @@ export class RoomConnection implements RoomConnection {
                     this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
                     break;
                 }
+                case "groupUsersUpdateMessage": {
+                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
+                    break;
+                }
                 case "sendUserMessage": {
                     adminMessagesService.onSendusermessage(message.sendUserMessage);
                     break;
@@ -509,6 +503,20 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }*/
+
+    public emitPlayerShowVoiceIndicator(show: boolean): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            showVoiceIndicator: show,
+        });
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
 
     public emitPlayerOutlineColor(color: number | null) {
         let message: SetPlayerDetailsMessageTsProto;
@@ -674,6 +682,7 @@ export class RoomConnection implements RoomConnection {
             groupId: message.groupId,
             position: position,
             groupSize: message.groupSize,
+            locked: message.locked,
         };
     }
 
@@ -882,6 +891,19 @@ export class RoomConnection implements RoomConnection {
                 followAbortMessage: {
                     leader: isLeader ? this.userId : get(followUsersStore)[0],
                     follower: isLeader ? 0 : this.userId,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitLockGroup(lock: boolean = true): void {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "lockGroupPromptMessage",
+                lockGroupPromptMessage: {
+                    lock,
                 },
             },
         }).finish();

@@ -43,7 +43,13 @@ export interface PositionInterface {
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface;
     groupId: number;
-    groupSize: number;
+    groupSize?: number;
+    locked?: boolean;
+}
+
+export interface GroupUsersUpdateMessageInterface {
+    groupId: number;
+    userIds: number[];
 }
 
 export interface WebRtcDisconnectMessageInterface {
@@ -69,12 +75,6 @@ export interface ItemEventMessageInterface {
     event: string;
     state: unknown;
     parameters: unknown;
-}
-
-export interface PlayerDetailsUpdatedMessageInterface {
-    userId: number;
-    outlineColor: number;
-    removeOutlineColor: boolean;
 }
 
 export interface RoomJoinedMessageInterface {

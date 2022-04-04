@@ -1,4 +1,4 @@
-import { MathUtils } from "../../../Utils/MathUtils";
+import { Easing } from "../../../types";
 import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../../Player/Animation";
 
 export enum CustomWokaBodyPart {
@@ -27,11 +27,15 @@ export interface CustomWokaPreviewerConfig {
 }
 
 export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
-    private background: Phaser.GameObjects.Graphics;
+    private background: Phaser.GameObjects.Image;
+    private frame: Phaser.GameObjects.Graphics;
     private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
+    private turnIcon: Phaser.GameObjects.Image;
 
     private animationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
     private moving: boolean = true;
+
+    private turnIconTween?: Phaser.Tweens.Tween;
 
     private config: CustomWokaPreviewerConfig;
 
@@ -53,19 +57,28 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             [CustomWokaBodyPart.Hat]: this.scene.add.sprite(this.config.bodyPartsOffsetX, 0, "").setVisible(false),
         };
 
-        this.background = this.scene.add.graphics();
-        this.drawBackground();
+        this.background = this.scene.add.image(0, 0, "floorTexture0");
+        this.frame = this.scene.add.graphics();
+        this.turnIcon = this.scene.add
+            .image(this.background.displayWidth * 0.35, this.background.displayHeight * 0.35, "iconTurn")
+            .setScale(0.25)
+            .setTintFill(0xffffff)
+            .setAlpha(0.5);
+
+        this.drawFrame();
         this.setSize(this.SIZE, this.SIZE);
         this.setInteractive({ cursor: "pointer" });
 
         this.add([
             this.background,
+            this.frame,
             this.sprites.Body,
             this.sprites.Eyes,
             this.sprites.Hair,
             this.sprites.Clothes,
             this.sprites.Hat,
             this.sprites.Accessory,
+            this.turnIcon,
         ]);
 
         this.bindEventHandlers();
@@ -115,16 +128,23 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             const direction = this.getNextAnimationDirection();
             const moving = direction === PlayerAnimationDirections.Down ? !this.moving : this.moving;
             this.changeAnimation(direction, moving);
+
+            this.turnIconTween?.stop();
+            this.turnIcon.setScale(0.25);
+            this.turnIconTween = this.scene.tweens.add({
+                targets: [this.turnIcon],
+                duration: 100,
+                scale: 0.2,
+                yoyo: true,
+                ease: Easing.SineEaseIn,
+            });
         });
     }
 
-    private drawBackground(): void {
-        this.background.clear();
-        this.background.fillStyle(0xffffff);
-        this.background.lineStyle(this.config.borderThickness, 0xadafbc);
-
-        this.background.fillRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
-        this.background.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
+    private drawFrame(): void {
+        this.frame.clear();
+        this.frame.lineStyle(this.config.borderThickness, 0xadafbc);
+        this.frame.strokeRect(-this.SIZE / 2, -this.SIZE / 2, this.SIZE, this.SIZE);
     }
 
     private animate(): void {

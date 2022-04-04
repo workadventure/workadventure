@@ -11,7 +11,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
+import { visibilityStore } from "./VisibilityStore";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -242,6 +242,7 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         isSilentStore,
+        visibilityStore,
     ],
     (
         [
@@ -254,6 +255,7 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $isSilentStore,
+            $visibilityStore,
         ],
         set
     ) => {
@@ -292,7 +294,14 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            currentVideoConstraint = false;
+            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+            if (!userMicrophonePrivacySetting) {
+                currentAudioConstraint = false;
+            }
+            if (!userCameraPrivacySetting) {
+                currentVideoConstraint = false;
+            }
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)

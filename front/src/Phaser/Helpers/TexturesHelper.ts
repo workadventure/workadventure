@@ -31,4 +31,40 @@ export class TexturesHelper {
             throw new Error("Could not get the snapshot");
         }
     }
+
+    public static createFloorRectangleTexture(
+        scene: Phaser.Scene,
+        newTextureKey: string,
+        width: number,
+        height: number,
+        sourceTextureKey: string,
+        sourceTextureFrame?: number | string,
+        sourceTextureWidth: number = 32,
+        sourceTextureHeight: number = 32
+    ): void {
+        const rt = scene.make.renderTexture({ x: 0, y: 0, width, height }, false);
+        const widthTiles = Math.ceil(width / sourceTextureWidth);
+        const heightTiles = Math.ceil(height / sourceTextureHeight);
+
+        for (let x = 0; x < widthTiles; x += 1) {
+            for (let y = 0; y < heightTiles; y += 1) {
+                rt.drawFrame(sourceTextureKey, sourceTextureFrame, x * 32, y * 32);
+            }
+        }
+
+        rt.saveTexture(newTextureKey);
+        rt.destroy();
+    }
+
+    public static createRectangleTexture(
+        scene: Phaser.Scene,
+        textureKey: string,
+        width: number,
+        height: number,
+        color: number
+    ): void {
+        const rectangleTexture = scene.add.graphics().fillStyle(color, 1).fillRect(0, 0, width, height);
+        rectangleTexture.generateTexture(textureKey, width, height);
+        rectangleTexture.destroy();
+    }
 }

@@ -57,6 +57,13 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Langage",
         },
+        privacySettings: {
+            title: "Paramètres du mode absent",
+            explanation:
+                "Quand l'onglet WorkAdventure n'est pas visible, vous passez en \"mode absent\". Lorsque ce mode est actif, vous pouvez décider de garder vos webcam et/ou micro désactivés tant que vous ne revenez pas sur l'onglet",
+            cameraToggle: "Camera",
+            microphoneToggle: "Microphone",
+        },
         save: {
             warning: "(La sauvegarde de ces paramètres redémarre le jeu)",
             button: "Sauvegarder",

@@ -320,10 +320,11 @@ export class AuthenticateController extends BaseHttpController {
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken: string | null = param.organizationMemberToken;
+                const playUri: string | null = param.playUri;
 
                 try {
                     if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
+                    const data = await adminApi.fetchMemberDataByToken(organizationMemberToken, playUri);
                     const userUuid = data.userUuid;
                     const email = data.email;
                     const roomUrl = data.roomUrl;
