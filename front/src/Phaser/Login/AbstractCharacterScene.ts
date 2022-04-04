@@ -12,5 +12,7 @@ export abstract class AbstractCharacterScene extends ResizableScene {
         this.superLoad = new SuperLoaderPlugin(this);
     }
 
-    preload() {}
+    preload() {
+        this.input.dragDistanceThreshold = 10;
+    }
 }
