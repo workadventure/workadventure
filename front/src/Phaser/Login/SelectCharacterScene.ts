@@ -74,6 +74,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public create() {
+        console.log("CREATE SCENE");
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
@@ -121,13 +122,21 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         analyticsClient.validationWoka("SelectWoka");
 
-        this.scene.stop(SelectCharacterSceneName);
-        waScaleManager.restoreZoom();
+        console.log(this.selectedWoka);
         gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
+        console.log("D1");
         this.selectedWoka = null;
+        console.log("D2");
+        waScaleManager.restoreZoom();
+        console.log("D3");
+        this.scene.stop(SelectCharacterSceneName);
+        console.log("D4");
         gameManager.tryResumingGame(EnableCameraSceneName);
+        console.log("D5");
         selectCharacterSceneVisibleStore.set(false);
+        console.log("D6");
         this.events.removeListener("wake");
+        console.log("D7");
     }
 
     public nextSceneToCustomizeScene(): void {
@@ -156,7 +165,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public getCollectionKeysSize(): number {
-        return this.collectionKeys.length;
+        return this.playerTextures.getCollectionsKeys().length;
     }
 
     public selectPreviousCollection(): void {

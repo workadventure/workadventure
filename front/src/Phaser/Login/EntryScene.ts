@@ -45,8 +45,7 @@ export class EntryScene extends Scene {
                         // Let's rescale before starting the game
                         // We can do it at this stage.
                         waScaleManager.applyNewSize();
-                        // this.scene.start(nextSceneName);
-                        this.scene.start(SelectCharacterSceneName);
+                        this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
                         const $LL = get(LL);
