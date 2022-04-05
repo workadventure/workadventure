@@ -12,7 +12,6 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
 import { DraggableGrid } from "@home-based-studio/phaser3-utils";
@@ -30,6 +29,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     private charactersDraggableGrid!: DraggableGrid;
     private collectionKeys!: string[];
     private selectedCollectionIndex!: number;
+    private selectedGridItemIndex?: number;
+    private gridRowsCount: number = 1;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
@@ -74,7 +75,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public create() {
-        console.log("CREATE SCENE");
+        waScaleManager.zoomModifier = 1;
         this.selectedWoka = null;
         this.selectedCollectionIndex = 0;
         this.collectionKeys = this.playerTextures.getCollectionsKeys();
@@ -86,9 +87,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
-
-        waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
 
         this.charactersDraggableGrid = new DraggableGrid(this, {
             position: { x: 0, y: 0 },
@@ -122,21 +120,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
         analyticsClient.validationWoka("SelectWoka");
 
-        console.log(this.selectedWoka);
         gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
-        console.log("D1");
         this.selectedWoka = null;
-        console.log("D2");
-        waScaleManager.restoreZoom();
-        console.log("D3");
         this.scene.stop(SelectCharacterSceneName);
-        console.log("D4");
         gameManager.tryResumingGame(EnableCameraSceneName);
-        console.log("D5");
         selectCharacterSceneVisibleStore.set(false);
-        console.log("D6");
         this.events.removeListener("wake");
-        console.log("D7");
     }
 
     public nextSceneToCustomizeScene(): void {
@@ -145,7 +134,6 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         }
         this.selectedWoka = null;
         this.scene.sleep(SelectCharacterSceneName);
-        waScaleManager.restoreZoom();
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
     }
@@ -175,6 +163,9 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     public selectNextCollection(): void {
+        if (this.collectionKeys.length === 1) {
+            return;
+        }
         this.selectedCollectionIndex =
             this.selectedCollectionIndex - 1 < 0 ? this.collectionKeys.length - 1 : this.selectedCollectionIndex - 1;
         selectedCollection.set(this.getSelectedCollectionName());
@@ -183,8 +174,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
 
     private handleCharactersGridOnResize(): void {
         const ratio = innerHeight / innerWidth;
-        const twoRows = ratio > 1 || innerHeight > 900;
-        const gridHeight = twoRows ? 210 : 105;
+        this.gridRowsCount = ratio > 1 || innerHeight > 900 ? 2 : 1;
+        const gridHeight = this.gridRowsCount === 2 ? 210 : 105;
         const gridWidth = innerWidth / waScaleManager.getActualZoom();
         const gridPos = {
             x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
@@ -200,7 +191,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         } catch (error) {
             console.warn(error);
         }
-        this.charactersDraggableGrid.setItemsInRow(twoRows ? 2 : 1);
+        this.charactersDraggableGrid.setItemsInRow(this.gridRowsCount);
         this.populateGrid();
     }
 
@@ -219,9 +210,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     }
 
     private bindEventHandlers(): void {
+        this.bindKeyboardEventHandlers();
         this.events.addListener("wake", () => {
-            waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
             selectCharacterSceneVisibleStore.set(true);
         });
 
@@ -230,20 +220,74 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
 
         this.charactersDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaSlot) => {
-            if (this.charactersDraggableGrid.getDraggableSpaceWidth() < this.charactersDraggableGrid.getGridSize().x) {
-                void this.charactersDraggableGrid.centerOnItem(
-                    this.charactersDraggableGrid.getAllItems().indexOf(item),
-                    500
-                );
-            }
-            this.charactersDraggableGrid.getAllItems().forEach((slot) => (slot as WokaSlot).select(false));
-            this.selectedWoka?.stop()?.setFrame(0);
-            this.selectedWoka = item.getSprite();
-            const wokaKey = this.selectedWoka.texture.key;
-            this.createWokaAnimation(wokaKey);
-            this.selectedWoka.play(wokaKey);
-            item.select(true);
+            this.selectGridItem(item);
         });
+    }
+
+    private selectGridItem(item: WokaSlot): void {
+        this.selectedGridItemIndex = this.charactersDraggableGrid.getAllItems().indexOf(item);
+        if (this.charactersDraggableGrid.getDraggableSpaceWidth() < this.charactersDraggableGrid.getGridSize().x) {
+            void this.charactersDraggableGrid.centerOnItem(this.selectedGridItemIndex, 500);
+        }
+        this.charactersDraggableGrid.getAllItems().forEach((slot) => (slot as WokaSlot).select(false));
+        this.selectedWoka?.stop()?.setFrame(0);
+        this.selectedWoka = item.getSprite();
+        const wokaKey = this.selectedWoka.texture.key;
+        this.createWokaAnimation(wokaKey);
+        this.selectedWoka.play(wokaKey);
+        item.select(true);
+    }
+
+    private bindKeyboardEventHandlers(): void {
+        this.input.keyboard.on("keyup-SPACE", () => {
+            this.selectNextCollection();
+        });
+        this.input.keyboard.on("keydown-LEFT", () => {
+            this.selectNextGridItem(true, false);
+        });
+        this.input.keyboard.on("keydown-RIGHT", () => {
+            this.selectNextGridItem(false, true);
+        });
+        this.input.keyboard.on("keydown-UP", () => {
+            this.selectNextGridItem(true, false);
+        });
+        this.input.keyboard.on("keydown-DOWN", () => {
+            this.selectNextGridItem(false, false);
+        });
+        this.input.keyboard.on("keydown-W", () => {
+            this.selectNextGridItem(true, false);
+        });
+        this.input.keyboard.on("keydown-S", () => {
+            this.selectNextGridItem(false, false);
+        });
+        this.input.keyboard.on("keydown-A", () => {
+            this.selectNextGridItem(true, true);
+        });
+        this.input.keyboard.on("keydown-D", () => {
+            this.selectNextGridItem(false, true);
+        });
+    }
+
+    private selectNextGridItem(previous: boolean = false, horizontally: boolean): void {
+        if (this.selectedGridItemIndex === undefined) {
+            this.selectedGridItemIndex = 0;
+        }
+        if (
+            previous
+                ? this.selectedGridItemIndex > 0
+                : this.selectedGridItemIndex < this.charactersDraggableGrid.getAllItems().length - 1
+        ) {
+            // NOTE: getItemsInRowCount() not working properly. Fix on lib side needed
+            const jump = horizontally ? this.gridRowsCount : 1;
+            const item = this.charactersDraggableGrid.getAllItems()[
+                this.selectedGridItemIndex + (previous ? -jump : jump)
+            ] as WokaSlot;
+            if (!item) {
+                return;
+            }
+            this.selectedGridItemIndex += previous ? -1 : 1;
+            this.selectGridItem(item);
+        }
     }
 
     private createWokaAnimation(key: string): void {
