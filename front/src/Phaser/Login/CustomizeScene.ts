@@ -9,7 +9,6 @@ import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { SelectCharacterSceneName } from "./SelectCharacterScene";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
 import {
     CustomWokaBodyPart,
@@ -95,6 +94,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
         this.initializeCustomWokaPreviewer();
         this.initializeBodyPartsDraggableGrid();
@@ -141,18 +141,19 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         gameManager.setCharacterLayers(layers);
         this.scene.stop(CustomizeSceneName);
-        waScaleManager.restoreZoom();
         gameManager.tryResumingGame(EnableCameraSceneName);
     }
 
     public backToPreviousScene() {
         this.scene.stop(CustomizeSceneName);
-        waScaleManager.restoreZoom();
         this.scene.run(SelectCharacterSceneName);
     }
 
     private createSlotBackgroundTextures(): void {
         for (let i = 0; i < 4; i += 1) {
+            if (this.textures.getTextureKeys().includes(`floorTexture${i}`)) {
+                continue;
+            }
             TexturesHelper.createFloorRectangleTexture(this, `floorTexture${i}`, 50, 50, "floorTiles", i);
         }
     }
@@ -466,11 +467,6 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private bindEventHandlers(): void {
         this.bindKeyboardEventHandlers();
-
-        this.events.addListener("wake", () => {
-            waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 3 : 1;
-        });
 
         this.randomizeButton.on(Phaser.Input.Events.POINTER_UP, () => {
             this.randomizeOutfit();
