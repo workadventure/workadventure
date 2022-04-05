@@ -1,5 +1,10 @@
-import { detect } from './deviceDetection';
+import { detect, Browser } from './deviceDetection';
 const browser = detect();
+
+interface SupportedBrowser {
+    name: Browser,
+    version: number
+}
 
 /**
  * The DeviceUtils class is able to return information about the device used such as:
@@ -8,43 +13,48 @@ const browser = detect();
 */
 export class DeviceUtils {
     private static message: string = "Your browser is compatible";
+    private static supportedBrowsers: SupportedBrowser[] = [
+        {
+            name: "ie",
+            version: 999, // Unsupported
+        },
+        {
+            name: "chrome",
+            version: 67,
+        },
+        {
+            name: "safari",
+            version: 15,
+        },
+        {
+            name: "firefox",
+            version: 68,
+        },
+        {
+            name: "edge",
+            version: 79,
+        },
+        {
+            name: "opera",
+            version: 54,
+        },
+    ];
 
     /**
      * Add cases of incompatibilities here
      */
     public static isCompatible(): boolean {
-        // Not compatible with "iOS < 15" because it doesn't support "BigInt64Array"
-        if (browser?.os === "iOS" && browser?.version < 15) {
-            this.message = `Your browser is not compatible. Please update your ${browser.os} version (you have ${browser.version})`
-            return false;
-        }
-
-        // Not compatible with "edge < 79" because it doesn't support "BigInt64Array"
-        if (browser?.browser === "edge" && browser?.version < 79) {
-            this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`
-            return false;
-        }
-
-        // Not compatible with "firefox < 68" because it doesn't support "BigInt64Array"
-        if (browser?.browser === "firefox" && browser?.version < 68) {
-            this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`
-            return false;
-        }
-
-        // Not compatible with "chrome < 67" because it doesn't support "BigInt64Array"
-        if (browser?.browser === "chrome" && browser?.version < 67) {
-            this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`
-            return false;
-        }
-
-        // Not compatible with "android < 99" because it doesn't support "BigInt64Array"
-        if (browser?.browser === "android" && browser?.version < 99) {
-            this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`
-            return false;
+        if (browser) {
+            if (this.supportedBrowsers.some(b => b.name === browser?.browser && b.version < browser?.version)) {
+                this.message = `Your browser is not compatible. Please update your ${browser.os} version (you have ${browser.version})`
+                return false;
+            }
         }
 
         return true;
     }
+
+    // TODO: feature detection (BigInt64Array)
 
     public static getMessage(): string {
         return this.message;

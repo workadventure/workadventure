@@ -97,7 +97,6 @@ const SEARCHBOX_UA_REGEX = /alexa|bot|crawl(er|ing)|facebookexternalhit|feedburn
 const REQUIRED_VERSION_PARTS = 3;
 
 const deviceRules: DeviceRule[] = [
-    ['Desktop', /xxxxxxxxx/],
     ['Mobile', /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i],
     ['Tablet', /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i],
     ['Bot', /bot/],
