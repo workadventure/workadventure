@@ -1,3 +1,57 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  .btn {
+    background-color: theme('colors.grey');
+    border-radius: theme('borderRadius.lg');
+    padding: theme('spacing.6');
+    box-shadow: theme('boxShadow.xl');
+    text-align: center;
+
+    &.pop-red {
+      background-color: theme('colors.pop-red');
+      color: theme('colors.white')
+    }
+    &.pop-blue {
+      background-color: theme('colors.pop-blue.500');
+      color: theme('colors.white')
+    }
+    &.pop-blue:hover {
+      background-color: theme('colors.pop-blue.700');
+      color: theme('colors.white')
+    }
+    &.pop-yellow {
+      background-color: theme('colors.pop-yellow');
+      color: theme('colors.black')
+    }
+    &.pop-green {
+      background-color: theme('colors.pop-green');
+      color: theme('colors.white')
+    }
+  }
+
+  input[type="text"] {
+    background-color: theme('colors.transparent');
+    color: theme('colors.light-purple');
+    border: 1px solid theme('colors.white');
+    border-radius: theme('borderRadius.md');
+    height: theme('height.12');
+    padding: theme('padding.2');
+    outline: none;
+  }
+  input[type="text"]::placeholder {
+    color: theme('colors.light-purple');
+    opacity: 0.5;
+  }
+
+  .toggle-switch {
+    &span {
+      color: green;
+      background-color: red;
+      width: 10px;
+    }
+  }
+
+}

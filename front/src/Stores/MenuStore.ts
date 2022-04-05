@@ -47,6 +47,7 @@ export enum SubMenusInterface {
     aboutRoom = "credit",
     globalMessages = "globalMessages",
     contact = "contact",
+    test = "test"
 }
 
 type MenuKeys = keyof Translation["menu"]["sub"];
@@ -91,6 +92,10 @@ function createSubMenusStore() {
         {
             type: "translated",
             key: SubMenusInterface.aboutRoom,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.test,
         },
     ]);
 
