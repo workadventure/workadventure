@@ -53,6 +53,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
+  google.protobuf.BoolValue away = 6;
 }
 
 message UserMovesMessage {

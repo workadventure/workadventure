@@ -39,7 +39,8 @@ export class User implements Movable {
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
-        private voiceIndicatorShown?: boolean
+        private voiceIndicatorShown?: boolean,
+        private away?: boolean
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -128,6 +129,7 @@ export class User implements Movable {
             this.outlineColor = details.getOutlinecolor()?.getValue();
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
+        this.away = details.getAway()?.getValue();
 
         const playerDetails = new SetPlayerDetailsMessage();
 
@@ -136,6 +138,9 @@ export class User implements Movable {
         }
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
+        }
+        if (this.away !== undefined) {
+            playerDetails.setAway(new BoolValue().setValue(this.away));
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

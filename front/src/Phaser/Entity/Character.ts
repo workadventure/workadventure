@@ -24,6 +24,7 @@ import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
+import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -32,6 +33,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
     private readonly talkIcon: TalkIcon;
+    protected readonly statusDot: PlayerStatusDot;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -137,7 +139,8 @@ export abstract class Character extends Container implements OutlineableInterfac
             });
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.add(this.playerNameText);
+        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 10, playerNameY - 1);
+        this.add([this.playerNameText, this.statusDot]);
 
         this.setClickable(isClickable);
 
@@ -236,6 +239,10 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
         this.talkIcon.show(show, forceClose);
+    }
+
+    public setAwayStatus(away: boolean = true): void {
+        this.statusDot.setAway(away);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
