@@ -2,6 +2,7 @@ import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
+import type { DesktopCapturerSource } from "@wa-preload-app";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -128,44 +129,36 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         }
 
-        let currentStreamPromise: Promise<MediaStream>;
-        if (navigator.getDisplayMedia) {
-            currentStreamPromise = navigator.getDisplayMedia({ constraints });
-        } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-            currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
-        } else {
-            stopScreenSharing();
-            set({
-                type: "error",
-                error: new Error("Your browser does not support sharing screen"),
-            });
-            return;
-        }
-
         (async () => {
-            try {
-                if (window.WAD?.getDesktopCapturerSources) {
-                    const options = {
-                        thumbnailSize: {
-                            height: 176,
-                            width: 312,
+            let currentStreamPromise: Promise<MediaStream>;
+            if (window.WAD?.getDesktopCapturerSources) {
+                showDesktopCapturerSourcePicker.set(true);
+                const source = await new Promise<DesktopCapturerSource>((resolve, reject) => {
+                    desktopCapturerSourcePromiseResolve = resolve;
+                });
+                currentStreamPromise = navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        mandatory: {
+                            chromeMediaSource: "desktop",
+                            chromeMediaSourceId: source.id,
                         },
-                        types: ["screen"],
-                    };
+                    },
+                });
+            } else if (navigator.getDisplayMedia) {
+                currentStreamPromise = navigator.getDisplayMedia({ constraints });
+            } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+                currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
+            } else {
+                stopScreenSharing();
+                set({
+                    type: "error",
+                    error: new Error("Your browser does not support sharing screen"),
+                });
+                return;
+            }
 
-                    const desktopCapturerSources = await window.WAD?.getDesktopCapturerSources(options);
-                    console.log("desktopCapturerSources", desktopCapturerSources);
-                    const getUserMediaOptions: MediaStreamConstraints | DesktopCapturerConstraints = {
-                        audio: false,
-                        video: {
-                            mandatory: {
-                                chromeMediaSource: "desktop",
-                                chromeMediaSourceId: desktopCapturerSources[0].id,
-                            },
-                        },
-                    };
-                    currentStreamPromise = window.navigator.mediaDevices.getUserMedia(getUserMediaOptions);
-                }
+            try {
                 stopScreenSharing();
                 currentStream = await currentStreamPromise;
 
@@ -241,3 +234,7 @@ export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia | null>(
         unsubscribe();
     };
 });
+
+export const showDesktopCapturerSourcePicker = writable(false);
+
+export let desktopCapturerSourcePromiseResolve: (source: DesktopCapturerSource) => void;
