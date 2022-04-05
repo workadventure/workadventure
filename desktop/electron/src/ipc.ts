@@ -1,4 +1,4 @@
-import { ipcMain, app } from "electron";
+import { ipcMain, app, desktopCapturer } from "electron";
 import electronIsDev from "electron-is-dev";
 import { createAndShowNotification } from "./notification";
 import { Server } from "./preload-local-app/types";
@@ -33,6 +33,14 @@ export default () => {
     ipcMain.on("app:notify", (event, txt) => {
         createAndShowNotification({ body: txt });
     });
+
+    ipcMain.handle("app:getDesktopCapturerSources", async (event, options) => {
+        return (await desktopCapturer.getSources(options)).map((source) => ({
+            id: source.id,
+            name: source.name,
+            thumbnailURL: source.thumbnail.toDataURL(),
+        }))
+    })
 
     // local-app ipc
     ipcMain.handle("local-app:showLocalApp", () => {

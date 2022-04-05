@@ -91,6 +91,25 @@ export const screenSharingConstraintsStore = derived(
     } as MediaStreamConstraints
 );
 
+export interface DesktopCapturerConstraints {
+    audio:
+        | boolean
+        | {
+              mandatory: {
+                  chromeMediaSource: string;
+                  chromeMediaSourceId: string;
+              };
+          };
+    video:
+        | boolean
+        | {
+              mandatory: {
+                  chromeMediaSource: string;
+                  chromeMediaSourceId: string;
+              };
+          };
+}
+
 /**
  * A store containing the MediaStream object for ScreenSharing (or null if nothing requested, or Error if an error occurred)
  */
@@ -125,6 +144,28 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
 
         (async () => {
             try {
+                if (window.WAD?.getDesktopCapturerSources) {
+                    const options = {
+                        thumbnailSize: {
+                            height: 176,
+                            width: 312,
+                        },
+                        types: ["screen"],
+                    };
+
+                    const desktopCapturerSources = await window.WAD?.getDesktopCapturerSources(options);
+                    console.log("desktopCapturerSources", desktopCapturerSources);
+                    const getUserMediaOptions: MediaStreamConstraints | DesktopCapturerConstraints = {
+                        audio: false,
+                        video: {
+                            mandatory: {
+                                chromeMediaSource: "desktop",
+                                chromeMediaSourceId: desktopCapturerSources[0].id,
+                            },
+                        },
+                    };
+                    currentStreamPromise = window.navigator.mediaDevices.getUserMedia(getUserMediaOptions);
+                }
                 stopScreenSharing();
                 currentStream = await currentStreamPromise;
 

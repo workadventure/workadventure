@@ -4,7 +4,7 @@ import { WorkAdventureDesktopApi } from "@wa-preload-app";
 
 declare global {
     interface Window {
-        WAD: WorkAdventureDesktopApi;
+        WAD?: WorkAdventureDesktopApi;
     }
 }
 
