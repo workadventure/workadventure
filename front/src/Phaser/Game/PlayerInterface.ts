@@ -7,6 +7,7 @@ export interface PlayerInterface {
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
+    away: boolean;
     color?: string;
     outlineColor?: number;
 }

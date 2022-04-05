@@ -32,6 +32,7 @@ export class User implements Movable {
         private position: PointInterface,
         public silent: boolean,
         private positionNotifier: PositionNotifier,
+        private away: boolean,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -39,8 +40,7 @@ export class User implements Movable {
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
-        private voiceIndicatorShown?: boolean,
-        private away?: boolean
+        private voiceIndicatorShown?: boolean
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -90,6 +90,11 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
+    public isAway(): boolean {
+        console.log("IS AWAY: " + this.away);
+        return this.away;
+    }
+
     get following(): User | undefined {
         return this._following;
     }
@@ -129,7 +134,11 @@ export class User implements Movable {
             this.outlineColor = details.getOutlinecolor()?.getValue();
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
-        this.away = details.getAway()?.getValue();
+
+        if (details.getAway() !== undefined) {
+            this.away = details.getAway()?.getValue() ?? false;
+            console.log(`SET AWAY TO: ${this.away}`);
+        }
 
         const playerDetails = new SetPlayerDetailsMessage();
 
@@ -139,7 +148,8 @@ export class User implements Movable {
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
-        if (this.away !== undefined) {
+        if (details.getAway() !== undefined) {
+            console.log("SEND AWAY WITH VALUE: " + this.away);
             playerDetails.setAway(new BoolValue().setValue(this.away));
         }
 

@@ -764,11 +764,13 @@ export class GameScene extends DirtyScene {
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
                 this.connection.userJoinedMessageStream.subscribe((message) => {
+                    console.log("D2");
                     const userMessage: AddPlayerInterface = {
                         userId: message.userId,
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
+                        away: message.away,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -1898,6 +1900,7 @@ ${escapedMessage}
      * Put all the players on the map on map load.
      */
     private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
+        console.log("D1");
         const currentPlayerId = this.connection?.getUserId();
         this.removeAllRemotePlayers();
         // load map
@@ -1946,6 +1949,9 @@ ${escapedMessage}
         );
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
+        }
+        if (addPlayerData.away !== undefined) {
+            player.setAwayStatus(addPlayerData.away);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);

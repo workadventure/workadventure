@@ -242,6 +242,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     public setAwayStatus(away: boolean = true): void {
+        console.log(`SET AWAY STATUS: ${away}`);
         this.statusDot.setAway(away);
     }
 

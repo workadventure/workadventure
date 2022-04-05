@@ -1,3 +1,5 @@
+import { Easing } from "../../types";
+
 export class PlayerStatusDot extends Phaser.GameObjects.Container {
     private graphics: Phaser.GameObjects.Graphics;
 
@@ -25,7 +27,25 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
             return;
         }
         this.away = away;
-        this.redraw();
+        this.playStatusChangeAnimation();
+        // this.redraw();
+    }
+
+    private playStatusChangeAnimation(): void {
+        this.scale = 1;
+        this.scene.tweens.add({
+            targets: [this],
+            duration: 200,
+            yoyo: true,
+            ease: Easing.BackEaseIn,
+            scale: 0,
+            onYoyo: () => {
+                this.redraw();
+            },
+            onComplete: () => {
+                this.scale = 1;
+            },
+        });
     }
 
     private redraw(): void {

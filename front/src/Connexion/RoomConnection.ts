@@ -662,12 +662,15 @@ export class RoomConnection implements RoomConnection {
 
         const companion = message.companion;
 
+        console.log(message);
+
         return {
             userId: message.userId,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
+            away: message.away,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
