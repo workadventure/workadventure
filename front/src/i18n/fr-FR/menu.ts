@@ -126,6 +126,7 @@ const menu: NonNullable<Translation["menu"]> = {
         credit: "Crédits",
         globalMessages: "Messages globaux",
         contact: "Contact",
+        test: "test"
     },
 };
 
