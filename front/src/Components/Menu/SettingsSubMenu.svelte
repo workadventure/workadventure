@@ -8,6 +8,7 @@
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+    import "../../../style/tailwind.scss";
 
     import infoImg from "../images/info.svg";
 
@@ -117,6 +118,7 @@
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
     <section>
         <h3>{$LL.menu.settings.gameQuality.title()}</h3>
+        <p class="text-purple-600">SASAGEYO!</p>
         <div class="nes-select is-dark">
             <select bind:value={valueGame}>
                 <option value={120}
