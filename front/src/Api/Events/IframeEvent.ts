@@ -71,7 +71,7 @@ export type IframeEventMap = {
     setProperty: SetPropertyEvent;
     loadSound: LoadSoundEvent;
     playSound: PlaySoundEvent;
-    stopSound: null;
+    stopSound: StopSoundEvent;
     getState: undefined;
     loadTileset: LoadTilesetEvent;
     registerMenu: MenuRegisterEvent;
