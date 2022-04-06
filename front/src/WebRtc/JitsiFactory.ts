@@ -3,6 +3,8 @@ import { coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
@@ -126,6 +128,7 @@ class JitsiFactory {
     private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
+    private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
     private jitsiScriptLoaded: boolean = false;
 
     /**
@@ -204,6 +207,7 @@ class JitsiFactory {
 
                 this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
                 this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+                this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
             });
 
             cancel(() => {
@@ -260,6 +264,25 @@ class JitsiFactory {
         } else {
             requestedCameraState.enableWebcam();
         }
+    }
+
+    private onDominantSpeakerChanged(data: { id: string }): void {
+        userIsJitsiDominantSpeakerStore.set(
+            //@ts-ignore
+            data.id === this.getCurrentParticipantId(this.jitsiApi?.getParticipantsInfo())
+        );
+    }
+
+    private getCurrentParticipantId(
+        participants: { displayName: string; participantId: string }[]
+    ): string | undefined {
+        const currentPlayerName = gameManager.getPlayerName();
+        for (const participant of participants) {
+            if (participant.displayName === currentPlayerName) {
+                return participant.participantId;
+            }
+        }
+        return;
     }
 
     private loadJitsiScript(domain: string): CancelablePromise<void> {
