@@ -662,6 +662,7 @@ export class RoomConnection implements RoomConnection {
 
         const companion = message.companion;
 
+        console.log("toMessageUserJoined");
         console.log(message);
 
         return {

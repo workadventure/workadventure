@@ -91,7 +91,6 @@ export class User implements Movable {
     }
 
     public isAway(): boolean {
-        console.log("IS AWAY: " + this.away);
         return this.away;
     }
 
@@ -137,7 +136,6 @@ export class User implements Movable {
 
         if (details.getAway() !== undefined) {
             this.away = details.getAway()?.getValue() ?? false;
-            console.log(`SET AWAY TO: ${this.away}`);
         }
 
         const playerDetails = new SetPlayerDetailsMessage();
@@ -149,7 +147,6 @@ export class User implements Movable {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
         if (details.getAway() !== undefined) {
-            console.log("SEND AWAY WITH VALUE: " + this.away);
             playerDetails.setAway(new BoolValue().setValue(this.away));
         }
 

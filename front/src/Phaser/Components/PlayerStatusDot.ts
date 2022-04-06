@@ -22,13 +22,16 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
-    public setAway(away: boolean = true): void {
+    public setAway(away: boolean = true, instant: boolean = false): void {
         if (this.away === away) {
             return;
         }
         this.away = away;
-        this.playStatusChangeAnimation();
-        // this.redraw();
+        if (instant) {
+            this.redraw();
+        } else {
+            this.playStatusChangeAnimation();
+        }
     }
 
     private playStatusChangeAnimation(): void {

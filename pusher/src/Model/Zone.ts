@@ -60,7 +60,6 @@ export class UserDescriptor {
     }
 
     public static createFromUserJoinedZoneMessage(message: UserJoinedZoneMessage): UserDescriptor {
-        console.log(message);
         const position = message.getPosition();
         if (position === undefined) {
             throw new Error("Missing position");
@@ -92,6 +91,9 @@ export class UserDescriptor {
         } else {
             this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
+        if (playerDetails.getAway()) {
+            this.away = playerDetails.getAway()?.getValue() ?? false;
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
@@ -101,7 +103,6 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
-        console.log(`AWAY D1: ${this.away}`);
         userJoinedMessage.setAway(this.away);
         if (this.visitCardUrl) {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);

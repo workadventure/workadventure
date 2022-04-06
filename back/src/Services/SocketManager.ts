@@ -660,7 +660,6 @@ export class SocketManager {
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
                 userJoinedMessage.setAway(thing.isAway());
-                console.log(`AWAY: ${thing.isAway()}`);
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {

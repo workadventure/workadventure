@@ -241,9 +241,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.talkIcon.show(show, forceClose);
     }
 
-    public setAwayStatus(away: boolean = true): void {
-        console.log(`SET AWAY STATUS: ${away}`);
-        this.statusDot.setAway(away);
+    public setAwayStatus(away: boolean = true, instant: boolean = false): void {
+        this.statusDot.setAway(away, instant);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
