@@ -13,6 +13,7 @@ import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { StopSoundEvent } from "./StopSoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
