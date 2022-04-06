@@ -71,7 +71,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { userIsAdminStore } from "../../Stores/GameStore";
+import { userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -178,6 +178,7 @@ export class GameScene extends DirtyScene {
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
+    private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
@@ -648,16 +649,7 @@ export class GameScene extends DirtyScene {
                         if (volume === undefined) {
                             return;
                         }
-                        const aboveTreshold = volume > talkIconVolumeTreshold;
-                        this.CurrentPlayer.showTalkIcon(aboveTreshold);
-
-                        if (this.showVoiceIndicatorChangeMessageSent && !aboveTreshold) {
-                            this.connection?.emitPlayerShowVoiceIndicator(false);
-                            this.showVoiceIndicatorChangeMessageSent = false;
-                        } else if (!this.showVoiceIndicatorChangeMessageSent && aboveTreshold) {
-                            this.connection?.emitPlayerShowVoiceIndicator(true);
-                            this.showVoiceIndicatorChangeMessageSent = true;
-                        }
+                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
             } else {
@@ -672,6 +664,12 @@ export class GameScene extends DirtyScene {
             }
             oldPeersNumber = peers.size;
         });
+
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
+            (dominantSpeaker) => {
+                this.tryChangeShowVoiceIndicatorState(dominantSpeaker);
+            }
+        );
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
             if (emote) {
@@ -1563,6 +1561,7 @@ ${escapedMessage}
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -1959,6 +1958,17 @@ ${escapedMessage}
             type: "RemovePlayerEvent",
             userId,
         });
+    }
+
+    private tryChangeShowVoiceIndicatorState(show: boolean): void {
+        this.CurrentPlayer.showTalkIcon(show);
+        if (this.showVoiceIndicatorChangeMessageSent && !show) {
+            this.connection?.emitPlayerShowVoiceIndicator(false);
+            this.showVoiceIndicatorChangeMessageSent = false;
+        } else if (!this.showVoiceIndicatorChangeMessageSent && show) {
+            this.connection?.emitPlayerShowVoiceIndicator(true);
+            this.showVoiceIndicatorChangeMessageSent = true;
+        }
     }
 
     private doRemovePlayer(userId: number) {
