@@ -9,9 +9,9 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         // online: 0x00ff00,
         // away: 0xffff00,
         online: 0x8cc43f,
-        onlineOutline: 0x6cc43f,
+        onlineOutline: 0x427a25,
         away: 0xf5931e,
-        awayOutline: 0xd5931e,
+        awayOutline: 0x875d13,
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
