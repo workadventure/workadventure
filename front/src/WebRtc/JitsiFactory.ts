@@ -242,6 +242,7 @@ class JitsiFactory {
     }
 
     public destroy() {
+        userIsJitsiDominantSpeakerStore.set(false);
         if (!this.jitsiApi) {
             return;
         }
