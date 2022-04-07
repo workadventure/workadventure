@@ -1,298 +1,333 @@
 <script lang="ts">
-    import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { videoConstraintStore } from "../../Stores/MediaStore";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import { menuVisiblilityStore } from "../../Stores/MenuStore";
-    import LL, { locale } from "../../i18n/i18n-svelte";
-    import type { Locales } from "../../i18n/i18n-types";
-    import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
-    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+  import { localUserStore } from "../../Connexion/LocalUserStore";
+  import { videoConstraintStore } from "../../Stores/MediaStore";
+  import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+  import { menuVisiblilityStore } from "../../Stores/MenuStore";
+  import LL, { locale } from "../../i18n/i18n-svelte";
+  import type { Locales } from "../../i18n/i18n-types";
+  import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
+  import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+  import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
-    let fullscreen: boolean = localUserStore.getFullscreen();
-    let notification: boolean = localUserStore.getNotification() === "granted";
-    let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
-    let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
-    let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
-    let valueGame: number = localUserStore.getGameQualityValue();
-    let valueVideo: number = localUserStore.getVideoQualityValue();
-    let valueLocale: string = $locale;
-    let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
-    let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+  let fullscreen: boolean = localUserStore.getFullscreen();
+  let notification: boolean = localUserStore.getNotification() === "granted";
+  let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
+  let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
+  let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
+  let valueGame: number = localUserStore.getGameQualityValue();
+  let valueVideo: number = localUserStore.getVideoQualityValue();
+  let valueLocale: string = $locale;
+  let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
+  let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
 
-    let previewValueGame = valueGame;
-    let previewValueVideo = valueVideo;
-    let previewValueLocale = valueLocale;
-    let previewCameraPrivacySettings = valueCameraPrivacySettings;
-    let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+  let previewValueGame = valueGame;
+  let previewValueVideo = valueVideo;
+  let previewValueLocale = valueLocale;
+  let previewCameraPrivacySettings = valueCameraPrivacySettings;
+  let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
-    function saveSetting() {
-        let change = false;
+  function saveSetting() {
+    let change = false;
 
-        if (valueLocale !== previewValueLocale) {
-            previewValueLocale = valueLocale;
-            setCurrentLocale(valueLocale as Locales);
-        }
-
-        if (valueVideo !== previewValueVideo) {
-            previewValueVideo = valueVideo;
-            videoConstraintStore.setFrameRate(valueVideo);
-        }
-
-        if (valueGame !== previewValueGame) {
-            previewValueGame = valueGame;
-            localUserStore.setGameQualityValue(valueGame);
-            change = true;
-        }
-
-        if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
-            previewCameraPrivacySettings = valueCameraPrivacySettings;
-            localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
-        }
-
-        if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
-            previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
-            localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
-        }
-
-        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
-
-        if (change) {
-            window.location.reload();
-        }
-
-        closeMenu();
+    if (valueLocale !== previewValueLocale) {
+      previewValueLocale = valueLocale;
+      setCurrentLocale(valueLocale as Locales);
     }
 
-    function changeFullscreen() {
-        const body = HtmlUtils.querySelectorOrFail("body");
-        if (body) {
-            if (document.fullscreenElement !== null && !fullscreen) {
-                document.exitFullscreen().catch((e) => console.error(e));
-            } else {
-                body.requestFullscreen().catch((e) => console.error(e));
-            }
-            localUserStore.setFullscreen(fullscreen);
-        }
+    if (valueVideo !== previewValueVideo) {
+      previewValueVideo = valueVideo;
+      videoConstraintStore.setFrameRate(valueVideo);
     }
 
-    function changeNotification() {
-        if (Notification.permission === "granted") {
+    if (valueGame !== previewValueGame) {
+      previewValueGame = valueGame;
+      localUserStore.setGameQualityValue(valueGame);
+      change = true;
+    }
+
+    if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
+      previewCameraPrivacySettings = valueCameraPrivacySettings;
+      localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
+    }
+
+    if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
+      previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+      localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
+    }
+
+    audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+
+    if (change) {
+      window.location.reload();
+    }
+
+    closeMenu();
+  }
+
+  function changeFullscreen() {
+    const body = HtmlUtils.querySelectorOrFail("body");
+    if (body) {
+      if (document.fullscreenElement !== null && !fullscreen) {
+        document.exitFullscreen().catch((e) => console.error(e));
+      } else {
+        body.requestFullscreen().catch((e) => console.error(e));
+      }
+      localUserStore.setFullscreen(fullscreen);
+    }
+  }
+
+  function changeNotification() {
+    if (Notification.permission === "granted") {
+      localUserStore.setNotification(notification ? "granted" : "denied");
+    } else {
+      Notification.requestPermission()
+        .then((response) => {
+          if (response === "granted") {
             localUserStore.setNotification(notification ? "granted" : "denied");
-        } else {
-            Notification.requestPermission()
-                .then((response) => {
-                    if (response === "granted") {
-                        localUserStore.setNotification(notification ? "granted" : "denied");
-                    } else {
-                        localUserStore.setNotification("denied");
-                        notification = false;
-                    }
-                })
-                .catch((e) => console.error(e));
-        }
+          } else {
+            localUserStore.setNotification("denied");
+            notification = false;
+          }
+        })
+        .catch((e) => console.error(e));
     }
+  }
 
-    function changeForceCowebsiteTrigger() {
-        localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
-    }
+  function changeForceCowebsiteTrigger() {
+    localUserStore.setForceCowebsiteTrigger(forceCowebsiteTrigger);
+  }
 
-    function changeIgnoreFollowRequests() {
-        localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
-    }
+  function changeIgnoreFollowRequests() {
+    localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
+  }
 
-    function changeDecreaseAudioPlayerVolumeWhileTalking() {
-        localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
-    }
+  function changeDecreaseAudioPlayerVolumeWhileTalking() {
+    localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+  }
 
-    function closeMenu() {
-        menuVisiblilityStore.set(false);
-    }
+  function closeMenu() {
+    menuVisiblilityStore.set(false);
+  }
 
-    const isMobile = isMediaBreakpointUp("md");
+  const isMobile = isMediaBreakpointUp("md");
 </script>
 
 <div class="settings-main" on:submit|preventDefault={saveSetting}>
-    <section>
-        <h3>{$LL.menu.settings.gameQuality.title()}</h3>
-        <div class="nes-select is-dark">
-            <select bind:value={valueGame}>
-                <option value={120}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.high()
-                        : $LL.menu.settings.gameQuality.long.high()}</option
-                >
-                <option value={60}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.medium()
-                        : $LL.menu.settings.gameQuality.long.medium()}</option
-                >
-                <option value={40}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.small()
-                        : $LL.menu.settings.gameQuality.long.small()}</option
-                >
-                <option value={20}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.minimum()
-                        : $LL.menu.settings.gameQuality.long.minimum()}</option
-                >
-            </select>
-        </div>
-    </section>
-    <section>
-        <h3>{$LL.menu.settings.videoQuality.title()}</h3>
-        <div class="nes-select is-dark">
-            <select bind:value={valueVideo}>
-                <option value={30}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.high()
-                        : $LL.menu.settings.videoQuality.long.high()}</option
-                >
-                <option value={20}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.medium()
-                        : $LL.menu.settings.videoQuality.long.medium()}</option
-                >
-                <option value={10}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.small()
-                        : $LL.menu.settings.videoQuality.long.small()}</option
-                >
-                <option value={5}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.minimum()
-                        : $LL.menu.settings.videoQuality.long.minimum()}</option
-                >
-            </select>
-        </div>
-    </section>
-    <section>
-        <h3>{$LL.menu.settings.language.title()}</h3>
-        <div class="nes-select is-dark">
-            <select class="languages-switcher" bind:value={valueLocale}>
-                {#each displayableLocales as locale (locale.id)}
-                    <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
-                {/each}
-            </select>
-        </div>
-    </section>
-
-    <section>
-        <h3>{$LL.menu.settings.privacySettings.title()}</h3>
-        <p>{$LL.menu.settings.privacySettings.explanation()}</p>
-        <label>
-            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueCameraPrivacySettings} />
-            <span>{$LL.menu.settings.privacySettings.cameraToggle()}</span>
-        </label>
-        <label>
-            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueMicrophonePrivacySettings} />
-            <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
-        </label>
-    </section>
-    <section class="settings-section-save">
-        <p>{$LL.menu.settings.save.warning()}</p>
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
-            >{$LL.menu.settings.save.button()}</button
+  <section>
+    <h3>{$LL.menu.settings.gameQuality.title()}</h3>
+    <div class="nes-select is-dark">
+      <select bind:value={valueGame}>
+        <option value={120}
+        >{isMobile
+          ? $LL.menu.settings.gameQuality.short.high()
+          : $LL.menu.settings.gameQuality.long.high()}</option
         >
-    </section>
-    <section class="settings-section-noSaveOption">
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={fullscreen}
-                on:change={changeFullscreen}
-            />
-            <span>{$LL.menu.settings.fullscreen()}</span>
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={notification}
-                on:change={changeNotification}
-            />
-            <span>{$LL.menu.settings.notifications()}</span>
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={forceCowebsiteTrigger}
-                on:change={changeForceCowebsiteTrigger}
-            />
-            <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
-        </label>
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={ignoreFollowRequests}
-                on:change={changeIgnoreFollowRequests}
-            />
-            <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
-            <label>
-                <input
-                    type="checkbox"
-                    class="nes-checkbox is-dark"
-                    bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-                    on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
-                />
-                <span>{$LL.audio.manager.reduce()}</span>
-            </label>
-        </label>
-    </section>
+        <option value={60}
+        >{isMobile
+          ? $LL.menu.settings.gameQuality.short.medium()
+          : $LL.menu.settings.gameQuality.long.medium()}</option
+        >
+        <option value={40}
+        >{isMobile
+          ? $LL.menu.settings.gameQuality.short.small()
+          : $LL.menu.settings.gameQuality.long.small()}</option
+        >
+        <option value={20}
+        >{isMobile
+          ? $LL.menu.settings.gameQuality.short.minimum()
+          : $LL.menu.settings.gameQuality.long.minimum()}</option
+        >
+      </select>
+    </div>
+  </section>
+  <section>
+    <h3>{$LL.menu.settings.videoQuality.title()}</h3>
+    <div class="nes-select is-dark">
+      <select bind:value={valueVideo}>
+        <option value={30}
+        >{isMobile
+          ? $LL.menu.settings.videoQuality.short.high()
+          : $LL.menu.settings.videoQuality.long.high()}</option
+        >
+        <option value={20}
+        >{isMobile
+          ? $LL.menu.settings.videoQuality.short.medium()
+          : $LL.menu.settings.videoQuality.long.medium()}</option
+        >
+        <option value={10}
+        >{isMobile
+          ? $LL.menu.settings.videoQuality.short.small()
+          : $LL.menu.settings.videoQuality.long.small()}</option
+        >
+        <option value={5}
+        >{isMobile
+          ? $LL.menu.settings.videoQuality.short.minimum()
+          : $LL.menu.settings.videoQuality.long.minimum()}</option
+        >
+      </select>
+    </div>
+  </section>
+  <section>
+    <h3>{$LL.menu.settings.language.title()}</h3>
+    <div class="nes-select is-dark">
+      <select class="languages-switcher" bind:value={valueLocale}>
+        {#each displayableLocales as locale (locale.id)}
+          <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
+        {/each}
+      </select>
+    </div>
+  </section>
+
+  <section>
+    <div class="away-tooltip">
+      <h3>{$LL.menu.settings.privacySettings.title()} (?)</h3>
+      <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
+    </div>
+    <label>
+      <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueCameraPrivacySettings} />
+      <span>{$LL.menu.settings.privacySettings.cameraToggle()}</span>
+    </label>
+    <label>
+      <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueMicrophonePrivacySettings} />
+      <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
+    </label>
+  </section>
+  <section class="settings-section-save">
+    <p>{$LL.menu.settings.save.warning()}</p>
+    <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
+    >{$LL.menu.settings.save.button()}</button
+    >
+  </section>
+  <section class="settings-section-noSaveOption">
+    <label>
+      <input
+        type="checkbox"
+        class="nes-checkbox is-dark"
+        bind:checked={fullscreen}
+        on:change={changeFullscreen}
+      />
+      <span>{$LL.menu.settings.fullscreen()}</span>
+    </label>
+    <label>
+      <input
+        type="checkbox"
+        class="nes-checkbox is-dark"
+        bind:checked={notification}
+        on:change={changeNotification}
+      />
+      <span>{$LL.menu.settings.notifications()}</span>
+    </label>
+    <label>
+      <input
+        type="checkbox"
+        class="nes-checkbox is-dark"
+        bind:checked={forceCowebsiteTrigger}
+        on:change={changeForceCowebsiteTrigger}
+      />
+      <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
+    </label>
+    <label>
+      <input
+        type="checkbox"
+        class="nes-checkbox is-dark"
+        bind:checked={ignoreFollowRequests}
+        on:change={changeIgnoreFollowRequests}
+      />
+      <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
+      <label>
+        <input
+          type="checkbox"
+          class="nes-checkbox is-dark"
+          bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+          on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+        />
+        <span>{$LL.audio.manager.reduce()}</span>
+      </label>
+    </label>
+  </section>
 </div>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
+  @import "../../../style/breakpoints.scss";
 
+  div.settings-main {
+    height: calc(100% - 40px);
+    overflow-y: auto;
+
+    section {
+      width: 100%;
+      padding: 20px 20px 0;
+      margin-bottom: 20px;
+      text-align: center;
+
+      div.nes-select select:focus {
+        outline: none;
+      }
+    }
+
+    section.settings-section-save {
+      text-align: center;
+
+      p {
+        margin: 16px 0;
+      }
+    }
+
+    section.settings-section-noSaveOption {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+
+      label {
+        flex: 1 1 auto;
+        text-align: center;
+        margin: 0 0 15px;
+      }
+    }
+
+    .languages-switcher option {
+      text-transform: capitalize;
+    }
+
+    //Tooltip
+    .away-tooltip-text{
+      visibility: visible; //TODO: hide
+
+      transition: opacity 0.3s;
+
+      padding: 5px 0;
+      background-color: #212529;
+      border-radius: 10px;
+      width: 90%;
+      position: absolute;
+      z-index: 900;
+    }
+
+
+    }
+    .away-tooltip-text::after{
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #212529 transparent transparent transparent;
+    }
+
+    .away-tooltip:hover {
+      .away-tooltip-text {
+        visibility: visible;
+      }
+    }
+
+
+  @include media-breakpoint-up(md) {
     div.settings-main {
-        height: calc(100% - 40px);
-        overflow-y: auto;
-
-        section {
-            width: 100%;
-            padding: 20px 20px 0;
-            margin-bottom: 20px;
-            text-align: center;
-
-            div.nes-select select:focus {
-                outline: none;
-            }
-        }
-
-        section.settings-section-save {
-            text-align: center;
-
-            p {
-                margin: 16px 0;
-            }
-        }
-
-        section.settings-section-noSaveOption {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-
-            label {
-                flex: 1 1 auto;
-                text-align: center;
-                margin: 0 0 15px;
-            }
-        }
-
-        .languages-switcher option {
-            text-transform: capitalize;
-        }
+      section {
+        padding: 0;
+      }
     }
-
-    @include media-breakpoint-up(md) {
-        div.settings-main {
-            section {
-                padding: 0;
-            }
-        }
-    }
+  }
 </style>
