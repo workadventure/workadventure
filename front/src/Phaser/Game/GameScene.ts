@@ -893,6 +893,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.gameMap.onEnterZone((zones) => {
+                    console.log("ZONE ENTERED");
                     for (const zone of zones) {
                         const focusable = zone.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {

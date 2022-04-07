@@ -76,7 +76,8 @@ export class GameMap {
     ) {
         this.flatLayers = flattenGroupLayersMap(map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
-        this.zones = this.tiledObjects.filter((object) => object.type === "zone");
+        this.zones = this.tiledObjects.filter((object) => object.width > 0);
+        console.log(this.zones);
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -468,6 +469,26 @@ export class GameMap {
 
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
+
+        const zonesByNewPosition = this.position
+            ? this.zones.filter((zone) => {
+                  if (!this.position) {
+                      return false;
+                  }
+                  return MathUtils.isOverlappingWithRectangle(this.position, zone);
+              })
+            : [];
+
+        for (const zone of zonesByNewPosition) {
+            if (zone.properties !== undefined) {
+                for (const property of zone.properties) {
+                    if (property.value === undefined) {
+                        continue;
+                    }
+                    properties.set(property.name, property.value);
+                }
+            }
+        }
 
         for (const layer of this.flatLayers) {
             if (layer.type !== "tilelayer") {
