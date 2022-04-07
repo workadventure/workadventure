@@ -91,8 +91,9 @@ export class UserDescriptor {
         } else {
             this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
-        if (playerDetails.getAway()) {
-            this.away = playerDetails.getAway()?.getValue() ?? false;
+        const away = playerDetails.getAway();
+        if (away) {
+            this.away = away.getValue();
         }
     }
 
