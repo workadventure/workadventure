@@ -12,7 +12,7 @@ services:
       - --entryPoints.websecure.address=:${HTTPS_PORT}
       # HTTP challenge
       - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.myresolver.acme.storage=/acme.json
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
       # Let's Encrypt's staging server
       # uncomment during testing to avoid rate limiting
@@ -22,7 +22,7 @@ services:
       - "${HTTPS_PORT}:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${DATA_DIR}/letsencrypt/acme.json:/acme.json
+      - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     restart: ${RESTART_POLICY}
 
 
