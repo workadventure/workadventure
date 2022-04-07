@@ -243,7 +243,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             this.selectNextCollection();
         });
         this.input.keyboard.on("keydown-LEFT", () => {
-            this.selectNextGridItem(true, false);
+            this.selectNextGridItem(true, true);
         });
         this.input.keyboard.on("keydown-RIGHT", () => {
             this.selectNextGridItem(false, true);
