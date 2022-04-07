@@ -139,7 +139,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             });
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 7, playerNameY - 2);
+        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 6, playerNameY - 1);
         this.add([this.playerNameText, this.statusDot]);
 
         this.setClickable(isClickable);

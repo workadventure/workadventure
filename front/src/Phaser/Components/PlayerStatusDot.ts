@@ -59,7 +59,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         this.graphics.clear();
         this.graphics.fillStyle(this.away ? this.COLORS.away : this.COLORS.online);
         this.graphics.lineStyle(1, this.away ? this.COLORS.awayOutline : this.COLORS.onlineOutline);
-        this.graphics.fillCircle(0, 0, 4);
-        this.graphics.strokeCircle(0, 0, 4);
+        this.graphics.fillCircle(0, 0, 3);
+        this.graphics.strokeCircle(0, 0, 3);
     }
 }
