@@ -134,8 +134,9 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
-        if (details.getAway() !== undefined) {
-            this.away = details.getAway()?.getValue() ?? false;
+        const away = details.getAway();
+        if (away) {
+            this.away = away.getValue();
         }
 
         const playerDetails = new SetPlayerDetailsMessage();
