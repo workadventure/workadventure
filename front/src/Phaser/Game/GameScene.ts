@@ -71,7 +71,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -179,6 +179,7 @@ export class GameScene extends DirtyScene {
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
+    private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
@@ -222,6 +223,8 @@ export class GameScene extends DirtyScene {
     private firstCameraUpdateSent: boolean = false;
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private currentPlayerGroupId?: number;
+    private jitsiDominantSpeaker: boolean = false;
+    private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -667,9 +670,15 @@ export class GameScene extends DirtyScene {
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
-                this.tryChangeShowVoiceIndicatorState(dominantSpeaker);
+                this.jitsiDominantSpeaker = dominantSpeaker;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
             }
         );
+
+        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
+            this.jitsiParticipantsCount = participantsCount;
+            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+        });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
             if (emote) {
