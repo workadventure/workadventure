@@ -18,6 +18,7 @@ export class AuthenticateController extends BaseHttpController {
         this.register();
         this.anonymLogin();
         this.profileCallback();
+        this.me();
     }
 
     openIDLogin() {
@@ -178,7 +179,7 @@ export class AuthenticateController extends BaseHttpController {
                             if (!code && !nonce) {
                                 return res.json({ ...resUserData, authToken: token });
                             }
-                            console.error("Token cannot to be check on OpenId provider");
+                            console.error("Token cannot to be checked on OpenId provider");
                             res.status(500);
                             res.send("User cannot to be connected on openid provider");
                             return;
@@ -253,7 +254,7 @@ export class AuthenticateController extends BaseHttpController {
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                 if (authTokenData.accessToken == undefined) {
-                    throw Error("Token cannot to be logout on Hydra");
+                    throw Error("Token cannot be logout on Hydra");
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
@@ -410,7 +411,7 @@ export class AuthenticateController extends BaseHttpController {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                         if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot to be check on Hydra");
+                            throw Error("Token cannot to be checked on Hydra");
                         }
                         await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
@@ -426,6 +427,50 @@ export class AuthenticateController extends BaseHttpController {
                 }
             } catch (error) {
                 console.error("profileCallback => ERROR", error);
+                this.castErrorToResponse(error, res);
+            }
+        });
+    }
+
+    /**
+     * @openapi
+     * /me:
+     *   get:
+     *     description: ???
+     *     parameters:
+     *      - name: "token"
+     *        in: "query"
+     *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: Data of user connected
+     */
+    me() {
+        this.app.get("/me", async (req, res) => {
+            const { token } = parse(req.path_query);
+            try {
+                //verify connected by token
+                if (token != undefined) {
+                    try {
+                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                        if (authTokenData.accessToken == undefined) {
+                            throw Error("Token cannot to be checked on Hydra");
+                        }
+                        const me = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+
+                        //get login profile
+                        res.status(200);
+                        res.json({ ...me });
+                        return;
+                    } catch (error) {
+                        this.castErrorToResponse(error, res);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("me => ERROR", error);
                 this.castErrorToResponse(error, res);
             }
         });
