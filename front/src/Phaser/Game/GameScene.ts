@@ -102,6 +102,7 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -177,6 +178,7 @@ export class GameScene extends DirtyScene {
 
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private privacyShutdownStoreUnsubscribe!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
 
@@ -705,6 +707,10 @@ export class GameScene extends DirtyScene {
             }
         });
 
+        this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
+            this.connection?.emitPlayerAway(away);
+        });
+
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
             ...scriptPromises,
@@ -763,6 +769,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
+                        away: message.away,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -1568,6 +1575,7 @@ ${escapedMessage}
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
+        this.privacyShutdownStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
@@ -1940,6 +1948,9 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
+        if (addPlayerData.away !== undefined) {
+            player.setAwayStatus(addPlayerData.away, true);
+        }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -2090,6 +2101,9 @@ ${escapedMessage}
         }
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
+        }
+        if (message.details?.away !== undefined) {
+            character.setAwayStatus(message.details?.away);
         }
     }
 

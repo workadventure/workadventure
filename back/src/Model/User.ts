@@ -32,6 +32,7 @@ export class User implements Movable {
         private position: PointInterface,
         public silent: boolean,
         private positionNotifier: PositionNotifier,
+        private away: boolean,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -89,6 +90,10 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
+    public isAway(): boolean {
+        return this.away;
+    }
+
     get following(): User | undefined {
         return this._following;
     }
@@ -129,6 +134,11 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
+        const away = details.getAway();
+        if (away) {
+            this.away = away.getValue();
+        }
+
         const playerDetails = new SetPlayerDetailsMessage();
 
         if (this.outlineColor !== undefined) {
@@ -136,6 +146,9 @@ export class User implements Movable {
         }
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
+        }
+        if (details.getAway() !== undefined) {
+            playerDetails.setAway(new BoolValue().setValue(this.away));
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

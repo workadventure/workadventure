@@ -49,6 +49,7 @@ export class UserDescriptor {
         private name: string,
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
+        private away: boolean,
         private visitCardUrl: string | null,
         private companion?: CompanionMessage,
         private outlineColor?: number
@@ -69,6 +70,7 @@ export class UserDescriptor {
             message.getName(),
             message.getCharacterlayersList(),
             position,
+            message.getAway(),
             message.getVisitcardurl(),
             message.getCompanion(),
             message.getHasoutline() ? message.getOutlinecolor() : undefined
@@ -89,6 +91,10 @@ export class UserDescriptor {
         } else {
             this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
+        const away = playerDetails.getAway();
+        if (away) {
+            this.away = away.getValue();
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
@@ -98,6 +104,7 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
+        userJoinedMessage.setAway(this.away);
         if (this.visitCardUrl) {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);
         }

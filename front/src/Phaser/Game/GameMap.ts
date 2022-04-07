@@ -202,6 +202,8 @@ export class GameMap {
 
     /**
      * Registers a callback called when the user moves inside another zone.
+     *
+     * @deprecated
      */
     public onEnterZone(callback: zoneChangeCallback) {
         this.enterZoneCallbacks.push(callback);
@@ -209,6 +211,8 @@ export class GameMap {
 
     /**
      * Registers a callback called when the user moves outside another zone.
+     *
+     * @deprecated
      */
     public onLeaveZone(callback: zoneChangeCallback) {
         this.leaveZoneCallbacks.push(callback);
