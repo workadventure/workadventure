@@ -30,6 +30,7 @@ function createPlayersStore() {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
+                        away: message.away,
                         color: getRandomColor(),
                     });
                     return users;
@@ -59,6 +60,7 @@ function createPlayersStore() {
                     characterLayers: [],
                     visitCardUrl: null,
                     companion: null,
+                    away: false,
                     userUuid: "dummy",
                     color: getRandomColor(),
                 });
