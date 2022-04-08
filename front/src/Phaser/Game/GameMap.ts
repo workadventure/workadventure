@@ -126,19 +126,7 @@ export class GameMap {
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
             for (let x = 0; x < this.map.width; x += 1) {
-                row.push(this.isCollidingAt(x, y) ? 1 : 0);
-            }
-            grid.push(row);
-        }
-        return grid;
-    }
-
-    public getWalkingCostGrid(): number[][] {
-        const grid: number[][] = [];
-        for (let y = 0; y < this.map.height; y += 1) {
-            const row: number[] = [];
-            for (let x = 0; x < this.map.width; x += 1) {
-                row.push(this.getWalkingCostAt(x, y));
+                row.push(this.isCollidingAt(x, y) ? 1 : this.isExitTile(x, y) ? 2 : 0);
             }
             grid.push(row);
         }
@@ -214,6 +202,8 @@ export class GameMap {
 
     /**
      * Registers a callback called when the user moves inside another zone.
+     *
+     * @deprecated
      */
     public onEnterZone(callback: zoneChangeCallback) {
         this.enterZoneCallbacks.push(callback);
@@ -221,6 +211,8 @@ export class GameMap {
 
     /**
      * Registers a callback called when the user moves outside another zone.
+     *
+     * @deprecated
      */
     public onLeaveZone(callback: zoneChangeCallback) {
         this.leaveZoneCallbacks.push(callback);
@@ -348,15 +340,14 @@ export class GameMap {
             if (!layer.visible) {
                 continue;
             }
-            if (layer.getTileAt(x, y)?.properties[GameMapProperties.COLLIDES]) {
+            if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
                 return true;
             }
         }
         return false;
     }
 
-    private getWalkingCostAt(x: number, y: number): number {
-        const bigCost = 100;
+    private isExitTile(x: number, y: number): boolean {
         for (const layer of this.phaserLayers) {
             if (!layer.visible) {
                 continue;
@@ -369,16 +360,16 @@ export class GameMap {
                 tile &&
                 (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL])
             ) {
-                return bigCost;
+                return true;
             }
             for (const property of layer.layer.properties) {
                 //@ts-ignore
                 if (property.name && property.name === "exitUrl") {
-                    return bigCost;
+                    return true;
                 }
             }
         }
-        return 0;
+        return false;
     }
 
     private triggerAllProperties(): void {

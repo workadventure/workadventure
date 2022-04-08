@@ -58,6 +58,13 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Sprache",
         },
+        privacySettings: {
+            title: "Einstellungen Abwesenheitsmodus",
+            explanation:
+                "Falls der WorkAdventure Tab nicht aktiv ist wird in den Abwesenheitsmodus umgeschaltet. Für diesen Modus kann eingestellt werden, ob die Kamera und/oder das Mikrofon deaktiviert sind solange der Tab nicht sichtbar ist.",
+            cameraToggle: "Kamera",
+            microphoneToggle: "Mikrofon",
+        },
         save: {
             warning: "(Das Spiel wird nach dem Speichern neugestartet)",
             button: "Speichern",

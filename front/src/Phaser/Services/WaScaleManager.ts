@@ -128,6 +128,10 @@ export class WaScaleManager {
         this.applyNewSize();
     }
 
+    public getActualZoom(): number {
+        return this.actualZoom;
+    }
+
     /**
      * This is used to scale back the ui components to counter-act the zoom.
      */

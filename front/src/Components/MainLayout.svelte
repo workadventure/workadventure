@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayout, hasEmbedScreen } from "../Stores/EmbedScreensStore";
@@ -12,7 +12,6 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import CameraControls from "./CameraControls.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -38,6 +37,7 @@
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
+    import Lazy from "./Lazy.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -54,6 +54,7 @@
     });
 </script>
 
+<!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
     <aside id="main-layout-left-aside">
         {#if $menuIconVisiblilityStore}
@@ -104,21 +105,19 @@
             <ShareLinkMapModal />
         {/if}
 
-        {#if $followStateStore !== "off" || $peerStore.size > 0}
-            <FollowMenu />
-        {/if}
-
         {#if $actionsMenuStore}
             <ActionsMenu />
+        {/if}
+
+        {#if $followStateStore !== "off" || $peerStore.size > 0}
+            <FollowMenu />
         {/if}
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if $emoteMenuStore}
-            <EmoteMenu />
-        {/if}
+        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
 
         {#if hasEmbedScreen}
             <EmbedScreensContainer />

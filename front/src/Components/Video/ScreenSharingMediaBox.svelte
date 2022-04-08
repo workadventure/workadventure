@@ -4,13 +4,15 @@
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
-    import { getColorByString, srcObject } from "./utils";
+    import { getColorByString, srcObject, getTextColorByBackgroundColor } from "./utils";
 
     export let clickable = false;
 
     export let peer: ScreenSharingPeer;
     let streamStore = peer.streamStore;
     let name = peer.userName;
+    let backGroundColor = getColorByString(peer.userName);
+    let textColor = getTextColorByBackgroundColor(backGroundColor);
     let statusStore = peer.statusStore;
 
     let embedScreen: EmbedScreen;
@@ -32,7 +34,7 @@
     {/if}
     {#if $streamStore !== null}
         <i class="container">
-            <span style="background-color: {getColorByString(name)};">{name}</span>
+            <span style="background-color: {backGroundColor}; color: {textColor};">{name}</span>
         </i>
         <!-- svelte-ignore a11y-media-has-caption -->
         <video

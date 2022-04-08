@@ -1,8 +1,6 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import { helpCameraSettingsVisibleStore } from "../../Stores/HelpCameraSettingsStore";
-    import firefoxImg from "./images/help-setting-camera-permission-firefox.png";
-    import chromeImg from "./images/help-setting-camera-permission-chrome.png";
     import { getNavigatorType, isAndroid as isAndroidFct, NavigatorType } from "../../WebRtc/DeviceUtils";
     import LL from "../../i18n/i18n-svelte";
 
@@ -33,9 +31,9 @@
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
                 </p>
-                <img src={firefoxImg} alt="" />
+                <img src={$LL.camera.help.screen.firefox()} alt="" />
             {:else if isChrome && !isAndroid}
-                <img src={chromeImg} alt="" />
+                <img src={$LL.camera.help.screen.chrome()} alt="" />
             {/if}
         </p>
     </section>

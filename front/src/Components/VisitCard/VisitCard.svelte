@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import { requestVisitCardsStore } from "../../Stores/GameStore";
     import { onMount } from "svelte";
@@ -76,6 +76,7 @@
         transform: translate(-50%, 0);
         margin-top: 200px;
         max-width: 80vw;
+        z-index: 350;
 
         iframe {
             border: 0;

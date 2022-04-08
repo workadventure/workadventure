@@ -57,8 +57,8 @@ export class SoundMeter {
         this.context = context;
         this.analyser = this.context.createAnalyser();
 
-        this.analyser.fftSize = 2048;
-        const bufferLength = this.analyser.fftSize;
+        this.analyser.fftSize = 256;
+        const bufferLength = this.analyser.frequencyBinCount;
         this.dataArray = new Uint8Array(bufferLength);
     }
 

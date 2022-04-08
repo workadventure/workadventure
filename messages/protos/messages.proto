@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/wrappers.proto";
+
 /*********** PARTIAL MESSAGES **************/
 
 message PositionMessage {
@@ -34,6 +36,7 @@ message SilentMessage {
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
+  string layer = 3;
 }
 
 message CompanionMessage {
@@ -47,12 +50,10 @@ message PingMessage {
 }
 
 message SetPlayerDetailsMessage {
-  //string name = 1;
-  //repeated string characterLayers = 2;
-
-  // TODO: switch to google.protobuf.Int32Value when we migrate to ts-proto
-  uint32 outlineColor = 3;
-  bool removeOutlineColor = 4;
+  google.protobuf.UInt32Value outlineColor = 3;
+  google.protobuf.BoolValue removeOutlineColor = 4;
+  google.protobuf.BoolValue showVoiceIndicator = 5;
+  google.protobuf.BoolValue away = 6;
 }
 
 message UserMovesMessage {
@@ -98,6 +99,10 @@ message FollowAbortMessage {
   int32 follower = 2;
 }
 
+message LockGroupPromptMessage {
+  bool lock = 1;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -116,7 +121,8 @@ message ClientToServerMessage {
     FollowRequestMessage followRequestMessage = 15;
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
-    XmppMessage xmppMessage = 18;
+    LockGroupPromptMessage lockGroupPromptMessage = 18;
+    XmppMessage xmppMessage = 19;
   }
 }
 
@@ -189,7 +195,8 @@ message BatchMessage {
 message GroupUpdateMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  int32 groupSize = 3;
+  google.protobuf.UInt32Value groupSize = 3;
+  google.protobuf.BoolValue locked = 4;
 }
 
 message GroupDeleteMessage {
@@ -206,6 +213,7 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
+  bool away = 10;
 }
 
 message UserLeftMessage {
@@ -221,6 +229,11 @@ message ItemStateMessage {
   string stateJson = 2;
 }
 
+message GroupUsersUpdateMessage {
+  int32 groupId = 1;
+  repeated int32 userIds = 2;
+}
+
 message RoomJoinedMessage {
   //repeated UserJoinedMessage user = 1;
   //repeated GroupUpdateMessage group = 2;
@@ -229,6 +242,8 @@ message RoomJoinedMessage {
   repeated string tag = 5;
   repeated VariableMessage variable = 6;
   string userRoomToken = 7;
+  // We send the current skin of the current player.
+  repeated CharacterLayerMessage characterLayer = 8;
 }
 
 message WebRtcStartMessage {
@@ -279,6 +294,8 @@ message RefreshRoomMessage{
 message WorldFullMessage{
 }
 message TokenExpiredMessage{
+}
+message InvalidTextureMessage{
 }
 
 message WorldConnexionMessage{
@@ -339,8 +356,10 @@ message ServerToClientMessage {
     FollowRequestMessage followRequestMessage = 21;
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
-    XmppSettingsMessage xmppSettingsMessage = 24;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 25;
+    InvalidTextureMessage invalidTextureMessage = 24;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
+    XmppSettingsMessage xmppSettingsMessage = 26;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 27;
   }
 }
 
@@ -358,6 +377,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
+  bool away = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -371,6 +391,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
+  bool away = 11;
 }
 
 message UserLeftZoneMessage {
@@ -381,8 +402,9 @@ message UserLeftZoneMessage {
 message GroupUpdateZoneMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  int32 groupSize = 3;
+  int32  groupSize = 3;
   Zone fromZone = 4;
+  bool locked = 5;
 }
 
 message GroupLeftZoneMessage {
@@ -428,6 +450,7 @@ message PusherToBackMessage {
     FollowRequestMessage followRequestMessage = 16;
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
+    LockGroupPromptMessage lockGroupPromptMessage = 19;
   }
 }
 

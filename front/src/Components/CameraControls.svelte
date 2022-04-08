@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
     import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";
@@ -10,12 +10,14 @@
     import layoutPresentationImg from "./images/layout-presentation.svg";
     import layoutChatImg from "./images/layout-chat.svg";
     import followImg from "./images/follow.svg";
+    import lockImg from "./images/lock.svg";
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { peerStore } from "../Stores/PeerStore";
     import { onDestroy } from "svelte";
     import { embedScreenLayout } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -70,6 +72,10 @@
         }
     }
 
+    function lockClick() {
+        gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
+    }
+
     let isSilent: boolean;
     const unsubscribeIsSilent = isSilentStore.subscribe((value) => {
         isSilent = value;
@@ -93,6 +99,15 @@
         on:click={followClick}
     >
         <img class="noselect" src={followImg} alt="" />
+    </div>
+
+    <div
+        class="btn-lock"
+        class:hide={$peerStore.size === 0 || isSilent}
+        class:disabled={$currentPlayerGroupLockStateStore}
+        on:click={lockClick}
+    >
+        <img class="noselect" src={lockImg} alt="" />
     </div>
 
     <div
@@ -162,7 +177,7 @@
         transform: translateY(15px);
         transition-timing-function: ease-in-out;
         transition: all 0.3s;
-        margin: 0 4%;
+        margin: 0 2%;
 
         &.hide {
             transform: translateY(60px);
@@ -204,6 +219,14 @@
     }
 
     .btn-follow {
+        pointer-events: auto;
+
+        img {
+            filter: brightness(0) invert(1);
+        }
+    }
+
+    .btn-lock {
         pointer-events: auto;
 
         img {

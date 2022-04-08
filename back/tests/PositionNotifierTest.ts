@@ -25,6 +25,7 @@ describe("PositionNotifier", () => {
                 leaveTriggered = true;
             },
             () => {},
+            () => {},
             () => {}
         );
 
@@ -40,6 +41,7 @@ describe("PositionNotifier", () => {
             },
             false,
             positionNotifier,
+            false,
             {} as UserSocket,
             [],
             null,
@@ -59,6 +61,7 @@ describe("PositionNotifier", () => {
             },
             false,
             positionNotifier,
+            false,
             {} as UserSocket,
             [],
             null,
@@ -132,6 +135,7 @@ describe("PositionNotifier", () => {
                 leaveTriggered = true;
             },
             () => {},
+            () => {},
             () => {}
         );
 
@@ -147,6 +151,7 @@ describe("PositionNotifier", () => {
             },
             false,
             positionNotifier,
+            false,
             {} as UserSocket,
             [],
             null,
@@ -166,6 +171,7 @@ describe("PositionNotifier", () => {
             },
             false,
             positionNotifier,
+            false,
             {} as UserSocket,
             [],
             null,

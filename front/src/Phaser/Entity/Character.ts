@@ -1,4 +1,9 @@
-import { PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
+import {
+    AnimationData,
+    getPlayerAnimations,
+    PlayerAnimationDirections,
+    PlayerAnimationTypes,
+} from "../Player/Animation";
 import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
@@ -10,7 +15,7 @@ import type { GameScene } from "../Game/GameScene";
 import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
 import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { isSilentStore } from "../../Stores/MediaStore";
-import { lazyLoadPlayerCharacterTextures, loadAllDefaultModels } from "./PlayerTexturesLoadingManager";
+import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import type { PictureStore } from "../../Stores/PictureStore";
 import { Unsubscriber, Writable, writable } from "svelte/store";
@@ -18,23 +23,17 @@ import { createColorStore } from "../../Stores/OutlineColorStore";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
+import { Deferred } from "ts-deferred";
+import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 
 const playerNameY = -25;
-
-interface AnimationData {
-    key: string;
-    frameRate: number;
-    repeat: number;
-    frameModel: string; //todo use an enum
-    frames: number[];
-}
-
 const interactiveRadius = 35;
 
 export abstract class Character extends Container implements OutlineableInterface {
     private bubble: SpeechBubble | null = null;
     private readonly playerNameText: Text;
     private readonly talkIcon: TalkIcon;
+    protected readonly statusDot: PlayerStatusDot;
     public playerName: string;
     public sprites: Map<string, Sprite>;
     protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
@@ -49,6 +48,11 @@ export abstract class Character extends Container implements OutlineableInterfac
     private readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
+
+    /**
+     * A deferred promise that resolves when the texture of the character is actually displayed.
+     */
+    private textureLoadedDeferred = new Deferred<void>();
 
     constructor(
         scene: GameScene,
@@ -78,16 +82,35 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.addTextures(textures, frame);
                 this.invisible = false;
                 this.playAnimation(direction, moving);
+                this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
                 });
             })
             .catch(() => {
-                return lazyLoadPlayerCharacterTextures(scene.load, ["color_22", "eyes_23"]).then((textures) => {
-                    this.addTextures(textures, frame);
-                    this.invisible = false;
-                    this.playAnimation(direction, moving);
-                });
+                return lazyLoadPlayerCharacterTextures(scene.superLoad, [
+                    {
+                        id: "color_22",
+                        img: "resources/customisation/character_color/character_color21.png",
+                    },
+                    {
+                        id: "eyes_23",
+                        img: "resources/customisation/character_eyes/character_eyes23.png",
+                    },
+                ])
+                    .then((textures) => {
+                        this.addTextures(textures, frame);
+                        this.invisible = false;
+                        this.playAnimation(direction, moving);
+                        this.textureLoadedDeferred.resolve();
+                        return this.getSnapshot().then((htmlImageElementSrc) => {
+                            this._pictureStore.set(htmlImageElementSrc);
+                        });
+                    })
+                    .catch((e) => {
+                        this.textureLoadedDeferred.reject(e);
+                        throw e;
+                    });
             })
             .finally(() => {
                 this.texturePromise = undefined;
@@ -97,7 +120,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
-            stroke: "gray",
+            stroke: "#14304C",
             metrics: {
                 ascent: 20,
                 descent: 10,
@@ -116,7 +139,8 @@ export abstract class Character extends Container implements OutlineableInterfac
             });
         }
         this.playerNameText.setOrigin(0.5).setDepth(DEPTH_INGAME_TEXT_INDEX);
-        this.add(this.playerNameText);
+        this.statusDot = new PlayerStatusDot(scene, this.playerNameText.getLeftCenter().x - 6, playerNameY - 1);
+        this.add([this.playerNameText, this.statusDot]);
 
         this.setClickable(isClickable);
 
@@ -217,13 +241,17 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.talkIcon.show(show, forceClose);
     }
 
+    public setAwayStatus(away: boolean = true, instant: boolean = false): void {
+        this.statusDot.setAway(away, instant);
+    }
+
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
         if (typeof texturePromise !== "undefined") {
             this.companion = new Companion(this.scene, this.x, this.y, name, texturePromise);
         }
     }
 
-    public addTextures(textures: string[], frame?: string | number): void {
+    private addTextures(textures: string[], frame?: string | number): void {
         if (textures.length < 1) {
             throw new TextureError("no texture given");
         }
@@ -234,7 +262,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             }
             const sprite = new Sprite(this.scene, 0, 0, texture, frame);
             this.add(sprite);
-            this.getPlayerAnimations(texture).forEach((d) => {
+            getPlayerAnimations(texture).forEach((d) => {
                 this.scene.anims.create({
                     key: d.key,
                     frames: this.scene.anims.generateFrameNumbers(d.frameModel, { frames: d.frames }),
@@ -252,67 +280,6 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     private getOutlinePlugin(): OutlinePipelinePlugin | undefined {
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
-    }
-
-    private getPlayerAnimations(name: string): AnimationData[] {
-        return [
-            {
-                key: `${name}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Walk}`,
-                frameModel: name,
-                frames: [0, 1, 2, 1],
-                frameRate: 10,
-                repeat: -1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Walk}`,
-                frameModel: name,
-                frames: [3, 4, 5, 4],
-                frameRate: 10,
-                repeat: -1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Walk}`,
-                frameModel: name,
-                frames: [6, 7, 8, 7],
-                frameRate: 10,
-                repeat: -1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Walk}`,
-                frameModel: name,
-                frames: [9, 10, 11, 10],
-                frameRate: 10,
-                repeat: -1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Down}-${PlayerAnimationTypes.Idle}`,
-                frameModel: name,
-                frames: [1],
-                frameRate: 10,
-                repeat: 1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Left}-${PlayerAnimationTypes.Idle}`,
-                frameModel: name,
-                frames: [4],
-                frameRate: 10,
-                repeat: 1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Right}-${PlayerAnimationTypes.Idle}`,
-                frameModel: name,
-                frames: [7],
-                frameRate: 10,
-                repeat: 1,
-            },
-            {
-                key: `${name}-${PlayerAnimationDirections.Up}-${PlayerAnimationTypes.Idle}`,
-                frameModel: name,
-                frames: [10],
-                frameRate: 10,
-                repeat: 1,
-            },
-        ];
     }
 
     protected playAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
@@ -507,5 +474,14 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     public characterFarAwayOutline(): void {
         this.outlineColorStore.characterFarAway();
+    }
+
+    /**
+     * Returns a promise that resolves as soon as a texture is displayed for the user.
+     * The promise will return when the required texture is loaded OR when the fallback texture is loaded (in case
+     * the required texture could not be loaded).
+     */
+    public getTextureLoadedPromise(): PromiseLike<void> {
+        return this.textureLoadedDeferred.promise;
     }
 }

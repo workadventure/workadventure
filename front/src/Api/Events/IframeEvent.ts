@@ -13,6 +13,7 @@ import type { LayerEvent } from "./LayerEvent";
 import type { SetPropertyEvent } from "./setPropertyEvent";
 import type { LoadSoundEvent } from "./LoadSoundEvent";
 import type { PlaySoundEvent } from "./PlaySoundEvent";
+import type { StopSoundEvent } from "./StopSoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import type { SetTilesEvent } from "./SetTilesEvent";
@@ -36,6 +37,10 @@ import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
+import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
+import type { AddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
+import type { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -45,6 +50,8 @@ export interface TypedMessageEvent<T> extends MessageEvent {
  * List event types sent from an iFrame to WorkAdventure
  */
 export type IframeEventMap = {
+    addActionsMenuKeyToRemotePlayer: AddActionsMenuKeyToRemotePlayerEvent;
+    removeActionsMenuKeyFromRemotePlayer: RemoveActionsMenuKeyFromRemotePlayerEvent;
     loadPage: LoadPageEvent;
     chat: ChatEvent;
     cameraFollowPlayer: CameraFollowPlayerEvent;
@@ -58,13 +65,14 @@ export type IframeEventMap = {
     displayBubble: null;
     removeBubble: null;
     onPlayerMove: undefined;
+    onOpenActionMenu: undefined;
     onCameraUpdate: undefined;
     showLayer: LayerEvent;
     hideLayer: LayerEvent;
     setProperty: SetPropertyEvent;
     loadSound: LoadSoundEvent;
     playSound: PlaySoundEvent;
-    stopSound: null;
+    stopSound: StopSoundEvent;
     getState: undefined;
     loadTileset: LoadTilesetEvent;
     registerMenu: MenuRegisterEvent;
@@ -90,6 +98,8 @@ export interface IframeResponseEventMap {
     enterZoneEvent: ChangeZoneEvent;
     leaveZoneEvent: ChangeZoneEvent;
     buttonClickedEvent: ButtonClickedEvent;
+    remotePlayerClickedEvent: RemotePlayerClickedEvent;
+    actionsMenuActionClickedEvent: ActionsMenuActionClickedEvent;
     hasPlayerMoved: HasPlayerMovedEvent;
     wasCameraUpdated: WasCameraUpdatedEvent;
     menuItemClicked: MenuItemClickedEvent;

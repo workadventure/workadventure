@@ -22,29 +22,8 @@ jobs:
         run: cat package.json
         working-directory: "front/packages/iframe-api-typings"
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v1
-        with:
-          version: '3.x'
-
       - name: "Install dependencies"
         run: yarn install
-        working-directory: "front"
-
-      - name: "Install messages dependencies"
-        run: yarn install
-        working-directory: "messages"
-
-      - name: "Build proto messages"
-        run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
-        working-directory: "messages"
-
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front"
-
-      - name: "Generate i18n files"
-        run: yarn run typesafe-i18n
         working-directory: "front"
 
       - name: "Build"
@@ -53,13 +32,6 @@ jobs:
           PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
         working-directory: "front"
-
-      # We build the front to generate the typings of iframe_api, then we copy those typings in a separate package.
-      - name: Copy typings to package dir
-        run: cp front/dist/src/iframe_api.d.ts front/packages/iframe-api-typings/iframe_api.d.ts
-
-      - name: Copy typings to package dir (2)
-        run: cp -R front/dist/src/Api front/packages/iframe-api-typings/Api
 
       - name: Install dependencies in package
         run: yarn install

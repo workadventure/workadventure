@@ -28,7 +28,7 @@ export class Player extends Character {
         companionTexturePromise?: CancelablePromise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
-
+        this.statusDot.setVisible(false);
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
     }
@@ -76,7 +76,7 @@ export class Player extends Character {
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
-        // take collider offset into consideraton
+        // take collider offset into consideration
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
         this.pathWalkingSpeed = speed;
         return new Promise((resolve) => {

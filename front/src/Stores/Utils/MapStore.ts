@@ -89,7 +89,7 @@ export class MapStore<K, V> extends Map<K, V> implements Readable<Map<K, V>> {
             }
         }
 
-        return readable(initStoreValue, (set) => {
+        return readable<T | undefined>(initStoreValue, (set) => {
             const storeByKey = this.getStore(key);
 
             let unsubscribeDeepStore: Unsubscriber | undefined;

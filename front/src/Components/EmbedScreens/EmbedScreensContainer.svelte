@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
@@ -18,5 +18,7 @@
         display: flex;
         padding-top: 2%;
         height: 100%;
+        position: relative;
+        z-index: 200;
     }
 </style>

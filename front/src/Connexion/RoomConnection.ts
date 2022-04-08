@@ -5,59 +5,51 @@ import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
 import { MucRoomDefinitionInterface, ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
-    ItemEventMessageInterface,
+    GroupUsersUpdateMessageInterface,
     MessageUserJoined,
-    OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PlayGlobalMessageInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
     ViewportInterface,
-    WebRtcDisconnectMessageInterface,
     WebRtcSignalReceivedMessageInterface,
 } from "./ConnexionModels";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
 import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
-import { warningContainerStore } from "../Stores/MenuStore";
-import { followStateStore, followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
+import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
-    RefreshRoomMessage,
     ServerToClientMessage as ServerToClientMessageTsProto,
     TokenExpiredMessage,
     WorldConnexionMessage,
-    WorldFullMessage,
     ErrorMessage as ErrorMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
-    ItemEventMessage as ItemEventMessageTsProto,
     EmoteEventMessage as EmoteEventMessageTsProto,
-    VariableMessage as VariableMessageTsProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
-    WorldFullWarningMessage,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    PlayGlobalMessage as PlayGlobalMessageTsProto,
-    StopGlobalMessage as StopGlobalMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
-    SendUserMessage as SendUserMessageTsProto,
-    BanUserMessage as BanUserMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
+    CharacterLayerMessage,
     XmppMessage,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage,
     XmppConnectionStatusChangeMessage_Status,
-} from "../Messages/ts-proto-generated/messages";
-import { BehaviorSubject, Subject } from "rxjs";
+} from "../Messages/ts-proto-generated/protos/messages";
+import { Subject, BehaviorSubject } from "rxjs";
+import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
 import { match } from "assert";
 import type xml from "@xmpp/xml";
@@ -117,6 +109,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _groupUpdateMessageStream = new Subject<GroupCreatedUpdatedMessageInterface>();
     public readonly groupUpdateMessageStream = this._groupUpdateMessageStream.asObservable();
+
+    private readonly _groupUsersUpdateMessageStream = new Subject<GroupUsersUpdateMessageInterface>();
+    public readonly groupUsersUpdateMessageStream = this._groupUsersUpdateMessageStream.asObservable();
 
     private readonly _groupDeleteMessageStream = new Subject<GroupDeleteMessageTsProto>();
     public readonly groupDeleteMessageStream = this._groupDeleteMessageStream.asObservable();
@@ -234,6 +229,7 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.onmessage = (messageEvent) => {
             const arrayBuffer: ArrayBuffer = messageEvent.data;
+            const initCharacterLayers = characterLayers;
 
             const serverToClientMessage = ServerToClientMessageTsProto.decode(new Uint8Array(arrayBuffer));
             //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
@@ -359,17 +355,42 @@ export class RoomConnection implements RoomConnection {
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
 
+                    // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
+                    if (
+                        roomJoinedMessage.characterLayer.length !== initCharacterLayers.length ||
+                        roomJoinedMessage.characterLayer.find((layer) => !layer.url)
+                    ) {
+                        this.goToSelectYourWokaScene();
+                        this.closed = true;
+                    }
+
+                    if (this.closed) {
+                        this.closeConnection();
+                        break;
+                    }
+
+                    const characterLayers = roomJoinedMessage.characterLayer.map(
+                        this.mapCharacterLayerToBodyResourceDescription.bind(this)
+                    );
+
                     this._roomJoinedMessageStream.next({
                         connection: this,
                         room: {
                             items,
                             variables,
+                            characterLayers,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
                 }
                 case "worldFullMessage": {
                     this._worldFullMessageStream.next(null);
+                    this.closed = true;
+                    break;
+                }
+                case "invalidTextureMessage": {
+                    this.goToSelectYourWokaScene();
+
                     this.closed = true;
                     break;
                 }
@@ -433,6 +454,10 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "sendJitsiJwtMessage": {
                     this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
+                    break;
+                }
+                case "groupUsersUpdateMessage": {
+                    this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
                 }
                 case "sendUserMessage": {
@@ -512,6 +537,34 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.send(clientToServerMessage.serializeBinary().buffer);
     }*/
+
+    public emitPlayerShowVoiceIndicator(show: boolean): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            showVoiceIndicator: show,
+        });
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitPlayerAway(away: boolean): void {
+        const message = SetPlayerDetailsMessageTsProto.fromPartial({
+            away,
+        });
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: message,
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
 
     public emitPlayerOutlineColor(color: number | null) {
         let message: SetPlayerDetailsMessageTsProto;
@@ -623,6 +676,15 @@ export class RoomConnection implements RoomConnection {
         });
     }*/
 
+    private mapCharacterLayerToBodyResourceDescription(
+        characterLayer: CharacterLayerMessage
+    ): BodyResourceDescriptionInterface {
+        return {
+            id: characterLayer.name,
+            img: characterLayer.url,
+        };
+    }
+
     // TODO: move this to protobuf utils
     private toMessageUserJoined(message: UserJoinedMessageTsProto): MessageUserJoined {
         const position = message.position;
@@ -630,12 +692,7 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Invalid JOIN_ROOM message");
         }
 
-        const characterLayers = message.characterLayers.map((characterLayer): BodyResourceDescriptionInterface => {
-            return {
-                name: characterLayer.name,
-                img: characterLayer.url,
-            };
-        });
+        const characterLayers = message.characterLayers.map(this.mapCharacterLayerToBodyResourceDescription.bind(this));
 
         const companion = message.companion;
 
@@ -645,6 +702,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
+            away: message.away,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
@@ -673,6 +731,7 @@ export class RoomConnection implements RoomConnection {
             groupId: message.groupId,
             position: position,
             groupSize: message.groupSize,
+            locked: message.locked,
         };
     }
 
@@ -888,12 +947,32 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
+    public emitLockGroup(lock: boolean = true): void {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "lockGroupPromptMessage",
+                lockGroupPromptMessage: {
+                    lock,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
     public getAllTags(): string[] {
         return this.tags;
     }
 
     public get userRoomToken(): string | undefined {
         return this._userRoomToken;
+    }
+
+    private goToSelectYourWokaScene(): void {
+        menuVisiblilityStore.set(false);
+        menuIconVisiblilityStore.set(false);
+        selectCharacterSceneVisibleStore.set(true);
+        gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
     public emitXmlMessage(xml: xml.Element): void {

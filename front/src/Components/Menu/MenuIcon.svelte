@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import logoTalk from "../images/logo-message-pixel.png";
     import logoWA from "../images/logo-WA-pixel.png";
     import logoUser from "../images/logo-user-pixel.png";
@@ -66,21 +66,21 @@
             on:dragstart|preventDefault={noDrag}
             on:click|preventDefault={showMenu}
         />
-        <img
-            src={logoTalk}
-            alt={$LL.menu.icon.open.chat()}
-            class="nes-pointer"
-            draggable="false"
-            on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showChat}
-        />
-        <img
+    {/if}
+    <img
+        src={logoTalk}
+        alt={$LL.menu.icon.open.chat()}
+        class="nes-pointer"
+        draggable="false"
+        on:dragstart|preventDefault={noDrag}
+        on:click|preventDefault={showChat}
+    />
+    <img
             src={logoUser}
             alt={$LL.menu.icon.open.userlist()}
             class="nes-pointer user-list-btn"
             on:click|preventDefault={showMucRooms}
-        />
-    {/if}
+    />
 </main>
 
 <style lang="scss">

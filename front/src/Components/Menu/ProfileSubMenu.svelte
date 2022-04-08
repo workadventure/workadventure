@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
     import { menuIconVisiblilityStore, menuVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
@@ -44,7 +44,6 @@
 
     async function logOut() {
         disableMenuStores();
-        loginSceneVisibleStore.set(true);
         return connectionManager.logout();
     }
 

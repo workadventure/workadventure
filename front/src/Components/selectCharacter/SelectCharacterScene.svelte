@@ -1,7 +1,8 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../i18n/i18n-svelte";
+    import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
 
     export let game: Game;
 
@@ -40,11 +41,13 @@
             class="selectCharacterSceneFormSubmit nes-btn is-primary"
             on:click|preventDefault={cameraScene}>{$LL.woka.selectWoka.continue()}</button
         >
-        <button
-            type="submit"
-            class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
-            on:click|preventDefault={customizeScene}>{$LL.woka.selectWoka.customize()}</button
-        >
+        {#if $customizeAvailableStore}
+            <button
+                type="submit"
+                class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
+                on:click|preventDefault={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+            >
+        {/if}
     </section>
 </form>
 

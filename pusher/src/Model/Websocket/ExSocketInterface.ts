@@ -8,21 +8,16 @@ import {
     ServerToClientMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
-import { WebSocket } from "uWebSockets.js";
 import { ClientDuplexStream } from "grpc";
 import { Zone } from "_Model/Zone";
-import { CharacterTexture } from "../../Messages/JsonMessages/CharacterTexture";
+import { compressors } from "hyper-express";
+import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "_Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
-export interface CharacterLayer {
-    name: string;
-    url: string | undefined;
-}
-
-export interface ExSocketInterface extends WebSocket, Identificable {
+export interface ExSocketInterface extends compressors.WebSocket, Identificable {
     token: string;
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user
@@ -30,7 +25,7 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     userIdentifier: string;
     IPAddress: string; // IP address
     name: string;
-    characterLayers: CharacterLayer[];
+    characterLayers: WokaDetail[];
     position: PointInterface;
     viewport: ViewportInterface;
     companion?: CompanionMessage;
@@ -44,7 +39,6 @@ export interface ExSocketInterface extends WebSocket, Identificable {
     messages: unknown;
     tags: string[];
     visitCardUrl: string | null;
-    textures: CharacterTexture[];
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
