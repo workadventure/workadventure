@@ -60,7 +60,7 @@ const menu: NonNullable<Translation["menu"]> = {
         privacySettings: {
             title: "Away mode", //TODO: translate
             explanation:
-                "While the WorkAdventure tab in your browser is not visible. WorkAdventure switches in \"away mode.", //TODO: translate
+                'While the WorkAdventure tab in your browser is not visible. WorkAdventure switches in "away mode.', //TODO: translate
             cameraToggle: "Keep camera active in away mode", //TODO: translate
             microphoneToggle: "Keep camera active in away mode", //TODO: translate
         },
