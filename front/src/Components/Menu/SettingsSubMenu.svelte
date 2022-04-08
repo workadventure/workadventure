@@ -179,9 +179,13 @@
   </section>
 
   <section>
-    <div class="away-tooltip">
-      <h3>{$LL.menu.settings.privacySettings.title()} (?)</h3>
-      <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
+    <div class="tooltip">
+      <h3><span class="dotted-bottom">{$LL.menu.settings.privacySettings.title()}</span> <img
+        src="/src/Components/images/info.svg"
+        alt="info icon" width="25px" height="25px" /></h3>
+      <div class="nes-balloon away-tooltip-container from-left flex">
+        <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
+      </div>
     </div>
     <label>
       <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueCameraPrivacySettings} />
@@ -193,7 +197,7 @@
     </label>
   </section>
   <section class="settings-section-save">
-    <p>{$LL.menu.settings.save.warning()}</p>
+    <p>{$LL.menu.settings.save.warning()} <i class="fas fa-door-open"></i></p>
     <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
     >{$LL.menu.settings.save.button()}</button
     >
@@ -290,37 +294,37 @@
     }
 
     //Tooltip
-    .away-tooltip-text{
-      visibility: visible; //TODO: hide
+    .tooltip {
+      position: relative;
+    }
 
+    .away-tooltip-container {
+      background-color: #FFF;
+      position: absolute;
+      bottom: 45%;
+      left: 55%;
+
+      visibility: hidden;
       transition: opacity 0.3s;
+    }
 
-      padding: 5px 0;
-      background-color: #212529;
-      border-radius: 10px;
-      width: 90%;
-      position: absolute;
-      z-index: 900;
+    .away-tooltip-text {
+      color: #000;
+
     }
 
 
-    }
-    .away-tooltip-text::after{
-      content: "";
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
-      border-width: 5px;
-      border-style: solid;
-      border-color: #212529 transparent transparent transparent;
-    }
+  }
 
-    .away-tooltip:hover {
-      .away-tooltip-text {
-        visibility: visible;
-      }
+  .dotted-bottom {
+    border-bottom: 1px dotted;
+  }
+
+  .tooltip:hover {
+    .away-tooltip-container {
+      visibility: visible;
     }
+  }
 
 
   @include media-breakpoint-up(md) {
