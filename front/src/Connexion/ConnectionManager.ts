@@ -292,7 +292,30 @@ class ConnectionManager {
             });
 
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
-                console.log("An error occurred while connecting to socket server. Retrying");
+                console.info(
+                    "An error occurred while connecting to socket server. Retrying => Event: ",
+                    event.reason,
+                    event.code,
+                    event
+                );
+
+                //However, Chrome will rarely report any close code 1006 reasons to the Javascript side.
+                //This is likely due to client security rules in the WebSocket spec to prevent abusing WebSocket.
+                //(such as using it to scan for open ports on a destination server, or for generating lots of connections for a denial-of-service attack).
+                // more detail here: https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+                if (event.code === 1006) {
+                    this.logout().finally(() => {
+                        reject(
+                            new Error(
+                                "An error occurred while connecting to socket server. Retrying. Code: " +
+                                    event.code +
+                                    ", Reason: " +
+                                    event.reason
+                            )
+                        );
+                    });
+                }
+
                 reject(
                     new Error(
                         "An error occurred while connecting to socket server. Retrying. Code: " +
