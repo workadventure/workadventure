@@ -1,5 +1,4 @@
 import {
-    BatchMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     ErrorMessage,

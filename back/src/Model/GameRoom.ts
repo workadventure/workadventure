@@ -13,14 +13,11 @@ import {
 import { PositionNotifier } from "./PositionNotifier";
 import { Movable } from "../Model/Movable";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmoteEventMessage,
-    ErrorMessage,
     JoinRoomMessage,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
-    VariableMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
@@ -398,7 +395,7 @@ export class GameRoom {
     private searchClosestAvailableUserOrGroup(user: User): User | Group | null {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
-        this.users.forEach((currentUser, userId) => {
+        this.users.forEach((currentUser) => {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== "undefined") {
                 return;

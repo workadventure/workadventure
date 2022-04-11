@@ -71,6 +71,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user entered
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
         for (const listener of this.listeners) {
             this.onEnters(thing, oldZone, listener);
