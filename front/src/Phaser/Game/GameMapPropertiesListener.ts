@@ -66,8 +66,6 @@ export class GameMapPropertiesListener {
                     }
                 });
             } else {
-                console.log("START JITSI");
-                console.log(newValue, oldValue, allProps);
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.instance);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;

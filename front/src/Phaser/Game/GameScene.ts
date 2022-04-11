@@ -893,11 +893,14 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.gameMap.onEnterZone((zones) => {
-                    console.log("ZONE ENTERED");
                     for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                        const focusable = zone.properties?.find(
+                            (property) => property.name === GameMapProperties.FOCUSABLE
+                        );
                         if (focusable && focusable.value === true) {
-                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
+                            const zoomMargin = zone.properties?.find(
+                                (property) => property.name === GameMapProperties.ZOOM_MARGIN
+                            );
                             this.cameraManager.enterFocusMode(
                                 {
                                     x: zone.x + zone.width * 0.5,

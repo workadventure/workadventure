@@ -77,7 +77,6 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
         this.zones = this.tiledObjects.filter((object) => object.width > 0);
-        console.log(this.zones);
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -424,23 +423,8 @@ export class GameMap {
      * We use Tiled Objects with type "zone" as zones with defined x, y, width and height for easier event triggering.
      */
     private triggerZonesChange(): void {
-        const zonesByOldPosition = this.oldPosition
-            ? this.zones.filter((zone) => {
-                  if (!this.oldPosition) {
-                      return false;
-                  }
-                  return MathUtils.isOverlappingWithRectangle(this.oldPosition, zone);
-              })
-            : [];
-
-        const zonesByNewPosition = this.position
-            ? this.zones.filter((zone) => {
-                  if (!this.position) {
-                      return false;
-                  }
-                  return MathUtils.isOverlappingWithRectangle(this.position, zone);
-              })
-            : [];
+        const zonesByOldPosition = this.getZonesOnPosition(this.oldPosition);
+        const zonesByNewPosition = this.getZonesOnPosition(this.position);
 
         const enterZones = new Set(zonesByNewPosition);
         const leaveZones = new Set(zonesByOldPosition);
@@ -470,16 +454,7 @@ export class GameMap {
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
 
-        const zonesByNewPosition = this.position
-            ? this.zones.filter((zone) => {
-                  if (!this.position) {
-                      return false;
-                  }
-                  return MathUtils.isOverlappingWithRectangle(this.position, zone);
-              })
-            : [];
-
-        for (const zone of zonesByNewPosition) {
+        for (const zone of this.getZonesOnPosition(this.position)) {
             if (zone.properties !== undefined) {
                 for (const property of zone.properties) {
                     if (property.value === undefined) {
@@ -526,6 +501,17 @@ export class GameMap {
         }
 
         return properties;
+    }
+
+    private getZonesOnPosition(position?: { x: number; y: number }): ITiledMapObject[] {
+        return position
+            ? this.zones.filter((zone) => {
+                  if (!position) {
+                      return false;
+                  }
+                  return MathUtils.isOverlappingWithRectangle(position, zone);
+              })
+            : [];
     }
 
     private getTileProperty(index: number): Array<ITiledMapProperty> {
