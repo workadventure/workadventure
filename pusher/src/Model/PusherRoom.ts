@@ -111,7 +111,7 @@ export class PusherRoom {
             }
         });
 
-        this.backConnection.on("error", (e) => {
+        this.backConnection.on("error", (err) => {
             if (!this.isClosing) {
                 debug("Error on back connection");
                 this.close();
@@ -119,6 +119,7 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
+                    console.error("Connection error between pusher and back server", err);
                 }
             }
         });

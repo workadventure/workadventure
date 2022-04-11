@@ -427,7 +427,7 @@ export class Zone {
             }
         }
 
-        for (const [groupId, group] of this.groups.entries()) {
+        for (const group of this.groups.values()) {
             this.socketListener.onGroupEnters(group, listener);
         }
 
@@ -436,13 +436,13 @@ export class Zone {
     }
 
     public stopListening(listener: ExSocketInterface): void {
-        for (const [userId, user] of this.users.entries()) {
+        for (const userId of this.users.keys()) {
             if (userId !== listener.userId) {
                 this.socketListener.onUserLeaves(userId, listener);
             }
         }
 
-        for (const [groupId, group] of this.groups.entries()) {
+        for (const groupId of this.groups.keys()) {
             this.socketListener.onGroupLeaves(groupId, listener);
         }
 

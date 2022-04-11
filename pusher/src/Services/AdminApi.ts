@@ -1,4 +1,4 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios, { AxiosResponse } from "axios";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";

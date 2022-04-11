@@ -27,7 +27,7 @@ import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
-import { SocketManager, socketManager } from "../Services/SocketManager";
+import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
 import { Zone } from "../Model/Zone";
@@ -97,7 +97,7 @@ export class IoSocketController {
                 console.log("Admin socket connect to client on " + Buffer.from(ws.getRemoteAddressAsText()).toString());
                 ws.disconnecting = false;
             },
-            message: (ws, arrayBuffer, isBinary): void => {
+            message: (ws, arrayBuffer): void => {
                 try {
                     const message: AdminMessageInterface = JSON.parse(
                         new TextDecoder("utf-8").decode(new Uint8Array(arrayBuffer))
@@ -199,7 +199,7 @@ export class IoSocketController {
                     console.error(err);
                 }
             },
-            close: (ws, code, message) => {
+            close: (ws) => {
                 const Client = ws as ExAdminSocketInterface;
                 try {
                     Client.disconnecting = true;
@@ -230,7 +230,6 @@ export class IoSocketController {
                         upgradeAborted.aborted = true;
                     });
 
-                    const url = req.getUrl();
                     const query = parse(req.getQuery());
                     const websocketKey = req.getHeader("sec-websocket-key");
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
@@ -513,7 +512,7 @@ export class IoSocketController {
                     });
                 }
             },
-            message: (ws, arrayBuffer, isBinary): void => {
+            message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
                 const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
@@ -581,7 +580,7 @@ export class IoSocketController {
             drain: (ws) => {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
-            close: (ws, code, message) => {
+            close: (ws) => {
                 const Client = ws as ExSocketInterface;
                 try {
                     Client.disconnecting = true;
