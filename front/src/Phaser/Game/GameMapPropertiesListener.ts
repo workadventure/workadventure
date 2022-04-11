@@ -112,7 +112,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue, oldValue) => {
+        this.gameMap.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue) => {
             if (newValue) {
                 this.scene
                     .onMapExit(
@@ -130,7 +130,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.EXIT_URL, (newValue, oldValue) => {
+        this.gameMap.onPropertyChange(GameMapProperties.EXIT_URL, (newValue) => {
             if (newValue) {
                 this.scene
                     .onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()))
@@ -142,7 +142,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue, oldValue) => {
+        this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.scene.connection?.setSilent(false);
                 this.scene.CurrentPlayer.noSilent();
@@ -162,7 +162,7 @@ export class GameMapPropertiesListener {
         });
 
         // TODO: This legacy property should be removed at some point
-        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue, oldValue) => {
+        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue) => {
             newValue === undefined
                 ? audioManagerFileStore.unloadAudio()
                 : audioManagerFileStore.playAudio(newValue, this.scene.getMapDirUrl(), undefined, true);

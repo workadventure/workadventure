@@ -52,7 +52,7 @@ class CoWebsiteManager {
         trails: number[] | undefined;
     };
 
-    private resizeObserver = new ResizeObserver((entries) => {
+    private resizeObserver = new ResizeObserver(() => {
         this.resizeAllIframes();
     });
 
@@ -223,7 +223,7 @@ class CoWebsiteManager {
             this.fire();
         };
 
-        this.cowebsiteAsideHolderDom.addEventListener("mousedown", (event) => {
+        this.cowebsiteAsideHolderDom.addEventListener("mousedown", () => {
             if (this.isFullScreen) return;
             const coWebsite = this.getMainCoWebsite();
 
@@ -240,7 +240,7 @@ class CoWebsiteManager {
             document.addEventListener("mousemove", movecallback);
         });
 
-        document.addEventListener("mouseup", (event) => {
+        document.addEventListener("mouseup", () => {
             if (!this.resizing || this.isFullScreen) return;
             document.removeEventListener("mousemove", movecallback);
             const coWebsite = this.getMainCoWebsite();
@@ -277,7 +277,7 @@ class CoWebsiteManager {
             document.addEventListener("touchmove", movecallback);
         });
 
-        document.addEventListener("touchend", (event) => {
+        document.addEventListener("touchend", () => {
             if (!this.resizing || this.isFullScreen) return;
             this.previousTouchMoveCoordinates = null;
             document.removeEventListener("touchmove", movecallback);
@@ -298,7 +298,7 @@ class CoWebsiteManager {
     }
 
     private transitionListeners() {
-        this.cowebsiteDom.addEventListener("transitionend", (event) => {
+        this.cowebsiteDom.addEventListener("transitionend", () => {
             if (this.cowebsiteDom.classList.contains("loading")) {
                 this.fire();
             }
@@ -552,7 +552,7 @@ class CoWebsiteManager {
         }
 
         coWebsite.unload().catch((err) => {
-            console.error("Cannot unload cowebsite on remove from stack");
+            console.error("Cannot unload cowebsite on remove from stack", err);
         });
     }
 

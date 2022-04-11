@@ -1,57 +1,44 @@
 import { z } from "zod";
 import type { ButtonClickedEvent } from "./ButtonClickedEvent";
-import { ChatEvent, isChatEvent } from "./ChatEvent";
-import { ClosePopupEvent, isClosePopupEvent } from "./ClosePopupEvent";
+import { isChatEvent } from "./ChatEvent";
+import { isClosePopupEvent } from "./ClosePopupEvent";
 import type { EnterLeaveEvent } from "./EnterLeaveEvent";
-import { GoToPageEvent, isGoToPageEvent } from "./GoToPageEvent";
-import { isLoadPageEvent, LoadPageEvent } from "./LoadPageEvent";
+import { isGoToPageEvent } from "./GoToPageEvent";
+import { isLoadPageEvent } from "./LoadPageEvent";
 import { isCoWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
-import { isOpenPopupEvent, OpenPopupEvent } from "./OpenPopupEvent";
-import { isOpenTabEvent, OpenTabEvent } from "./OpenTabEvent";
+import { isOpenPopupEvent } from "./OpenPopupEvent";
+import { isOpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
-import { isLayerEvent, LayerEvent } from "./LayerEvent";
-import { isSetPropertyEvent, SetPropertyEvent } from "./setPropertyEvent";
-import { isLoadSoundEvent, LoadSoundEvent } from "./LoadSoundEvent";
-import { isPlaySoundEvent, PlaySoundEvent } from "./PlaySoundEvent";
-import { isStopSoundEvent, StopSoundEvent } from "./StopSoundEvent";
+import { isLayerEvent } from "./LayerEvent";
+import { isSetPropertyEvent } from "./setPropertyEvent";
+import { isLoadSoundEvent } from "./LoadSoundEvent";
+import { isPlaySoundEvent } from "./PlaySoundEvent";
+import { isStopSoundEvent } from "./StopSoundEvent";
 import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
-import { isSetTilesEvent, SetTilesEvent } from "./SetTilesEvent";
+import { isSetTilesEvent } from "./SetTilesEvent";
 import type { SetVariableEvent } from "./SetVariableEvent";
 import { isGameStateEvent } from "./GameStateEvent";
 import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
-import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
 import { isCreateEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
-import type { LoadTilesetEvent } from "./LoadTilesetEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
 import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
-import {
-    isMenuRegisterEvent,
-    isUnregisterMenuEvent,
-    MenuRegisterEvent,
-    UnregisterMenuEvent,
-} from "./ui/MenuRegisterEvent";
+import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import { isPlayerPosition } from "./PlayerPosition";
 import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./ChangeZoneEvent";
-import { CameraSetEvent, isCameraSetEvent } from "./CameraSetEvent";
-import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
+import { isCameraSetEvent } from "./CameraSetEvent";
+import { isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
-import {
-    AddActionsMenuKeyToRemotePlayerEvent,
-    isAddActionsMenuKeyToRemotePlayerEvent,
-} from "./AddActionsMenuKeyToRemotePlayerEvent";
+import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
-import {
-    isRemoveActionsMenuKeyFromRemotePlayerEvent,
-    RemoveActionsMenuKeyFromRemotePlayerEvent,
-} from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;

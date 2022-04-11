@@ -27,8 +27,8 @@ module.exports = {
     ],
     "overrides": [
         {
-          "files": ["*.svelte"],
-          "processor": "svelte3/svelte3"
+            "files": ["*.svelte"],
+            "processor": "svelte3/svelte3"
         }
     ],
     "rules": {
@@ -36,6 +36,7 @@ module.exports = {
         "eol-last": ["error", "always"],
         "@typescript-eslint/no-explicit-any": "error",
         "no-throw-literal": "error",
+        "@typescript-eslint/no-unused-vars": ["error"],
         // TODO: remove those ignored rules and write a stronger code!
         "@typescript-eslint/no-unsafe-call": "off",
         "@typescript-eslint/restrict-plus-operands": "off",

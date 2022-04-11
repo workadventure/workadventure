@@ -1,7 +1,4 @@
-import type { LoadSoundEvent } from "../Events/LoadSoundEvent";
-import type { PlaySoundEvent } from "../Events/PlaySoundEvent";
-import type { StopSoundEvent } from "../Events/StopSoundEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution } from "./IframeApiContribution";
 import { Sound } from "./Sound/Sound";
 
 export class WorkadventureSoundCommands extends IframeApiContribution<WorkadventureSoundCommands> {

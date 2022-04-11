@@ -1,9 +1,4 @@
-import {
-    AnimationData,
-    getPlayerAnimations,
-    PlayerAnimationDirections,
-    PlayerAnimationTypes,
-} from "../Player/Animation";
+import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
 import { SpeechBubble } from "./SpeechBubble";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;

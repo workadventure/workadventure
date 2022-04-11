@@ -1,13 +1,11 @@
 import { Subject } from "rxjs";
-import { isChatEvent } from "./Events/ChatEvent";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
 import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
-import { isOpenPopupEvent, OpenPopupEvent } from "./Events/OpenPopupEvent";
-import { isOpenTabEvent, OpenTabEvent } from "./Events/OpenTabEvent";
+import { OpenPopupEvent } from "./Events/OpenPopupEvent";
+import { OpenTabEvent } from "./Events/OpenTabEvent";
 import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
-import { ClosePopupEvent, isClosePopupEvent } from "./Events/ClosePopupEvent";
+import { ClosePopupEvent } from "./Events/ClosePopupEvent";
 import { scriptUtils } from "./ScriptUtils";
-import { isGoToPageEvent } from "./Events/GoToPageEvent";
 import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
@@ -18,33 +16,25 @@ import {
     isLookingLikeIframeEventWrapper,
 } from "./Events/IframeEvent";
 import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
-import { isPlaySoundEvent, PlaySoundEvent } from "./Events/PlaySoundEvent";
-import { isStopSoundEvent, StopSoundEvent } from "./Events/StopSoundEvent";
-import { isLoadSoundEvent, LoadSoundEvent } from "./Events/LoadSoundEvent";
-import { isSetPropertyEvent, SetPropertyEvent } from "./Events/setPropertyEvent";
-import { isLayerEvent, LayerEvent } from "./Events/LayerEvent";
+import { PlaySoundEvent } from "./Events/PlaySoundEvent";
+import { StopSoundEvent } from "./Events/StopSoundEvent";
+import { LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { SetPropertyEvent } from "./Events/setPropertyEvent";
+import { LayerEvent } from "./Events/LayerEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
-import { isLoadPageEvent } from "./Events/LoadPageEvent";
-import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./Events/ui/MenuRegisterEvent";
-import { SetTilesEvent, isSetTilesEvent } from "./Events/SetTilesEvent";
+import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
-import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
+import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
-import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
-import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
+import { CameraSetEvent } from "./Events/CameraSetEvent";
+import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
-import {
-    AddActionsMenuKeyToRemotePlayerEvent,
-    isAddActionsMenuKeyToRemotePlayerEvent,
-} from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
+import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
-import {
-    isRemoveActionsMenuKeyFromRemotePlayerEvent,
-    RemoveActionsMenuKeyFromRemotePlayerEvent,
-} from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -304,6 +294,7 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
+                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const _exhaustiveCheck: never = iframeEvent;
                     }
                 }
@@ -328,7 +319,7 @@ class IframeListener {
     }
 
     registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>((resolve) => {
             console.info("Loading map related script at ", scriptUrl);
 
             const iframe = document.createElement("iframe");

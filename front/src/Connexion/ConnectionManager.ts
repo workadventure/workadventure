@@ -72,9 +72,7 @@ class ConnectionManager {
 
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then(
-            (res) => res.data
-        );
+        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on login page can permit to clear token and start authentication process
@@ -311,9 +309,9 @@ class ConnectionManager {
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
-        }).catch((err) => {
+        }).catch(() => {
             // Let's retry in 4-6 seconds
-            return new Promise<OnConnectInterface>((resolve, reject) => {
+            return new Promise<OnConnectInterface>((resolve) => {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.

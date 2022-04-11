@@ -34,14 +34,6 @@ interface MenuDescriptor {
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
 
-interface ZonedPopupOptions {
-    zone: string;
-    objectLayerName?: string;
-    popupText: string;
-    delay?: number;
-    popupOptions: Array<ButtonDescriptor>;
-}
-
 export interface ActionMessageOptions {
     message: string;
     type?: "message" | "warning";
