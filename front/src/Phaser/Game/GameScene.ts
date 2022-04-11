@@ -892,42 +892,42 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMap.onEnterZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find(
+                this.gameMap.onEnterArea((areas) => {
+                    for (const area of areas) {
+                        const focusable = area.properties?.find(
                             (property) => property.name === GameMapProperties.FOCUSABLE
                         );
                         if (focusable && focusable.value === true) {
-                            const zoomMargin = zone.properties?.find(
+                            const zoomMargin = area.properties?.find(
                                 (property) => property.name === GameMapProperties.ZOOM_MARGIN
                             );
                             this.cameraManager.enterFocusMode(
                                 {
-                                    x: zone.x + zone.width * 0.5,
-                                    y: zone.y + zone.height * 0.5,
-                                    width: zone.width,
-                                    height: zone.height,
+                                    x: area.x + area.width * 0.5,
+                                    y: area.y + area.height * 0.5,
+                                    width: area.width,
+                                    height: area.height,
                                 },
                                 zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
                             );
                             break;
                         }
                     }
-                    zones.forEach((zone) => {
-                        iframeListener.sendEnterZoneEvent(zone.name);
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMap.onLeaveZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
+                this.gameMap.onLeaveArea((areas) => {
+                    for (const area of areas) {
+                        const focusable = area.properties?.find((property) => property.name === "focusable");
                         if (focusable && focusable.value === true) {
                             this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
                             break;
                         }
                     }
-                    zones.forEach((zone) => {
-                        iframeListener.sendLeaveZoneEvent(zone.name);
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveAreaEvent(area.name);
                     });
                 });
 

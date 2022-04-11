@@ -31,7 +31,7 @@ import { ModifyEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./Events/Emb
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
+import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import { CameraSetEvent, isCameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent, isCameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
@@ -441,21 +441,21 @@ class IframeListener {
         });
     }
 
-    sendEnterZoneEvent(zoneName: string) {
+    sendEnterAreaEvent(areaName: string) {
         this.postMessage({
-            type: "enterZoneEvent",
+            type: "enterAreaEvent",
             data: {
-                name: zoneName,
-            } as ChangeZoneEvent,
+                name: areaName,
+            } as ChangeAreaEvent,
         });
     }
 
-    sendLeaveZoneEvent(zoneName: string) {
+    sendLeaveAreaEvent(areaName: string) {
         this.postMessage({
-            type: "leaveZoneEvent",
+            type: "leaveAreaEvent",
             data: {
-                name: zoneName,
-            } as ChangeZoneEvent,
+                name: areaName,
+            } as ChangeAreaEvent,
         });
     }
 
