@@ -15,6 +15,7 @@ In order to create a silent zone:
 
 {.alert.alert-info}
 As an alternative, you may also put the `silent` property on a layer (rather than putting them on an "area" object)
+but we advise to stick with "area" objects for better performance!
 
 ## Playing sounds or background music
 
@@ -33,3 +34,4 @@ In order to create a zone that triggers sounds/music:
 
 {.alert.alert-info}
 As an alternative, you may also put the `playAudio` properties on a layer (rather than putting them on an "area" object)
+but we advise to stick with "area" objects for better performance!

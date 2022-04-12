@@ -18,6 +18,7 @@ You can have this object (i.e. your meeting area) to be selectable as the precis
 
 {.alert.alert-info}
 As an alternative, you may also put the `jitsiRoom` properties on a layer (rather than putting them on an "area" object)
+but we advise to stick with "area" objects for better performance!
 
 ## Triggering of the "Jitsi meet" action
 
