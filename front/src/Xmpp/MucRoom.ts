@@ -33,7 +33,7 @@ export class MucRoom {
 
     public disconnect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
-        const message = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
+        return xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
     }
 
     onMessage(xml: xml.Element): void {

@@ -2,7 +2,7 @@ import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { MucRoomDefinitionInterface, ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -41,21 +41,44 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
-    XmppMessage,
     XmppSettingsMessage,
-    XmppConnectionStatusChangeMessage,
     XmppConnectionStatusChangeMessage_Status,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
-import { OpenPopupEvent } from "../Api/Events/OpenPopupEvent";
-import { match } from "assert";
 import type xml from "@xmpp/xml";
-const parse = require("@xmpp/xml/lib/parse");
+import { ElementChild, Parser } from "@xmpp/xml";
 
 const manualPingDelay = 20000;
+
+const parse = (data: Buffer) => {
+    const p = new Parser();
+    let result: xml.Element | null = null;
+    let error = null;
+
+    p.on("start", (el: xml.Element) => {
+        result = el;
+    });
+    p.on("element", (el: ElementChild) => {
+        if (result == undefined) {
+            return;
+        }
+        result.append(el);
+    });
+    p.on("error", (err) => {
+        console.error("Error => XML XMPP Parser => ", err);
+        error = err;
+    });
+    p.write(data);
+    p.end(data);
+    if (error) {
+        throw error;
+    } else {
+        return result;
+    }
+};
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -316,7 +339,12 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "xmppMessage": {
-                                this._xmppMessageStream.next(parse(subMessage.xmppMessage.stanza));
+                                const data = parse(Buffer.from(subMessage.xmppMessage.stanza));
+                                if (data == undefined) {
+                                    console.error("xmppMessage  => data is undefined => ", data);
+                                    break;
+                                }
+                                this._xmppMessageStream.next(data);
                                 break;
                             }
                             default: {

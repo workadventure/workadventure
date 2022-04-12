@@ -5,10 +5,7 @@ import { MucRoom } from "./MucRoom";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
-import {
-    XmppConnectionStatusChangeMessage,
-    XmppConnectionStatusChangeMessage_Status as Status,
-} from "../Messages/ts-proto-generated/messages";
+import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/messages";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -63,7 +60,7 @@ export class XmppClient {
                     throw new Error("Unexpected status received");
                 }
                 default: {
-                    const _exhaustiveCheck: never = status;
+                    //const _exhaustiveCheck: never = status;
                 }
             }
         });
@@ -152,7 +149,7 @@ export class XmppClient {
     }
 
     public close() {
-        for (const [url, room] of this.rooms) {
+        for (const [, room] of this.rooms) {
             room.disconnect();
             mucRoomsStore.removeMucRoom(room);
         }
