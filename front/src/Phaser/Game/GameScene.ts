@@ -234,7 +234,7 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = room.getInstance();
+        this.instance = room.instance;
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
