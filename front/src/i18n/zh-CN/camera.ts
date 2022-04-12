@@ -9,8 +9,7 @@ const camera: BaseTranslation = {
         title: "需要摄像头/麦克风权限",
         permissionDenied: "拒绝访问",
         content: "你必须在浏览器设置里允许摄像头和麦克风访问权限。",
-        firefoxContent:
-            '如果你不希望Firefox反复要求授权，请选中"记住此决定"。',
+        firefoxContent: '如果你不希望Firefox反复要求授权，请选中"记住此决定"。',
         refresh: "刷新",
         continue: "不使用摄像头继续游戏",
         screen: {
