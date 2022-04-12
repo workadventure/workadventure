@@ -1,5 +1,5 @@
-import {writable} from "svelte/store";
-import {WAError} from "../Phaser/Reconnecting/WAError";
+import { writable } from "svelte/store";
+import { WAError } from "../Phaser/Reconnecting/WAError";
 
 /**
  * A store that contains one error of type WAError to be displayed.
@@ -9,9 +9,7 @@ function createErrorScreenStore() {
 
     return {
         subscribe,
-        setError: (
-            e: WAError
-        ): void => set(e),
+        setError: (e: WAError): void => set(e),
     };
 }
 

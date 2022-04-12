@@ -47,8 +47,8 @@ import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
-import {errorScreenStore} from "../Stores/ErrorScreenStore";
-import {WAError} from "../Phaser/Reconnecting/WAError";
+import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { WAError } from "../Phaser/Reconnecting/WAError";
 
 const manualPingDelay = 20000;
 
@@ -483,7 +483,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "errorV2Message": {
                     this._errorV2MessageStream.next(message.errorV2Message);
-                    if(message.errorV2Message.code !== 'retry') this.closed = true;
+                    if (message.errorV2Message.code !== "retry") this.closed = true;
                     console.error("An error occurred server side: " + message.errorV2Message.code);
                     errorScreenStore.setError(message.errorV2Message as unknown as WAError);
                     break;

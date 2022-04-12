@@ -16,7 +16,6 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
 
-
     export let game: Game;
 </script>
 

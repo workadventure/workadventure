@@ -4,12 +4,22 @@ export class WAError extends Error {
     private _title: string;
     private _subtitle: string;
     private _details: string;
-    private _timeToRetry:number;
+    private _timeToRetry: number;
     private _canRetryManual: boolean;
     private _urlToRedirect: string;
     private _buttonTitle: string;
 
-    constructor(type: string, code: string, title: string, subtitle: string, details: string, timeToRetry: number, canRetryManual: boolean, urlToRedirect: string, buttonTitle: string) {
+    constructor(
+        type: string,
+        code: string,
+        title: string,
+        subtitle: string,
+        details: string,
+        timeToRetry: number,
+        canRetryManual: boolean,
+        urlToRedirect: string,
+        buttonTitle: string
+    ) {
         super(title + " - " + subtitle + " - " + details);
 
         this._type = type;
