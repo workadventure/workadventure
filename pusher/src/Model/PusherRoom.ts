@@ -1,8 +1,8 @@
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
 import { arrayIntersect } from "../Services/ArrayHelper";
-import { ZoneEventListener } from "_Model/Zone";
+import { ZoneEventListener } from "../Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherRoomMessage,
@@ -137,7 +137,7 @@ export class PusherRoom {
             }
         });
 
-        this.backConnection.on("error", (e) => {
+        this.backConnection.on("error", (err) => {
             if (!this.isClosing) {
                 debug("Error on back connection");
                 this.close();
@@ -145,6 +145,7 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
+                    console.error("Connection error between pusher and back server", err);
                 }
             }
         });

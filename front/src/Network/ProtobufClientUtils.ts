@@ -9,7 +9,7 @@ export interface MucRoomDefinitionInterface {
 
 export class ProtobufClientUtils {
     public static toPointInterface(position: PositionMessage): PointInterface {
-        let direction: string;
+        let direction: "up" | "down" | "left" | "right";
         switch (position.direction) {
             case PositionMessage_Direction.UP:
                 direction = "up";

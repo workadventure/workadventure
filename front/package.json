@@ -48,7 +48,6 @@
     "cross-env": "^7.0.3",
     "deep-copy-ts": "^0.5.0",
     "easystarjs": "^0.4.4",
-    "generic-type-guard": "^3.4.2",
     "google-protobuf": "^3.13.0",
     "phaser": "3.55.1",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#da68bbededd605925621dd4f03bd27e69284b254",
@@ -66,7 +65,7 @@
     "ts-proto": "^1.96.0",
     "typesafe-i18n": "^2.59.0",
     "uuidv4": "^6.2.10",
-    "zod": "^3.11.6"
+    "zod": "^3.14.3"
   },
   "scripts": {
     "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",

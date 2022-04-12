@@ -48,7 +48,7 @@ export class DebugController {
                                     return obj;
                                 } else if (value instanceof Set) {
                                     const obj: Array<unknown> = [];
-                                    for (const [setKey, setValue] of value.entries()) {
+                                    for (const setValue of value.values()) {
                                         obj.push(setValue);
                                     }
                                     return obj;

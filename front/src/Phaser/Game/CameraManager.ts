@@ -97,6 +97,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             });
             return;
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.camera.pan(setTo.x, setTo.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             if (this.cameraMode === CameraMode.Positioned) {
                 this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
@@ -138,6 +139,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             return;
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.camera.pan(focusOn.x, focusOn.y, duration, Easing.SineEaseOut, true, (camera, progress, x, y) => {
             this.waScaleManager.zoomModifier = currentZoomModifier + progress * zoomModifierChange;
             if (progress === 1) {

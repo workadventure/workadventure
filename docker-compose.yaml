@@ -117,7 +117,6 @@ services:
       #APACHE_EXTENSION_HEADERS: 1
       STARTUP_COMMAND_0: sudo a2enmod headers
       STARTUP_COMMAND_1: yarn install
-      STARTUP_COMMAND_2: yarn run dev &
     volumes:
       - ./maps:/var/www/html
     labels:

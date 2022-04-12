@@ -1,13 +1,12 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isColorEvent = new tg.IsInterface()
-    .withProperties({
-        red: tg.isNumber,
-        green: tg.isNumber,
-        blue: tg.isNumber,
-    })
-    .get();
+export const isColorEvent = z.object({
+    red: z.number(),
+    green: z.number(),
+    blue: z.number(),
+});
+
 /**
  * A message sent from the iFrame to the game to dynamically set the outline of the player.
  */
-export type ColorEvent = tg.GuardedType<typeof isColorEvent>;
+export type ColorEvent = z.infer<typeof isColorEvent>;

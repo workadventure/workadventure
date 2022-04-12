@@ -100,7 +100,7 @@ export class PathfindingManager {
         start: { x: number; y: number },
         end: { x: number; y: number }
     ): Promise<{ x: number; y: number }[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.easyStar.findPath(start.x, start.y, end.x, end.y, (path) => {
                 if (path === null) {
                     resolve([]);

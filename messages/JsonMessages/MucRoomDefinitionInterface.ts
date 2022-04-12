@@ -1,11 +1,7 @@
-import * as tg from "generic-type-guard";
-import { isMapDetailsData } from "./MapDetailsData";
+import { z } from "zod";
 
-export const isMucRoomDefinition = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-        uri: tg.isString,
-    })
-    .get();
-
-export type MucRoomDefinitionInterface = tg.GuardedType<typeof isMucRoomDefinition>;
+export const isMucRoomDefinition = z.object({
+    name: z.optional(z.string()),
+    uri: z.optional(z.string()),
+});
+export type MucRoomDefinitionInterface = z.infer<typeof isMucRoomDefinition>;

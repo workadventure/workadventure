@@ -100,7 +100,6 @@ import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
@@ -193,7 +192,7 @@ export class GameScene extends DirtyScene {
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasPlayerMovedEvent = {
-        direction: "",
+        direction: "down",
         moving: false,
         x: -1000,
         y: -1000,
@@ -1055,6 +1054,7 @@ ${escapedMessage}
                 }, 100);
 
                 id = 0;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for (const button of openPopupEvent.buttons) {
                     const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(
                         `popup-${openPopupEvent.popupId}-${id}`
@@ -1313,7 +1313,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName,
+                startLayerName: this.startPositionCalculator.startLayerName ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -1422,6 +1422,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const _exhaustiveCheck: never = event.target;
                 }
             }
@@ -1441,7 +1442,7 @@ ${escapedMessage}
             this.connection?.emitPlayerOutlineColor(color);
         });
 
-        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+        iframeListener.registerAnswerer("removePlayerOutline", () => {
             this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
@@ -1725,6 +1726,7 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -1775,9 +1777,11 @@ ${escapedMessage}
                     emoteMenuStore.openEmoteMenu();
                 }
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();
             });
@@ -1879,6 +1883,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const tmp: never = event;
                 }
             }
@@ -2040,8 +2045,6 @@ ${escapedMessage}
             this.currentTick,
             {
                 ...message.position,
-                oldX: undefined,
-                oldY: undefined,
             },
             this.currentTick + POSITION_DELAY
         );

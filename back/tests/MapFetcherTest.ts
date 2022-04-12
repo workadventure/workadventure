@@ -1,4 +1,3 @@
-import { arrayIntersect } from "../src/Services/ArrayHelper";
 import { mapFetcher } from "../src/Services/MapFetcher";
 
 describe("MapFetcher", () => {

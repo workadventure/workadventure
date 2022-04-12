@@ -68,6 +68,11 @@
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+              "OPID_CLIENT_ID": "auth-code-client",
+              "OPID_CLIENT_SECRET": "mySecretHydraWA2022",
+              "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
+              "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
+              "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
             } else {})
           },
     "front": {

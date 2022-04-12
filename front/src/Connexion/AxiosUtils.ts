@@ -58,4 +58,4 @@ export function hideConnectionIssueMessage() {
     errorStore.clearMessageById("axios_retry");
 }
 
-const interceptorId = rax.attach(axiosWithRetry);
+rax.attach(axiosWithRetry);

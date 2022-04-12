@@ -166,10 +166,12 @@ export class MapController extends BaseHttpController {
                             }
                         }
                     }
-                    const mapDetails = await adminApi.fetchMapDetails(query.playUri as string, userId);
+                    const mapDetails = isMapDetailsData.safeParse(
+                        await adminApi.fetchMapDetails(query.playUri as string, userId)
+                    );
 
-                    if (isMapDetailsData(mapDetails) && DISABLE_ANONYMOUS) {
-                        mapDetails.authenticationMandatory = true;
+                    if (mapDetails.success && DISABLE_ANONYMOUS) {
+                        mapDetails.data.authenticationMandatory = true;
                     }
 
                     res.json(mapDetails);

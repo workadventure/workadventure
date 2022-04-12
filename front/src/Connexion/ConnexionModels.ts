@@ -5,7 +5,7 @@ import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTe
 export interface PointInterface {
     x: number;
     y: number;
-    direction: string; // TODO: modify this to the enum from ts-proto
+    direction: "up" | "down" | "left" | "right"; // TODO: modify this to the enum from ts-proto
     moving: boolean;
 }
 

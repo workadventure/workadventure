@@ -9,7 +9,7 @@ function createCoWebsiteStore() {
     return {
         subscribe,
         add: (coWebsite: CoWebsite, position?: number) => {
-            coWebsite.getStateSubscriber().subscribe((value) => {
+            coWebsite.getStateSubscriber().subscribe(() => {
                 update((currentArray) => currentArray);
             });
 
@@ -18,7 +18,6 @@ function createCoWebsiteStore() {
                     if (position === 0) {
                         return [coWebsite, ...currentArray];
                     } else if (currentArray.length > position) {
-                        const test = [...currentArray.splice(position, 0, coWebsite)];
                         return [...currentArray.splice(position, 0, coWebsite)];
                     }
 
