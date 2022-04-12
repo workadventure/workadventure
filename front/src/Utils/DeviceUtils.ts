@@ -12,7 +12,7 @@ interface SupportedBrowser {
  * /!\ WARNING: Note that the above solution is not always reliable. The value of the userAgent can be easily changed.
 */
 export class DeviceUtils {
-    private static message: string = "Your browser is compatible";
+    private static message: string = "Your browser is incompatible. Please upgrade or use Google Chrome.";
     private static supportedBrowsers: SupportedBrowser[] = [
         {
             name: "ie",
@@ -40,21 +40,54 @@ export class DeviceUtils {
         },
     ];
 
-    /**
-     * Add cases of incompatibilities here
-     */
     public static isCompatible(): boolean {
+        if (!this.supportsFeatures()) {
+            return false;
+        }
+        if (!this.supportsBrowser()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * This method checks if the browser has a specific and mandatory Javascript feature.
+     */
+    private static supportsFeatures(): boolean {
+        let iframe = document.createElement("iframe");
+        if (!(iframe instanceof HTMLIFrameElement)) {
+            this.message = "Your browser doesn't support iFrames. Please upgrade or use Google Chrome."
+            return false;
+        }
+
+        if (!navigator.hasOwnProperty("getUserMedia") || !window.hasOwnProperty("RTCPeerConnection")) {
+            this.message = "Your browser doesn't support WebRTC. Please upgrade or use Google Chrome."
+            return false;
+        }
+
+        if (!window.hasOwnProperty("BigInt64Array")) {
+            this.message = "Your browser doesn't support BigInt64Array. Please upgrade or use Google Chrome."
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * This method checks if the browser and browser version is compatible
+     * by providing minimum version numbers.
+     */
+    private static supportsBrowser(): boolean {
         if (browser) {
-            if (this.supportedBrowsers.some(b => b.name === browser?.browser && b.version < browser?.version)) {
-                this.message = `Your browser is not compatible. Please update your ${browser.os} version (you have ${browser.version})`
+            if (this.supportedBrowsers.some(b => b.name === browser?.browser && browser?.version < b.version)) {
+                this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`
                 return false;
             }
         }
 
         return true;
     }
-
-    // TODO: feature detection (BigInt64Array)
 
     public static getMessage(): string {
         return this.message;
