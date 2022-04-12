@@ -304,16 +304,18 @@ class ConnectionManager {
                 //(such as using it to scan for open ports on a destination server, or for generating lots of connections for a denial-of-service attack).
                 // more detail here: https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
                 if (event.code === 1006) {
-                    this.logout().finally(() => {
-                        reject(
-                            new Error(
-                                "An error occurred while connecting to socket server. Retrying. Code: " +
-                                    event.code +
-                                    ", Reason: " +
-                                    event.reason
-                            )
-                        );
-                    });
+                    //check cookies
+                    const cookies = document.cookie.split(";");
+                    for (const cookie of cookies) {
+                        //check id cookie posthog exist
+                        const numberIndexPh = cookie.indexOf("_posthog=");
+                        if (numberIndexPh !== -1) {
+                            //if exist, remove posthog cookie
+                            document.cookie =
+                                cookie.slice(0, numberIndexPh + 9) +
+                                "; domain=.workadventu.re; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                        }
+                    }
                 }
 
                 reject(
