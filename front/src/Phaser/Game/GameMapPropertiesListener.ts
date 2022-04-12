@@ -6,7 +6,7 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { ITiledMapLayer, ITiledMapProperty } from "../Map/ITiledMap";
+import type { ITiledMapProperty } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -29,6 +29,8 @@ interface OpenCoWebsite {
 export interface ITiledPlace {
     name: string;
     properties?: ITiledMapProperty[];
+    width?: number;
+    height?: number;
 }
 
 export class GameMapPropertiesListener {
