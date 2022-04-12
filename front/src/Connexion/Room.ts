@@ -15,10 +15,6 @@ export interface RoomRedirect {
 
 export class Room {
     public readonly id: string;
-    /**
-     * @deprecated
-     */
-    private readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
@@ -36,13 +32,6 @@ export class Room {
 
         if (this.id.startsWith("/")) {
             this.id = this.id.substr(1);
-        }
-        if (this.id.startsWith("_/") || this.id.startsWith("*/")) {
-            this.isPublic = true;
-        } else if (this.id.startsWith("@/")) {
-            this.isPublic = false;
-        } else {
-            throw new Error("Invalid room ID");
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -84,7 +73,7 @@ export class Room {
 
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
-        if (currentRoom.isPublic) {
+        if (currentRoom.id.startsWith("_/") || currentRoom.id.startsWith("*/")) {
             const match = /[_*]\/([^/]+)\/.+/.exec(currentRoom.id);
             if (!match) throw new Error('Could not extract instance from "' + currentRoom.id + '"');
             instance = match[1];
