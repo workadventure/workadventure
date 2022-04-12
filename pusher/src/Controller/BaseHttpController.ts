@@ -31,12 +31,14 @@ export class BaseHttpController {
 
         if (axios.isAxiosError(e) && e.response) {
             res.status(e.response.status);
-            res.send(
-                "An error occurred: " +
-                    e.response.status +
-                    " " +
-                    (e.response.data && e.response.data.message ? e.response.data.message : e.response.statusText)
-            );
+            if(!e.response.data?.code) {
+                res.send(
+                    "An error occurred: " +
+                        e.response.status +
+                        " " +
+                        (e.response.data && e.response.data.message ? e.response.data.message : e.response.statusText)
+                );
+            } else res.json(e.response.data);
             return;
         } else {
             res.status(500);

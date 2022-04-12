@@ -26,6 +26,11 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi {
+    private locale: string = 'en';
+    setLocale(locale: string){
+        //console.info('PUSHER LOCALE SET TO :', locale);
+        this.locale = locale;
+    }
     /**
      * @var playUri: is url of the room
      * @var userId: can to be undefined or email or uuid
@@ -42,7 +47,7 @@ class AdminApi {
         };
 
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale },
             params,
         });
 
@@ -80,7 +85,7 @@ class AdminApi {
                 ipAddress,
                 characterLayers,
             },
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale },
             paramsSerializer: (p) => {
                 return qs.stringify(p, { arrayFormat: "brackets" });
             },
@@ -106,7 +111,7 @@ class AdminApi {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale },
         });
 
         const adminApiData = isAdminApiData.safeParse(res.data);
@@ -138,7 +143,7 @@ class AdminApi {
                 reportWorldSlug,
             },
             {
-                headers: { Authorization: `${ADMIN_API_TOKEN}` },
+                headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale },
             }
         );
     }
@@ -157,7 +162,7 @@ class AdminApi {
                 encodeURIComponent(userUuid) +
                 "&roomUrl=" +
                 encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}` } }
+            { headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale } }
         ).then((data) => {
             return data.data;
         });
@@ -169,7 +174,7 @@ class AdminApi {
         }
 
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, 'Accept-Language': this.locale },
         }).then((data) => {
             return data.data;
         });

@@ -218,6 +218,18 @@ message ErrorMessage {
   string message = 1;
 }
 
+message ErrorV2Message {
+  string type = 1;
+  string code = 2;
+  string title = 3;
+  string subtitle = 4;
+  string details = 5;
+  int32 timeToRetry = 6;
+  bool canRetryManual = 7;
+  string urlToRedirect = 8;
+  string buttonTitle = 9;
+}
+
 message ItemStateMessage {
   int32 itemId = 1;
   string stateJson = 2;
@@ -329,6 +341,7 @@ message ServerToClientMessage {
     FollowAbortMessage followAbortMessage = 23;
     InvalidTextureMessage invalidTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
+    ErrorV2Message errorV2Message = 26;
   }
 }
 

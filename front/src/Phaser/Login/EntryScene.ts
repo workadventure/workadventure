@@ -4,9 +4,8 @@ import { ErrorScene } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import LL from "../../i18n/i18n-svelte";
-import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
+import {errorScreenStore} from "../../Stores/ErrorScreenStore";
 
 export const EntrySceneName = "EntryScene";
 
@@ -47,27 +46,18 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
-                        const $LL = get(LL);
-                        if (err.response && err.response.status == 404) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.accessLink.title(),
-                                    $LL.error.accessLink.subTitle(),
-                                    $LL.error.accessLink.details()
-                                ),
-                                this.scene
-                            );
-                        } else if (err.response && err.response.status == 403) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.connectionRejected.title(),
-                                    $LL.error.connectionRejected.subTitle({
-                                        error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
-                                    }),
-                                    $LL.error.connectionRejected.details()
-                                ),
-                                this.scene
-                            );
+                        if (err.response.data?.code) {
+                            errorScreenStore.setError(new WAError(
+                                err.response.data.type,
+                                err.response.data.code,
+                                err.response.data.title,
+                                err.response.data.subtitle,
+                                err.response.data.details,
+                                err.response.data.timeToRetry,
+                                err.response.data.canRetryManual,
+                                err.response.data.urlToRedirect,
+                                err.response.data.buttonTitle
+                            ));
                         } else {
                             ErrorScene.showError(err, this.scene);
                         }
