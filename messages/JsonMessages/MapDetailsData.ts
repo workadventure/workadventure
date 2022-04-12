@@ -13,6 +13,7 @@ export const isMapDetailsData = z.object({
     roomSlug: z.nullable(z.string()), // deprecated
     contactPage: z.nullable(z.string()),
     group: z.nullable(z.string()),
+    instance: z.string(),
 
     iframeAuthentication: z.optional(z.nullable(z.string())),
     // The date (in ISO 8601 format) at which the room will expire

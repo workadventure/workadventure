@@ -130,6 +130,7 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                this.instance = data.instance;
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);

@@ -76,6 +76,10 @@ export class MapController extends BaseHttpController {
          *                   type: string|null
          *                   description: The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)
          *                   example: myorg/myworld
+         *                 instance:
+         *                   type: string
+         *                   description: The instance of this map. In a public URL: the second part of the URL (_/[instance]/map.json)
+         *                   example: global
          *                 iframeAuthentication:
          *                   type: string|null
          *                   description: The URL of the authentication Iframe
@@ -111,14 +115,15 @@ export class MapController extends BaseHttpController {
             if (!ADMIN_API_URL) {
                 const roomUrl = new URL(query.playUri);
 
-                const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+                const match = /\/_\/([^/]+)\/(.+)/.exec(roomUrl.pathname);
                 if (!match) {
                     res.status(404);
                     res.json({});
                     return;
                 }
 
-                const mapUrl = roomUrl.protocol + "//" + match[1];
+                const instance = match[1];
+                const mapUrl = roomUrl.protocol + "//" + match[2];
 
                 res.json({
                     mapUrl,
@@ -128,6 +133,7 @@ export class MapController extends BaseHttpController {
                     tags: [],
                     contactPage: null,
                     authenticationMandatory: DISABLE_ANONYMOUS,
+                    instance,
                 } as MapDetailsData);
 
                 return;
