@@ -39,7 +39,8 @@ import {
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
     LockGroupPromptMessage,
-    InvalidTextureMessage, ErrorV2Message,
+    InvalidTextureMessage,
+    ErrorV2Message,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -643,7 +644,18 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorV2Message(client: compressors.WebSocket, type: string, code: string, title: string, subtitle: string, details: string, timeToRetry: number, canRetryManual: boolean, urlToRedirect: string, buttonTitle: string) {
+    public emitErrorV2Message(
+        client: compressors.WebSocket,
+        type: string,
+        code: string,
+        title: string,
+        subtitle: string,
+        details: string,
+        timeToRetry: number,
+        canRetryManual: boolean,
+        urlToRedirect: string,
+        buttonTitle: string
+    ) {
         const errorMessage = new ErrorV2Message();
         errorMessage.setType(type);
         errorMessage.setCode(code);
@@ -659,7 +671,7 @@ export class SocketManager implements ZoneEventListener {
         serverToClientMessage.setErrorv2message(errorMessage);
 
         //if (!client.disconnecting) {
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
         //}
     }
 

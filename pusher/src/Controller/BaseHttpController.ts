@@ -31,7 +31,7 @@ export class BaseHttpController {
 
         if (axios.isAxiosError(e) && e.response) {
             res.status(e.response.status);
-            if(!e.response.data?.code) {
+            if (!e.response.data?.code) {
                 res.send(
                     "An error occurred: " +
                         e.response.status +

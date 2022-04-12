@@ -236,7 +236,7 @@ export class IoSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
 
-                    adminApi.setLocale(req.getHeader('accept-language'));
+                    adminApi.setLocale(req.getHeader("accept-language"));
 
                     const roomId = query.roomId;
                     try {
@@ -486,7 +486,18 @@ export class IoSocketController {
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.reason === "error") {
-                        socketManager.emitErrorV2Message(ws, ws.error.type, ws.error.code, ws.error.title, ws.error.subtitle, ws.error.details, ws.error.timeToRetry, ws.error.canRetryManual, ws.error.urlToRedirect, ws.error.buttonTitle);
+                        socketManager.emitErrorV2Message(
+                            ws,
+                            ws.error.type,
+                            ws.error.code,
+                            ws.error.title,
+                            ws.error.subtitle,
+                            ws.error.details,
+                            ws.error.timeToRetry,
+                            ws.error.canRetryManual,
+                            ws.error.urlToRedirect,
+                            ws.error.buttonTitle
+                        );
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }
