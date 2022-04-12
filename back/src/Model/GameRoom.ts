@@ -579,7 +579,7 @@ export class GameRoom {
                 roomSlug: null,
                 contactPage: null,
                 group: null,
-                instance
+                instance,
             };
         }
 
