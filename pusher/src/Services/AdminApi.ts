@@ -4,8 +4,8 @@ import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDe
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { z } from "zod";
-import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
+import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 
 export interface AdminBannedData {
     is_banned: boolean;

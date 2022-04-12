@@ -268,6 +268,11 @@
   resolved "https://registry.yarnpkg.com/@types/long/-/long-4.0.1.tgz#459c65fa1867dafe6a8f322c4c51695663cc55e9"
   integrity sha512-5tXH6Bx/kNGd3MgffdmP4dy2Z+G4eaXw0SE81Tq3BNadtnMR5/ySMzX4SLEzHJzSmPNn4HIdpQsBvXMUykr58w==
 
+"@types/ltx@*":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@types/ltx/-/ltx-3.0.2.tgz#9eec642be1ac82c36427ed791ec35e4370ebc786"
+  integrity sha512-A/f5iJ5vkD5n4z7VWGhpq25mxKmxkWF52uxsbS8M6Et8ck4BU35Soew+q6Mg+MuviYFOyeZgb/rRiS2zDShsAQ==
+
 "@types/node@*", "@types/node@^15.3.0":
   version "15.3.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-15.3.0.tgz#d6fed7d6bc6854306da3dea1af9f874b00783e26"
@@ -335,6 +340,19 @@
   integrity sha512-xUrhYSJnkTq9CP79cU3svoKTLPCIbMMnu9Twf/tMpHATYSHCAAeDNeb2a/29YORhk5p4atHhCTMsIBU/tvdh6A==
   dependencies:
     uuidv4 "*"
+
+"@types/xmpp__jid@^1.3.1":
+  version "1.3.3"
+  resolved "https://registry.yarnpkg.com/@types/xmpp__jid/-/xmpp__jid-1.3.3.tgz#ef439d61d054ff40cf4666e153d4460472680234"
+  integrity sha512-dSsfCAuhl6tUrFMnvudyQwpTVRM58ldWIhW0marSIka2u4ratB7BHIOZq9Anc/rLrV18/sl6UuDT+hao1GZnLw==
+
+"@types/xmpp__xml@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@types/xmpp__xml/-/xmpp__xml-0.6.1.tgz#985a4344a6d9a4cec3890b2484b7b3699aed4958"
+  integrity sha512-/O8QvvBrXKyXYOyPe0slIDFFOae8XtPeBF2OW3bUjvdXHL+/G8QuoCXQg5tg2F+SHkZjp9ufieaj64l7q8tePw==
+  dependencies:
+    "@types/ltx" "*"
+    "@types/node" "*"
 
 "@typescript-eslint/eslint-plugin@^5.6.0":
   version "5.6.0"
@@ -405,6 +423,18 @@
   dependencies:
     "@typescript-eslint/types" "5.6.0"
     eslint-visitor-keys "^3.0.0"
+
+"@xmpp/jid@^0.13.0":
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/@xmpp/jid/-/jid-0.13.1.tgz#043cd7c491feeb6a7c9f7b1b3581f94939670717"
+  integrity sha512-E5ulk4gfPQwPY71TWXapiWzoxxAJz3LP0bDIUXIfgvlf1/2QKP3EcYQ7o+qmI0cLEZwWmwluRGouylqhyuwcAw==
+
+"@xmpp/xml@^0.13.0":
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/@xmpp/xml/-/xml-0.13.1.tgz#856b992dec1978fba89e06bd4718d91a31188916"
+  integrity sha512-GMfYB3PKY9QzsMnl3dPohgPBGd1JQTBanKOaZexJCSYJN2cdYLU2HGhjMtDlGSno6h9U+t0oO7r0igsJwyigwg==
+  dependencies:
+    ltx "^3.0.0"
 
 acorn-jsx@^5.3.1:
   version "5.3.1"
@@ -1871,6 +1901,11 @@ lru-cache@^6.0.0:
   integrity sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA==
   dependencies:
     yallist "^4.0.0"
+
+ltx@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/ltx/-/ltx-3.0.0.tgz#f2a2260814165c5e28d455f9f7db2178ed295187"
+  integrity sha512-bu3/4/ApUmMqVNuIkHaRhqVtEi6didYcBDIF56xhPRCzVpdztCipZ62CUuaxMlMBUzaVL93+4LZRqe02fuAG6A==
 
 magic-string@^0.25.7:
   version "0.25.7"

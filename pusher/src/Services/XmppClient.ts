@@ -1,4 +1,4 @@
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { v4 } from "uuid";
 import {
     MucRoomDefinitionMessage,
@@ -117,8 +117,11 @@ export class XmppClient {
             xmppSettings.setJid(address.toString());
             xmppSettings.setConferencedomain("conference.ejabberd");
             xmppSettings.setRoomsList(
-                this.initialMucRooms.map((definition) => {
+                this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
                     const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                    if (!definition.name || !definition.uri) {
+                        throw new Error("Name and Uri cannot be empty!");
+                    }
                     mucRoomDefinitionMessage.setName(definition.name);
                     mucRoomDefinitionMessage.setUrl(definition.uri);
                     return mucRoomDefinitionMessage;

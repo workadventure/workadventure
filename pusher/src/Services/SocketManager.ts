@@ -445,16 +445,13 @@ export class SocketManager implements ZoneEventListener {
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
         const data = await adminApi.fetchMapDetails(room.roomUrl);
-const mapDetailsData = isMapDetailsData.safeParse(data);
+        const mapDetailsData = isMapDetailsData.safeParse(data);
 
         if (mapDetailsData.success) {
             room.tags = mapDetailsData.data.tags;
             room.policyType = Number(mapDetailsData.data.policy_type);
-        }else if (isMapDetailsData(data)) {
-            room.tags = data.tags;
-            room.policyType = Number(data.policy_type);
-            room.groupId = data.group;
-            room.mucRooms = data.mucRooms;
+            room.groupId = mapDetailsData.data.group;
+            room.mucRooms = mapDetailsData.data.mucRooms;
         } else {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
             // and redirect everybody to the new location (so we need to close the connection for everybody)
