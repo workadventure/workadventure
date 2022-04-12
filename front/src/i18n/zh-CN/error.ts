@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const error: BaseTranslation = {
+const error: NonNullable<Translation["error"]> = {
     accessLink: {
         title: "访问链接错误",
         subTitle: "找不到地图。请检查你的访问链接。",
