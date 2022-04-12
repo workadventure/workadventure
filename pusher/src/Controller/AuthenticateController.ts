@@ -318,6 +318,8 @@ export class AuthenticateController extends BaseHttpController {
             (async () => {
                 const param = await req.json();
 
+                adminApi.setLocale(req.header('accept-language'));
+
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken: string | null = param.organizationMemberToken;
                 const playUri: string | null = param.playUri;

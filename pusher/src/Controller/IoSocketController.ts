@@ -68,7 +68,7 @@ interface UpgradeData {
 
 interface UpgradeFailedData {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | null;
+    reason: "tokenInvalid" | "textureInvalid" | "error" | null;
     message: string;
     roomId: string;
 }
@@ -231,6 +231,8 @@ export class IoSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
 
+                    adminApi.setLocale(req.getHeader('accept-language'));
+
                     const roomId = query.roomId;
                     try {
                         if (typeof roomId !== "string") {
@@ -306,7 +308,7 @@ export class IoSocketController {
                                     );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
-                                        if (err?.response?.status == 404) {
+                                        if (err?.response?.status == 404 || !err?.response?.data.code) {
                                             // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
 
                                             console.warn(
@@ -314,16 +316,18 @@ export class IoSocketController {
                                                     (userIdentifier || "anonymous") +
                                                     '". Performing an anonymous login instead.'
                                             );
-                                        } else if (err?.response?.status == 403) {
-                                            // If we get an HTTP 403, the world is full. We need to broadcast a special error to the client.
-                                            // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
+                                        } else if (err?.response?.data.code) {
+                                            //OLD // If we get an HTTP 403, the world is full. We need to broadcast a special error to the client.
+                                            //OLD // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
                                             return res.upgrade(
                                                 {
                                                     rejected: true,
-                                                    message: err?.response?.data.message,
+                                                    reason: "error",
+                                                    message: err?.response?.data.code,
                                                     status: err?.response?.status,
+                                                    error: err?.response?.data,
                                                     roomId,
-                                                },
+                                                } as UpgradeFailedData,
                                                 websocketKey,
                                                 websocketProtocol,
                                                 websocketExtensions,
@@ -476,8 +480,8 @@ export class IoSocketController {
                         socketManager.emitTokenExpiredMessage(ws);
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
-                    } else if (ws.message === "World is full") {
-                        socketManager.emitWorldFullMessage(ws);
+                    } else if (ws.reason === "error") {
+                        socketManager.emitErrorV2Message(ws, ws.error.type, ws.error.code, ws.error.title, ws.error.subtitle, ws.error.details, ws.error.timeToRetry, ws.error.canRetryManual, ws.error.urlToRedirect, ws.error.buttonTitle);
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }
