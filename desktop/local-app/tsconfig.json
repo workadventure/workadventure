@@ -5,7 +5,7 @@
     "useDefineForClassFields": true,
     "module": "esnext",
     "resolveJsonModule": true,
-    "baseUrl": ".",
+    //"baseUrl": ".",
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.
      * Disable checkJs if you'd like to use dynamic types in JS.
@@ -15,10 +15,23 @@
     "allowJs": true,
     "checkJs": true,
     "paths": {
-      "~/*": ["./src/*"],
-      "@wa-preload-local-app": ["../electron/src/preload-local-app/types.ts"],
+      "~/*": [
+        "./src/*"
+      ],
+      "@wa-preload-local-app": [
+        "../electron/src/preload-local-app/types.ts"
+      ],
     }
   },
-  "include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src/**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

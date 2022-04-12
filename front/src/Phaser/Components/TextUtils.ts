@@ -1,6 +1,5 @@
 import type { ITiledMapObject } from "../Map/ITiledMap";
 import type { GameScene } from "../Game/GameScene";
-import { type } from "os";
 import { GameMapProperties } from "../Game/GameMapProperties";
 
 export class TextUtils {

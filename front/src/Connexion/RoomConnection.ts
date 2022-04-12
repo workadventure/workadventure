@@ -190,7 +190,7 @@ export class RoomConnection implements RoomConnection {
 
         let interval: ReturnType<typeof setInterval> | undefined = undefined;
 
-        this.socket.onopen = (ev) => {
+        this.socket.onopen = () => {
             //we manually ping every 20s to not be logged out by the server, even when the game is in background.
             const pingMessage = PingMessageTsProto.encode({}).finish();
             interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
@@ -297,6 +297,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                                 const tmp: never = subMessage;
                             }
                         }
@@ -477,6 +478,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const tmp: never = message;
                 }
             }

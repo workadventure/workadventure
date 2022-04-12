@@ -1,11 +1,9 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isMovePlayerToEventConfig = new tg.IsInterface()
-    .withProperties({
-        x: tg.isNumber,
-        y: tg.isNumber,
-        speed: tg.isOptional(tg.isNumber),
-    })
-    .get();
+export const isMovePlayerToEventConfig = z.object({
+    x: z.number(),
+    y: z.number(),
+    speed: z.optional(z.number()),
+});
 
-export type MovePlayerToEvent = tg.GuardedType<typeof isMovePlayerToEventConfig>;
+export type MovePlayerToEvent = z.infer<typeof isMovePlayerToEventConfig>;

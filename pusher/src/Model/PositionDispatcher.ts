@@ -9,8 +9,8 @@
  * number of players around the current player.
  */
 import { Zone, ZoneEventListener } from "./Zone";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 //import Debug from "debug";
 
 //const debug = Debug('positiondispatcher');

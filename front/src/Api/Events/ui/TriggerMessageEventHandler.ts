@@ -5,20 +5,16 @@ import {
     triggerActionMessage,
 } from "./TriggerActionMessageEvent";
 
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-const isTriggerMessageEventObject = new tg.IsInterface()
-    .withProperties({
-        type: tg.isSingletonString(triggerActionMessage),
-        data: isTriggerActionMessageEvent,
-    })
-    .get();
+const isTriggerMessageEventObject = z.object({
+    type: z.enum([triggerActionMessage]),
+    data: isTriggerActionMessageEvent,
+});
 
-const isTriggerMessageRemoveEventObject = new tg.IsInterface()
-    .withProperties({
-        type: tg.isSingletonString(removeActionMessage),
-        data: isMessageReferenceEvent,
-    })
-    .get();
+const isTriggerMessageRemoveEventObject = z.object({
+    type: z.enum([removeActionMessage]),
+    data: isMessageReferenceEvent,
+});
 
-export const isTriggerMessageHandlerEvent = tg.isUnion(isTriggerMessageEventObject, isTriggerMessageRemoveEventObject);
+export const isTriggerMessageHandlerEvent = z.union([isTriggerMessageEventObject, isTriggerMessageRemoveEventObject]);

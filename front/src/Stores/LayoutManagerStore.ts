@@ -1,5 +1,4 @@
 import { derived, writable } from "svelte/store";
-import type { ActivatablesManager } from "../Phaser/Game/ActivatablesManager";
 import type { UserInputManager } from "../Phaser/UserInput/UserInputManager";
 
 export interface LayoutManagerAction {

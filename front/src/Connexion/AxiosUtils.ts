@@ -42,4 +42,4 @@ axiosWithRetry.interceptors.response.use((res) => {
     return res;
 });
 
-const interceptorId = rax.attach(axiosWithRetry);
+rax.attach(axiosWithRetry);
