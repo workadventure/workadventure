@@ -892,6 +892,7 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
+                // TODO: Move to GameMapPropertiesListener?
                 this.gameMap.onEnterArea((areas) => {
                     for (const area of areas) {
                         const focusable = area.properties?.find(
@@ -920,7 +921,9 @@ export class GameScene extends DirtyScene {
 
                 this.gameMap.onLeaveArea((areas) => {
                     for (const area of areas) {
-                        const focusable = area.properties?.find((property) => property.name === "focusable");
+                        const focusable = area.properties?.find(
+                            (property) => property.name === GameMapProperties.FOCUSABLE
+                        );
                         if (focusable && focusable.value === true) {
                             this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
                             break;
