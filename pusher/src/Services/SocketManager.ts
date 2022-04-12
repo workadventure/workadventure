@@ -50,13 +50,11 @@ import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zone";
 import Debug from "debug";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-//import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 
 const debug = Debug("socket");
 
@@ -447,13 +445,14 @@ export class SocketManager implements ZoneEventListener {
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
         const data = await adminApi.fetchMapDetails(room.roomUrl);
+        const mapDetailsData = isMapDetailsData.safeParse(data);
 
-        if (isRoomRedirect(data)) {
+        if (mapDetailsData.success) {
+            room.tags = mapDetailsData.data.tags;
+            room.policyType = Number(mapDetailsData.data.policy_type);
+        } else {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
             // and redirect everybody to the new location (so we need to close the connection for everybody)
-        } else {
-            room.tags = data.tags;
-            room.policyType = Number(data.policy_type);
         }
     }
 
@@ -715,7 +714,7 @@ export class SocketManager implements ZoneEventListener {
         for (const roomUrl of tabUrlRooms) {
             const apiRoom = await apiClientRepository.getClient(roomUrl);
             roomMessage.setRoomid(roomUrl);
-            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+            apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;
             });
         }

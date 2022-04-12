@@ -17,8 +17,8 @@ import {
     PlayerDetailsUpdatedCallback,
     Zone,
 } from "./Zone";
-import { Movable } from "_Model/Movable";
-import { PositionInterface } from "_Model/PositionInterface";
+import { Movable } from "../Model/Movable";
+import { PositionInterface } from "../Model/PositionInterface";
 import { ZoneSocket } from "../RoomManager";
 import { User } from "../Model/User";
 import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";

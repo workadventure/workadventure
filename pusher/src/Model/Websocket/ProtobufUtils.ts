@@ -5,10 +5,9 @@ import {
     PointMessage,
     PositionMessage,
 } from "../../Messages/generated/messages_pb";
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
-import { ItemEventMessageInterface } from "_Model/Websocket/ItemEventMessage";
-import { PositionInterface } from "_Model/PositionInterface";
+import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
+import { PositionInterface } from "../../Model/PositionInterface";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 
 export class ProtobufUtils {

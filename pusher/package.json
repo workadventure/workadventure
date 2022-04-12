@@ -43,7 +43,6 @@
     "axios": "^0.21.2",
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
-    "generic-type-guard": "^3.2.0",
     "google-protobuf": "^3.13.0",
     "grpc": "^1.24.4",
     "hyper-express": "^5.8.1",
@@ -54,7 +53,7 @@
     "qs": "^6.10.3",
     "query-string": "^6.13.3",
     "uuidv4": "^6.0.7",
-    "zod": "^3.12.0"
+    "zod": "^3.14.3"
   },
   "devDependencies": {
     "@types/circular-json": "^0.4.0",
