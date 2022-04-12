@@ -4,11 +4,11 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     callbacks = [];
 
     disablePlayerControls(): void {
-        sendToWorkadventure({ type: "disablePlayerControls", data: null });
+        sendToWorkadventure({ type: "disablePlayerControls", data: undefined });
     }
 
     restorePlayerControls(): void {
-        sendToWorkadventure({ type: "restorePlayerControls", data: null });
+        sendToWorkadventure({ type: "restorePlayerControls", data: undefined });
     }
 }
 

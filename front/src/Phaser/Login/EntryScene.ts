@@ -1,6 +1,6 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
+import { ErrorScene } from "../Reconnecting/ErrorScene";
 import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
@@ -15,6 +15,8 @@ export const EntrySceneName = "EntryScene";
  * and to route to the next correct scene.
  */
 export class EntryScene extends Scene {
+    private localeLoaded: boolean = false;
+
     constructor() {
         super({
             key: EntrySceneName,
@@ -30,6 +32,10 @@ export class EntryScene extends Scene {
     }
 
     create() {
+        this.loadLocale();
+    }
+
+    private loadLocale(): void {
         localeDetector()
             .then(() => {
                 gameManager

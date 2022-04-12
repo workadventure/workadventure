@@ -8,6 +8,12 @@ import { ActionMessage } from "./Ui/ActionMessage";
 import { isMessageReferenceEvent } from "../Events/ui/TriggerActionMessageEvent";
 import { Menu } from "./Ui/Menu";
 import type { RequireOnlyOne } from "../types";
+import { isRemotePlayerClickedEvent, RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
+import {
+    ActionsMenuActionClickedEvent,
+    isActionsMenuActionClickedEvent,
+} from "../Events/ActionsMenuActionClickedEvent";
+import { Observable, Subject } from "rxjs";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -28,21 +34,83 @@ interface MenuDescriptor {
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
 
-interface ZonedPopupOptions {
-    zone: string;
-    objectLayerName?: string;
-    popupText: string;
-    delay?: number;
-    popupOptions: Array<ButtonDescriptor>;
-}
-
 export interface ActionMessageOptions {
     message: string;
     type?: "message" | "warning";
     callback: () => void;
 }
 
+export interface RemotePlayerInterface {
+    addAction(key: string, callback: Function): void;
+}
+
+export class RemotePlayer implements RemotePlayerInterface {
+    private id: number;
+
+    private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
+
+    constructor(id: number) {
+        this.id = id;
+    }
+
+    public addAction(key: string, callback: Function): ActionsMenuAction {
+        const newAction = new ActionsMenuAction(this, key, callback);
+        this.actions.set(key, newAction);
+        sendToWorkadventure({
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id: this.id, actionKey: key },
+        });
+        return newAction;
+    }
+
+    public callAction(key: string): void {
+        const action = this.actions.get(key);
+        if (action) {
+            action.call();
+        }
+    }
+
+    public removeAction(key: string): void {
+        this.actions.delete(key);
+        sendToWorkadventure({
+            type: "removeActionsMenuKeyFromRemotePlayer",
+            data: { id: this.id, actionKey: key },
+        });
+    }
+}
+
+export class ActionsMenuAction {
+    private remotePlayer: RemotePlayer;
+    private key: string;
+    private callback: Function;
+
+    constructor(remotePlayer: RemotePlayer, key: string, callback: Function) {
+        this.remotePlayer = remotePlayer;
+        this.key = key;
+        this.callback = callback;
+    }
+
+    public call(): void {
+        this.callback();
+    }
+
+    public remove(): void {
+        this.remotePlayer.removeAction(this.key);
+    }
+}
+
 export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
+    public readonly _onRemotePlayerClicked: Subject<RemotePlayerInterface>;
+    public readonly onRemotePlayerClicked: Observable<RemotePlayerInterface>;
+
+    private currentlyClickedRemotePlayer?: RemotePlayer;
+
+    constructor() {
+        super();
+        this._onRemotePlayerClicked = new Subject<RemotePlayerInterface>();
+        this.onRemotePlayerClicked = this._onRemotePlayerClicked.asObservable();
+    }
+
     callbacks = [
         apiCallback({
             type: "buttonClickedEvent",
@@ -82,9 +150,38 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
                 }
             },
         }),
+        apiCallback({
+            type: "remotePlayerClickedEvent",
+            typeChecker: isRemotePlayerClickedEvent,
+            callback: (payloadData: RemotePlayerClickedEvent) => {
+                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData.id);
+                this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
+            },
+        }),
+        apiCallback({
+            type: "actionsMenuActionClickedEvent",
+            typeChecker: isActionsMenuActionClickedEvent,
+            callback: (payloadData: ActionsMenuActionClickedEvent) => {
+                this.currentlyClickedRemotePlayer?.callAction(payloadData.actionName);
+            },
+        }),
     ];
 
-    openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
+    public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {
+        sendToWorkadventure({
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id, actionKey },
+        });
+    }
+
+    public removeActionsMenuKeyFromRemotePlayer(id: number, actionKey: string): void {
+        sendToWorkadventure({
+            type: "removeActionsMenuKeyFromRemotePlayer",
+            data: { id, actionKey },
+        });
+    }
+
+    public openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
         const popup = new Popup(popupId);
         const btnMap = new Map<number, () => void>();
@@ -119,7 +216,10 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return popup;
     }
 
-    registerMenuCommand(commandDescriptor: string, options: MenuOptions | ((commandDescriptor: string) => void)): Menu {
+    public registerMenuCommand(
+        commandDescriptor: string,
+        options: MenuOptions | ((commandDescriptor: string) => void)
+    ): Menu {
         const menu = new Menu(commandDescriptor);
 
         if (typeof options === "function") {
@@ -168,15 +268,15 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return menu;
     }
 
-    displayBubble(): void {
-        sendToWorkadventure({ type: "displayBubble", data: null });
+    public displayBubble(): void {
+        sendToWorkadventure({ type: "displayBubble", data: undefined });
     }
 
-    removeBubble(): void {
-        sendToWorkadventure({ type: "removeBubble", data: null });
+    public removeBubble(): void {
+        sendToWorkadventure({ type: "removeBubble", data: undefined });
     }
 
-    displayActionMessage(actionMessageOptions: ActionMessageOptions): ActionMessage {
+    public displayActionMessage(actionMessageOptions: ActionMessageOptions): ActionMessage {
         const actionMessage = new ActionMessage(actionMessageOptions, () => {
             actionMessages.delete(actionMessage.uuid);
         });

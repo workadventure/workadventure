@@ -10,8 +10,6 @@ import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
-import { Console } from "console";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
 
@@ -74,12 +72,17 @@ export class VideoPeer extends Peer {
 
         this.volumeStore = readable<number | undefined>(undefined, (set) => {
             let timeout: ReturnType<typeof setTimeout>;
+            let soundMeter: SoundMeter;
             const unsubscribe = this.streamStore.subscribe((mediaStream) => {
+                clearInterval(timeout);
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
                 if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
                     set(undefined);
                     return;
                 }
-                const soundMeter = new SoundMeter(mediaStream);
+                soundMeter = new SoundMeter(mediaStream);
                 let error = false;
 
                 timeout = setInterval(() => {
@@ -97,6 +100,9 @@ export class VideoPeer extends Peer {
             return () => {
                 unsubscribe();
                 clearInterval(timeout);
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
             };
         });
 

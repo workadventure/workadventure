@@ -155,7 +155,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run proto && yarn run copy-to-back
+        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
         working-directory: "messages"
 
       - name: "Build"
@@ -173,3 +173,79 @@ jobs:
       - name: "Prettier"
         run: yarn run pretty-check
         working-directory: "back"
+
+  continuous-integration-desktop:
+    name: "Continuous Integration Desktop"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop/electron"
+
+      - name: "Build"
+        run: yarn build
+        working-directory: "desktop/electron"
+
+      - name: "Typecheck"
+        run: yarn typecheck
+        working-directory: "desktop/electron"
+
+      - name: "Lint"
+        run: yarn lint
+        working-directory: "desktop/electron"
+
+      - name: "Jasmine"
+        run: yarn test
+        working-directory: "desktop/electron"
+
+      - name: "Prettier"
+        run: yarn pretty-check
+        working-directory: "desktop/electron"
+
+  continuous-integration-desktop-local-app:
+    name: "Continuous Integration Desktop Local App"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: "Install dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "desktop/local-app"
+
+      - name: "Build"
+        run: yarn build
+        working-directory: "desktop/local-app"
+
+      - name: "Typecheck"
+        run: yarn check
+        working-directory: "desktop/local-app"
+
+      - name: "Lint"
+        run: yarn lint
+        working-directory: "desktop/local-app"
+
+      - name: "Jasmine"
+        run: yarn test
+        working-directory: "desktop/local-app"
+
+      - name: "Prettier"
+        run: yarn pretty-check
+        working-directory: "desktop/local-app"

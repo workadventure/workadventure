@@ -4,7 +4,7 @@ import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import { localUserStore } from "./LocalUserStore";
-import { CharacterTexture, LocalUser } from "./LocalUser";
+import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -13,7 +13,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
-import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -45,8 +44,10 @@ class ConnectionManager {
 
     /**
      * TODO fix me to be move in game manager
+     *
+     * Returns the URL that we need to redirect to to load the OpenID screen, or "null" if no redirection needs to happen.
      */
-    public loadOpenIDScreen() {
+    public loadOpenIDScreen(): URL | null {
         const state = localUserStore.generateState();
         const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
@@ -55,11 +56,10 @@ class ConnectionManager {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
-        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`);
+        const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
         redirectUrl.searchParams.append("state", state);
         redirectUrl.searchParams.append("nonce", nonce);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
-        window.location.assign(redirectUrl.toString());
         return redirectUrl;
     }
 
@@ -72,9 +72,7 @@ class ConnectionManager {
 
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then(
-            (res) => res.data
-        );
+        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on login page can permit to clear token and start authentication process
@@ -83,10 +81,11 @@ class ConnectionManager {
 
     /**
      * Tries to login to the node server and return the starting map url to be loaded
+     *
+     * @return returns a promise to the Room we are going to load OR a pointer to the URL we must redirect to if authentication is needed.
      */
-    public async initGameConnexion(): Promise<Room> {
-        const connexionType = urlManager.getGameConnexionType();
-        this.connexionType = connexionType;
+    public async initGameConnexion(): Promise<Room | URL> {
+        this.connexionType = urlManager.getGameConnexionType();
         this._currentRoom = null;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -99,13 +98,15 @@ class ConnectionManager {
             urlParams.delete("token");
         }
 
-        if (connexionType === GameConnexionTypes.login) {
+        if (this.connexionType === GameConnexionTypes.login) {
             this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            if (this.loadOpenIDScreen() !== null) {
-                return Promise.reject(new Error("You will be redirect on login page"));
+            const redirect = this.loadOpenIDScreen();
+            if (redirect !== null) {
+                return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.jwt) {
+        } else if (this.connexionType === GameConnexionTypes.jwt) {
+            /** @deprecated */
             if (!token) {
                 const code = urlParams.get("code");
                 const state = urlParams.get("state");
@@ -124,21 +125,31 @@ class ConnectionManager {
                 analyticsClient.loggedWithSso();
             } catch (err) {
                 console.error(err);
-                this.loadOpenIDScreen();
-                return Promise.reject(new Error("You will be redirect on login page"));
+                const redirect = this.loadOpenIDScreen();
+                if (redirect === null) {
+                    throw new Error("Unable to redirect on login page.");
+                }
+                return redirect;
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.register) {
-            //@deprecated
+        }
+        //@deprecated
+        else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
+            const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            if (!isRegisterData(data)) {
-                console.error("Invalid data received from /register route. Data: ", data);
+
+            const registerDataChecking = isRegisterData.safeParse(result);
+
+            if (!registerDataChecking.success) {
+                console.error("Invalid data received from /register route. Data: ", result);
                 throw new Error("Invalid data received from /register route.");
             }
-            this.localUser = new LocalUser(data.userUuid, data.textures, data.email);
+
+            const data = registerDataChecking.data;
+
+            this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
             localUserStore.setAuthToken(this.authToken);
@@ -158,11 +169,11 @@ class ConnectionManager {
                 )
             );
             urlManager.pushRoomIdToUrl(this._currentRoom);
-        } else if (connexionType === GameConnexionTypes.room || connexionType === GameConnexionTypes.empty) {
+        } else if (this.connexionType === GameConnexionTypes.room || this.connexionType === GameConnexionTypes.empty) {
             this.authToken = localUserStore.getAuthToken();
 
             let roomPath: string;
-            if (connexionType === GameConnexionTypes.empty) {
+            if (this.connexionType === GameConnexionTypes.empty) {
                 roomPath = localUserStore.getLastRoomUrl();
                 //get last room path from cache api
                 try {
@@ -212,28 +223,15 @@ class ConnectionManager {
                             err.response?.data &&
                             err.response.data !== "User cannot to be connected on openid provider")
                     ) {
-                        this.loadOpenIDScreen();
-                        return Promise.reject(new Error("You will be redirect on login page"));
+                        const redirect = this.loadOpenIDScreen();
+                        if (redirect === null) {
+                            throw new Error("Unable to redirect on login page.");
+                        }
+                        return redirect;
                     }
                 }
             }
             this.localUser = localUserStore.getLocalUser() as LocalUser; //if authToken exist in localStorage then localUser cannot be null
-
-            if (this._currentRoom.textures != undefined && this._currentRoom.textures.length > 0) {
-                //check if texture was changed
-                if (this.localUser.textures.length === 0) {
-                    this.localUser.textures = this._currentRoom.textures;
-                } else {
-                    this._currentRoom.textures.forEach((newTexture) => {
-                        const alreadyExistTexture = this.localUser.textures.find((c) => newTexture.id === c.id);
-                        if (this.localUser.textures.findIndex((c) => newTexture.id === c.id) !== -1) {
-                            return;
-                        }
-                        this.localUser.textures.push(newTexture);
-                    });
-                }
-                localUserStore.saveUser(this.localUser);
-            }
         }
         if (this._currentRoom == undefined) {
             return Promise.reject(new Error("Invalid URL"));
@@ -259,7 +257,7 @@ class ConnectionManager {
 
     public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
-        this.localUser = new LocalUser(data.userUuid, [], data.email);
+        this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;
         if (!isBenchmark) {
             // In benchmark, we don't have a local storage.
@@ -269,7 +267,7 @@ class ConnectionManager {
     }
 
     public initBenchmark(): void {
-        this.localUser = new LocalUser("", []);
+        this.localUser = new LocalUser("");
     }
 
     public connectToRoomSocket(
@@ -311,9 +309,9 @@ class ConnectionManager {
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
-        }).catch((err) => {
+        }).catch(() => {
             // Let's retry in 4-6 seconds
-            return new Promise<OnConnectInterface>((resolve, reject) => {
+            return new Promise<OnConnectInterface>((resolve) => {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
@@ -346,7 +344,7 @@ class ConnectionManager {
                 throw new Error("No Auth code provided");
             }
         }
-        const { authToken, userUuid, textures, email, username, locale } = await Axios.get(
+        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(
             `${PUSHER_URL}/login-callback`,
             {
                 params: { code, nonce, token, playUri: this.currentRoom?.key },
@@ -355,7 +353,7 @@ class ConnectionManager {
             return res.data;
         });
         localUserStore.setAuthToken(authToken);
-        this.localUser = new LocalUser(userUuid, textures, email);
+        this.localUser = new LocalUser(userUuid, email);
         localUserStore.saveUser(this.localUser);
         this.authToken = authToken;
 
@@ -375,6 +373,18 @@ class ConnectionManager {
                 }
             } catch (err) {
                 console.warn("Could not set locale", err);
+            }
+        }
+
+        if (textures) {
+            const layers: string[] = [];
+            for (const texture of textures) {
+                if (texture !== undefined) {
+                    layers.push(texture.id);
+                }
+            }
+            if (layers.length > 0) {
+                gameManager.setCharacterLayers(layers);
             }
         }
 

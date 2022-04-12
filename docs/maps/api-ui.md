@@ -162,3 +162,34 @@ class ActionMessage {
     remove() {};
 }
 ```
+
+### Adding custom ActionsMenu Action
+
+When clicking on other player's WOKA, the contextual menu (we call it ActionsMenu) is displayed with some default Actions. It is possible to add custom actions right when player is clicked:
+
+<div class="col">
+    <img src="images/actions-menu-1.png" class="figure-img img-fluid rounded" alt="" />
+</div>
+
+To do that, we need to listen for the `onRemotePlayerClicked` stream and make use of the `remotePlayer` object that is passed by as a payload.
+
+```javascript
+WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
+    remotePlayer.addAction('Ask to tell a joke', () => {
+        console.log('I am NOT telling you a joke!');
+    });
+}
+```
+
+`remotePlayer.addAction(actionName, callback)` returns an Action object, which can remove itself from ActionsMenu:
+```javascript
+const action = remotePlayer.addAction('This will disappear!', () => {
+    console.log('You managed to click me!');
+});
+setTimeout(
+    () => {
+        action.remove();
+    },
+    1000,
+);
+```

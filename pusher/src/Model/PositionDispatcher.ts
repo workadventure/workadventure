@@ -9,8 +9,8 @@
  * number of players around the current player.
  */
 import { Zone, ZoneEventListener } from "./Zone";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 //import Debug from "debug";
 
 //const debug = Debug('positiondispatcher');
@@ -92,8 +92,10 @@ export class PositionDispatcher {
 
     public removeViewport(socket: ExSocketInterface): void {
         // Also, let's stop listening on viewports
-        for (const zone of socket.listenedZones) {
-            this.stopListening(zone, socket);
+        if (socket.listenedZones) {
+            for (const zone of socket.listenedZones) {
+                this.stopListening(zone, socket);
+            }
         }
     }
 

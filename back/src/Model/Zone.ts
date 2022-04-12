@@ -1,5 +1,5 @@
 import { User } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
+import { PositionInterface } from "../Model/PositionInterface";
 import { Movable } from "./Movable";
 import { Group } from "./Group";
 import { ZoneSocket } from "../RoomManager";
@@ -13,6 +13,7 @@ export type EntersCallback = (thing: Movable, fromZone: Zone | null, listener: Z
 export type MovesCallback = (thing: Movable, position: PositionInterface, listener: ZoneSocket) => void;
 export type LeavesCallback = (thing: Movable, newZone: Zone | null, listener: ZoneSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) => void;
+export type LockGroupCallback = (groupId: number, listener: ZoneSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
     playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage,
     listener: ZoneSocket
@@ -27,6 +28,7 @@ export class Zone {
         private onMoves: MovesCallback,
         private onLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         public readonly x: number,
         public readonly y: number
@@ -69,6 +71,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user entered
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     private notifyEnter(thing: Movable, oldZone: Zone | null, position: PositionInterface) {
         for (const listener of this.listeners) {
             this.onEnters(thing, oldZone, listener);
@@ -105,6 +108,12 @@ export class Zone {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, listener);
+        }
+    }
+
+    public emitLockGroupEvent(groupId: number) {
+        for (const listener of this.listeners) {
+            this.onLockGroup(groupId, listener);
         }
     }
 

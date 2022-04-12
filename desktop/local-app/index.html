@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self';" />
+        <title>WorkAdventure Desktop</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            html,
+            body,
+            #app {
+                height: 100%;
+                width: 100%;
+            }
+
+            #app {
+                display: flex;
+            }
+
+            a:hover {
+                text-decoration: none !important;
+            }
+
+            *::-webkit-scrollbar {
+                width: 10px;
+                height: 10px;
+            }
+            *::-webkit-scrollbar-track {
+                background-color: transparent;
+                border-radius: 10px;
+            }
+            *::-webkit-scrollbar-thumb {
+                background-color: rgba(0, 0, 0, 0.4);
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app"></div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
+</html>

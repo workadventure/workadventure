@@ -8,27 +8,21 @@ export class PathfindingManager {
     private grid: number[][];
     private tileDimensions: { width: number; height: number };
 
-    constructor(
-        scene: Phaser.Scene,
-        collisionsGrid: number[][],
-        walkingCostGrid: number[][],
-        tileDimensions: { width: number; height: number }
-    ) {
+    constructor(scene: Phaser.Scene, collisionsGrid: number[][], tileDimensions: { width: number; height: number }) {
         this.scene = scene;
 
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();
+        this.easyStar.setTileCost(2, 100);
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
         this.setEasyStarGrid(collisionsGrid);
-        this.setWalkingCostGrid(walkingCostGrid);
     }
 
-    public setCollisionGrid(collisionGrid: number[][], walkingCostGrid: number[][]): void {
+    public setCollisionGrid(collisionGrid: number[][]): void {
         this.setEasyStarGrid(collisionGrid);
-        this.setWalkingCostGrid(walkingCostGrid);
     }
 
     public async findPath(
@@ -106,7 +100,7 @@ export class PathfindingManager {
         start: { x: number; y: number },
         end: { x: number; y: number }
     ): Promise<{ x: number; y: number }[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.easyStar.findPath(start.x, start.y, end.x, end.y, (path) => {
                 if (path === null) {
                     resolve([]);
@@ -120,15 +114,7 @@ export class PathfindingManager {
 
     private setEasyStarGrid(grid: number[][]): void {
         this.easyStar.setGrid(grid);
-        this.easyStar.setAcceptableTiles([0]); // zeroes are walkable
-    }
-
-    private setWalkingCostGrid(grid: number[][]): void {
-        for (let y = 0; y < grid.length; y += 1) {
-            for (let x = 0; x < grid[y].length; x += 1) {
-                this.easyStar.setAdditionalPointCost(x, y, grid[y][x]);
-            }
-        }
+        this.easyStar.setAcceptableTiles([0, 2]); // zeroes are walkable, 2 are exits, also walkable
     }
 
     private logGridToTheConsole(grid: number[][]): void {

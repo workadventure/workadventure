@@ -1,7 +1,4 @@
-import * as rax from "retry-axios";
-import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
-import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -9,7 +6,7 @@ import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export class MapDetail {
-    constructor(public readonly mapUrl: string, public readonly textures: CharacterTexture[] | undefined) {}
+    constructor(public readonly mapUrl: string) {}
 }
 
 export interface RoomRedirect {
@@ -25,13 +22,14 @@ export class Room {
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
-    private _textures: CharacterTexture[] | undefined;
     private instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport: boolean = false;
+    private _loadingLogo: string | undefined;
+    private _loginSceneLogo: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -111,14 +109,16 @@ export class Room {
                 data.authenticationMandatory = Boolean(data.authenticationMandatory);
             }
 
-            if (isRoomRedirect(data)) {
+            const roomRedirectChecking = isRoomRedirect.safeParse(data);
+            const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
+
+            if (roomRedirectChecking.success) {
                 return {
                     redirectUrl: data.redirectUrl,
                 };
-            } else if (isMapDetailsData(data)) {
+            } else if (mapDetailsDataChecking.success) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
-                this._textures = data.textures;
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
@@ -128,8 +128,13 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
-                return new MapDetail(data.mapUrl, data.textures);
+                this._loadingLogo = data.loadingLogo ?? undefined;
+                this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                return new MapDetail(data.mapUrl);
             } else {
+                console.log(data);
+                console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
+                console.error("mapDetailsDataChecking", mapDetailsDataChecking.error.issues);
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
@@ -205,10 +210,6 @@ export class Room {
         return this.roomUrl.toString();
     }
 
-    get textures(): CharacterTexture[] | undefined {
-        return this._textures;
-    }
-
     get mapUrl(): string {
         if (!this._mapUrl) {
             throw new Error("Map URL not fetched yet");
@@ -238,5 +239,13 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
+    }
+
+    get loadingLogo(): string | undefined {
+        return this._loadingLogo;
+    }
+
+    get loginSceneLogo(): string | undefined {
+        return this._loginSceneLogo;
     }
 }

@@ -1,5 +1,5 @@
 import { requestVisitCardsStore } from "../../Stores/GameStore";
-import { ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
+import { ActionsMenuAction, ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
@@ -8,21 +8,28 @@ import { get, Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
+import { blackListManager } from "../../WebRtc/BlackListManager";
+import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+
+export enum RemotePlayerEvent {
+    Clicked = "Clicked",
+}
 
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
 export class RemotePlayer extends Character implements ActivatableInterface {
-    public userId: number;
+    public readonly userId: number;
+    public readonly userUuid: string;
     public readonly activationRadius: number;
 
-    private registeredActions: { actionName: string; callback: Function }[];
     private visitCardUrl: string | null;
     private isActionsMenuInitialized: boolean = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
 
     constructor(
         userId: number,
+        userUuid: string,
         Scene: GameScene,
         x: number,
         y: number,
@@ -39,10 +46,9 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         //set data
         this.userId = userId;
+        this.userUuid = userUuid;
         this.visitCardUrl = visitCardUrl;
-        this.registeredActions = [];
-        this.registerDefaultActionsMenuActions();
-        this.setClickable(this.registeredActions.length > 0);
+        this.setClickable(this.getDefaultActionsMenuActions().length > 0);
         this.activationRadius = activationRadius ?? 96;
         this.actionsMenuStoreUnsubscriber = actionsMenuStore.subscribe((value: ActionsMenuData | undefined) => {
             this.isActionsMenuInitialized = value ? true : false;
@@ -63,17 +69,19 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         }
     }
 
-    public registerActionsMenuAction(action: { actionName: string; callback: Function }): void {
-        this.registeredActions.push(action);
-        this.updateIsClickable();
+    public registerActionsMenuAction(action: ActionsMenuAction): void {
+        actionsMenuStore.addAction({
+            ...action,
+            priority: action.priority ?? 0,
+            callback: () => {
+                action.callback();
+                actionsMenuStore.clear();
+            },
+        });
     }
 
     public unregisterActionsMenuAction(actionName: string) {
-        const index = this.registeredActions.findIndex((action) => action.actionName === actionName);
-        if (index !== -1) {
-            this.registeredActions.splice(index, 1);
-        }
-        this.updateIsClickable();
+        actionsMenuStore.removeAction(actionName);
     }
 
     public activate(): void {
@@ -90,37 +98,52 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         return this.isClickable();
     }
 
-    private updateIsClickable(): void {
-        this.setClickable(this.registeredActions.length > 0);
-    }
-
     private toggleActionsMenu(): void {
         if (this.isActionsMenuInitialized) {
             actionsMenuStore.clear();
             return;
         }
         actionsMenuStore.initialize(this.playerName);
-        for (const action of this.registeredActions) {
-            actionsMenuStore.addAction(action.actionName, action.callback);
+        for (const action of this.getDefaultActionsMenuActions()) {
+            actionsMenuStore.addAction(action);
         }
     }
 
-    private registerDefaultActionsMenuActions(): void {
+    private getDefaultActionsMenuActions(): ActionsMenuAction[] {
+        const actions: ActionsMenuAction[] = [];
         if (this.visitCardUrl) {
-            this.registeredActions.push({
+            actions.push({
                 actionName: get(LL).woka.menu.businessCard(),
+                protected: true,
+                priority: 1,
                 callback: () => {
                     requestVisitCardsStore.set(this.visitCardUrl);
                     actionsMenuStore.clear();
                 },
             });
         }
+
+        actions.push({
+            actionName: blackListManager.isBlackListed(this.userUuid)
+                ? LL.report.block.unblock()
+                : LL.report.block.block(),
+            protected: true,
+            priority: -1,
+            style: "is-error",
+            callback: () => {
+                showReportScreenStore.set({ userId: this.userId, userName: this.name });
+                actionsMenuStore.clear();
+            },
+        });
+
+        return actions;
     }
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
             if (event.downElement.nodeName === "CANVAS" && event.leftButtonDown()) {
                 this.toggleActionsMenu();
+                this.emit(RemotePlayerEvent.Clicked);
             }
         });
     }

@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isUserInputChatEvent = new tg.IsInterface()
-    .withProperties({
-        message: tg.isString,
-    })
-    .get();
+export const isUserInputChatEvent = z.object({
+    message: z.string(),
+});
+
 /**
  * A message sent from the game to the iFrame when a user types a message in the chat.
  */
-export type UserInputChatEvent = tg.GuardedType<typeof isUserInputChatEvent>;
+export type UserInputChatEvent = z.infer<typeof isUserInputChatEvent>;

@@ -1,10 +1,10 @@
-import { PositionMessage, PositionMessage_Direction } from "../Messages/ts-proto-generated/messages";
+import { PositionMessage, PositionMessage_Direction } from "../Messages/ts-proto-generated/protos/messages";
 
 import type { PointInterface } from "../Connexion/ConnexionModels";
 
 export class ProtobufClientUtils {
     public static toPointInterface(position: PositionMessage): PointInterface {
-        let direction: string;
+        let direction: "up" | "down" | "left" | "right";
         switch (position.direction) {
             case PositionMessage_Direction.UP:
                 direction = "up";

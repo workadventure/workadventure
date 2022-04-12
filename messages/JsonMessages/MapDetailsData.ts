@@ -1,30 +1,28 @@
-import * as tg from "generic-type-guard";
-import { isCharacterTexture } from "./CharacterTexture";
-import { isNumber } from "generic-type-guard";
+import { z } from "zod";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
  * All other files are automatically copied from this file on container startup / build
  */
 
-export const isMapDetailsData = new tg.IsInterface()
-    .withProperties({
-        mapUrl: tg.isString,
-        policy_type: isNumber, //isNumericEnum(GameRoomPolicyTypes),
-        tags: tg.isArray(tg.isString),
-        textures: tg.isArray(isCharacterTexture),
-        authenticationMandatory: tg.isUnion(tg.isNullable(tg.isBoolean), tg.isUndefined),
-        roomSlug: tg.isNullable(tg.isString), // deprecated
-        contactPage: tg.isNullable(tg.isString),
-        group: tg.isNullable(tg.isString),
-    })
-    .withOptionalProperties({
-        iframeAuthentication: tg.isNullable(tg.isString),
-        // The date (in ISO 8601 format) at which the room will expire
-        expireOn: tg.isString,
-        // Whether the "report" feature is enabled or not on this room
-        canReport: tg.isBoolean,
-    })
-    .get();
+export const isMapDetailsData = z.object({
+    mapUrl: z.string(),
+    policy_type: z.number(),
+    tags: z.array(z.string()),
+    authenticationMandatory: z.optional(z.nullable(z.boolean())),
+    roomSlug: z.nullable(z.string()), // deprecated
+    contactPage: z.nullable(z.string()),
+    group: z.nullable(z.string()),
 
-export type MapDetailsData = tg.GuardedType<typeof isMapDetailsData>;
+    iframeAuthentication: z.optional(z.nullable(z.string())),
+    // The date (in ISO 8601 format) at which the room will expire
+    expireOn: z.optional(z.string()),
+    // Whether the "report" feature is enabled or not on this room
+    canReport: z.optional(z.boolean()),
+    // The URL of the logo image on the loading screen
+    loadingLogo: z.optional(z.nullable(z.string())),
+    // The URL of the logo image on "LoginScene"
+    loginSceneLogo: z.optional(z.nullable(z.string())),
+});
+
+export type MapDetailsData = z.infer<typeof isMapDetailsData>;

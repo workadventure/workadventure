@@ -91,7 +91,7 @@ function createAudioManagerFileStore() {
             });
         },
         unloadAudio: () => {
-            update((file: string) => {
+            update(() => {
                 audioManagerVolumeStore.setLoop(false);
                 return "";
             });
