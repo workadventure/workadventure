@@ -14,7 +14,7 @@
     function click(){
         if(errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
         else if(errorScreen.type === 'redirect' && window.history.length > 2) history.back();
-        else window.location.reload(true);
+        else window.location.reload();
     }
     let details = errorScreen.details;
     let timeVar = errorScreen.timeToRetry ?? 0;
