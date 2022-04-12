@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isChangeAreaEvent = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-    })
-    .get();
+export const isChangeZoneEvent = z.object({
+    name: z.string(),
+});
+
 /**
  * A message sent from the game to the iFrame when a user enters or leaves a zone.
  */
-export type ChangeAreaEvent = tg.GuardedType<typeof isChangeAreaEvent>;
+export type ChangeAreaEvent = z.infer<typeof isChangeZoneEvent>;

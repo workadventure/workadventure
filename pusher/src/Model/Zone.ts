@@ -20,7 +20,7 @@ import {
     SetPlayerDetailsMessage,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
-import { PositionDispatcher } from "_Model/PositionDispatcher";
+import { PositionDispatcher } from "../Model/PositionDispatcher";
 import Debug from "debug";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
@@ -49,6 +49,7 @@ export class UserDescriptor {
         private name: string,
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
+        private away: boolean,
         private visitCardUrl: string | null,
         private companion?: CompanionMessage,
         private outlineColor?: number
@@ -69,6 +70,7 @@ export class UserDescriptor {
             message.getName(),
             message.getCharacterlayersList(),
             position,
+            message.getAway(),
             message.getVisitcardurl(),
             message.getCompanion(),
             message.getHasoutline() ? message.getOutlinecolor() : undefined
@@ -89,6 +91,10 @@ export class UserDescriptor {
         } else {
             this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
+        const away = playerDetails.getAway();
+        if (away) {
+            this.away = away.getValue();
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
@@ -98,6 +104,7 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
+        userJoinedMessage.setAway(this.away);
         if (this.visitCardUrl) {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);
         }
@@ -420,7 +427,7 @@ export class Zone {
             }
         }
 
-        for (const [groupId, group] of this.groups.entries()) {
+        for (const group of this.groups.values()) {
             this.socketListener.onGroupEnters(group, listener);
         }
 
@@ -429,13 +436,13 @@ export class Zone {
     }
 
     public stopListening(listener: ExSocketInterface): void {
-        for (const [userId, user] of this.users.entries()) {
+        for (const userId of this.users.keys()) {
             if (userId !== listener.userId) {
                 this.socketListener.onUserLeaves(userId, listener);
             }
         }
 
-        for (const [groupId, group] of this.groups.entries()) {
+        for (const groupId of this.groups.keys()) {
             this.socketListener.onGroupLeaves(groupId, listener);
         }
 

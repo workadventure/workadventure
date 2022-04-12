@@ -2,7 +2,6 @@ import { GameRoom } from "../Model/GameRoom";
 import {
     ItemEventMessage,
     ItemStateMessage,
-    PlayGlobalMessage,
     PointMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
@@ -35,12 +34,10 @@ import {
     FollowAbortMessage,
     VariableMessage,
     BatchToPusherRoomMessage,
-    SubToPusherRoomMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
-    RoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -60,9 +57,9 @@ import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Zone } from "_Model/Zone";
+import { Zone } from "../Model/Zone";
 import Debug from "debug";
-import { Admin } from "_Model/Admin";
+import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 
 const debug = Debug("sockermanager");
@@ -331,6 +328,7 @@ export class SocketManager {
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
+            userJoinedZoneMessage.setAway(thing.isAway());
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
@@ -658,6 +656,7 @@ export class SocketManager {
                 userJoinedMessage.setUserid(thing.id);
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
+                userJoinedMessage.setAway(thing.isAway());
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {

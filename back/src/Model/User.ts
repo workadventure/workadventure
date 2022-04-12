@@ -1,8 +1,8 @@
 import { Group } from "./Group";
 import { PointInterface } from "./Websocket/PointInterface";
-import { Zone } from "_Model/Zone";
-import { Movable } from "_Model/Movable";
-import { PositionNotifier } from "_Model/PositionNotifier";
+import { Zone } from "../Model/Zone";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
     BatchMessage,
@@ -14,7 +14,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
 } from "../Messages/generated/messages_pb";
-import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
+import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
@@ -32,6 +32,7 @@ export class User implements Movable {
         private position: PointInterface,
         public silent: boolean,
         private positionNotifier: PositionNotifier,
+        private away: boolean,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -89,6 +90,10 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
+    public isAway(): boolean {
+        return this.away;
+    }
+
     get following(): User | undefined {
         return this._following;
     }
@@ -129,6 +134,11 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
+        const away = details.getAway();
+        if (away) {
+            this.away = away.getValue();
+        }
+
         const playerDetails = new SetPlayerDetailsMessage();
 
         if (this.outlineColor !== undefined) {
@@ -136,6 +146,9 @@ export class User implements Movable {
         }
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
+        }
+        if (details.getAway() !== undefined) {
+            playerDetails.setAway(new BoolValue().setValue(this.away));
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);
