@@ -562,13 +562,14 @@ export class GameRoom {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+            const match = /\/_\/([^/]+)\/(.+)/.exec(roomUrlObj.pathname);
             if (!match) {
                 console.error("Unexpected room URL", roomUrl);
                 throw new Error('Unexpected room URL "' + roomUrl + '"');
             }
 
-            const mapUrl = roomUrlObj.protocol + "//" + match[1];
+            const instance = match[1];
+            const mapUrl = roomUrlObj.protocol + "//" + match[2];
 
             return {
                 mapUrl,
@@ -578,6 +579,7 @@ export class GameRoom {
                 roomSlug: null,
                 contactPage: null,
                 group: null,
+                instance
             };
         }
 
