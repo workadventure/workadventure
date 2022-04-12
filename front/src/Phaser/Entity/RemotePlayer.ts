@@ -125,8 +125,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         actions.push({
             actionName: blackListManager.isBlackListed(this.userUuid)
-                ? LL.report.block.unblock()
-                : LL.report.block.block(),
+                ? get(LL).report.block.unblock()
+                : get(LL).report.block.block(),
             protected: true,
             priority: -1,
             style: "is-error",
