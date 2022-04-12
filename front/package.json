@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "SEE LICENSE IN LICENSE.txt",
   "devDependencies": {
-    "@geprog/vite-plugin-env-config": "^4.0.0",
+    "@geprog/vite-plugin-env-config": "^4.0.3",
+    "@home-based-studio/phaser3-utils": "^0.4.2",
     "@sveltejs/vite-plugin-svelte": "^1.0.0-next.36",
     "@tsconfig/svelte": "^1.0.10",
     "@types/google-protobuf": "^3.7.3",
@@ -17,7 +18,7 @@
     "eslint": "^8.4.1",
     "eslint-plugin-svelte3": "^3.2.1",
     "jasmine": "^3.5.0",
-    "lint-staged": "^11.0.0",
+    "lint-staged": "^12.3.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.3.1",
     "prettier-plugin-svelte": "^2.5.0",
@@ -43,9 +44,8 @@
     "cross-env": "^7.0.3",
     "deep-copy-ts": "^0.5.0",
     "easystarjs": "^0.4.4",
-    "generic-type-guard": "^3.4.2",
     "google-protobuf": "^3.13.0",
-    "phaser": "^3.54.0",
+    "phaser": "3.55.1",
     "phaser-animated-tiles": "workadventure/phaser-animated-tiles#da68bbededd605925621dd4f03bd27e69284b254",
     "phaser3-rex-plugins": "^1.1.42",
     "posthog-js": "^1.14.1",
@@ -57,10 +57,11 @@
     "simple-peer": "^9.11.0",
     "socket.io-client": "^2.3.0",
     "standardized-audio-context": "^25.2.4",
+    "ts-deferred": "^1.0.4",
     "ts-proto": "^1.96.0",
     "typesafe-i18n": "^2.59.0",
     "uuidv4": "^6.2.10",
-    "zod": "^3.11.6"
+    "zod": "^3.14.3"
   },
   "scripts": {
     "start": "run-p templater serve watch-iframe-api svelte-check-watch typesafe-i18n-watch",

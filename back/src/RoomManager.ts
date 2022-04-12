@@ -15,7 +15,6 @@ import {
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
-    PlayGlobalMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
@@ -29,6 +28,7 @@ import {
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
     ZoneMessage,
+    LockGroupPromptMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -134,6 +134,12 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 message.getFollowabortmessage() as FollowAbortMessage
+                            );
+                        } else if (message.hasLockgrouppromptmessage()) {
+                            socketManager.handleLockGroupPromptMessage(
+                                room,
+                                user,
+                                message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

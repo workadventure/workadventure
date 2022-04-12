@@ -28,7 +28,10 @@ export class LoginScene extends ResizableScene {
             gameManager.currentStartedRoom &&
             gameManager.currentStartedRoom.authenticationMandatory
         ) {
-            connectionManager.loadOpenIDScreen();
+            const redirect = connectionManager.loadOpenIDScreen();
+            if (redirect !== null) {
+                window.location.assign(redirect.toString());
+            }
             loginSceneVisibleIframeStore.set(true);
         }
         loginSceneVisibleStore.set(true);
@@ -46,6 +49,7 @@ export class LoginScene extends ResizableScene {
         loginSceneVisibleStore.set(false);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(time: number, delta: number): void {}
 
     public onResize(): void {}

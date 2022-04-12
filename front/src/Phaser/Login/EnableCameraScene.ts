@@ -1,7 +1,6 @@
 import { gameManager } from "../Game/GameManager";
 import { ResizableScene } from "./ResizableScene";
 import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
-import { localUserStore } from "../../Connexion/LocalUserStore";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 
 export const EnableCameraSceneName = "EnableCameraScene";
@@ -25,6 +24,7 @@ export class EnableCameraScene extends ResizableScene {
 
     public onResize(): void {}
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(time: number, delta: number): void {}
 
     public login(): void {

@@ -11,13 +11,12 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { AudioContext } from "standardized-audio-context";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -30,7 +29,7 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -43,7 +42,7 @@ function createRequestedMicrophoneState() {
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
@@ -147,7 +146,7 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
@@ -190,7 +189,7 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
@@ -292,7 +291,14 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            currentVideoConstraint = false;
+            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+            if (!userMicrophonePrivacySetting) {
+                currentAudioConstraint = false;
+            }
+            if (!userCameraPrivacySetting) {
+                currentVideoConstraint = false;
+            }
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
@@ -545,8 +551,12 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
 
 export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
     let timeout: ReturnType<typeof setTimeout>;
+    let soundMeter: SoundMeter;
     const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
         clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
         if (localStreamStoreValue.type === "error") {
             set(undefined);
             return;
@@ -557,7 +567,7 @@ export const localVolumeStore = readable<number | undefined>(undefined, (set) =>
             set(undefined);
             return;
         }
-        const soundMeter = new SoundMeter(mediaStream);
+        soundMeter = new SoundMeter(mediaStream);
         let error = false;
 
         timeout = setInterval(() => {
@@ -575,6 +585,9 @@ export const localVolumeStore = readable<number | undefined>(undefined, (set) =>
     return () => {
         unsubscribe();
         clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
     };
 });
 

@@ -3,6 +3,8 @@ import { coWebsiteManager } from "./CoWebsiteManager";
 import { requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
 import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
+import { gameManager } from "../Phaser/Game/GameManager";
+import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
@@ -126,6 +128,8 @@ class JitsiFactory {
     private jitsiApi?: JitsiApi;
     private audioCallback = this.onAudioChange.bind(this);
     private videoCallback = this.onVideoChange.bind(this);
+    private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
+    private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
     private jitsiScriptLoaded: boolean = false;
 
     /**
@@ -197,10 +201,18 @@ class JitsiFactory {
 
                 options.onload = () => doResolve(); //we want for the iframe to be loaded before triggering animations.
                 this.jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-                this.jitsiApi.executeCommand("displayName", playerName);
+
+                this.jitsiApi.addListener("videoConferenceJoined", () => {
+                    this.jitsiApi?.executeCommand("displayName", playerName);
+                    this.updateParticipantsCountStore();
+                });
 
                 this.jitsiApi.addListener("audioMuteStatusChanged", this.audioCallback);
                 this.jitsiApi.addListener("videoMuteStatusChanged", this.videoCallback);
+                this.jitsiApi.addListener("dominantSpeakerChanged", this.dominantSpeakerChangedCallback);
+                this.jitsiApi.addListener("participantJoined", this.participantsCountChangeCallback);
+                this.jitsiApi.addListener("participantLeft", this.participantsCountChangeCallback);
+                this.jitsiApi.addListener("participantKickedOut", this.participantsCountChangeCallback);
             });
 
             cancel(() => {
@@ -235,6 +247,8 @@ class JitsiFactory {
     }
 
     public destroy() {
+        userIsJitsiDominantSpeakerStore.set(false);
+        jitsiParticipantsCountStore.set(0);
         if (!this.jitsiApi) {
             return;
         }
@@ -257,6 +271,34 @@ class JitsiFactory {
         } else {
             requestedCameraState.enableWebcam();
         }
+    }
+
+    private onDominantSpeakerChanged(data: { id: string }): void {
+        userIsJitsiDominantSpeakerStore.set(
+            //@ts-ignore
+            data.id === this.getCurrentParticipantId(this.jitsiApi?.getParticipantsInfo())
+        );
+    }
+
+    private onParticipantsCountChange(): void {
+        this.updateParticipantsCountStore();
+    }
+
+    private updateParticipantsCountStore(): void {
+        //@ts-ignore
+        jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
+    }
+
+    private getCurrentParticipantId(
+        participants: { displayName: string; participantId: string }[]
+    ): string | undefined {
+        const currentPlayerName = gameManager.getPlayerName();
+        for (const participant of participants) {
+            if (participant.displayName === currentPlayerName) {
+                return participant.participantId;
+            }
+        }
+        return;
     }
 
     private loadJitsiScript(domain: string): CancelablePromise<void> {

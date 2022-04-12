@@ -12,12 +12,13 @@ import {
     EmoteCallback,
     EntersCallback,
     LeavesCallback,
+    LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
     Zone,
 } from "./Zone";
-import { Movable } from "_Model/Movable";
-import { PositionInterface } from "_Model/PositionInterface";
+import { Movable } from "../Model/Movable";
+import { PositionInterface } from "../Model/PositionInterface";
 import { ZoneSocket } from "../RoomManager";
 import { User } from "../Model/User";
 import { EmoteEventMessage, SetPlayerDetailsMessage } from "../Messages/generated/messages_pb";
@@ -44,12 +45,13 @@ export class PositionNotifier {
     private zones: Zone[][] = [];
 
     constructor(
-        private zoneWidth: number,
-        private zoneHeight: number,
+        private readonly zoneWidth: number,
+        private readonly zoneHeight: number,
         private onUserEnters: EntersCallback,
         private onUserMoves: MovesCallback,
         private onUserLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ) {}
 
@@ -111,6 +113,7 @@ export class PositionNotifier {
                 this.onUserMoves,
                 this.onUserLeaves,
                 this.onEmote,
+                this.onLockGroup,
                 this.onPlayerDetailsUpdated,
                 i,
                 j
@@ -135,6 +138,12 @@ export class PositionNotifier {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
         zone.emitEmoteEvent(emoteEventMessage);
+    }
+
+    public emitLockGroupEvent(user: User, groupId: number) {
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        zone.emitLockGroupEvent(groupId);
     }
 
     public *getAllUsersInSquareAroundZone(zone: Zone): Generator<User> {

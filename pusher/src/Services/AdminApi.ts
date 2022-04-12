@@ -1,26 +1,29 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
-import Axios from "axios";
-import { GameRoomPolicyTypes } from "_Model/PusherRoom";
-import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
-import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import Axios, { AxiosResponse } from "axios";
+import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { z } from "zod";
+import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
+import qs from "qs";
 
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
 }
 
-export interface FetchMemberDataByUuidResponse {
-    email: string;
-    userUuid: string;
-    tags: string[];
-    visitCardUrl: string | null;
-    textures: CharacterTexture[];
-    messages: unknown[];
-    anonymous?: boolean;
-    userRoomToken: string | undefined;
-}
+export const isFetchMemberDataByUuidResponse = z.object({
+    email: z.string(),
+    userUuid: z.string(),
+    tags: z.array(z.string()),
+    visitCardUrl: z.nullable(z.string()),
+    textures: z.array(isWokaDetail),
+    messages: z.array(z.unknown()),
+    anonymous: z.optional(z.boolean()),
+    userRoomToken: z.optional(z.string()),
+});
+
+export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi {
     /**
@@ -38,41 +41,83 @@ class AdminApi {
             userId,
         };
 
-        const res = await Axios.get(ADMIN_API_URL + "/api/map", {
+        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
             params,
         });
-        return res.data;
+
+        const mapDetailData = isMapDetailsData.safeParse(res.data);
+        const roomRedirect = isRoomRedirect.safeParse(res.data);
+
+        if (mapDetailData.success) {
+            return mapDetailData.data;
+        }
+
+        if (roomRedirect.success) {
+            return roomRedirect.data;
+        }
+
+        console.error(mapDetailData.error.issues);
+        console.error(roomRedirect.error.issues);
+        throw new Error(
+            "Invalid answer received from the admin for the /api/map endpoint. Received: " + JSON.stringify(res.data)
+        );
     }
 
     async fetchMemberDataByUuid(
         userIdentifier: string | null,
-        roomId: string,
-        ipAddress: string
+        playUri: string,
+        ipAddress: string,
+        characterLayers: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
-        const res = await Axios.get(ADMIN_API_URL + "/api/room/access", {
-            params: { userIdentifier, roomId, ipAddress },
+        const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
+            params: {
+                userIdentifier,
+                playUri,
+                ipAddress,
+                characterLayers,
+            },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
+            paramsSerializer: (p) => {
+                return qs.stringify(p, { arrayFormat: "brackets" });
+            },
         });
-        return res.data;
+
+        const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
+
+        if (fetchMemberDataByUuidResponse.success) {
+            return fetchMemberDataByUuidResponse.data;
+        }
+
+        console.error(fetchMemberDataByUuidResponse.error.issues);
+        throw new Error(
+            "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
+                JSON.stringify(res.data)
+        );
     }
 
-    async fetchMemberDataByToken(organizationMemberToken: string): Promise<AdminApiData> {
+    async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
+            params: { playUri },
             headers: { Authorization: `${ADMIN_API_TOKEN}` },
         });
-        if (!isAdminApiData(res.data)) {
-            console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
-            throw new Error("Message received from /api/login-url is not in the expected format.");
+
+        const adminApiData = isAdminApiData.safeParse(res.data);
+
+        if (adminApiData.success) {
+            return adminApiData.data;
         }
-        return res.data;
+
+        console.error(adminApiData.error.issues);
+        console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+        throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
     reportPlayer(

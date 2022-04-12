@@ -1,6 +1,6 @@
 import "jasmine";
 import { MapStore } from "../../../src/Stores/Utils/MapStore";
-import type { Readable, Writable } from "svelte/store";
+import type { Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 
 describe("Main store", () => {

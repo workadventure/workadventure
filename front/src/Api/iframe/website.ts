@@ -1,4 +1,4 @@
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { EmbeddedWebsite } from "./Room/EmbeddedWebsite";
 import type { CreateEmbeddedWebsiteEvent } from "../Events/EmbeddedWebsiteEvent";
 

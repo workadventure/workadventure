@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
-import pluginRewriteAll from 'vite-plugin-rewrite-all';
+import pluginRewriteAll from "vite-plugin-rewrite-all";
 
 export default defineConfig({
     server: {
@@ -10,7 +10,10 @@ export default defineConfig({
         hmr: {
             // workaround for development in docker
             clientPort: 80,
-        }
+        },
+    },
+    build: {
+        sourcemap: true,
     },
     plugins: [
         svelte({
