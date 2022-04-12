@@ -22,7 +22,7 @@ export class Room {
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
-    private instance: string | undefined;
+    private _instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
@@ -85,7 +85,9 @@ export class Room {
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
         if (currentRoom.isPublic) {
-            instance = currentRoom.getInstance();
+            const match = /[_*]\/([^/]+)\/.+/.exec(currentRoom.id);
+            if (!match) throw new Error('Could not extract instance from "' + currentRoom.id + '"');
+            instance = match[1];
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
@@ -130,7 +132,7 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
-                this.instance = data.instance;
+                this._instance = data.instance;
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -149,31 +151,6 @@ export class Room {
                 console.error("Error => getMapDetail", e);
             }
             throw e;
-        }
-    }
-
-    /**
-     * Instance name is:
-     * - In a public URL: the second part of the URL ( _/[instance]/map.json)
-     * - In a private URL: [organizationId/worldId]
-     *
-     * @deprecated
-     */
-    public getInstance(): string {
-        if (this.instance !== undefined) {
-            return this.instance;
-        }
-
-        if (this.isPublic) {
-            const match = /[_*]\/([^/]+)\/.+/.exec(this.id);
-            if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
-            this.instance = match[1];
-            return this.instance;
-        } else {
-            const match = /@\/([^/]+)\/([^/]+)\/.+/.exec(this.id);
-            if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
-            this.instance = match[1] + "/" + match[2];
-            return this.instance;
         }
     }
 
@@ -232,6 +209,13 @@ export class Room {
 
     get group(): string | null {
         return this._group;
+    }
+
+    get instance(): string {
+        if (!this._instance) {
+            throw new Error("Instance not fetched yet");
+        }
+        return this._instance;
     }
 
     get expireOn(): Date | undefined {
