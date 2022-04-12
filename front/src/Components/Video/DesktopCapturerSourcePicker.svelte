@@ -16,8 +16,8 @@
 
         desktopCapturerSources = await window.WAD.getDesktopCapturerSources({
             thumbnailSize: {
-                height: 176,
-                width: 312,
+                height: 240,
+                width: 426,
             },
             types: ["screen", "window"],
         });
@@ -29,30 +29,37 @@
         close();
     }
 
+    function cancel() {
+        desktopCapturerSourcePromiseResolve(null);
+        close();
+    }
+
     function close() {
         $showDesktopCapturerSourcePicker = false;
     }
 </script>
 
-<form class="source-picker nes-container" on:submit|preventDefault={close} transition:fly={{ y: -50, duration: 500 }}>
+<div class="source-picker nes-container is-rounded" transition:fly={{ y: -50, duration: 500 }}>
+    <button type="button" class="nes-btn is-error close" on:click={cancel}>&times</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source}
-            <div class="media-box" on:click|preventDefault={() => selectDesktopCapturerSource(source)}>
-                <i class="container">
-                    <span style="background-color: grey; color: black;">{source.name}</span>
-                </i>
-                <img width="312px" height="176px" src={source.thumbnailURL} alt={source.name} />
+            <div
+                class="media-box nes-container is-rounded clickable"
+                on:click|preventDefault={() => selectDesktopCapturerSource(source)}
+            >
+                <div class="container">
+                    {source.name}
+                </div>
+                <img src={source.thumbnailURL} alt={source.name} />
             </div>
         {/each}
     </section>
-    <section>
-        <button class="nes-btn" on:click|preventDefault={close}>Close</button>
-    </section>
-</form>
+</div>
 
 <style lang="scss">
     .source-picker {
+        position: absolute;
         pointer-events: auto;
         background: #eceeee;
         margin-left: auto;
@@ -61,12 +68,19 @@
         right: 0;
         margin-top: 4%;
         max-height: 80vh;
-        max-width: 80vw;
+        max-width: 80vh;
         z-index: 600;
-        overflow: auto;
         text-align: center;
         display: flex;
         flex-direction: column;
+        background-color: #333333;
+        color: whitesmoke;
+
+        .nes-btn.is-error.close {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+        }
 
         h2 {
             font-family: "Press Start 2P";
@@ -76,31 +90,50 @@
             display: flex;
             flex-direction: row;
             flex-wrap: wrap;
-            max-height: 60vh;
+            gap: 10px;
             overflow-y: scroll;
+            justify-content: center;
         }
         .media-box {
             display: flex;
             position: relative;
-            width: calc(100% / 3);
-            background-color: red;
+            padding: 0;
+            width: calc(100% / 3 - 20px);
+            height: auto;
+            justify-content: center;
 
-            i {
+            &.clickable {
+                cursor: url("../../../style/images/cursor_pointer.png"), pointer;
+            }
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+            }
+
+            &.nes-container.is-rounded {
+                border-image-outset: 1;
+            }
+
+            div.container {
                 position: absolute;
-                min-width: 100px;
+                width: 90%;
                 height: auto;
-                left: -6px;
+                left: 5%;
                 top: calc(100% - 28px);
                 text-align: center;
-                color: white;
-                span {
-                    font-size: 14px;
-                    margin: 2px;
-                    background-color: white;
-                    border: solid 3px black;
-                    border-radius: 8px;
-                    font-style: normal;
-                }
+                padding: 2px 36px;
+
+                white-space: nowrap;
+                overflow-x: hidden;
+                text-overflow: ellipsis;
+                font-size: 14px;
+                margin: 2px;
+                background-color: white;
+                color: #333333;
+                border: solid 3px black;
+                border-radius: 8px;
+                font-style: normal;
             }
         }
     }

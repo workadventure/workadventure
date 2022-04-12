@@ -111,6 +111,25 @@ export interface DesktopCapturerConstraints {
           };
 }
 
+async function getDesktopCapturerSources() {
+    showDesktopCapturerSourcePicker.set(true);
+    const source = await new Promise<DesktopCapturerSource | null>((resolve, reject) => {
+        desktopCapturerSourcePromiseResolve = resolve;
+    });
+    if (source === null) {
+        return;
+    }
+    return navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+            mandatory: {
+                chromeMediaSource: "desktop",
+                chromeMediaSourceId: source.id,
+            },
+        },
+    });
+}
+
 /**
  * A store containing the MediaStream object for ScreenSharing (or null if nothing requested, or Error if an error occurred)
  */
@@ -132,19 +151,7 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
         (async () => {
             let currentStreamPromise: Promise<MediaStream>;
             if (window.WAD?.getDesktopCapturerSources) {
-                showDesktopCapturerSourcePicker.set(true);
-                const source = await new Promise<DesktopCapturerSource>((resolve, reject) => {
-                    desktopCapturerSourcePromiseResolve = resolve;
-                });
-                currentStreamPromise = navigator.mediaDevices.getUserMedia({
-                    audio: false,
-                    video: {
-                        mandatory: {
-                            chromeMediaSource: "desktop",
-                            chromeMediaSourceId: source.id,
-                        },
-                    },
-                });
+                currentStreamPromise = getDesktopCapturerSources();
             } else if (navigator.getDisplayMedia) {
                 currentStreamPromise = navigator.getDisplayMedia({ constraints });
             } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
@@ -237,4 +244,4 @@ export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia | null>(
 
 export const showDesktopCapturerSourcePicker = writable(false);
 
-export let desktopCapturerSourcePromiseResolve: (source: DesktopCapturerSource) => void;
+export let desktopCapturerSourcePromiseResolve: (source: DesktopCapturerSource | null) => void;
