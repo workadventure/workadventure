@@ -16,6 +16,9 @@ In order to create Jitsi meet zones:
 
 You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
 
+{.alert.alert-info}
+As an alternative, you may also put the `jitsiRoom` properties on a layer (rather than putting them on an "area" object)
+
 ## Triggering of the "Jitsi meet" action
 
 By default, Jitsi meet will open when a user enters the area defined on the map.

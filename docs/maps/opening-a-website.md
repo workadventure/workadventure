@@ -20,6 +20,9 @@ In order to create a zone that opens websites:
 A website can explicitly forbid another website from loading it in an iFrame using
 the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
 
+{.alert.alert-info}
+As an alternative, you may also put the `openWebsite` properties on a layer (rather than putting them on an "area" object)
+
 ## Integrating a Youtube video
 
 A common use case is to use `openWebsite` to open a Youtube video.

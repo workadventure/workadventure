@@ -13,6 +13,9 @@ In order to create a silent zone:
 *   Object must be of type "`area`"
 *   In object properties, you MUST add a boolean "`silent`" property. If the silent property is checked, the users are entering the silent zone when they walk on the area.
 
+{.alert.alert-info}
+As an alternative, you may also put the `silent` property on a layer (rather than putting them on an "area" object)
+
 ## Playing sounds or background music
 
 Your map can define special zones where a sound or background music will automatically be played.
@@ -27,3 +30,6 @@ In order to create a zone that triggers sounds/music:
 
 {.alert.alert-info}
 "`playAudioLoop`" is deprecated and should not be used anymore.
+
+{.alert.alert-info}
+As an alternative, you may also put the `playAudio` properties on a layer (rather than putting them on an "area" object)
