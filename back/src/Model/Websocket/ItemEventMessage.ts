@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isItemEventMessageInterface = new tg.IsInterface()
-    .withProperties({
-        itemId: tg.isNumber,
-        event: tg.isString,
-        state: tg.isUnknown,
-        parameters: tg.isUnknown,
-    })
-    .get();
-export type ItemEventMessageInterface = tg.GuardedType<typeof isItemEventMessageInterface>;
+export const isItemEventMessageInterface = z.object({
+    itemId: z.number(),
+    event: z.string(),
+    state: z.unknown(),
+    parameters: z.unknown(),
+});
+
+export type ItemEventMessageInterface = z.infer<typeof isItemEventMessageInterface>;

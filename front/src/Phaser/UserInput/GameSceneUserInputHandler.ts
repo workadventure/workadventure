@@ -16,6 +16,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         gameObjects: Phaser.GameObjects.GameObject[],
         deltaX: number,
         deltaY: number,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deltaZ: number
     ): void {
         this.gameScene.zoomByFactor(1 - (deltaY / 53) * 0.1);
@@ -43,13 +44,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .then((path) => {
                 // Remove first step as it is for the tile we are currently standing on
                 path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch((reason) => {});
+                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
             })
             .catch((reason) => {
                 console.warn(reason);
             });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
 
     public handleSpaceKeyUpEvent(event: Event): Event {

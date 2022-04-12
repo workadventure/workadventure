@@ -8,7 +8,7 @@ import { visibilityStore } from "./VisibilityStore";
 function createPrivacyShutdownStore() {
     let privacyEnabled = false;
 
-    const { subscribe, set, update } = writable(privacyEnabled);
+    const { subscribe, set } = writable(privacyEnabled);
 
     visibilityStore.subscribe((isVisible) => {
         if (!isVisible && get(peerStore).size === 0) {

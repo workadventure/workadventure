@@ -10,7 +10,7 @@ declare const navigator: any; // eslint-disable-line @typescript-eslint/no-expli
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedScreenSharingState() {
-    const { subscribe, set, update } = writable(false);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,

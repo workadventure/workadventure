@@ -1,12 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isActionsMenuActionClickedEvent = new tg.IsInterface()
-    .withProperties({
-        id: tg.isNumber,
-        actionName: tg.isString,
-    })
-    .get();
+export const isActionsMenuActionClickedEvent = z.object({
+    id: z.number(),
+    actionName: z.string(),
+});
 
-export type ActionsMenuActionClickedEvent = tg.GuardedType<typeof isActionsMenuActionClickedEvent>;
+export type ActionsMenuActionClickedEvent = z.infer<typeof isActionsMenuActionClickedEvent>;
 
 export type ActionsMenuActionClickedEventCallback = (event: ActionsMenuActionClickedEvent) => void;

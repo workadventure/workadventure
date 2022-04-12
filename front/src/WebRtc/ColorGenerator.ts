@@ -14,6 +14,7 @@ export function getColorRgbFromHue(hue: number): { r: number; g: number; b: numb
     return hsv_to_rgb(hue, 0.5, 0.95);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function stringToDouble(string: string): number {
     let num = 1;
     for (const char of string.split("")) {

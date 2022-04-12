@@ -1,8 +1,8 @@
 import { Group } from "./Group";
 import { PointInterface } from "./Websocket/PointInterface";
-import { Zone } from "_Model/Zone";
-import { Movable } from "_Model/Movable";
-import { PositionNotifier } from "_Model/PositionNotifier";
+import { Zone } from "../Model/Zone";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
     BatchMessage,
@@ -14,7 +14,7 @@ import {
     SetPlayerDetailsMessage,
     SubMessage,
 } from "../Messages/generated/messages_pb";
-import { CharacterLayer } from "_Model/Websocket/CharacterLayer";
+import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
