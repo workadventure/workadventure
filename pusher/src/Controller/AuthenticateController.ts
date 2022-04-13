@@ -411,7 +411,7 @@ export class AuthenticateController extends BaseHttpController {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                         if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot to be checked on Hydra");
+                            throw Error("Token cannot be checked on OpenID connect provider");
                         }
                         await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
