@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import {ErrorScreenMessage} from "../Messages/ts-proto-generated/protos/messages";
+import { ErrorScreenMessage } from "../Messages/ts-proto-generated/protos/messages";
 
 /**
  * A store that contains one error of type WAError to be displayed.
