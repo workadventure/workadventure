@@ -7,8 +7,11 @@ import { AdminInterface } from "./AdminInterface";
 class LocalAdmin implements AdminInterface {
     fetchMemberDataByUuid(
         userIdentifier: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         playUri: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ipAddress: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         characterLayers: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
         return Promise.resolve({

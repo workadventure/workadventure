@@ -224,7 +224,6 @@ export class GameScene extends DirtyScene {
     private firstCameraUpdateSent: boolean = false;
     private currentPlayerGroupId?: number;
     private showVoiceIndicatorChangeMessageSent: boolean = false;
-    private currentPlayerGroupId?: number;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;

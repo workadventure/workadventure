@@ -1,6 +1,6 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
