@@ -165,7 +165,12 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 desktopApi.init();
 
-analyticsClient.enteredWorkAdventure(DeviceUtils.getDevice(), DeviceUtils.getOS(), DeviceUtils.getBrowser(), DeviceUtils.getVersion())
+analyticsClient.enteredWorkAdventure(
+    DeviceUtils.getDevice(),
+    DeviceUtils.getOS(),
+    DeviceUtils.getBrowser(),
+    DeviceUtils.getVersion()
+);
 if (!DeviceUtils.isCompatible()) {
     alert(DeviceUtils.getMessage());
 }
