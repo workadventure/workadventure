@@ -6,6 +6,7 @@ import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiD
 import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
+import { AdminInterface } from "./AdminInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -25,7 +26,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
-class AdminApi {
+class AdminApi implements AdminInterface {
     private locale: string = "en";
     setLocale(locale: string) {
         //console.info('PUSHER LOCALE SET TO :', locale);
@@ -70,7 +71,7 @@ class AdminApi {
     }
 
     async fetchMemberDataByUuid(
-        userIdentifier: string | null,
+        userIdentifier: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[]
