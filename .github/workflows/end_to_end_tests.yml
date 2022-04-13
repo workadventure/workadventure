@@ -20,7 +20,8 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright@~1.21.0 install --with-deps
+        run: npx playwright install --with-deps
+        working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
       - name: Install messages dependencies
