@@ -1,12 +1,12 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios, { AxiosResponse } from "axios";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import * as tg from "generic-type-guard";
-import { isNumber } from "generic-type-guard";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
+import { AdminInterface } from "./AdminInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -30,7 +30,7 @@ const isFetchMemberDataByUuidResponse = new tg.IsInterface()
 
 export type FetchMemberDataByUuidResponse = tg.GuardedType<typeof isFetchMemberDataByUuidResponse>;
 
-class AdminApi {
+class AdminApi implements AdminInterface {
     /**
      * @var playUri: is url of the room
      * @var userId: can to be undefined or email or uuid
@@ -60,7 +60,7 @@ class AdminApi {
     }
 
     async fetchMemberDataByUuid(
-        userIdentifier: string | null,
+        userIdentifier: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[]
