@@ -1,11 +1,12 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { adminApi } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
+import { adminService } from "../Services/AdminService";
 
 export interface TokenInterface {
     userUuid: string;
@@ -166,10 +167,11 @@ export class AuthenticateController extends BaseHttpController {
 
                         //Get user data from Admin Back Office
                         //This is very important to create User Local in LocalStorage in WorkAdventure
-                        const resUserData = await this.getUserByUserIdentifier(
+                        const resUserData = await adminService.fetchMemberDataByUuid(
                             authTokenData.identifier,
                             playUri as string,
-                            IPAddress
+                            IPAddress,
+                            []
                         );
 
                         if (authTokenData.accessToken == undefined) {
@@ -221,7 +223,7 @@ export class AuthenticateController extends BaseHttpController {
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
-                const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
+                const data = await adminService.fetchMemberDataByUuid(email, playUri as string, IPAddress, []);
 
                 return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
@@ -431,35 +433,5 @@ export class AuthenticateController extends BaseHttpController {
                 this.castErrorToResponse(error, res);
             }
         });
-    }
-
-    /**
-     *
-     * @param email
-     * @param playUri
-     * @param IPAddress
-     * @return FetchMemberDataByUuidResponse|object
-     * @private
-     */
-    private async getUserByUserIdentifier(
-        email: string,
-        playUri: string,
-        IPAddress: string
-    ): Promise<FetchMemberDataByUuidResponse | object> {
-        let data: FetchMemberDataByUuidResponse = {
-            email: email,
-            userUuid: email,
-            tags: [],
-            messages: [],
-            visitCardUrl: null,
-            textures: [],
-            userRoomToken: undefined,
-        };
-        try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, []);
-        } catch (err) {
-            console.error("openIDCallback => fetchMemberDataByUuid", err);
-        }
-        return data;
     }
 }

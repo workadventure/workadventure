@@ -1,4 +1,4 @@
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { BatchMessage, ErrorMessage, ServerToClientMessage, SubMessage } from "../Messages/generated/messages_pb";
 import { WebSocket } from "uWebSockets.js";
 

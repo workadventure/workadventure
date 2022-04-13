@@ -223,7 +223,7 @@ height,*/
     }
 
     close(): void {
-        for (const [key, website] of this.embeddedWebsites) {
+        for (const website of this.embeddedWebsites.values()) {
             if (website.allowApi) {
                 iframeListener.unregisterIframe(website.iframe);
             }

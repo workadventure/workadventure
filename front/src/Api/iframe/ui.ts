@@ -34,14 +34,6 @@ interface MenuDescriptor {
 
 export type MenuOptions = RequireOnlyOne<MenuDescriptor, "callback" | "iframe">;
 
-interface ZonedPopupOptions {
-    zone: string;
-    objectLayerName?: string;
-    popupText: string;
-    delay?: number;
-    popupOptions: Array<ButtonDescriptor>;
-}
-
 export interface ActionMessageOptions {
     message: string;
     type?: "message" | "warning";
@@ -277,11 +269,11 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     }
 
     public displayBubble(): void {
-        sendToWorkadventure({ type: "displayBubble", data: null });
+        sendToWorkadventure({ type: "displayBubble", data: undefined });
     }
 
     public removeBubble(): void {
-        sendToWorkadventure({ type: "removeBubble", data: null });
+        sendToWorkadventure({ type: "removeBubble", data: undefined });
     }
 
     public displayActionMessage(actionMessageOptions: ActionMessageOptions): ActionMessage {

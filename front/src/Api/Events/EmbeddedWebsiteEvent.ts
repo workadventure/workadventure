@@ -1,52 +1,43 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isRectangle = new tg.IsInterface()
-    .withProperties({
-        x: tg.isNumber,
-        y: tg.isNumber,
-        width: tg.isNumber,
-        height: tg.isNumber,
-    })
-    .get();
+export const isRectangle = z.object({
+    x: z.number(),
+    y: z.number(),
+    width: z.number(),
+    height: z.number(),
+});
 
-export const isEmbeddedWebsiteEvent = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-    })
-    .withOptionalProperties({
-        url: tg.isString,
-        visible: tg.isBoolean,
-        allowApi: tg.isBoolean,
-        allow: tg.isString,
-        x: tg.isNumber,
-        y: tg.isNumber,
-        width: tg.isNumber,
-        height: tg.isNumber,
-        origin: tg.isSingletonStringUnion("player", "map"),
-        scale: tg.isNumber,
-    })
-    .get();
+// TODO: make a variation that is all optional (except for the name)
+export type Rectangle = z.infer<typeof isRectangle>;
 
-export const isCreateEmbeddedWebsiteEvent = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-        url: tg.isString,
-        position: isRectangle,
-    })
-    .withOptionalProperties({
-        visible: tg.isBoolean,
-        allowApi: tg.isBoolean,
-        allow: tg.isString,
-        origin: tg.isSingletonStringUnion("player", "map"),
-        scale: tg.isNumber,
-    })
-    .get();
+export const isEmbeddedWebsiteEvent = z.object({
+    name: z.string(),
+    url: z.optional(z.string()),
+    visible: z.optional(z.boolean()),
+    allowApi: z.optional(z.boolean()),
+    allow: z.optional(z.string()),
+    x: z.optional(z.number()),
+    y: z.optional(z.number()),
+    width: z.optional(z.number()),
+    height: z.optional(z.number()),
+    origin: z.optional(z.enum(["player", "map"])),
+    scale: z.optional(z.number()),
+});
 
 /**
  * A message sent from the iFrame to the game to modify an embedded website
  */
-export type ModifyEmbeddedWebsiteEvent = tg.GuardedType<typeof isEmbeddedWebsiteEvent>;
+export type ModifyEmbeddedWebsiteEvent = z.infer<typeof isEmbeddedWebsiteEvent>;
 
-export type CreateEmbeddedWebsiteEvent = tg.GuardedType<typeof isCreateEmbeddedWebsiteEvent>;
-// TODO: make a variation that is all optional (except for the name)
-export type Rectangle = tg.GuardedType<typeof isRectangle>;
+export const isCreateEmbeddedWebsiteEvent = z.object({
+    name: z.string(),
+    url: z.string(),
+    position: isRectangle,
+    visible: z.optional(z.boolean()),
+    allowApi: z.optional(z.boolean()),
+    allow: z.optional(z.string()),
+    origin: z.optional(z.enum(["player", "map"])),
+    scale: z.optional(z.number()),
+});
+
+export type CreateEmbeddedWebsiteEvent = z.infer<typeof isCreateEmbeddedWebsiteEvent>;

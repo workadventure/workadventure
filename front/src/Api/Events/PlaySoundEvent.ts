@@ -1,25 +1,21 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-const isSoundConfig = new tg.IsInterface()
-    .withProperties({
-        volume: tg.isOptional(tg.isNumber),
-        loop: tg.isOptional(tg.isBoolean),
-        mute: tg.isOptional(tg.isBoolean),
-        rate: tg.isOptional(tg.isNumber),
-        detune: tg.isOptional(tg.isNumber),
-        seek: tg.isOptional(tg.isNumber),
-        delay: tg.isOptional(tg.isNumber),
-    })
-    .get();
+export const isSoundConfig = z.object({
+    volume: z.optional(z.number()),
+    loop: z.optional(z.boolean()),
+    mute: z.optional(z.boolean()),
+    rate: z.optional(z.number()),
+    detune: z.optional(z.number()),
+    seek: z.optional(z.number()),
+    delay: z.optional(z.number()),
+});
 
-export const isPlaySoundEvent = new tg.IsInterface()
-    .withProperties({
-        url: tg.isString,
-        config: tg.isOptional(isSoundConfig),
-    })
-    .get();
+export const isPlaySoundEvent = z.object({
+    url: z.string(),
+    config: z.optional(isSoundConfig),
+});
 
 /**
  * A message sent from the iFrame to the game to add a message in the chat.
  */
-export type PlaySoundEvent = tg.GuardedType<typeof isPlaySoundEvent>;
+export type PlaySoundEvent = z.infer<typeof isPlaySoundEvent>;

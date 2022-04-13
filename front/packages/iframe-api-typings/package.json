@@ -9,5 +9,8 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "rxjs": "^6.6.3"
   }
 }

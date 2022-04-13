@@ -50,13 +50,11 @@ import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zone";
 import Debug from "debug";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-//import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
+import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 
 const debug = Debug("socket");
 
@@ -124,7 +122,13 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn("Admin connection lost to back server");
+                console.warn(
+                    "Admin connection lost to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
+                );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
@@ -132,7 +136,14 @@ export class SocketManager implements ZoneEventListener {
                 console.log("A user left");
             })
             .on("error", (err: Error) => {
-                console.error("Error in connection to back server:", err);
+                console.error(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
+                    err
+                );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -189,7 +200,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom");
+            console.log("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -217,7 +228,13 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn("Connection lost to back server");
+                    console.warn(
+                        "Connection lost to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "'"
+                    );
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
@@ -225,7 +242,14 @@ export class SocketManager implements ZoneEventListener {
                     console.log("A user left");
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server:", err);
+                    console.error(
+                        "Error in connection to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
+                        err
+                    );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
@@ -447,13 +471,14 @@ export class SocketManager implements ZoneEventListener {
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
         const data = await adminApi.fetchMapDetails(room.roomUrl);
+        const mapDetailsData = isMapDetailsData.safeParse(data);
 
-        if (isRoomRedirect(data)) {
+        if (mapDetailsData.success) {
+            room.tags = mapDetailsData.data.tags;
+            room.policyType = Number(mapDetailsData.data.policy_type);
+        } else {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
             // and redirect everybody to the new location (so we need to close the connection for everybody)
-        } else {
-            room.tags = data.tags;
-            room.policyType = Number(data.policy_type);
         }
     }
 
@@ -715,7 +740,7 @@ export class SocketManager implements ZoneEventListener {
         for (const roomUrl of tabUrlRooms) {
             const apiRoom = await apiClientRepository.getClient(roomUrl);
             roomMessage.setRoomid(roomUrl);
-            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+            apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;
             });
         }

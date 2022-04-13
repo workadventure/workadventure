@@ -54,7 +54,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         moveStream.subscribe(callback);
         sendToWorkadventure({
             type: "onPlayerMove",
-            data: null,
+            data: undefined,
         });
     }
 

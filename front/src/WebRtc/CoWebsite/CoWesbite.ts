@@ -1,5 +1,5 @@
 import type CancelablePromise from "cancelable-promise";
-import type { Readable, Writable } from "svelte/store";
+import type { Readable } from "svelte/store";
 
 export type CoWebsiteState = "asleep" | "loading" | "ready";
 

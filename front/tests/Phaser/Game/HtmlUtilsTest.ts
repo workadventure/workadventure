@@ -1,5 +1,4 @@
 import "jasmine";
-import {HtmlUtils} from "../../../src/WebRtc/HtmlUtils";
 
 describe("urlify()", () => {
     // FIXME: we need to add PhantomJS to have a good mock for "document".

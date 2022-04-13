@@ -1,9 +1,7 @@
-import ImageFrameConfig = Phaser.Types.Loader.FileTypes.ImageFrameConfig;
 import { DirtyScene } from "../Game/DirtyScene";
 import { gameManager } from "../Game/GameManager";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import CancelablePromise from "cancelable-promise";
-import Image = Phaser.GameObjects.Image;
 import Texture = Phaser.Textures.Texture;
 
 const TextName: string = "Loading...";
@@ -34,8 +32,6 @@ export class Loader {
 
         const logoResource = gameManager.currentStartedRoom.loadingLogo ?? "static/images/logo.png";
         this.logoNameIndex = "logoLoading" + logoResource;
-
-        const loadingBarWidth: number = Math.floor(this.scene.game.renderer.width / 3);
 
         //add loading if logo image until logo image is ready
         this.loadingText = this.scene.add.text(

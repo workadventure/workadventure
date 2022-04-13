@@ -1,6 +1,4 @@
 import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
-import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
-import { waScaleManager } from "../Services/WaScaleManager";
 import { ResizableScene } from "../Login/ResizableScene";
 
 const Events = Phaser.Core.Events;

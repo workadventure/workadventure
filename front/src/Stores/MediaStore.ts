@@ -11,13 +11,13 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { visibilityStore } from "./VisibilityStore";
+import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -30,7 +30,7 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -43,7 +43,7 @@ function createRequestedMicrophoneState() {
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
@@ -147,7 +147,7 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
@@ -190,7 +190,7 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
@@ -242,7 +242,6 @@ export const mediaStreamConstraintsStore = derived(
         privacyShutdownStore,
         cameraEnergySavingStore,
         isSilentStore,
-        visibilityStore,
     ],
     (
         [
@@ -255,7 +254,6 @@ export const mediaStreamConstraintsStore = derived(
             $privacyShutdownStore,
             $cameraEnergySavingStore,
             $isSilentStore,
-            $visibilityStore,
         ],
         set
     ) => {
@@ -317,10 +315,10 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.
+        // Let's make the changes only if the new value is different from the old one.tile
         if (
-            previousComputedVideoConstraint != currentVideoConstraint ||
-            previousComputedAudioConstraint != currentAudioConstraint
+            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;

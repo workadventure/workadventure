@@ -9,7 +9,7 @@ The [scripting API](https://workadventu.re/map-building/scripting.md) allows map
 
 The philosophy behind WorkAdventure is to build a platform that is as open as possible. Part of this strategy is to
 offer map developers the ability to turn a WorkAdventures map into something unexpected, using the API. For instance,
-you could use it to develop games (we have seen a PacMan and a mine-sweeper on WorkAdventure!) 
+you could use it to develop games (we have seen a PacMan and a mine-sweeper on WorkAdventure!)
 
 We started working on the WorkAdventure scripting API with this in mind, but at some point, maybe you will find that
 a feature is missing in the API. This article is here to explain to you how to add this feature.
@@ -35,7 +35,7 @@ directly access Phaser objects (Phaser is the game engine used in WorkAdventure)
 can contribute a map, we cannot allow anyone to run any code in the scope of the WorkAdventure server (that would be
 a huge XSS security flaw).
 
-Instead, the only way the script can interact with WorkAdventure is by sending messages using the 
+Instead, the only way the script can interact with WorkAdventure is by sending messages using the
 [postMessage API](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage).
 
 ![](images/scripting_2.svg)
@@ -103,14 +103,14 @@ All the other files dedicated to the iframe API are located in the `src/Api/ifra
 
 ## Utility functions to exchange messages
 
-In the example above, we already saw you can easily send a message from the iframe to WorkAdventure using the 
+In the example above, we already saw you can easily send a message from the iframe to WorkAdventure using the
 [`sendToWorkadventure`](http://github.com/thecodingmachine/workadventure/blob/ab075ef6f4974766a3e2de12a230ac4df0954b58/front/src/Api/iframe/IframeApiContribution.ts#L11-L13) utility function.
 
 Of course, messaging can go the other way around and WorkAdventure can also send messages to the iframes.
 We use the [`IFrameListener.postMessage`](http://github.com/thecodingmachine/workadventure/blob/ab075ef6f4974766a3e2de12a230ac4df0954b58/front/src/Api/IframeListener.ts#L455-L459) function for this.
 
 Finally, there is a last type of utility function (a quite powerful one). It is quite common to need to call a function
-from the iframe in WorkAdventure, and to expect a response. For those use cases, the iframe API comes with a 
+from the iframe in WorkAdventure, and to expect a response. For those use cases, the iframe API comes with a
 [`queryWorkadventure`](http://github.com/thecodingmachine/workadventure/blob/ab075ef6f4974766a3e2de12a230ac4df0954b58/front/src/Api/iframe/IframeApiContribution.ts#L30-L49) utility function.
 
 ## Types
@@ -122,7 +122,7 @@ Indeed, Typescript interfaces only exist at compilation time but cannot be enfor
 is an entry point to WorkAdventure, and as with any entry point, data must be checked (otherwise, a hacker could
 send specially crafted JSON packages to try to hack WA).
 
-In WorkAdventure, we use the [generic-type-guard](https://github.com/mscharley/generic-type-guard) package. This package
+In WorkAdventure, we use the [zod](https://github.com/colinhacks/zod) package. This package
 allows us to create interfaces AND custom type guards in one go.
 
 Let's go back at our example. Let's have a look at the JSON message sent when we want to send a chat message from the API:
@@ -140,21 +140,20 @@ sendToWorkadventure({
 The "data" part of the message is defined in `front/src/Api/Events/ChatEvent.ts`:
 
 ```typescript
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isChatEvent = new tg.IsInterface()
-    .withProperties({
-        message: tg.isString,
-        author: tg.isString,
-    })
-    .get();
+export const isChatEvent = z.object({
+    message: z.string(),
+    author: z.string(),
+});
+
 /**
  * A message sent from the iFrame to the game to add a message in the chat.
  */
-export type ChatEvent = tg.GuardedType<typeof isChatEvent>;
+export type ChatEvent = z.infer<typeof isChatEvent>;
 ```
 
-Using the generic-type-guard library, we start by writing a type guard function (`isChatEvent`).
+Using the zod library, we start by writing a type guard function (`isChatEvent`).
 From this type guard, the library can automatically generate the `ChatEvent` type that we can refer in our code.
 
 The advantage of this technique is that, **at runtime**, WorkAdventure can verify that the JSON message received
@@ -212,7 +211,7 @@ export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
 If you want to add a new "query" (if you are using the `queryWorkadventure` utility function), you will need to
 define the type of the query and the type of the response.
 
-The signature of `queryWorkadventure` is: 
+The signature of `queryWorkadventure` is:
 
 ```typescript
 function queryWorkadventure<T extends keyof IframeQueryMap>(
@@ -250,12 +249,12 @@ Here is a sample:
 ```typescript
 iframeListener.registerAnswerer("openCoWebsite", (openCoWebsiteEvent, source) => {
     // ...
-    
+
     return /*...*/;
 });
 ```
 
-The `registerAnswerer` callback is passed the event, and should return a response (or a promise to the response) in the expected format 
+The `registerAnswerer` callback is passed the event, and should return a response (or a promise to the response) in the expected format
 (the one you defined in the `answer` key of `iframeQueryMapTypeGuards`).
 
 Important:

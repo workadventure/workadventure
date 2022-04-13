@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isMenuItemClickedEvent = new tg.IsInterface()
-    .withProperties({
-        menuItem: tg.isString,
-    })
-    .get();
+export const isMenuItemClickedEvent = z.object({
+    menuItem: z.string(),
+});
+
 /**
  * A message sent from the game to the iFrame when a menu item is clicked.
  */
-export type MenuItemClickedEvent = tg.GuardedType<typeof isMenuItemClickedEvent>;
+export type MenuItemClickedEvent = z.infer<typeof isMenuItemClickedEvent>;

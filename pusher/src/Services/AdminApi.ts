@@ -1,36 +1,32 @@
-import { ADMIN_API_TOKEN, ADMIN_API_URL, ADMIN_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import { ADMIN_API_TOKEN, ADMIN_API_URL, OPID_PROFILE_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
 import Axios, { AxiosResponse } from "axios";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
-import * as tg from "generic-type-guard";
-import { isNumber } from "generic-type-guard";
+import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
+import { AdminInterface } from "./AdminInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
     message: string;
 }
 
-const isFetchMemberDataByUuidResponse = new tg.IsInterface()
-    .withProperties({
-        email: tg.isString,
-        userUuid: tg.isString,
-        tags: tg.isArray(tg.isString),
-        visitCardUrl: tg.isNullable(tg.isString),
-        textures: tg.isArray(isWokaDetail),
-        messages: tg.isArray(tg.isUnknown),
-    })
-    .withOptionalProperties({
-        anonymous: tg.isBoolean,
-        userRoomToken: tg.isString,
-    })
-    .get();
+export const isFetchMemberDataByUuidResponse = z.object({
+    email: z.string(),
+    userUuid: z.string(),
+    tags: z.array(z.string()),
+    visitCardUrl: z.nullable(z.string()),
+    textures: z.array(isWokaDetail),
+    messages: z.array(z.unknown()),
+    anonymous: z.optional(z.boolean()),
+    userRoomToken: z.optional(z.string()),
+});
 
-export type FetchMemberDataByUuidResponse = tg.GuardedType<typeof isFetchMemberDataByUuidResponse>;
+export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
-class AdminApi {
+class AdminApi implements AdminInterface {
     private locale: string = "en";
     setLocale(locale: string) {
         //console.info('PUSHER LOCALE SET TO :', locale);
@@ -55,17 +51,27 @@ class AdminApi {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
             params,
         });
-        if (!isMapDetailsData(res.data) && !isRoomRedirect(res.data)) {
-            throw new Error(
-                "Invalid answer received from the admin for the /api/map endpoint. Received: " +
-                    JSON.stringify(res.data)
-            );
+
+        const mapDetailData = isMapDetailsData.safeParse(res.data);
+        const roomRedirect = isRoomRedirect.safeParse(res.data);
+
+        if (mapDetailData.success) {
+            return mapDetailData.data;
         }
-        return res.data;
+
+        if (roomRedirect.success) {
+            return roomRedirect.data;
+        }
+
+        console.error(mapDetailData.error.issues);
+        console.error(roomRedirect.error.issues);
+        throw new Error(
+            "Invalid answer received from the admin for the /api/map endpoint. Received: " + JSON.stringify(res.data)
+        );
     }
 
     async fetchMemberDataByUuid(
-        userIdentifier: string | null,
+        userIdentifier: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[]
@@ -85,13 +91,18 @@ class AdminApi {
                 return qs.stringify(p, { arrayFormat: "brackets" });
             },
         });
-        if (!isFetchMemberDataByUuidResponse(res.data)) {
-            throw new Error(
-                "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
-                    JSON.stringify(res.data)
-            );
+
+        const fetchMemberDataByUuidResponse = isFetchMemberDataByUuidResponse.safeParse(res.data);
+
+        if (fetchMemberDataByUuidResponse.success) {
+            return fetchMemberDataByUuidResponse.data;
         }
-        return res.data;
+
+        console.error(fetchMemberDataByUuidResponse.error.issues);
+        throw new Error(
+            "Invalid answer received from the admin for the /api/room/access endpoint. Received: " +
+                JSON.stringify(res.data)
+        );
     }
 
     async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
@@ -103,11 +114,16 @@ class AdminApi {
             params: { playUri },
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
         });
-        if (!isAdminApiData(res.data)) {
-            console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
-            throw new Error("Message received from /api/login-url is not in the expected format.");
+
+        const adminApiData = isAdminApiData.safeParse(res.data);
+
+        if (adminApiData.success) {
+            return adminApiData.data;
         }
-        return res.data;
+
+        console.error(adminApiData.error.issues);
+        console.error("Message received from /api/login-url is not in the expected format. Message: ", res.data);
+        throw new Error("Message received from /api/login-url is not in the expected format.");
     }
 
     reportPlayer(
