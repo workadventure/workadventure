@@ -17,7 +17,6 @@ menuVisiblilityStore.subscribe((value) => {
     if (value) analyticsClient.openedMenu();
     if (userIsConnected && value && IDENTITY_URL != null) {
         axios.get(getMeUrl()).catch((err) => {
-            console.error("getMeUrl", err);
             profileAvailable.set(false);
         });
     }
