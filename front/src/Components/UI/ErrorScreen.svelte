@@ -1,8 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
-    import logo from "../images/logo-min-white.png";
+    import logoImg from "../images/logo-min-white.png";
+    let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
     import error from "../images/error.png";
     import cup from "../images/cup.png";
     import reload from "../images/reload.png";
@@ -39,10 +41,10 @@
             {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
         </p>
         {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || ($errorScreenStore.type === "redirect" && (window.history.length > 2 || $errorScreenStore.urlToRedirect))}
-            <div class="button" on:click={click}>
+            <button type="button" class="nes-btn is-primary button" on:click={click}>
                 <img src={$errorScreenStore.type === "retry" ? reload : external} alt="" class="reload" />
                 {$errorScreenStore.buttonTitle}
-            </div>
+            </button>
         {/if}
     </div>
 </main>
@@ -130,27 +132,11 @@
 
         .button {
             cursor: pointer;
-            background-image: url("../images/button-large.png");
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: contain;
-            padding: 16px 20px;
-            margin-bottom: 2px;
             font-family: "Press Start 2P";
             font-size: 14px;
             .reload {
                 margin-top: -4px;
                 width: 22px;
-            }
-        }
-        .button:hover {
-            margin-bottom: 0;
-            margin-top: -5px;
-            padding: 18px 22px;
-            font-size: 16px;
-            .reload {
-                margin-top: -5px;
-                width: 24px;
             }
         }
     }

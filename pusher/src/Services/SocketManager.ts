@@ -40,7 +40,7 @@ import {
     PlayerDetailsUpdatedMessage,
     LockGroupPromptMessage,
     InvalidTextureMessage,
-    ErrorV2Message,
+    ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -644,7 +644,7 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorV2Message(
+    public emitErrorScreenMessage(
         client: compressors.WebSocket,
         type: string,
         code: string,
@@ -656,7 +656,7 @@ export class SocketManager implements ZoneEventListener {
         urlToRedirect: string,
         buttonTitle: string
     ) {
-        const errorMessage = new ErrorV2Message();
+        const errorMessage = new ErrorScreenMessage();
         errorMessage.setType(type);
         errorMessage.setCode(code);
         errorMessage.setTitle(title);
@@ -668,7 +668,7 @@ export class SocketManager implements ZoneEventListener {
         errorMessage.setButtontitle(buttonTitle);
 
         const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setErrorv2message(errorMessage);
+        serverToClientMessage.setErrorscreenmessage(errorMessage);
 
         //if (!client.disconnecting) {
         client.send(serverToClientMessage.serializeBinary().buffer, true);

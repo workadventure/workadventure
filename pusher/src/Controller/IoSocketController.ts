@@ -486,7 +486,7 @@ export class IoSocketController {
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.reason === "error") {
-                        socketManager.emitErrorV2Message(
+                        socketManager.emitErrorScreenMessage(
                             ws,
                             ws.error.type,
                             ws.error.code,
