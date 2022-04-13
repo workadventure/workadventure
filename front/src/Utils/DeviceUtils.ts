@@ -41,6 +41,7 @@ export class DeviceUtils {
     ];
 
     public static isCompatible(): boolean {
+        console.log("isCompatible()");
         if (!this.supportsFeatures()) {
             return false;
         }
@@ -51,8 +52,10 @@ export class DeviceUtils {
      * This method checks if the browser has a specific and mandatory Javascript feature.
      */
     private static supportsFeatures(): boolean {
+        console.log("supportsFeatures()");
         const iframe = document.createElement("iframe");
         if (!(iframe instanceof HTMLIFrameElement)) {
+            console.log("iFrames KO");
             this.message = "Your browser doesn't support iFrames. Please upgrade or use Google Chrome.";
             return false;
         }
@@ -61,11 +64,13 @@ export class DeviceUtils {
             !Object.prototype.hasOwnProperty.call(navigator, "getUserMedia") ||
             !Object.prototype.hasOwnProperty.call(window, "RTCPeerConnection")
         ) {
+            console.log("WebRTC KO");
             this.message = "Your browser doesn't support WebRTC. Please upgrade or use Google Chrome.";
             return false;
         }
 
         if (!Object.prototype.hasOwnProperty.call(window, "BigInt64Array")) {
+            console.log("BigInt64Array KO");
             this.message = "Your browser doesn't support BigInt64Array. Please upgrade or use Google Chrome.";
             return false;
         }
@@ -78,8 +83,10 @@ export class DeviceUtils {
      * by providing minimum version numbers.
      */
     private static supportsBrowser(): boolean {
+        console.log("supportsBrowser()");
         if (browser) {
             if (this.supportedBrowsers.some((b) => b.name === browser?.browser && browser?.version < b.version)) {
+                console.log("Browser KO");
                 this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`;
                 return false;
             }

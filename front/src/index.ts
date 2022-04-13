@@ -138,6 +138,7 @@ const config: GameConfig = {
 };
 
 // Start Phaser
+console.log("Start Phaser");
 const game = new Game(config);
 
 waScaleManager.setGame(game);
@@ -171,10 +172,18 @@ analyticsClient.enteredWorkAdventure(
     DeviceUtils.getBrowser(),
     DeviceUtils.getVersion()
 );
+console.log("DeviceUtils.getDevice()", DeviceUtils.getDevice());
+console.log("DeviceUtils.getOS()", DeviceUtils.getOS());
+console.log("DeviceUtils.getBrowser()", DeviceUtils.getBrowser());
+console.log("DeviceUtils.getVersion()", DeviceUtils.getVersion());
+console.log("checking compatibilities...");
 if (!DeviceUtils.isCompatible()) {
+    console.log("device is not compatible");
     alert(DeviceUtils.getMessage());
 }
+console.log("[DONE]");
 
+console.log("Start Svelte");
 // Start Svelte
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),
