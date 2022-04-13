@@ -1,5 +1,4 @@
 import { writable } from "svelte/store";
-import { WAError } from "../Phaser/Reconnecting/WAError";
 import {ErrorScreenMessage} from "../Messages/ts-proto-generated/protos/messages";
 
 /**
