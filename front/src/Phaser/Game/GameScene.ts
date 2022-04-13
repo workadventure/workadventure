@@ -102,6 +102,7 @@ import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
+import { PlayerStatus } from "../Components/PlayerStatusDot";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -250,6 +251,8 @@ export class GameScene extends DirtyScene {
         this.listenToIframeEvents();
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
+        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
+        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -1954,7 +1957,7 @@ ${escapedMessage}
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
         if (addPlayerData.away !== undefined) {
-            player.setAwayStatus(addPlayerData.away, true);
+            player.setStatus(addPlayerData.away ? PlayerStatus.Away : PlayerStatus.Online, true);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2106,7 +2109,7 @@ ${escapedMessage}
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
         if (message.details?.away !== undefined) {
-            character.setAwayStatus(message.details?.away);
+            character.setStatus(message.details?.away ? PlayerStatus.Away : PlayerStatus.Online);
         }
     }
 
