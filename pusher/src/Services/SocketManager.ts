@@ -121,7 +121,13 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn("Admin connection lost to back server");
+                console.warn(
+                    "Admin connection lost to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
+                );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
@@ -129,7 +135,14 @@ export class SocketManager implements ZoneEventListener {
                 console.log("A user left");
             })
             .on("error", (err: Error) => {
-                console.error("Error in connection to back server:", err);
+                console.error(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
+                    err
+                );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -186,7 +199,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom");
+            console.log("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -214,7 +227,13 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn("Connection lost to back server");
+                    console.warn(
+                        "Connection lost to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "'"
+                    );
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
@@ -222,7 +241,14 @@ export class SocketManager implements ZoneEventListener {
                     console.log("A user left");
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server:", err);
+                    console.error(
+                        "Error in connection to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
+                        err
+                    );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }

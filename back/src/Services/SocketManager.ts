@@ -38,6 +38,7 @@ import {
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
+    RoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
