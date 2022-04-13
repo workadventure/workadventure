@@ -307,8 +307,8 @@ export class IoSocketController {
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
-                            jabberId: "",
-                            jabberPassword: "",
+                            jabberId: null,
+                            jabberPassword: null,
                         };
 
                         let characterLayerObjs: WokaDetail[];

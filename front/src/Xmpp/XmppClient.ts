@@ -1,16 +1,17 @@
-import type xml from "@xmpp/xml";
 import jid from "@xmpp/jid";
+
 import { Observable, Subject } from "rxjs";
 import { MucRoom } from "./MucRoom";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
 import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/messages";
+import ElementExt from "./Lib/ElementExt";
 
 export class XmppClient {
     private jid: string | undefined;
     private conferenceDomain: string | undefined;
-    private subscriptions = new Map<string, Subject<xml.Element>>();
+    private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
 
     constructor(private connection: RoomConnection) {
@@ -67,7 +68,7 @@ export class XmppClient {
     }
 
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
-        console.log("CONNECTION TO STATUS STORE!");
+        console.log("CONNECTION TO STATUS STORE!", initialRoomDefinitions);
         xmppServerConnectionStatusStore.set(true);
 
         for (const { name, url } of initialRoomDefinitions) {
@@ -81,7 +82,7 @@ export class XmppClient {
      *
      * IMPORTANT: it is the responsibility of the caller to free the subscription later.
      */
-    private sendMessage(message: xml.Element): Observable<xml.Element> {
+    private sendMessage(message: ElementExt): Observable<ElementExt> {
         let id = message.getAttr("id");
         if (!id) {
             id = this.generateId();
@@ -98,7 +99,7 @@ export class XmppClient {
         // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
         // FIXME: FIND A WAY TO TRACK ON DIFFERENT STRATEGIES (ROUTE BY ROOM, ETC...)
         // PLUS IT SEEMS ID IS RETURNED ONLY ONCE!
-        const subject = new Subject<xml.Element>();
+        const subject = new Subject<ElementExt>();
         this.subscriptions.set(id, subject);
         return subject.asObservable();
     }

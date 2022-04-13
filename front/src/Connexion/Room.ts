@@ -103,7 +103,7 @@ export class Room {
                 },
             });
 
-            const data = result.data;
+            const data = result.data.data;
 
             if (data.authenticationMandatory !== undefined) {
                 data.authenticationMandatory = Boolean(data.authenticationMandatory);

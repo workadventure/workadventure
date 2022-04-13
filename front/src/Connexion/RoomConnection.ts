@@ -48,37 +48,10 @@ import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
-import type xml from "@xmpp/xml";
-import { ElementChild, Parser } from "@xmpp/xml";
+import ElementExt from "../Xmpp/Lib/ElementExt";
+import xml from "@xmpp/xml";
 
 const manualPingDelay = 20000;
-
-const parse = (data: Buffer) => {
-    const p = new Parser();
-    let result: xml.Element | null = null;
-    let error = null;
-
-    p.on("start", (el: xml.Element) => {
-        result = el;
-    });
-    p.on("element", (el: ElementChild) => {
-        if (result == undefined) {
-            return;
-        }
-        result.append(el);
-    });
-    p.on("error", (err) => {
-        console.error("Error => XML XMPP Parser => ", err);
-        error = err;
-    });
-    p.write(data);
-    p.end(data);
-    if (error) {
-        throw error;
-    } else {
-        return result;
-    }
-};
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -162,7 +135,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
-    private readonly _xmppMessageStream = new Subject<xml.Element>();
+    private readonly _xmppMessageStream = new Subject<ElementExt>();
     public readonly xmppMessageStream = this._xmppMessageStream.asObservable();
 
     // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
@@ -339,12 +312,13 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "xmppMessage": {
-                                const data = parse(Buffer.from(subMessage.xmppMessage.stanza));
-                                if (data == undefined) {
-                                    console.error("xmppMessage  => data is undefined => ", data);
+                                const elementExtParsed = xml(subMessage.xmppMessage.stanza);
+
+                                if (elementExtParsed == undefined) {
+                                    console.error("xmppMessage  => data is undefined => ", elementExtParsed);
                                     break;
                                 }
-                                this._xmppMessageStream.next(data);
+                                this._xmppMessageStream.next(elementExtParsed);
                                 break;
                             }
                             default: {
@@ -1005,7 +979,7 @@ export class RoomConnection implements RoomConnection {
         gameManager.leaveGame(SelectCharacterSceneName, new SelectCharacterScene());
     }
 
-    public emitXmlMessage(xml: xml.Element): void {
+    public emitXmlMessage(xml: ElementExt): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "xmppMessage",

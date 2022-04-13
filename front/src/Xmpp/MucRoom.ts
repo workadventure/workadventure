@@ -4,6 +4,7 @@ import jid, { JID } from "@xmpp/jid";
 import { gameManager } from "../Phaser/Game/GameManager";
 import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
+import ElementExt from "./Lib/ElementExt";
 
 type UserList = Set<string>;
 export type UsersStore = Readable<UserList>;
@@ -36,7 +37,7 @@ export class MucRoom {
         return xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
     }
 
-    onMessage(xml: xml.Element): void {
+    onMessage(xml: ElementExt): void {
         let handledMessage = false;
 
         // We are receiving the presence from someone

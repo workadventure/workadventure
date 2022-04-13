@@ -215,12 +215,16 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
+                    //disconnect of xmpp server
+                    if (client.xmppClient) {
+                        client.xmppClient.close();
+                    }
                     console.warn("Connection lost to back server");
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
-                    console.log("A user left");
+                    console.log("streamToPusher => A user left");
                 })
                 .on("error", (err: Error) => {
                     console.error("Error in connection to back server:", err);
@@ -402,9 +406,13 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
+                    //disconnect of xmpp server
+                    if (socket.xmppClient) {
+                        socket.xmppClient.close();
+                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log("A user left");
+                    console.log("leaveRoom => A user left");
                 }
             }
         } finally {

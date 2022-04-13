@@ -578,6 +578,7 @@ export class GameRoom {
                 roomSlug: null,
                 contactPage: null,
                 group: null,
+                mucRooms: null,
             };
         }
 

@@ -180,12 +180,16 @@ export class XmppClient {
     close() {
         this.clientPromise
             .then(async (xmpp) => {
+                //send presence unavailable to notify server
                 await xmpp.send(xml("presence", { type: "unavailable" }));
                 await xmpp.stop();
+
+                //cancel promise
+                this.clientPromise.cancel();
+
                 return xmpp;
             })
-            .catch((e) => console.error(e))
-            .cancel();
+            .catch((e) => console.error(e));
     }
 
     async send(stanza: string): Promise<void> {

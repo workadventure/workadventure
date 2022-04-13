@@ -21,8 +21,8 @@ export const isFetchMemberDataByUuidResponse = z.object({
     messages: z.array(z.unknown()),
     anonymous: z.optional(z.boolean()),
     userRoomToken: z.optional(z.string()),
-    jabberId: z.optional(z.boolean()),
-    jabberPassword: z.optional(z.string()),
+    jabberId: z.optional(z.nullable(z.string())),
+    jabberPassword: z.optional(z.nullable(z.string())),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
