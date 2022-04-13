@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const follow: BaseTranslation = {
+const follow: NonNullable<Translation["follow"]> = {
     interactStatus: {
         following: "跟随 {leader}",
         waitingFollowers: "等待跟随者确认",
