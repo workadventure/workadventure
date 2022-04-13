@@ -179,7 +179,7 @@ export class AuthenticateController extends BaseHttpController {
                             if (!code && !nonce) {
                                 return res.json({ ...resUserData, authToken: token });
                             }
-                            console.error("Token cannot to be checked on OpenId provider");
+                            console.error("Token cannot be checked on OpenId provider");
                             res.status(500);
                             res.send("User cannot to be connected on openid provider");
                             return;
