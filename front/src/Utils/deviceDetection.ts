@@ -1,20 +1,22 @@
-interface DetectedInfo<T extends Device, N extends Browser, O, V = null> {
-    readonly device: T;
+/** Code adapted from https://github.com/DamonOehlman/detect-browser */
+
+interface DetectedInfo<T extends Platform, N extends Browser, O, V = null> {
+    readonly platform: T;
     readonly browser: N;
     readonly browserVersion: V;
     readonly os: O;
 }
 
-export class DeviceInfo implements DetectedInfo<Device, Browser, OperatingSystem, number> {
+export class DeviceInfo implements DetectedInfo<Platform, Browser, OperatingSystem, number> {
     constructor(
-        public readonly device: Device,
+        public readonly platform: Platform,
         public readonly browser: Browser,
         public readonly browserVersion: number,
         public readonly os: OperatingSystem
     ) {}
 }
 
-export type Device = "Desktop" | "Mobile" | "Tablet" | "Bot" | "TV" | "Watch";
+export type Platform = "Desktop" | "Mobile" | "Tablet" | "Bot" | "TV" | "Watch";
 
 export type Browser =
     | "aol"
@@ -75,7 +77,7 @@ export type OperatingSystem =
     | "OS/2"
     | "Chrome OS"
     | "Unknown";
-type DeviceRule = [Device, RegExp];
+type PlatformRule = [Platform, RegExp];
 type UserAgentRule = [Browser, RegExp];
 type UserAgentMatch = [Browser, RegExpExecArray] | false;
 type OperatingSystemRule = [OperatingSystem, RegExp];
@@ -85,7 +87,7 @@ const SEARCHBOX_UA_REGEX =
     /alexa|bot|crawl(er|ing)|facebookexternalhit|feedburner|google web preview|nagios|postrank|pingdom|slurp|spider|yahoo!|yandex/;
 const REQUIRED_VERSION_PARTS = 3;
 
-const deviceRules: DeviceRule[] = [
+const platformRules: PlatformRule[] = [
     ["Mobile", /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i],
     ["Tablet", /(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i],
     ["Bot", /bot/],
@@ -212,9 +214,9 @@ export function parseUserAgent(ua: string): DeviceInfo | null {
 
     const version = versionParts.join(".");
     const os = detectOS(ua);
-    const device = detectDevice(ua);
+    const platform = detectPlatform(ua);
 
-    return new DeviceInfo(device, browser, parseFloat(version), os);
+    return new DeviceInfo(platform, browser, parseFloat(version), os);
 }
 
 export function detectOS(ua: string): OperatingSystem {
@@ -229,12 +231,12 @@ export function detectOS(ua: string): OperatingSystem {
     return "Unknown";
 }
 
-export function detectDevice(ua: string): Device {
-    for (let ii = 0, count = deviceRules.length; ii < count; ii++) {
-        const [device, regex] = deviceRules[ii];
+export function detectPlatform(ua: string): Platform {
+    for (let ii = 0, count = platformRules.length; ii < count; ii++) {
+        const [platform, regex] = platformRules[ii];
         const match = regex.exec(ua);
         if (match) {
-            return device;
+            return platform;
         }
     }
 

@@ -1,5 +1,5 @@
 import { detect, Browser } from "./deviceDetection";
-const browser = detect();
+const device = detect();
 
 interface SupportedBrowser {
     name: Browser;
@@ -84,10 +84,10 @@ export class DeviceUtils {
      */
     private static supportsBrowser(): boolean {
         console.log("supportsBrowser()");
-        if (browser) {
-            if (this.supportedBrowsers.some((b) => b.name === browser?.browser && browser?.browserVersion < b.version)) {
+        if (device) {
+            if (this.supportedBrowsers.some((b) => b.name === device?.browser && device?.browserVersion < b.version)) {
                 console.log("Browser KO");
-                this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.browserVersion})`;
+                this.message = `Your browser is not compatible. Please update your ${device.browser} version (you have ${device.browserVersion})`;
                 return false;
             }
         }
@@ -100,18 +100,18 @@ export class DeviceUtils {
     }
 
     public static getDevice(): string {
-        return browser ? browser.device : "Unknown";
+        return device ? device.platform : "Unknown";
     }
 
     public static getOS(): string {
-        return browser ? browser.os : "Unknown";
+        return device ? device.os : "Unknown";
     }
 
     public static getBrowser(): string {
-        return browser ? browser.browser : "Unknown";
+        return device ? device.browser : "Unknown";
     }
 
     public static getVersion(): number {
-        return browser ? browser.browserVersion : 0;
+        return device ? device.browserVersion : 0;
     }
 }
