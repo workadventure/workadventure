@@ -12,7 +12,6 @@ import { SelectCompanionScene } from "./Phaser/Login/SelectCompanionScene";
 import { EnableCameraScene } from "./Phaser/Login/EnableCameraScene";
 import { CustomizeScene } from "./Phaser/Login/CustomizeScene";
 import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
@@ -132,7 +131,8 @@ const config: GameConfig = {
         postBoot: (game) => {
             // Install rexOutlinePipeline only if the renderer is WebGL.
             const renderer = game.renderer;
-            if (renderer instanceof WebGLRenderer) {
+            if (renderer instanceof WebGLRenderer && Object.prototype.hasOwnProperty.call(window, "BigInt64Array")) {
+                const OutlinePipelinePlugin = require("phaser3-rex-plugins/plugins/outlinepipeline-plugin.js");
                 game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
             }
         },
