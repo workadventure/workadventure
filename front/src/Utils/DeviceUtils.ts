@@ -55,18 +55,18 @@ export class DeviceUtils {
      * This method checks if the browser has a specific and mandatory Javascript feature.
      */
     private static supportsFeatures(): boolean {
-        let iframe = document.createElement("iframe");
+        const iframe = document.createElement("iframe");
         if (!(iframe instanceof HTMLIFrameElement)) {
             this.message = "Your browser doesn't support iFrames. Please upgrade or use Google Chrome."
             return false;
         }
 
-        if (!navigator.hasOwnProperty("getUserMedia") || !window.hasOwnProperty("RTCPeerConnection")) {
+        if (!Object.prototype.hasOwnProperty.call(navigator, "getUserMedia") || !Object.prototype.hasOwnProperty.call(window, "RTCPeerConnection")) {
             this.message = "Your browser doesn't support WebRTC. Please upgrade or use Google Chrome."
             return false;
         }
 
-        if (!window.hasOwnProperty("BigInt64Array")) {
+        if (!Object.prototype.hasOwnProperty.call(window, "BigInt64Array")) {
             this.message = "Your browser doesn't support BigInt64Array. Please upgrade or use Google Chrome."
             return false;
         }
