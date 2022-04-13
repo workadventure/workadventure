@@ -1,7 +1,7 @@
 interface DetectedInfo<T extends Device, N extends Browser, O, V = null> {
     readonly device: T;
     readonly browser: N;
-    readonly version: V;
+    readonly browserVersion: V;
     readonly os: O;
 }
 
@@ -9,7 +9,7 @@ export class DeviceInfo implements DetectedInfo<Device, Browser, OperatingSystem
     constructor(
         public readonly device: Device,
         public readonly browser: Browser,
-        public readonly version: number,
+        public readonly browserVersion: number,
         public readonly os: OperatingSystem
     ) {}
 }

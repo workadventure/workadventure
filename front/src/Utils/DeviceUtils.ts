@@ -85,9 +85,9 @@ export class DeviceUtils {
     private static supportsBrowser(): boolean {
         console.log("supportsBrowser()");
         if (browser) {
-            if (this.supportedBrowsers.some((b) => b.name === browser?.browser && browser?.version < b.version)) {
+            if (this.supportedBrowsers.some((b) => b.name === browser?.browser && browser?.browserVersion < b.version)) {
                 console.log("Browser KO");
-                this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.version})`;
+                this.message = `Your browser is not compatible. Please update your ${browser.browser} version (you have ${browser.browserVersion})`;
                 return false;
             }
         }
@@ -112,6 +112,6 @@ export class DeviceUtils {
     }
 
     public static getVersion(): number {
-        return browser ? browser.version : 0;
+        return browser ? browser.browserVersion : 0;
     }
 }
