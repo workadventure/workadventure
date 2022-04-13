@@ -1,12 +1,10 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
 import { ErrorScene } from "../Reconnecting/ErrorScene";
-import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import {ErrorScreenMessage} from "../../Messages/ts-proto-generated/protos/messages";
 
 export const EntrySceneName = "EntryScene";
 

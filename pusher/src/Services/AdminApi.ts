@@ -29,7 +29,7 @@ export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUu
 class AdminApi implements AdminInterface {
     private locale: string = "en";
     setLocale(locale: string) {
-        console.info('PUSHER LOCALE SET TO :', locale);
+        console.info("PUSHER LOCALE SET TO :", locale);
         this.locale = locale;
     }
     /**
