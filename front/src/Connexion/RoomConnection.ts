@@ -48,7 +48,6 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { WAError } from "../Phaser/Reconnecting/WAError";
 
 const manualPingDelay = 20000;
 
@@ -486,7 +485,7 @@ export class RoomConnection implements RoomConnection {
                     this._errorScreenMessageStream.next(message.errorScreenMessage);
                     if (message.errorScreenMessage.code !== "retry") this.closed = true;
                     console.error("An error occurred server side: " + message.errorScreenMessage.code);
-                    errorScreenStore.setError(message.errorScreenMessage as WAError);
+                    errorScreenStore.setError(message.errorScreenMessage);
                     break;
                 }
                 default: {

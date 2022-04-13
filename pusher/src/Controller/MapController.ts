@@ -107,6 +107,8 @@ export class MapController extends BaseHttpController {
                 return;
             }
 
+            adminApi.setLocale(req.header("accept-language"));
+
             // If no admin URL is set, let's react on '/_/[instance]/[map url]' URLs
             if (!ADMIN_API_URL) {
                 const roomUrl = new URL(query.playUri);

@@ -6,6 +6,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import {ErrorScreenMessage} from "../../Messages/ts-proto-generated/protos/messages";
 
 export const EntrySceneName = "EntryScene";
 
@@ -47,19 +48,7 @@ export class EntryScene extends Scene {
                     })
                     .catch((err) => {
                         if (err.response.data?.code) {
-                            errorScreenStore.setError(
-                                new WAError(
-                                    err.response.data.type,
-                                    err.response.data.code,
-                                    err.response.data.title,
-                                    err.response.data.subtitle,
-                                    err.response.data.details,
-                                    err.response.data.timeToRetry,
-                                    err.response.data.canRetryManual,
-                                    err.response.data.urlToRedirect,
-                                    err.response.data.buttonTitle
-                                )
-                            );
+                            errorScreenStore.setError(err.response.data);
                         } else {
                             ErrorScene.showError(err, this.scene);
                         }

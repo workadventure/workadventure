@@ -236,6 +236,8 @@ export class IoSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
 
+                    adminApi.setLocale(req.getHeader("accept-language"));
+
                     const roomId = query.roomId;
                     try {
                         if (typeof roomId !== "string") {
