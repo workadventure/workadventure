@@ -1,3 +1,5 @@
+console.log("BEFORE IMPORT");
+
 import "phaser";
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../style/index.scss";
