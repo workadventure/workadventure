@@ -76,10 +76,10 @@
         on:click|preventDefault={showChat}
     />
     <img
-            src={logoUser}
-            alt={$LL.menu.icon.open.userlist()}
-            class="nes-pointer user-list-btn"
-            on:click|preventDefault={showMucRooms}
+        src={logoUser}
+        alt={$LL.menu.icon.open.userlist()}
+        class="nes-pointer user-list-btn"
+        on:click|preventDefault={showMucRooms}
     />
 </main>
 
