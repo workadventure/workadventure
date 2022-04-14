@@ -45,7 +45,7 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
-                        if (err.response.data?.code) {
+                        if (err?.response?.data?.code) {
                             errorScreenStore.setError(err.response.data);
                         } else {
                             ErrorScene.showError(err, this.scene);
