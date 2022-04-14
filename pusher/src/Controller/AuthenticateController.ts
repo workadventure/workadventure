@@ -450,7 +450,7 @@ export class AuthenticateController extends BaseHttpController {
      *         description: Data of user connected
      */
     me() {
-        this.app.get("/me", async (req, res) => {
+        this.app.get("/me", async (req, res): Promise<any> => {
             const { token } = parse(req.path_query);
             try {
                 //verify connected by token
