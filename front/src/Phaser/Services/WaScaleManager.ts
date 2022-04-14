@@ -86,7 +86,7 @@ export class WaScaleManager {
         const { width: gameWidth, height: gameHeight } = coWebsiteManager.getGameSize();
         const devicePixelRatio = window.devicePixelRatio ?? 1;
 
-        const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
+        const { real: realSize } = this.hdpiManager.getOptimalGameSize({
             width: gameWidth * devicePixelRatio,
             height: gameHeight * devicePixelRatio,
         });

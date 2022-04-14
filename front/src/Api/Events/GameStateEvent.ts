@@ -1,20 +1,19 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isGameStateEvent = new tg.IsInterface()
-    .withProperties({
-        roomId: tg.isString,
-        mapUrl: tg.isString,
-        nickname: tg.isString,
-        language: tg.isUnion(tg.isString, tg.isUndefined),
-        uuid: tg.isUnion(tg.isString, tg.isUndefined),
-        startLayerName: tg.isUnion(tg.isString, tg.isNull),
-        tags: tg.isArray(tg.isString),
-        variables: tg.isObject,
-        playerVariables: tg.isObject,
-        userRoomToken: tg.isUnion(tg.isString, tg.isUndefined),
-    })
-    .get();
+export const isGameStateEvent = z.object({
+    roomId: z.string(),
+    mapUrl: z.string(),
+    nickname: z.string(),
+    language: z.optional(z.string()),
+    uuid: z.optional(z.string()),
+    startLayerName: z.optional(z.string()),
+    tags: z.array(z.string()),
+    variables: z.unknown(), // Todo : Typing
+    playerVariables: z.unknown(), // Todo : Typing
+    userRoomToken: z.optional(z.string()),
+});
+
 /**
  * A message sent from the game to the iFrame when the gameState is received by the script
  */
-export type GameStateEvent = tg.GuardedType<typeof isGameStateEvent>;
+export type GameStateEvent = z.infer<typeof isGameStateEvent>;

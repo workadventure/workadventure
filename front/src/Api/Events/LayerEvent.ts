@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isLayerEvent = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-    })
-    .get();
+export const isLayerEvent = z.object({
+    name: z.string(),
+});
+
 /**
  * A message sent from the iFrame to the game to show/hide a layer.
  */
-export type LayerEvent = tg.GuardedType<typeof isLayerEvent>;
+export type LayerEvent = z.infer<typeof isLayerEvent>;

@@ -1,6 +1,5 @@
 import { TextField } from "../Components/TextField";
 import Image = Phaser.GameObjects.Image;
-import Sprite = Phaser.GameObjects.Sprite;
 import LL from "../../i18n/i18n-svelte";
 import { get } from "svelte/store";
 

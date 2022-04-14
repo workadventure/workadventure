@@ -49,6 +49,7 @@ export class LoginScene extends ResizableScene {
         loginSceneVisibleStore.set(false);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(time: number, delta: number): void {}
 
     public onResize(): void {}

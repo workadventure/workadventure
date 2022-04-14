@@ -15,7 +15,6 @@ import {
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
-    PlayGlobalMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
