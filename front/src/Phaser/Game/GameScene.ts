@@ -91,7 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -709,8 +709,9 @@ export class GameScene extends DirtyScene {
         });
 
         this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
-            // TODO: Might be a problem with SILENT here
-            this.connection?.emitPlayerStatusChange(away ? AvailabilityStatus.AWAY : AvailabilityStatus.ONLINE);
+            const status = away ? AvailabilityStatus.AWAY : AvailabilityStatus.ONLINE;
+            this.connection?.emitPlayerStatusChange(status);
+            availabilityStatusStore.set(status);
         });
 
         Promise.all([
@@ -2153,16 +2154,16 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        const status = silent ? AvailabilityStatus.SILENT : AvailabilityStatus.ONLINE;
-        this.connection?.emitPlayerStatusChange(status);
-        this.CurrentPlayer.setStatus(status);
+        // const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+        // const status = silent ? AvailabilityStatus.SILENT : AvailabilityStatus.ONLINE;
+        // this.connection?.emitPlayerStatusChange(status);
+        // this.CurrentPlayer.setStatus(status);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        this.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
-        this.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
+        // this.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
+        // this.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
         mediaManager.hideMyCamera();
     }
 

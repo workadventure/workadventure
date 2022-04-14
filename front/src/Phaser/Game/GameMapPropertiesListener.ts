@@ -18,6 +18,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import { availabilityStatusStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -66,6 +67,9 @@ export class GameMapPropertiesListener {
                         coWebsiteManager.closeCoWebsite(coWebsite);
                     }
                 });
+                this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.ONLINE);
+                availabilityStatusStore.set(AvailabilityStatus.ONLINE);
+                this.scene.CurrentPlayer.setStatus(AvailabilityStatus.ONLINE);
             } else {
                 const openJitsiRoomFunction = () => {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.instance);
@@ -109,6 +113,9 @@ export class GameMapPropertiesListener {
                     });
                 } else {
                     openJitsiRoomFunction();
+                    this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.JITSI);
+                    availabilityStatusStore.set(AvailabilityStatus.JITSI);
+                    this.scene.CurrentPlayer.setStatus(AvailabilityStatus.JITSI);
                 }
             }
         });
@@ -146,12 +153,12 @@ export class GameMapPropertiesListener {
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.ONLINE);
+                availabilityStatusStore.set(AvailabilityStatus.ONLINE);
                 this.scene.CurrentPlayer.setStatus(AvailabilityStatus.ONLINE);
-                this.scene.CurrentPlayer.noSilent();
             } else {
                 this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
+                availabilityStatusStore.set(AvailabilityStatus.SILENT);
                 this.scene.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
-                this.scene.CurrentPlayer.isSilent();
             }
         });
 

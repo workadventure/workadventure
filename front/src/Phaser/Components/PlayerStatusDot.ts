@@ -11,6 +11,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         [AvailabilityStatus.AWAY]: { filling: 0xf5931e, outline: 0x875d13 },
         [AvailabilityStatus.ONLINE]: { filling: 0x8cc43f, outline: 0x427a25 },
         [AvailabilityStatus.SILENT]: { filling: 0xe74c3c, outline: 0xc0392b },
+        [AvailabilityStatus.JITSI]: { filling: 0x74b9ff, outline: 0x0984e3 },
         [AvailabilityStatus.UNRECOGNIZED]: { filling: 0xffffff, outline: 0xffffff },
     };
 

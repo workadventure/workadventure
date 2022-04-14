@@ -95,7 +95,7 @@ export class User implements Movable {
     }
 
     public get silent(): boolean {
-        return this.status === AvailabilityStatus.SILENT;
+        return this.status === AvailabilityStatus.SILENT || this.status === AvailabilityStatus.JITSI;
     }
 
     get following(): User | undefined {

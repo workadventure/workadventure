@@ -11,6 +11,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -178,10 +179,7 @@ function createVideoConstraintStore() {
     };
 }
 
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);
+export const availabilityStatusStore = writable(AvailabilityStatus.ONLINE);
 
 export const videoConstraintStore = createVideoConstraintStore();
 
@@ -240,7 +238,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
-        isSilentStore,
+        availabilityStatusStore,
     ],
     (
         [
@@ -252,7 +250,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
-            $isSilentStore,
+            $availabilityStatusStore,
         ],
         set
     ) => {
@@ -309,7 +307,7 @@ export const mediaStreamConstraintsStore = derived(
             //currentAudioConstraint = false;
         }
 
-        if ($isSilentStore === true) {
+        if ($availabilityStatusStore === AvailabilityStatus.SILENT) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

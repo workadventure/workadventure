@@ -8,6 +8,7 @@ enum AvailabilityStatus {
   ONLINE = 0;
   SILENT = 1;
   AWAY = 2;
+  JITSI = 3;
 }
 
 message PositionMessage {
