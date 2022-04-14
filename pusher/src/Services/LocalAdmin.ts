@@ -1,11 +1,10 @@
-import {AdminBannedData, FetchMemberDataByUuidResponse} from "./AdminApi";
-import {AdminInterface} from "./AdminInterface";
-import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
-import {RoomRedirect} from "../Messages/JsonMessages/RoomRedirect";
-import {GameRoomPolicyTypes} from "../Model/PusherRoom";
-import {ADMIN_API_URL, DISABLE_ANONYMOUS, OPID_PROFILE_SCREEN_PROVIDER} from "../Enum/EnvironmentVariable";
-import {AdminApiData} from "../Messages/JsonMessages/AdminApiData";
-import Axios from "axios";
+import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { AdminInterface } from "./AdminInterface";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { GameRoomPolicyTypes } from "../Model/PusherRoom";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -38,7 +37,6 @@ class LocalAdmin implements AdminInterface {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         authToken?: string
     ): Promise<MapDetailsData | RoomRedirect> {
-
         const roomUrl = new URL(playUri);
 
         const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
@@ -58,7 +56,7 @@ class LocalAdmin implements AdminInterface {
             group: null,
             iframeAuthentication: null,
             loadingLogo: null,
-            loginSceneLogo: null
+            loginSceneLogo: null,
         });
     }
 
@@ -113,7 +111,7 @@ class LocalAdmin implements AdminInterface {
     async logoutOauth(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         token: string
-    ): Promise<void>{
+    ): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

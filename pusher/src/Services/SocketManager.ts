@@ -54,7 +54,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import {adminService} from "./AdminService";
+import { adminService } from "./AdminService";
 
 const debug = Debug("socket");
 

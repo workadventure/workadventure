@@ -1,7 +1,7 @@
-import {AdminBannedData, FetchMemberDataByUuidResponse} from "./AdminApi";
-import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
-import {RoomRedirect} from "../Messages/JsonMessages/RoomRedirect";
-import {AdminApiData} from "../Messages/JsonMessages/AdminApiData";
+import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminInterface {
     locale: string;
@@ -25,20 +25,14 @@ export interface AdminInterface {
      * @var userId: can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMapDetails(
-        playUri: string,
-        authToken?: string
-    ): Promise<MapDetailsData | RoomRedirect>;
+    fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect>;
 
     /**
      * @param organizationMemberToken
      * @param playUri
      * @return AdminApiData
      */
-    fetchMemberDataByToken(
-        organizationMemberToken: string,
-        playUri: string | null
-    ): Promise<AdminApiData>;
+    fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData>;
 
     /**
      * @param reportedUserUuid
@@ -59,32 +53,22 @@ export interface AdminInterface {
      * @param roomUrl
      * @return AdminBannedData
      */
-    verifyBanUser(
-        userUuid: string,
-        ipAddress: string,
-        roomUrl: string
-    ): Promise<AdminBannedData>;
+    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData>;
 
     /**
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(
-        roomUrl: string
-    ): Promise<string[]>;
+    getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]>;
 
     /**
      * @param accessToken
      * @return string
      */
-    getProfileUrl(
-        accessToken: string
-    ): string;
+    getProfileUrl(accessToken: string): string;
 
     /**
      * @param token
      */
-    logoutOauth(
-        token: string
-    ): Promise<void>;
+    logoutOauth(token: string): Promise<void>;
 }

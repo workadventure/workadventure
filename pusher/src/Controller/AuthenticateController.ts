@@ -1,6 +1,6 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
@@ -508,7 +508,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
         };
         try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, []);
+            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

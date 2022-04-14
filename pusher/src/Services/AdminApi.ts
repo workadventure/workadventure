@@ -7,8 +7,8 @@ import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
-import {AuthTokenData, jwtTokenManager} from "./JWTTokenManager";
-import {InvalidTokenError} from "../Controller/InvalidTokenError";
+import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
+import { InvalidTokenError } from "../Controller/InvalidTokenError";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -46,13 +46,13 @@ class AdminApi implements AdminInterface {
                     console.info("JWT expire, but decoded", userId);
                 } catch (e) {
                     if (e instanceof InvalidTokenError) {
-                        throw new Error('Token decrypted error');
+                        throw new Error("Token decrypted error");
                         // The token was not good, redirect user on login page
                         //res.status(401);
                         //res.send("Token decrypted error");
                         //return;
                     } else {
-                        throw new Error('Error on decryption of token :' + e);
+                        throw new Error("Error on decryption of token :" + e);
                         //this.castErrorToResponse(e, res);
                         //return;
                     }
@@ -190,7 +190,7 @@ class AdminApi implements AdminInterface {
         return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
     }
 
-    async logoutOauth(token: string): Promise<void>{
+    async logoutOauth(token: string): Promise<void> {
         await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }

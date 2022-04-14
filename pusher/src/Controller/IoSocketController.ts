@@ -40,7 +40,7 @@ import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
-import {adminService} from "../Services/AdminService";
+import { adminService } from "../Services/AdminService";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket

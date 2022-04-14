@@ -2,7 +2,7 @@ import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { parse } from "query-string";
 import { BaseHttpController } from "./BaseHttpController";
-import {adminService} from "../Services/AdminService";
+import { adminService } from "../Services/AdminService";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
