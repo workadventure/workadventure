@@ -17,6 +17,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
+import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -144,10 +145,12 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                // this.scene.connection?.setSilent(false);
+                this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.ONLINE);
+                this.scene.CurrentPlayer.setStatus(AvailabilityStatus.ONLINE);
                 this.scene.CurrentPlayer.noSilent();
             } else {
-                // this.scene.connection?.setSilent(true);
+                this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
+                this.scene.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
                 this.scene.CurrentPlayer.isSilent();
             }
         });

@@ -356,6 +356,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         super.destroy();
     }
 
+    // TODO: Remove silent store and check for status?
     isSilent() {
         isSilentStore.set(true);
     }

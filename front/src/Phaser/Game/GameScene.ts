@@ -2109,6 +2109,7 @@ ${escapedMessage}
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
         if (message.details?.status !== undefined) {
+            console.log(message.details);
             character.setStatus(message.details?.status);
         }
     }
