@@ -44,7 +44,6 @@ import {
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
-import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -55,6 +54,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import {adminService} from "./AdminService";
 
 const debug = Debug("socket");
 
@@ -358,7 +358,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
-            await adminApi.reportPlayer(
+            await adminService.reportPlayer(
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
@@ -444,7 +444,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(room.roomUrl);
+        const data = await adminService.fetchMapDetails(room.roomUrl);
         const mapDetailsData = isMapDetailsData.safeParse(data);
 
         if (mapDetailsData.success) {
@@ -702,7 +702,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
