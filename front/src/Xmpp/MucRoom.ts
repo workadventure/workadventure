@@ -41,6 +41,7 @@ export class MucRoom {
         let handledMessage = false;
 
         // We are receiving the presence from someone
+        console.log("MucRoom => onMessage => xml.getName()", xml.getName());
         if (xml.getName() === "presence") {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
@@ -64,7 +65,7 @@ export class MucRoom {
         }
 
         if (!handledMessage) {
-            console.log("Unhandled message targeted at the room: ", xml.toString());
+            console.warn("Unhandled message targeted at the room: ", xml.toString());
         }
     }
 

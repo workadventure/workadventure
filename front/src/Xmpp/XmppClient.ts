@@ -26,27 +26,32 @@ export class XmppClient {
         });
 
         connection.xmppMessageStream.subscribe((xml) => {
+            console.log("XmppClient => xmppMessageStream => xml", xml);
             let handledMessage = false;
             const id = xml.getAttr("id");
+            console.log("XmppClient => xmppMessageStream => id", id);
+
             if (id) {
                 this.subscriptions.get(id)?.next(xml);
                 handledMessage = true;
             }
 
             const from = xml.getAttr("from");
+            console.log("XmppClient => xmppMessageStream => from", from);
 
             if (from) {
                 const fromJid = jid(from);
                 const roomJid = jid(fromJid.local, fromJid.domain);
 
                 const room = this.rooms.get(roomJid.toString());
+                console.log("XmppClient => xmppMessageStream => room", room);
                 if (room) {
                     room.onMessage(xml);
                     handledMessage = true;
                 }
             }
             if (!handledMessage) {
-                console.log("Unhandled XMPP message: ", xml.toString());
+                console.warn("Unhandled XMPP message: ", xml.toString());
             }
         });
 

@@ -49,7 +49,36 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import ElementExt from "../Xmpp/Lib/ElementExt";
-import xml from "@xmpp/xml";
+import { Parser } from "@xmpp/xml";
+
+const parse = (data: string): ElementExt | null => {
+    const p = new Parser();
+
+    let result: ElementExt | null = null;
+    let error = null;
+
+    p.on("start", (el) => {
+        result = el;
+    });
+    p.on("element", (el) => {
+        if (!result) {
+            return;
+        }
+        result.append(el);
+    });
+    p.on("error", (err) => {
+        error = err;
+    });
+
+    p.write(data);
+    p.end(data);
+
+    if (error) {
+        throw error;
+    } else {
+        return result;
+    }
+};
 
 const manualPingDelay = 20000;
 
@@ -312,7 +341,7 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "xmppMessage": {
-                                const elementExtParsed = xml(subMessage.xmppMessage.stanza);
+                                const elementExtParsed = parse(subMessage.xmppMessage.stanza);
 
                                 if (elementExtParsed == undefined) {
                                     console.error("xmppMessage  => data is undefined => ", elementExtParsed);

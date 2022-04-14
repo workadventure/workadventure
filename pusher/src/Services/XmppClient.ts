@@ -36,6 +36,7 @@ interface XmlElement {
 export class XmppClient {
     private address!: JID;
     private clientPromise!: CancelablePromise<XmppSocket>;
+    private clientJID: any;
     private clientID: string;
     private clientDomain: string;
     private clientResource: string;
@@ -43,15 +44,16 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        console.log("CONNECTING JABBERID ", clientSocket.jabberId);
-        const userJid = jid(clientSocket.jabberId);
-        this.clientID = userJid.local;
-        this.clientDomain = userJid.domain;
-        this.clientResource = userJid.resource;
+        this.clientJID = jid(clientSocket.jabberId);
+        console.log("XmppClient => constructor => clientJID", this.clientJID);
+        this.clientID = this.clientJID.local;
+        this.clientDomain = this.clientJID.domain;
+        this.clientResource = this.clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
         this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
+                console.log("XmppClient => clientPromise => onCancel");
                 if (this.timeout) {
                     clearTimeout(this.timeout);
                     this.timeout = undefined;
@@ -66,99 +68,107 @@ export class XmppClient {
         res: (value: XmppSocket | PromiseLike<XmppSocket>) => void,
         rej: (reason?: any) => void
     ): void {
-        let status: "disconnected" | "connected" = "disconnected";
-        const xmpp = client({
-            service: "ws://ejabberd:5443/ws",
-            domain: EJABBERD_DOMAIN,
-            username: this.clientID,
-            resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
-            password: this.clientPassword,
-        });
-        debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
+        try {
+            let status: "disconnected" | "connected" = "disconnected";
+            const xmpp = client({
+                service: "ws://ejabberd:5443/ws",
+                domain: EJABBERD_DOMAIN,
+                username: this.clientID,
+                resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
+                password: this.clientPassword,
+            });
+            //debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
 
-        xmpp.on("error", (err: string) => {
-            console.error("err", err);
-            rej(err);
-        });
+            xmpp.on("error", (err: string) => {
+                console.error("XmppClient => receive => error =>", err);
+                rej(err);
+            });
 
-        xmpp.on("offline", () => {
-            console.log("XMPP connection is terminally disconnected");
-            status = "disconnected";
-            // This can happen when the first connection failed for some reason.
-            // We should probably retry regularly (every 10 seconds)
-            this.timeout = setTimeout(() => {
-                this.createClient(res, rej);
-            }, 10000);
-        });
-        xmpp.on("disconnect", () => {
-            if (status !== "disconnected") {
+            xmpp.on("offline", () => {
+                console.log("XmppClient => receive => offline");
                 status = "disconnected";
-                console.log("XMPP connection lost, will try to reconnect");
+                // This can happen when the first connection failed for some reason.
+                // We should probably retry regularly (every 10 seconds)
+                this.timeout = setTimeout(() => {
+                    this.createClient(res, rej);
+                }, 10000);
+            });
 
-                const xmppConnectionStatusChangeMessage = new XmppConnectionStatusChangeMessage();
-                xmppConnectionStatusChangeMessage.setStatus(XmppConnectionStatusChangeMessage.Status.DISCONNECTED);
+            xmpp.on("disconnect", () => {
+                if (status !== "disconnected") {
+                    status = "disconnected";
+                    console.log("XmppClient => receive => disconnect");
+
+                    const xmppConnectionStatusChangeMessage = new XmppConnectionStatusChangeMessage();
+                    xmppConnectionStatusChangeMessage.setStatus(XmppConnectionStatusChangeMessage.Status.DISCONNECTED);
+
+                    const serverToClientMessage = new ServerToClientMessage();
+                    serverToClientMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
+
+                    if (!this.clientSocket.disconnecting) {
+                        this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
+                    }
+                }
+            });
+            xmpp.on("online", async (address: JID) => {
+                status = "connected";
+                console.log("XmppClient => receive => online", address);
+                //await this.send(xml("presence", { to: address, from: address, type: "available" }));
+
+                this.address = address;
+
+                const xmppSettings = new XmppSettingsMessage();
+                xmppSettings.setJid(address.toString());
+                xmppSettings.setConferencedomain("conference.ejabberd");
+                xmppSettings.setRoomsList(
+                    this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
+                        const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                        if (!definition.name || !definition.uri) {
+                            throw new Error("Name and Uri cannot be empty!");
+                        }
+                        mucRoomDefinitionMessage.setName(definition.name);
+                        mucRoomDefinitionMessage.setUrl(definition.uri);
+                        return mucRoomDefinitionMessage;
+                    })
+                );
 
                 const serverToClientMessage = new ServerToClientMessage();
-                serverToClientMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
+                serverToClientMessage.setXmppsettingsmessage(xmppSettings);
 
                 if (!this.clientSocket.disconnecting) {
                     this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
                 }
-            }
-        });
-        xmpp.on("online", async (address: JID) => {
-            console.log("CONNECTED TO XMPP SERVER");
-            status = "connected";
-            await xmpp.send(xml("presence"));
 
-            this.address = address;
+                res(xmpp);
+            });
+            xmpp.on("status", async (status: string) => {
+                // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
+                console.log("XmppClient => receive => status: ", status);
+            });
 
-            const xmppSettings = new XmppSettingsMessage();
-            xmppSettings.setJid(address.toString());
-            xmppSettings.setConferencedomain("conference.ejabberd");
-            xmppSettings.setRoomsList(
-                this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
-                    const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
-                    if (!definition.name || !definition.uri) {
-                        throw new Error("Name and Uri cannot be empty!");
-                    }
-                    mucRoomDefinitionMessage.setName(definition.name);
-                    mucRoomDefinitionMessage.setUrl(definition.uri);
-                    return mucRoomDefinitionMessage;
-                })
-            );
+            xmpp.start().catch((e: any) => {
+                console.error("XmppClient => start => Error =>", e);
+                xmpp.stop();
+                rej(e);
+            });
 
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setXmppsettingsmessage(xmppSettings);
+            xmpp.on("stanza", async (stanza: any) => {
+                console.log("XmppClient => receive => stanza", stanza.toString());
 
-            if (!this.clientSocket.disconnecting) {
-                this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
-            }
+                const xmppMessage = new XmppMessage();
+                xmppMessage.setStanza(stanza.toString());
+
+                const subMessage = new SubMessage();
+                subMessage.setXmppmessage(xmppMessage);
+
+                this.clientSocket.emitInBatch(subMessage);
+            });
 
             res(xmpp);
-        });
-        xmpp.on("status", async (status: string) => {
-            // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
-            console.log("NEW STATUS: ", status);
-        });
-
-        xmpp.start().catch((e: any) => {
-            console.error("err2", e);
-            xmpp.stop();
-            rej(e);
-        });
-
-        xmpp.on("stanza", async (stanza: any) => {
-            console.log("stanza", stanza.toString());
-
-            const xmppMessage = new XmppMessage();
-            xmppMessage.setStanza(stanza.toString());
-
-            const subMessage = new SubMessage();
-            subMessage.setXmppmessage(xmppMessage);
-
-            this.clientSocket.emitInBatch(subMessage);
-        });
+        } catch (err) {
+            console.error("XmppClient => createClient => Error", err);
+            rej(err);
+        }
     }
 
     /*sendMessage() {
@@ -193,8 +203,9 @@ export class XmppClient {
     }
 
     async send(stanza: string): Promise<void> {
-        const client = await this.clientPromise;
+        const xmppSocket = await this.clientPromise;
         const ctx = parse(stanza);
-        return client.send(ctx);
+        console.log("XmppClient => send => stanza ", ctx);
+        xmppSocket.send(ctx);
     }
 }
