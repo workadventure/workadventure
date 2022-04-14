@@ -40,11 +40,10 @@ import {
     PlayerDetailsUpdatedMessage,
     LockGroupPromptMessage,
     InvalidTextureMessage,
-    ErrorV2Message,
+    ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
-import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -55,6 +54,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { adminService } from "./AdminService";
 
 const debug = Debug("socket");
 
@@ -122,13 +122,7 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn(
-                    "Admin connection lost to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "'"
-                );
+                console.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
@@ -136,14 +130,7 @@ export class SocketManager implements ZoneEventListener {
                 console.log("A user left");
             })
             .on("error", (err: Error) => {
-                console.error(
-                    "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "':",
-                    err
-                );
+                console.error("Error in connection to back server:", err);
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -200,7 +187,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom '" + client.roomId + "'");
+            console.log("Calling joinRoom");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -228,13 +215,7 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn(
-                        "Connection lost to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            client.roomId +
-                            "'"
-                    );
+                    console.warn("Connection lost to back server");
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
@@ -242,14 +223,7 @@ export class SocketManager implements ZoneEventListener {
                     console.log("A user left");
                 })
                 .on("error", (err: Error) => {
-                    console.error(
-                        "Error in connection to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            client.roomId +
-                            "':",
-                        err
-                    );
+                    console.error("Error in connection to back server:", err);
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
@@ -384,7 +358,7 @@ export class SocketManager implements ZoneEventListener {
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
-            await adminApi.reportPlayer(
+            await adminService.reportPlayer(
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
@@ -470,7 +444,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(room.roomUrl);
+        const data = await adminService.fetchMapDetails(room.roomUrl);
         const mapDetailsData = isMapDetailsData.safeParse(data);
 
         if (mapDetailsData.success) {
@@ -670,7 +644,7 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorV2Message(
+    public emitErrorScreenMessage(
         client: compressors.WebSocket,
         type: string,
         code: string,
@@ -682,7 +656,7 @@ export class SocketManager implements ZoneEventListener {
         urlToRedirect: string,
         buttonTitle: string
     ) {
-        const errorMessage = new ErrorV2Message();
+        const errorMessage = new ErrorScreenMessage();
         errorMessage.setType(type);
         errorMessage.setCode(code);
         errorMessage.setTitle(title);
@@ -694,7 +668,7 @@ export class SocketManager implements ZoneEventListener {
         errorMessage.setButtontitle(buttonTitle);
 
         const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setErrorv2message(errorMessage);
+        serverToClientMessage.setErrorscreenmessage(errorMessage);
 
         //if (!client.disconnecting) {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
@@ -728,7 +702,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }

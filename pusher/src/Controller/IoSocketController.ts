@@ -26,7 +26,7 @@ import {
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
@@ -40,6 +40,7 @@ import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
+import { adminService } from "../Services/AdminService";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -236,7 +237,7 @@ export class IoSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
 
-                    adminApi.setLocale(req.getHeader("accept-language"));
+                    adminService.locale = req.getHeader("accept-language");
 
                     const roomId = query.roomId;
                     try {
@@ -305,7 +306,7 @@ export class IoSocketController {
                         if (ADMIN_API_URL) {
                             try {
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(
+                                    userData = await adminService.fetchMemberDataByUuid(
                                         userIdentifier,
                                         roomId,
                                         IPAddress,
@@ -328,9 +329,9 @@ export class IoSocketController {
                                                 {
                                                     rejected: true,
                                                     reason: "error",
-                                                    message: err?.response?.data.code,
-                                                    status: err?.response?.status,
-                                                    error: err?.response?.data,
+                                                    message: err.response.data.code,
+                                                    status: err.response.status,
+                                                    error: err.response.data,
                                                     roomId,
                                                 } as UpgradeFailedData,
                                                 websocketKey,
@@ -486,7 +487,7 @@ export class IoSocketController {
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.reason === "error") {
-                        socketManager.emitErrorV2Message(
+                        socketManager.emitErrorScreenMessage(
                             ws,
                             ws.error.type,
                             ws.error.code,

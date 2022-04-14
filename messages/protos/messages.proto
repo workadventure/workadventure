@@ -214,11 +214,17 @@ message UserLeftMessage {
   int32 userId = 1;
 }
 
+/*
+ * ErrorMessage is only used to console.error the message in the front
+ */
 message ErrorMessage {
   string message = 1;
 }
 
-message ErrorV2Message {
+/*
+ * ErrorScreenMessage is used to show the ErrorScreen in the front
+ */
+message ErrorScreenMessage {
   string type = 1;
   string code = 2;
   string title = 3;
@@ -341,7 +347,7 @@ message ServerToClientMessage {
     FollowAbortMessage followAbortMessage = 23;
     InvalidTextureMessage invalidTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
-    ErrorV2Message errorV2Message = 26;
+    ErrorScreenMessage errorScreenMessage = 26;
   }
 }
 

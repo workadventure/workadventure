@@ -1,15 +1,15 @@
 import { writable } from "svelte/store";
-import { WAError } from "../Phaser/Reconnecting/WAError";
+import { ErrorScreenMessage } from "../Messages/ts-proto-generated/protos/messages";
 
 /**
  * A store that contains one error of type WAError to be displayed.
  */
 function createErrorScreenStore() {
-    const { subscribe, set } = writable<WAError>(undefined);
+    const { subscribe, set } = writable<ErrorScreenMessage>(undefined);
 
     return {
         subscribe,
-        setError: (e: WAError): void => set(e),
+        setError: (e: ErrorScreenMessage): void => set(e),
     };
 }
 

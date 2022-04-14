@@ -7,6 +7,8 @@ import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
+import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
+import { InvalidTokenError } from "../Controller/InvalidTokenError";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -27,18 +29,35 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
-    private locale: string = "en";
-    setLocale(locale: string) {
-        this.locale = locale;
-    }
-    /**
-     * @var playUri: is url of the room
-     * @var userId: can to be undefined or email or uuid
-     * @return MapDetailsData|RoomRedirect
-     */
-    async fetchMapDetails(playUri: string, userId?: string): Promise<MapDetailsData | RoomRedirect> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
+    locale: string = "en";
+
+    async fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect> {
+        let userId: string | undefined = undefined;
+        if (authToken != undefined) {
+            let authTokenData: AuthTokenData;
+            try {
+                authTokenData = jwtTokenManager.verifyJWTToken(authToken);
+                userId = authTokenData.identifier;
+            } catch (e) {
+                try {
+                    // Decode token, in this case we don't need to create new token.
+                    authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
+                    userId = authTokenData.identifier;
+                    console.info("JWT expire, but decoded", userId);
+                } catch (e) {
+                    if (e instanceof InvalidTokenError) {
+                        throw new Error("Token decrypted error");
+                        // The token was not good, redirect user on login page
+                        //res.status(401);
+                        //res.send("Token decrypted error");
+                        //return;
+                    } else {
+                        throw new Error("Error on decryption of token :" + e);
+                        //this.castErrorToResponse(e, res);
+                        //return;
+                    }
+                }
+            }
         }
 
         const params: { playUri: string; userId?: string } = {
@@ -75,9 +94,6 @@ class AdminApi implements AdminInterface {
         ipAddress: string,
         characterLayers: string[]
     ): Promise<FetchMemberDataByUuidResponse> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
                 userIdentifier,
@@ -105,9 +121,6 @@ class AdminApi implements AdminInterface {
     }
 
     async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
@@ -131,9 +144,6 @@ class AdminApi implements AdminInterface {
         reporterUserUuid: string,
         reportWorldSlug: string
     ) {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
         return Axios.post(
             `${ADMIN_API_URL}/api/report`,
             {
@@ -149,9 +159,6 @@ class AdminApi implements AdminInterface {
     }
 
     async verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
@@ -169,10 +176,6 @@ class AdminApi implements AdminInterface {
     }
 
     async getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]> {
-        if (!ADMIN_API_URL) {
-            return Promise.reject(new Error("No admin backoffice set!"));
-        }
-
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
         }).then((data) => {
@@ -180,10 +183,6 @@ class AdminApi implements AdminInterface {
         });
     }
 
-    /**
-     *
-     * @param accessToken
-     */
     getProfileUrl(accessToken: string): string {
         if (!OPID_PROFILE_SCREEN_PROVIDER) {
             throw new Error("No admin backoffice set!");
@@ -191,7 +190,7 @@ class AdminApi implements AdminInterface {
         return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
     }
 
-    async logoutOauth(token: string) {
+    async logoutOauth(token: string): Promise<void> {
         await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }

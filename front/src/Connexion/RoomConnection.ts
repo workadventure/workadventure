@@ -25,7 +25,7 @@ import {
     TokenExpiredMessage,
     WorldConnexionMessage,
     ErrorMessage as ErrorMessageTsProto,
-    ErrorV2Message as ErrorV2MessageTsProto,
+    ErrorScreenMessage as ErrorScreenMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
@@ -48,7 +48,6 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
-import { WAError } from "../Phaser/Reconnecting/WAError";
 
 const manualPingDelay = 20000;
 
@@ -64,8 +63,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
 
-    private readonly _errorV2MessageStream = new Subject<ErrorV2MessageTsProto>();
-    public readonly errorV2MessageStream = this._errorV2MessageStream.asObservable();
+    private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
+    public readonly errorScreenMessageStream = this._errorScreenMessageStream.asObservable();
 
     private readonly _roomJoinedMessageStream = new Subject<{
         connection: RoomConnection;
@@ -482,11 +481,11 @@ export class RoomConnection implements RoomConnection {
                     console.error("An error occurred server side: " + message.errorMessage.message);
                     break;
                 }
-                case "errorV2Message": {
-                    this._errorV2MessageStream.next(message.errorV2Message);
-                    if (message.errorV2Message.code !== "retry") this.closed = true;
-                    console.error("An error occurred server side: " + message.errorV2Message.code);
-                    errorScreenStore.setError(message.errorV2Message as unknown as WAError);
+                case "errorScreenMessage": {
+                    this._errorScreenMessageStream.next(message.errorScreenMessage);
+                    if (message.errorScreenMessage.code !== "retry") this.closed = true;
+                    console.error("An error occurred server side: " + message.errorScreenMessage.code);
+                    errorScreenStore.setError(message.errorScreenMessage);
                     break;
                 }
                 default: {
