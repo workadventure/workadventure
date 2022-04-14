@@ -31,7 +31,6 @@ export class User implements Movable {
         public readonly uuid: string,
         public readonly IPAddress: string,
         private position: PointInterface,
-        public silent: boolean,
         private positionNotifier: PositionNotifier,
         private status: AvailabilityStatus,
         public readonly socket: UserSocket,
@@ -93,6 +92,10 @@ export class User implements Movable {
 
     public getStatus(): AvailabilityStatus {
         return this.status;
+    }
+
+    public get silent(): boolean {
+        return this.status === AvailabilityStatus.SILENT;
     }
 
     get following(): User | undefined {

@@ -144,10 +144,10 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                this.scene.connection?.setSilent(false);
+                // this.scene.connection?.setSilent(false);
                 this.scene.CurrentPlayer.noSilent();
             } else {
-                this.scene.connection?.setSilent(true);
+                // this.scene.connection?.setSilent(true);
                 this.scene.CurrentPlayer.isSilent();
             }
         });

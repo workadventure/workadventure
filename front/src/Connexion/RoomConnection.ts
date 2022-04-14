@@ -615,19 +615,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public setSilent(silent: boolean): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "silentMessage",
-                silentMessage: {
-                    silent,
-                },
-            },
-        }).finish();
-
-        this.socket.send(bytes);
-    }
-
     public setViewport(viewport: ViewportInterface): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {

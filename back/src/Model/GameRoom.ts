@@ -144,7 +144,6 @@ export class GameRoom {
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
-            false,
             this.positionNotifier,
             joinRoomMessage.getStatus(),
             socket,
@@ -343,21 +342,6 @@ export class GameRoom {
                 currentUser.socket.write(message);
             }
         });
-    }
-
-    setSilent(user: User, silent: boolean) {
-        if (user.silent === silent) {
-            return;
-        }
-
-        user.silent = silent;
-        if (silent && user.group !== undefined) {
-            this.leaveGroup(user);
-        }
-        if (!silent) {
-            // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(user, user.getPosition());
-        }
     }
 
     /**

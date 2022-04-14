@@ -8,7 +8,6 @@ import {
     ItemEventMessage,
     ViewportMessage,
     ClientToServerMessage,
-    SilentMessage,
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
@@ -525,8 +524,6 @@ export class IoSocketController {
                         client,
                         message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage
                     );
-                } else if (message.hasSilentmessage()) {
-                    socketManager.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
                 } else if (message.hasItemeventmessage()) {
                     socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
                 } else if (message.hasVariablemessage()) {

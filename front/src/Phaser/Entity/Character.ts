@@ -19,7 +19,8 @@ import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
-import { PlayerStatus, PlayerStatusDot } from "../Components/PlayerStatusDot";
+import { PlayerStatusDot } from "../Components/PlayerStatusDot";
+import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -236,7 +237,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.talkIcon.show(show, forceClose);
     }
 
-    public setStatus(status: PlayerStatus, instant: boolean = false): void {
+    public setStatus(status: AvailabilityStatus, instant: boolean = false): void {
         this.statusDot.setStatus(status, instant);
     }
 

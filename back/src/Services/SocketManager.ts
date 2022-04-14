@@ -5,7 +5,6 @@ import {
     PointMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
-    SilentMessage,
     SubMessage,
     UserMovedMessage,
     UserMovesMessage,
@@ -158,10 +157,6 @@ export class SocketManager {
 
     handleSetPlayerDetails(room: GameRoom, user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         room.updatePlayerDetails(user, playerDetailsMessage);
-    }
-
-    handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
-        room.setSilent(user, silentMessage.getSilent());
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {

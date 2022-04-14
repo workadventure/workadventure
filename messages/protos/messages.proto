@@ -6,7 +6,7 @@ import "google/protobuf/wrappers.proto";
 
 enum AvailabilityStatus {
   ONLINE = 0;
-  SILENCED = 1;
+  SILENT = 1;
   AWAY = 2;
 }
 
@@ -33,10 +33,6 @@ message ViewportMessage {
   int32 top = 2;
   int32 right = 3;
   int32 bottom = 4;
-}
-
-message SilentMessage {
-  bool silent = 1;
 }
 
 message CharacterLayerMessage {
@@ -112,7 +108,6 @@ message LockGroupPromptMessage {
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
@@ -411,7 +406,6 @@ message PusherToBackMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;

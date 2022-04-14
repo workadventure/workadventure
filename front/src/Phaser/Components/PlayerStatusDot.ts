@@ -73,7 +73,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
                 return { filling: this.COLORS.online, outline: this.COLORS.onlineOutline };
             case AvailabilityStatus.AWAY:
                 return { filling: this.COLORS.away, outline: this.COLORS.awayOutline };
-            case AvailabilityStatus.SILENCED:
+            case AvailabilityStatus.SILENT:
                 return { filling: this.COLORS.silenced, outline: this.COLORS.silencedOutline };
             default:
                 return { filling: this.COLORS.never, outline: this.COLORS.never };

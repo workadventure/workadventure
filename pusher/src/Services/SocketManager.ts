@@ -24,7 +24,6 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SilentMessage,
     SubMessage,
     UserJoinedRoomMessage,
     UserLeftMessage,
@@ -330,13 +329,6 @@ export class SocketManager implements ZoneEventListener {
     handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setSetplayerdetailsmessage(playerDetailsMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSilentmessage(silentMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }

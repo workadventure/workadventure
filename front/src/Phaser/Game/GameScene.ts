@@ -709,7 +709,7 @@ export class GameScene extends DirtyScene {
         });
 
         this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
-            // TODO: Might be a problem with SILENCED here
+            // TODO: Might be a problem with SILENT here
             this.connection?.emitPlayerStatusChange(away ? AvailabilityStatus.AWAY : AvailabilityStatus.ONLINE);
         });
 
@@ -2153,13 +2153,13 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
+        // const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+        // this.connection?.setSilent(!!silent);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        this.connection?.setSilent(true);
+        // this.connection?.setSilent(true);
         mediaManager.hideMyCamera();
     }
 
