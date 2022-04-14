@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const login: BaseTranslation = {
+const login: NonNullable<Translation["login"]> = {
     input: {
         name: {
             placeholder: "输入你的名字",
