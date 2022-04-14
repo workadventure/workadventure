@@ -41,6 +41,7 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
+    AvailabilityStatus,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -520,9 +521,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerAway(away: boolean): void {
+    public emitPlayerStatusChange(status: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
-            away,
+            status,
         });
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -670,7 +671,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            away: message.away,
+            status: message.status,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,

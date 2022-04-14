@@ -5,6 +5,7 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
+    AvailabilityStatus,
     BatchMessage,
     CompanionMessage,
     FollowAbortMessage,
@@ -32,7 +33,7 @@ export class User implements Movable {
         private position: PointInterface,
         public silent: boolean,
         private positionNotifier: PositionNotifier,
-        private away: boolean,
+        private status: AvailabilityStatus,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -90,8 +91,8 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
-    public isAway(): boolean {
-        return this.away;
+    public getStatus(): AvailabilityStatus {
+        return this.status;
     }
 
     get following(): User | undefined {
@@ -134,9 +135,9 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
-        const away = details.getAway();
-        if (away) {
-            this.away = away.getValue();
+        const status = details.getStatus();
+        if (status !== undefined) {
+            this.status = status;
         }
 
         const playerDetails = new SetPlayerDetailsMessage();
@@ -147,8 +148,8 @@ export class User implements Movable {
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
-        if (details.getAway() !== undefined) {
-            playerDetails.setAway(new BoolValue().setValue(this.away));
+        if (details.getStatus() !== undefined) {
+            playerDetails.setStatus(details.getStatus());
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

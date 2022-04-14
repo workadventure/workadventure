@@ -4,6 +4,12 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+enum AvailabilityStatus {
+  ONLINE = 0;
+  SILENCED = 1;
+  AWAY = 2;
+}
+
 message PositionMessage {
   int32 x = 1;
   int32 y = 2;
@@ -53,7 +59,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
-  google.protobuf.BoolValue away = 6;
+  AvailabilityStatus status = 6;
 }
 
 message UserMovesMessage {
@@ -207,7 +213,7 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
-  bool away = 10;
+  AvailabilityStatus status = 10;
 }
 
 message UserLeftMessage {
@@ -346,7 +352,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
-  bool away = 11;
+  AvailabilityStatus status = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -360,7 +366,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
-  bool away = 11;
+  AvailabilityStatus status = 11;
 }
 
 message UserLeftZoneMessage {

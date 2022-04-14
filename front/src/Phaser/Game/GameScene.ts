@@ -100,9 +100,8 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { AvailabilityStatus, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
-import { PlayerStatus } from "../Components/PlayerStatusDot";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -710,7 +709,8 @@ export class GameScene extends DirtyScene {
         });
 
         this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
-            this.connection?.emitPlayerAway(away);
+            // TODO: Might be a problem with SILENCED here
+            this.connection?.emitPlayerStatusChange(away ? AvailabilityStatus.AWAY : AvailabilityStatus.ONLINE);
         });
 
         Promise.all([
@@ -771,7 +771,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
-                        away: message.away,
+                        status: message.status,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -1956,8 +1956,8 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
-        if (addPlayerData.away !== undefined) {
-            player.setStatus(addPlayerData.away ? PlayerStatus.Away : PlayerStatus.Online, true);
+        if (addPlayerData.status !== undefined) {
+            player.setStatus(addPlayerData.status, true);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2108,8 +2108,8 @@ ${escapedMessage}
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
-        if (message.details?.away !== undefined) {
-            character.setStatus(message.details?.away ? PlayerStatus.Away : PlayerStatus.Online);
+        if (message.details?.status !== undefined) {
+            character.setStatus(message.details?.status);
         }
     }
 

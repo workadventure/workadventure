@@ -146,7 +146,7 @@ export class GameRoom {
             position,
             false,
             this.positionNotifier,
-            joinRoomMessage.getAway(),
+            joinRoomMessage.getStatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
