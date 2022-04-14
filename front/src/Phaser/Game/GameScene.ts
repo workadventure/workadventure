@@ -2109,7 +2109,6 @@ ${escapedMessage}
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
         if (message.details?.status !== undefined) {
-            console.log(message.details);
             character.setStatus(message.details?.status);
         }
     }
@@ -2154,13 +2153,16 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        // const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        // this.connection?.setSilent(!!silent);
+        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
+        const status = silent ? AvailabilityStatus.SILENT : AvailabilityStatus.ONLINE;
+        this.connection?.emitPlayerStatusChange(status);
+        this.CurrentPlayer.setStatus(status);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        // this.connection?.setSilent(true);
+        this.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
+        this.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
         mediaManager.hideMyCamera();
     }
 
