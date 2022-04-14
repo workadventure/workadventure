@@ -450,7 +450,8 @@ export class AuthenticateController extends BaseHttpController {
      *         description: Data of user connected
      */
     me() {
-        this.app.get("/me", async (req, res): Promise<any> => {
+        // @ts-ignore
+        this.app.get("/me", async (req, res): void => {
             const { token } = parse(req.path_query);
             try {
                 //verify connected by token
@@ -474,6 +475,7 @@ export class AuthenticateController extends BaseHttpController {
             } catch (error) {
                 console.error("me => ERROR", error);
                 this.castErrorToResponse(error, res);
+                return;
             }
         });
     }
