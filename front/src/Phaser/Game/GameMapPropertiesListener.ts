@@ -67,7 +67,7 @@ export class GameMapPropertiesListener {
                 });
             } else {
                 const openJitsiRoomFunction = () => {
-                    const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.instance);
+                    const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {

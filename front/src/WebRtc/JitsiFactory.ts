@@ -5,6 +5,7 @@ import { get } from "svelte/store";
 import CancelablePromise from "cancelable-promise";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { jitsiParticipantsCountStore, userIsJitsiDominantSpeakerStore } from "../Stores/GameStore";
+import { StringUtils } from "../Utils/StringUtils";
 
 interface jitsiConfigInterface {
     startWithAudioMuted: boolean;
@@ -120,7 +121,7 @@ const slugify = (...args: (string | number)[]): string => {
         .replace(/[\u0300-\u036f]/g, "") // remove all previously split accents
         .toLowerCase()
         .trim()
-        .replace(/[^a-z0-9 ]/g, "") // remove all chars not letters, numbers and spaces (to be replaced)
+        .replace(/[^a-z0-9-_ ]/g, "") // remove all chars not letters, numbers, dash, underscores and spaces (to be replaced)
         .replace(/\s+/g, "-"); // separator
 };
 
@@ -135,8 +136,8 @@ class JitsiFactory {
     /**
      * Slugifies the room name and prepends the room name with the instance
      */
-    public getRoomName(roomName: string, instance: string): string {
-        return slugify(instance.replace("/", "-") + "-" + roomName);
+    public getRoomName(roomName: string, roomId: string): string {
+        return slugify(StringUtils.shortHash(roomId) + "-" + roomName);
     }
 
     public start(
