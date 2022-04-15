@@ -18,7 +18,6 @@ export class Room {
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
-    private _instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
@@ -121,7 +120,6 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
-                this._instance = data.instance;
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -198,13 +196,6 @@ export class Room {
 
     get group(): string | null {
         return this._group;
-    }
-
-    get instance(): string {
-        if (!this._instance) {
-            throw new Error("Instance not fetched yet");
-        }
-        return this._instance;
     }
 
     get expireOn(): Date | undefined {
