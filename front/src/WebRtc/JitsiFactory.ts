@@ -136,8 +136,8 @@ class JitsiFactory {
     /**
      * Slugifies the room name and prepends the room name with the instance
      */
-    public getRoomName(roomName: string, roomId: string): string {
-        return slugify(StringUtils.shortHash(roomId) + "-" + roomName);
+    public getRoomName(roomName: string, roomId: string, addPrefix: boolean): string {
+        return slugify((addPrefix ? StringUtils.shortHash(roomId) + "-" : "") + roomName);
     }
 
     public start(
