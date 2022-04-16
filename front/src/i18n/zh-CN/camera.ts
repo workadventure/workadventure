@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const camera: BaseTranslation = {
+const camera: NonNullable<Translation["camera"]> = {
     enable: {
         title: "开启你的摄像头和麦克风",
         start: "出发!",

@@ -1,7 +1,13 @@
 <script lang="ts">
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { SelectCompanionScene, SelectCompanionSceneName } from "../../Phaser/Login/SelectCompanionScene";
-    import { menuIconVisiblilityStore, menuVisiblilityStore, userIsConnected } from "../../Stores/MenuStore";
+    import {
+        menuIconVisiblilityStore,
+        menuVisiblilityStore,
+        userIsConnected,
+        profileAvailable,
+        getProfileUrl,
+    } from "../../Stores/MenuStore";
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
@@ -9,7 +15,6 @@
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { PROFILE_URL } from "../../Enum/EnvironmentVariable";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
@@ -47,10 +52,6 @@
         return connectionManager.logout();
     }
 
-    function getProfileUrl() {
-        return PROFILE_URL + `?token=${localUserStore.getAuthToken()}`;
-    }
-
     function openEnableCameraScene() {
         disableMenuStores();
         enableCameraSceneVisibilityStore.showEnableCameraScene();
@@ -81,7 +82,7 @@
     </div>
 
     <div class="content">
-        {#if $userIsConnected}
+        {#if $userIsConnected && $profileAvailable}
             <section>
                 {#if PROFILE_URL != undefined}
                     <iframe title="profile" src={getProfileUrl()} />

@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const report: BaseTranslation = {
+const report: NonNullable<Translation["report"]> = {
     block: {
         title: "屏蔽",
         content: "屏蔽任何来自 {userName} 的通信。该操作是可逆的。",

@@ -6,6 +6,7 @@ import { AdminApiData, isAdminApiData } from "../Messages/JsonMessages/AdminApiD
 import { z } from "zod";
 import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
+import { AdminInterface } from "./AdminInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -25,7 +26,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
-class AdminApi {
+class AdminApi implements AdminInterface {
     /**
      * @var playUri: is url of the room
      * @var userId: can to be undefined or email or uuid
@@ -65,7 +66,7 @@ class AdminApi {
     }
 
     async fetchMemberDataByUuid(
-        userIdentifier: string | null,
+        userIdentifier: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[]

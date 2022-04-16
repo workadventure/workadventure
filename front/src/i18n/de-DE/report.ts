@@ -3,17 +3,17 @@ import type { Translation } from "../i18n-types";
 const report: NonNullable<Translation["report"]> = {
     block: {
         title: "Blockieren",
-        content: "Blockiere jede Kommunikation von und zu {userName}. Kann jederzeit rückgängig gemacht werden.",
-        unblock: "Blockierung für diesen User aufheben",
-        block: "Blockiere diese User",
+        content: "Blockiere jegliche Kommunikation mit {userName}. Kann jederzeit rückgängig gemacht werden.",
+        unblock: "Blockierung für diesen Nutzer aufheben",
+        block: "Blockiere diesen Nutzer",
     },
     title: "Melden",
-    content: "Verfasse eine Meldung an die Administratoren dieses Raums. Diese können den User anschließend bannen.",
+    content: "Verfasse eine Beschwerde an die Administratoren dieses Raums. Diese können den Nutzer anschließend bannen.",
     message: {
         title: "Deine Nachricht: ",
-        empty: "Bitte einen Text angeben.",
+        empty: "Bitte Text eingeben.",
     },
-    submit: "Diesen User melden",
+    submit: "Diesen Nutzer melden",
     moderate: {
         title: "{userName} moderieren",
         block: "Blockieren",
