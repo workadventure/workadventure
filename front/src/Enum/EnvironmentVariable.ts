@@ -23,6 +23,7 @@ export const DISPLAY_TERMS_OF_USE = getEnvConfig("DISPLAY_TERMS_OF_USE") == "tru
 export const NODE_ENV = getEnvConfig("NODE_ENV") || "development";
 export const CONTACT_URL = getEnvConfig("CONTACT_URL") || undefined;
 export const PROFILE_URL = getEnvConfig("PROFILE_URL") || undefined;
+export const IDENTITY_URL = getEnvConfig("IDENTITY_URL") || undefined;
 export const POSTHOG_API_KEY: string = (getEnvConfig("POSTHOG_API_KEY") as string) || "";
 export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
