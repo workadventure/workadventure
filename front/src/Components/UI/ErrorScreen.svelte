@@ -9,15 +9,15 @@
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
     import reload from "../images/reload.png";
     import external from "../images/external-link.png";
-    import {connectionManager} from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
 
     let errorScreen = get(errorScreenStore);
 
-    if(!errorScreen.buttonTitle && errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
+    if (!errorScreen.buttonTitle && errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
 
     function click() {
         if (errorScreen.urlToRedirect) {
-            if (errorScreen.urlToRedirect === '/login') void connectionManager.logout();
+            if (errorScreen.urlToRedirect === "/login") void connectionManager.logout();
             else window.location.replace(errorScreen.urlToRedirect);
         } else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
         else window.location.reload();
