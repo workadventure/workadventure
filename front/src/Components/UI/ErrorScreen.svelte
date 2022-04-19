@@ -15,9 +15,9 @@
 
     if(!errorScreen.buttonTitle && errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
 
-    function click() {
-        if (errorScreen.urlToRedirect){
-            if(errorScreen.urlToRedirect === '/login') connectionManager.logout();
+    async function click() {
+        if (errorScreen.urlToRedirect) {
+            if (errorScreen.urlToRedirect === '/login') await connectionManager.logout().then().catch();
             window.location.replace(errorScreen.urlToRedirect);
         } else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
         else window.location.reload();
