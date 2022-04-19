@@ -13,6 +13,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         [AvailabilityStatus.SILENT]: { filling: 0xe74c3c, outline: 0xc0392b },
         [AvailabilityStatus.JITSI]: { filling: 0x74b9ff, outline: 0x0984e3 },
         [AvailabilityStatus.UNRECOGNIZED]: { filling: 0xffffff, outline: 0xffffff },
+        [AvailabilityStatus.UNCHANGED]: { filling: 0xffffff, outline: 0xffffff },
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -31,7 +32,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     public setStatus(status: AvailabilityStatus, instant: boolean = false): void {
-        if (this.status === status) {
+        if (this.status === status || status === AvailabilityStatus.UNCHANGED) {
             return;
         }
         this.status = status;

@@ -179,6 +179,7 @@ function createVideoConstraintStore() {
     };
 }
 
+export const previousAvailabilityStatusStore = writable(AvailabilityStatus.ONLINE);
 export const availabilityStatusStore = writable(AvailabilityStatus.ONLINE);
 
 export const videoConstraintStore = createVideoConstraintStore();

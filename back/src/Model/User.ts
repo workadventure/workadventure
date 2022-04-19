@@ -139,8 +139,10 @@ export class User implements Movable {
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
         const status = details.getStatus();
-        if (status !== undefined) {
+        let sendStatusUpdate = false;
+        if (status && status !== this.status) {
             this.status = status;
+            sendStatusUpdate = true;
         }
 
         const playerDetails = new SetPlayerDetailsMessage();
@@ -151,7 +153,7 @@ export class User implements Movable {
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
-        if (details.getStatus() !== undefined) {
+        if (sendStatusUpdate) {
             playerDetails.setStatus(details.getStatus());
         }
 

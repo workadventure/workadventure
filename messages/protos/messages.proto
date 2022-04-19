@@ -5,10 +5,11 @@ import "google/protobuf/wrappers.proto";
 /*********** PARTIAL MESSAGES **************/
 
 enum AvailabilityStatus {
-  ONLINE = 0;
-  SILENT = 1;
-  AWAY = 2;
-  JITSI = 3;
+  UNCHANGED = 0;
+  ONLINE = 1;
+  SILENT = 2;
+  AWAY = 3;
+  JITSI = 4;
 }
 
 message PositionMessage {
