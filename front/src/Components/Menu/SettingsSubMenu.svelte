@@ -9,6 +9,8 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
+    import infoImg from "../images/info.svg";
+
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
@@ -182,7 +184,7 @@
         <div class="tooltip">
             <h3>
                 <span class="dotted-bottom">{$LL.menu.settings.privacySettings.title()}</span>
-                <img src="/src/Components/images/info.svg" alt="info icon" width="25px" height="25px" />
+                <img src={infoImg} alt="info icon" width="25px" height="25px" />
             </h3>
             <div class="nes-balloon away-tooltip-container from-left flex">
                 <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
@@ -198,7 +200,7 @@
         </label>
     </section>
     <section class="settings-section-save">
-        <p>{$LL.menu.settings.save.warning()} <i class="fas fa-door-open" /></p>
+        <p>{$LL.menu.settings.save.warning()}</p>
         <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
             >{$LL.menu.settings.save.button()}</button
         >
