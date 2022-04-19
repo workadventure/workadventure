@@ -65,6 +65,8 @@ export class GameMap {
     public readonly phaserLayers: TilemapLayer[] = [];
     public readonly areas: ITiledMapObject[] = [];
 
+    private readonly areasPositionOffsetY: number = 16;
+
     public exitUrls: Array<string> = [];
 
     public hasStartTile = false;
@@ -149,7 +151,10 @@ export class GameMap {
     public setPosition(x: number, y: number) {
         this.oldPosition = this.position;
         this.position = { x, y };
-        this.triggerAreasChange();
+        const areasChanged = this.triggerAreasChange();
+        if (areasChanged) {
+            this.triggerAllProperties();
+        }
 
         this.oldKey = this.key;
 
@@ -422,10 +427,11 @@ export class GameMap {
 
     /**
      * We use Tiled Objects with type "area" as areas with defined x, y, width and height for easier event triggering.
+     * @returns If there were any areas changes
      */
-    private triggerAreasChange(): void {
-        const areasByOldPosition = this.getAreasOnPosition(this.oldPosition);
-        const areasByNewPosition = this.getAreasOnPosition(this.position);
+    private triggerAreasChange(): boolean {
+        const areasByOldPosition = this.getAreasOnPosition(this.oldPosition, this.areasPositionOffsetY);
+        const areasByNewPosition = this.getAreasOnPosition(this.position, this.areasPositionOffsetY);
 
         const enterAreas = new Set(areasByNewPosition);
         const leaveAreas = new Set(areasByOldPosition);
@@ -437,11 +443,13 @@ export class GameMap {
             }
         });
 
+        let areasChange = false;
         if (enterAreas.size > 0) {
             const areasArray = Array.from(enterAreas);
             for (const callback of this.enterAreaCallbacks) {
                 callback(areasArray, areasByNewPosition);
             }
+            areasChange = true;
         }
 
         if (leaveAreas.size > 0) {
@@ -449,13 +457,15 @@ export class GameMap {
             for (const callback of this.leaveAreaCallbacks) {
                 callback(areasArray, areasByNewPosition);
             }
+            areasChange = true;
         }
+        return areasChange;
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
         const properties = new Map<string, string | boolean | number>();
 
-        for (const area of this.getAreasOnPosition(this.position)) {
+        for (const area of this.getAreasOnPosition(this.position, this.areasPositionOffsetY)) {
             if (area.properties !== undefined) {
                 for (const property of area.properties) {
                     if (property.value === undefined) {
@@ -504,13 +514,13 @@ export class GameMap {
         return properties;
     }
 
-    private getAreasOnPosition(position?: { x: number; y: number }): ITiledMapObject[] {
+    private getAreasOnPosition(position?: { x: number; y: number }, offsetY: number = 0): ITiledMapObject[] {
         return position
             ? this.areas.filter((area) => {
                   if (!position) {
                       return false;
                   }
-                  return MathUtils.isOverlappingWithRectangle(position, area);
+                  return MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area);
               })
             : [];
     }
