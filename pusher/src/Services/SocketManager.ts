@@ -55,7 +55,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
-import {ErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 const debug = Debug("socket");
 
@@ -654,10 +654,11 @@ export class SocketManager implements ZoneEventListener {
         errorMessage.setDetails(error.details);
         errorMessage.setImage(error.image);
 
-        if(error.urlToRedirect) errorMessage.setUrltoredirect(error.urlToRedirect);
-        if(error.buttonTitle) errorMessage.setButtontitle(error.buttonTitle);
-        if(!!error.canRetryManual) errorMessage.setCanretrymanual(error.canRetryManual);
-        if(error.timeToRetry && !isNaN(Number(error.timeToRetry))) errorMessage.setTimetoretry(Number(error.timeToRetry));
+        if (error.urlToRedirect) errorMessage.setUrltoredirect(error.urlToRedirect);
+        if (error.buttonTitle) errorMessage.setButtontitle(error.buttonTitle);
+        if (!!error.canRetryManual) errorMessage.setCanretrymanual(error.canRetryManual);
+        if (error.timeToRetry && !isNaN(Number(error.timeToRetry)))
+            errorMessage.setTimetoretry(Number(error.timeToRetry));
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setErrorscreenmessage(errorMessage);

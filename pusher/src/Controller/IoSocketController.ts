@@ -22,7 +22,6 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -41,7 +40,7 @@ import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
-import {ErrorApiData, isErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
+import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -324,20 +323,20 @@ export class IoSocketController {
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
                                         const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                        if(errorType.success) {
-                                                return res.upgrade(
-                                                    {
-                                                        rejected: true,
-                                                        reason: "error",
-                                                        status: err?.response?.status,
-                                                        error: errorType.data,
-                                                    } as UpgradeFailedData,
-                                                    websocketKey,
-                                                    websocketProtocol,
-                                                    websocketExtensions,
-                                                    context
-                                                );
-                                            }
+                                        if (errorType.success) {
+                                            return res.upgrade(
+                                                {
+                                                    rejected: true,
+                                                    reason: "error",
+                                                    status: err?.response?.status,
+                                                    error: errorType.data,
+                                                } as UpgradeFailedData,
+                                                websocketKey,
+                                                websocketProtocol,
+                                                websocketExtensions,
+                                                context
+                                            );
+                                        }
                                     }
                                     throw err;
                                 }
