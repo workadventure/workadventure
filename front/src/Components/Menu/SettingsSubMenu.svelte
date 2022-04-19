@@ -184,7 +184,7 @@
         <div class="tooltip">
             <h3>
                 <span class="dotted-bottom">{$LL.menu.settings.privacySettings.title()}</span>
-                <img src={infoImg} alt="info icon" width="25px" height="25px" />
+                <img src={infoImg} alt="info icon" width="23px" height="23px" />
             </h3>
             <div class="nes-balloon away-tooltip-container from-left flex">
                 <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
