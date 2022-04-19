@@ -3,7 +3,7 @@
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { get } from "svelte/store";
-    import {onDestroy} from "svelte";
+    import { onDestroy } from "svelte";
 
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
@@ -16,7 +16,7 @@
 
     const image = errorScreen.image ?? (errorScreen.type === "retry" ? cup : error);
 
-            function click() {
+    function click() {
         if (errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
         else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
         else window.location.reload();
