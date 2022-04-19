@@ -11,6 +11,7 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -314,10 +315,10 @@ export const mediaStreamConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.
+        // Let's make the changes only if the new value is different from the old one.tile
         if (
-            previousComputedVideoConstraint != currentVideoConstraint ||
-            previousComputedAudioConstraint != currentAudioConstraint
+            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
