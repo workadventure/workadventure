@@ -2158,16 +2158,10 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        // const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        // const status = silent ? AvailabilityStatus.SILENT : AvailabilityStatus.ONLINE;
-        // this.connection?.emitPlayerStatusChange(status);
-        // this.CurrentPlayer.setStatus(status);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        // this.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
-        // this.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
         mediaManager.hideMyCamera();
     }
 
