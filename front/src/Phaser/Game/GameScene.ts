@@ -185,7 +185,6 @@ export class GameScene extends DirtyScene {
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
-    instance: string;
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
@@ -234,7 +233,6 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;

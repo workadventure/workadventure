@@ -11,7 +11,7 @@ In order to create Jitsi meet zones:
 
 * You must create a specific object.
 * Object must be of type "`area`"
-* In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with the name of the instance of the map (so that different instances of the map have different rooms)
+* In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
 * You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
 
 You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
@@ -86,3 +86,15 @@ and not
 {.alert.alert-info}
 When you use `jitsiUrl`, the targeted Jitsi instance must be public. You cannot use moderation features or the JWT 
 tokens authentication with maps configured using the `jitsiUrl` property.
+
+## Full control over the Jitsi room name
+
+By default, the name of the room will be "slugified" and prepended with a hash of the room URL.
+This is what you want most of the time. Indeed, different maps with the same Jitsi room name (the same `jitsiRoom` property) will not share the same Jitsi room instance.
+
+However, sometimes, you may actually want to have different WorkAdventure meeting rooms that are actually sharing
+the same Jitsi meet meeting room. Or if you are pointing to a custom Jitsi server (using the `jitsiUrl` property),
+you may want to point to a specific existing room.
+
+For all those use cases, you can use `jitsiNoPrefix: true`. This will remove the automatic prefixing
+of the hash and will give you full control on the Jitsi room name.
