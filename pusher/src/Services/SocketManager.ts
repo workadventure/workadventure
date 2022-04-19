@@ -644,10 +644,7 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorScreenMessage(
-        client: compressors.WebSocket,
-        error: ErrorScreenMessage
-    ) {
+    public emitErrorScreenMessage(client: compressors.WebSocket, error: ErrorScreenMessage) {
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setErrorscreenmessage(error);
 

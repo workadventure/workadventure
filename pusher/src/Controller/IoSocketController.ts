@@ -22,7 +22,7 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    ErrorScreenMessage
+    ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
