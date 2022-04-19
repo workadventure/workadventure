@@ -12,6 +12,7 @@ import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
+import muc from "./muc";
 
 const zh_CN: BaseTranslation = {
     language: "中文",
@@ -29,6 +30,7 @@ const zh_CN: BaseTranslation = {
     warning,
     emoji,
     trigger,
+    muc,
 };
 
 export default zh_CN;

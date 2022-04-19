@@ -29,7 +29,7 @@ export class PusherRoom {
     public tags: string[];
     public policyType: GameRoomPolicyTypes;
     public groupId: string | null = null;
-    public mucRooms: MucRoomDefinitionInterface[];
+    public mucRooms: MucRoomDefinitionInterface[] | null = null;
 
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
@@ -60,6 +60,9 @@ export class PusherRoom {
     public async join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
+        if (!this.mucRooms) {
+            return;
+        }
         const xmppClient = new XmppClient(socket, this.mucRooms);
         //await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
 

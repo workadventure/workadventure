@@ -1,45 +1,15 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
-    import { gameManager } from "../../Phaser/Game/GameManager";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+    import {
+        walkAutomaticallyStore,
+        copyLink,
+        updateInputFieldValue,
+        canShare,
+        shareLink,
+    } from "../../Stores/GuestMenuStore";
 
     let entryPoint: string = $startLayerNamesStore[0];
-    let walkAutomatically: boolean = false;
-    const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
-    const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
-
-    function copyLink() {
-        const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
-        input.focus();
-        input.select();
-        document.execCommand("copy");
-    }
-
-    function getLink() {
-        return `${location.origin}${location.pathname}#${entryPoint}${
-            walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
-        }`;
-    }
-
-    function updateInputFieldValue() {
-        const input = document.getElementById("input-share-link");
-        if (input) {
-            (input as HTMLInputElement).value = getLink();
-        }
-    }
-
-    let canShare = navigator.share !== undefined;
-
-    async function shareLink() {
-        const shareData = { url: getLink() };
-
-        try {
-            await navigator.share(shareData);
-        } catch (err) {
-            console.error("Error: " + err);
-            copyLink();
-        }
-    }
 </script>
 
 <div class="guest-main">
@@ -74,7 +44,7 @@
             <input
                 type="checkbox"
                 class="nes-checkbox is-dark"
-                bind:checked={walkAutomatically}
+                bind:checked={$walkAutomaticallyStore}
                 on:change={() => {
                     updateInputFieldValue();
                 }}

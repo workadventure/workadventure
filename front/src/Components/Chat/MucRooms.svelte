@@ -7,6 +7,7 @@
     } from "../../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import Spinner from "./Spinner.svelte";
+    import LL from "../../i18n/i18n-svelte";
 
     let chatWindowElement: HTMLElement;
     //let handleFormBlur: { blur():void };
@@ -40,7 +41,7 @@
             {/each}
         </section>
     {:else}
-        <div class="reconnecting center">Connection to presence server in progress</div>
+        <div class="reconnecting center">{$LL.muc.mucRoom.reconnecting()}</div>
         <div class="center"><Spinner /></div>
     {/if}
 </aside>
@@ -64,7 +65,7 @@
     }
 
     aside.chatWindow {
-        z-index: 100;
+        z-index: 800;
         pointer-events: auto;
         position: absolute;
         top: 0;

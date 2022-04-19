@@ -6,8 +6,19 @@ import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 
-type UserList = Set<string>;
+const USER_STATUS_AVAILABLE = "available";
+const USER_STATUS_DISCONNECTED = "disconnected";
+type User = {
+    roomId: string;
+    status: string;
+};
+type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
+
+export function goToWorkAdventureRoomId(roomId: string, mouseEvent: MouseEvent | undefined) {
+    window.location.href = roomId;
+    return mouseEvent;
+}
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
@@ -18,7 +29,7 @@ export class MucRoom {
         private roomJid: JID,
         private jid: string
     ) {
-        this.presenceStore = writable<UserList>(new Set<string>());
+        this.presenceStore = writable<UserList>(new Map<string, User>());
     }
 
     public connect() {
@@ -26,9 +37,14 @@ export class MucRoom {
         const message = xml(
             "presence",
             { to: to.toString(), from: this.jid },
-            xml("x", { xmlns: "http://jabber.org/protocol/muc" })
+            xml("x", {
+                xmlns: "http://jabber.org/protocol/muc",
+            }),
+            //add window location and have possibility to teleport on the user
+            xml("room", {
+                id: window.location.toString(),
+            })
         );
-
         this.connection.emitXmlMessage(message);
     }
 
@@ -41,21 +57,26 @@ export class MucRoom {
         let handledMessage = false;
 
         // We are receiving the presence from someone
-        console.log("MucRoom => onMessage => xml.getName()", xml.getName());
         if (xml.getName() === "presence") {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
+            const me = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
+
+            //It's me and I want a profile details
+            //TODO create profile details with XMPP connection
+            if (from.toString() === me.toString()) {
+                return;
+            }
 
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
+                const roomId = xml.getChild("room")?.getAttr("id");
                 this.presenceStore.update((list) => {
                     if (type === "unavailable") {
-                        list.delete(from.resource);
-                        console.log("USER LEFT", from.resource);
+                        list.set(from.resource, { roomId, status: USER_STATUS_DISCONNECTED });
                     } else {
-                        list.add(from.resource);
-                        console.log("USER ENTERED", from.resource);
+                        list.set(from.resource, { roomId, status: USER_STATUS_AVAILABLE });
                     }
                     return list;
                 });

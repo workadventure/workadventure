@@ -45,7 +45,6 @@ export class XmppClient {
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         this.clientJID = jid(clientSocket.jabberId);
-        console.log("XmppClient => constructor => clientJID", this.clientJID);
         this.clientID = this.clientJID.local;
         this.clientDomain = this.clientJID.domain;
         this.clientResource = this.clientJID.resource;
@@ -53,7 +52,6 @@ export class XmppClient {
         this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
-                console.log("XmppClient => clientPromise => onCancel");
                 if (this.timeout) {
                     clearTimeout(this.timeout);
                     this.timeout = undefined;
@@ -76,6 +74,7 @@ export class XmppClient {
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
                 password: this.clientPassword,
+                roomId: this.clientSocket.roomId,
             });
             //debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
 
@@ -85,7 +84,6 @@ export class XmppClient {
             });
 
             xmpp.on("offline", () => {
-                console.log("XmppClient => receive => offline");
                 status = "disconnected";
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
@@ -97,7 +95,6 @@ export class XmppClient {
             xmpp.on("disconnect", () => {
                 if (status !== "disconnected") {
                     status = "disconnected";
-                    console.log("XmppClient => receive => disconnect");
 
                     const xmppConnectionStatusChangeMessage = new XmppConnectionStatusChangeMessage();
                     xmppConnectionStatusChangeMessage.setStatus(XmppConnectionStatusChangeMessage.Status.DISCONNECTED);
@@ -112,7 +109,6 @@ export class XmppClient {
             });
             xmpp.on("online", async (address: JID) => {
                 status = "connected";
-                console.log("XmppClient => receive => online", address);
                 //await this.send(xml("presence", { to: address, from: address, type: "available" }));
 
                 this.address = address;
@@ -143,7 +139,6 @@ export class XmppClient {
             });
             xmpp.on("status", async (status: string) => {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
-                console.log("XmppClient => receive => status: ", status);
             });
 
             xmpp.start().catch((e: any) => {
@@ -153,8 +148,6 @@ export class XmppClient {
             });
 
             xmpp.on("stanza", async (stanza: any) => {
-                console.log("XmppClient => receive => stanza", stanza.toString());
-
                 const xmppMessage = new XmppMessage();
                 xmppMessage.setStanza(stanza.toString());
 
@@ -205,7 +198,6 @@ export class XmppClient {
     async send(stanza: string): Promise<void> {
         const xmppSocket = await this.clientPromise;
         const ctx = parse(stanza);
-        console.log("XmppClient => send => stanza ", ctx);
         xmppSocket.send(ctx);
     }
 }

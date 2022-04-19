@@ -13,6 +13,7 @@ import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
+import muc from "./muc";
 
 const fr_FR: Translation = {
     ...(en_US as Translation),
@@ -31,6 +32,7 @@ const fr_FR: Translation = {
     warning,
     emoji,
     trigger,
+    muc,
 };
 
 export default fr_FR;
