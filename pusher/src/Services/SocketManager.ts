@@ -646,29 +646,10 @@ export class SocketManager implements ZoneEventListener {
 
     public emitErrorScreenMessage(
         client: compressors.WebSocket,
-        type: string,
-        code: string,
-        title: string,
-        subtitle: string,
-        details: string,
-        timeToRetry: number,
-        canRetryManual: boolean,
-        urlToRedirect: string,
-        buttonTitle: string
+        error: ErrorScreenMessage
     ) {
-        const errorMessage = new ErrorScreenMessage();
-        errorMessage.setType(type);
-        errorMessage.setCode(code);
-        errorMessage.setTitle(title);
-        errorMessage.setSubtitle(subtitle);
-        errorMessage.setDetails(details);
-        errorMessage.setTimetoretry(timeToRetry);
-        errorMessage.setCanretrymanual(canRetryManual);
-        errorMessage.setUrltoredirect(urlToRedirect);
-        errorMessage.setButtontitle(buttonTitle);
-
         const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setErrorscreenmessage(errorMessage);
+        serverToClientMessage.setErrorscreenmessage(error);
 
         //if (!client.disconnecting) {
         client.send(serverToClientMessage.serializeBinary().buffer, true);

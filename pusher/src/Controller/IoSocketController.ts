@@ -22,6 +22,7 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
+    ErrorScreenMessage
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -486,18 +487,7 @@ export class IoSocketController {
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.reason === "error") {
-                        socketManager.emitErrorScreenMessage(
-                            ws,
-                            ws.error.type,
-                            ws.error.code,
-                            ws.error.title,
-                            ws.error.subtitle,
-                            ws.error.details,
-                            ws.error.timeToRetry,
-                            ws.error.canRetryManual,
-                            ws.error.urlToRedirect,
-                            ws.error.buttonTitle
-                        );
+                        socketManager.emitErrorScreenMessage(ws, ws.error as ErrorScreenMessage);
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }

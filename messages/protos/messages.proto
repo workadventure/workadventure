@@ -234,6 +234,7 @@ message ErrorScreenMessage {
   bool canRetryManual = 7;
   string urlToRedirect = 8;
   string buttonTitle = 9;
+  string image = 10;
 }
 
 message ItemStateMessage {
