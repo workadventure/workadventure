@@ -55,6 +55,7 @@ import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import {ErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
 
 const debug = Debug("socket");
 
@@ -644,9 +645,22 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorScreenMessage(client: compressors.WebSocket, error: ErrorScreenMessage) {
+    public emitErrorScreenMessage(client: compressors.WebSocket, error: ErrorApiData) {
+        const errorMessage = new ErrorScreenMessage();
+        errorMessage.setType(error.type);
+        errorMessage.setCode(error.code);
+        errorMessage.setTitle(error.title);
+        errorMessage.setSubtitle(error.subtitle);
+        errorMessage.setDetails(error.details);
+        errorMessage.setImage(error.image);
+
+        if(error.urlToRedirect) errorMessage.setUrltoredirect(error.urlToRedirect);
+        if(error.buttonTitle) errorMessage.setButtontitle(error.buttonTitle);
+        if(!!error.canRetryManual) errorMessage.setCanretrymanual(error.canRetryManual);
+        if(error.timeToRetry) errorMessage.setTimetoretry(error.timeToRetry);
+
         const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setErrorscreenmessage(error);
+        serverToClientMessage.setErrorscreenmessage(errorMessage);
 
         //if (!client.disconnecting) {
         client.send(serverToClientMessage.serializeBinary().buffer, true);

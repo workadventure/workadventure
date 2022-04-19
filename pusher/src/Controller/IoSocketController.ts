@@ -41,6 +41,7 @@ import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
+import {ErrorApiData, isErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -68,12 +69,20 @@ interface UpgradeData {
     };
 }
 
-interface UpgradeFailedData {
+interface UpgradeFailedInvalidData {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | "error" | null;
+    reason: "tokenInvalid" | "textureInvalid" | null;
     message: string;
     roomId: string;
 }
+
+interface UpgradeFailedErrorData {
+    rejected: true;
+    reason: "error";
+    error: ErrorApiData;
+}
+
+type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -314,35 +323,23 @@ export class IoSocketController {
                                     );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
-                                        if (err?.response?.status == 404 || !err?.response?.data.code) {
-                                            // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
-
-                                            console.warn(
-                                                'Cannot find user with email "' +
-                                                    (userIdentifier || "anonymous") +
-                                                    '". Performing an anonymous login instead.'
-                                            );
-                                        } else if (err?.response?.data.code) {
-                                            //OLD // If we get an HTTP 403, the world is full. We need to broadcast a special error to the client.
-                                            //OLD // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: "error",
-                                                    message: err?.response?.data.code,
-                                                    status: err?.response?.status,
-                                                    error: err?.response?.data,
-                                                    roomId,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        }
-                                    } else {
-                                        throw err;
+                                        const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                        if(errorType.success) {
+                                                return res.upgrade(
+                                                    {
+                                                        rejected: true,
+                                                        reason: "error",
+                                                        status: err?.response?.status,
+                                                        error: errorType.data,
+                                                    } as UpgradeFailedData,
+                                                    websocketKey,
+                                                    websocketProtocol,
+                                                    websocketExtensions,
+                                                    context
+                                                );
+                                            }
                                     }
+                                    throw err;
                                 }
                                 memberMessages = userData.messages;
                                 memberTags = userData.tags;
@@ -487,7 +484,7 @@ export class IoSocketController {
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
                     } else if (ws.reason === "error") {
-                        socketManager.emitErrorScreenMessage(ws, ws.error as ErrorScreenMessage);
+                        socketManager.emitErrorScreenMessage(ws, ws.error);
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }
