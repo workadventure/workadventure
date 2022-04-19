@@ -9,12 +9,17 @@
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
     import reload from "../images/reload.png";
     import external from "../images/external-link.png";
+    import {connectionManager} from "../../Connexion/ConnectionManager";
 
     let errorScreen = get(errorScreenStore);
 
+    if(!errorScreen.buttonTitle && errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
+
     function click() {
-        if (errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
-        else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
+        if (errorScreen.urlToRedirect){
+            if(errorScreen.urlToRedirect === '/login') connectionManager.logout();
+            window.location.replace(errorScreen.urlToRedirect);
+        } else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
         else window.location.reload();
     }
     let details = errorScreen.details;
@@ -41,7 +46,7 @@
         <p class="details">
             {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
         </p>
-        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || ($errorScreenStore.type === "redirect" && (window.history.length > 2 || $errorScreenStore.urlToRedirect))}
+        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || ($errorScreenStore.type === "unauthorized" && $errorScreenStore.urlToRedirect && $errorScreenStore.buttonTitle) || ($errorScreenStore.type === "redirect" && (window.history.length > 2 || $errorScreenStore.urlToRedirect))}
             <button type="button" class="nes-btn is-primary button" on:click={click}>
                 <img src={$errorScreenStore.type === "retry" ? reload : external} alt="" class="reload" />
                 {$errorScreenStore.buttonTitle}

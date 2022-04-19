@@ -656,7 +656,7 @@ export class SocketManager implements ZoneEventListener {
 
         if (error.urlToRedirect) errorMessage.setUrltoredirect(error.urlToRedirect);
         if (error.buttonTitle) errorMessage.setButtontitle(error.buttonTitle);
-        if (!!error.canRetryManual) errorMessage.setCanretrymanual(error.canRetryManual);
+        if (error.canRetryManual !== undefined && null !== error.canRetryManual) errorMessage.setCanretrymanual(error.canRetryManual);
         if (error.timeToRetry && !isNaN(Number(error.timeToRetry)))
             errorMessage.setTimetoretry(Number(error.timeToRetry));
 
