@@ -7,14 +7,10 @@
 
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
-    import error from "../images/error.png";
-    import cup from "../images/cup.png";
     import reload from "../images/reload.png";
     import external from "../images/external-link.png";
 
     let errorScreen = get(errorScreenStore);
-
-    const image = errorScreen.image ?? (errorScreen.type === "retry" ? cup : error);
 
     function click() {
         if (errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
@@ -38,7 +34,7 @@
 <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
     <div style="width: 90%;">
         <img src={logo} alt="WorkAdventure" class="logo" />
-        <div><img src={image} alt="" class="icon" /></div>
+        <div><img src={$errorScreenStore.image} alt="" class="icon" /></div>
         {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
         <p>{$errorScreenStore.subtitle}</p>
         {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
@@ -79,13 +75,13 @@
         .logo {
             width: 50%;
             margin-bottom: 50px;
-            max-height: 10vh;
+            max-height: 25vh;
             max-width: 50vw;
         }
         .icon {
             height: 125px;
             margin-bottom: 25px;
-            max-height: 10vh;
+            max-height: 25vh;
             max-width: 50vw;
         }
         h2 {
