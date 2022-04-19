@@ -21,6 +21,7 @@ jobs:
         working-directory: tests
       - name: Install Playwright
         run: npx playwright install --with-deps
+        working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
       - name: Install messages dependencies

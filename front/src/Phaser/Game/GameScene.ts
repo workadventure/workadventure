@@ -177,6 +177,7 @@ export class GameScene extends DirtyScene {
 
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
     private privacyShutdownStoreUnsubscribe!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
@@ -221,8 +222,8 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
     private currentPlayerGroupId?: number;
+    private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
@@ -836,6 +837,10 @@ export class GameScene extends DirtyScene {
                         type: "PlayerDetailsUpdated",
                         details: message,
                     });
+                });
+
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    this.currentPlayerGroupId = message.groupId;
                 });
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
