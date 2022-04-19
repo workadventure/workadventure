@@ -15,7 +15,7 @@ export const isErrorApiData = z.object({
     urlToRedirect: z.optional(z.nullable(z.string())),
     buttonTitle: z.optional(z.nullable(z.string())),
     timeToRetry: z.optional(z.nullable(z.bigint())),
-    canRetryManual: z.optional(z.nullable(z.boolean()))
+    canRetryManual: z.optional(z.nullable(z.boolean())),
 });
 
 export type ErrorApiData = z.infer<typeof isErrorApiData>;
