@@ -1,8 +1,6 @@
 import { writable } from "svelte/store";
 import type { MucRoom } from "../Xmpp/MucRoom";
 
-export const mucRoomsVisibilityStore = writable(false);
-
 /**
  * True if the connection between the pusher and the XMPP server is established, false otherwise.
  */

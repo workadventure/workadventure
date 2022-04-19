@@ -1,14 +1,12 @@
 <script lang="ts">
     import logoTalk from "../images/logo-message-pixel.png";
     import logoWA from "../images/logo-WA-pixel.png";
-    import logoUser from "../images/logo-user-pixel.png";
     import logoInvite from "../images/logo-invite-pixel.png";
     import logoRegister from "../images/logo-register-pixel.png";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { limitMapStore } from "../../Stores/GameStore";
     import { get } from "svelte/store";
-    import { mucRoomsVisibilityStore } from "../../Stores/MucRoomsStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
     import LL from "../../i18n/i18n-svelte";
@@ -31,9 +29,6 @@
 
     function noDrag() {
         return false;
-    }
-    function showMucRooms() {
-        mucRoomsVisibilityStore.set(true);
     }
 </script>
 
@@ -74,12 +69,6 @@
         draggable="false"
         on:dragstart|preventDefault={noDrag}
         on:click|preventDefault={showChat}
-    />
-    <img
-        src={logoUser}
-        alt={$LL.menu.icon.open.userlist()}
-        class="nes-pointer user-list-btn"
-        on:click|preventDefault={showMucRooms}
     />
 </main>
 

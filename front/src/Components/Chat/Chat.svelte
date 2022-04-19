@@ -6,6 +6,9 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import LL from "../../i18n/i18n-svelte";
+    import { mucRoomsStore, xmppServerConnectionStatusStore } from "../../Stores/MucRoomsStore";
+    import UsersList from "./UsersList.svelte";
+    import Spinner from "./Spinner.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -44,9 +47,25 @@
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
+
+    <!-- LIST USER SECTION -->
+    <section class="roomsList">
+        <p class="system-text">{$LL.muc.title()}</p>
+        {#if $xmppServerConnectionStatusStore}
+            {#each [...$mucRoomsStore] as mucRoom}
+                <p class="room-name">{mucRoom.name}</p>
+                <UsersList usersListStore={mucRoom.getPresenceStore()} />
+            {/each}
+        {:else}
+            <div class="reconnecting center">{$LL.muc.mucRoom.reconnecting()}</div>
+            <div class="center"><Spinner /></div>
+        {/if}
+    </section>
+
+    <!-- MESSAGE LIST SECTION -->
     <section class="messagesList" bind:this={listDom}>
+        <p class="system-text">{$LL.chat.intro()}</p>
         <ul>
-            <li><p class="system-text">{$LL.chat.intro()}</p></li>
             {#each $chatMessagesStore as message, i}
                 <li><ChatElement {message} line={i} /></li>
             {/each}
@@ -75,6 +94,7 @@
         max-width: 100%;
         background: gray;
         display: inline-block;
+        position: fixed;
     }
 
     aside.chatWindow {
@@ -96,19 +116,47 @@
         border-bottom-right-radius: 16px;
         border-top-right-radius: 16px;
 
-        .messagesList {
-            margin-top: 35px;
-            overflow-y: auto;
-            flex: auto;
+        section {
+            &.roomsList {
+                margin-top: 35px;
+                overflow-y: auto;
+                height: auto;
+                max-height: 50%;
+                flex: inherit;
 
-            ul {
-                list-style-type: none;
-                padding-left: 0;
+                p.room-name {
+                    margin-top: 40px;
+                }
+            }
+
+            &.messagesList {
+                margin-top: 35px;
+                overflow-y: auto;
+                height: auto;
+                max-height: 80%;
+
+                ul {
+                    list-style-type: none;
+                    padding-left: 0;
+
+                    li:nth-child(1) {
+                        margin-top: 40px;
+                    }
+                }
+            }
+
+            &.messageForm {
+                position: fixed;
+                bottom: 10px;
             }
         }
-        .messageForm {
-            flex: 0 70px;
-            padding-top: 15px;
-        }
+    }
+
+    div.center {
+        text-align: center;
+    }
+
+    div.reconnecting {
+        margin-top: 3rem;
     }
 </style>

@@ -1,7 +1,7 @@
 import { BaseTranslation } from "../i18n-types";
 
 const muc: BaseTranslation = {
-    title: "Muc",
+    title: "Users list",
     userList: {
         teleport: "Teleport",
     },

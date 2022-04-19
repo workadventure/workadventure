@@ -68,6 +68,7 @@
             flex-grow: 1;
             max-width: 100%;
             user-select: text;
+            padding-bottom: 20px;
 
             span.date {
                 font-size: 80%;

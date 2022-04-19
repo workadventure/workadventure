@@ -13,8 +13,6 @@
     import SelectCharacterScene from "./selectCharacter/SelectCharacterScene.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
-    import { mucRoomsVisibilityStore } from "../Stores/MucRoomsStore";
-    import MucRooms from "./Chat/MucRooms.svelte";
 
     export let game: Game;
 </script>
@@ -44,8 +42,5 @@
 
     {#if $chatVisibilityStore}
         <Chat />
-    {/if}
-    {#if $mucRoomsVisibilityStore}
-        <MucRooms />
     {/if}
 {/if}

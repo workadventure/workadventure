@@ -1,7 +1,7 @@
 import { Translation } from "../i18n-types";
 
 const muc: NonNullable<Translation["muc"]> = {
-    title: "Muc",
+    title: "Users list",
     userList: {
         teleport: "Teleport",
     },
