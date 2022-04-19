@@ -15,6 +15,7 @@ export enum GameMapProperties {
     JITSI_TRIGGER_MESSAGE = "jitsiTriggerMessage",
     JITSI_URL = "jitsiUrl",
     JITSI_WIDTH = "jitsiWidth",
+    JITSI_NO_PREFIX = "jitsiNoPrefix",
     NAME = "name",
     OPEN_TAB = "openTab",
     OPEN_WEBSITE = "openWebsite",
