@@ -336,7 +336,6 @@ export class AuthenticateController extends BaseHttpController {
 
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
 
-                    console.info(data);
                     res.json({
                         authToken,
                         userUuid,
