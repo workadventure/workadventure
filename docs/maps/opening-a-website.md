@@ -10,14 +10,19 @@ on the right side of the screen)
 
 In order to create a zone that opens websites:
 
-* You must create a specific layer.
-* In layer properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
+* You must create a specific object.
+* Object must be of type "`area`"
+* In object properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
 * You may also use "`openWebsiteWidth`" property (of type "`int`" or "`float`" between 0 and 100) to control the width of the iframe.
 * You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
 
 {.alert.alert-warning}
 A website can explicitly forbid another website from loading it in an iFrame using
 the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
+
+{.alert.alert-info}
+As an alternative, you may also put the `openWebsite` properties on a layer (rather than putting them on an "area" object)
+but we advise to stick with "area" objects for better performance!
 
 ## Integrating a Youtube video
 
@@ -43,7 +48,7 @@ By default, the iFrame will open when a user enters the zone defined on the map.
 
 It is however possible to trigger the iFrame only on user action. You can do this with the `openWebsiteTrigger` property.
 
-If you set `openWebsiteTrigger: onaction`, when the user walks on the layer, an alert message will be displayed at the bottom of the screen:
+If you set `openWebsiteTrigger: onaction`, when the user walks on the area, an alert message will be displayed at the bottom of the screen:
 
 <figure class="figure">
     <img src="images/click_space_open_website.jpg" class="figure-img img-fluid rounded" alt="" />
@@ -52,7 +57,7 @@ If you set `openWebsiteTrigger: onaction`, when the user walks on the layer, an 
 
 If you set `openWebsiteTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to open the web site'.
 
-If you set `openWebsiteTrigger: onicon`, when the user walks on the layer, an icon will be displayed at the bottom of the screen:
+If you set `openWebsiteTrigger: onicon`, when the user walks on the area, an icon will be displayed at the bottom of the screen:
 
 <figure class="figure">
     <img src="images/icon_open_website.png" class="figure-img img-fluid rounded" alt="" />
@@ -78,6 +83,6 @@ Cowebsites allow you to have several sites open at the same time.
 
 If you want to open a Jitsi and another page it's easy!
 
-You have just to [add a Jitsi to the map](meeting-rooms.md) and [add a co-website](opening-a-website.md#the-openwebsite-property) on the same layer.
+You have just to [add a Jitsi to the map](meeting-rooms.md) and [add a co-website](opening-a-website.md#the-openwebsite-property) on the same object.
 
 It's done!

@@ -44,6 +44,11 @@
                  "value":"{\"DEFAULT_BACKGROUND\":\"#77ee77\"}"
                 }, 
                 {
+                 "name":"jitsiNoPrefix",
+                 "type":"bool",
+                 "value":true
+                }, 
+                {
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"myRoom avec espace \u00e9\u00e0$&'\"_ \ud83d\ude00"
@@ -65,7 +70,7 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":83.6666666666666,
+                 "height":110.891622876526,
                  "id":1,
                  "name":"",
                  "rotation":0,
@@ -73,14 +78,14 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":13,
-                     "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens, background in green and audio\/video is muted",
+                     "text":"Test:\nWalk on the carpet and press space\nResult:\nJitsi opens, background in green and audio\/video is muted.\nThe name of the room (displayed at the top of Jitsi) is \"Myroom Avec Espace EA\"",
                      "wrap":true
                     },
                  "type":"",
                  "visible":true,
                  "width":315.4375,
-                 "x":2.28125,
-                 "y":235.166666666667
+                 "x":1.48051599382768,
+                 "y":209.535838407429
                 }],
          "opacity":1,
          "type":"objectgroup",
