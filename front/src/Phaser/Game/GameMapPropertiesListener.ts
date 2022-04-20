@@ -17,8 +17,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
-import { availabilityStatusStore } from "../../Stores/MediaStore";
+import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -67,7 +66,7 @@ export class GameMapPropertiesListener {
                         coWebsiteManager.closeCoWebsite(coWebsite);
                     }
                 });
-                this.changeAvailabilityStatus(AvailabilityStatus.ONLINE);
+                inJitsiStore.set(false);
             } else {
                 const openJitsiRoomFunction = () => {
                     let addPrefix = true;
@@ -112,13 +111,13 @@ export class GameMapPropertiesListener {
                         message: message,
                         callback: () => {
                             openJitsiRoomFunction();
-                            this.changeAvailabilityStatus(AvailabilityStatus.JITSI);
+                            inJitsiStore.set(true);
                         },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
                     openJitsiRoomFunction();
-                    this.changeAvailabilityStatus(AvailabilityStatus.JITSI);
+                    inJitsiStore.set(true);
                 }
             }
         });
@@ -155,9 +154,9 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                this.changeAvailabilityStatus(AvailabilityStatus.ONLINE);
+                silentStore.set(false);
             } else {
-                this.changeAvailabilityStatus(AvailabilityStatus.SILENT);
+                silentStore.set(true);
             }
         });
 
@@ -376,11 +375,5 @@ export class GameMapPropertiesListener {
 
             handler();
         });
-    }
-
-    private changeAvailabilityStatus(status: AvailabilityStatus): void {
-        availabilityStatusStore.set(status);
-        this.scene.connection?.emitPlayerStatusChange(status);
-        this.scene.CurrentPlayer.setStatus(status);
     }
 }

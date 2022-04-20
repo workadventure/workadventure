@@ -180,7 +180,20 @@ function createVideoConstraintStore() {
     };
 }
 
-export const availabilityStatusStore = writable(AvailabilityStatus.ONLINE);
+export const inJitsiStore = writable(false);
+export const silentStore = writable(false);
+export const awayStore = writable(false);
+
+export const availabilityStatusStore = derived(
+    [inJitsiStore, silentStore, awayStore],
+    ([$inJitsiStore, $silentStore, $awayStore]) => {
+        if ($inJitsiStore) return AvailabilityStatus.JITSI;
+        if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($awayStore) return AvailabilityStatus.AWAY;
+        return AvailabilityStatus.ONLINE;
+    },
+    AvailabilityStatus.ONLINE
+);
 
 export const videoConstraintStore = createVideoConstraintStore();
 
