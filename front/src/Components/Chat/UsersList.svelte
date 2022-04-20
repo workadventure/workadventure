@@ -40,9 +40,18 @@
                 <div>
                     <span>{userName}</span>
                     <div>
-                        <button on:click={(event) => goToWorkAdventureRoomId(user.roomId, event)} src="btn btn-primary"
-                            >{$LL.muc.userList.teleport()}</button
-                        >
+                        {#if user.isInSameMap === false}
+                            <button src="btn btn-primary" disabled>
+                                {$LL.muc.userList.isHere()}
+                            </button>
+                        {:else}
+                            <button
+                                on:click={(event) => goToWorkAdventureRoomId(user.roomId, event)}
+                                src="btn btn-primary"
+                            >
+                                {$LL.muc.userList.teleport()}
+                            </button>
+                        {/if}
                     </div>
                 </div>
             </li>

@@ -11,7 +11,7 @@ export function copyLink() {
     document.execCommand("copy");
 }
 
-export function getLink() {
+export function getLink(): string {
     let startLayerName: string[] = [];
     startLayerNamesStore.subscribe((value) => {
         startLayerName = value;
@@ -25,9 +25,13 @@ export function getLink() {
         walkAutomatically = value;
     });
 
-    return `${location.origin}${location.pathname}${entryPoint ? `#${entryPoint}` : ""}${
+    return `${getRoomId()}${entryPoint ? `#${entryPoint}` : ""}${
         walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
     }`;
+}
+
+export function getRoomId(): string {
+    return `${location.origin}${location.pathname}`;
 }
 
 export function updateInputFieldValue() {

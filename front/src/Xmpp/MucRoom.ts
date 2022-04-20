@@ -5,12 +5,14 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
+import { getRoomId } from "../Stores/GuestMenuStore";
 
 const USER_STATUS_AVAILABLE = "available";
 const USER_STATUS_DISCONNECTED = "disconnected";
 type User = {
     roomId: string;
     status: string;
+    isInSameMap: boolean;
 };
 type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
@@ -74,9 +76,17 @@ export class MucRoom {
                 const roomId = xml.getChild("room")?.getAttr("id");
                 this.presenceStore.update((list) => {
                     if (type === "unavailable") {
-                        list.set(from.resource, { roomId, status: USER_STATUS_DISCONNECTED });
+                        list.set(from.resource, {
+                            roomId,
+                            status: USER_STATUS_DISCONNECTED,
+                            isInSameMap: roomId === getRoomId(),
+                        });
                     } else {
-                        list.set(from.resource, { roomId, status: USER_STATUS_AVAILABLE });
+                        list.set(from.resource, {
+                            roomId,
+                            status: USER_STATUS_AVAILABLE,
+                            isInSameMap: roomId === getRoomId(),
+                        });
                     }
                     return list;
                 });

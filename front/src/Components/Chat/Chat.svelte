@@ -9,6 +9,7 @@
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import Spinner from "./Spinner.svelte";
+    import Search from "../Util/Search.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -51,6 +52,7 @@
     <!-- LIST USER SECTION -->
     <section class="roomsList">
         <p class="system-text">{$LL.muc.title()}</p>
+        <Search id="search-user-connected" />
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
                 <p class="room-name">{mucRoom.name}</p>
