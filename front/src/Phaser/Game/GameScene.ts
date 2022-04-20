@@ -91,7 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, awayStore, localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -101,7 +101,6 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
-import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -710,10 +709,6 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.removeFollowOutlineColor();
                 this.connection?.emitPlayerOutlineColor(null);
             }
-        });
-
-        this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
-            awayStore.set(away);
         });
 
         Promise.all([

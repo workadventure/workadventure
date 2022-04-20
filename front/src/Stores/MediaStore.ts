@@ -182,14 +182,13 @@ function createVideoConstraintStore() {
 
 export const inJitsiStore = writable(false);
 export const silentStore = writable(false);
-export const awayStore = writable(false);
 
 export const availabilityStatusStore = derived(
-    [inJitsiStore, silentStore, awayStore],
-    ([$inJitsiStore, $silentStore, $awayStore]) => {
+    [inJitsiStore, silentStore, privacyShutdownStore],
+    ([$inJitsiStore, $silentStore, $privacyShutdownStore]) => {
         if ($inJitsiStore) return AvailabilityStatus.JITSI;
         if ($silentStore) return AvailabilityStatus.SILENT;
-        if ($awayStore) return AvailabilityStatus.AWAY;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
         return AvailabilityStatus.ONLINE;
     },
     AvailabilityStatus.ONLINE
