@@ -206,9 +206,8 @@ export class GameRoom {
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
-        const isSilent = user.silent;
         user.updateDetails(playerDetailsMessage);
-        if (!isSilent && user.group !== undefined && user.silent) {
+        if (user.group !== undefined && user.silent) {
             this.leaveGroup(user);
         }
     }
