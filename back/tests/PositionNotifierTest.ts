@@ -6,6 +6,7 @@ import { Zone } from "../src/Model/Zone";
 import { Movable } from "../src/Model/Movable";
 import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
+import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
 
 describe("PositionNotifier", () => {
     it("should receive notifications when player moves", () => {
@@ -41,7 +42,7 @@ describe("PositionNotifier", () => {
                 direction: "down",
             },
             positionNotifier,
-            false,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -60,7 +61,7 @@ describe("PositionNotifier", () => {
                 direction: "down",
             },
             positionNotifier,
-            false,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -149,7 +150,7 @@ describe("PositionNotifier", () => {
                 direction: "down",
             },
             positionNotifier,
-            false,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -168,7 +169,7 @@ describe("PositionNotifier", () => {
                 direction: "down",
             },
             positionNotifier,
-            false,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
