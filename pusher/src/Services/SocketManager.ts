@@ -125,10 +125,10 @@ export class SocketManager implements ZoneEventListener {
             .on("end", () => {
                 console.warn(
                     "Admin connection lost to back server '" +
-                    apiClient.getChannel().getTarget() +
-                    "' for room '" +
-                    roomId +
-                    "'"
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
                 );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
@@ -139,10 +139,10 @@ export class SocketManager implements ZoneEventListener {
             .on("error", (err: Error) => {
                 console.error(
                     "Error in connection to back server '" +
-                    apiClient.getChannel().getTarget() +
-                    "' for room '" +
-                    roomId +
-                    "':",
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
                     err
                 );
                 if (!client.disconnecting) {
@@ -231,10 +231,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("end", () => {
                     console.warn(
                         "Connection lost to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        client.roomId +
-                        "'"
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "'"
                     );
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
@@ -245,10 +245,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("error", (err: Error) => {
                     console.error(
                         "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        client.roomId +
-                        "':",
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
                         err
                     );
                     if (!client.disconnecting) {

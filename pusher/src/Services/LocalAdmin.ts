@@ -10,17 +10,16 @@ import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
  * A local class mocking a real admin if no admin is configured.
  */
 class LocalAdmin implements AdminInterface {
-
     fetchMemberDataByUuid(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
         userIdentifier: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         playUri: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ipAddress: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        characterLayers: string[]
+        characterLayers: string[],
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         return Promise.resolve({
             email: userIdentifier,
@@ -34,11 +33,11 @@ class LocalAdmin implements AdminInterface {
     }
 
     fetchMapDetails(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
         playUri: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        authToken?: string
+        authToken?: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale?: string
     ): Promise<MapDetailsData | RoomRedirect> {
         const roomUrl = new URL(playUri);
 
@@ -65,18 +64,16 @@ class LocalAdmin implements AdminInterface {
 
     async fetchMemberDataByToken(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         organizationMemberToken: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        playUri: string | null
+        playUri: string | null,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale?: string
     ): Promise<AdminApiData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     reportPlayer(
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         reportedUserUuid: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,29 +81,31 @@ class LocalAdmin implements AdminInterface {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         reporterUserUuid: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        reportWorldSlug: string
+        reportWorldSlug: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale?: string
     ) {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     async verifyBanUser(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         userUuid: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ipAddress: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        roomUrl: string
+        roomUrl: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale?: string
     ): Promise<AdminBannedData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
     async getUrlRoomsFromSameWorld(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        locale: string,
+        roomUrl: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        roomUrl: string
+        locale?: string
     ): Promise<string[]> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }

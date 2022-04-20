@@ -29,7 +29,11 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
-    async fetchMapDetails(locale: string, playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect> {
+    async fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect> {
         let userId: string | undefined = undefined;
         if (authToken != undefined) {
             let authTokenData: AuthTokenData;
@@ -64,7 +68,7 @@ class AdminApi implements AdminInterface {
         };
 
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             params,
         });
 
@@ -87,11 +91,11 @@ class AdminApi implements AdminInterface {
     }
 
     async fetchMemberDataByUuid(
-        locale: string,
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[]
+        characterLayers: string[],
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
@@ -100,7 +104,7 @@ class AdminApi implements AdminInterface {
                 ipAddress,
                 characterLayers,
             },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             paramsSerializer: (p) => {
                 return qs.stringify(p, { arrayFormat: "brackets" });
             },
@@ -119,11 +123,15 @@ class AdminApi implements AdminInterface {
         );
     }
 
-    async fetchMemberDataByToken(locale: string, organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
+    async fetchMemberDataByToken(
+        organizationMemberToken: string,
+        playUri: string | null,
+        locale?: string
+    ): Promise<AdminApiData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         });
 
         const adminApiData = isAdminApiData.safeParse(res.data);
@@ -138,11 +146,11 @@ class AdminApi implements AdminInterface {
     }
 
     reportPlayer(
-        locale: string,
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string
+        reportWorldSlug: string,
+        locale?: string
     ) {
         return Axios.post(
             `${ADMIN_API_URL}/api/report`,
@@ -153,12 +161,17 @@ class AdminApi implements AdminInterface {
                 reportWorldSlug,
             },
             {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
+                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             }
         );
     }
 
-    async verifyBanUser(locale: string, userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
+    async verifyBanUser(
+        userUuid: string,
+        ipAddress: string,
+        roomUrl: string,
+        locale?: string
+    ): Promise<AdminBannedData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
@@ -169,15 +182,15 @@ class AdminApi implements AdminInterface {
                 encodeURIComponent(userUuid) +
                 "&roomUrl=" +
                 encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale } }
+            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
         ).then((data) => {
             return data.data;
         });
     }
 
-    async getUrlRoomsFromSameWorld(locale: string, roomUrl: string): Promise<string[]> {
+    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         }).then((data) => {
             return data.data;
         });
