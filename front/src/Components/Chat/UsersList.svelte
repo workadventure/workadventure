@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { UsersStore } from "../../Xmpp/MucRoom";
+    import type { User, UserList, UsersStore } from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
     import {
         walkAutomaticallyStore,
@@ -10,8 +10,36 @@
         updateInputFieldValue,
     } from "../../Stores/GuestMenuStore";
     import { goToWorkAdventureRoomId } from "../../Xmpp/MucRoom";
+    import { onMount } from "svelte";
+    import { searchValue } from "../../Stores/Utils/SearchStore";
 
     export let usersListStore: UsersStore;
+    let usersList: UserList = new Map<string, User>();
+
+    onMount(() => {
+        usersListStore.subscribe((value: UserList) => {
+            usersList = value;
+        });
+    });
+
+    //recreate user list
+    searchValue.subscribe((value: string | null) => {
+        usersList = new Map<string, User>();
+        usersListStore.subscribe((users: UserList) => {
+            for (const userName of users.keys()) {
+                if (value == undefined || userName == undefined) {
+                    continue;
+                }
+                if (userName.indexOf(value) !== -1) {
+                    const userObject: User | undefined = users.get(value);
+                    if (userObject == undefined) {
+                        continue;
+                    }
+                    usersList.set(value, userObject);
+                }
+            }
+        });
+    });
 </script>
 
 <ul>

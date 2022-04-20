@@ -6,7 +6,11 @@
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import LL from "../../i18n/i18n-svelte";
-    import { mucRoomsStore, xmppServerConnectionStatusStore } from "../../Stores/MucRoomsStore";
+    import {
+        mucRoomsStore,
+        numberPresenceUserStore,
+        xmppServerConnectionStatusStore,
+    } from "../../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import Spinner from "./Spinner.svelte";
     import Search from "../Util/Search.svelte";
@@ -52,7 +56,9 @@
     <!-- LIST USER SECTION -->
     <section class="roomsList">
         <p class="system-text">{$LL.muc.title()}</p>
-        <Search id="search-user-connected" />
+        {#if $numberPresenceUserStore > 0}
+            <Search id="search-user-connected" />
+        {/if}
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
                 <p class="room-name">{mucRoom.name}</p>
@@ -127,7 +133,7 @@
                 flex: inherit;
 
                 p.room-name {
-                    margin-top: 40px;
+                    margin-top: 10px;
                 }
             }
 

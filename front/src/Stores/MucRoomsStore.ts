@@ -5,6 +5,7 @@ import type { MucRoom } from "../Xmpp/MucRoom";
  * True if the connection between the pusher and the XMPP server is established, false otherwise.
  */
 export const xmppServerConnectionStatusStore = writable(false);
+export const numberPresenceUserStore = writable(0);
 
 function createMucRoomsStore() {
     const { subscribe, update, set } = writable<Set<MucRoom>>(new Set<MucRoom>());

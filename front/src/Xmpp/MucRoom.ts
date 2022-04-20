@@ -6,15 +6,16 @@ import type { Readable, Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
+import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 
 const USER_STATUS_AVAILABLE = "available";
 const USER_STATUS_DISCONNECTED = "disconnected";
-type User = {
+export type User = {
     roomId: string;
     status: string;
     isInSameMap: boolean;
 };
-type UserList = Map<string, User>;
+export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
 export function goToWorkAdventureRoomId(roomId: string, mouseEvent: MouseEvent | undefined) {
@@ -88,6 +89,9 @@ export class MucRoom {
                             isInSameMap: roomId === getRoomId(),
                         });
                     }
+
+                    //update size of presence users
+                    numberPresenceUserStore.set(list.size);
                     return list;
                 });
 

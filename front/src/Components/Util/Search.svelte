@@ -6,11 +6,12 @@
     export let placeHolder: string = $LL.muc.userList.search();
     export let disabled: boolean = false;
     export let onChangeSearchHandler = (value: string) => {
+        console.log("value", value);
         searchValue.set(value);
     };
 </script>
 
-<div class="search">
+<form>
     <input
         type="text"
         {id}
@@ -20,16 +21,40 @@
         on:input={(event) => onChangeSearchHandler(event.currentTarget.value)}
         {disabled}
     />
-</div>
+    <button type="submit">
+        <img src="/static/images/send.png" alt="Send" width="20" />
+    </button>
+</form>
 
 <style lang="scss">
-    div.search {
-        width: 100%;
-        height: 20px;
-        input.search-input {
-            padding: 2px;
-            border: solid 1px white;
-            border-radius: 4px;
+    form {
+        display: flex;
+        padding-left: 4px;
+        padding-right: 4px;
+        margin-top: 50px;
+        width: 285px;
+
+        input {
+            flex: auto;
+            background-color: #254560;
+            color: white;
+            border-bottom-left-radius: 4px;
+            border-top-left-radius: 4px;
+            border: none;
+            font-size: 22px;
+            font-family: Lato;
+            padding-left: 6px;
+            min-width: 0; //Needed so that the input doesn't overflow the container in firefox
+            outline: none;
+        }
+
+        button {
+            background-color: #254560;
+            border-bottom-right-radius: 4px;
+            border-top-right-radius: 4px;
+            border: none;
+            border-left: solid white 1px;
+            font-size: 16px;
         }
     }
 </style>
