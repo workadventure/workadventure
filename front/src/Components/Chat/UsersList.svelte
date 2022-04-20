@@ -30,8 +30,8 @@
                 if (value == undefined || userName == undefined) {
                     continue;
                 }
-                if (userName.indexOf(value) !== -1) {
-                    const userObject: User | undefined = users.get(value);
+                if (userName.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) !== -1) {
+                    const userObject: User | undefined = users.get(userName);
                     if (userObject == undefined) {
                         continue;
                     }
