@@ -18,7 +18,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
-import { availabilityStatusStore, previousAvailabilityStatusStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -67,9 +67,7 @@ export class GameMapPropertiesListener {
                         coWebsiteManager.closeCoWebsite(coWebsite);
                     }
                 });
-                const newStatus = this.swapAvailabilityStatuses();
-                this.scene.connection?.emitPlayerStatusChange(newStatus);
-                this.scene.CurrentPlayer.setStatus(newStatus);
+                this.changeAvailabilityStatus(AvailabilityStatus.ONLINE);
             } else {
                 const openJitsiRoomFunction = () => {
                     let addPrefix = true;
@@ -112,15 +110,15 @@ export class GameMapPropertiesListener {
                         uuid: "jitsi",
                         type: "message",
                         message: message,
-                        callback: () => openJitsiRoomFunction(),
+                        callback: () => {
+                            openJitsiRoomFunction();
+                            this.changeAvailabilityStatus(AvailabilityStatus.JITSI);
+                        },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
                     openJitsiRoomFunction();
-                    previousAvailabilityStatusStore.set(get(availabilityStatusStore));
-                    this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.JITSI);
-                    availabilityStatusStore.set(AvailabilityStatus.JITSI);
-                    this.scene.CurrentPlayer.setStatus(AvailabilityStatus.JITSI);
+                    this.changeAvailabilityStatus(AvailabilityStatus.JITSI);
                 }
             }
         });
@@ -156,15 +154,10 @@ export class GameMapPropertiesListener {
         });
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
-            const newStatus = this.swapAvailabilityStatuses();
             if (newValue === undefined || newValue === false || newValue === "") {
-                availabilityStatusStore.set(newStatus);
-                this.scene.connection?.emitPlayerStatusChange(newStatus);
-                this.scene.CurrentPlayer.setStatus(newStatus);
+                this.changeAvailabilityStatus(AvailabilityStatus.ONLINE);
             } else {
-                this.scene.connection?.emitPlayerStatusChange(AvailabilityStatus.SILENT);
-                availabilityStatusStore.set(AvailabilityStatus.SILENT);
-                this.scene.CurrentPlayer.setStatus(AvailabilityStatus.SILENT);
+                this.changeAvailabilityStatus(AvailabilityStatus.SILENT);
             }
         });
 
@@ -385,10 +378,9 @@ export class GameMapPropertiesListener {
         });
     }
 
-    private swapAvailabilityStatuses(): AvailabilityStatus {
-        const newStatus = get(previousAvailabilityStatusStore);
-        previousAvailabilityStatusStore.set(get(availabilityStatusStore));
-        availabilityStatusStore.set(newStatus);
-        return newStatus;
+    private changeAvailabilityStatus(status: AvailabilityStatus): void {
+        availabilityStatusStore.set(status);
+        this.scene.connection?.emitPlayerStatusChange(status);
+        this.scene.CurrentPlayer.setStatus(status);
     }
 }

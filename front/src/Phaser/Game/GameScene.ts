@@ -91,7 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, localVolumeStore, previousAvailabilityStatusStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -711,8 +711,7 @@ export class GameScene extends DirtyScene {
             if ([AvailabilityStatus.SILENT, AvailabilityStatus.JITSI].includes(get(availabilityStatusStore))) {
                 return;
             }
-            const status = away ? AvailabilityStatus.AWAY : get(previousAvailabilityStatusStore);
-            previousAvailabilityStatusStore.set(get(availabilityStatusStore));
+            const status = away ? AvailabilityStatus.AWAY : AvailabilityStatus.ONLINE;
             availabilityStatusStore.set(status);
             this.connection?.emitPlayerStatusChange(status);
         });
