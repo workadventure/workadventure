@@ -907,38 +907,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMap.onEnterZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
-                            this.cameraManager.enterFocusMode(
-                                {
-                                    x: zone.x + zone.width * 0.5,
-                                    y: zone.y + zone.height * 0.5,
-                                    width: zone.width,
-                                    height: zone.height,
-                                },
-                                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
-                            );
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendEnterZoneEvent(zone.name);
+                this.gameMap.onEnterArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMap.onLeaveZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendLeaveZoneEvent(zone.name);
+                this.gameMap.onLeaveArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveAreaEvent(area.name);
                     });
                 });
 

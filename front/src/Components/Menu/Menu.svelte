@@ -3,7 +3,6 @@
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
@@ -25,16 +24,16 @@
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
 
-    onMount(() => {
+    onMount(async () => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                switchMenu($subMenusStore[0]);
+                void switchMenu($subMenusStore[0]);
             }
         });
 
         checkSubMenuToShow();
 
-        switchMenu($subMenusStore[0]);
+        await switchMenu($subMenusStore[0]);
     });
 
     onDestroy(() => {
@@ -43,7 +42,7 @@
         }
     });
 
-    function switchMenu(menu: MenuItem) {
+    async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
             switch (menu.key) {
@@ -60,7 +59,7 @@
                     activeComponent = AboutRoomSubMenu;
                     break;
                 case SubMenusInterface.globalMessages:
-                    activeComponent = GlobalMessageSubMenu;
+                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     break;
                 case SubMenusInterface.contact:
                     activeComponent = ContactSubMenu;
@@ -111,7 +110,7 @@
                 <button
                     type="button"
                     class="nes-btn {activeSubMenu === submenu ? 'is-disabled' : ''}"
-                    on:click|preventDefault={() => switchMenu(submenu)}
+                    on:click|preventDefault={() => void switchMenu(submenu)}
                 >
                     {translateMenuName(submenu)}
                 </button>
