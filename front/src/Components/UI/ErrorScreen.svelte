@@ -13,12 +13,10 @@
 
     let errorScreen = get(errorScreenStore);
 
-    if (!errorScreen.buttonTitle && errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
-
     function click() {
         if (errorScreen.urlToRedirect) {
             if (errorScreen.urlToRedirect === "/login") void connectionManager.logout();
-            else window.location.replace(errorScreen.urlToRedirect);
+            else window.location.assign(errorScreen.urlToRedirect);
         } else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
         else window.location.reload();
     }
