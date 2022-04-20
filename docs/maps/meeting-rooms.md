@@ -9,19 +9,24 @@ On your map, you can define special zones (meeting rooms) that will trigger the 
 
 In order to create Jitsi meet zones:
 
-* You must create a specific layer.
-* In layer properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
+* You must create a specific object.
+* Object must be of type "`area`"
+* In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
 * You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
 
-You can have this layer (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
+You can have this object (i.e. your meeting area) to be selectable as the precise location for your meeting using the [Google Calendar integration for Work Adventure](/integrations/google-calendar). To do so, you must set the `meetingRoomLabel` property. You can provide any name that you would like your meeting room to have (as a string).
+
+{.alert.alert-info}
+As an alternative, you may also put the `jitsiRoom` properties on a layer (rather than putting them on an "area" object)
+but we advise to stick with "area" objects for better performance!
 
 ## Triggering of the "Jitsi meet" action
 
-By default, Jitsi meet will open when a user enters the zone defined on the map.
+By default, Jitsi meet will open when a user enters the area defined on the map.
 
 It is however possible to trigger Jitsi only on user action. You can do this with the `jitsiTrigger` property.
 
-If you set `jitsiTrigger: onaction`, when the user walks on the layer, an alert message will be displayed at the bottom of the screen:
+If you set `jitsiTrigger: onaction`, when the user walks on the area, an alert message will be displayed at the bottom of the screen:
 
 <figure class="figure">
     <img src="images/click_space_jitsi.png" class="figure-img img-fluid rounded" alt="" />
@@ -32,7 +37,7 @@ If you set `jitsiTriggerMessage: your message action` you can edit alert message
 
 ## Customizing your "Jitsi meet"
 
-Your Jitsi meet experience can be customized using Jitsi specific config options. The `jitsiConfig` and `jitsiInterfaceConfig` properties can be used on the Jitsi layer to change the way Jitsi looks and behaves. Those 2 properties are accepting a JSON string.
+Your Jitsi meet experience can be customized using Jitsi specific config options. The `jitsiConfig` and `jitsiInterfaceConfig` properties can be used on the Jitsi object to change the way Jitsi looks and behaves. Those 2 properties are accepting a JSON string.
 
 For instance, use `jitsiConfig: { "startWithAudioMuted": true }` to automatically mute the microphone when someone enters a room. Or use `jitsiInterfaceConfig: { "DEFAULT_BACKGROUND": "#77ee77" }` to change the background color of Jitsi.
 
@@ -60,7 +65,7 @@ You can grant moderator rights to some of your members. Jitsi moderators can:
 *   Mute everybody expect one speaker
 *   Kick users out of the meeting
 
-In order to grant moderator rights to a given user, you can add a `jitsiRoomAdminTag` property to your Jitsi layer. For instance, if you write a property:
+In order to grant moderator rights to a given user, you can add a `jitsiRoomAdminTag` property to your Jitsi object. For instance, if you write a property:
 
     jitsiRoomAdminTag: speaker
 
@@ -74,7 +79,7 @@ WorkAdventure usually comes with a default Jitsi meet installation. If you are u
 
 You have the possibility, in your map, to override the Jitsi meet instance that will be used by default. This can be useful for regulatory reasons. Maybe your company wants to keep control on the video streams and therefore, wants to self-host a Jitsi instance? Or maybe you want to use a very special configuration or very special version of Jitsi?
 
-Use the `jitsiUrl` property to in the Jitsi layer to specify the Jitsi instance that should be used. Beware, `jitsiUrl` takes in parameter a **domain name**, without the protocol. So you should use:  
+Use the `jitsiUrl` property to in the Jitsi object to specify the Jitsi instance that should be used. Beware, `jitsiUrl` takes in parameter a **domain name**, without the protocol. So you should use:  
 `jitsiUrl: meet.jit.si`  
 and not  
 `jitsiUrl: https://meet.jit.si`
