@@ -314,11 +314,11 @@ export class IoSocketController {
                             try {
                                 try {
                                     userData = await adminService.fetchMemberDataByUuid(
-                                        req.getHeader("accept-language"),
                                         userIdentifier,
                                         roomId,
                                         IPAddress,
-                                        characterLayers
+                                        characterLayers,
+                                        req.getHeader("accept-language")
                                     );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
