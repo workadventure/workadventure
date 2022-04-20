@@ -29,9 +29,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
-    locale: string = "en";
-
-    async fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect> {
+    async fetchMapDetails(locale: string, playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect> {
         let userId: string | undefined = undefined;
         if (authToken != undefined) {
             let authTokenData: AuthTokenData;
@@ -66,7 +64,7 @@ class AdminApi implements AdminInterface {
         };
 
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
             params,
         });
 
@@ -89,6 +87,7 @@ class AdminApi implements AdminInterface {
     }
 
     async fetchMemberDataByUuid(
+        locale: string,
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
@@ -101,7 +100,7 @@ class AdminApi implements AdminInterface {
                 ipAddress,
                 characterLayers,
             },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
             paramsSerializer: (p) => {
                 return qs.stringify(p, { arrayFormat: "brackets" });
             },
@@ -120,11 +119,11 @@ class AdminApi implements AdminInterface {
         );
     }
 
-    async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
+    async fetchMemberDataByToken(locale: string, organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
         });
 
         const adminApiData = isAdminApiData.safeParse(res.data);
@@ -139,6 +138,7 @@ class AdminApi implements AdminInterface {
     }
 
     reportPlayer(
+        locale: string,
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
@@ -153,12 +153,12 @@ class AdminApi implements AdminInterface {
                 reportWorldSlug,
             },
             {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
             }
         );
     }
 
-    async verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
+    async verifyBanUser(locale: string, userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
@@ -169,15 +169,15 @@ class AdminApi implements AdminInterface {
                 encodeURIComponent(userUuid) +
                 "&roomUrl=" +
                 encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale } }
+            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale } }
         ).then((data) => {
             return data.data;
         });
     }
 
-    async getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]> {
+    async getUrlRoomsFromSameWorld(locale: string, roomUrl: string): Promise<string[]> {
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale },
         }).then((data) => {
             return data.data;
         });

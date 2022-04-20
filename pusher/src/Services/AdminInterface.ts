@@ -4,7 +4,6 @@ import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminInterface {
-    locale: string;
 
     /**
      * @var playUri: is url of the room
@@ -14,6 +13,7 @@ export interface AdminInterface {
      * @return MapDetailsData|RoomRedirect
      */
     fetchMemberDataByUuid(
+        locale: string,
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
@@ -25,22 +25,25 @@ export interface AdminInterface {
      * @var userId: can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect>;
+    fetchMapDetails(locale: string, playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect>;
 
     /**
+     * @param locale
      * @param organizationMemberToken
      * @param playUri
      * @return AdminApiData
      */
-    fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData>;
+    fetchMemberDataByToken(locale: string, organizationMemberToken: string, playUri: string | null): Promise<AdminApiData>;
 
     /**
+     * @param locale
      * @param reportedUserUuid
      * @param reportedUserComment
      * @param reporterUserUuid
      * @param reportWorldSlug
      */
     reportPlayer(
+        locale: string,
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
@@ -48,18 +51,20 @@ export interface AdminInterface {
     ): Promise<unknown>;
 
     /**
+     * @param locale
      * @param userUuid
      * @param ipAddress
      * @param roomUrl
      * @return AdminBannedData
      */
-    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData>;
+    verifyBanUser(locale: string, userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData>;
 
     /**
+     * @param locale
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]>;
+    getUrlRoomsFromSameWorld(locale: string, roomUrl: string): Promise<string[]>;
 
     /**
      * @param accessToken

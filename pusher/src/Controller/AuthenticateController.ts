@@ -169,6 +169,7 @@ export class AuthenticateController extends BaseHttpController {
                         //Get user data from Admin Back Office
                         //This is very important to create User Local in LocalStorage in WorkAdventure
                         const resUserData = await adminService.fetchMemberDataByUuid(
+                            req.header("accept-language"),
                             authTokenData.identifier,
                             playUri as string,
                             IPAddress,
@@ -224,7 +225,7 @@ export class AuthenticateController extends BaseHttpController {
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
-                const data = await adminService.fetchMemberDataByUuid(email, playUri as string, IPAddress, []);
+                const data = await adminService.fetchMemberDataByUuid(req.header("accept-language"), email, playUri as string, IPAddress, []);
 
                 return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
@@ -321,15 +322,13 @@ export class AuthenticateController extends BaseHttpController {
             (async () => {
                 const param = await req.json();
 
-                adminService.locale = req.header("accept-language");
-
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken: string | null = param.organizationMemberToken;
                 const playUri: string | null = param.playUri;
 
                 try {
                     if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminService.fetchMemberDataByToken(organizationMemberToken, playUri);
+                    const data = await adminService.fetchMemberDataByToken(req.header("accept-language"), organizationMemberToken, playUri);
                     const userUuid = data.userUuid;
                     const email = data.email;
                     const roomUrl = data.roomUrl;
@@ -508,7 +507,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
         };
         try {
-            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
+            data = await adminService.fetchMemberDataByUuid("en", email, playUri, IPAddress, []);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

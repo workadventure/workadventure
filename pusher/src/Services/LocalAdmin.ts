@@ -10,9 +10,10 @@ import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
  * A local class mocking a real admin if no admin is configured.
  */
 class LocalAdmin implements AdminInterface {
-    locale: string = "en";
 
     fetchMemberDataByUuid(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
         userIdentifier: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         playUri: string,
@@ -33,6 +34,8 @@ class LocalAdmin implements AdminInterface {
     }
 
     fetchMapDetails(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
         playUri: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         authToken?: string
@@ -62,6 +65,8 @@ class LocalAdmin implements AdminInterface {
 
     async fetchMemberDataByToken(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         organizationMemberToken: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         playUri: string | null
@@ -70,6 +75,8 @@ class LocalAdmin implements AdminInterface {
     }
 
     reportPlayer(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         reportedUserUuid: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,6 +91,8 @@ class LocalAdmin implements AdminInterface {
 
     async verifyBanUser(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         userUuid: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         ipAddress: string,
@@ -94,6 +103,8 @@ class LocalAdmin implements AdminInterface {
     }
 
     async getUrlRoomsFromSameWorld(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        locale: string,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         roomUrl: string
     ): Promise<string[]> {

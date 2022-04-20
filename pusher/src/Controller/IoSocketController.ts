@@ -246,8 +246,6 @@ export class IoSocketController {
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
 
-                    adminService.locale = req.getHeader("accept-language");
-
                     const roomId = query.roomId;
                     try {
                         if (typeof roomId !== "string") {
@@ -316,6 +314,7 @@ export class IoSocketController {
                             try {
                                 try {
                                     userData = await adminService.fetchMemberDataByUuid(
+                                        req.getHeader("accept-language"),
                                         userIdentifier,
                                         roomId,
                                         IPAddress,

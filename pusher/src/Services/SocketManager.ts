@@ -360,6 +360,7 @@ export class SocketManager implements ZoneEventListener {
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
             await adminService.reportPlayer(
+                "en",
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
@@ -445,7 +446,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminService.fetchMapDetails(room.roomUrl);
+        const data = await adminService.fetchMapDetails("en", room.roomUrl);
         const mapDetailsData = isMapDetailsData.safeParse(data);
 
         if (mapDetailsData.success) {
@@ -696,7 +697,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld("en", clientRoomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }

@@ -104,12 +104,10 @@ export class MapController extends BaseHttpController {
                 return;
             }
 
-            adminService.locale = req.header("accept-language");
-
             (async () => {
                 try {
                     const mapDetails = isMapDetailsData.parse(
-                        await adminService.fetchMapDetails(query.playUri as string, query.authToken as string)
+                        await adminService.fetchMapDetails(req.header("accept-language"), query.playUri as string, query.authToken as string)
                     );
 
                     if (DISABLE_ANONYMOUS) mapDetails.authenticationMandatory = true;
