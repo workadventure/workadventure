@@ -5,8 +5,8 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-import {isErrorApiData} from "../../Messages/JsonMessages/ErrorApiData";
-import {connectionManager} from "../../Connexion/ConnectionManager";
+import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
+import { connectionManager } from "../../Connexion/ConnectionManager";
 
 export const EntrySceneName = "EntryScene";
 
@@ -50,7 +50,7 @@ export class EntryScene extends Scene {
                         const errorType = isErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
                             // If error from API and urlToRedirect is specified but not buttonTitle => redirect directly
-                            if (!errorType.data.buttonTitle && errorType.data.urlToRedirect){
+                            if (!errorType.data.buttonTitle && errorType.data.urlToRedirect) {
                                 if (errorType.data.urlToRedirect === "/login") void connectionManager.logout();
                                 else window.location.assign(errorType.data.urlToRedirect);
                             } else errorScreenStore.setError(err.response.data);
