@@ -13,6 +13,7 @@ import {
     FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
+    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -529,6 +530,13 @@ export class SocketManager implements ZoneEventListener {
         } catch (e) {
             console.error("An error occurred while generating the Jitsi JWT token: ", e);
         }
+    }
+
+    public handleJoinBBBMeetingMessage(client: ExSocketInterface, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setJoinbbbmeetingmessage(joinBBBMeetingMessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 
     public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
