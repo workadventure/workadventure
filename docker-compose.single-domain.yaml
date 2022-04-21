@@ -136,6 +136,8 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
       JITSI_ISS: $JITSI_ISS
+      BBB_URL: $BBB_URL
+      BBB_SECRET: $BBB_SECRET
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development
