@@ -49,11 +49,11 @@ export class EntryScene extends Scene {
                     .catch((err) => {
                         const errorType = isErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
-                            // If error from API and urlToRedirect is specified but not buttonTitle => redirect directly
-                            if (!errorType.data.buttonTitle && errorType.data.urlToRedirect) {
-                                if (errorType.data.urlToRedirect === "/login") void connectionManager.logout();
-                                else window.location.assign(errorType.data.urlToRedirect);
-                            } else errorScreenStore.setError(err.response.data);
+                            if (errorType.data.type === 'unauthorized') {
+                                void connectionManager.logout();
+                            } else if (errorType.data.type === 'redirect') {
+                                window.location.assign(errorType.data.urlToRedirect);
+                            } else errorScreenStore.setError(err?.response?.data);
                         } else {
                             ErrorScene.showError(err, this.scene);
                         }

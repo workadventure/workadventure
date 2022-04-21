@@ -55,7 +55,13 @@ import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterfac
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
-import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import {
+    ErrorApiData,
+    isErrorApiErrorData,
+    isErrorApiRedirectData,
+    isErrorApiRetryData, isErrorApiUnauthorizedData
+} from "../Messages/JsonMessages/ErrorApiData";
+import {BoolValue, Int32Value, StringValue} from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");
 
@@ -472,7 +478,7 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminService.fetchMapDetails("en", room.roomUrl);
+        const data = await adminService.fetchMapDetails(room.roomUrl);
         const mapDetailsData = isMapDetailsData.safeParse(data);
 
         if (mapDetailsData.success) {
@@ -672,21 +678,23 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorScreenMessage(client: compressors.WebSocket, error: ErrorApiData) {
+    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
         const errorMessage = new ErrorScreenMessage();
-        errorMessage.setType(error.type);
-        errorMessage.setCode(error.code);
-        errorMessage.setTitle(error.title);
-        errorMessage.setSubtitle(error.subtitle);
-        errorMessage.setDetails(error.details);
-        errorMessage.setImage(error.image);
+        errorMessage.setType(errorApi.type);
+        if(errorApi.type == 'retry' || errorApi.type == 'error'){
+            errorMessage.setCode(new StringValue().setValue(errorApi.code));
+            errorMessage.setTitle(new StringValue().setValue(errorApi.title));
+            errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
+            errorMessage.setDetails(new StringValue().setValue(errorApi.details));
+            errorMessage.setImage(new StringValue().setValue(errorApi.image));
+        }
+        if(errorApi.type == 'retry') {
+            if (errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
+            if (errorApi.canRetryManual !== undefined) errorMessage.setCanretrymanual(new BoolValue().setValue(errorApi.canRetryManual));
+            if (errorApi.timeToRetry) errorMessage.setTimetoretry(new Int32Value().setValue(Number(errorApi.timeToRetry)));
+        }
+        if(errorApi.type == 'redirect' && errorApi.urlToRedirect) errorMessage.setUrltoredirect(new StringValue().setValue(errorApi.urlToRedirect));
 
-        if (error.urlToRedirect) errorMessage.setUrltoredirect(error.urlToRedirect);
-        if (error.buttonTitle) errorMessage.setButtontitle(error.buttonTitle);
-        if (error.canRetryManual !== undefined && null !== error.canRetryManual)
-            errorMessage.setCanretrymanual(error.canRetryManual);
-        if (error.timeToRetry && !isNaN(Number(error.timeToRetry)))
-            errorMessage.setTimetoretry(Number(error.timeToRetry));
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setErrorscreenmessage(errorMessage);

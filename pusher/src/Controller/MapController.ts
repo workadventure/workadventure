@@ -108,9 +108,9 @@ export class MapController extends BaseHttpController {
                 try {
                     const mapDetails = isMapDetailsData.parse(
                         await adminService.fetchMapDetails(
-                            req.header("accept-language"),
                             query.playUri as string,
-                            query.authToken as string
+                            query.authToken as string,
+                            req.header("accept-language")
                         )
                     );
 

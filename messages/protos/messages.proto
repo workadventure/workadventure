@@ -226,15 +226,15 @@ message ErrorMessage {
  */
 message ErrorScreenMessage {
   string type = 1;
-  string code = 2;
-  string title = 3;
-  string subtitle = 4;
-  string details = 5;
-  int32 timeToRetry = 6;
-  bool canRetryManual = 7;
-  string urlToRedirect = 8;
-  string buttonTitle = 9;
-  string image = 10;
+  google.protobuf.StringValue code = 2;
+  google.protobuf.StringValue title = 3;
+  google.protobuf.StringValue subtitle = 4;
+  google.protobuf.StringValue details = 5;
+  google.protobuf.Int32Value timeToRetry = 6;
+  google.protobuf.BoolValue canRetryManual = 7;
+  google.protobuf.StringValue urlToRedirect = 8;
+  google.protobuf.StringValue buttonTitle = 9;
+  google.protobuf.StringValue image = 10;
 }
 
 message ItemStateMessage {

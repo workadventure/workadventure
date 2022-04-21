@@ -245,6 +245,8 @@ export class IoSocketController {
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
+                    const locale = req.getHeader("accept-language");
+
 
                     const roomId = query.roomId;
                     try {
@@ -318,7 +320,7 @@ export class IoSocketController {
                                         roomId,
                                         IPAddress,
                                         characterLayers,
-                                        req.getHeader("accept-language")
+                                        locale
                                     );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
@@ -330,6 +332,20 @@ export class IoSocketController {
                                                     reason: "error",
                                                     status: err?.response?.status,
                                                     error: errorType.data,
+                                                } as UpgradeFailedData,
+                                                websocketKey,
+                                                websocketProtocol,
+                                                websocketExtensions,
+                                                context
+                                            );
+                                        } else {
+                                            return res.upgrade(
+                                                {
+                                                    rejected: true,
+                                                    reason: null,
+                                                    status: 500,
+                                                    message: err?.response?.data,
+                                                    roomId: roomId
                                                 } as UpgradeFailedData,
                                                 websocketKey,
                                                 websocketProtocol,
