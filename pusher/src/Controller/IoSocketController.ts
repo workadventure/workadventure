@@ -281,7 +281,7 @@ export class IoSocketController {
                         let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
                         let memberTextures: WokaDetail[] = [];
-                        const room = await socketManager.getOrCreateRoom(roomId);
+                        const room = await socketManager.getOrCreateRoom(roomId, userIdentifier);
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,

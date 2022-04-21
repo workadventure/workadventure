@@ -262,7 +262,7 @@ export class SocketManager {
         }
     }
 
-    async getOrCreateRoom(roomId: string): Promise<GameRoom> {
+    async getOrCreateRoom(roomId: string, userId?: string): Promise<GameRoom> {
         //check and create new room
         let roomPromise = this.roomsPromises.get(roomId);
         if (roomPromise === undefined) {
@@ -291,7 +291,8 @@ export class SocketManager {
                     void this.onLockGroup(groupId, listener, roomPromise);
                 },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
-                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
+                    this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener),
+                userId
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
@@ -312,7 +313,7 @@ export class SocketManager {
     ): Promise<{ room: GameRoom; user: User }> {
         const roomId = joinRoomMessage.getRoomid();
 
-        const room = await socketManager.getOrCreateRoom(roomId);
+        const room = await socketManager.getOrCreateRoom(roomId, joinRoomMessage.getUseruuid());
 
         //join world
         const user = room.join(socket, joinRoomMessage);

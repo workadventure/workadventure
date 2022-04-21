@@ -260,7 +260,7 @@ export class SocketManager implements ZoneEventListener {
             pusherToBackMessage.setJoinroommessage(joinRoomMessage);
             streamToPusher.write(pusherToBackMessage);
 
-            const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            const pusherRoom = await this.getOrCreateRoom(client.roomId, client.userUuid);
             pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
@@ -456,13 +456,13 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    async getOrCreateRoom(roomUrl: string): Promise<PusherRoom> {
+    async getOrCreateRoom(roomUrl: string, userId?: string): Promise<PusherRoom> {
         //check and create new world for a room
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
             if (ADMIN_API_URL) {
-                await this.updateRoomWithAdminData(room);
+                await this.updateRoomWithAdminData(room, userId);
             }
             await room.init();
             this.rooms.set(roomUrl, room);
@@ -470,8 +470,8 @@ export class SocketManager implements ZoneEventListener {
         return room;
     }
 
-    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(room.roomUrl);
+    public async updateRoomWithAdminData(room: PusherRoom, userId?: string): Promise<void> {
+        const data = await adminApi.fetchMapDetails(room.roomUrl, userId);
 
         if (isRoomRedirect(data)) {
             // TODO: if the updated room data is actually a redirect, we need to take everybody on the map

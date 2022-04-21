@@ -4,7 +4,7 @@ import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDe
 import { isRoomRedirect, RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 class AdminApi {
-    async fetchMapDetails(playUri: string): Promise<MapDetailsData | RoomRedirect> {
+    async fetchMapDetails(playUri: string, userId?: string): Promise<MapDetailsData | RoomRedirect> {
         if (!ADMIN_API_URL) {
             return Promise.reject(new Error("No admin backoffice set!"));
         }
