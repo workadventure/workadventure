@@ -9,7 +9,7 @@
         shareLink,
         updateInputFieldValue,
     } from "../../Stores/GuestMenuStore";
-    import { goToWorkAdventureRoomId } from "../../Xmpp/MucRoom";
+    import { goToWorkAdventureRoomId, USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
     import { onMount } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
 
@@ -30,12 +30,16 @@
                 if (value == undefined || userName == undefined) {
                     continue;
                 }
-                if (userName.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) !== -1) {
+                if (
+                    value == undefined ||
+                    value == "" ||
+                    userName.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) !== -1
+                ) {
                     const userObject: User | undefined = users.get(userName);
                     if (userObject == undefined) {
                         continue;
                     }
-                    usersList.set(value, userObject);
+                    usersList.set(userName, userObject);
                 }
             }
         });
@@ -63,21 +67,25 @@
             <span>{$LL.menu.invite.walk_automatically_to_position()}</span>
         </label>
     {:else}
-        {#each [...$usersListStore] as [userName, user]}
+        {#each [...usersList] as [userName, user]}
             <li class={user.status}>
                 <div>
                     <span>{userName}</span>
                     <div>
-                        {#if user.isInSameMap === false}
+                        {#if user.status === USER_STATUS_DISCONNECTED}
                             <button src="btn btn-primary" disabled>
-                                {$LL.muc.userList.isHere()}
+                                {$LL.muc.userList.disconnected()}
                             </button>
-                        {:else}
+                        {:else if user.isInSameMap === false}
                             <button
                                 on:click={(event) => goToWorkAdventureRoomId(user.roomId, event)}
                                 src="btn btn-primary"
                             >
                                 {$LL.muc.userList.teleport()}
+                            </button>
+                        {:else}
+                            <button src="btn btn-primary" disabled>
+                                {$LL.muc.userList.isHere()}
                             </button>
                         {/if}
                     </div>
@@ -94,9 +102,15 @@
     ul li.disconnected {
         list-style: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' version='1.1' width='10' height='10'><circle id='red_circle' stroke='black'' fill='%23ff2138' cx='5' cy='5' r='5' /></svg>");
     }
+    li {
+        margin: 2px 0;
+    }
     li div {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+    }
+    button[disabled] {
+        color: white;
     }
 </style>

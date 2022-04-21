@@ -6,7 +6,6 @@
     export let placeHolder: string = $LL.muc.userList.search();
     export let disabled: boolean = false;
     export let onChangeSearchHandler = (value: string) => {
-        console.log("value", value);
         searchValue.set(value);
     };
 </script>

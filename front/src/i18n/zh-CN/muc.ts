@@ -3,6 +3,7 @@ import { BaseTranslation } from "../i18n-types";
 const muc: BaseTranslation = {
     title: "Users list",
     userList: {
+        disconnected: "Disconnected",
         isHere: "Is here!",
         teleport: "Teleport",
         search: "Just look it up!",

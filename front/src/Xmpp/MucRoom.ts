@@ -8,8 +8,8 @@ import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 
-const USER_STATUS_AVAILABLE = "available";
-const USER_STATUS_DISCONNECTED = "disconnected";
+export const USER_STATUS_AVAILABLE = "available";
+export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
     roomId: string;
     status: string;
