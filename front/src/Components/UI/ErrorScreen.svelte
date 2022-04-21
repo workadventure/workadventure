@@ -8,17 +8,10 @@
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
     import reload from "../images/reload.png";
-    import external from "../images/external-link.png";
-    import { connectionManager } from "../../Connexion/ConnectionManager";
-
     let errorScreen = get(errorScreenStore);
 
     function click() {
-        if (errorScreen.urlToRedirect) {
-            if (errorScreen.urlToRedirect === "/login") void connectionManager.logout();
-            else window.location.assign(errorScreen.urlToRedirect);
-        } else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
-        else window.location.reload();
+        window.location.reload();
     }
     let details = errorScreen.details;
     let timeVar = errorScreen.timeToRetry ?? 0;
@@ -31,7 +24,7 @@
         onDestroy(() => clearInterval(interval));
     }
 
-    $: detailsStylized = details.replace("{time}", `${timeVar / 1000}`);
+    $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 </script>
 
 <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
@@ -44,9 +37,9 @@
         <p class="details">
             {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
         </p>
-        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || ($errorScreenStore.type === "unauthorized" && $errorScreenStore.urlToRedirect && $errorScreenStore.buttonTitle) || ($errorScreenStore.type === "redirect" && (window.history.length > 2 || $errorScreenStore.urlToRedirect))}
+        {#if $errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual}
             <button type="button" class="nes-btn is-primary button" on:click={click}>
-                <img src={$errorScreenStore.type === "retry" ? reload : external} alt="" class="reload" />
+                <img src={reload} alt="" class="reload" />
                 {$errorScreenStore.buttonTitle}
             </button>
         {/if}

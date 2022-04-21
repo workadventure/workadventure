@@ -247,7 +247,6 @@ export class IoSocketController {
                     const IPAddress = req.getHeader("x-forwarded-for");
                     const locale = req.getHeader("accept-language");
 
-
                     const roomId = query.roomId;
                     try {
                         if (typeof roomId !== "string") {
@@ -345,7 +344,7 @@ export class IoSocketController {
                                                     reason: null,
                                                     status: 500,
                                                     message: err?.response?.data,
-                                                    roomId: roomId
+                                                    roomId: roomId,
                                                 } as UpgradeFailedData,
                                                 websocketKey,
                                                 websocketProtocol,

@@ -59,9 +59,10 @@ import {
     ErrorApiData,
     isErrorApiErrorData,
     isErrorApiRedirectData,
-    isErrorApiRetryData, isErrorApiUnauthorizedData
+    isErrorApiRetryData,
+    isErrorApiUnauthorizedData,
 } from "../Messages/JsonMessages/ErrorApiData";
-import {BoolValue, Int32Value, StringValue} from "google-protobuf/google/protobuf/wrappers_pb";
+import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");
 
@@ -681,20 +682,22 @@ export class SocketManager implements ZoneEventListener {
     public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
         const errorMessage = new ErrorScreenMessage();
         errorMessage.setType(errorApi.type);
-        if(errorApi.type == 'retry' || errorApi.type == 'error'){
+        if (errorApi.type == "retry" || errorApi.type == "error") {
             errorMessage.setCode(new StringValue().setValue(errorApi.code));
             errorMessage.setTitle(new StringValue().setValue(errorApi.title));
             errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
             errorMessage.setDetails(new StringValue().setValue(errorApi.details));
             errorMessage.setImage(new StringValue().setValue(errorApi.image));
         }
-        if(errorApi.type == 'retry') {
+        if (errorApi.type == "retry") {
             if (errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
-            if (errorApi.canRetryManual !== undefined) errorMessage.setCanretrymanual(new BoolValue().setValue(errorApi.canRetryManual));
-            if (errorApi.timeToRetry) errorMessage.setTimetoretry(new Int32Value().setValue(Number(errorApi.timeToRetry)));
+            if (errorApi.canRetryManual !== undefined)
+                errorMessage.setCanretrymanual(new BoolValue().setValue(errorApi.canRetryManual));
+            if (errorApi.timeToRetry)
+                errorMessage.setTimetoretry(new Int32Value().setValue(Number(errorApi.timeToRetry)));
         }
-        if(errorApi.type == 'redirect' && errorApi.urlToRedirect) errorMessage.setUrltoredirect(new StringValue().setValue(errorApi.urlToRedirect));
-
+        if (errorApi.type == "redirect" && errorApi.urlToRedirect)
+            errorMessage.setUrltoredirect(new StringValue().setValue(errorApi.urlToRedirect));
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setErrorscreenmessage(errorMessage);

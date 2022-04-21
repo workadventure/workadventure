@@ -43,9 +43,4 @@ export const isErrorApiData = z.discriminatedUnion("type", [
     isErrorApiUnauthorizedData,
 ]);
 
-export type ErrorApiErrorData = z.infer<typeof isErrorApiErrorData>;
-export type ErrorApiRetryData = z.infer<typeof isErrorApiRetryData>;
-export type ErrorApiRedirectData = z.infer<typeof isErrorApiRedirectData>;
-export type ErrorApiUnauthorizedData = z.infer<typeof isErrorApiUnauthorizedData>;
-
 export type ErrorApiData = z.infer<typeof isErrorApiData>;
