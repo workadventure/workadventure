@@ -1,11 +1,10 @@
 <script lang="ts">
-    import { availabilityStatusStore, localVolumeStore, obtainedMediaConstraintStore } from "../Stores/MediaStore";
+    import { localVolumeStore, obtainedMediaConstraintStore, silentStore } from "../Stores/MediaStore";
     import { localStreamStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy, onMount } from "svelte";
     import { srcObject } from "./Video/utils";
     import LL from "../i18n/i18n-svelte";
-    import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
     let stream: MediaStream | null;
 
@@ -22,8 +21,8 @@
     });
 
     let isSilent: boolean;
-    const unsubscribeIsSilent = availabilityStatusStore.subscribe((status) => {
-        isSilent = status === AvailabilityStatus.SILENT;
+    const unsubscribeIsSilent = silentStore.subscribe((silent) => {
+        isSilent = silent;
     });
 
     let cameraContainer: HTMLDivElement;

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
-    import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";
     import monitorCloseImg from "./images/monitor-close.svg";
     import cinemaImg from "./images/cinema.svg";
@@ -18,7 +18,6 @@
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
-    import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -78,8 +77,8 @@
     }
 
     let isSilent: boolean;
-    const unsubscribeIsSilent = availabilityStatusStore.subscribe((status) => {
-        isSilent = status === AvailabilityStatus.SILENT;
+    const unsubscribeIsSilent = silentStore.subscribe((silent) => {
+        isSilent = silent;
     });
     onDestroy(unsubscribeIsSilent);
 </script>

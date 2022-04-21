@@ -1,7 +1,6 @@
-import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import { get } from "svelte/store";
 import { WorkAdventureDesktopApi } from "@wa-preload-app";
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 
 declare global {
     interface Window {
@@ -37,8 +36,8 @@ class DesktopApi {
             }
         });
 
-        availabilityStatusStore.subscribe((status) => {
-            this.isSilent = status === AvailabilityStatus.SILENT;
+        silentStore.subscribe((silent) => {
+            this.isSilent = silent;
         });
     }
 }
