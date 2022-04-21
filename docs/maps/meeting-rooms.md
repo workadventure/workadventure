@@ -1,5 +1,5 @@
 {.section-title.accent.text-primary}
-# Meeting rooms
+# Meeting rooms with Jitsi
 
 [Building your map - Meeting room](https://www.youtube.com/watch?v=cN9VMWHN0eo)
 
@@ -82,3 +82,51 @@ and not
 {.alert.alert-info}
 When you use `jitsiUrl`, the targeted Jitsi instance must be public. You cannot use moderation features or the JWT 
 tokens authentication with maps configured using the `jitsiUrl` property.
+
+# Meeting rooms with BigBlueButton
+
+## Opening a BigBlueButton session when walking on the map
+
+The same concept of Jitsi rooms is applied to BigBlueButton rooms. When a player pass over the BigBlueButton special zone, a BigBlueButton session will open (as an iframe on the right side of the screen).
+
+In order to create a BigBlueButton session zone:
+
+* You must create a specific layer.
+* In layer properties:
+  * You MUST add a "`bbbMeeting`" property (of type "`string`"). The value of this property will be used to calculate the meetingID of the BigBlueButton room. We suggest you to use [a random UUID](https://www.uuidgenerator.net/version4).
+  * You CAN add a "`meetingName`" property (of type "`string`"). The value of this property will be used as `meetingName` of the BigBlueButton room. If you do not set it, `meetingName` will be the same as `meetingID`.
+  * You CAN add "`userdata-`" properties (of type "`string`"). They will be passed in the JOIN API call on BigBlueButton, and will allow you to customize UI settings on BigBlueButton. These are a few properties you can set::
+    * `userdata-bbb_auto_share_webcam=true`: webcam will be shared automatically
+    * `userdata-bbb_hide_presentation=true`: presentation will be minimized and webcams will use the whole space
+    * `userdata-bbb_listen_only_mode=false`: microphone will be enabled for audio and listen only mode won't be used
+    * `userdata-bbb_skip_check_audio=true`: echo test when enabling microphone won't be displayed
+    * `userdata-bbb_skip_video_preview=true`: webcam preview won't be displayed before sharing
+    * `userdata-bbb_show_participants_on_login=false`: users list won't be displayed
+
+{.alert.alert-info}
+All participants join BigBlueButton as moderators.
+
+## Using another BigBlueButton server
+
+WorkAdventure will come configured with test BigBlueButton credentials, provided by [Blindside Networks](https://blindsidenetworks.com) as default server for testing integrations.
+
+You will configure your BigBlueButton credentials on the back component. In order to get your URL and secret, log in your BigBlueButton server and type `bbb-conf --secret`. The answer will look like this:
+
+```
+$ bbb-conf --secret
+
+    URL: https://YOUR-SERVER/bigbluebutton/
+    Secret: YOUR-SECRET
+
+    Link to the API-Mate:
+    https://mconf.github.io/api-mate/#server=https://YOUR-SERVER/bigbluebutton/&sharedSecret=YOUR-SECRET
+```
+
+You'll set the following environment variables with URL and secret:
+```
+BBB_URL: YOUR-SERVER
+BBB_SECRET: YOUR-SECRET
+```
+
+{.alert.alert-info}
+Make sure BBB_URL ends with `/bigbluebutton/`.
