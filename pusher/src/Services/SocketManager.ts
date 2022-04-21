@@ -55,13 +55,7 @@ import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterfac
 import { compressors } from "hyper-express";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
-import {
-    ErrorApiData,
-    isErrorApiErrorData,
-    isErrorApiRedirectData,
-    isErrorApiRetryData,
-    isErrorApiUnauthorizedData,
-} from "../Messages/JsonMessages/ErrorApiData";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");

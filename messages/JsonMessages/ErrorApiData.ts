@@ -7,7 +7,7 @@ import { z } from "zod";
 
 export const isErrorApiErrorData = z.object({
     // @ts-ignore
-    type: z.literal('error'),
+    type: z.literal("error"),
     code: z.string(),
     title: z.string(),
     subtitle: z.string(),
@@ -16,7 +16,7 @@ export const isErrorApiErrorData = z.object({
 });
 
 export const isErrorApiRetryData = z.object({
-    type: z.literal('retry'),
+    type: z.literal("retry"),
     code: z.string(),
     title: z.string(),
     subtitle: z.string(),
@@ -28,12 +28,12 @@ export const isErrorApiRetryData = z.object({
 });
 
 export const isErrorApiRedirectData = z.object({
-    type: z.literal('redirect'),
+    type: z.literal("redirect"),
     urlToRedirect: z.string(),
 });
 
 export const isErrorApiUnauthorizedData = z.object({
-    type: z.literal('unauthorized'),
+    type: z.literal("unauthorized"),
 });
 
 export const isErrorApiData = z.discriminatedUnion("type", [
