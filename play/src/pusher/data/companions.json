@@ -73,6 +73,10 @@
             {
                 "name": "fairydust",
                 "img": "resources/companions/fairydust.png"
+            },
+            {
+                "name": "Alpaka1",
+                "img": "resources/companions/Alpaka_companion.png"
             }
         ]
     }
