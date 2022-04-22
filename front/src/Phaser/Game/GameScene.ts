@@ -176,8 +176,6 @@ export class GameScene extends DirtyScene {
 
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
-    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
-    private privacyShutdownStoreUnsubscribe!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
 
@@ -1558,7 +1556,6 @@ ${escapedMessage}
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
-        this.privacyShutdownStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
