@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { getRandomColor } from "../WebRtc/ColorGenerator";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 let idCount = 0;
 
@@ -28,7 +29,7 @@ function createPlayersStore() {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
-                        away: message.away,
+                        status: message.status,
                         color: getRandomColor(),
                     });
                     return users;
@@ -58,7 +59,7 @@ function createPlayersStore() {
                     characterLayers: [],
                     visitCardUrl: null,
                     companion: null,
-                    away: false,
+                    status: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: getRandomColor(),
                 });

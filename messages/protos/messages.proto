@@ -4,6 +4,14 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+enum AvailabilityStatus {
+  UNCHANGED = 0;
+  ONLINE = 1;
+  SILENT = 2;
+  AWAY = 3;
+  JITSI = 4;
+}
+
 message PositionMessage {
   int32 x = 1;
   int32 y = 2;
@@ -29,10 +37,6 @@ message ViewportMessage {
   int32 bottom = 4;
 }
 
-message SilentMessage {
-  bool silent = 1;
-}
-
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
@@ -53,7 +57,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
-  google.protobuf.BoolValue away = 6;
+  AvailabilityStatus status = 6;
 }
 
 message UserMovesMessage {
@@ -106,7 +110,6 @@ message LockGroupPromptMessage {
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
@@ -207,7 +210,7 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
-  bool away = 10;
+  AvailabilityStatus status = 10;
 }
 
 message UserLeftMessage {
@@ -346,7 +349,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
-  bool away = 11;
+  AvailabilityStatus status = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -360,7 +363,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
-  bool away = 11;
+  AvailabilityStatus status = 11;
 }
 
 message UserLeftZoneMessage {
@@ -405,7 +408,6 @@ message PusherToBackMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;

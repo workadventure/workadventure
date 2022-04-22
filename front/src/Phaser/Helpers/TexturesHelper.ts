@@ -67,4 +67,20 @@ export class TexturesHelper {
         rectangleTexture.generateTexture(textureKey, width, height);
         rectangleTexture.destroy();
     }
+
+    public static createCircleTexture(
+        scene: Phaser.Scene,
+        textureKey: string,
+        radius: number,
+        color: number,
+        outlineColor?: number,
+        outlineThickness?: number
+    ): void {
+        const circleTexture = scene.add.graphics().fillStyle(color, 1).fillCircle(radius, radius, radius);
+        if (outlineColor) {
+            circleTexture.lineStyle(outlineThickness ?? 1, outlineColor).strokeCircle(radius, radius, radius);
+        }
+        circleTexture.generateTexture(textureKey, radius * 2, radius * 2);
+        circleTexture.destroy();
+    }
 }

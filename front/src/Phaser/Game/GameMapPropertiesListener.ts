@@ -17,6 +17,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
+import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -77,6 +78,7 @@ export class GameMapPropertiesListener {
                         coWebsiteManager.closeCoWebsite(coWebsite);
                     }
                 });
+                inJitsiStore.set(false);
             } else {
                 const openJitsiRoomFunction = () => {
                     let addPrefix = true;
@@ -119,11 +121,15 @@ export class GameMapPropertiesListener {
                         uuid: "jitsi",
                         type: "message",
                         message: message,
-                        callback: () => openJitsiRoomFunction(),
+                        callback: () => {
+                            openJitsiRoomFunction();
+                            inJitsiStore.set(true);
+                        },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
                     openJitsiRoomFunction();
+                    inJitsiStore.set(true);
                 }
             }
         });
@@ -160,11 +166,9 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                this.scene.connection?.setSilent(false);
-                this.scene.CurrentPlayer.noSilent();
+                silentStore.set(false);
             } else {
-                this.scene.connection?.setSilent(true);
-                this.scene.CurrentPlayer.isSilent();
+                silentStore.set(true);
             }
         });
 

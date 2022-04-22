@@ -91,7 +91,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -101,7 +101,6 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
-import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -249,6 +248,8 @@ export class GameScene extends DirtyScene {
         this.listenToIframeEvents();
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
+        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
+        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -679,6 +680,11 @@ export class GameScene extends DirtyScene {
             this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
         });
 
+        availabilityStatusStore.subscribe((status) => {
+            this.connection?.emitPlayerStatusChange(status);
+            this.CurrentPlayer.setStatus(status);
+        });
+
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
             if (emote) {
                 this.CurrentPlayer?.playEmote(emote.url);
@@ -703,10 +709,6 @@ export class GameScene extends DirtyScene {
                 this.CurrentPlayer.removeFollowOutlineColor();
                 this.connection?.emitPlayerOutlineColor(null);
             }
-        });
-
-        this.privacyShutdownStoreUnsubscribe = privacyShutdownStore.subscribe((away) => {
-            this.connection?.emitPlayerAway(away);
         });
 
         Promise.all([
@@ -767,7 +769,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
-                        away: message.away,
+                        status: message.status,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -1933,8 +1935,8 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
-        if (addPlayerData.away !== undefined) {
-            player.setAwayStatus(addPlayerData.away, true);
+        if (addPlayerData.status !== undefined) {
+            player.setStatus(addPlayerData.status, true);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2085,8 +2087,8 @@ ${escapedMessage}
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
-        if (message.details?.away !== undefined) {
-            character.setAwayStatus(message.details?.away);
+        if (message.details?.status !== undefined) {
+            character.setStatus(message.details?.status);
         }
     }
 
@@ -2130,13 +2132,10 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        this.connection?.setSilent(true);
         mediaManager.hideMyCamera();
     }
 
