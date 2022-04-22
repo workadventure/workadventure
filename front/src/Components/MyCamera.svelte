@@ -20,11 +20,6 @@
         unsubscribeLocalStreamStore();
     });
 
-    let isSilent: boolean;
-    const unsubscribeIsSilent = silentStore.subscribe((silent) => {
-        isSilent = silent;
-    });
-
     let cameraContainer: HTMLDivElement;
 
     onMount(() => {
@@ -40,16 +35,14 @@
             }
         });
     });
-
-    onDestroy(unsubscribeIsSilent);
 </script>
 
 <div
     class="nes-container is-rounded my-cam-video-container"
-    class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !isSilent}
+    class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
     bind:this={cameraContainer}
 >
-    {#if isSilent}
+    {#if $silentStore}
         <div class="is-silent">{$LL.camera.my.silentZone()}</div>
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <video class="my-cam-video" use:srcObject={stream} autoplay muted playsinline />

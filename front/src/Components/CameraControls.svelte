@@ -13,7 +13,6 @@
     import lockImg from "./images/lock.svg";
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { peerStore } from "../Stores/PeerStore";
-    import { onDestroy } from "svelte";
     import { embedScreenLayout } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
@@ -22,7 +21,7 @@
     const gameScene = gameManager.getCurrentGameScene();
 
     function screenSharingClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
         } else {
@@ -31,7 +30,7 @@
     }
 
     function cameraClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
         } else {
@@ -40,7 +39,7 @@
     }
 
     function microphoneClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
         } else {
@@ -75,12 +74,6 @@
     function lockClick() {
         gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
-
-    let isSilent: boolean;
-    const unsubscribeIsSilent = silentStore.subscribe((silent) => {
-        isSilent = silent;
-    });
-    onDestroy(unsubscribeIsSilent);
 </script>
 
 <div class="btn-cam-action">
@@ -94,7 +87,7 @@
 
     <div
         class="btn-follow"
-        class:hide={($peerStore.size === 0 && $followStateStore === "off") || isSilent}
+        class:hide={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
         class:disabled={$followStateStore !== "off"}
         on:click={followClick}
     >
@@ -103,7 +96,7 @@
 
     <div
         class="btn-lock"
-        class:hide={$peerStore.size === 0 || isSilent}
+        class:hide={$peerStore.size === 0 || $silentStore}
         class:disabled={$currentPlayerGroupLockStateStore}
         on:click={lockClick}
     >
@@ -113,26 +106,26 @@
     <div
         class="btn-monitor"
         on:click={screenSharingClick}
-        class:hide={!$screenSharingAvailableStore || isSilent}
+        class:hide={!$screenSharingAvailableStore || $silentStore}
         class:enabled={$requestedScreenSharingState}
     >
-        {#if $requestedScreenSharingState && !isSilent}
+        {#if $requestedScreenSharingState && !$silentStore}
             <img class="noselect" src={monitorImg} alt="Start screen sharing" />
         {:else}
             <img class="noselect" src={monitorCloseImg} alt="Stop screen sharing" />
         {/if}
     </div>
 
-    <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || isSilent}>
-        {#if $requestedCameraState && !isSilent}
+    <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || $silentStore}>
+        {#if $requestedCameraState && !$silentStore}
             <img class="noselect" src={cinemaImg} alt="Turn on webcam" />
         {:else}
             <img class="noselect" src={cinemaCloseImg} alt="Turn off webcam" />
         {/if}
     </div>
 
-    <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || isSilent}>
-        {#if $requestedMicrophoneState && !isSilent}
+    <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || $silentStore}>
+        {#if $requestedMicrophoneState && !$silentStore}
             <img class="noselect" src={microphoneImg} alt="Turn on microphone" />
         {:else}
             <img class="noselect" src={microphoneCloseImg} alt="Turn off microphone" />
