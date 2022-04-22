@@ -40,12 +40,13 @@ class AdminApi implements AdminInterface {
             try {
                 authTokenData = jwtTokenManager.verifyJWTToken(authToken);
                 userId = authTokenData.identifier;
+                //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 try {
                     // Decode token, in this case we don't need to create new token.
                     authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
                     userId = authTokenData.identifier;
-                    console.info("JWT expire, but decoded", userId);
+                    console.info("JWT expire, but decoded:", userId);
                 } catch (e) {
                     if (e instanceof InvalidTokenError) {
                         throw new Error("Token decrypted error");

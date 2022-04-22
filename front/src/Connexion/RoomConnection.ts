@@ -303,8 +303,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                const tmp: never = subMessage;
+                                const _exhaustiveCheck: never = subMessage;
                             }
                         }
                     }
@@ -491,8 +490,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const tmp: never = message;
+                    const _exhaustiveCheck: never = message;
                 }
             }
         };

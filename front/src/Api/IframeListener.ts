@@ -294,7 +294,6 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const _exhaustiveCheck: never = iframeEvent;
                     }
                 }
