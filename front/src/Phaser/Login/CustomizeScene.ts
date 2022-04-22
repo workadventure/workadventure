@@ -54,7 +54,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public preload(): void {
-        this.input.dragDistanceThreshold = 10;
+        super.preload();
 
         this.load.image("iconClothes", "/resources/icons/icon_clothes.png");
         this.load.image("iconAccessory", "/resources/icons/icon_accessory.png");
