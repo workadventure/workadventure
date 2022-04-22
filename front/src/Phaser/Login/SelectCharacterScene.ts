@@ -4,7 +4,7 @@ import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { loadAllDefaultModels } from "../Entity/PlayerTexturesLoadingManager";
 import { Loader } from "../Components/Loader";
-import { BodyResourceDescriptionInterface, PlayerTextures, PlayerTexturesKey } from "../Entity/PlayerTextures";
+import { BodyResourceDescriptionInterface, PlayerTextures } from "../Entity/PlayerTextures";
 import { AbstractCharacterScene } from "./AbstractCharacterScene";
 import { areCharacterLayersValid } from "../../Connexion/LocalUser";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
@@ -138,7 +138,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         selectCharacterSceneVisibleStore.set(false);
     }
 
-    public update(time: number, delta: number): void {
+    public update(): void {
         if (this.lazyloadingAttempt) {
             this.lazyloadingAttempt = false;
         }
