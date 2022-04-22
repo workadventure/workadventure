@@ -398,6 +398,7 @@ message ZoneMessage {
 
 message RoomMessage {
   string roomId = 1;
+  string userId = 2;
 }
 
 message PusherToBackMessage {

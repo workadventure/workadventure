@@ -464,7 +464,7 @@ export class SocketManager implements ZoneEventListener {
             if (ADMIN_API_URL) {
                 await this.updateRoomWithAdminData(room, userId);
             }
-            await room.init();
+            await room.init(userId);
             this.rooms.set(roomUrl, room);
         }
         return room;

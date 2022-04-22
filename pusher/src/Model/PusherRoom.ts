@@ -83,11 +83,14 @@ export class PusherRoom {
     /**
      * Creates a connection to the back server to track global messages relative to this room (like variable changes).
      */
-    public async init(): Promise<void> {
+    public async init(userId?: string): Promise<void> {
         debug("Opening connection to room %s on back server", this.roomUrl);
         const apiClient = await apiClientRepository.getClient(this.roomUrl);
         const roomMessage = new RoomMessage();
         roomMessage.setRoomid(this.roomUrl);
+        if (userId != undefined) {
+            roomMessage.setUserid(userId);
+        }
         this.backConnection = apiClient.listenRoom(roomMessage);
         this.backConnection.on("data", (batch: BatchToPusherRoomMessage) => {
             for (const message of batch.getPayloadList()) {

@@ -218,9 +218,15 @@ const roomManager: IRoomManagerServer = {
         debug("listenRoom called");
         const roomMessage = call.request;
 
-        socketManager.addRoomListener(call, roomMessage.getRoomid()).catch((e) => {
-            emitErrorOnRoomSocket(call, e);
-        });
+        socketManager
+            .addRoomListener(
+                call,
+                roomMessage.getRoomid(),
+                roomMessage.getUserid() !== "" ? roomMessage.getUserid() : undefined //message Proto3 type string by default is empty string
+            )
+            .catch((e) => {
+                emitErrorOnRoomSocket(call, e);
+            });
 
         call.on("cancelled", () => {
             debug("listenRoom cancelled");

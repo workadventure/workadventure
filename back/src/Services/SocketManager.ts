@@ -696,8 +696,8 @@ export class SocketManager {
         room.removeZoneListener(call, x, y);
     }
 
-    async addRoomListener(call: RoomSocket, roomId: string) {
-        const room = await this.getOrCreateRoom(roomId);
+    async addRoomListener(call: RoomSocket, roomId: string, userId?: string) {
+        const room = await this.getOrCreateRoom(roomId, userId);
         if (!room) {
             throw new Error("In addRoomListener, could not find room with id '" + roomId + "'");
         }
