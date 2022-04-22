@@ -1695,7 +1695,6 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -1746,11 +1745,9 @@ ${escapedMessage}
                     emoteMenuStore.openEmoteMenu();
                 }
             });
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();
             });
@@ -1852,8 +1849,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const tmp: never = event;
+                    const _exhaustiveCheck: never = event;
                 }
             }
         }

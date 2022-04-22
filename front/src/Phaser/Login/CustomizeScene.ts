@@ -112,7 +112,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public update(time: number, dt: number): void {
         this.customWokaPreviewer.update();
     }
