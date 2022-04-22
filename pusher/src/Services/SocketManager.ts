@@ -451,26 +451,10 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
-            if (ADMIN_API_URL) {
-                await this.updateRoomWithAdminData(room);
-            }
             await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;
-    }
-
-    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(room.roomUrl);
-        const mapDetailsData = isMapDetailsData.safeParse(data);
-
-        if (mapDetailsData.success) {
-            room.tags = mapDetailsData.data.tags;
-            room.policyType = Number(mapDetailsData.data.policy_type);
-        } else {
-            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
-            // and redirect everybody to the new location (so we need to close the connection for everybody)
-        }
     }
 
     public getWorlds(): Map<string, PusherRoom> {
@@ -665,8 +649,7 @@ export class SocketManager implements ZoneEventListener {
         const room = this.rooms.get(roomId);
         //this function is run for every users connected to the room, so we need to make sure the room wasn't already refreshed.
         if (!room || !room.needsUpdate(versionNumber)) return;
-
-        this.updateRoomWithAdminData(room);
+        //TODO check right of user in admin
     }
 
     handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {

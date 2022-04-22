@@ -122,11 +122,7 @@ export class MapController extends BaseHttpController {
 
                 res.json({
                     mapUrl,
-                    policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-                    roomSlug: null, // Deprecated
                     group: null,
-                    tags: [],
-                    contactPage: null,
                     authenticationMandatory: DISABLE_ANONYMOUS,
                 } as MapDetailsData);
 
@@ -160,9 +156,10 @@ export class MapController extends BaseHttpController {
                             }
                         }
                     }
-                    const mapDetails = isMapDetailsData.parse(
-                        await adminApi.fetchMapDetails(query.playUri as string, userId)
-                    );
+
+                    const resMapDetail = await adminApi.fetchMapDetails(query.playUri as string, userId);
+                    console.log("resMapDetail", resMapDetail);
+                    const mapDetails = isMapDetailsData.parse(resMapDetail);
 
                     if (DISABLE_ANONYMOUS) {
                         mapDetails.authenticationMandatory = true;

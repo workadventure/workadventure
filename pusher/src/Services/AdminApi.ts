@@ -20,6 +20,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     visitCardUrl: z.nullable(z.string()),
     textures: z.array(isWokaDetail),
     messages: z.array(z.unknown()),
+
     anonymous: z.optional(z.boolean()),
     userRoomToken: z.optional(z.string()),
 });
@@ -47,6 +48,7 @@ class AdminApi implements AdminInterface {
             params,
         });
 
+        console.log("fetchMapDetails => ", res.data);
         const mapDetailData = isMapDetailsData.safeParse(res.data);
         const roomRedirect = isRoomRedirect.safeParse(res.data);
 

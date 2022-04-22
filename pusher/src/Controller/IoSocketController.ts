@@ -343,20 +343,6 @@ export class IoSocketController {
                                 memberVisitCardUrl = userData.visitCardUrl;
                                 memberTextures = userData.textures;
                                 memberUserRoomToken = userData.userRoomToken;
-
-                                if (
-                                    room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
-                                    (userData.anonymous === true || !room.canAccess(memberTags))
-                                ) {
-                                    throw new Error("Insufficient privileges to access this room");
-                                }
-                                if (
-                                    room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY &&
-                                    userData.anonymous === true
-                                ) {
-                                    throw new Error("Use the login URL to connect");
-                                }
-
                                 characterLayerObjs = memberTextures;
                             } catch (e) {
                                 console.log(
