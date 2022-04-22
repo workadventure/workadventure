@@ -71,7 +71,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { userIsAdminStore } from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -91,13 +91,12 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
@@ -178,16 +177,18 @@ export class GameScene extends DirtyScene {
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
+    private privacyShutdownStoreUnsubscribe!: Unsubscriber;
+    private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
+    private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
-    instance: string;
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasPlayerMovedEvent = {
-        direction: "",
+        direction: "down",
         moving: false,
         x: -1000,
         y: -1000,
@@ -219,8 +220,10 @@ export class GameScene extends DirtyScene {
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
     private currentPlayerGroupId?: number;
+    private showVoiceIndicatorChangeMessageSent: boolean = false;
+    private jitsiDominantSpeaker: boolean = false;
+    private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -229,7 +232,6 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
@@ -246,6 +248,8 @@ export class GameScene extends DirtyScene {
         this.listenToIframeEvents();
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
+        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
+        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -648,16 +652,7 @@ export class GameScene extends DirtyScene {
                         if (volume === undefined) {
                             return;
                         }
-                        const aboveTreshold = volume > talkIconVolumeTreshold;
-                        this.CurrentPlayer.showTalkIcon(aboveTreshold);
-
-                        if (this.showVoiceIndicatorChangeMessageSent && !aboveTreshold) {
-                            this.connection?.emitPlayerShowVoiceIndicator(false);
-                            this.showVoiceIndicatorChangeMessageSent = false;
-                        } else if (!this.showVoiceIndicatorChangeMessageSent && aboveTreshold) {
-                            this.connection?.emitPlayerShowVoiceIndicator(true);
-                            this.showVoiceIndicatorChangeMessageSent = true;
-                        }
+                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
             } else {
@@ -671,6 +666,23 @@ export class GameScene extends DirtyScene {
                 }
             }
             oldPeersNumber = peers.size;
+        });
+
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
+            (dominantSpeaker) => {
+                this.jitsiDominantSpeaker = dominantSpeaker;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+            }
+        );
+
+        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
+            this.jitsiParticipantsCount = participantsCount;
+            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+        });
+
+        availabilityStatusStore.subscribe((status) => {
+            this.connection?.emitPlayerStatusChange(status);
+            this.CurrentPlayer.setStatus(status);
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
@@ -757,6 +769,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
+                        status: message.status,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -830,6 +843,10 @@ export class GameScene extends DirtyScene {
                     this.currentPlayerGroupId = message.groupId;
                 });
 
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    this.currentPlayerGroupId = message.groupId;
+                });
+
                 /**
                  * Triggered when we receive the JWT token to connect to Jitsi
                  */
@@ -892,38 +909,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMap.onEnterZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
-                            this.cameraManager.enterFocusMode(
-                                {
-                                    x: zone.x + zone.width * 0.5,
-                                    y: zone.y + zone.height * 0.5,
-                                    width: zone.width,
-                                    height: zone.height,
-                                },
-                                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
-                            );
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendEnterZoneEvent(zone.name);
+                this.gameMap.onEnterArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMap.onLeaveZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendLeaveZoneEvent(zone.name);
+                this.gameMap.onLeaveArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveAreaEvent(area.name);
                     });
                 });
 
@@ -1033,6 +1027,7 @@ ${escapedMessage}
                 }, 100);
 
                 id = 0;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for (const button of openPopupEvent.buttons) {
                     const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(
                         `popup-${openPopupEvent.popupId}-${id}`
@@ -1291,7 +1286,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName,
+                startLayerName: this.startPositionCalculator.startLayerName ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -1400,6 +1395,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const _exhaustiveCheck: never = event.target;
                 }
             }
@@ -1419,7 +1415,7 @@ ${escapedMessage}
             this.connection?.emitPlayerOutlineColor(color);
         });
 
-        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+        iframeListener.registerAnswerer("removePlayerOutline", () => {
             this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
@@ -1562,7 +1558,10 @@ ${escapedMessage}
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
+        this.privacyShutdownStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber();
+        this.jitsiParticipantsCountStoreUnsubscriber();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -1699,6 +1698,7 @@ ${escapedMessage}
     private createCollisionWithPlayer() {
         //add collision layer
         for (const phaserLayer of this.gameMap.phaserLayers) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -1749,9 +1749,11 @@ ${escapedMessage}
                     emoteMenuStore.openEmoteMenu();
                 }
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OUT, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOutOutline();
             });
@@ -1853,6 +1855,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const tmp: never = event;
                 }
             }
@@ -1932,6 +1935,9 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
+        if (addPlayerData.status !== undefined) {
+            player.setStatus(addPlayerData.status, true);
+        }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1959,6 +1965,17 @@ ${escapedMessage}
             type: "RemovePlayerEvent",
             userId,
         });
+    }
+
+    private tryChangeShowVoiceIndicatorState(show: boolean): void {
+        this.CurrentPlayer.showTalkIcon(show);
+        if (this.showVoiceIndicatorChangeMessageSent && !show) {
+            this.connection?.emitPlayerShowVoiceIndicator(false);
+            this.showVoiceIndicatorChangeMessageSent = false;
+        } else if (!this.showVoiceIndicatorChangeMessageSent && show) {
+            this.connection?.emitPlayerShowVoiceIndicator(true);
+            this.showVoiceIndicatorChangeMessageSent = true;
+        }
     }
 
     private doRemovePlayer(userId: number) {
@@ -2000,8 +2017,6 @@ ${escapedMessage}
             this.currentTick,
             {
                 ...message.position,
-                oldX: undefined,
-                oldY: undefined,
             },
             this.currentTick + POSITION_DELAY
         );
@@ -2072,6 +2087,9 @@ ${escapedMessage}
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
+        if (message.details?.status !== undefined) {
+            character.setStatus(message.details?.status);
+        }
     }
 
     /**
@@ -2114,13 +2132,10 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        this.connection?.setSilent(true);
         mediaManager.hideMyCamera();
     }
 

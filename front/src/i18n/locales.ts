@@ -1,7 +1,7 @@
 import { detectLocale, navigatorDetector, initLocalStorageDetector } from "typesafe-i18n/detectors";
 import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
 import { initI18n, setLocale } from "./i18n-svelte";
-import type { Locales, Translation } from "./i18n-types";
+import type { Locales } from "./i18n-types";
 import { baseLocale, getTranslationForLocale, locales } from "./i18n-util";
 
 const fallbackLocale = FALLBACK_LOCALE || baseLocale;

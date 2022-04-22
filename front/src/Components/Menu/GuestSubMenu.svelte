@@ -47,7 +47,13 @@
         {#if !canShare}
             <section class="share-url not-mobile">
                 <h3>{$LL.menu.invite.description()}</h3>
-                <input type="text" readonly id="input-share-link" class="link-url" value={location.toString()} />
+                <input
+                    type="text"
+                    readonly
+                    id="input-share-link"
+                    class="link-url nes-input is-dark"
+                    value={location.toString()}
+                />
                 <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
             </section>
         {:else}

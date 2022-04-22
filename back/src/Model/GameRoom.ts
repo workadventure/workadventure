@@ -1,7 +1,7 @@
 import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
+import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
     EntersCallback,
@@ -9,23 +9,20 @@ import {
     LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
-} from "_Model/Zone";
+} from "../Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
-import { Movable } from "_Model/Movable";
+import { Movable } from "../Model/Movable";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmoteEventMessage,
-    ErrorMessage,
     JoinRoomMessage,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
-    VariableMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "src/RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
@@ -36,7 +33,6 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -148,8 +144,8 @@ export class GameRoom {
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
-            false,
             this.positionNotifier,
+            joinRoomMessage.getStatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -211,6 +207,9 @@ export class GameRoom {
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         user.updateDetails(playerDetailsMessage);
+        if (user.group !== undefined && user.silent) {
+            this.leaveGroup(user);
+        }
     }
 
     private updateUserGroup(user: User): void {
@@ -348,21 +347,6 @@ export class GameRoom {
         });
     }
 
-    setSilent(user: User, silent: boolean) {
-        if (user.silent === silent) {
-            return;
-        }
-
-        user.silent = silent;
-        if (silent && user.group !== undefined) {
-            this.leaveGroup(user);
-        }
-        if (!silent) {
-            // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(user, user.getPosition());
-        }
-    }
-
     /**
      * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
      *
@@ -398,7 +382,7 @@ export class GameRoom {
     private searchClosestAvailableUserOrGroup(user: User): User | Group | null {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
-        this.users.forEach((currentUser, userId) => {
+        this.users.forEach((currentUser) => {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== "undefined") {
                 return;
@@ -584,12 +568,15 @@ export class GameRoom {
             };
         }
 
-        const result = await adminApi.fetchMapDetails(roomUrl);
-        if (isRoomRedirect(result)) {
-            console.error("Unexpected room redirect received while querying map details", result);
-            throw new Error("Unexpected room redirect received while querying map details");
+        const result = isMapDetailsData.safeParse(await adminApi.fetchMapDetails(roomUrl));
+
+        if (result.success) {
+            return result.data;
         }
-        return result;
+
+        console.error(result.error.issues);
+        console.error("Unexpected room redirect received while querying map details", result);
+        throw new Error("Unexpected room redirect received while querying map details");
     }
 
     private mapPromise: Promise<ITiledMap> | undefined;

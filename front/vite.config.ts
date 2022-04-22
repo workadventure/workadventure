@@ -28,6 +28,7 @@ export default defineConfig({
                 "ADMIN_URL",
                 "CONTACT_URL",
                 "PROFILE_URL",
+                "IDENTITY_URL",
                 "ICON_URL",
                 "DEBUG_MODE",
                 "STUN_SERVER",

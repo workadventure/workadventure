@@ -1,6 +1,6 @@
 // lib/app.ts
-import { IoSocketController } from "./Controller/IoSocketController"; //TODO fix import by "_Controller/..."
-import { AuthenticateController } from "./Controller/AuthenticateController"; //TODO fix import by "_Controller/..."
+import { IoSocketController } from "./Controller/IoSocketController";
+import { AuthenticateController } from "./Controller/AuthenticateController";
 import { MapController } from "./Controller/MapController";
 import { PrometheusController } from "./Controller/PrometheusController";
 import { DebugController } from "./Controller/DebugController";

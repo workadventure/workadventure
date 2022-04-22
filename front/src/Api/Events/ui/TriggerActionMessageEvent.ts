@@ -1,26 +1,22 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
 export const triggerActionMessage = "triggerActionMessage";
 export const removeActionMessage = "removeActionMessage";
 
-export const isActionMessageType = tg.isSingletonStringUnion("message", "warning");
+export const isActionMessageType = z.enum(["message", "warning"]);
 
-export type ActionMessageType = tg.GuardedType<typeof isActionMessageType>;
+export type ActionMessageType = z.infer<typeof isActionMessageType>;
 
-export const isTriggerActionMessageEvent = new tg.IsInterface()
-    .withProperties({
-        message: tg.isString,
-        uuid: tg.isString,
-        type: isActionMessageType,
-    })
-    .get();
+export const isTriggerActionMessageEvent = z.object({
+    message: z.string(),
+    uuid: z.string(),
+    type: isActionMessageType,
+});
 
-export type TriggerActionMessageEvent = tg.GuardedType<typeof isTriggerActionMessageEvent>;
+export type TriggerActionMessageEvent = z.infer<typeof isTriggerActionMessageEvent>;
 
-export const isMessageReferenceEvent = new tg.IsInterface()
-    .withProperties({
-        uuid: tg.isString,
-    })
-    .get();
+export const isMessageReferenceEvent = z.object({
+    uuid: z.string(),
+});
 
-export type MessageReferenceEvent = tg.GuardedType<typeof isMessageReferenceEvent>;
+export type MessageReferenceEvent = z.infer<typeof isMessageReferenceEvent>;

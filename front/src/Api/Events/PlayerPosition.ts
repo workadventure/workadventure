@@ -1,10 +1,8 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isPlayerPosition = new tg.IsInterface()
-    .withProperties({
-        x: tg.isNumber,
-        y: tg.isNumber,
-    })
-    .get();
+export const isPlayerPosition = z.object({
+    x: z.number(),
+    y: z.number(),
+});
 
-export type PlayerPosition = tg.GuardedType<typeof isPlayerPosition>;
+export type PlayerPosition = z.infer<typeof isPlayerPosition>;

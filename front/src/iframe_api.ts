@@ -227,7 +227,7 @@ window.addEventListener(
             const payloadData = payload.data;
 
             const callback = registeredCallbacks[payload.type] as IframeCallback<T> | undefined;
-            if (callback?.typeChecker(payloadData)) {
+            if (callback?.typeChecker.safeParse(payloadData).success) {
                 callback?.callback(payloadData);
             }
         }

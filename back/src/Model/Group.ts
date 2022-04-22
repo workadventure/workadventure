@@ -1,8 +1,8 @@
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { User } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
-import { Movable } from "_Model/Movable";
-import { PositionNotifier } from "_Model/PositionNotifier";
+import { PositionInterface } from "../Model/PositionInterface";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
 

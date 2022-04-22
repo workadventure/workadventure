@@ -23,7 +23,6 @@ import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import { analyticsClient } from "./Administration/AnalyticsClient";
 import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
@@ -148,7 +147,7 @@ HtmlUtils.querySelectorOrFail("#game canvas").addEventListener("contextmenu", fu
     e.preventDefault();
 });
 
-window.addEventListener("resize", function (event) {
+window.addEventListener("resize", function () {
     coWebsiteManager.resetStyleMain();
 
     waScaleManager.applyNewSize();

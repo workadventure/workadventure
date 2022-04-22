@@ -1,11 +1,9 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isMovePlayerToEventAnswer = new tg.IsInterface()
-    .withProperties({
-        x: tg.isNumber,
-        y: tg.isNumber,
-        cancelled: tg.isBoolean,
-    })
-    .get();
+export const isMovePlayerToEventAnswer = z.object({
+    x: z.number(),
+    y: z.number(),
+    cancelled: z.boolean(),
+});
 
-export type MovePlayerToEventAnswer = tg.GuardedType<typeof isMovePlayerToEventAnswer>;
+export type ActionsMenuActionClickedEvent = z.infer<typeof isMovePlayerToEventAnswer>;

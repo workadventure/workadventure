@@ -1,12 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isOpenTabEvent = new tg.IsInterface()
-    .withProperties({
-        url: tg.isString,
-    })
-    .get();
+export const isOpenTabEvent = z.object({
+    url: z.string(),
+});
 
 /**
  * A message sent from the iFrame to the game to add a message in the chat.
  */
-export type OpenTabEvent = tg.GuardedType<typeof isOpenTabEvent>;
+export type OpenTabEvent = z.infer<typeof isOpenTabEvent>;
