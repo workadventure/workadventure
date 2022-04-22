@@ -34,7 +34,7 @@ Please note that `openPopup` returns an object of the `Popup` class. Also, the c
 
 The `Popup` class that represents an open popup contains a single method: `close()`. This will obviously close the popup when called.
 
-```javascript
+```ts
 class Popup {
     /**
      * Closes the popup
@@ -45,7 +45,7 @@ class Popup {
 
 Example:
 
-```javascript
+```ts
 let helloWorldPopup;
 
 // Open the popup when we enter a given zone
@@ -90,8 +90,8 @@ Custom menu exist only until the map is unloaded, or you leave the iframe zone o
     </div>
 </div>
 
-Example: 
-```javascript
+Example:
+```ts
 const menu = WA.ui.registerMenuCommand('menu test',
     {
         callback: () => {
@@ -107,7 +107,7 @@ Please note that `registerMenuCommand` returns an object of the `Menu` class.
 
 The `Menu` class contains a single method: `remove(): void`. This will obviously remove the menu when called.
 
-```javascript
+```ts
 class Menu {
 	/**
 	* Remove the menu
@@ -120,7 +120,7 @@ class Menu {
 
 ### Awaiting User Confirmation (with space bar)
 
-```
+```ts
 WA.ui.displayActionMessage({
     message: string,
     callback: () => void,
@@ -136,7 +136,7 @@ Displays a message at the bottom of the screen (that will disappear when space b
 
 Example:
 
-```javascript
+```ts
 const triggerMessage = WA.ui.displayActionMessage({
     message: "press 'space' to confirm",
     callback: () => {
@@ -154,7 +154,7 @@ Please note that `displayActionMessage` returns an object of the `ActionMessage`
 
 The `ActionMessage` class contains a single method: `remove(): Promise<void>`. This will obviously remove the message when called.
 
-```javascript
+```ts
 class ActionMessage {
     /**
      * Hides the message
@@ -173,7 +173,7 @@ When clicking on other player's WOKA, the contextual menu (we call it ActionsMen
 
 To do that, we need to listen for the `onRemotePlayerClicked` stream and make use of the `remotePlayer` object that is passed by as a payload.
 
-```javascript
+```ts
 WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
     remotePlayer.addAction('Ask to tell a joke', () => {
         console.log('I am NOT telling you a joke!');
@@ -182,7 +182,7 @@ WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
 ```
 
 `remotePlayer.addAction(actionName, callback)` returns an Action object, which can remove itself from ActionsMenu:
-```javascript
+```ts
 const action = remotePlayer.addAction('This will disappear!', () => {
     console.log('You managed to click me!');
 });
@@ -192,4 +192,89 @@ setTimeout(
     },
     1000,
 );
+```
+
+# Manage websites on UI
+
+You can use the scripting API to display websites on the user interface.
+
+<div class="col">
+    <img src="images/ui-website.png" class="figure-img img-fluid rounded" alt="" />
+</div>
+
+This functonnality creates an iframe positionned on the viewport.
+
+## Display a UI website
+
+```ts
+WA.ui.website.open(website: CreateUIWebsiteEvent): Promise<UIWebsite>
+
+interface CreateUIWebsiteEvent {
+    url: string,            // Website URL
+    visible?: boolean,      // The website is visible or not
+    allowApi?: boolean,     // Allow scripting API on the website
+    allowPolicy?: string,   // The list of feature policies allowed
+    position: {
+        vertical: string,   // Vertical position (top, middle, bottom)
+        horizontal: string, // Horizontal position (left, middle, right)
+    },
+    size: {                 // Size on the UI (available units: px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem and others values auto|inherit)
+        height: string,
+        width: string,
+    },
+    margin?: {              // Website margin (available units: px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem and others values auto|inherit)
+        top?: string,
+        bottom?: string,
+        left?: string,
+        right?: string,
+    },
+}
+
+interface UIWebsite {
+    readonly id: string,            // Unique ID
+    url: string,                    // Website URL
+    visible: boolean,               // The website is visible or not
+    readonly allowApi: boolean,     // Allow scripting API on the website
+    readonly allowPolicy: string,   // The list of feature policies allowed
+    position: {
+        vertical: string,           // Vertical position (top, middle, bottom)
+        horizontal: string,         // Horizontal position (left, middle, right)
+    },
+    size: {                         // Size on the UI (available units: px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem and others values auto|inherit)
+        height: string,
+        width: string,
+    },
+    margin?: {                      // Website margin (available units: px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem and others values auto|inherit)
+        top?: string,
+        bottom?: string,
+        left?: string,
+        right?: string,
+    },
+    close(): Promise<void>,         // Close the current website instance
+}
+```
+
+You can open a website with the `WA.ui.website.open()` method. It returns an `Promise<UIWebsite>` instance.
+
+```ts
+const myWebsite = await WA.ui.website.open({
+    url: "https://wikipedia.org",
+    position: {
+        vertical: "middle",
+        horizontal: "middle",
+    },
+    size: {
+        height: "50vh",
+        width: "50vw",
+    },
+});
+
+myWebsite.position.vertical = "top";
+```
+
+## Close a UI website
+You can close a website with the close function on the `UIWebsite` object
+
+```ts
+myWebsite.close();
 ```
