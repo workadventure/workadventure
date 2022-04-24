@@ -28,4 +28,4 @@ publish:
     provider: github
     owner: anbraten
     repo: workadventure
-    releaseType: draft
+    releaseType: release
