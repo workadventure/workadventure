@@ -60,6 +60,21 @@ jobs:
         run: yarn build
         working-directory: "desktop/local-app"
 
+      - name: "Set preview desktop version"
+        run: |
+          sed -i "s/managedbyci/0.0.0/g" package.json
+          cat package.json
+        working-directory: "desktop/electron"
+        if: ${{ github.event_name != 'release' }}
+
+      - name: "Set stable desktop version"
+        run: |
+          echo "Version: ${GITHUB_REF##*/v}"
+          sed -i "s/managedbyci/${GITHUB_REF##*/v}/g" package.json
+          cat package.json
+        working-directory: "desktop/electron"
+        if: ${{ github.event_name == 'release' }}
+
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
         working-directory: "desktop/electron"
@@ -68,15 +83,19 @@ jobs:
         run: yarn build
         working-directory: "desktop/electron"
 
-      - name: "Build app"
-        run: yarn bundle --publish never
+      - name: "Install electron tools"
+        run: yarn electron-builder install-app-deps
+        working-directory: "desktop/electron"
+
+      - name: "Build app for testing"
+        run: yarn electron-builder --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop/electron"
         if: ${{ github.event_name != 'release' }}
 
-      - name: "Build & publish App"
-        run: yarn release
+      - name: "Build & release app"
+        run: yarn electron-builder --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop/electron"
