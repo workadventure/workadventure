@@ -1,3 +1,4 @@
+import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
 
 export interface PlayerInterface {
@@ -7,7 +8,7 @@ export interface PlayerInterface {
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
-    away: boolean;
+    status: AvailabilityStatus;
     color?: string;
     outlineColor?: number;
 }

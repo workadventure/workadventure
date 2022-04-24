@@ -25,6 +25,7 @@ import {
     TokenExpiredMessage,
     WorldConnexionMessage,
     ErrorMessage as ErrorMessageTsProto,
+    ErrorScreenMessage as ErrorScreenMessageTsProto,
     UserMovedMessage as UserMovedMessageTsProto,
     GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
@@ -41,11 +42,13 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
+    AvailabilityStatus,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
+import { errorScreenStore } from "../Stores/ErrorScreenStore";
 
 const manualPingDelay = 20000;
 
@@ -60,6 +63,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
+
+    private readonly _errorScreenMessageStream = new Subject<ErrorScreenMessageTsProto>();
+    public readonly errorScreenMessageStream = this._errorScreenMessageStream.asObservable();
 
     private readonly _roomJoinedMessageStream = new Subject<{
         connection: RoomConnection;
@@ -297,8 +303,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                const tmp: never = subMessage;
+                                const _exhaustiveCheck: never = subMessage;
                             }
                         }
                     }
@@ -476,10 +481,16 @@ export class RoomConnection implements RoomConnection {
                     console.error("An error occurred server side: " + message.errorMessage.message);
                     break;
                 }
+                case "errorScreenMessage": {
+                    this._errorScreenMessageStream.next(message.errorScreenMessage);
+                    if (message.errorScreenMessage.code !== "retry") this.closed = true;
+                    console.error("An error occurred server side: " + message.errorScreenMessage.code);
+                    errorScreenStore.setError(message.errorScreenMessage);
+                    break;
+                }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const tmp: never = message;
+                    const _exhaustiveCheck: never = message;
                 }
             }
         };
@@ -520,9 +531,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerAway(away: boolean): void {
+    public emitPlayerStatusChange(status: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
-            away,
+            status,
         });
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -614,19 +625,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public setSilent(silent: boolean): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "silentMessage",
-                silentMessage: {
-                    silent,
-                },
-            },
-        }).finish();
-
-        this.socket.send(bytes);
-    }
-
     public setViewport(viewport: ViewportInterface): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -670,7 +668,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            away: message.away,
+            status: message.status,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,

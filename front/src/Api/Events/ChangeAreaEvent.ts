@@ -7,4 +7,4 @@ export const isChangeZoneEvent = z.object({
 /**
  * A message sent from the game to the iFrame when a user enters or leaves a zone.
  */
-export type ChangeZoneEvent = z.infer<typeof isChangeZoneEvent>;
+export type ChangeAreaEvent = z.infer<typeof isChangeZoneEvent>;

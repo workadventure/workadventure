@@ -11,6 +11,8 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
@@ -178,10 +180,19 @@ function createVideoConstraintStore() {
     };
 }
 
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);
+export const inJitsiStore = writable(false);
+export const silentStore = writable(false);
+
+export const availabilityStatusStore = derived(
+    [inJitsiStore, silentStore, privacyShutdownStore],
+    ([$inJitsiStore, $silentStore, $privacyShutdownStore]) => {
+        if ($inJitsiStore) return AvailabilityStatus.JITSI;
+        if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
+        return AvailabilityStatus.ONLINE;
+    },
+    AvailabilityStatus.ONLINE
+);
 
 export const videoConstraintStore = createVideoConstraintStore();
 
@@ -240,7 +251,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
-        isSilentStore,
+        availabilityStatusStore,
     ],
     (
         [
@@ -252,7 +263,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
-            $isSilentStore,
+            $availabilityStatusStore,
         ],
         set
     ) => {
@@ -309,15 +320,15 @@ export const mediaStreamConstraintsStore = derived(
             //currentAudioConstraint = false;
         }
 
-        if ($isSilentStore === true) {
+        if ($availabilityStatusStore === AvailabilityStatus.SILENT) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.
+        // Let's make the changes only if the new value is different from the old one.tile
         if (
-            previousComputedVideoConstraint != currentVideoConstraint ||
-            previousComputedAudioConstraint != currentAudioConstraint
+            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
