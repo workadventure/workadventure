@@ -42,7 +42,7 @@ import {
     ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -52,7 +52,6 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zon
 import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";

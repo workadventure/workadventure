@@ -1,5 +1,4 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -296,7 +295,6 @@ export class IoSocketController {
                         let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
                         let memberTextures: WokaDetail[] = [];
-                        const room = await socketManager.getOrCreateRoom(roomId);
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,

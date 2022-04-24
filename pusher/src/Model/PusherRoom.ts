@@ -1,7 +1,6 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
 import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
-import { arrayIntersect } from "../Services/ArrayHelper";
 import { ZoneEventListener } from "../Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
