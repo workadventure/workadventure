@@ -48,10 +48,10 @@
                 class="media-box nes-container is-rounded clickable"
                 on:click|preventDefault={() => selectDesktopCapturerSource(source)}
             >
+                <img src={source.thumbnailURL} alt={source.name} />
                 <div class="container">
                     {source.name}
                 </div>
-                <img src={source.thumbnailURL} alt={source.name} />
             </div>
         {/each}
     </section>
@@ -67,9 +67,9 @@
         left: 0;
         right: 0;
         margin-top: 4%;
-        max-height: 80vh;
-        max-width: 80vh;
-        z-index: 600;
+        height: 80vh;
+        max-width: 80vw;
+        z-index: 900;
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -91,24 +91,34 @@
             flex-direction: row;
             flex-wrap: wrap;
             gap: 10px;
-            overflow-y: scroll;
+            overflow-y: auto;
             justify-content: center;
         }
+
         .media-box {
-            display: flex;
             position: relative;
             padding: 0;
             width: calc(100% / 3 - 20px);
-            height: auto;
+            padding-bottom: calc((100% / 3 - 20px) * (240px / 426px));
             justify-content: center;
+            background-color: #000;
+            background-clip: padding-box;
 
-            &.clickable {
+            &.clickable * {
                 cursor: url("../../../style/images/cursor_pointer.png"), pointer;
             }
 
+            &:hover {
+                transform: scale(1.05);
+            }
+
             img {
+                position: absolute;
+                top: 50%;
+                left: 50%;
                 max-width: 100%;
                 max-height: 100%;
+                transform: translate(-50%, -50%);
             }
 
             &.nes-container.is-rounded {
