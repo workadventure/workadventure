@@ -30,11 +30,11 @@ export default () => {
     ipcMain.handle("get-version", () => (electronIsDev ? "dev" : app.getVersion()));
 
     // app ipc
-    ipcMain.on("app:notify", (event, txt) => {
+    ipcMain.on("app:notify", (event, txt: string) => {
         createAndShowNotification({ body: txt });
     });
 
-    ipcMain.handle("app:getDesktopCapturerSources", async (event, options) => {
+    ipcMain.handle("app:getDesktopCapturerSources", async (event, options: Electron.SourcesOptions) => {
         return (await desktopCapturer.getSources(options)).map((source) => ({
             id: source.id,
             name: source.name,
@@ -51,7 +51,7 @@ export default () => {
         return settings.get("servers");
     });
 
-    ipcMain.handle("local-app:selectServer", (event, serverId: string) => {
+    ipcMain.handle("local-app:selectServer", async (event, serverId: string) => {
         const servers = settings.get("servers") || [];
         const selectedServer = servers.find((s) => s._id === serverId);
 
@@ -59,7 +59,7 @@ export default () => {
             return new Error("Server not found");
         }
 
-        showAppView(selectedServer.url);
+        await showAppView(selectedServer.url);
         return true;
     });
 

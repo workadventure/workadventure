@@ -1,5 +1,5 @@
 import { app, dialog } from "electron";
-import { autoUpdater } from "electron-updater";
+import { autoUpdater, UpdateDownloadedEvent } from "electron-updater";
 import log from "electron-log";
 import * as isDev from "electron-is-dev";
 import * as util from "util";
@@ -38,32 +38,35 @@ export async function manualRequestUpdateCheck() {
     isManualRequestedUpdate = false;
 }
 
-function init() {
+async function init() {
     autoUpdater.logger = log;
 
-    autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
-        (async () => {
-            const dialogOpts = {
-                type: "question",
-                buttons: ["Install and Restart", "Install Later"],
-                defaultId: 0,
-                title: "WorkAdventure - Update",
-                message: process.platform === "win32" ? releaseNotes : releaseName,
-                detail: "A new version has been downloaded. Restart the application to apply the updates.",
-            };
+    autoUpdater.on(
+        "update-downloaded",
+        ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
+            void (async () => {
+                const dialogOpts = {
+                    type: "question",
+                    buttons: ["Install and Restart", "Install Later"],
+                    defaultId: 0,
+                    title: "WorkAdventure - Update",
+                    message: process.platform === "win32" ? releaseNotes : releaseName,
+                    detail: "A new version has been downloaded. Restart the application to apply the updates.",
+                };
 
-            const { response } = await dialog.showMessageBox(dialogOpts);
-            if (response === 0) {
-                await sleep(1000);
+                const { response } = await dialog.showMessageBox(dialogOpts);
+                if (response === 0) {
+                    await sleep(1000);
 
-                autoUpdater.quitAndInstall();
+                    autoUpdater.quitAndInstall();
 
-                // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-                // app.confirmedExitPrompt = true;
-                app.quit();
-            }
-        })();
-    });
+                    // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
+                    // app.confirmedExitPrompt = true;
+                    app.quit();
+                }
+            })();
+        }
+    );
 
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;
@@ -85,7 +88,7 @@ function init() {
         }
     });
 
-    checkForUpdates();
+    await checkForUpdates();
 
     // run update check every hour again
     setInterval(() => checkForUpdates, 1000 * 60 * 1);
