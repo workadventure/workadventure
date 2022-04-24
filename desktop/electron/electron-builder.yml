@@ -26,7 +26,6 @@ win:
 
 publish:
     provider: github
-    owner: thecodingmachine
+    owner: anbraten
     repo: workadventure
-    vPrefixedTagName: false
     releaseType: draft

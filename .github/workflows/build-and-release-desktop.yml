@@ -68,19 +68,15 @@ jobs:
         run: yarn build
         working-directory: "desktop/electron"
 
-      - name: "Build app"
-        run: yarn bundle --publish never
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop/electron"
-        if: ${{ github.event_name != 'release' }}
+      - name: "Install electron tools"
+        run: yarn electron-builder install-app-deps
 
       - name: "Build & publish App"
-        run: yarn release
+        run: yarn electron-builder --publish onTagOrDraft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop/electron"
-        if: ${{ github.event_name == 'release' }}
 
       - name: Upload Linux .AppImage artifact
         uses: actions/upload-artifact@v2
