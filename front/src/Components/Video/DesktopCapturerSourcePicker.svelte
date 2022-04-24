@@ -16,8 +16,8 @@
         }
         desktopCapturerSources = await window.WAD.getDesktopCapturerSources({
             thumbnailSize: {
-                height: 240,
-                width: 426,
+                height: 144,
+                width: 256,
             },
             types: ["screen", "window"],
         });
@@ -84,7 +84,8 @@
         right: 0;
         margin-top: 4%;
         height: 80vh;
-        max-width: 80vw;
+        width: 80vw;
+        max-width: 1024px;
         z-index: 900;
         text-align: center;
         display: flex;
@@ -109,13 +110,17 @@
             gap: 10px;
             overflow-y: auto;
             justify-content: center;
+            align-content: flex-start;
+            height: 100%;
         }
 
         .media-box {
             position: relative;
             padding: 0;
             width: calc(100% / 3 - 20px);
-            padding-bottom: calc((100% / 3 - 20px) * (240px / 426px));
+            max-width: 256px;
+            padding-bottom: calc(min((100% / 3 - 20px), 256px) * (144px / 256px));
+            max-height: 144px;
             justify-content: center;
             background-color: #000;
             background-clip: padding-box;
