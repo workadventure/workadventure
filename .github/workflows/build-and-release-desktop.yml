@@ -19,16 +19,17 @@ jobs:
     strategy:
       matrix:
         node-version: [14.x]
-        runtime: [ linux-x64, win-x64, osx-x64 ]
+        runtime: [ linux-x64 ]
+#        runtime: [ linux-x64, win-x64, osx-x64 ]
         include:
         - runtime: linux-x64
           os: ubuntu-latest
 
-        - runtime: osx-x64
-          os: macos-latest
+        # - runtime: osx-x64
+        #   os: macos-latest
 
-        - runtime: win-x64
-          os: windows-latest
+        # - runtime: win-x64
+        #   os: windows-latest
 
     runs-on: ${{ matrix.os }}
 
@@ -70,6 +71,7 @@ jobs:
 
       - name: "Install electron tools"
         run: yarn electron-builder install-app-deps
+        working-directory: "desktop/electron"
 
       - name: "Build & publish App"
         run: yarn electron-builder --publish onTagOrDraft
