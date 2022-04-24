@@ -113,7 +113,7 @@ export interface DesktopCapturerConstraints {
 
 async function getDesktopCapturerSources() {
     showDesktopCapturerSourcePicker.set(true);
-    const source = await new Promise<DesktopCapturerSource | null>((resolve, reject) => {
+    const source = await new Promise<DesktopCapturerSource | null>((resolve) => {
         desktopCapturerSourcePromiseResolve = resolve;
     });
     if (source === null) {
@@ -244,4 +244,4 @@ export const screenSharingLocalMedia = readable<ScreenSharingLocalMedia | null>(
 
 export const showDesktopCapturerSourcePicker = writable(false);
 
-export let desktopCapturerSourcePromiseResolve: (source: DesktopCapturerSource | null) => void;
+export let desktopCapturerSourcePromiseResolve: ((source: DesktopCapturerSource | null) => void) | undefined;

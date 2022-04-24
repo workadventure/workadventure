@@ -4,16 +4,16 @@
         desktopCapturerSourcePromiseResolve,
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import type { DesktopCapturerSource } from "@wa-preload-app";
 
     let desktopCapturerSources: DesktopCapturerSource[] = [];
+    let interval: ReturnType<typeof setInterval>;
 
-    onMount(async () => {
+    async function getDesktopCapturerSources() {
         if (!window.WAD) {
             throw new Error("This component can only be used in the desktop app");
         }
-
         desktopCapturerSources = await window.WAD.getDesktopCapturerSources({
             thumbnailSize: {
                 height: 240,
@@ -21,15 +21,31 @@
             },
             types: ["screen", "window"],
         });
-        console.log("desktopCapturerSources", desktopCapturerSources);
+    }
+
+    onMount(async () => {
+        await getDesktopCapturerSources();
+        interval = setInterval(() => {
+            void getDesktopCapturerSources();
+        }, 1000);
+    });
+
+    onDestroy(() => {
+        clearInterval(interval);
     });
 
     function selectDesktopCapturerSource(source: DesktopCapturerSource) {
+        if (!desktopCapturerSourcePromiseResolve) {
+            throw new Error("desktopCapturerSourcePromiseResolve is not defined");
+        }
         desktopCapturerSourcePromiseResolve(source);
         close();
     }
 
     function cancel() {
+        if (!desktopCapturerSourcePromiseResolve) {
+            throw new Error("desktopCapturerSourcePromiseResolve is not defined");
+        }
         desktopCapturerSourcePromiseResolve(null);
         close();
     }
