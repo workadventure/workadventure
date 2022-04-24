@@ -63,7 +63,7 @@ jobs:
 
       - name: "Update desktop version"
         run: |
-          sed -i "s/managedbyci/${GITHUB_REF##*v/}/g" package.json
+          sed -i "s/managedbyci/${GITHUB_REF##*/v}/g" package.json
           cat package.json
         working-directory: "desktop/electron"
 
