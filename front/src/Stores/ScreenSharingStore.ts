@@ -92,25 +92,6 @@ export const screenSharingConstraintsStore = derived(
     } as MediaStreamConstraints
 );
 
-export interface DesktopCapturerConstraints {
-    audio:
-        | boolean
-        | {
-              mandatory: {
-                  chromeMediaSource: string;
-                  chromeMediaSourceId: string;
-              };
-          };
-    video:
-        | boolean
-        | {
-              mandatory: {
-                  chromeMediaSource: string;
-                  chromeMediaSourceId: string;
-              };
-          };
-}
-
 async function getDesktopCapturerSources() {
     showDesktopCapturerSourcePicker.set(true);
     const source = await new Promise<DesktopCapturerSource | null>((resolve) => {
@@ -148,23 +129,23 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
             return;
         }
 
-        (async () => {
-            let currentStreamPromise: Promise<MediaStream>;
-            if (window.WAD?.getDesktopCapturerSources) {
-                currentStreamPromise = getDesktopCapturerSources();
-            } else if (navigator.getDisplayMedia) {
-                currentStreamPromise = navigator.getDisplayMedia({ constraints });
-            } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-                currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
-            } else {
-                stopScreenSharing();
-                set({
-                    type: "error",
-                    error: new Error("Your browser does not support sharing screen"),
-                });
-                return;
-            }
+        let currentStreamPromise: Promise<MediaStream>;
+        if (window.WAD?.getDesktopCapturerSources) {
+            currentStreamPromise = getDesktopCapturerSources();
+        } else if (navigator.getDisplayMedia) {
+            currentStreamPromise = navigator.getDisplayMedia({ constraints });
+        } else if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+            currentStreamPromise = navigator.mediaDevices.getDisplayMedia({ constraints });
+        } else {
+            stopScreenSharing();
+            set({
+                type: "error",
+                error: new Error("Your browser does not support sharing screen"),
+            });
+            return;
+        }
 
+        (async () => {
             try {
                 stopScreenSharing();
                 currentStream = await currentStreamPromise;
