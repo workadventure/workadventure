@@ -61,6 +61,12 @@ jobs:
         run: yarn build
         working-directory: "desktop/local-app"
 
+      - name: "Update desktop version"
+        run: |
+          sed -i "s/managedbyci/${GITHUB_REF##*v/}/g" package.json
+          cat package.json
+        working-directory: "desktop/electron"
+
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
         working-directory: "desktop/electron"
