@@ -54,7 +54,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public preload(): void {
-        this.input.dragDistanceThreshold = 10;
+        super.preload();
 
         this.load.image("iconClothes", "/resources/icons/icon_clothes.png");
         this.load.image("iconAccessory", "/resources/icons/icon_accessory.png");
@@ -112,7 +112,6 @@ export class CustomizeScene extends AbstractCharacterScene {
         this.onResize();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public update(time: number, dt: number): void {
         this.customWokaPreviewer.update();
     }

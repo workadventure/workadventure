@@ -88,7 +88,6 @@ export function createState(target: "global" | "player"): WorkadventureStateComm
             }
             return target.loadVariable(p.toString());
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         set(target: WorkadventureStateCommands, p: PropertyKey, value: unknown, receiver: unknown): boolean {
             // Note: when using "set", there is no way to wait, so we ignore the return of the promise.
             // User must use WA.state.saveVariable to have error message.

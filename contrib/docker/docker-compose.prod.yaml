@@ -95,6 +95,7 @@ services:
       - JITSI_ISS
       - MAX_PER_GROUP
       - STORE_VARIABLES_FOR_LOCAL_MAPS
+      - REDIS_HOST=redis
     labels:
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
       - "traefik.http.routers.back.entryPoints=web"
@@ -117,3 +118,11 @@ services:
       - "traefik.http.routers.icon-ssl.service=icon"
       - "traefik.http.routers.icon-ssl.tls=true"
       - "traefik.http.routers.icon-ssl.tls.certresolver=myresolver"
+
+  redis:
+    image: redis:6
+    volumes:
+      - redisdata:/data
+
+volumes:
+  redisdata:

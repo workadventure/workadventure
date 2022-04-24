@@ -27,7 +27,7 @@
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-unused-vars": [
-            "error"
+            "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
         ],
         "no-throw-literal": "error"
     }
