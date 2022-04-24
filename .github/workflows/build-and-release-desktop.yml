@@ -62,16 +62,14 @@ jobs:
 
       - name: "Set preview desktop version"
         run: |
-          sed -i "s/managedbyci/0.0.0/g" package.json
-          cat package.json
+          sed -i.bak "s/managedbyci/0.0.0/g" package.json
         working-directory: "desktop/electron"
         if: ${{ github.event_name != 'release' }}
 
       - name: "Set stable desktop version"
         run: |
           echo "Version: ${GITHUB_REF##*/v}"
-          sed -i "s/managedbyci/${GITHUB_REF##*/v}/g" package.json
-          cat package.json
+          sed -i.bak "s/managedbyci/${GITHUB_REF##*/v}/g" package.json
         working-directory: "desktop/electron"
         if: ${{ github.event_name == 'release' }}
 
