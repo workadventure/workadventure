@@ -60,18 +60,9 @@ jobs:
         run: yarn build
         working-directory: "desktop/local-app"
 
-      - name: "Set preview desktop version"
-        run: |
-          sed -i.bak "s/managedbyci/0.0.0/g" package.json
+      - name: "Set desktop app version"
+        run: node helpers/set-version.js
         working-directory: "desktop/electron"
-        if: ${{ github.event_name != 'release' }}
-
-      - name: "Set stable desktop version"
-        run: |
-          echo "Version: ${GITHUB_REF##*/v}"
-          sed -i.bak "s/managedbyci/${GITHUB_REF##*/v}/g" package.json
-        working-directory: "desktop/electron"
-        if: ${{ github.event_name == 'release' }}
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
