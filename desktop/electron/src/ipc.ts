@@ -39,8 +39,8 @@ export default () => {
             id: source.id,
             name: source.name,
             thumbnailURL: source.thumbnail.toDataURL(),
-        }))
-    })
+        }));
+    });
 
     // local-app ipc
     ipcMain.handle("local-app:showLocalApp", () => {
