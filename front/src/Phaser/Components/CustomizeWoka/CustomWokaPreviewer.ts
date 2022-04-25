@@ -62,8 +62,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.turnIcon = this.scene.add
             .image(this.background.displayWidth * 0.35, this.background.displayHeight * 0.35, "iconTurn")
             .setScale(0.25)
-            .setTintFill(0xffffff)
-            .setAlpha(0.5);
+            .setAlpha(0.75);
 
         this.drawFrame();
         this.setSize(this.SIZE, this.SIZE);
