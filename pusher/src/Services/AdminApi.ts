@@ -22,6 +22,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     visitCardUrl: z.nullable(z.string()),
     textures: z.array(isWokaDetail),
     messages: z.array(z.unknown()),
+
     anonymous: z.optional(z.boolean()),
     userRoomToken: z.optional(z.string()),
 });

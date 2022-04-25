@@ -559,11 +559,7 @@ export class GameRoom {
 
             return {
                 mapUrl,
-                policy_type: 1,
-                tags: [],
                 authenticationMandatory: null,
-                roomSlug: null,
-                contactPage: null,
                 group: null,
             };
         }

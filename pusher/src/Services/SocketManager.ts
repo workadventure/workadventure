@@ -42,7 +42,7 @@ import {
     ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -52,7 +52,6 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zon
 import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
@@ -455,26 +454,10 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
-            if (ADMIN_API_URL) {
-                await this.updateRoomWithAdminData(room);
-            }
             await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;
-    }
-
-    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminService.fetchMapDetails(room.roomUrl);
-        const mapDetailsData = isMapDetailsData.safeParse(data);
-
-        if (mapDetailsData.success) {
-            room.tags = mapDetailsData.data.tags;
-            room.policyType = Number(mapDetailsData.data.policy_type);
-        } else {
-            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
-            // and redirect everybody to the new location (so we need to close the connection for everybody)
-        }
     }
 
     public getWorlds(): Map<string, PusherRoom> {
@@ -697,8 +680,7 @@ export class SocketManager implements ZoneEventListener {
         const room = this.rooms.get(roomId);
         //this function is run for every users connected to the room, so we need to make sure the room wasn't already refreshed.
         if (!room || !room.needsUpdate(versionNumber)) return;
-
-        this.updateRoomWithAdminData(room);
+        //TODO check right of user in admin
     }
 
     handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
