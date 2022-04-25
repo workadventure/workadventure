@@ -74,7 +74,6 @@ class AdminApi implements AdminInterface {
             params,
         });
 
-        console.log("fetchMapDetails => ", res.data);
         const mapDetailData = isMapDetailsData.safeParse(res.data);
         const roomRedirect = isRoomRedirect.safeParse(res.data);
 
