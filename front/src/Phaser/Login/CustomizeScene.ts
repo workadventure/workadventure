@@ -213,15 +213,16 @@ export class CustomizeScene extends AbstractCharacterScene {
             ),
             [CustomWokaBodyPart.Body]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconBody")),
             [CustomWokaBodyPart.Clothes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconClothes")),
-            [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes")),
+            [CustomWokaBodyPart.Eyes]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconEyes", 0.7)),
             [CustomWokaBodyPart.Hair]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHair")),
             [CustomWokaBodyPart.Hat]: new IconButton(this, 0, 0, this.getDefaultIconButtonConfig("iconHat")),
         };
     }
 
-    private getDefaultIconButtonConfig(iconTextureKey: string): IconButtonConfig {
+    private getDefaultIconButtonConfig(iconTextureKey: string, iconScale?: number): IconButtonConfig {
         return {
             iconTextureKey,
+            iconScale,
             width: 25,
             height: 25,
             idle: {
@@ -420,7 +421,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleRandomizeButtonOnResize(): void {
         const x =
-            this.customWokaPreviewer.x +
+            this.customWokaPreviewer.x -
             (this.customWokaPreviewer.displayWidth - this.randomizeButton.displayWidth) * 0.5;
         const y =
             this.customWokaPreviewer.y +
@@ -431,7 +432,7 @@ export class CustomizeScene extends AbstractCharacterScene {
 
     private handleFinishButtonOnResize(): void {
         const x =
-            this.customWokaPreviewer.x -
+            this.customWokaPreviewer.x +
             (this.customWokaPreviewer.displayWidth - this.randomizeButton.displayWidth) * 0.5;
         const y =
             this.customWokaPreviewer.y +
