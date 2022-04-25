@@ -26,7 +26,6 @@ import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
 import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 import { DeviceUtils } from "./Utils/DeviceUtils";
-import { analyticsClient } from "./Administration/AnalyticsClient";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -168,12 +167,6 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 desktopApi.init();
 
-analyticsClient.enteredWorkAdventure(
-    DeviceUtils.getDevice(),
-    DeviceUtils.getOS(),
-    DeviceUtils.getBrowser(),
-    DeviceUtils.getVersion()
-);
 console.log("DeviceUtils.getDevice()", DeviceUtils.getDevice());
 console.log("DeviceUtils.getOS()", DeviceUtils.getOS());
 console.log("DeviceUtils.getBrowser()", DeviceUtils.getBrowser());

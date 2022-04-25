@@ -17,14 +17,6 @@ class AnalyticsClient {
         }
     }
 
-    enteredWorkAdventure(device: string, os: string, browser: string, version: number) {
-        this.posthogPromise
-            ?.then((posthog) => {
-                posthog.capture("wa-entered-device", { device, os, browser, version });
-            })
-            .catch((e) => console.error(e));
-    }
-
     identifyUser(uuid: string, email: string | null) {
         this.posthogPromise
             ?.then((posthog) => {
