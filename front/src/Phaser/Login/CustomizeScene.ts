@@ -94,6 +94,15 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        const savedWokaLayers = gameManager.getCharacterLayers();
+        if (savedWokaLayers && savedWokaLayers.length !== 0) {
+            this.selectedLayers = [];
+            for (let i = 0; i < savedWokaLayers.length; i += 1) {
+                this.selectedLayers.push(
+                    this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i])
+                );
+            }
+        }
         waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
         this.initializeCustomWokaPreviewer();
