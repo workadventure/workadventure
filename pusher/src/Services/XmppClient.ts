@@ -109,10 +109,11 @@ export class XmppClient {
             });
             xmpp.on("online", async (address: JID) => {
                 status = "connected";
-                //await this.send(xml("presence", { to: address, from: address, type: "available" }));
-
+                //TODO
+                // define if MUC must persistent or not
+                // if persistent, send subscribe MUC
+                // Admin can create presence and subscribe MUC with members
                 this.address = address;
-
                 const xmppSettings = new XmppSettingsMessage();
                 xmppSettings.setJid(address.toString());
                 xmppSettings.setConferencedomain("conference.ejabberd");
@@ -141,11 +142,15 @@ export class XmppClient {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
-            xmpp.start().catch((e: any) => {
-                console.error("XmppClient => start => Error =>", e);
-                xmpp.stop();
-                rej(e);
-            });
+            xmpp.start()
+                .then(() => {
+                    console.log("XmppClient => start");
+                })
+                .catch((e: any) => {
+                    console.error("XmppClient => start => Error =>", e);
+                    xmpp.stop();
+                    rej(e);
+                });
 
             xmpp.on("stanza", async (stanza: any) => {
                 const xmppMessage = new XmppMessage();

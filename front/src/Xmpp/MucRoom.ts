@@ -7,6 +7,7 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
+import { v4 as uuidv4 } from "uuid";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -37,9 +38,14 @@ export class MucRoom {
 
     public connect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
-        const message = xml(
+        const messagePresence = xml(
             "presence",
-            { to: to.toString(), from: this.jid },
+            {
+                to: to.toString(),
+                from: this.jid,
+                /*type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
+                persistent: true*/
+            },
             xml("x", {
                 xmlns: "http://jabber.org/protocol/muc",
             }),
@@ -48,7 +54,49 @@ export class MucRoom {
                 id: window.location.toString(),
             })
         );
-        this.connection.emitXmlMessage(message);
+        this.connection.emitXmlMessage(messagePresence);
+
+        //create list of user
+        /*const roster = xml("iq", {
+                from: this.jid,
+                type: 'set',
+                id: 'roster_2'
+            },
+            xml("query", {
+                    xmlns: 'jabber:iq:roster'
+                },
+                xml("item", {
+                        jid: this.roomJid.domain,
+                        name: gameManager.getPlayerName()
+                    },
+                    xml("group", "Servants")
+                )
+            ),
+        );
+        console.log('roster', roster);
+        this.connection.emitXmlMessage(roster);*/
+
+        //create MUC subscriber
+        const toMucSubscriber = jid(this.roomJid.local, this.roomJid.domain);
+        const messageMucSubscribe = xml(
+            "iq",
+            {
+                type: "set",
+                to: toMucSubscriber.toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "subscribe",
+                {
+                    xmlns: "urn:xmpp:mucsub:0",
+                    nick: gameManager.getPlayerName(),
+                },
+                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+            )
+        );
+        this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
     public disconnect() {
