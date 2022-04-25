@@ -34,7 +34,6 @@ import {
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
-    JoinBBBMeetingMessage as JoinBBBMeetingMessageTsProto,
     BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,

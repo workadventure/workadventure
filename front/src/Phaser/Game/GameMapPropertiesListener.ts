@@ -136,7 +136,9 @@ export class GameMapPropertiesListener {
                 bbbFactory.stop();
             } else {
                 bbbFactory.setStopped(false);
-                this.scene.connection?.emitJoinBBBMeeting(newValue as string, allProps);
+                void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
+                    this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
+                });
             }
         });
 
