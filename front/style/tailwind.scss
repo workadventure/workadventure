@@ -3,55 +3,115 @@
 @tailwind utilities;
 
 @layer components {
-  .btn {
-    background-color: theme('colors.grey');
-    border-radius: theme('borderRadius.lg');
-    padding: theme('spacing.6');
-    box-shadow: theme('boxShadow.xl');
-    text-align: center;
-
-    &.pop-red {
-      background-color: theme('colors.pop-red');
-      color: theme('colors.white')
-    }
-    &.pop-blue {
-      background-color: theme('colors.pop-blue.500');
-      color: theme('colors.white')
-    }
-    &.pop-blue:hover {
-      background-color: theme('colors.pop-blue.700');
-      color: theme('colors.white')
-    }
-    &.pop-yellow {
-      background-color: theme('colors.pop-yellow');
-      color: theme('colors.black')
-    }
-    &.pop-green {
-      background-color: theme('colors.pop-green');
-      color: theme('colors.white')
-    }
+  h2 {
+    color: theme('colors.light-blue');
+    font-size: theme('fontSize.sm');
+    font-family: theme('fontFamily.sans'), serif;
+    font-weight: theme('fontWeight.normal');
   }
 
-  input[type="text"] {
+  h3 {
+    font-weight: theme('fontWeight.normal');
+  }
+
+  .menu-item-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 theme('padding.3');
+  }
+
+  .menu-item {
     background-color: theme('colors.transparent');
-    color: theme('colors.light-purple');
-    border: 1px solid theme('colors.white');
-    border-radius: theme('borderRadius.md');
-    height: theme('height.12');
-    padding: theme('padding.2');
-    outline: none;
-  }
-  input[type="text"]::placeholder {
-    color: theme('colors.light-purple');
-    opacity: 0.5;
+    height: 60px;
+    font-family: Roboto, sans-serif;
+    font-weight: bold;
+    font-size: theme('fontSize.base');
+    align-items: center;
+    padding-left: theme('padding.4')
   }
 
-  .toggle-switch {
-    &span {
-      color: green;
-      background-color: red;
-      width: 10px;
+  .menu-submenu-container {
+    border-left: 1px solid theme('colors.light-purple');
+    padding: theme('padding.3')
+  }
+
+  .menu-item-container:hover, .active {
+    background-color: theme('colors.light-purple');
+
+    .menu-icon {
+      filter: brightness(1.5);
     }
   }
 
+  .menu-icon {
+    height: 13px;
+    margin: theme('padding.1');
+  }
+
+  .form-select, .form-checkbox {
+    flex-direction: column;
+    color: theme('colors.lighter-purple');
+    margin-bottom: theme('padding.5');
+
+    .checkbox-group {
+      padding-left: theme('padding.3');
+      color: theme('colors.white');
+
+      input:checked {
+        background-color: theme('colors.dark-blue');
+      }
+    }
+
+    select {
+      background-color: theme('colors.dark-blue');
+      color: theme('colors.white');
+      padding: 0 theme('padding.3');
+      height: 40px;
+      border: solid 1px theme('colors.light-purple');
+    }
+  }
+
+  .btn{
+    border: none;
+    text-decoration: none;
+    border-radius: theme('borderRadius.DEFAULT');
+    font-family: theme('fontFamily.sans'), serif;
+    height: 40px;
+    padding: 5px 15px;
+
+    &.light{
+      background-color: theme('colors.light-blue');
+      color: theme('colors.dark-purple')
+    }
+
+    &.dark{
+      background-color: theme('colors.dark-purple');
+      color: theme('colors.light-blue')
+    }
+
+    &.outline{
+      background-color: theme('colors.transparent');
+      color: theme('colors.light-blue');
+      border: solid 1px theme('colors.light-blue')
+    }
+  }
+
+  .btn:hover{
+    filter: brightness(1.1);
+  }
+
+  .subtitle {
+    padding-left: theme('padding.3');
+    font-family: theme('fontFamily.sans'), serif;
+    font-size: theme('fontSize.base');
+    color: theme('colors.lighter-purple')
+  }
+
+  .light-blue-button:hover{
+    filter: brightness(0.9);
+    color: theme('colors.dark-purple');
+    text-decoration: none;
+  }
 }
