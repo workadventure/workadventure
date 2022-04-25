@@ -94,19 +94,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
-        try {
-            const savedWokaLayers = gameManager.getCharacterLayers();
-            if (savedWokaLayers && savedWokaLayers.length !== 0) {
-                this.selectedLayers = [];
-                for (let i = 0; i < savedWokaLayers.length; i += 1) {
-                    this.selectedLayers.push(
-                        this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i])
-                    );
-                }
-            }
-        } catch (error) {
-            console.warn(error);
-        }
+        this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
         this.initializeCustomWokaPreviewer();
@@ -160,6 +148,22 @@ export class CustomizeScene extends AbstractCharacterScene {
     public backToPreviousScene() {
         this.scene.stop(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
+    }
+
+    private tryLoadLastUsedWokaLayers(): void {
+        try {
+            const savedWokaLayers = gameManager.getCharacterLayers();
+            if (savedWokaLayers && savedWokaLayers.length !== 0) {
+                this.selectedLayers = [];
+                for (let i = 0; i < savedWokaLayers.length; i += 1) {
+                    this.selectedLayers.push(
+                        this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i])
+                    );
+                }
+            }
+        } catch {
+            console.warn("Cannot load previous WOKA");
+        }
     }
 
     private createSlotBackgroundTextures(): void {
