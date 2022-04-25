@@ -1,5 +1,5 @@
 import { app, dialog } from "electron";
-import { autoUpdater, UpdateDownloadedEvent } from "electron-updater";
+import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import * as isDev from "electron-is-dev";
 import * as util from "util";
