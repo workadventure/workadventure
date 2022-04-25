@@ -154,7 +154,14 @@ export class CustomizeScene extends AbstractCharacterScene {
             if (this.textures.getTextureKeys().includes(`floorTexture${i}`)) {
                 continue;
             }
-            TexturesHelper.createFloorRectangleTexture(this, `floorTexture${i}`, 50, 50, "floorTiles", i);
+            TexturesHelper.createFloorRectangleTexture(
+                this,
+                `floorTexture${i}`,
+                WokaBodyPartSlot.SIZE,
+                WokaBodyPartSlot.SIZE,
+                "floorTiles",
+                i
+            );
         }
     }
 
@@ -328,13 +335,14 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     private handleCustomWokaPreviewerOnResize(): void {
+        const ratio = innerHeight / innerWidth;
         this.customWokaPreviewer.x = this.cameras.main.worldView.x + this.cameras.main.width / 2;
-        this.customWokaPreviewer.y = this.customWokaPreviewer.displayHeight * 0.5 + 10;
+        this.customWokaPreviewer.y = this.customWokaPreviewer.displayHeight * 0.5 + (ratio > 1.6 ? 40 : 10);
     }
 
     private handleBodyPartButtonsOnResize(): void {
         const ratio = innerHeight / innerWidth;
-        const slotDimension = 50;
+        const slotDimension = WokaBodyPartSlot.SIZE;
 
         for (const part in this.bodyPartsButtons) {
             this.bodyPartsButtons[part as CustomWokaBodyPart].setDisplaySize(slotDimension, slotDimension);
