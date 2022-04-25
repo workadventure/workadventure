@@ -24,7 +24,6 @@ import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 import { DeviceUtils } from "./Utils/DeviceUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
