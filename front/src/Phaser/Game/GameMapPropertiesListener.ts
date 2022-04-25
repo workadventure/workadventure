@@ -6,7 +6,7 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { ITiledMapLayer } from "../Map/ITiledMap";
+import type { ITiledMapProperty } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -17,15 +17,28 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
+import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
     coWebsite?: CoWebsite;
 }
 
+/**
+ * Either Layer or Object within Objects Layer in Tiled
+ */
+export interface ITiledPlace {
+    name: string;
+    properties?: ITiledMapProperty[];
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+}
+
 export class GameMapPropertiesListener {
-    private coWebsitesOpenByLayer = new Map<ITiledMapLayer, OpenCoWebsite>();
-    private coWebsitesActionTriggerByLayer = new Map<ITiledMapLayer, string>();
+    private coWebsitesOpenByPlace = new Map<ITiledPlace, OpenCoWebsite>();
+    private coWebsitesActionTriggerByPlace = new Map<ITiledPlace, string>();
 
     constructor(private scene: GameScene, private gameMap: GameMap) {}
 
@@ -65,6 +78,7 @@ export class GameMapPropertiesListener {
                         coWebsiteManager.closeCoWebsite(coWebsite);
                     }
                 });
+                inJitsiStore.set(false);
             } else {
                 const openJitsiRoomFunction = () => {
                     let addPrefix = true;
@@ -107,11 +121,15 @@ export class GameMapPropertiesListener {
                         uuid: "jitsi",
                         type: "message",
                         message: message,
-                        callback: () => openJitsiRoomFunction(),
+                        callback: () => {
+                            openJitsiRoomFunction();
+                            inJitsiStore.set(true);
+                        },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
                     openJitsiRoomFunction();
+                    inJitsiStore.set(true);
                 }
             }
         });
@@ -148,11 +166,9 @@ export class GameMapPropertiesListener {
 
         this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
-                this.scene.connection?.setSilent(false);
-                this.scene.CurrentPlayer.noSilent();
+                silentStore.set(false);
             } else {
-                this.scene.connection?.setSilent(true);
-                this.scene.CurrentPlayer.isSilent();
+                silentStore.set(true);
             }
         });
 
@@ -183,193 +199,241 @@ export class GameMapPropertiesListener {
             }
         });
 
-        // Open a new co-website by the property.
         this.gameMap.onEnterLayer((newLayers) => {
-            const handler = () => {
-                newLayers.forEach((layer) => {
-                    if (!layer.properties) {
-                        return;
-                    }
-
-                    let openWebsiteProperty: string | undefined;
-                    let allowApiProperty: boolean | undefined;
-                    let websitePolicyProperty: string | undefined;
-                    let websiteWidthProperty: number | undefined;
-                    let websitePositionProperty: number | undefined;
-                    let websiteTriggerProperty: string | undefined;
-                    let websiteTriggerMessageProperty: string | undefined;
-
-                    layer.properties.forEach((property) => {
-                        switch (property.name) {
-                            case GameMapProperties.OPEN_WEBSITE:
-                                openWebsiteProperty = property.value as string | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_ALLOW_API:
-                                allowApiProperty = property.value as boolean | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_POLICY:
-                                websitePolicyProperty = property.value as string | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_WIDTH:
-                                websiteWidthProperty = property.value as number | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_POSITION:
-                                websitePositionProperty = property.value as number | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_TRIGGER:
-                                websiteTriggerProperty = property.value as string | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
-                                websiteTriggerMessageProperty = property.value as string | undefined;
-                                break;
-                        }
-                    });
-
-                    if (!openWebsiteProperty) {
-                        return;
-                    }
-
-                    const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
-
-                    if (this.coWebsitesOpenByLayer.has(layer)) {
-                        return;
-                    }
-
-                    const coWebsiteOpen: OpenCoWebsite = {
-                        actionId: actionId,
-                    };
-
-                    this.coWebsitesOpenByLayer.set(layer, coWebsiteOpen);
-
-                    const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
-                        coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
-                            console.error("Error during loading a co-website: " + coWebsite.getUrl());
-                        });
-
-                        layoutManagerActionStore.removeAction(actionId);
-                    };
-
-                    const openCoWebsiteFunction = () => {
-                        const coWebsite = new SimpleCoWebsite(
-                            new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
-                            allowApiProperty,
-                            websitePolicyProperty,
-                            websiteWidthProperty,
-                            false
-                        );
-
-                        coWebsiteOpen.coWebsite = coWebsite;
-
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
-
-                        loadCoWebsiteFunction(coWebsite);
-                    };
-
-                    if (
-                        localUserStore.getForceCowebsiteTrigger() ||
-                        websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON
-                    ) {
-                        if (!websiteTriggerMessageProperty) {
-                            websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
-                        }
-
-                        this.coWebsitesActionTriggerByLayer.set(layer, actionId);
-
-                        layoutManagerActionStore.addAction({
-                            uuid: actionId,
-                            type: "message",
-                            message: websiteTriggerMessageProperty,
-                            callback: () => openCoWebsiteFunction(),
-                            userInputManager: this.scene.userInputManager,
-                        });
-                    } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
-                        const coWebsite = new SimpleCoWebsite(
-                            new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
-                            allowApiProperty,
-                            websitePolicyProperty,
-                            websiteWidthProperty,
-                            false
-                        );
-
-                        coWebsiteOpen.coWebsite = coWebsite;
-
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
-                    }
-
-                    if (!websiteTriggerProperty) {
-                        openCoWebsiteFunction();
-                    }
-                });
-            };
-
-            handler();
+            this.onEnterPlaceHandler(newLayers);
         });
 
-        // Close opened co-websites on leave the layer who contain the property.
         this.gameMap.onLeaveLayer((oldLayers) => {
-            const handler = () => {
-                oldLayers.forEach((layer) => {
-                    if (!layer.properties) {
-                        return;
-                    }
-
-                    let openWebsiteProperty: string | undefined;
-                    let websiteTriggerProperty: string | undefined;
-
-                    layer.properties.forEach((property) => {
-                        switch (property.name) {
-                            case GameMapProperties.OPEN_WEBSITE:
-                                openWebsiteProperty = property.value as string | undefined;
-                                break;
-                            case GameMapProperties.OPEN_WEBSITE_TRIGGER:
-                                websiteTriggerProperty = property.value as string | undefined;
-                                break;
-                        }
-                    });
-
-                    if (!openWebsiteProperty) {
-                        return;
-                    }
-
-                    const coWebsiteOpen = this.coWebsitesOpenByLayer.get(layer);
-
-                    if (!coWebsiteOpen) {
-                        return;
-                    }
-
-                    const coWebsite = coWebsiteOpen.coWebsite;
-
-                    if (coWebsite) {
-                        coWebsiteManager.closeCoWebsite(coWebsite);
-                    }
-
-                    this.coWebsitesOpenByLayer.delete(layer);
-
-                    if (!websiteTriggerProperty) {
-                        return;
-                    }
-
-                    const actionStore = get(layoutManagerActionStore);
-                    const actionTriggerUuid = this.coWebsitesActionTriggerByLayer.get(layer);
-
-                    if (!actionTriggerUuid) {
-                        return;
-                    }
-
-                    const action =
-                        actionStore && actionStore.length > 0
-                            ? actionStore.find((action) => action.uuid === actionTriggerUuid)
-                            : undefined;
-
-                    if (action) {
-                        layoutManagerActionStore.removeAction(actionTriggerUuid);
-                    }
-
-                    this.coWebsitesActionTriggerByLayer.delete(layer);
-                });
-            };
-
-            handler();
+            this.onLeavePlaceHandler(oldLayers);
         });
+
+        this.gameMap.onEnterArea((newAreas) => {
+            this.onEnterPlaceHandler(newAreas);
+        });
+
+        this.gameMap.onLeaveArea((oldAreas) => {
+            this.onLeavePlaceHandler(oldAreas);
+        });
+    }
+
+    private onEnterPlaceHandler(places: ITiledPlace[]): void {
+        places.forEach((place) => {
+            this.handleOpenWebsitePropertiesOnEnter(place);
+            this.handleFocusablePropertiesOnEnter(place);
+        });
+    }
+
+    private onLeavePlaceHandler(places: ITiledPlace[]): void {
+        places.forEach((place) => {
+            if (!place.properties) {
+                return;
+            }
+
+            this.handleOpenWebsitePropertiesOnLeave(place);
+            this.handleFocusablePropertiesOnLeave(place);
+        });
+    }
+
+    private handleOpenWebsitePropertiesOnEnter(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        let openWebsiteProperty: string | undefined;
+        let allowApiProperty: boolean | undefined;
+        let websitePolicyProperty: string | undefined;
+        let websiteWidthProperty: number | undefined;
+        let websitePositionProperty: number | undefined;
+        let websiteTriggerProperty: string | undefined;
+        let websiteTriggerMessageProperty: string | undefined;
+
+        place.properties.forEach((property) => {
+            switch (property.name) {
+                case GameMapProperties.OPEN_WEBSITE:
+                    openWebsiteProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_ALLOW_API:
+                    allowApiProperty = property.value as boolean | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_POLICY:
+                    websitePolicyProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_WIDTH:
+                    websiteWidthProperty = property.value as number | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_POSITION:
+                    websitePositionProperty = property.value as number | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_TRIGGER:
+                    websiteTriggerProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
+                    websiteTriggerMessageProperty = property.value as string | undefined;
+                    break;
+            }
+        });
+
+        if (!openWebsiteProperty) {
+            return;
+        }
+
+        const actionId = "openWebsite-" + (Math.random() + 1).toString(36).substring(7);
+
+        if (this.coWebsitesOpenByPlace.has(place)) {
+            return;
+        }
+
+        const coWebsiteOpen: OpenCoWebsite = {
+            actionId: actionId,
+        };
+
+        this.coWebsitesOpenByPlace.set(place, coWebsiteOpen);
+
+        const loadCoWebsiteFunction = (coWebsite: CoWebsite) => {
+            coWebsiteManager.loadCoWebsite(coWebsite).catch(() => {
+                console.error("Error during loading a co-website: " + coWebsite.getUrl());
+            });
+
+            layoutManagerActionStore.removeAction(actionId);
+        };
+
+        const openCoWebsiteFunction = () => {
+            const coWebsite = new SimpleCoWebsite(
+                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                allowApiProperty,
+                websitePolicyProperty,
+                websiteWidthProperty,
+                false
+            );
+
+            coWebsiteOpen.coWebsite = coWebsite;
+
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+
+            loadCoWebsiteFunction(coWebsite);
+        };
+
+        if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
+            if (!websiteTriggerMessageProperty) {
+                websiteTriggerMessageProperty = get(LL).trigger.cowebsite();
+            }
+
+            this.coWebsitesActionTriggerByPlace.set(place, actionId);
+
+            layoutManagerActionStore.addAction({
+                uuid: actionId,
+                type: "message",
+                message: websiteTriggerMessageProperty,
+                callback: () => openCoWebsiteFunction(),
+                userInputManager: this.scene.userInputManager,
+            });
+        } else if (websiteTriggerProperty === ON_ICON_TRIGGER_BUTTON) {
+            const coWebsite = new SimpleCoWebsite(
+                new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
+                allowApiProperty,
+                websitePolicyProperty,
+                websiteWidthProperty,
+                false
+            );
+
+            coWebsiteOpen.coWebsite = coWebsite;
+
+            coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+        }
+
+        if (!websiteTriggerProperty) {
+            openCoWebsiteFunction();
+        }
+    }
+
+    private handleFocusablePropertiesOnEnter(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        if (place.x === undefined || place.y === undefined || !place.height || !place.width) {
+            return;
+        }
+        const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);
+        if (focusable && focusable.value === true) {
+            const zoomMargin = place.properties.find((property) => property.name === GameMapProperties.ZOOM_MARGIN);
+            this.scene.getCameraManager().enterFocusMode(
+                {
+                    x: place.x + place.width * 0.5,
+                    y: place.y + place.height * 0.5,
+                    width: place.width,
+                    height: place.height,
+                },
+                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
+            );
+        }
+    }
+
+    private handleOpenWebsitePropertiesOnLeave(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+
+        let openWebsiteProperty: string | undefined;
+        let websiteTriggerProperty: string | undefined;
+
+        place.properties.forEach((property) => {
+            switch (property.name) {
+                case GameMapProperties.OPEN_WEBSITE:
+                    openWebsiteProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_TRIGGER:
+                    websiteTriggerProperty = property.value as string | undefined;
+                    break;
+            }
+        });
+
+        if (!openWebsiteProperty) {
+            return;
+        }
+
+        const coWebsiteOpen = this.coWebsitesOpenByPlace.get(place);
+
+        if (!coWebsiteOpen) {
+            return;
+        }
+
+        const coWebsite = coWebsiteOpen.coWebsite;
+
+        if (coWebsite) {
+            coWebsiteManager.closeCoWebsite(coWebsite);
+        }
+
+        this.coWebsitesOpenByPlace.delete(place);
+
+        if (!websiteTriggerProperty) {
+            return;
+        }
+
+        const actionStore = get(layoutManagerActionStore);
+        const actionTriggerUuid = this.coWebsitesActionTriggerByPlace.get(place);
+
+        if (!actionTriggerUuid) {
+            return;
+        }
+
+        const action =
+            actionStore && actionStore.length > 0
+                ? actionStore.find((action) => action.uuid === actionTriggerUuid)
+                : undefined;
+
+        if (action) {
+            layoutManagerActionStore.removeAction(actionTriggerUuid);
+        }
+
+        this.coWebsitesActionTriggerByPlace.delete(place);
+    }
+
+    private handleFocusablePropertiesOnLeave(place: ITiledPlace): void {
+        if (!place.properties) {
+            return;
+        }
+        const focusable = place.properties.find((property) => property.name === GameMapProperties.FOCUSABLE);
+        if (focusable && focusable.value === true) {
+            this.scene.getCameraManager().leaveFocusMode(this.scene.CurrentPlayer, 1000);
+        }
     }
 }

@@ -115,7 +115,7 @@ export async function createWindow() {
     }
 }
 
-export function showAppView(url?: string) {
+export async function showAppView(url?: string) {
     if (!appView) {
         throw new Error("App view not found");
     }
@@ -130,7 +130,7 @@ export function showAppView(url?: string) {
     mainWindow.addBrowserView(appView);
 
     if (url && url !== appViewUrl) {
-        appView.webContents.loadURL(url);
+        await appView.webContents.loadURL(url);
         appViewUrl = url;
     }
 

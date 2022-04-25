@@ -144,9 +144,8 @@ export class GameRoom {
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
-            false,
             this.positionNotifier,
-            joinRoomMessage.getAway(),
+            joinRoomMessage.getStatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -208,6 +207,9 @@ export class GameRoom {
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         user.updateDetails(playerDetailsMessage);
+        if (user.group !== undefined && user.silent) {
+            this.leaveGroup(user);
+        }
     }
 
     private updateUserGroup(user: User): void {
@@ -343,21 +345,6 @@ export class GameRoom {
                 currentUser.socket.write(message);
             }
         });
-    }
-
-    setSilent(user: User, silent: boolean) {
-        if (user.silent === silent) {
-            return;
-        }
-
-        user.silent = silent;
-        if (silent && user.group !== undefined) {
-            this.leaveGroup(user);
-        }
-        if (!silent) {
-            // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(user, user.getPosition());
-        }
     }
 
     /**
@@ -572,11 +559,7 @@ export class GameRoom {
 
             return {
                 mapUrl,
-                policy_type: 1,
-                tags: [],
                 authenticationMandatory: null,
-                roomSlug: null,
-                contactPage: null,
                 group: null,
             };
         }

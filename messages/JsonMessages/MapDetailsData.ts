@@ -7,13 +7,10 @@ import { z } from "zod";
 
 export const isMapDetailsData = z.object({
     mapUrl: z.string(),
-    policy_type: z.number(),
-    tags: z.array(z.string()),
     authenticationMandatory: z.optional(z.nullable(z.boolean())),
-    roomSlug: z.nullable(z.string()), // deprecated
-    contactPage: z.nullable(z.string()),
     group: z.nullable(z.string()),
 
+    contactPage: z.optional(z.nullable(z.string())),
     iframeAuthentication: z.optional(z.nullable(z.string())),
     // The date (in ISO 8601 format) at which the room will expire
     expireOn: z.optional(z.string()),

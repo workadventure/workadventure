@@ -1,10 +1,10 @@
-import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
+import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
 import { get } from "svelte/store";
 import { WorkAdventureDesktopApi } from "@wa-preload-app";
 
 declare global {
     interface Window {
-        WAD: WorkAdventureDesktopApi;
+        WAD?: WorkAdventureDesktopApi;
     }
 }
 
@@ -36,8 +36,8 @@ class DesktopApi {
             }
         });
 
-        isSilentStore.subscribe((value) => {
-            this.isSilent = value;
+        silentStore.subscribe((silent) => {
+            this.isSilent = silent;
         });
     }
 }
