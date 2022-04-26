@@ -404,12 +404,15 @@ class IframeListener {
      * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
      */
     sendUserInputChat(message: string, exceptOrigin?: Window) {
-        this.postMessage({
-            type: "userInputChat",
-            data: {
-                message: message,
-            } as UserInputChatEvent,
-        }, exceptOrigin);
+        this.postMessage(
+            {
+                type: "userInputChat",
+                data: {
+                    message: message,
+                } as UserInputChatEvent,
+            },
+            exceptOrigin
+        );
     }
 
     sendEnterEvent(name: string) {
