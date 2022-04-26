@@ -13,7 +13,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
@@ -25,7 +25,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "draworder":"topdown",
          "id":3,
@@ -40,7 +40,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":13,
-                     "text":"Test:\nClick on tne WOKA name\n\nResult:\nThe tab with all emoji should be displayed\n\nTest:\nChoose on emoji and click on it\n\nResult:\nEmoji will be play at the top of your WOKA",
+                     "text":"Test:\nClick on the WOKA name\n\nResult:\nThe tab with all emojis should be displayed\n\nTest:\nChoose on emoji and click on it\n\nResult:\nEmoji will be displayed above your WOKA",
                      "wrap":true
                     },
                  "type":"",
