@@ -64,7 +64,7 @@
     "standardized-audio-context": "^25.2.4",
     "ts-deferred": "^1.0.4",
     "ts-proto": "^1.96.0",
-    "typesafe-i18n": "^5.3.5",
+    "typesafe-i18n": "^5.4.0",
     "uuidv4": "^6.2.10",
     "zod": "^3.14.3"
   },
