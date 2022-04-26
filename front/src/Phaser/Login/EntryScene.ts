@@ -6,7 +6,6 @@ import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
-import { connectionManager } from "../../Connexion/ConnectionManager";
 
 export const EntrySceneName = "EntryScene";
 

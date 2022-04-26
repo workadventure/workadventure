@@ -2,7 +2,7 @@
     import { fly } from "svelte/transition";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import {connectionManager} from "../../Connexion/ConnectionManager";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
     import { onDestroy } from "svelte";
 
@@ -12,7 +12,7 @@
     let errorScreen = get(errorScreenStore);
 
     function click() {
-        if(errorScreen.type === 'unauthorized') void connectionManager.logout();
+        if (errorScreen.type === "unauthorized") void connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen.details;
@@ -39,9 +39,9 @@
         <p class="details">
             {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
         </p>
-        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === 'unauthorized'}
+        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
             <button type="button" class="nes-btn is-primary button" on:click={click}>
-                {#if $errorScreenStore.type === 'retry'}<img src={reload} alt="" class="reload" />{/if}
+                {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                 {$errorScreenStore.buttonTitle}
             </button>
         {/if}

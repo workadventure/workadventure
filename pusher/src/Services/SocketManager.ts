@@ -676,7 +676,7 @@ export class SocketManager implements ZoneEventListener {
     public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
         const errorMessage = new ErrorScreenMessage();
         errorMessage.setType(errorApi.type);
-        if (errorApi.type == "retry" || errorApi.type == "error") {
+        if (errorApi.type == "retry" || errorApi.type == "error" || errorApi.type == "unauthorized") {
             errorMessage.setCode(new StringValue().setValue(errorApi.code));
             errorMessage.setTitle(new StringValue().setValue(errorApi.title));
             errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
