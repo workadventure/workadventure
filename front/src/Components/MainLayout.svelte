@@ -68,6 +68,11 @@
     </aside>
 
     <section id="main-layout-main">
+        <Lazy
+            when={$showDesktopCapturerSourcePicker}
+            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+        />
+
         {#if $menuVisiblilityStore}
             <Menu />
         {/if}
@@ -119,11 +124,6 @@
         {/if}
 
         <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
-
-        <Lazy
-            when={$showDesktopCapturerSourcePicker}
-            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
-        />
 
         {#if hasEmbedScreen}
             <EmbedScreensContainer />
