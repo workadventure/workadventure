@@ -484,9 +484,14 @@ export class RoomConnection implements RoomConnection {
                 case "errorScreenMessage": {
                     this._errorScreenMessageStream.next(message.errorScreenMessage);
                     console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
-                    if(message.errorScreenMessage.code !== "retry"){ this.closed = true; }
-                    if(message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect){ window.location.assign(message.errorScreenMessage.urlToRedirect); }
-                    else{ errorScreenStore.setError(message.errorScreenMessage); }
+                    if (message.errorScreenMessage.code !== "retry") {
+                        this.closed = true;
+                    }
+                    if (message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect) {
+                        window.location.assign(message.errorScreenMessage.urlToRedirect);
+                    } else {
+                        errorScreenStore.setError(message.errorScreenMessage);
+                    }
                     break;
                 }
                 default: {
