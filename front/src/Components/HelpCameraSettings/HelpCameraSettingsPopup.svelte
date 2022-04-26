@@ -53,11 +53,14 @@
         background: #eceeee;
         margin-left: auto;
         margin-right: auto;
+        position: absolute;
         left: 0;
         right: 0;
         margin-top: 4%;
         max-height: 80vh;
         max-width: 80vw;
+        margin-left: 10%;
+        margin-right: 10%;
         z-index: 600;
         overflow: auto;
         text-align: center;
