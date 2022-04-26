@@ -11,8 +11,9 @@ export async function login(
   await page.fill('input[name="loginSceneName"]', userName);
   await page.click('button.loginSceneFormSubmit');
 
+  await page.waitForTimeout(1000);
   for (let i = 0; i < characterNumber; i++) {
-    await page.click('button.selectCharacterButtonRight');
+    await page.keyboard.press('ArrowRight');
   }
 
   await page.click('button.selectCharacterSceneFormSubmit');

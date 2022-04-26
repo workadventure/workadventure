@@ -28,12 +28,12 @@
     let previewCameraPrivacySettings = valueCameraPrivacySettings;
     let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
-    function saveSetting() {
+    async function saveSetting() {
         let change = false;
 
         if (valueLocale !== previewValueLocale) {
             previewValueLocale = valueLocale;
-            setCurrentLocale(valueLocale as Locales);
+            await setCurrentLocale(valueLocale as Locales);
         }
 
         if (valueVideo !== previewValueVideo) {
@@ -174,7 +174,7 @@
         <div class="nes-select is-dark">
             <select class="languages-switcher" bind:value={valueLocale}>
                 {#each displayableLocales as locale (locale.id)}
-                    <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
+                    <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
                 {/each}
             </select>
         </div>

@@ -18,11 +18,18 @@ In order to create a zone that opens websites:
 
 {.alert.alert-warning}
 A website can explicitly forbid another website from loading it in an iFrame using
-the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options).
+the [X-Frame-Options HTTP header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options). You can
+read more about this common issue and possible workaround the [troubleshooting guide](troubleshooting.md#embedding-an-iframe-is-forbidden).
 
 {.alert.alert-info}
 As an alternative, you may also put the `openWebsite` properties on a layer (rather than putting them on an "area" object)
-but we advise to stick with "area" objects for better performance!
+but we advise sticking with "area" objects for better performance!
+
+{.alert.alert-warning}
+If the website you are embedding is using cookies, those cookies must be configured with the `SameSite=none` attribute. Otherwise,
+they will be ignored by the browser. If you manage to see the website you embed but cannot log into it, the `SameSite` attribute is most
+likely the culprit. You can read more about this common issue and possible workaround the [troubleshooting guide](troubleshooting.md#i-cannot-log-into-my-embedded-website).
+
 
 ## Integrating a Youtube video
 

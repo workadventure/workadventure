@@ -38,6 +38,7 @@
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import Lazy from "./Lazy.svelte";
+    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
 
     let mainLayout: HTMLDivElement;
 
@@ -118,6 +119,11 @@
         {/if}
 
         <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
+
+        <Lazy
+            when={$showDesktopCapturerSourcePicker}
+            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+        />
 
         {#if hasEmbedScreen}
             <EmbedScreensContainer />

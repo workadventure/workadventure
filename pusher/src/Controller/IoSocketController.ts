@@ -1,5 +1,4 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { PointInterface } from "../Model/Websocket/PointInterface";
 import {
     SetPlayerDetailsMessage,
@@ -8,7 +7,6 @@ import {
     ItemEventMessage,
     ViewportMessage,
     ClientToServerMessage,
-    SilentMessage,
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
@@ -27,7 +25,7 @@ import {
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
@@ -41,6 +39,8 @@ import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
+import { adminService } from "../Services/AdminService";
+import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -68,12 +68,20 @@ interface UpgradeData {
     };
 }
 
-interface UpgradeFailedData {
+interface UpgradeFailedInvalidData {
     rejected: true;
     reason: "tokenInvalid" | "textureInvalid" | null;
     message: string;
     roomId: string;
 }
+
+interface UpgradeFailedErrorData {
+    rejected: true;
+    reason: "error";
+    error: ErrorApiData;
+}
+
+type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -236,6 +244,7 @@ export class IoSocketController {
                     const websocketProtocol = req.getHeader("sec-websocket-protocol");
                     const websocketExtensions = req.getHeader("sec-websocket-extensions");
                     const IPAddress = req.getHeader("x-forwarded-for");
+                    const locale = req.getHeader("accept-language");
 
                     const roomId = query.roomId;
                     try {
@@ -287,7 +296,6 @@ export class IoSocketController {
                         let memberMessages: unknown;
                         let memberUserRoomToken: string | undefined;
                         let memberTextures: WokaDetail[] = [];
-                        const room = await socketManager.getOrCreateRoom(roomId);
                         let userData: FetchMemberDataByUuidResponse = {
                             email: userIdentifier,
                             userUuid: userIdentifier,
@@ -304,61 +312,52 @@ export class IoSocketController {
                         if (ADMIN_API_URL) {
                             try {
                                 try {
-                                    userData = await adminApi.fetchMemberDataByUuid(
+                                    userData = await adminService.fetchMemberDataByUuid(
                                         userIdentifier,
                                         roomId,
                                         IPAddress,
-                                        characterLayers
+                                        characterLayers,
+                                        locale
                                     );
                                 } catch (err) {
                                     if (Axios.isAxiosError(err)) {
-                                        if (err?.response?.status == 404) {
-                                            // If we get an HTTP 404, the token is invalid. Let's perform an anonymous login!
-
-                                            console.warn(
-                                                'Cannot find user with email "' +
-                                                    (userIdentifier || "anonymous") +
-                                                    '". Performing an anonymous login instead.'
-                                            );
-                                        } else if (err?.response?.status == 403) {
-                                            // If we get an HTTP 403, the world is full. We need to broadcast a special error to the client.
-                                            // we finish immediately the upgrade then we will close the socket as soon as it starts opening.
+                                        const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                        if (errorType.success) {
                                             return res.upgrade(
                                                 {
                                                     rejected: true,
-                                                    message: err?.response?.data.message,
+                                                    reason: "error",
                                                     status: err?.response?.status,
-                                                    roomId,
-                                                },
+                                                    error: errorType.data,
+                                                } as UpgradeFailedData,
+                                                websocketKey,
+                                                websocketProtocol,
+                                                websocketExtensions,
+                                                context
+                                            );
+                                        } else {
+                                            return res.upgrade(
+                                                {
+                                                    rejected: true,
+                                                    reason: null,
+                                                    status: 500,
+                                                    message: err?.response?.data,
+                                                    roomId: roomId,
+                                                } as UpgradeFailedData,
                                                 websocketKey,
                                                 websocketProtocol,
                                                 websocketExtensions,
                                                 context
                                             );
                                         }
-                                    } else {
-                                        throw err;
                                     }
+                                    throw err;
                                 }
                                 memberMessages = userData.messages;
                                 memberTags = userData.tags;
                                 memberVisitCardUrl = userData.visitCardUrl;
                                 memberTextures = userData.textures;
                                 memberUserRoomToken = userData.userRoomToken;
-
-                                if (
-                                    room.policyType === GameRoomPolicyTypes.USE_TAGS_POLICY &&
-                                    (userData.anonymous === true || !room.canAccess(memberTags))
-                                ) {
-                                    throw new Error("Insufficient privileges to access this room");
-                                }
-                                if (
-                                    room.policyType === GameRoomPolicyTypes.MEMBERS_ONLY_POLICY &&
-                                    userData.anonymous === true
-                                ) {
-                                    throw new Error("Use the login URL to connect");
-                                }
-
                                 characterLayerObjs = memberTextures;
                             } catch (e) {
                                 console.log(
@@ -482,8 +481,8 @@ export class IoSocketController {
                         socketManager.emitTokenExpiredMessage(ws);
                     } else if (ws.reason === "textureInvalid") {
                         socketManager.emitInvalidTextureMessage(ws);
-                    } else if (ws.message === "World is full") {
-                        socketManager.emitWorldFullMessage(ws);
+                    } else if (ws.reason === "error") {
+                        socketManager.emitErrorScreenMessage(ws, ws.error);
                     } else {
                         socketManager.emitConnexionErrorMessage(ws, ws.message);
                     }
@@ -526,8 +525,6 @@ export class IoSocketController {
                         client,
                         message.getSetplayerdetailsmessage() as SetPlayerDetailsMessage
                     );
-                } else if (message.hasSilentmessage()) {
-                    socketManager.handleSilentMessage(client, message.getSilentmessage() as SilentMessage);
                 } else if (message.hasItemeventmessage()) {
                     socketManager.handleItemEvent(client, message.getItemeventmessage() as ItemEventMessage);
                 } else if (message.hasVariablemessage()) {

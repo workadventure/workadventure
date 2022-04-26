@@ -61,9 +61,8 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.frame = this.scene.add.graphics();
         this.turnIcon = this.scene.add
             .image(this.background.displayWidth * 0.35, this.background.displayHeight * 0.35, "iconTurn")
-            .setScale(0.25)
-            .setTintFill(0xffffff)
-            .setAlpha(0.5);
+            .setScale(0.2)
+            .setAlpha(0.75);
 
         this.drawFrame();
         this.setSize(this.SIZE, this.SIZE);
@@ -130,11 +129,11 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             this.changeAnimation(direction, moving);
 
             this.turnIconTween?.stop();
-            this.turnIcon.setScale(0.25);
+            this.turnIcon.setScale(0.2);
             this.turnIconTween = this.scene.tweens.add({
                 targets: [this.turnIcon],
                 duration: 100,
-                scale: 0.2,
+                scale: 0.15,
                 yoyo: true,
                 ease: Easing.SineEaseIn,
             });
