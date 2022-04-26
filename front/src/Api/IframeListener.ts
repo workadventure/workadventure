@@ -239,7 +239,7 @@ class IframeListener {
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
-                        scriptUtils.sendAnonymousChat(iframeEvent.data);
+                        scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -399,13 +399,17 @@ class IframeListener {
         this.scripts.delete(scriptUrl);
     }
 
-    sendUserInputChat(message: string) {
+    /**
+     * @param message The message to dispatch
+     * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
+     */
+    sendUserInputChat(message: string, exceptOrigin?: Window) {
         this.postMessage({
             type: "userInputChat",
             data: {
                 message: message,
             } as UserInputChatEvent,
-        });
+        }, exceptOrigin);
     }
 
     sendEnterEvent(name: string) {
@@ -521,8 +525,11 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
+    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>, exceptOrigin?: Window) {
         for (const iframe of this.iframes) {
+            if (exceptOrigin === iframe.contentWindow) {
+                continue;
+            }
             iframe.contentWindow?.postMessage(message, "*");
         }
     }
