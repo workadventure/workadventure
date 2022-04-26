@@ -1107,6 +1107,13 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
+                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+                soundManager.stopSound(this.sound, url.toString());
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
                 this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
                     actionName: data.actionKey,
