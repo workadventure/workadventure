@@ -39,7 +39,7 @@ export const isErrorApiUnauthorizedData = z.object({
     subtitle: z.string(),
     details: z.string(),
     image: z.string(),
-    buttonTitle: z.optional(z.nullable(z.string()))
+    buttonTitle: z.optional(z.nullable(z.string())),
 });
 
 export const isErrorApiData = z.discriminatedUnion("type", [
