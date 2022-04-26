@@ -49,9 +49,7 @@ export class EntryScene extends Scene {
                     .catch((err) => {
                         const errorType = isErrorApiData.safeParse(err?.response?.data);
                         if (errorType.success) {
-                            if (errorType.data.type === "unauthorized") {
-                                void connectionManager.logout();
-                            } else if (errorType.data.type === "redirect") {
+                            if (errorType.data.type === "redirect") {
                                 window.location.assign(errorType.data.urlToRedirect);
                             } else errorScreenStore.setError(err?.response?.data);
                         } else {
