@@ -101,6 +101,7 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1189,7 +1190,7 @@ ${escapedMessage}
                     this.CurrentPlayer.y,
                     "circleSprite-white"
                 );
-                scriptedBubbleSprite.setDisplayOrigin(48, 48);
+                scriptedBubbleSprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
                 this.add.existing(scriptedBubbleSprite);
             })
         );
@@ -2037,7 +2038,7 @@ ${escapedMessage}
                 ? "circleSprite-red"
                 : "circleSprite-white"
         );
-        sprite.setDisplayOrigin(48, 48);
+        sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
