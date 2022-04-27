@@ -11,14 +11,14 @@ import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
-import { visibilityStore } from "./VisibilityStore";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -31,7 +31,7 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(true);
 
     return {
         subscribe,
@@ -44,7 +44,7 @@ function createRequestedMicrophoneState() {
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
@@ -148,7 +148,7 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
@@ -180,10 +180,19 @@ function createVideoConstraintStore() {
     };
 }
 
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);
+export const inJitsiStore = writable(false);
+export const silentStore = writable(false);
+
+export const availabilityStatusStore = derived(
+    [inJitsiStore, silentStore, privacyShutdownStore],
+    ([$inJitsiStore, $silentStore, $privacyShutdownStore]) => {
+        if ($inJitsiStore) return AvailabilityStatus.JITSI;
+        if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
+        return AvailabilityStatus.ONLINE;
+    },
+    AvailabilityStatus.ONLINE
+);
 
 export const videoConstraintStore = createVideoConstraintStore();
 
@@ -191,7 +200,7 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
@@ -242,7 +251,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
-        isSilentStore,
+        availabilityStatusStore,
     ],
     (
         [
@@ -254,7 +263,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
-            $isSilentStore,
+            $availabilityStatusStore,
         ],
         set
     ) => {
@@ -311,7 +320,7 @@ export const mediaStreamConstraintsStore = derived(
             //currentAudioConstraint = false;
         }
 
-        if ($isSilentStore === true) {
+        if ($availabilityStatusStore === AvailabilityStatus.SILENT) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

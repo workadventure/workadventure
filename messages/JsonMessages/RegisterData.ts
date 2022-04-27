@@ -1,22 +1,18 @@
-import * as tg from "generic-type-guard";
-//import { isCharacterTexture } from "./CharacterTexture";
+import { z } from "zod";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
  * All other files are automatically copied from this file on container startup / build
  */
 
-export const isRegisterData = new tg.IsInterface()
-    .withProperties({
-        roomUrl: tg.isString,
-        email: tg.isNullable(tg.isString),
-        organizationMemberToken: tg.isNullable(tg.isString),
-        mapUrlStart: tg.isString,
-        userUuid: tg.isString,
-        authToken: tg.isString,
-    })
-    .withOptionalProperties({
-        messages: tg.isArray(tg.isUnknown),
-    })
-    .get();
-export type RegisterData = tg.GuardedType<typeof isRegisterData>;
+export const isRegisterData = z.object({
+    roomUrl: z.string(),
+    email: z.nullable(z.string()),
+    organizationMemberToken: z.nullable(z.string()),
+    mapUrlStart: z.string(),
+    userUuid: z.string(),
+    authToken: z.string(),
+    messages: z.optional(z.array(z.unknown())),
+});
+
+export type RegisterData = z.infer<typeof isRegisterData>;

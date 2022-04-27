@@ -4,7 +4,7 @@ import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
 import { localUserStore } from "./LocalUserStore";
-import { CharacterTexture, LocalUser } from "./LocalUser";
+import { LocalUser } from "./LocalUser";
 import { Room } from "./Room";
 import { _ServiceWorker } from "../Network/ServiceWorker";
 import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
@@ -13,7 +13,6 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
 import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
-import { isAdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
 import { gameManager } from "../Phaser/Game/GameManager";
@@ -73,9 +72,7 @@ class ConnectionManager {
 
         //Logout user in pusher and hydra
         const token = localUserStore.getAuthToken();
-        const { authToken } = await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then(
-            (res) => res.data
-        );
+        await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
         //Go on login page can permit to clear token and start authentication process
@@ -139,13 +136,19 @@ class ConnectionManager {
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
-            const data = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
+            const result = await Axios.post(`${PUSHER_URL}/register`, { organizationMemberToken }).then(
                 (res) => res.data
             );
-            if (!isRegisterData(data)) {
-                console.error("Invalid data received from /register route. Data: ", data);
+
+            const registerDataChecking = isRegisterData.safeParse(result);
+
+            if (!registerDataChecking.success) {
+                console.error("Invalid data received from /register route. Data: ", result);
                 throw new Error("Invalid data received from /register route.");
             }
+
+            const data = registerDataChecking.data;
+
             this.localUser = new LocalUser(data.userUuid, data.email);
             this.authToken = data.authToken;
             localUserStore.saveUser(this.localUser);
@@ -287,12 +290,12 @@ class ConnectionManager {
             );
 
             connection.onConnectError((error: object) => {
-                console.log("An error occurred while connecting to socket server. Retrying");
+                console.log("onConnectError => An error occurred while connecting to socket server. Retrying");
                 reject(error);
             });
 
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
-                console.log("An error occurred while connecting to socket server. Retrying");
+                console.log("connectionErrorStream => An error occurred while connecting to socket server. Retrying");
                 reject(
                     new Error(
                         "An error occurred while connecting to socket server. Retrying. Code: " +
@@ -306,9 +309,9 @@ class ConnectionManager {
             connection.roomJoinedMessageStream.subscribe((connect: OnConnectInterface) => {
                 resolve(connect);
             });
-        }).catch((err) => {
+        }).catch(() => {
             // Let's retry in 4-6 seconds
-            return new Promise<OnConnectInterface>((resolve, reject) => {
+            return new Promise<OnConnectInterface>((resolve) => {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
@@ -360,15 +363,13 @@ class ConnectionManager {
 
         if (locale) {
             try {
-                if (locales.indexOf(locale) == -1) {
-                    locales.forEach((l) => {
-                        if (l.startsWith(locale.split("-")[0])) {
-                            setCurrentLocale(l);
-                            return;
-                        }
-                    });
+                if (locales.indexOf(locale) !== -1) {
+                    await setCurrentLocale(locale as Locales);
                 } else {
-                    setCurrentLocale(locale as Locales);
+                    const nonRegionSpecificLocale = locales.find((l) => l.startsWith(locale.split("-")[0]));
+                    if (nonRegionSpecificLocale) {
+                        await setCurrentLocale(nonRegionSpecificLocale);
+                    }
                 }
             } catch (err) {
                 console.warn("Could not set locale", err);

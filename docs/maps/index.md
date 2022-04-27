@@ -9,7 +9,7 @@ In order to build your own map for WorkAdventure, you need:
 *   "tiles" (i.e. images) to create your map
 *   a web-server to serve your map
 
-WorkAdventure comes with a "map starter kit" that we recommend using to start designing your map quickly. It contains **a good default tileset** for building an office and it proposes to **use Github static pages as a web-server** which is both free and performant. It also comes with a local webserver for testing purpose and with Typescript support (if you are looking to use the [map scripting API]({{url('/map-building/scripting')}}).
+WorkAdventure comes with a "map starter kit" that we recommend using to start designing your map quickly. It contains **a good default tileset** for building an office and it proposes to **use Github static pages as a web-server** which is both free and performant. It also comes with a local webserver for testing purpose and with Typescript support (if you are looking to use the [map scripting API](scripting.md).
 
 {.alert.alert-info}
 If you are looking to host your maps on your own webserver, be sure to read the [Self-hosting your map](hosting.md) guide.

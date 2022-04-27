@@ -18,11 +18,10 @@
     "pretty-check": "yarn prettier --check 'JsonMessages/**/*.ts'"
   },
   "dependencies": {
-    "generic-type-guard": "^3.5.0",
     "google-protobuf": "^3.13.0",
     "grpc": "^1.24.4",
     "ts-proto": "^1.96.0",
-    "zod": "^3.12.0"
+    "zod": "^3.14.3"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.7.4",

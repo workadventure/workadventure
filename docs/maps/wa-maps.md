@@ -87,11 +87,11 @@ Repeat for every tile that should be "collidable".
 In the next sections, you will see how you can add behaviour on your map by adding "properties".
 You can add properties for a variety of features: putting exits, opening websites, meeting rooms, silent zones, etc...
 
-You can add properties either on individual tiles of a tileset OR on a complete layer.
+You can add properties either on individual tiles of a tileset, on Tiled object OR on a complete layer.
 
-If you put a property on a layer, it will be triggered if your Woka walks on any tile of the layer.
+If you put a property on a object or layer, it will be triggered if your Woka walks on object area / any tile of the layer.
 
-The exception is the "collides" property that can only be set on tiles, but not on a complete layer.
+The exception is the "collides" property that can only be set on tiles, but not on an object or on complete layer.
 
 ## Insert helpful information in your map
 

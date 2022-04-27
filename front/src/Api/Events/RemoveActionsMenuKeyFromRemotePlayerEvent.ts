@@ -1,15 +1,11 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isRemoveActionsMenuKeyFromRemotePlayerEvent = new tg.IsInterface()
-    .withProperties({
-        id: tg.isNumber,
-        actionKey: tg.isString,
-    })
-    .get();
+export const isRemoveActionsMenuKeyFromRemotePlayerEvent = z.object({
+    id: z.number(),
+    actionKey: z.string(),
+});
 
-export type RemoveActionsMenuKeyFromRemotePlayerEvent = tg.GuardedType<
-    typeof isRemoveActionsMenuKeyFromRemotePlayerEvent
->;
+export type RemoveActionsMenuKeyFromRemotePlayerEvent = z.infer<typeof isRemoveActionsMenuKeyFromRemotePlayerEvent>;
 
 export type RemoveActionsMenuKeyFromRemotePlayerEventCallback = (
     event: RemoveActionsMenuKeyFromRemotePlayerEvent

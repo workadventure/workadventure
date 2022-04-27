@@ -41,7 +41,7 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
     onCameraUpdate(): Subject<WasCameraUpdatedEvent> {
         sendToWorkadventure({
             type: "onCameraUpdate",
-            data: null,
+            data: undefined,
         });
         return moveStream;
     }

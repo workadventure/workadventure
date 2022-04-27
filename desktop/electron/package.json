@@ -1,6 +1,6 @@
 {
     "name": "workadventure-desktop",
-    "version": "1.0.0",
+    "version": "managedbyci",
     "description": "Desktop application for WorkAdventure",
     "author": "thecodingmachine",
     "main": "dist/main.js",
@@ -11,7 +11,6 @@
         "dev": "yarn build --watch --onSuccess 'yarn electron dist/main.js'",
         "dev:local-app": "cd ../local-app && yarn && yarn dev",
         "bundle": "yarn build:local-app && yarn build && electron-builder install-app-deps && electron-builder",
-        "release": "yarn bundle",
         "typecheck": "tsc --noEmit",
         "test": "exit 0",
         "lint": "yarn eslint src/ . --ext .ts",
@@ -32,13 +31,13 @@
     },
     "devDependencies": {
         "@types/auto-launch": "^5.0.2",
-        "@typescript-eslint/eslint-plugin": "^2.26.0",
-        "@typescript-eslint/parser": "^2.26.0",
-        "electron": "^17.0.1",
+        "@typescript-eslint/eslint-plugin": "^5.18.0",
+        "@typescript-eslint/parser": "^5.18.0",
+        "electron": "^18.0.3",
         "electron-builder": "^22.14.13",
-        "eslint": "^6.8.0",
-        "prettier": "^2.5.1",
-        "tsup": "^5.11.13",
-        "typescript": "^3.8.3"
+        "eslint": "^8.12.0",
+        "prettier": "^2.6.2",
+        "tsup": "^5.12.4",
+        "typescript": "^4.6.3"
     }
 }

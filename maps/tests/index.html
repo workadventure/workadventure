@@ -50,10 +50,10 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-door-map"> Success <input type="radio" name="test-door-map"> Failure <input type="radio" name="test-door-map" checked> Pending
+                        <input type="radio" name="test-pathfinding"> Success <input type="radio" name="test-pathfinding"> Failure <input type="radio" name="test-pathfinding" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="DoorTest/map.json" target="_blank">Test Doors</a>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/map.json" target="_blank">Test Pathfinding</a>
                     </td>
                 </tr>
                 <tr>
@@ -168,6 +168,14 @@
                         <a href="#" class="testLink" data-testmap="layer-visibility.json" target="_blank">Layer visibility + Layer size and offset</a>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-tiled-objects"> Success <input type="radio" name="test-tiled-objects"> Failure <input type="radio" name="test-tiled-objects" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="tiled_objects.json" target="_blank">Test Tiled Objects with properties</a>
+                    </td>
+                </tr>
             </table>
             <h2>Iframe API</h2>
             <table class="table">
@@ -208,7 +216,7 @@
                         <input type="radio" name="test-cowebsite-allowAPI"> Success <input type="radio" name="test-cowebsite-allowAPI"> Failure <input type="radio" name="test-cowebsite-allowAPI" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test a iframe opened by a script can use Iframe API</a>
+                        <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test a iframe opened by a script can use Iframe API <i>(already automated in E2E tests)</i></a>
                     </td>
                 </tr>
                 <tr>
@@ -216,7 +224,7 @@
                         <input type="radio" name="test-custom-menu"> Success <input type="radio" name="test-custom-menu"> Failure <input type="radio" name="test-custom-menu" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="Metadata/customMenu.json" target="_blank">Testing add a custom menu by scripting API</a>
+                        <a href="#" class="testLink" data-testmap="Metadata/customMenu.json" target="_blank">Testing add a custom menu by scripting API <i>(already automated in E2E tests)</i></a>
                     </td>
                 </tr>
                 <tr>
@@ -469,6 +477,14 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="AwayModeSettings/away_mode_settings.json" target="_blank">Away mode settings</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-status-indicator"> Success <input type="radio" name="test-status-indicator"> Failure <input type="radio" name="test-status-indicator" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="status_indicator.json" target="_blank">Test Status Indicator</a>
                     </td>
                 </tr>
             </table>
