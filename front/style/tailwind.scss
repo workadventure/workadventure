@@ -2,116 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  h1, h2, h3, h4, h5, h6, p, span {
+    @apply tw-font-sans
+  }
+}
+
 @layer components {
-  h2 {
-    color: theme('colors.light-blue');
-    font-size: theme('fontSize.sm');
-    font-family: theme('fontFamily.sans'), serif;
-    font-weight: theme('fontWeight.normal');
-  }
 
-  h3 {
-    font-weight: theme('fontWeight.normal');
-  }
+  //Menus - Main one uses theses classes
+  .menu-container {
+    pointer-events: auto;
+    z-index: 900;
+    @apply tw-h-3/4 tw-w-full md:tw-w-4/5 tw-absolute tw-top-14 tw-mx-auto tw-flex tw-text-white;
 
-  .menu-item-container {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 theme('padding.3');
-  }
+    .menu-nav-sidebar {
+      @apply tw-bg-dark-purple/95 tw-rounded tw-overflow-auto tw-w-1/5;
+    }
 
-  .menu-item {
-    background-color: theme('colors.transparent');
-    height: 60px;
-    font-family: Roboto, sans-serif;
-    font-weight: bold;
-    font-size: theme('fontSize.base');
-    align-items: center;
-    padding-left: theme('padding.4')
-  }
+    .menu-submenu-container {
+      border-left: 1px solid theme('colors.light-purple');
+      @apply tw-p-3 tw-w-4/5 tw-overflow-auto;
+    }
 
-  .menu-submenu-container {
-    border-left: 1px solid theme('colors.light-purple');
-    padding: theme('padding.3')
-  }
+    .menu-item-container {
+      @apply tw-flex tw-flex-row tw-items-center tw-justify-between tw-py-0 tw-px-3;
+    }
 
-  .menu-item-container:hover, .active {
-    background-color: theme('colors.light-purple');
+    .menu-item {
+      @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-base tw-items-center tw-pl-4;
+    }
 
-    .menu-icon {
-      filter: brightness(1.5);
+    .menu-item-container:hover, .active {
+      @apply tw-bg-light-purple;
+
+      .menu-icon {
+        filter: brightness(1.5);
+      }
     }
   }
 
   .menu-icon {
-    height: 13px;
-    margin: theme('padding.1');
+    @apply tw-h-3 tw-p-0.5;
   }
 
-  .form-select, .form-checkbox {
-    flex-direction: column;
-    color: theme('colors.lighter-purple');
-    margin-bottom: theme('padding.5');
-
-    .checkbox-group {
-      padding-left: theme('padding.3');
-      color: theme('colors.white');
-
-      input:checked {
-        background-color: theme('colors.dark-blue');
-      }
-    }
-
-    select {
-      background-color: theme('colors.dark-blue');
-      color: theme('colors.white');
-      padding: 0 theme('padding.3');
-      height: 40px;
-      border: solid 1px theme('colors.light-purple');
-    }
+  //Buttons - basic buttons appearance
+  button, .btn {
+    @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1;
   }
 
-  .btn{
-    border: none;
-    text-decoration: none;
-    border-radius: theme('borderRadius.DEFAULT');
-    font-family: theme('fontFamily.sans'), serif;
-    height: 40px;
-    padding: 5px 15px;
+  .btn:hover, button:hover {
+    filter: brightness(1.25);
+  }
+}
 
-    &.light{
-      background-color: theme('colors.light-blue');
-      color: theme('colors.dark-purple')
-    }
-
-    &.dark{
-      background-color: theme('colors.dark-purple');
-      color: theme('colors.light-blue')
-    }
-
-    &.outline{
-      background-color: theme('colors.transparent');
-      color: theme('colors.light-blue');
-      border: solid 1px theme('colors.light-blue')
-    }
+@layer utilities {
+  input[type='text'],
+  input[type='password'],
+  input[type='email'],
+  input[type='number'],
+  input[type='url'],
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='month'],
+  input[type='week'],
+  input[type='time'],
+  input[type='search'],
+  input[type='tel'],
+  select,
+  textarea {
+    @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple;
+    @apply placeholder:tw-text-lighter-purple;
   }
 
-  .btn:hover{
-    filter: brightness(1.1);
+  input[type="checkbox"],
+  input[type="radio"] {
+    @apply tw-border-light-purple tw-text-light-purple focus:tw-border-lighter-purple focus:tw-ring-lighter-purple;
   }
 
-  .subtitle {
-    padding-left: theme('padding.3');
-    font-family: theme('fontFamily.sans'), serif;
-    font-size: theme('fontSize.base');
-    color: theme('colors.lighter-purple')
+  input[type="checkbox"] {
+    @apply tw-rounded;
   }
 
-  .light-blue-button:hover{
-    filter: brightness(0.9);
-    color: theme('colors.dark-purple');
-    text-decoration: none;
+  .small-blue-title {
+    @apply tw-text-light-blue tw-font-sans tw-text-sm tw-font-normal;
+  }
+
+  button, .btn {
+    &.light {
+      @apply tw-bg-light-blue tw-text-dark-purple;
+    }
+
+    &.dark {
+      @apply tw-bg-dark-purple tw-text-light-blue;
+    }
+
+    &.outline {
+      @apply tw-bg-transparent tw-text-light-blue tw-border-1 tw-border-light-blue;
+    }
+
+    &.close {
+      @apply tw-bg-dark-purple tw-text-light-blue tw-ring-1 tw-ring-light-purple tw-absolute tw-right-5 tw-px-0 tw-py-0 tw-h-6 tw-w-6;
+    }
   }
 }
