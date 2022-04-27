@@ -150,6 +150,9 @@ export class User implements Movable {
         if (this.outlineColor !== undefined) {
             playerDetails.setOutlinecolor(new UInt32Value().setValue(this.outlineColor));
         }
+        if (details.getRemoveoutlinecolor()) {
+            playerDetails.setRemoveoutlinecolor(new BoolValue().setValue(true));
+        }
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
