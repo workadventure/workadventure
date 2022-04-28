@@ -9,7 +9,7 @@ import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
-import {extendApi} from "@anatine/zod-openapi";
+import { extendApi } from "@anatine/zod-openapi";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -18,15 +18,30 @@ export interface AdminBannedData {
 
 export const isFetchMemberDataByUuidResponse = z.object({
     // @ts-ignore
-    email: extendApi(z.string(), {description: 'The email of the fetched user, it can be an email, an uuid or undefined.', example: "example@workadventu.re"}),
-    userUuid: extendApi(z.string(), {description: 'The uuid of the fetched user, it can be an email, an uuid or undefined.', example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"}),
-    tags: extendApi(z.array(z.string()), {description: 'List of tags related to the user fetched.', example: ['editor']}),
-    visitCardUrl: extendApi(z.nullable(z.string()), {description: 'URL of the visitCard of the user fetched.', example: 'https://mycompany.com/contact/me'}),
-    textures: extendApi(z.array(isWokaDetail), {$ref: "#/definitions/WokaDetail"}),
-    messages: extendApi(z.array(z.unknown()), {description: 'List of user\'s messages.'}),
+    email: extendApi(z.string(), {
+        description: "The email of the fetched user, it can be an email, an uuid or undefined.",
+        example: "example@workadventu.re",
+    }),
+    userUuid: extendApi(z.string(), {
+        description: "The uuid of the fetched user, it can be an email, an uuid or undefined.",
+        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9",
+    }),
+    tags: extendApi(z.array(z.string()), {
+        description: "List of tags related to the user fetched.",
+        example: ["editor"],
+    }),
+    visitCardUrl: extendApi(z.nullable(z.string()), {
+        description: "URL of the visitCard of the user fetched.",
+        example: "https://mycompany.com/contact/me",
+    }),
+    textures: extendApi(z.array(isWokaDetail), { $ref: "#/definitions/WokaDetail" }),
+    messages: extendApi(z.array(z.unknown()), { description: "List of user's messages." }),
 
-    anonymous: extendApi(z.optional(z.boolean()), {description: 'Whether the user if logged as anonymous or not', example: false}),
-    userRoomToken: extendApi(z.optional(z.string()), {description: '', example: ''}),
+    anonymous: extendApi(z.optional(z.boolean()), {
+        description: "Whether the user if logged as anonymous or not",
+        example: false,
+    }),
+    userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;

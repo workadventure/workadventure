@@ -33,27 +33,27 @@ export class SwaggerController extends BaseHttpController {
                     info: {
                         title: "WorkAdventure Pusher",
                         version: "1.0.0",
-                        description: "This is a documentation about the endpoints called by the pusher. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
-                        contact:
-                            {
-                                email:	"hello@workadventu.re"
-                            }
+                        description:
+                            "This is a documentation about the endpoints called by the pusher. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
+                        contact: {
+                            email: "hello@workadventu.re",
+                        },
                     },
-                    "host": "pusher." + ADMIN_URL.replace('//',''),
-                    "tags": [
+                    host: "pusher." + ADMIN_URL.replace("//", ""),
+                    tags: [
                         {
-                            "name": "AdminAPI",
-                            "description": "Access to end points of the admin from the pusher"
+                            name: "AdminAPI",
+                            description: "Access to end points of the admin from the pusher",
                         },
                     ],
-                    "securityDefinitions": {
-                        "Bearer": {
-                            "type": "apiKey",
-                            "name": "Authorization",
-                            "in": "header"
+                    securityDefinitions: {
+                        Bearer: {
+                            type: "apiKey",
+                            name: "Authorization",
+                            in: "header",
                         },
                     },
-                    ...SwaggerGenerator.definitions()
+                    ...SwaggerGenerator.definitions(),
                 },
                 apis: ["./src/Services/*.ts"],
             };
@@ -81,11 +81,14 @@ export class SwaggerController extends BaseHttpController {
                 }
 
                 const urls = [
-                    {url: "/openapi/pusher", name: "Front -> Pusher"},
-                    {url: "/openapi/admin", name: "Pusher <- Admin"},
+                    { url: "/openapi/pusher", name: "Front -> Pusher" },
+                    { url: "/openapi/admin", name: "Pusher <- Admin" },
                 ];
 
-                const result = data.replace(/url: "https:\/\/petstore\.swagger\.io\/v2\/swagger.json"/g, `urls: ${JSON.stringify(urls)}, "urls.primaryName": "Pusher <- Admin"`);
+                const result = data.replace(
+                    /url: "https:\/\/petstore\.swagger\.io\/v2\/swagger.json"/g,
+                    `urls: ${JSON.stringify(urls)}, "urls.primaryName": "Pusher <- Admin"`
+                );
                 response.send(result);
 
                 return;
