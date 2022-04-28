@@ -852,14 +852,14 @@ export class SocketManager {
             return;
         }
 
-        const versionNumber = room.incrementVersion();
+        const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            const worldFullMessage = new RefreshRoomMessage();
-            worldFullMessage.setRoomid(roomId);
-            worldFullMessage.setVersionnumber(versionNumber);
+            const refreshRoomMessage = new RefreshRoomMessage();
+            refreshRoomMessage.setRoomid(roomId);
+            refreshRoomMessage.setVersionnumber(versionNumber);
 
             const clientMessage = new ServerToClientMessage();
-            clientMessage.setRefreshroommessage(worldFullMessage);
+            clientMessage.setRefreshroommessage(refreshRoomMessage);
 
             recipient.socket.write(clientMessage);
         });
