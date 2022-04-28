@@ -48,7 +48,7 @@
 
   //Buttons - basic buttons appearance
   button, .btn {
-    @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1;
+    @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1 tw-mx-0.5 tw-my-1;
   }
 
   .btn:hover, button:hover {
@@ -71,7 +71,7 @@
   input[type='tel'],
   select,
   textarea {
-    @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple;
+    @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple tw-mb-5;
     @apply placeholder:tw-text-lighter-purple;
   }
 
@@ -98,11 +98,22 @@
     }
 
     &.outline {
-      @apply tw-bg-transparent tw-text-light-blue tw-border-1 tw-border-light-blue;
+      @apply tw-bg-transparent tw-text-light-blue tw-border tw-border-light-blue tw-border-solid;
     }
 
     &.close {
       @apply tw-bg-dark-purple tw-text-light-blue tw-ring-1 tw-ring-light-purple tw-absolute tw-right-5 tw-px-0 tw-py-0 tw-h-6 tw-w-6;
     }
+  }
+
+  section{
+    @apply tw-mb-4 tw-p-2;
+    .bottom-separator{
+      border-bottom: 1px solid theme('colors.light-purple');
+    }
+  }
+
+  .centered-column{
+    @apply tw-flex tw-flex-col tw-items-center
   }
 }
