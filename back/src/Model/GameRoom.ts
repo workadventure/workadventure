@@ -520,7 +520,16 @@ export class GameRoom {
         this.admins.delete(admin);
     }
 
-    public incrementVersion(): number {
+    public async incrementVersion(): Promise<number> {
+        // Let's check if the mapUrl has changed
+        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
+        if (this.mapUrl !== mapDetails.mapUrl) {
+            this.mapUrl = mapDetails.mapUrl;
+            this.mapPromise = undefined;
+            // Reset the variable manager
+            this.variableManagerPromise = undefined;
+        }
+
         this.versionNumber++;
         return this.versionNumber;
     }
