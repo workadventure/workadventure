@@ -4,8 +4,6 @@ import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 export interface AdminInterface {
-    locale: string;
-
     /**
      * @var playUri: is url of the room
      * @var userIdentifier: can to be undefined or email or uuid
@@ -17,7 +15,8 @@ export interface AdminInterface {
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[]
+        characterLayers: string[],
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse>;
 
     /**
@@ -25,16 +24,22 @@ export interface AdminInterface {
      * @var userId: can to be undefined or email or uuid
      * @return MapDetailsData|RoomRedirect
      */
-    fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect>;
+    fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect>;
 
     /**
+     * @param locale
      * @param organizationMemberToken
      * @param playUri
      * @return AdminApiData
      */
-    fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData>;
+    fetchMemberDataByToken(
+        organizationMemberToken: string,
+        playUri: string | null,
+        locale?: string
+    ): Promise<AdminApiData>;
 
     /**
+     * @param locale
      * @param reportedUserUuid
      * @param reportedUserComment
      * @param reporterUserUuid
@@ -44,22 +49,25 @@ export interface AdminInterface {
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string
+        reportWorldSlug: string,
+        locale?: string
     ): Promise<unknown>;
 
     /**
+     * @param locale
      * @param userUuid
      * @param ipAddress
      * @param roomUrl
      * @return AdminBannedData
      */
-    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData>;
+    verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string, locale?: string): Promise<AdminBannedData>;
 
     /**
+     * @param locale
      * @param roomUrl
      * @return string[]
      */
-    getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]>;
+    getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]>;
 
     /**
      * @param accessToken

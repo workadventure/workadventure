@@ -42,6 +42,7 @@ import {
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
+    AvailabilityStatus,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -302,8 +303,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                const tmp: never = subMessage;
+                                const _exhaustiveCheck: never = subMessage;
                             }
                         }
                     }
@@ -483,15 +483,20 @@ export class RoomConnection implements RoomConnection {
                 }
                 case "errorScreenMessage": {
                     this._errorScreenMessageStream.next(message.errorScreenMessage);
-                    if (message.errorScreenMessage.code !== "retry") this.closed = true;
-                    console.error("An error occurred server side: " + message.errorScreenMessage.code);
-                    errorScreenStore.setError(message.errorScreenMessage);
+                    console.error("An error occurred server side: " + JSON.stringify(message.errorScreenMessage));
+                    if (message.errorScreenMessage.code !== "retry") {
+                        this.closed = true;
+                    }
+                    if (message.errorScreenMessage.type === "redirect" && message.errorScreenMessage.urlToRedirect) {
+                        window.location.assign(message.errorScreenMessage.urlToRedirect);
+                    } else {
+                        errorScreenStore.setError(message.errorScreenMessage);
+                    }
                     break;
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const tmp: never = message;
+                    const _exhaustiveCheck: never = message;
                 }
             }
         };
@@ -532,9 +537,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerAway(away: boolean): void {
+    public emitPlayerStatusChange(status: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
-            away,
+            status,
         });
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -626,19 +631,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public setSilent(silent: boolean): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "silentMessage",
-                silentMessage: {
-                    silent,
-                },
-            },
-        }).finish();
-
-        this.socket.send(bytes);
-    }
-
     public setViewport(viewport: ViewportInterface): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -682,7 +674,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            away: message.away,
+            status: message.status,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,

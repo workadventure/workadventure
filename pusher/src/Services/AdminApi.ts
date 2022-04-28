@@ -22,6 +22,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     visitCardUrl: z.nullable(z.string()),
     textures: z.array(isWokaDetail),
     messages: z.array(z.unknown()),
+
     anonymous: z.optional(z.boolean()),
     userRoomToken: z.optional(z.string()),
 });
@@ -29,21 +30,24 @@ export const isFetchMemberDataByUuidResponse = z.object({
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
 
 class AdminApi implements AdminInterface {
-    locale: string = "en";
-
-    async fetchMapDetails(playUri: string, authToken?: string): Promise<MapDetailsData | RoomRedirect> {
+    async fetchMapDetails(
+        playUri: string,
+        authToken?: string,
+        locale?: string
+    ): Promise<MapDetailsData | RoomRedirect> {
         let userId: string | undefined = undefined;
         if (authToken != undefined) {
             let authTokenData: AuthTokenData;
             try {
                 authTokenData = jwtTokenManager.verifyJWTToken(authToken);
                 userId = authTokenData.identifier;
+                //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
                 try {
                     // Decode token, in this case we don't need to create new token.
                     authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
                     userId = authTokenData.identifier;
-                    console.info("JWT expire, but decoded", userId);
+                    console.info("JWT expire, but decoded:", userId);
                 } catch (e) {
                     if (e instanceof InvalidTokenError) {
                         throw new Error("Token decrypted error");
@@ -66,7 +70,7 @@ class AdminApi implements AdminInterface {
         };
 
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             params,
         });
 
@@ -92,7 +96,8 @@ class AdminApi implements AdminInterface {
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
-        characterLayers: string[]
+        characterLayers: string[],
+        locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
@@ -101,7 +106,7 @@ class AdminApi implements AdminInterface {
                 ipAddress,
                 characterLayers,
             },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             paramsSerializer: (p) => {
                 return qs.stringify(p, { arrayFormat: "brackets" });
             },
@@ -120,11 +125,15 @@ class AdminApi implements AdminInterface {
         );
     }
 
-    async fetchMemberDataByToken(organizationMemberToken: string, playUri: string | null): Promise<AdminApiData> {
+    async fetchMemberDataByToken(
+        organizationMemberToken: string,
+        playUri: string | null,
+        locale?: string
+    ): Promise<AdminApiData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         });
 
         const adminApiData = isAdminApiData.safeParse(res.data);
@@ -142,7 +151,8 @@ class AdminApi implements AdminInterface {
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string
+        reportWorldSlug: string,
+        locale?: string
     ) {
         return Axios.post(
             `${ADMIN_API_URL}/api/report`,
@@ -153,12 +163,17 @@ class AdminApi implements AdminInterface {
                 reportWorldSlug,
             },
             {
-                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+                headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             }
         );
     }
 
-    async verifyBanUser(userUuid: string, ipAddress: string, roomUrl: string): Promise<AdminBannedData> {
+    async verifyBanUser(
+        userUuid: string,
+        ipAddress: string,
+        roomUrl: string,
+        locale?: string
+    ): Promise<AdminBannedData> {
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
@@ -169,15 +184,15 @@ class AdminApi implements AdminInterface {
                 encodeURIComponent(userUuid) +
                 "&roomUrl=" +
                 encodeURIComponent(roomUrl),
-            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale } }
+            { headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" } }
         ).then((data) => {
             return data.data;
         });
     }
 
-    async getUrlRoomsFromSameWorld(roomUrl: string): Promise<string[]> {
+    async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
-            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": this.locale },
+            headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         }).then((data) => {
             return data.data;
         });

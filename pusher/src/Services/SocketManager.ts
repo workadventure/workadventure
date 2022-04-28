@@ -24,7 +24,6 @@ import {
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SilentMessage,
     SubMessage,
     UserJoinedRoomMessage,
     UserLeftMessage,
@@ -43,7 +42,7 @@ import {
     ErrorScreenMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -53,8 +52,9 @@ import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zon
 import Debug from "debug";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { compressors } from "hyper-express";
-import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { adminService } from "./AdminService";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");
 
@@ -122,7 +122,13 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn("Admin connection lost to back server");
+                console.warn(
+                    "Admin connection lost to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
+                );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
@@ -130,7 +136,14 @@ export class SocketManager implements ZoneEventListener {
                 console.log("A user left");
             })
             .on("error", (err: Error) => {
-                console.error("Error in connection to back server:", err);
+                console.error(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
+                    err
+                );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -187,7 +200,7 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom");
+            console.log("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -215,7 +228,13 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn("Connection lost to back server");
+                    console.warn(
+                        "Connection lost to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "'"
+                    );
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
@@ -223,7 +242,14 @@ export class SocketManager implements ZoneEventListener {
                     console.log("A user left");
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server:", err);
+                    console.error(
+                        "Error in connection to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
+                        err
+                    );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
@@ -335,13 +361,6 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSilentmessage(silentMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
     handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
@@ -359,6 +378,7 @@ export class SocketManager implements ZoneEventListener {
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
             await adminService.reportPlayer(
+                "en",
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
@@ -434,26 +454,10 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
-            if (ADMIN_API_URL) {
-                await this.updateRoomWithAdminData(room);
-            }
             await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;
-    }
-
-    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminService.fetchMapDetails(room.roomUrl);
-        const mapDetailsData = isMapDetailsData.safeParse(data);
-
-        if (mapDetailsData.success) {
-            room.tags = mapDetailsData.data.tags;
-            room.policyType = Number(mapDetailsData.data.policy_type);
-        } else {
-            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
-            // and redirect everybody to the new location (so we need to close the connection for everybody)
-        }
     }
 
     public getWorlds(): Map<string, PusherRoom> {
@@ -644,28 +648,25 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorScreenMessage(
-        client: compressors.WebSocket,
-        type: string,
-        code: string,
-        title: string,
-        subtitle: string,
-        details: string,
-        timeToRetry: number,
-        canRetryManual: boolean,
-        urlToRedirect: string,
-        buttonTitle: string
-    ) {
+    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
         const errorMessage = new ErrorScreenMessage();
-        errorMessage.setType(type);
-        errorMessage.setCode(code);
-        errorMessage.setTitle(title);
-        errorMessage.setSubtitle(subtitle);
-        errorMessage.setDetails(details);
-        errorMessage.setTimetoretry(timeToRetry);
-        errorMessage.setCanretrymanual(canRetryManual);
-        errorMessage.setUrltoredirect(urlToRedirect);
-        errorMessage.setButtontitle(buttonTitle);
+        errorMessage.setType(errorApi.type);
+        if (errorApi.type == "retry" || errorApi.type == "error" || errorApi.type == "unauthorized") {
+            errorMessage.setCode(new StringValue().setValue(errorApi.code));
+            errorMessage.setTitle(new StringValue().setValue(errorApi.title));
+            errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
+            errorMessage.setDetails(new StringValue().setValue(errorApi.details));
+            errorMessage.setImage(new StringValue().setValue(errorApi.image));
+        }
+        if (errorApi.type == "retry") {
+            if (errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
+            if (errorApi.canRetryManual !== undefined)
+                errorMessage.setCanretrymanual(new BoolValue().setValue(errorApi.canRetryManual));
+            if (errorApi.timeToRetry)
+                errorMessage.setTimetoretry(new Int32Value().setValue(Number(errorApi.timeToRetry)));
+        }
+        if (errorApi.type == "redirect" && errorApi.urlToRedirect)
+            errorMessage.setUrltoredirect(new StringValue().setValue(errorApi.urlToRedirect));
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setErrorscreenmessage(errorMessage);
@@ -679,8 +680,7 @@ export class SocketManager implements ZoneEventListener {
         const room = this.rooms.get(roomId);
         //this function is run for every users connected to the room, so we need to make sure the room wasn't already refreshed.
         if (!room || !room.needsUpdate(versionNumber)) return;
-
-        this.updateRoomWithAdminData(room);
+        //TODO check right of user in admin
     }
 
     handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
@@ -702,7 +702,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld("en", clientRoomUrl);
         } else {
             tabUrlRooms = [clientRoomUrl];
         }

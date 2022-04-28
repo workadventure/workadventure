@@ -38,6 +38,7 @@
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import Lazy from "./Lazy.svelte";
+    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
 
     let mainLayout: HTMLDivElement;
 
@@ -67,6 +68,11 @@
     </aside>
 
     <section id="main-layout-main">
+        <Lazy
+            when={$showDesktopCapturerSourcePicker}
+            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+        />
+
         {#if $menuVisiblilityStore}
             <Menu />
         {/if}

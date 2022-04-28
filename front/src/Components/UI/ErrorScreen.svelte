@@ -2,47 +2,46 @@
     import { fly } from "svelte/transition";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
+    import { get } from "svelte/store";
+    import { onDestroy } from "svelte";
 
     import logoImg from "../images/logo-min-white.png";
     let logo = gameManager?.currentStartedRoom?.loginSceneLogo ?? logoImg;
-    import error from "../images/error.png";
-    import cup from "../images/cup.png";
     import reload from "../images/reload.png";
-    import external from "../images/external-link.png";
-    import { get } from "svelte/store";
-
     let errorScreen = get(errorScreenStore);
 
     function click() {
-        if (errorScreen.urlToRedirect) window.location.replace(errorScreen.urlToRedirect);
-        else if (errorScreen.type === "redirect" && window.history.length > 2) history.back();
+        if (errorScreen.type === "unauthorized") void connectionManager.logout();
         else window.location.reload();
     }
     let details = errorScreen.details;
     let timeVar = errorScreen.timeToRetry ?? 0;
+
     if (errorScreen.type === "retry") {
-        setInterval(() => {
+        let interval = setInterval(() => {
             if (timeVar <= 1000) click();
             timeVar -= 1000;
         }, 1000);
+        onDestroy(() => clearInterval(interval));
     }
 
-    $: detailsStylized = details.replace("{time}", `${timeVar / 1000}`);
+    $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 </script>
 
 <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
     <div style="width: 90%;">
         <img src={logo} alt="WorkAdventure" class="logo" />
-        <div><img src={$errorScreenStore.type === "retry" ? cup : error} alt="" class="icon" /></div>
+        <div><img src={$errorScreenStore.image} alt="" class="icon" /></div>
         {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
         <p>{$errorScreenStore.subtitle}</p>
         {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
         <p class="details">
             {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
         </p>
-        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || ($errorScreenStore.type === "redirect" && (window.history.length > 2 || $errorScreenStore.urlToRedirect))}
+        {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
             <button type="button" class="nes-btn is-primary button" on:click={click}>
-                <img src={$errorScreenStore.type === "retry" ? reload : external} alt="" class="reload" />
+                {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                 {$errorScreenStore.buttonTitle}
             </button>
         {/if}
@@ -74,10 +73,14 @@
         .logo {
             width: 50%;
             margin-bottom: 50px;
+            max-height: 25vh;
+            max-width: 50vw;
         }
         .icon {
             height: 125px;
             margin-bottom: 25px;
+            max-height: 25vh;
+            max-width: 50vw;
         }
         h2 {
             font-family: "Press Start 2P";

@@ -9,7 +9,9 @@ function createErrorScreenStore() {
 
     return {
         subscribe,
-        setError: (e: ErrorScreenMessage): void => set(e),
+        setError: (e: ErrorScreenMessage): void => {
+            set(e);
+        },
     };
 }
 

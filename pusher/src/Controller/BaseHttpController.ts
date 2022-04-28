@@ -1,6 +1,7 @@
 import { Server } from "hyper-express";
 import Response from "hyper-express/types/components/http/Response";
 import axios from "axios";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export class BaseHttpController {
     constructor(protected app: Server) {
@@ -31,14 +32,15 @@ export class BaseHttpController {
 
         if (axios.isAxiosError(e) && e.response) {
             res.status(e.response.status);
-            if (!e.response.data?.code) {
+            const errorType = isErrorApiData.safeParse(e?.response?.data);
+            if (!errorType.success) {
                 res.send(
                     "An error occurred: " +
                         e.response.status +
                         " " +
                         (e.response.data && e.response.data.message ? e.response.data.message : e.response.statusText)
                 );
-            } else res.json(e.response.data);
+            } else res.json(errorType.data);
             return;
         } else {
             res.status(500);
