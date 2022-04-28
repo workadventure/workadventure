@@ -74,9 +74,4 @@ export interface AdminInterface {
      * @return string
      */
     getProfileUrl(accessToken: string): string;
-
-    /**
-     * @param token
-     */
-    logoutOauth(token: string): Promise<void>;
 }

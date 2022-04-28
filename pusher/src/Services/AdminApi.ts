@@ -9,6 +9,7 @@ import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
+import {extendApi} from "@anatine/zod-openapi";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -16,15 +17,16 @@ export interface AdminBannedData {
 }
 
 export const isFetchMemberDataByUuidResponse = z.object({
-    email: z.string(),
-    userUuid: z.string(),
-    tags: z.array(z.string()),
-    visitCardUrl: z.nullable(z.string()),
-    textures: z.array(isWokaDetail),
-    messages: z.array(z.unknown()),
+    // @ts-ignore
+    email: extendApi(z.string(), {description: 'The email of the fetched user, it can be an email, an uuid or undefined.', example: "example@workadventu.re"}),
+    userUuid: extendApi(z.string(), {description: 'The uuid of the fetched user, it can be an email, an uuid or undefined.', example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"}),
+    tags: extendApi(z.array(z.string()), {description: 'List of tags related to the user fetched.', example: ['editor']}),
+    visitCardUrl: extendApi(z.nullable(z.string()), {description: 'URL of the visitCard of the user fetched.', example: 'https://mycompany.com/contact/me'}),
+    textures: extendApi(z.array(isWokaDetail), {$ref: "#/definitions/WokaDetail"}),
+    messages: extendApi(z.array(z.unknown()), {description: 'List of user\'s messages.'}),
 
-    anonymous: z.optional(z.boolean()),
-    userRoomToken: z.optional(z.string()),
+    anonymous: extendApi(z.optional(z.boolean()), {description: 'Whether the user if logged as anonymous or not', example: false}),
+    userRoomToken: extendApi(z.optional(z.string()), {description: '', example: ''}),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
@@ -69,6 +71,47 @@ class AdminApi implements AdminInterface {
             userId,
         };
 
+        /**
+         * @openapi
+         * /api/map:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Returns a map mapping map name to file name of the map
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "The full URL of WorkAdventure"
+         *        required: true
+         *        type: "string"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+         *      - name: "userId"
+         *        in: "query"
+         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+         *        type: "string"
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *     responses:
+         *       200:
+         *         description: The details of the member
+         *         schema:
+         *             $ref: "#/definitions/MapDetailsData"
+         *       401:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiRedirectData'
+         *       403:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         *
+         */
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/map", {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
             params,
@@ -99,6 +142,58 @@ class AdminApi implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        /**
+         * @openapi
+         * /api/room/access:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Returns member's informations if he can access this room
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "userIdentifier"
+         *        in: "query"
+         *        description: "The identifier of the current user \n It can be undefined or an uuid or an email"
+         *        type: "string"
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "The full URL of WorkAdventure"
+         *        required: true
+         *        type: "string"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+         *      - name: "ipAddress"
+         *        in: "query"
+         *        required: true
+         *        type: "string"
+         *        example: "127.0.0.1"
+         *      - name: "characterLayers"
+         *        in: "query"
+         *        type: "array"
+         *        items:
+         *          type: string
+         *        example: ["male1"]
+         *     responses:
+         *       200:
+         *         description: The details of the member
+         *         schema:
+         *             $ref: "#/definitions/FetchMemberDataByUuidResponse"
+         *       401:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiRedirectData'
+         *       403:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiUnauthorizedData'
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         *
+         */
         const res = await Axios.get<unknown, AxiosResponse<unknown>>(ADMIN_API_URL + "/api/room/access", {
             params: {
                 userIdentifier,
@@ -130,6 +225,42 @@ class AdminApi implements AdminInterface {
         playUri: string | null,
         locale?: string
     ): Promise<AdminApiData> {
+        /**
+         * @openapi
+         * /api/login-url/{organizationMemberToken}:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Returns a member from the token
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "organizationMemberToken"
+         *        in: "path"
+         *        description: "The token of member in the organization"
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "The full URL of WorkAdventure"
+         *        required: true
+         *        type: "string"
+         *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
+         *     responses:
+         *       200:
+         *         description: The details of the member
+         *         schema:
+         *             $ref: "#/definitions/AdminApiData"
+         *       401:
+         *         description: Error while retrieving the data because you are not authorized
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiRedirectData'
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         *
+         */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         const res = await Axios.get(ADMIN_API_URL + "/api/login-url/" + organizationMemberToken, {
             params: { playUri },
@@ -154,6 +285,41 @@ class AdminApi implements AdminInterface {
         reportWorldSlug: string,
         locale?: string
     ) {
+        /**
+         * @openapi
+         * /api/report:
+         *   post:
+         *     tags: ["AdminAPI"]
+         *     description: Report one user with a comment
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "reportedUserUuid"
+         *        in: "query"
+         *        description: "The identifier of the reported user \n It can be an uuid or an email"
+         *        type: "string"
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
+         *      - name: "reportedUserComment"
+         *        in: "query"
+         *        description: "The comment of the report"
+         *        required: true
+         *        type: "string"
+         *      - name: "reporterUserUuid"
+         *        in: "query"
+         *        description: "The identifier of the reporter user \n It can be an uuid or an email"
+         *        type: "string"
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
+         *      - name: "reportWorldSlug"
+         *        in: "query"
+         *        description: "The slug of the world where the report is made"
+         *        type: "string"
+         *        example: "/@/teamSlug/worldSlug/roomSlug"
+         *     responses:
+         *       200:
+         *         description: The report has been successfully saved
+         */
         return Axios.post(
             `${ADMIN_API_URL}/api/report`,
             {
@@ -174,6 +340,53 @@ class AdminApi implements AdminInterface {
         roomUrl: string,
         locale?: string
     ): Promise<AdminBannedData> {
+        /**
+         * @openapi
+         * /api/ban:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Check if user is banned or not
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "ipAddress"
+         *        in: "query"
+         *        type: "string"
+         *        required: true
+         *        example: "127.0.0.1"
+         *      - name: "token"
+         *        in: "query"
+         *        description: "The uuid of the user \n It can be an uuid or an email"
+         *        type: "string"
+         *        required: true
+         *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
+         *      - name: "roomUrl"
+         *        in: "query"
+         *        description: "The slug of the world where to check if the user is banned"
+         *        type: "string"
+         *        required: true
+         *        example: "/@/teamSlug/worldSlug/roomSlug"
+         *     responses:
+         *       200:
+         *         description: The user is banned or not
+         *         content:
+         *             application/json:
+         *                 schema:
+         *                     type: array
+         *                     required:
+         *                         - is_banned
+         *                 properties:
+         *                     is_banned:
+         *                         type: boolean
+         *                         description: Whether the user is banned or not
+         *                         example: true
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
         //todo: this call can fail if the corresponding world is not activated or if the token is invalid. Handle that case.
         return Axios.get(
             ADMIN_API_URL +
@@ -191,6 +404,37 @@ class AdminApi implements AdminInterface {
     }
 
     async getUrlRoomsFromSameWorld(roomUrl: string, locale?: string): Promise<string[]> {
+        /**
+         * @openapi
+         * /api/room/sameWorld:
+         *   get:
+         *     tags: ["AdminAPI"]
+         *     description: Get all URLs of the rooms from the world specified
+         *     security:
+         *      - Bearer: []
+         *     produces:
+         *      - "application/json"
+         *     parameters:
+         *      - name: "roomUrl"
+         *        in: "query"
+         *        description: "The slug of the room"
+         *        type: "string"
+         *        required: true
+         *        example: "/@/teamSlug/worldSlug/roomSlug"
+         *     responses:
+         *       200:
+         *         description: The list of URL of the rooms from the same world
+         *         schema:
+         *             type: array
+         *             items:
+         *                 type: string
+         *                 description: URL of a room
+         *                 example: "http://example.com/@/teamSlug/worldSlug/room2Slug"
+         *       404:
+         *         description: Error while retrieving the data
+         *         schema:
+         *             $ref: '#/definitions/ErrorApiErrorData'
+         */
         return Axios.get(ADMIN_API_URL + "/api/room/sameWorld" + "?roomUrl=" + encodeURIComponent(roomUrl), {
             headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },
         }).then((data) => {
@@ -203,10 +447,6 @@ class AdminApi implements AdminInterface {
             throw new Error("No admin backoffice set!");
         }
         return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
-    }
-
-    async logoutOauth(token: string): Promise<void> {
-        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }
 
