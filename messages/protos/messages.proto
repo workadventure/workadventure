@@ -381,8 +381,8 @@ message ServerToClientMessage {
     InvalidTextureMessage invalidTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
-    XmppSettingsMessage xmppSettingsMessage = 26;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 27;
+    XmppSettingsMessage xmppSettingsMessage = 27;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 28;
   }
 }
 

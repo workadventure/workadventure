@@ -64,7 +64,7 @@
                     updateInputFieldValue();
                 }}
             />
-            <span>{$LL.menu.invite.walk_automatically_to_position()}</span>
+            <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
         </label>
     {:else}
         {#each [...usersList] as [userName, user]}
