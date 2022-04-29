@@ -8,6 +8,7 @@ import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
 import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 export enum iframeStates {
     closed = 1,
@@ -126,6 +127,7 @@ class CoWebsiteManager {
 
         const buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
         buttonCloseCoWebsite.addEventListener("click", () => {
+            analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
             if (!coWebsite) {
@@ -143,6 +145,7 @@ class CoWebsiteManager {
 
         const buttonFullScreenFrame = HtmlUtils.getElementByIdOrFail(cowebsiteFullScreenButtonId);
         buttonFullScreenFrame.addEventListener("click", () => {
+            analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
             this.fullscreen();
         });
@@ -159,6 +162,7 @@ class CoWebsiteManager {
         });
 
         buttonSwipe.addEventListener("click", () => {
+            analyticsClient.switchMultiIframe();
             const mainCoWebsite = this.getMainCoWebsite();
             const highlightedEmbed = get(highlightedEmbedScreen);
             if (highlightedEmbed?.type === "cowebsite") {

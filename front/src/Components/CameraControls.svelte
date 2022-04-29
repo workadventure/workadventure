@@ -17,6 +17,7 @@
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
+    import { analyticsClient } from "../Administration/AnalyticsClient";
 
     const gameScene = gameManager.getCurrentGameScene();
 
@@ -89,6 +90,7 @@
         class="btn-follow"
         class:hide={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
         class:disabled={$followStateStore !== "off"}
+        on:click={() => analyticsClient.follow()}
         on:click={followClick}
     >
         <img class="noselect" src={followImg} alt="" />
@@ -98,6 +100,7 @@
         class="btn-lock"
         class:hide={$peerStore.size === 0 || $silentStore}
         class:disabled={$currentPlayerGroupLockStateStore}
+        on:click={() => analyticsClient.lockDiscussion()}
         on:click={lockClick}
     >
         <img class="noselect" src={lockImg} alt="" />
@@ -105,6 +108,7 @@
 
     <div
         class="btn-monitor"
+        on:click={() => analyticsClient.screenSharing()}
         on:click={screenSharingClick}
         class:hide={!$screenSharingAvailableStore || $silentStore}
         class:enabled={$requestedScreenSharingState}
@@ -116,7 +120,12 @@
         {/if}
     </div>
 
-    <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || $silentStore}>
+    <div
+        class="btn-video"
+        on:click={() => analyticsClient.camera()}
+        on:click={cameraClick}
+        class:disabled={!$requestedCameraState || $silentStore}
+    >
         {#if $requestedCameraState && !$silentStore}
             <img class="noselect" src={cinemaImg} alt="Turn on webcam" />
         {:else}
@@ -124,7 +133,12 @@
         {/if}
     </div>
 
-    <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || $silentStore}>
+    <div
+        class="btn-micro"
+        on:click={() => analyticsClient.microphone()}
+        on:click={microphoneClick}
+        class:disabled={!$requestedMicrophoneState || $silentStore}
+    >
         {#if $requestedMicrophoneState && !$silentStore}
             <img class="noselect" src={microphoneImg} alt="Turn on microphone" />
         {:else}

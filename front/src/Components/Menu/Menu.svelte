@@ -18,6 +18,7 @@
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let activeSubMenu: MenuItem = $subMenusStore[0];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
@@ -47,21 +48,27 @@
             activeSubMenu = menu;
             switch (menu.key) {
                 case SubMenusInterface.settings:
+                    analyticsClient.menuSetting();
                     activeComponent = SettingsSubMenu;
                     break;
                 case SubMenusInterface.profile:
+                    analyticsClient.menuProfile();
                     activeComponent = ProfileSubMenu;
                     break;
                 case SubMenusInterface.invite:
+                    analyticsClient.menuInvite();
                     activeComponent = GuestSubMenu;
                     break;
                 case SubMenusInterface.aboutRoom:
+                    analyticsClient.menuCredit();
                     activeComponent = AboutRoomSubMenu;
                     break;
                 case SubMenusInterface.globalMessages:
+                    analyticsClient.globalMessage();
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     break;
                 case SubMenusInterface.contact:
+                    analyticsClient.menuContact();
                     activeComponent = ContactSubMenu;
                     break;
             }

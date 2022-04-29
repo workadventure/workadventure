@@ -2,7 +2,6 @@ import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
-import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { Translation } from "../i18n/i18n-types";
 import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -14,7 +13,6 @@ export const userIsConnected = writable(false);
 export const profileAvailable = writable(true);
 
 menuVisiblilityStore.subscribe((value) => {
-    if (value) analyticsClient.openedMenu();
     if (userIsConnected && value && IDENTITY_URL != null) {
         axios.get(getMeUrl()).catch((err) => {
             console.error("menuVisiblilityStore => err => ", err);
