@@ -114,9 +114,9 @@
   const isMobile = isMediaBreakpointUp("md");
 </script>
 
-<div class="" on:submit|preventDefault={saveSetting}>
+<div on:submit|preventDefault={saveSetting}>
   <section class="bottom-separator">
-    <h3 class="small-blue-title">{$LL.menu.settings.gameQuality.title()}</h3>
+    <h3 class="blue-title">{$LL.menu.settings.gameQuality.title()}</h3>
     <select bind:value={valueGame} class="tw-w-full">
       <option value={120}
       >{isMobile
@@ -139,7 +139,7 @@
         : $LL.menu.settings.gameQuality.long.minimum()}</option
       >
     </select>
-    <h3 class="small-blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
+    <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
     <select bind:value={valueVideo} class="tw-w-full">
       <option value={30}
       >{isMobile
@@ -162,7 +162,7 @@
         : $LL.menu.settings.videoQuality.long.minimum()}</option
       >
     </select>
-    <h3 class="small-blue-title">{$LL.menu.settings.language.title()}</h3>
+    <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
     <select class="tw-w-full" bind:value={valueLocale}>
       {#each displayableLocales as locale (locale.id)}
         <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
@@ -175,26 +175,25 @@
       >{$LL.menu.settings.save.button()}</button>
     </div>
   </section>
-  <section class="bottom-separator">
-    <div class="tooltip">
-      <h3 class="small-blue-title">
-        <span class="dotted-bottom">{$LL.menu.settings.privacySettings.title()}</span>
-        <img src={infoImg} alt="info icon" width="23px" height="23px" />
-      </h3>
-      <div class="nes-balloon away-tooltip-container from-left flex tw-hidden">
-        <p class="away-tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
-      </div>
+  <section class="bottom-separator tw-flex tw-flex-col">
+    <h3 class="blue-title">
+      <span
+        class="tw-underline tw-decoration-dotted hover:tw-brightness-125">{$LL.menu.settings.privacySettings.title()}</span>
+      <img src={infoImg} alt="info icon" width="23px" height="23px" />
+    </h3>
+    <div class="tooltip tw-h-20">
+      <p class="tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
     </div>
-    <label>
-      <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
-      <span>{$LL.menu.settings.privacySettings.cameraToggle()}</span>
-    </label>
-    <label>
-      <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
-      <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
-    </label>
+      <label>
+        <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
+        {$LL.menu.settings.privacySettings.cameraToggle()}
+      </label>
+      <label>
+        <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
+        {$LL.menu.settings.privacySettings.microphoneToggle()}
+      </label>
   </section>
-  <section>
+  <section class="tw-flex tw-flex-col">
     <label>
       <input
         type="checkbox"
@@ -226,58 +225,19 @@
         on:change={changeIgnoreFollowRequests}
       />
       <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
-      <label>
-        <input
-          type="checkbox"
-          bind:checked={decreaseAudioPlayerVolumeWhileTalking}
-          on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
-        />
-        <span>{$LL.audio.manager.reduce()}</span>
-      </label>
     </label>
+    <label>
+      <input
+        type="checkbox"
+        bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+        on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
+      />
+      <span>{$LL.audio.manager.reduce()}</span>
+    </label>
+
   </section>
 </div>
 
 <style lang="scss">
   @import "../../../style/breakpoints.scss";
-
-  div.settings-main {
-
-    //Tooltip
-    .tooltip {
-      position: relative;
-    }
-
-    .away-tooltip-container {
-      background-color: #fff;
-      position: absolute;
-      bottom: 45%;
-      left: 55%;
-
-      visibility: hidden;
-      transition: opacity 0.3s;
-    }
-
-    .away-tooltip-text {
-      color: #000;
-    }
-  }
-
-  .dotted-bottom {
-    border-bottom: 1px dotted;
-  }
-
-  .tooltip:hover {
-    .away-tooltip-container {
-      visibility: visible;
-    }
-  }
-
-  @include media-breakpoint-up(md) {
-    div.settings-main {
-      section {
-        padding: 0;
-      }
-    }
-  }
 </style>
