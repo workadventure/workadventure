@@ -8,9 +8,10 @@ module.exports = {
     colors: {
       //UI colors
       'dark-purple': '#1B1B29',
-      'dark-blue': '#0F1F2D',
+      'medium-purple': '#38384A',
       'light-purple': '#4D4B67',
       'lighter-purple': '#928EBB',
+      'dark-blue': '#0F1F2D',
       'light-blue': '#56EAFF',
 
       //WA brand colors

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 @layer base {
-  h1, h2, h3, h4, h5, h6, p, span {
+  * {
     @apply tw-font-sans
   }
 }
@@ -84,8 +84,8 @@
     @apply tw-rounded;
   }
 
-  .small-blue-title {
-    @apply tw-text-light-blue tw-font-sans tw-text-sm tw-font-normal;
+  .blue-title {
+    @apply tw-text-light-blue tw-font-sans tw-text-base tw-font-normal;
   }
 
   button, .btn {
@@ -115,5 +115,13 @@
 
   .centered-column{
     @apply tw-flex tw-flex-col tw-items-center
+  }
+
+  .tooltip{
+    @apply tw-bg-medium-purple tw-rounded tw-flex tw-text-center tw-p-2 tw-relative;
+
+    p{
+      @apply tw-flex tw-items-center tw-m-0 tw-absolute;
+    }
   }
 }

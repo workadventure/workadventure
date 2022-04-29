@@ -111,7 +111,7 @@
 
 <div class="menu-container">
   <div class="menu-nav-sidebar" transition:fly={{ x: -1000, duration: 500 }}>
-    <h2 class="tw-p-5 small-blue-title">{$LL.menu.title()}</h2>
+    <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
     <nav>
       {#each $subMenusStore as submenu}
         <div class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}" on:click|preventDefault={() => switchMenu(submenu)}>
