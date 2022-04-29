@@ -77,7 +77,8 @@ const menu: NonNullable<Translation["menu"]> = {
         description: "分享该房间的链接！",
         copy: "复制",
         share: "分享",
-        walk_automatically_to_position: "自动走到我的位置",
+        walkAutomaticallyToPosition: "自动走到我的位置",
+        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "文本",

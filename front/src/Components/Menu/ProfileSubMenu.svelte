@@ -23,6 +23,7 @@
     import Woka from "../Woka/Woka.svelte";
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -62,19 +63,39 @@
 <div class="customize-main">
     <div class="submenu">
         <section>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditNameScene}>
+            <button
+                type="button"
+                class="nes-btn"
+                on:click={() => analyticsClient.editName()}
+                on:click={openEditNameScene}
+            >
                 <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} />
                 <span class="btn-hover">{$LL.menu.profile.edit.name()}</span>
             </button>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditSkinScene}>
+            <button
+                type="button"
+                class="nes-btn"
+                on:click={() => analyticsClient.editWoka()}
+                on:click={openEditSkinScene}
+            >
                 <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
                 <span class="btn-hover">{$LL.menu.profile.edit.woka()}</span>
             </button>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEditCompanionScene}>
+            <button
+                type="button"
+                class="nes-btn"
+                on:click={() => analyticsClient.editCompanion()}
+                on:click={openEditCompanionScene}
+            >
                 <Companion userId={-1} placeholderSrc={btnProfileSubMenuCompanion} width="26px" height="26px" />
                 <span class="btn-hover">{$LL.menu.profile.edit.companion()}</span>
             </button>
-            <button type="button" class="nes-btn" on:click|preventDefault={openEnableCameraScene}>
+            <button
+                type="button"
+                class="nes-btn"
+                on:click={() => analyticsClient.editCamera()}
+                on:click={openEnableCameraScene}
+            >
                 <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} />
                 <span class="btn-hover">{$LL.menu.profile.edit.camera()}</span>
             </button>
@@ -89,13 +110,15 @@
                 {/if}
             </section>
             <section>
-                <button type="button" class="nes-btn" on:click|preventDefault={logOut}
+                <button type="button" class="nes-btn" on:click={() => analyticsClient.logout()} on:click={logOut}
                     >{$LL.menu.profile.logout()}</button
                 >
             </section>
         {:else}
             <section>
-                <a type="button" class="nes-btn" href="/login">{$LL.menu.profile.login()}</a>
+                <a type="button" class="nes-btn" href="/login" on:click={() => analyticsClient.login()}
+                    >{$LL.menu.profile.login()}</a
+                >
             </section>
         {/if}
     </div>

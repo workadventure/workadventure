@@ -3,6 +3,7 @@
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../i18n/i18n-svelte";
     import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let game: Game;
 
@@ -40,13 +41,15 @@
     <button
         type="submit"
         class="selectCharacterSceneFormSubmit nes-btn is-primary"
-        on:click|preventDefault={cameraScene}>{$LL.woka.selectWoka.continue()}</button
+        on:click={() => analyticsClient.selectWoka()}
+        on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
     {#if $customizeAvailableStore}
         <button
             type="submit"
             class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
-            on:click|preventDefault={customizeScene}>{$LL.woka.selectWoka.customize()}</button
+            on:click={() => analyticsClient.selectCustomWoka()}
+            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
     {/if}
 </section>

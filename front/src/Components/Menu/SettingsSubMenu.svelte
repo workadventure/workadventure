@@ -10,6 +10,7 @@
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     import infoImg from "../images/info.svg";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
@@ -191,11 +192,21 @@
             </div>
         </div>
         <label>
-            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueCameraPrivacySettings} />
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                on:change={(event) => analyticsClient.settingCamera(event.currentTarget.value)}
+                bind:checked={valueCameraPrivacySettings}
+            />
             <span>{$LL.menu.settings.privacySettings.cameraToggle()}</span>
         </label>
         <label>
-            <input type="checkbox" class="nes-checkbox is-dark" bind:checked={valueMicrophonePrivacySettings} />
+            <input
+                type="checkbox"
+                class="nes-checkbox is-dark"
+                on:change={(event) => analyticsClient.settingMicrophone(event.currentTarget.value)}
+                bind:checked={valueMicrophonePrivacySettings}
+            />
             <span>{$LL.menu.settings.privacySettings.microphoneToggle()}</span>
         </label>
     </section>
@@ -211,6 +222,7 @@
                 type="checkbox"
                 class="nes-checkbox is-dark"
                 bind:checked={fullscreen}
+                on:change={(event) => analyticsClient.settingFullscreen(event.currentTarget.value)}
                 on:change={changeFullscreen}
             />
             <span>{$LL.menu.settings.fullscreen()}</span>
@@ -220,6 +232,7 @@
                 type="checkbox"
                 class="nes-checkbox is-dark"
                 bind:checked={notification}
+                on:change={(event) => analyticsClient.settingNotification(event.currentTarget.value)}
                 on:change={changeNotification}
             />
             <span>{$LL.menu.settings.notifications()}</span>
@@ -229,6 +242,7 @@
                 type="checkbox"
                 class="nes-checkbox is-dark"
                 bind:checked={forceCowebsiteTrigger}
+                on:change={(event) => analyticsClient.settingAskWebsite(event.currentTarget.value)}
                 on:change={changeForceCowebsiteTrigger}
             />
             <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
@@ -238,6 +252,7 @@
                 type="checkbox"
                 class="nes-checkbox is-dark"
                 bind:checked={ignoreFollowRequests}
+                on:change={(event) => analyticsClient.settingRequestFollow(event.currentTarget.value)}
                 on:change={changeIgnoreFollowRequests}
             />
             <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
@@ -246,6 +261,7 @@
                     type="checkbox"
                     class="nes-checkbox is-dark"
                     bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                    on:change={(event) => analyticsClient.settingDecreaseAudioVolume(event.currentTarget.value)}
                     on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
                 />
                 <span>{$LL.audio.manager.reduce()}</span>
