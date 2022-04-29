@@ -1,4 +1,5 @@
 import { z } from "zod";
+import {extendApi} from "@anatine/zod-openapi";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -7,18 +8,18 @@ import { z } from "zod";
 
 //The list of all the player textures, both the default models and the partial textures used for customization
 
-const wokaTexture = z.object({
-    id: z.string(),
-    name: z.string(),
-    url: z.string(),
-    tags: z.array(z.string()).optional(),
-    tintable: z.boolean().optional(),
+export const wokaTexture = z.object({
+    id: extendApi(z.string(), {description: 'The identifier of the texture in the database.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
+    name: extendApi(z.string(), {description: 'The name of the texture.', example: 'Hair 1'}),
+    url: extendApi(z.string(), {description: 'The URL of the image of the texture.', example: 'http://example.com/resources/customisation/character_hairs/character_hairs1.png'}),
+    tags: extendApi(z.array(z.string()).optional(), {deprecated: true}),
+    tintable: extendApi(z.boolean().optional(), {description: 'Whether the color is customizable or not.', example: true}),
 });
 
 export type WokaTexture = z.infer<typeof wokaTexture>;
 
 const wokaTextureCollection = z.object({
-    name: z.string(),
+    name: extendApi(z.string(), {description: 'Name of the collection', example: 'Hair'}),
     textures: z.array(wokaTexture),
 });
 
@@ -38,9 +39,9 @@ export type WokaList = z.infer<typeof wokaList>;
 export const wokaPartNames = ["woka", "body", "eyes", "hair", "clothes", "hat", "accessory"];
 
 export const isWokaDetail = z.object({
-    id: z.string(),
-    url: z.optional(z.string()),
-    layer: z.optional(z.string()),
+    id: extendApi(z.string(), {description: 'The identifier of the woka in the database.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
+    url: extendApi(z.optional(z.string()), {description: 'The URL of the image of the woka.', example: 'http://example.com/resources/characters/pipoya/male.png'}),
+    layer: extendApi(z.optional(z.string()), {description: 'The layer of where the woka will be rendered.'}),
 });
 
 export type WokaDetail = z.infer<typeof isWokaDetail>;
