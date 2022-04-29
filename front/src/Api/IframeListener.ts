@@ -28,7 +28,7 @@ import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
-import type { ChangeZoneEvent } from "./Events/ChangeZoneEvent";
+import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import { CameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
 import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
@@ -239,7 +239,7 @@ class IframeListener {
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
-                        scriptUtils.sendAnonymousChat(iframeEvent.data);
+                        scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -294,7 +294,6 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         const _exhaustiveCheck: never = iframeEvent;
                     }
                 }
@@ -400,13 +399,20 @@ class IframeListener {
         this.scripts.delete(scriptUrl);
     }
 
-    sendUserInputChat(message: string) {
-        this.postMessage({
-            type: "userInputChat",
-            data: {
-                message: message,
-            } as UserInputChatEvent,
-        });
+    /**
+     * @param message The message to dispatch
+     * @param exceptOrigin Don't dispatch the message to exceptOrigin (to avoid infinite loops)
+     */
+    sendUserInputChat(message: string, exceptOrigin?: Window) {
+        this.postMessage(
+            {
+                type: "userInputChat",
+                data: {
+                    message: message,
+                } as UserInputChatEvent,
+            },
+            exceptOrigin
+        );
     }
 
     sendEnterEvent(name: string) {
@@ -445,21 +451,21 @@ class IframeListener {
         });
     }
 
-    sendEnterZoneEvent(zoneName: string) {
+    sendEnterAreaEvent(areaName: string) {
         this.postMessage({
-            type: "enterZoneEvent",
+            type: "enterAreaEvent",
             data: {
-                name: zoneName,
-            } as ChangeZoneEvent,
+                name: areaName,
+            } as ChangeAreaEvent,
         });
     }
 
-    sendLeaveZoneEvent(zoneName: string) {
+    sendLeaveAreaEvent(areaName: string) {
         this.postMessage({
-            type: "leaveZoneEvent",
+            type: "leaveAreaEvent",
             data: {
-                name: zoneName,
-            } as ChangeZoneEvent,
+                name: areaName,
+            } as ChangeAreaEvent,
         });
     }
 
@@ -522,8 +528,11 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>) {
+    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>, exceptOrigin?: Window) {
         for (const iframe of this.iframes) {
+            if (exceptOrigin === iframe.contentWindow) {
+                continue;
+            }
             iframe.contentWindow?.postMessage(message, "*");
         }
     }

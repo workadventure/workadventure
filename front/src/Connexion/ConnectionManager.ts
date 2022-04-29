@@ -290,15 +290,15 @@ class ConnectionManager {
             );
 
             connection.onConnectError((error: object) => {
-                console.log("An error occurred while connecting to socket server. Retrying");
+                console.log("onConnectError => An error occurred while connecting to socket server. Retrying");
                 reject(error);
             });
 
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
-                console.log("Connection closed to socket server. Retrying");
+                console.log("connectionErrorStream => An error occurred while connecting to socket server. Retrying");
                 reject(
                     new Error(
-                        "Connection closed to socket server. Retrying. Code: " +
+                        "An error occurred while connecting to socket server. Retrying. Code: " +
                             event.code +
                             ", Reason: " +
                             event.reason
@@ -363,15 +363,13 @@ class ConnectionManager {
 
         if (locale) {
             try {
-                if (locales.indexOf(locale) == -1) {
-                    locales.forEach((l) => {
-                        if (l.startsWith(locale.split("-")[0])) {
-                            setCurrentLocale(l);
-                            return;
-                        }
-                    });
+                if (locales.indexOf(locale) !== -1) {
+                    await setCurrentLocale(locale as Locales);
                 } else {
-                    setCurrentLocale(locale as Locales);
+                    const nonRegionSpecificLocale = locales.find((l) => l.startsWith(locale.split("-")[0]));
+                    if (nonRegionSpecificLocale) {
+                        await setCurrentLocale(nonRegionSpecificLocale);
+                    }
                 }
             } catch (err) {
                 console.warn("Could not set locale", err);

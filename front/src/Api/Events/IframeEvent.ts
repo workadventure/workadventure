@@ -29,7 +29,7 @@ import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./ui/MenuRegisterEve
 import type { ChangeLayerEvent } from "./ChangeLayerEvent";
 import { isPlayerPosition } from "./PlayerPosition";
 import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
-import type { ChangeZoneEvent } from "./ChangeZoneEvent";
+import type { ChangeAreaEvent } from "./ChangeAreaEvent";
 import { isCameraSetEvent } from "./CameraSetEvent";
 import { isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
@@ -162,8 +162,8 @@ export interface IframeResponseEventMap {
     leaveEvent: EnterLeaveEvent;
     enterLayerEvent: ChangeLayerEvent;
     leaveLayerEvent: ChangeLayerEvent;
-    enterZoneEvent: ChangeZoneEvent;
-    leaveZoneEvent: ChangeZoneEvent;
+    enterAreaEvent: ChangeAreaEvent;
+    leaveAreaEvent: ChangeAreaEvent;
     buttonClickedEvent: ButtonClickedEvent;
     remotePlayerClickedEvent: RemotePlayerClickedEvent;
     actionsMenuActionClickedEvent: ActionsMenuActionClickedEvent;

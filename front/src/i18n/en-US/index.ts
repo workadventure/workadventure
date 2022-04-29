@@ -15,8 +15,6 @@ import trigger from "./trigger";
 import muc from "./muc";
 
 const en_US: BaseTranslation = {
-    language: "English",
-    country: "United States",
     audio,
     camera,
     chat,

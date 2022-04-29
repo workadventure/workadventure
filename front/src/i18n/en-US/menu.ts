@@ -59,11 +59,11 @@ const menu: BaseTranslation = {
             title: "Language",
         },
         privacySettings: {
-            title: "Away mode settings",
+            title: "Away mode",
             explanation:
-                'When the WorkAdventure tab is not visible, it switches to "away mode". In this mode, you can decide to automatically disable your webcam and/or microphone for as long as the tab stays hidden.',
-            cameraToggle: "Camera",
-            microphoneToggle: "Microphone",
+                'While the WorkAdventure tab in your browser is not visible. WorkAdventure switches to "away mode"',
+            cameraToggle: 'Keep camera active in "away mode"',
+            microphoneToggle: 'Keep microphone active in "away mode"',
         },
         save: {
             warning: "(Saving these settings will restart the game)",
@@ -78,7 +78,8 @@ const menu: BaseTranslation = {
         description: "Share the link of the room!",
         copy: "Copy",
         share: "Share",
-        walk_automatically_to_position: "Walk automatically to my position",
+        walkAutomaticallyToPosition: "Walk automatically to my position",
+        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",

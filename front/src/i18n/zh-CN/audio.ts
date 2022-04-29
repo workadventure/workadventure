@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const audio: BaseTranslation = {
+const audio: NonNullable<Translation["audio"]> = {
     manager: {
         reduce: "说话时降低音乐音量",
         allow: "播放声音",

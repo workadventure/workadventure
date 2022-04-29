@@ -4,7 +4,7 @@ import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
 import type { PointInterface } from "../../Connexion/ConnexionModels";
 import type { PlayerAnimationDirections } from "../Player/Animation";
-import type { Unsubscriber } from "svelte/store";
+import { get, Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
@@ -113,7 +113,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         const actions: ActionsMenuAction[] = [];
         if (this.visitCardUrl) {
             actions.push({
-                actionName: LL.woka.menu.businessCard(),
+                actionName: get(LL).woka.menu.businessCard(),
                 protected: true,
                 priority: 1,
                 callback: () => {
@@ -125,8 +125,8 @@ export class RemotePlayer extends Character implements ActivatableInterface {
 
         actions.push({
             actionName: blackListManager.isBlackListed(this.userUuid)
-                ? LL.report.block.unblock()
-                : LL.report.block.block(),
+                ? get(LL).report.block.unblock()
+                : get(LL).report.block.block(),
             protected: true,
             priority: -1,
             style: "is-error",

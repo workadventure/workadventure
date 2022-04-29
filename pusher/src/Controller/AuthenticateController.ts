@@ -1,11 +1,12 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
+import { adminService } from "../Services/AdminService";
 
 export interface TokenInterface {
     userUuid: string;
@@ -18,6 +19,7 @@ export class AuthenticateController extends BaseHttpController {
         this.register();
         this.anonymLogin();
         this.profileCallback();
+        this.me();
     }
 
     openIDLogin() {
@@ -166,10 +168,12 @@ export class AuthenticateController extends BaseHttpController {
 
                         //Get user data from Admin Back Office
                         //This is very important to create User Local in LocalStorage in WorkAdventure
-                        const resUserData = await this.getUserByUserIdentifier(
+                        const resUserData = await adminService.fetchMemberDataByUuid(
                             authTokenData.identifier,
                             playUri as string,
-                            IPAddress
+                            IPAddress,
+                            [],
+                            req.header("accept-language")
                         );
 
                         if (authTokenData.accessToken == undefined) {
@@ -178,7 +182,7 @@ export class AuthenticateController extends BaseHttpController {
                             if (!code && !nonce) {
                                 return res.json({ ...resUserData, authToken: token });
                             }
-                            console.error("Token cannot to be check on OpenId provider");
+                            console.error("Token cannot be checked on OpenId provider");
                             res.status(500);
                             res.send("User cannot to be connected on openid provider");
                             return;
@@ -221,7 +225,13 @@ export class AuthenticateController extends BaseHttpController {
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
-                const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
+                const data = await adminService.fetchMemberDataByUuid(
+                    email,
+                    playUri as string,
+                    IPAddress,
+                    [],
+                    req.header("accept-language")
+                );
 
                 return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
@@ -253,7 +263,7 @@ export class AuthenticateController extends BaseHttpController {
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                 if (authTokenData.accessToken == undefined) {
-                    throw Error("Token cannot to be logout on Hydra");
+                    throw Error("Token cannot be logout on Hydra");
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
@@ -324,13 +334,18 @@ export class AuthenticateController extends BaseHttpController {
 
                 try {
                     if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminApi.fetchMemberDataByToken(organizationMemberToken, playUri);
+                    const data = await adminService.fetchMemberDataByToken(
+                        organizationMemberToken,
+                        playUri,
+                        req.header("accept-language")
+                    );
                     const userUuid = data.userUuid;
                     const email = data.email;
                     const roomUrl = data.roomUrl;
                     const mapUrlStart = data.mapUrlStart;
 
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
+
                     res.json({
                         authToken,
                         userUuid,
@@ -410,13 +425,13 @@ export class AuthenticateController extends BaseHttpController {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                         if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot to be check on Hydra");
+                            throw Error("Token cannot be checked on OpenID connect provider");
                         }
                         await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
                         //get login profile
                         res.status(302);
-                        res.setHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
+                        res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken));
                         res.send("");
                         return;
                     } catch (error) {
@@ -432,11 +447,58 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     /**
+     * @openapi
+     * /me:
+     *   get:
+     *     description: ???
+     *     parameters:
+     *      - name: "token"
+     *        in: "query"
+     *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: Data of user connected
+     */
+    me() {
+        // @ts-ignore
+        this.app.get("/me", async (req, res): void => {
+            const { token } = parse(req.path_query);
+            try {
+                //verify connected by token
+                if (token != undefined) {
+                    try {
+                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                        if (authTokenData.accessToken == undefined) {
+                            throw Error("Token cannot to be checked on Hydra");
+                        }
+                        const me = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+
+                        //get login profile
+                        res.status(200);
+                        res.json({ ...me });
+                        return;
+                    } catch (error) {
+                        this.castErrorToResponse(error, res);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("me => ERROR", error);
+                this.castErrorToResponse(error, res);
+                return;
+            }
+        });
+    }
+
+    /**
      *
      * @param email
      * @param playUri
      * @param IPAddress
-     * @return FetchMemberDataByUuidResponse|object
+     * @return 
+     |object
      * @private
      */
     private async getUserByUserIdentifier(
@@ -456,7 +518,7 @@ export class AuthenticateController extends BaseHttpController {
             jabberPassword: null,
         };
         try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress, []);
+            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

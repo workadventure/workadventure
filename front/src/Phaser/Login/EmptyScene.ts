@@ -13,6 +13,5 @@ export class EmptyScene extends Scene {
 
     create() {}
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(time: number, delta: number): void {}
 }

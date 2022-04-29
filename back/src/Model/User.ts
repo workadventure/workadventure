@@ -5,6 +5,7 @@ import { Movable } from "../Model/Movable";
 import { PositionNotifier } from "../Model/PositionNotifier";
 import { ServerDuplexStream } from "grpc";
 import {
+    AvailabilityStatus,
     BatchMessage,
     CompanionMessage,
     FollowAbortMessage,
@@ -30,9 +31,8 @@ export class User implements Movable {
         public readonly uuid: string,
         public readonly IPAddress: string,
         private position: PointInterface,
-        public silent: boolean,
         private positionNotifier: PositionNotifier,
-        private away: boolean,
+        private status: AvailabilityStatus,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -90,8 +90,12 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
-    public isAway(): boolean {
-        return this.away;
+    public getStatus(): AvailabilityStatus {
+        return this.status;
+    }
+
+    public get silent(): boolean {
+        return this.status === AvailabilityStatus.SILENT || this.status === AvailabilityStatus.JITSI;
     }
 
     get following(): User | undefined {
@@ -134,9 +138,11 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
-        const away = details.getAway();
-        if (away) {
-            this.away = away.getValue();
+        const status = details.getStatus();
+        let sendStatusUpdate = false;
+        if (status && status !== this.status) {
+            this.status = status;
+            sendStatusUpdate = true;
         }
 
         const playerDetails = new SetPlayerDetailsMessage();
@@ -144,11 +150,14 @@ export class User implements Movable {
         if (this.outlineColor !== undefined) {
             playerDetails.setOutlinecolor(new UInt32Value().setValue(this.outlineColor));
         }
+        if (details.getRemoveoutlinecolor()) {
+            playerDetails.setRemoveoutlinecolor(new BoolValue().setValue(true));
+        }
         if (this.voiceIndicatorShown !== undefined) {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
-        if (details.getAway() !== undefined) {
-            playerDetails.setAway(new BoolValue().setValue(this.away));
+        if (sendStatusUpdate) {
+            playerDetails.setStatus(details.getStatus());
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

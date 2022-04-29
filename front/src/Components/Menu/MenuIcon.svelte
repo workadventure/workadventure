@@ -10,6 +10,7 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -42,7 +43,8 @@
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showInvite}
+            on:click={() => analyticsClient.openInvite()}
+            on:click={showInvite}
         />
         <img
             src={logoRegister}
@@ -50,7 +52,8 @@
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={register}
+            on:click={() => analyticsClient.openRegister()}
+            on:click={register}
         />
     {:else}
         <img
@@ -59,7 +62,8 @@
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showMenu}
+            on:click={() => analyticsClient.openedMenu()}
+            on:click={showMenu}
         />
     {/if}
     <img
@@ -68,7 +72,8 @@
         class="nes-pointer"
         draggable="false"
         on:dragstart|preventDefault={noDrag}
-        on:click|preventDefault={showChat}
+        on:click={() => analyticsClient.openedMenu()}
+        on:click={showChat}
     />
 </main>
 

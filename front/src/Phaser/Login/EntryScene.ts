@@ -1,12 +1,11 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
 import { ErrorScene } from "../Reconnecting/ErrorScene";
-import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import LL from "../../i18n/i18n-svelte";
-import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
 
 export const EntrySceneName = "EntryScene";
 
@@ -47,27 +46,11 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
-                        const $LL = get(LL);
-                        if (err.response && err.response.status == 404) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.accessLink.title(),
-                                    $LL.error.accessLink.subTitle(),
-                                    $LL.error.accessLink.details()
-                                ),
-                                this.scene
-                            );
-                        } else if (err.response && err.response.status == 403) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.connectionRejected.title(),
-                                    $LL.error.connectionRejected.subTitle({
-                                        error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
-                                    }),
-                                    $LL.error.connectionRejected.details()
-                                ),
-                                this.scene
-                            );
+                        const errorType = isErrorApiData.safeParse(err?.response?.data);
+                        if (errorType.success) {
+                            if (errorType.data.type === "redirect") {
+                                window.location.assign(errorType.data.urlToRedirect);
+                            } else errorScreenStore.setError(err?.response?.data);
                         } else {
                             ErrorScene.showError(err, this.scene);
                         }

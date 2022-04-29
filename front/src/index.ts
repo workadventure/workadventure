@@ -17,14 +17,12 @@ import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
 import { desktopApi } from "./Api/desktop/index";
-import { SelectCharacterMobileScene } from "./Phaser/Login/SelectCharacterMobileScene";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -91,7 +89,7 @@ const config: GameConfig = {
     scene: [
         EntryScene,
         LoginScene,
-        isMediaBreakpointUp("md") ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCharacterScene,
         SelectCompanionScene,
         EnableCameraScene,
         ReconnectingScene,

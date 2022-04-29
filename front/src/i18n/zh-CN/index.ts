@@ -1,4 +1,5 @@
-import type { BaseTranslation } from "../i18n-types";
+import en_US from "../en-US";
+import type { Translation } from "../i18n-types";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
@@ -14,9 +15,8 @@ import emoji from "./emoji";
 import trigger from "./trigger";
 import muc from "./muc";
 
-const zh_CN: BaseTranslation = {
-    language: "中文",
-    country: "中国",
+const zh_CN: Translation = {
+    ...(en_US as Translation),
     audio,
     camera,
     chat,

@@ -1,6 +1,7 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
     import {
         walkAutomaticallyStore,
         copyLink,
@@ -17,17 +18,33 @@
         {#if !canShare}
             <section class="share-url not-mobile">
                 <h3>{$LL.menu.invite.description()}</h3>
-                <input type="text" readonly id="input-share-link" class="link-url" value={location.toString()} />
-                <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
+                <input
+                    type="text"
+                    readonly
+                    id="input-share-link"
+                    class="link-url nes-input is-dark"
+                    value={location.toString()}
+                />
+                <button
+                    type="button"
+                    class="nes-btn is-primary"
+                    on:click={() => analyticsClient.inviteCopyLink()}
+                    on:click={copyLink}>{$LL.menu.invite.copy()}</button
+                >
             </section>
         {:else}
             <section class="is-mobile">
                 <h3>{$LL.menu.invite.description()}</h3>
                 <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-                <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
+                <button
+                    type="button"
+                    class="nes-btn is-primary"
+                    on:click={() => analyticsClient.inviteCopyLink()}
+                    on:click={shareLink}>{$LL.menu.invite.share()}</button
+                >
             </section>
         {/if}
-        <h3>Select an entry point</h3>
+        <h3>{$LL.menu.invite.selectEntryPoint()}</h3>
         <section class="nes-select is-dark starting-points">
             <select
                 bind:value={entryPoint}
@@ -45,11 +62,12 @@
                 type="checkbox"
                 class="nes-checkbox is-dark"
                 bind:checked={$walkAutomaticallyStore}
+                on:change={(e) => analyticsClient.inviteCopyLinkWalk(e.currentTarget.value)}
                 on:change={() => {
                     updateInputFieldValue();
                 }}
             />
-            <span>{$LL.menu.invite.walk_automatically_to_position()}</span>
+            <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
         </label>
     </section>
 </div>

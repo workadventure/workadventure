@@ -2,18 +2,20 @@
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../i18n/i18n-svelte";
-    import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+    import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let game: Game;
 
     const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
+    const showArrows = selectCharacterScene.getCollectionKeysSize() > 1;
 
     function selectLeft() {
-        selectCharacterScene.moveToLeft();
+        selectCharacterScene.selectPreviousCollection();
     }
 
     function selectRight() {
-        selectCharacterScene.moveToRight();
+        selectCharacterScene.selectNextCollection();
     }
 
     function cameraScene() {
@@ -25,83 +27,74 @@
     }
 </script>
 
-<form class="selectCharacterScene">
-    <section class="text-center">
-        <h2>{$LL.woka.selectWoka.title()}</h2>
-        <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
-            &lt;
-        </button>
-        <button class="selectCharacterButton selectCharacterButtonRight nes-btn" on:click|preventDefault={selectRight}>
-            &gt;
-        </button>
-    </section>
-    <section class="action">
+<section class="text-center">
+    <h2>{$LL.woka.selectWoka.title()}</h2>
+</section>
+<section class="category">
+    {#if showArrows}
+        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
+        <strong class="category-text">{$selectedCollection}</strong>
+        <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
+    {/if}
+</section>
+<section class="action">
+    <button
+        type="submit"
+        class="selectCharacterSceneFormSubmit nes-btn is-primary"
+        on:click={() => analyticsClient.selectWoka()}
+        on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
+    >
+    {#if $customizeAvailableStore}
         <button
             type="submit"
-            class="selectCharacterSceneFormSubmit nes-btn is-primary"
-            on:click|preventDefault={cameraScene}>{$LL.woka.selectWoka.continue()}</button
+            class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
+            on:click={() => analyticsClient.selectCustomWoka()}
+            on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
-        {#if $customizeAvailableStore}
-            <button
-                type="submit"
-                class="selectCharacterSceneFormCustomYourOwnSubmit nes-btn"
-                on:click|preventDefault={customizeScene}>{$LL.woka.selectWoka.customize()}</button
-            >
-        {/if}
-    </section>
-</form>
+    {/if}
+</section>
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
 
-    form.selectCharacterScene {
+    section {
         font-family: "Press Start 2P";
-        pointer-events: auto;
         color: #ebeeee;
+        margin: 5px;
 
-        section {
-            margin: 10px;
-
-            &.action {
-                text-align: center;
-                margin-top: 55vh;
-            }
-
-            h2 {
+        &.category {
+            text-align: center;
+            margin-top: 8vh;
+            .category-text {
                 font-family: "Press Start 2P";
-                margin: 1px;
-            }
-
-            &.text-center {
-                text-align: center;
-            }
-
-            button.selectCharacterButton {
-                position: absolute;
-                top: 33vh;
-                margin: 0;
+                display: inline-block;
+                width: 65%;
             }
         }
 
-        button {
+        &.action {
+            position: absolute;
+            bottom: 2vh;
+            width: 100%;
+            text-align: center;
+        }
+
+        h2 {
             font-family: "Press Start 2P";
+            margin: 1px;
+        }
 
-            &.selectCharacterButtonLeft {
-                left: 33vw;
-            }
+        &.text-center {
+            text-align: center;
+        }
 
-            &.selectCharacterButtonRight {
-                right: 33vw;
-            }
+        button.selectCharacterButton {
+            margin: 0;
         }
     }
 
-    @include media-breakpoint-up(md) {
-        form.selectCharacterScene button.selectCharacterButtonLeft {
-            left: 5vw;
-        }
-        form.selectCharacterScene button.selectCharacterButtonRight {
-            right: 5vw;
-        }
+    button {
+        font-family: "Press Start 2P";
+        pointer-events: auto;
     }
 </style>

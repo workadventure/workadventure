@@ -144,9 +144,8 @@ export class GameRoom {
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
-            false,
             this.positionNotifier,
-            joinRoomMessage.getAway(),
+            joinRoomMessage.getStatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -208,6 +207,9 @@ export class GameRoom {
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         user.updateDetails(playerDetailsMessage);
+        if (user.group !== undefined && user.silent) {
+            this.leaveGroup(user);
+        }
     }
 
     private updateUserGroup(user: User): void {
@@ -343,21 +345,6 @@ export class GameRoom {
                 currentUser.socket.write(message);
             }
         });
-    }
-
-    setSilent(user: User, silent: boolean) {
-        if (user.silent === silent) {
-            return;
-        }
-
-        user.silent = silent;
-        if (silent && user.group !== undefined) {
-            this.leaveGroup(user);
-        }
-        if (!silent) {
-            // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(user, user.getPosition());
-        }
     }
 
     /**
@@ -533,7 +520,16 @@ export class GameRoom {
         this.admins.delete(admin);
     }
 
-    public incrementVersion(): number {
+    public async incrementVersion(): Promise<number> {
+        // Let's check if the mapUrl has changed
+        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
+        if (this.mapUrl !== mapDetails.mapUrl) {
+            this.mapUrl = mapDetails.mapUrl;
+            this.mapPromise = undefined;
+            // Reset the variable manager
+            this.variableManagerPromise = undefined;
+        }
+
         this.versionNumber++;
         return this.versionNumber;
     }
@@ -572,11 +568,7 @@ export class GameRoom {
 
             return {
                 mapUrl,
-                policy_type: 1,
-                tags: [],
                 authenticationMandatory: null,
-                roomSlug: null,
-                contactPage: null,
                 group: null,
                 mucRooms: null,
             };

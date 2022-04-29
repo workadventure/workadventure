@@ -28,7 +28,6 @@ export class Player extends Character {
         companionTexturePromise?: CancelablePromise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
-        this.statusDot.setVisible(false);
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
     }

@@ -7,6 +7,14 @@
   resolved "https://registry.yarnpkg.com/@16bits/nes.css/-/nes.css-2.3.2.tgz#e69db834119b33ae8d3cb044f106a07a17cadd6f"
   integrity sha512-nEM5PIth+Bab5JSOa4uUR+PMNUsNTYxA55oVlG3gXI/4LoYtWS767Uv9Pu/KCbHXVvnIjt4ZXt13kZw3083qTw==
 
+"@anatine/zod-openapi@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@anatine/zod-openapi/-/zod-openapi-1.3.0.tgz#b5b38c3d821b79674226aa7b327c88c371860d0d"
+  integrity sha512-l54DypUdDsIq1Uwjv4ib9IBkTXMKZQLUj7qvdFL51EExC5LdSSqOlTOyaVVZZGYgWPKM7ZjGklhdoknLz4EC+w==
+  dependencies:
+    ts-deepmerge "^1.1.0"
+    validator "^13.7.0"
+
 "@babel/runtime@^7.14.0":
   version "7.14.0"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.14.0.tgz#46794bc20b612c5f75e62dd071e24dfd95f1cbe6"
@@ -77,10 +85,10 @@
   resolved "https://registry.yarnpkg.com/@geprog/vite-plugin-env-config/-/vite-plugin-env-config-4.0.3.tgz#ca04bd9ad9f55fe568917db79266afe8e766e25e"
   integrity sha512-2HDCV+6XXJjSuBAhDWLRr111buMQ3bIZrKo3dymIhEJ4oJCC/3yDqg7HDQIn8Y8KKbsM0AtuHMZW4yz2tPBsYg==
 
-"@home-based-studio/phaser3-utils@^0.4.2":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@home-based-studio/phaser3-utils/-/phaser3-utils-0.4.2.tgz#b2c1815a6b51321ea8dab027b5badcf714d99fd6"
-  integrity sha512-S0VkAq3z0Kf0vEUUyCDes911icvc+nkUq7lGp23zD/5lk7LTGM51NswSAfel7Rm/DLY8IBxvDTBJADTf/De82w==
+"@home-based-studio/phaser3-utils@^0.4.7":
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/@home-based-studio/phaser3-utils/-/phaser3-utils-0.4.7.tgz#d0464c81cb27328657d3fd048396f6936e200c48"
+  integrity sha512-gYt1mkuad85uzYwHK0+wp+mrsGASV4sRZPaHZHnO8A2ofTAnX36S3PcI+BqKchdJ0I7jvBQcfh0yp1Ug0BHT+A==
   dependencies:
     phaser "3.55.1"
 
@@ -1111,10 +1119,10 @@ debug@~3.1.0:
   dependencies:
     ms "2.0.0"
 
-deep-copy-ts@^0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/deep-copy-ts/-/deep-copy-ts-0.5.0.tgz#b9493d8e2bae85ef7d659c16eb707c13efb84499"
-  integrity sha512-/3cgBcMkznRf5BM8wu6YWz3SQUkHzgh/v1TZFjevztLj9sMjFvNFBtpN4uUtPzw/rA/TldyD6c6LRL1zno4+YA==
+deep-copy-ts@^0.5.4:
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/deep-copy-ts/-/deep-copy-ts-0.5.4.tgz#e81b15797e4075cb3a690a1a7ac30179f2d72562"
+  integrity sha512-YJbPjw0YqdosorpCsa6copy1p/gJsFT9Q6Zq0tLi7D0nXh6Y/usjeIQZfkzV3HVuqY0Hl/5gM7TwgIbIWvEjlA==
 
 deep-equal@^1.0.1:
   version "1.1.1"
@@ -2375,6 +2383,13 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
+openapi3-ts@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/openapi3-ts/-/openapi3-ts-2.0.2.tgz#a200dd838bf24c9086c8eedcfeb380b7eb31e82a"
+  integrity sha512-TxhYBMoqx9frXyOgnRHufjQfPXomTIHYKhSKJ6jHfj13kS8OEIhvmE8CTuQyKtjjWttAjX5DPxM1vmalEpo8Qw==
+  dependencies:
+    yaml "^1.10.2"
+
 optionator@^0.9.1:
   version "0.9.1"
   resolved "https://registry.yarnpkg.com/optionator/-/optionator-0.9.1.tgz#4f236a6373dae0566a6d43e1326674f50c291499"
@@ -3195,6 +3210,11 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
+ts-deepmerge@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ts-deepmerge/-/ts-deepmerge-1.1.0.tgz#4236ae102199affe2e77690dcf198a420160eef2"
+  integrity sha512-VvwaV/6RyYMwT9d8dClmfHIsG2PCdm6WY430QKOIbPRR50Y/1Q2ilp4i2XEZeHFcNqfaYnAQzpyUC6XA0AqqBg==
+
 ts-deferred@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/ts-deferred/-/ts-deferred-1.0.4.tgz#58145ebaeef5b8f2a290b8cec3d060839f9489c7"
@@ -3311,10 +3331,10 @@ type-fest@^0.21.3:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.21.3.tgz#d260a24b0198436e133fa26a524a6d65fa3b2e37"
   integrity sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==
 
-typesafe-i18n@^2.59.0:
-  version "2.59.0"
-  resolved "https://registry.yarnpkg.com/typesafe-i18n/-/typesafe-i18n-2.59.0.tgz#09a9a32e61711418d927a389fa52e1c06a5fa5c4"
-  integrity sha512-Qv3Mrwmb8b73VNzQDPHPECzwymdBRVyDiZ3w2qnp4c2iv/7TGuiJegNHT/l3MooEN7IPbSpc5tbXw2x3MbGtFg==
+typesafe-i18n@^5.4.0:
+  version "5.4.0"
+  resolved "https://registry.yarnpkg.com/typesafe-i18n/-/typesafe-i18n-5.4.0.tgz#cab696160bb144c387d7cbd13f7a728aa8371777"
+  integrity sha512-htewpld3FzZQv3Y1G31w54bofaaKR11MCkDK0FIYuXCpX72y1G6fkXUDslqzZCyVkZWRnIhY8leviNDxLwEzRw==
 
 typescript@*:
   version "4.3.2"
@@ -3385,6 +3405,11 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+validator@^13.7.0:
+  version "13.7.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.7.0.tgz#4f9658ba13ba8f3d82ee881d3516489ea85c0857"
+  integrity sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==
 
 vite-plugin-rewrite-all@^0.1.2:
   version "0.1.2"

@@ -1,7 +1,6 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
 import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
-import { arrayIntersect } from "../Services/ArrayHelper";
 import { ZoneEventListener } from "../Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
@@ -26,9 +25,6 @@ export enum GameRoomPolicyTypes {
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public tags: string[];
-    public policyType: GameRoomPolicyTypes;
-    public groupId: string | null = null;
     public mucRooms: MucRoomDefinitionInterface[] | null = null;
 
     private versionNumber: number = 1;
@@ -38,8 +34,8 @@ export class PusherRoom {
     //private xmppListeners: Map<string, XmppClient> = new Map();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
-        this.tags = [];
-        this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
+        // A zone is 10 sprites wide.
+        this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
 
         // By default, create a MUC room whose name is the name of the room.
         this.mucRooms = [
@@ -48,9 +44,6 @@ export class PusherRoom {
                 uri: roomUrl,
             },
         ];
-
-        // A zone is 10 sprites wide.
-        this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
     }
 
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
@@ -80,10 +73,6 @@ export class PusherRoom {
             //this.xmppListeners.delete(socket.userUuid);
         }
         socket.pusherRoom = undefined;
-    }
-
-    public canAccess(userTags: string[]): boolean {
-        return arrayIntersect(userTags, this.tags);
     }
 
     public isEmpty(): boolean {
