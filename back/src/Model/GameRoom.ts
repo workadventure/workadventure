@@ -96,7 +96,7 @@ export class GameRoom {
 
         const gameRoom = new GameRoom(
             roomUrl,
-            mapDetails.mapUrl,
+            mapDetails.mapUrl as string,
             connectCallback,
             disconnectCallback,
             minDistance,
@@ -524,7 +524,7 @@ export class GameRoom {
         // Let's check if the mapUrl has changed
         const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
         if (this.mapUrl !== mapDetails.mapUrl) {
-            this.mapUrl = mapDetails.mapUrl;
+            this.mapUrl = mapDetails.mapUrl as string;
             this.mapPromise = undefined;
             // Reset the variable manager
             this.variableManagerPromise = undefined;

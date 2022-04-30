@@ -34,7 +34,6 @@ import {
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
     EJABBERD_JWT_SECRET,
-    SECRET_KEY,
     SOCKET_IDLE_TIMER,
 } from "../Enum/EnvironmentVariable";
 import { Zone } from "../Model/Zone";

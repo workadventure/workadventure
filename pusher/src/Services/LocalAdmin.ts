@@ -2,7 +2,6 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
@@ -40,11 +39,9 @@ class LocalAdmin implements AdminInterface {
 
         return Promise.resolve({
             mapUrl,
-            policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-            tags: [],
             authenticationMandatory: DISABLE_ANONYMOUS,
-            roomSlug: null,
             contactPage: null,
+            mucRooms: null,
             group: null,
             iframeAuthentication: null,
             loadingLogo: null,

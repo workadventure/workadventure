@@ -13,7 +13,6 @@ import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
 const { client, xml, jid } = require("@xmpp/client");
-const debug = require("@xmpp/debug");
 const parse = require("@xmpp/xml/lib/parse");
 
 interface JID {
@@ -36,7 +35,6 @@ interface XmlElement {
 export class XmppClient {
     private address!: JID;
     private clientPromise!: CancelablePromise<XmppSocket>;
-    private clientJID: any;
     private clientID: string;
     private clientDomain: string;
     private clientResource: string;
@@ -44,10 +42,10 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        this.clientJID = jid(clientSocket.jabberId);
-        this.clientID = this.clientJID.local;
-        this.clientDomain = this.clientJID.domain;
-        this.clientResource = this.clientJID.resource;
+        const clientJID = jid(clientSocket.jabberId);
+        this.clientID = clientJID.local;
+        this.clientDomain = clientJID.domain;
+        this.clientResource = clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
         this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
@@ -64,7 +62,7 @@ export class XmppClient {
 
     private createClient(
         res: (value: XmppSocket | PromiseLike<XmppSocket>) => void,
-        rej: (reason?: any) => void
+        rej: (reason?: unknown) => void
     ): void {
         try {
             let status: "disconnected" | "connected" = "disconnected";
@@ -107,7 +105,7 @@ export class XmppClient {
                     }
                 }
             });
-            xmpp.on("online", async (address: JID) => {
+            xmpp.on("online", (address: JID) => {
                 status = "connected";
                 //TODO
                 // define if MUC must persistent or not
@@ -142,18 +140,20 @@ export class XmppClient {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
+            // @ts-ignore
             xmpp.start()
                 .then(() => {
                     console.log("XmppClient => start");
                 })
-                .catch((e: any) => {
-                    console.error("XmppClient => start => Error =>", e);
+                .catch((err) => {
+                    console.error("XmppClient => start => Error =>", err);
                     xmpp.stop();
                     rej(e);
                 });
 
-            xmpp.on("stanza", async (stanza: any) => {
+            xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
+                // @ts-ignore
                 xmppMessage.setStanza(stanza.toString());
 
                 const subMessage = new SubMessage();

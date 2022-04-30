@@ -10,7 +10,6 @@ import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
-import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 
 export interface AdminBannedData {
     is_banned: boolean;

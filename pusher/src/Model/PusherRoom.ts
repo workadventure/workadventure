@@ -50,7 +50,7 @@ export class PusherRoom {
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public async join(socket: ExSocketInterface) {
+    public join(socket: ExSocketInterface) {
         this.listeners.add(socket);
 
         if (!this.mucRooms) {
