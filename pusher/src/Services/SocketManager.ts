@@ -657,6 +657,7 @@ export class SocketManager implements ZoneEventListener {
             errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
             errorMessage.setDetails(new StringValue().setValue(errorApi.details));
             errorMessage.setImage(new StringValue().setValue(errorApi.image));
+            if (errorApi.type == "unauthorized" && errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
         }
         if (errorApi.type == "retry") {
             if (errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
