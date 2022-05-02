@@ -2,11 +2,11 @@ import { z } from "zod";
 
 const regexUnit = /-*\d+(px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem)|auto|inherit/;
 
+// Parse the string to check if is a valid CSS unit (px,%,vw,vh...)
 export const isUIWebsiteCSSValue = z.string().regex(regexUnit);
 
 export type UIWebsiteCSSValue = z.infer<typeof isUIWebsiteCSSValue>;
 
-// Parse the string to check if is a valid CSS unit (px,%,vw,vh...)
 export const isUIWebsiteMargin = z.object({
     top: isUIWebsiteCSSValue.optional(),
     bottom: isUIWebsiteCSSValue.optional(),

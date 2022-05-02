@@ -1,7 +1,7 @@
 import { get } from "svelte/store";
 import { CreateUIWebsiteEvent, ModifyUIWebsiteEvent, UIWebsite } from "../../../Api/Events/ui/UIWebsite";
 import { iframeListener } from "../../../Api/IframeListener";
-import { scriptUtils } from "../../../Api/ScriptUtils";
+import { v4 as uuidv4 } from "uuid";
 import { uiWebsitesStore } from "../../../Stores/UIWebsiteStore";
 
 class UIWebsiteManager {
@@ -65,7 +65,7 @@ class UIWebsiteManager {
     public open(websiteConfig: CreateUIWebsiteEvent): UIWebsite {
         const newWebsite: UIWebsite = {
             ...websiteConfig,
-            id: scriptUtils.uuidv4(),
+            id: uuidv4(),
             visible: websiteConfig.visible ?? true,
             allowPolicy: websiteConfig.allowPolicy ?? "",
             allowApi: websiteConfig.allowApi ?? false,

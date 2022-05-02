@@ -194,9 +194,9 @@ setTimeout(
 );
 ```
 
-# Manage websites on UI
+# Open fixed iframes
 
-You can use the scripting API to display websites on the user interface.
+You can use the scripting API to display an iframe (so any HTML element) above the game. The iframe is positionned relative to the browser window (so unlike [embedded websites](website-in-map.md), the position of the iframe does not move when someone walks on the map).
 
 <div class="col">
     <img src="images/ui-website.png" class="figure-img img-fluid rounded" alt="" />
@@ -215,8 +215,8 @@ interface CreateUIWebsiteEvent {
     allowApi?: boolean,     // Allow scripting API on the website
     allowPolicy?: string,   // The list of feature policies allowed
     position: {
-        vertical: string,   // Vertical position (top, middle, bottom)
-        horizontal: string, // Horizontal position (left, middle, right)
+        vertical: "top"|"middle"|"bottom",,
+        horizontal: "left","middle","right",
     },
     size: {                 // Size on the UI (available units: px|em|%|cm|in|pc|pt|mm|ex|vw|vh|rem and others values auto|inherit)
         height: string,
