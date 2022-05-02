@@ -178,8 +178,8 @@ export class GameScene extends DirtyScene {
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
+    private biggestAvailableAreaStoreUnsubscriber!: Unsubscriber;
 
-    private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
 
@@ -624,9 +624,9 @@ export class GameScene extends DirtyScene {
         this.reposition();
 
         // From now, this game scene will be notified of reposition events
-        this.biggestAvailableAreaStoreUnsubscribe = biggestAvailableAreaStore.subscribe((box) =>
-            this.cameraManager.updateCameraOffset(box)
-        );
+        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) => {
+            this.cameraManager.updateCameraOffset(box);
+        });
 
         new GameMapPropertiesListener(this, this.gameMap).register();
 
@@ -1563,7 +1563,7 @@ ${escapedMessage}
         this.emoteUnsubscribe();
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
-        this.biggestAvailableAreaStoreUnsubscribe();
+        this.biggestAvailableAreaStoreUnsubscriber();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
         iframeListener.unregisterAnswerer("getState");

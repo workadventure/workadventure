@@ -1,112 +1,133 @@
-import { get, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { LayoutMode } from "../WebRtc/LayoutManager";
-import { embedScreenLayout } from "./EmbedScreensStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
 function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-    if (get(embedScreenLayout) === LayoutMode.VideoChat) {
-        const children = document.querySelectorAll<HTMLDivElement>("div.chat-mode > div");
-        const htmlChildren = Array.from(children.values());
+    // map iframes to Box'es and remove ones outside of the game canvas space
+    const iframeBoxes: Box[] = Array.from(document.getElementsByTagName("iframe"))
+        .filter((iframe) => iframe.offsetLeft < game.offsetWidth)
+        .map((iframe) => ({
+            xStart: iframe.offsetLeft,
+            yStart: iframe.offsetTop,
+            xEnd: iframe.offsetLeft + iframe.offsetWidth,
+            yEnd: iframe.offsetTop + iframe.offsetHeight,
+        }));
 
-        // No chat? Let's go full center
-        if (htmlChildren.length === 0) {
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
+    // create vertices arrays and insert game canvas edges
+    const xVertices = [game.offsetLeft, game.offsetWidth];
+    const yVertices = [game.offsetTop, game.offsetHeight];
 
-        const lastDiv = htmlChildren[htmlChildren.length - 1];
-        // Compute area between top right of the last div and bottom right of window
-        const area1 =
-            (game.offsetWidth - (lastDiv.offsetLeft + lastDiv.offsetWidth)) * (game.offsetHeight - lastDiv.offsetTop);
+    // populate with all vertices
+    for (const box of iframeBoxes) {
+        xVertices.push(box.xStart, box.xEnd);
+        yVertices.push(box.yStart, box.yEnd);
+    }
+    xVertices.sort();
+    yVertices.sort();
 
-        // Compute area between bottom of last div and bottom of the screen on whole width
-        const area2 = game.offsetWidth * (game.offsetHeight - (lastDiv.offsetTop + lastDiv.offsetHeight));
+    // NOTE: cannot use fill() here it makes references to a single array
+    const occupiedSpace: boolean[][] = new Array(xVertices.length);
+    for (let x = 0; x < xVertices.length; x += 1) {
+        occupiedSpace[x] = new Array(yVertices.length);
+    }
 
-        if (area1 < 0 && area2 < 0) {
-            // If screen is full, let's not attempt something foolish and simply center character in the middle.
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
-        if (area1 <= area2) {
-            return {
-                xStart: 0,
-                yStart: lastDiv.offsetTop + lastDiv.offsetHeight,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        } else {
-            return {
-                xStart: lastDiv.offsetLeft + lastDiv.offsetWidth,
-                yStart: lastDiv.offsetTop,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
-    } else {
-        // Possible destinations: at the center bottom or at the right bottom.
-        const mainSectionChildren = Array.from(
-            document.querySelectorAll<HTMLDivElement>("div.main-section > div").values()
-        );
-        const sidebarChildren = Array.from(document.querySelectorAll<HTMLDivElement>("aside.sidebar > div").values());
-
-        // No presentation? Let's center on the screen
-        if (mainSectionChildren.length === 0) {
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
-
-        // At this point, we know we have at least one element in the main section.
-        const lastPresentationDiv = mainSectionChildren[mainSectionChildren.length - 1];
-
-        const presentationArea =
-            (game.offsetHeight - (lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight)) *
-            (lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth);
-
-        let leftSideBar: number;
-        let bottomSideBar: number;
-        if (sidebarChildren.length === 0) {
-            leftSideBar = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("sidebar").offsetLeft;
-            bottomSideBar = 0;
-        } else {
-            const lastSideBarChildren = sidebarChildren[sidebarChildren.length - 1];
-            leftSideBar = lastSideBarChildren.offsetLeft;
-            bottomSideBar = lastSideBarChildren.offsetTop + lastSideBarChildren.offsetHeight;
-        }
-        const sideBarArea = (game.offsetWidth - leftSideBar) * (game.offsetHeight - bottomSideBar);
-
-        if (presentationArea <= sideBarArea) {
-            return {
-                xStart: leftSideBar,
-                yStart: bottomSideBar,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        } else {
-            return {
-                xStart: 0,
-                yStart: lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight,
-                xEnd: /*lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth*/ game.offsetWidth, // To avoid flickering when a chat start, we center on the center of the screen, not the center of the main content area
-                yEnd: game.offsetHeight,
-            };
+    // check if given vertex is a part of something occupying the view
+    for (let x = 0; x < xVertices.length; x += 1) {
+        for (let y = 0; y < yVertices.length; y += 1) {
+            occupiedSpace[x][y] = isPartOfBoxes(xVertices[x], yVertices[y], iframeBoxes);
         }
     }
+
+    // create an array of all possible squares
+    const allSquares: Box[] = [];
+    for (let x = 0; x < occupiedSpace.length - 1; x += 1) {
+        for (let y = 0; y < occupiedSpace[x].length - 1; y += 1) {
+            allSquares.push(...findSquares(x, y, occupiedSpace));
+        }
+    }
+    console.log(allSquares);
+
+    // remove squares with occupied areas
+    const freeSquares = allSquares.filter((square) => {
+        let occupiedVerticesCounter = 0;
+        for (let x = square.xStart; x <= square.xEnd; x += 1) {
+            for (let y = square.yStart; y <= square.yEnd; y += 1) {
+                if (occupiedSpace[x][y]) {
+                    occupiedVerticesCounter++;
+                }
+            }
+        }
+        // Up to 2 occupied vertices inside rectangle mean it is bordering with occupied area
+        return occupiedVerticesCounter <= 2;
+    });
+
+    // get biggest free square
+    const freeSquaresAreas = freeSquares
+        .map((square) => ({ square, area: getSquareArea(square, xVertices, yVertices) }))
+        .sort((a, b) => {
+            if (a.area < b.area) {
+                return 1;
+            }
+            if (a.area > b.area) {
+                return -1;
+            }
+            return 0;
+        });
+
+    const biggestFreeAreaSquare = freeSquaresAreas[0].square;
+    const freeSpace = {
+        xStart: xVertices[biggestFreeAreaSquare.xStart],
+        xEnd: xVertices[biggestFreeAreaSquare.xEnd],
+        yStart: yVertices[biggestFreeAreaSquare.yStart],
+        yEnd: yVertices[biggestFreeAreaSquare.yEnd],
+    };
+
+    console.log(freeSpace);
+    return freeSpace;
+
+    // console.log(occupiedSpace);
+    // console.log(`game: ${game.offsetLeft}, ${game.offsetTop}, ${game.offsetWidth}, ${game.offsetHeight}`);
+    // console.log('______________');
+    // console.log(`xVertices: ${xVertices}`);
+    // console.log(`YVertices: ${yVertices}`);
+}
+
+function isPartOfBoxes(x: number, y: number, boxes: Box[]): boolean {
+    for (const box of boxes) {
+        if ((x === box.xStart || x === box.xEnd) && (y === box.yStart || y === box.yEnd)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function findSquares(left: number, top: number, grid: boolean[][]): Box[] {
+    if (grid.length < 2) {
+        return [];
+    }
+    if (grid[0].length < 2) {
+        return [];
+    }
+
+    const squares: Box[] = [];
+
+    for (let x = left + 1; x < grid.length; x += 1) {
+        for (let y = top + 1; y < grid[x].length; y += 1) {
+            squares.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
+        }
+    }
+
+    return squares;
+}
+
+function getSquareArea(square: Box, xVertices: number[], yVertices: number[]): number {
+    const width = xVertices[square.xEnd] - xVertices[square.xStart];
+    const height = yVertices[square.yEnd] - yVertices[square.yStart];
+    return width * height;
 }
 
 /**
