@@ -19,7 +19,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
-import {isErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -125,10 +125,10 @@ class ConnectionManager {
                 await this.checkAuthUserConnexion();
                 analyticsClient.loggedWithSso();
             } catch (err) {
-                if(Axios.isAxiosError(err)){
+                if (Axios.isAxiosError(err)) {
                     const errorType = isErrorApiData.safeParse(err?.response?.data);
-                    if(errorType.success){
-                        throw (err);
+                    if (errorType.success) {
+                        throw err;
                     }
                 }
                 console.error(err);

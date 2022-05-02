@@ -8,11 +8,11 @@ import {
 } from "../Messages/JsonMessages/ErrorApiData";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import {isWokaDetail, wokaList, wokaTexture} from "../Messages/JsonMessages/PlayerTextures";
+import { isWokaDetail, wokaList, wokaTexture} from "../Messages/JsonMessages/PlayerTextures";
 
 class SwaggerGenerator {
     definitions(type: string | null) {
-        let definitions = {
+        const definitions = {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
