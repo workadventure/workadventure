@@ -238,6 +238,7 @@ class CoWebsiteManager {
 
             const iframe = coWebsite.getIframe();
             if (iframe) {
+                this.activateMainLoaderAnimation();
                 iframe.style.display = "none";
             }
             this.resizing = true;
@@ -258,6 +259,7 @@ class CoWebsiteManager {
             const iframe = coWebsite.getIframe();
             if (iframe) {
                 iframe.style.display = "flex";
+                this.desactivateMainLoaderAnimation();
             }
             this.resizing = false;
         });
@@ -273,6 +275,7 @@ class CoWebsiteManager {
 
             const iframe = coWebsite.getIframe();
             if (iframe) {
+                this.activateMainLoaderAnimation();
                 iframe.style.display = "none";
             }
             this.resizing = true;
@@ -296,6 +299,7 @@ class CoWebsiteManager {
             const iframe = coWebsite.getIframe();
             if (iframe) {
                 iframe.style.display = "flex";
+                this.desactivateMainLoaderAnimation();
             }
             this.resizing = false;
         });
@@ -309,9 +313,7 @@ class CoWebsiteManager {
 
             if (this.cowebsiteDom.classList.contains("closing")) {
                 this.cowebsiteDom.classList.remove("closing");
-                if (this.loaderAnimationInterval.interval) {
-                    clearInterval(this.loaderAnimationInterval.interval);
-                }
+                this.desactivateMainLoaderAnimation();
                 this.loaderAnimationInterval.trails = undefined;
             }
         });
@@ -353,7 +355,10 @@ class CoWebsiteManager {
         this.fire();
     }
 
-    private loadMain(openingWidth?: number): void {
+    private activateMainLoaderAnimation() {
+        this.desactivateMainLoaderAnimation();
+
+        this.cowebsiteLoaderDom.style.display = "block";
         this.loaderAnimationInterval.interval = setInterval(() => {
             if (!this.loaderAnimationInterval.trails) {
                 this.loaderAnimationInterval.trails = [0, 1, 2];
@@ -361,7 +366,6 @@ class CoWebsiteManager {
 
             for (let trail = 1; trail < this.loaderAnimationInterval.trails.length + 1; trail++) {
                 for (let state = 0; state < 4; state++) {
-                    // const newState = this.loaderAnimationInterval.frames + trail -1;
                     const stateDom = this.cowebsiteLoaderDom.querySelector(
                         `#trail-${trail}-state-${state}`
                     ) as SVGPolygonElement;
@@ -382,6 +386,17 @@ class CoWebsiteManager {
                 trail === 3 ? 0 : trail + 1
             );
         }, 200);
+    }
+
+    private desactivateMainLoaderAnimation() {
+        if (this.loaderAnimationInterval.interval) {
+            this.cowebsiteLoaderDom.style.display = "none";
+            clearInterval(this.loaderAnimationInterval.interval);
+        }
+    }
+
+    private loadMain(openingWidth?: number): void {
+        this.activateMainLoaderAnimation();
 
         if (!this.verticalMode && openingWidth) {
             let newWidth = 50;
@@ -623,6 +638,8 @@ class CoWebsiteManager {
                         setTimeout(() => {
                             this.fire();
                         }, animationTime);
+
+                        this.desactivateMainLoaderAnimation();
                     } else if (
                         !highlightedEmbed &&
                         this.getCoWebsites().find((searchCoWebsite) => searchCoWebsite.getId() === coWebsite.getId())
