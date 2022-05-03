@@ -561,6 +561,7 @@ export class GameRoom {
                 mapUrl,
                 authenticationMandatory: null,
                 group: null,
+                showPoweredBy: true
             };
         }
 

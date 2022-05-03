@@ -20,6 +20,7 @@ export const isMapDetailsData = z.object({
     loadingLogo: z.optional(z.nullable(z.string())),
     // The URL of the logo image on "LoginScene"
     loginSceneLogo: z.optional(z.nullable(z.string())),
+    showPoweredBy: z.boolean()
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
