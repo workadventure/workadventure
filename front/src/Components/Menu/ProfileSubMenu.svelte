@@ -69,7 +69,13 @@
                 on:click={() => analyticsClient.editName()}
                 on:click={openEditNameScene}
             >
-                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} width="26px" height="26px" class="darken-icon"/>
+                <img
+                    src={btnProfileSubMenuIdentity}
+                    alt={$LL.menu.profile.edit.name()}
+                    width="26px"
+                    height="26px"
+                    class="darken-icon"
+                />
                 <span class="">{$LL.menu.profile.edit.name()}</span>
             </button>
             <button
@@ -96,7 +102,13 @@
                 on:click={() => analyticsClient.editCamera()}
                 on:click={openEnableCameraScene}
             >
-                <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} width="26px" height="26px" class="darken-icon"/>
+                <img
+                    src={btnProfileSubMenuCamera}
+                    alt={$LL.menu.profile.edit.camera()}
+                    width="26px"
+                    height="26px"
+                    class="darken-icon"
+                />
                 <span class="">{$LL.menu.profile.edit.camera()}</span>
             </button>
         </section>
@@ -104,17 +116,30 @@
 
     <div class="content">
         <section class="centered-column tw-w-full tw-m-auto">
-        {#if $userIsConnected && $profileAvailable}
+            {#if $userIsConnected && $profileAvailable}
                 {#if PROFILE_URL != undefined}
-                    <iframe title="profile" src={getProfileUrl()}  class="tw-w-4/5 tw-h-screen tw-border-1 tw-border-solid tw-border-light-blue"/>
+                    <iframe
+                        title="profile"
+                        src={getProfileUrl()}
+                        class="tw-w-4/5 tw-h-screen tw-border-1 tw-border-solid tw-border-light-blue"
+                    />
                 {/if}
-                <button type="button" class="btn light tw-w-80 tw-justify-center" on:click={() => analyticsClient.logout()} on:click={logOut}
-                    >{$LL.menu.profile.logout()}</button
+                <button
+                    type="button"
+                    class="btn light tw-w-80 tw-justify-center"
+                    on:click={() => analyticsClient.logout()}
+                    on:click={logOut}>{$LL.menu.profile.logout()}</button
                 >
-        {:else}
-                <a type="button" class="btn light tw-w-80 tw-justify-center" href="/login" on:click={() => analyticsClient.login()}>
-                    {$LL.menu.profile.login()}</a>
-        {/if}
+            {:else}
+                <a
+                    type="button"
+                    class="btn light tw-w-80 tw-justify-center"
+                    href="/login"
+                    on:click={() => analyticsClient.login()}
+                >
+                    {$LL.menu.profile.login()}</a
+                >
+            {/if}
         </section>
     </div>
 </div>
