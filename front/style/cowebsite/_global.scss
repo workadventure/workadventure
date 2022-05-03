@@ -68,6 +68,7 @@
 
   &-loader {
     width: 20%;
+    display: none;
 
     #smoke {
       @for $i from 1 through 3 {
