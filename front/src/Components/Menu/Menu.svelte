@@ -7,8 +7,8 @@
   import ContactSubMenu from "./ContactSubMenu.svelte";
   import CustomSubMenu from "./CustomSubMenu.svelte";
   import GuestSubMenu from "./GuestSubMenu.svelte";
-  import TestSubMenu from "./TestSubMenu.svelte";
   import chevronImg from "../images/chevron.svg";
+  import "../../../style/tailwind.scss";
 
   import {
     checkSubMenuToShow,
@@ -67,9 +67,6 @@
           break;
         case SubMenusInterface.contact:
           activeComponent = ContactSubMenu;
-          break;
-        case SubMenusInterface.test:
-          activeComponent = TestSubMenu;
           break;
       }
     } else {
@@ -136,3 +133,4 @@
 <style lang="scss">
   @import "../../../style/breakpoints.scss";
 </style>
+

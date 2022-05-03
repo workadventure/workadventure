@@ -94,10 +94,6 @@ function createSubMenusStore() {
             type: "translated",
             key: SubMenusInterface.aboutRoom,
         },
-        {
-            type: "translated",
-            key: SubMenusInterface.test,
-        },
     ]);
 
     return {
