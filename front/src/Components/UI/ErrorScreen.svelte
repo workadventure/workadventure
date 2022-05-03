@@ -36,14 +36,15 @@
     <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
         <div style="width: 90%;">
             <img src={logo} alt="WorkAdventure" class="logo" />
-            <div><img src={errorLogo} alt="Error Image" class="icon" /></div>
+            <div><img src={errorLogo} alt="Error logo" class="icon" /></div>
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
             <p class="details">
-                {detailsStylized}{#if $errorScreenStore.type === "retry" || $errorScreenStore.type === "reconnecting"}<div
-                        class="loading"
-                    />{/if}
+                {detailsStylized}
+                {#if $errorScreenStore.type === "retry" || $errorScreenStore.type === "reconnecting"}
+                    <div class="loading"/>
+                {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
                 <button type="button" class="nes-btn is-primary button" on:click={click}>
