@@ -11,7 +11,7 @@ module.exports = {
       'medium-purple': '#38384A',
       'light-purple': '#4D4B67',
       'lighter-purple': '#928EBB',
-      'dark-blue': '#0F1F2D',
+      'dark-blue': '#1B1B29',
       'light-blue': '#56EAFF',
 
       //WA brand colors

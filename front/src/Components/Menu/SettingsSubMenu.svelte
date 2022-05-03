@@ -176,22 +176,20 @@
     </div>
   </section>
   <section class="bottom-separator tw-flex tw-flex-col">
-    <h3 class="blue-title">
-      <span
-        class="tw-underline tw-decoration-dotted hover:tw-brightness-125">{$LL.menu.settings.privacySettings.title()}</span>
-      <img src={infoImg} alt="info icon" width="23px" height="23px" />
-    </h3>
-    <div class="tooltip tw-h-20">
-      <p class="tooltip-text">{$LL.menu.settings.privacySettings.explanation()}</p>
+    <div class="tooltip">
+      <h3
+        class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">{$LL.menu.settings.privacySettings.title()}
+        <img src={infoImg} alt="info icon" width="18px" height="18px"/></h3>
+      <span class="tooltiptext">{$LL.menu.settings.privacySettings.explanation()}</span>
     </div>
-      <label>
-        <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
-        {$LL.menu.settings.privacySettings.cameraToggle()}
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
-        {$LL.menu.settings.privacySettings.microphoneToggle()}
-      </label>
+    <label>
+      <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
+      {$LL.menu.settings.privacySettings.cameraToggle()}
+    </label>
+    <label>
+      <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
+      {$LL.menu.settings.privacySettings.microphoneToggle()}
+    </label>
   </section>
   <section class="tw-flex tw-flex-col">
     <label>
