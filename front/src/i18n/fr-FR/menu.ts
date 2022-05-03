@@ -121,7 +121,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
     },
     sub: {
-        profile: "Profile",
+        profile: "Profil",
         settings: "Paramètres",
         invite: "Inviter",
         credit: "Crédits",
