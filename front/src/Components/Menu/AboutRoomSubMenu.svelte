@@ -65,18 +65,18 @@
 <div class="about-room-main">
     <h2>{$LL.menu.about.mapInfo()}</h2>
     <section class="container-overflow">
-        <h3>{mapName}</h3>
+        <h3 class="blue-title">{mapName}</h3>
         <p class="string-HTML">{mapDescription}</p>
         {#if mapLink}
             <p class="string-HTML">
                 &gt; <a href={mapLink} target="_blank">{$LL.menu.about.mapLink()}</a> &lt;
             </p>
         {/if}
-        <h3 class="nes-pointer hoverable" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedMapCopyright = !expandedMapCopyright)}>
             {$LL.menu.about.copyrights.map.title()}
         </h3>
         <p class="string-HTML" hidden={!expandedMapCopyright}>{mapCopyright}</p>
-        <h3 class="nes-pointer hoverable" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedTilesetCopyright = !expandedTilesetCopyright)}>
             {$LL.menu.about.copyrights.tileset.title()}
         </h3>
         <section hidden={!expandedTilesetCopyright}>
@@ -86,7 +86,7 @@
                 <p>{$LL.menu.about.copyrights.tileset.empty()}</p>
             {/each}
         </section>
-        <h3 class="nes-pointer hoverable" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
+        <h3 class="blue-title" on:click={() => (expandedAudioCopyright = !expandedAudioCopyright)}>
             {$LL.menu.about.copyrights.audio.title()}
         </h3>
         <section hidden={!expandedAudioCopyright}>
@@ -104,35 +104,5 @@
 
     .string-HTML {
         white-space: pre-line;
-    }
-
-    div.about-room-main {
-        height: calc(100% - 56px);
-
-        h2,
-        h3 {
-            width: 100%;
-            text-align: center;
-        }
-
-        h3.hoverable:hover {
-            background-color: #3c3e40;
-            border-radius: 32px;
-        }
-
-        section.container-overflow {
-            height: calc(100% - 220px);
-            margin: 0;
-            padding: 0;
-            overflow-y: auto;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        div.about-room-main {
-            section.container-overflow {
-                height: calc(100% - 120px);
-            }
-        }
     }
 </style>
