@@ -34,8 +34,7 @@
     }
 
     .menu-item-container:hover, .active {
-      @apply tw-bg-light-purple;
-      cursor: url('./images/cursor_pointer.png'), pointer;
+      @apply tw-bg-light-purple clickable;
 
       .menu-icon {
         @apply tw-brightness-125;
@@ -51,7 +50,7 @@
   button, .btn {
     @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex tw-no-underline tw-transition-colors tw-duration-300;
     * {
-      cursor: url('./images/cursor_pointer.png'), pointer;
+      @apply clickable;
     }
   }
 
@@ -147,6 +146,10 @@
     margin-left: -5px;
     border-width: 5px;
     border-color: theme("colors.medium-purple") theme("colors.transparent") theme("colors.transparent") theme("colors.transparent");
+  }
+
+  .clickable, .clickable:hover {
+    cursor: url('./images/cursor_pointer.png'), pointer;
   }
 
 }

@@ -103,16 +103,16 @@
     </div>
 
     <div class="content">
-        <section class="centered-column tw-w-80 tw-m-auto">
+        <section class="centered-column tw-w-full tw-m-auto">
         {#if $userIsConnected && $profileAvailable}
                 {#if PROFILE_URL != undefined}
-                    <iframe title="profile" src={getProfileUrl()} />
+                    <iframe title="profile" src={getProfileUrl()}  class="tw-w-4/5 tw-h-screen tw-border-1 tw-border-solid tw-border-light-blue"/>
                 {/if}
-                <button type="button" class="btn light tw-w-full tw-justify-center" on:click={() => analyticsClient.logout()} on:click={logOut}
+                <button type="button" class="btn light tw-w-80 tw-justify-center" on:click={() => analyticsClient.logout()} on:click={logOut}
                     >{$LL.menu.profile.logout()}</button
                 >
         {:else}
-                <a type="button" class="btn light tw-w-full tw-justify-center" href="/login" on:click={() => analyticsClient.login()}>
+                <a type="button" class="btn light tw-w-80 tw-justify-center" href="/login" on:click={() => analyticsClient.login()}>
                     {$LL.menu.profile.login()}</a>
         {/if}
         </section>
