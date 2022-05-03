@@ -69,7 +69,7 @@
                 on:click={() => analyticsClient.editName()}
                 on:click={openEditNameScene}
             >
-                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} width="26px" height="26px"/>
+                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} width="26px" height="26px" class="darken-icon"/>
                 <span class="">{$LL.menu.profile.edit.name()}</span>
             </button>
             <button
@@ -96,7 +96,7 @@
                 on:click={() => analyticsClient.editCamera()}
                 on:click={openEnableCameraScene}
             >
-                <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} width="26px" height="26px"/>
+                <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} width="26px" height="26px" class="darken-icon"/>
                 <span class="">{$LL.menu.profile.edit.camera()}</span>
             </button>
         </section>
