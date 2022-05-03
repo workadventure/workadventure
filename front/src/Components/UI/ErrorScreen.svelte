@@ -43,7 +43,7 @@
             <p class="details">
                 {detailsStylized}
                 {#if $errorScreenStore.type === "retry" || $errorScreenStore.type === "reconnecting"}
-                    <div class="loading"/>
+                    <div class="loading" />
                 {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
