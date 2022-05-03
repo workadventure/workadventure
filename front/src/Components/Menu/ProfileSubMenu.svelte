@@ -108,11 +108,11 @@
                 {#if PROFILE_URL != undefined}
                     <iframe title="profile" src={getProfileUrl()} />
                 {/if}
-                <button type="button" class="btn light tw-w-full" on:click={() => analyticsClient.logout()} on:click={logOut}
+                <button type="button" class="btn light tw-w-full tw-justify-center" on:click={() => analyticsClient.logout()} on:click={logOut}
                     >{$LL.menu.profile.logout()}</button
                 >
         {:else}
-                <a type="button" class="btn light tw-w-full" href="/login" on:click={() => analyticsClient.login()}>
+                <a type="button" class="btn light tw-w-full tw-justify-center" href="/login" on:click={() => analyticsClient.login()}>
                     {$LL.menu.profile.login()}</a>
         {/if}
         </section>

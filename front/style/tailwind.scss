@@ -48,7 +48,10 @@
 
   //Buttons - basic buttons appearance
   button, .btn {
-    @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1 tw-mx-0.5 tw-my-1;
+    @apply tw-border-none tw-rounded tw-h-10 tw-px-4 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex;
+    * {
+      cursor: url('./images/cursor_pointer.png'), pointer;
+    }
   }
 
   .btn:hover, button:hover {
@@ -102,25 +105,25 @@
     }
 
     &.close {
-      @apply tw-bg-dark-purple tw-text-light-blue tw-ring-1 tw-ring-light-purple tw-absolute tw-right-5 tw-px-0 tw-py-0 tw-h-6 tw-w-6;
+      @apply tw-bg-dark-purple tw-text-light-blue tw-ring-1 tw-ring-light-purple tw-absolute tw-right-5 tw-px-0 tw-py-0 tw-h-6 tw-w-6 tw-justify-center;
     }
   }
 
-  section{
+  section {
     @apply tw-mb-4 tw-p-2 tw-h-full;
-    .bottom-separator{
+    .bottom-separator {
       border-bottom: 1px solid theme('colors.light-purple');
     }
   }
 
-  .centered-column{
+  .centered-column {
     @apply tw-flex tw-flex-col tw-items-center
   }
 
-  .tooltip{
+  .tooltip {
     @apply tw-bg-medium-purple tw-rounded tw-flex tw-text-center tw-p-2 tw-relative;
 
-    p{
+    p {
       @apply tw-flex tw-items-center tw-m-0 tw-absolute;
     }
   }
