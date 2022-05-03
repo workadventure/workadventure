@@ -224,6 +224,11 @@ export class GameMap {
         return this.flatLayers.find((layer) => layer.name === layerName);
     }
 
+    public findObject(objectName: string, objectType?: string): ITiledMapObject | undefined {
+        const object = this.getObjectWithName(objectName);
+        return !objectType ? object : objectType === object?.type ? object : undefined;
+    }
+
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
         return this.phaserLayers.find((layer) => layer.layer.name === layerName);
     }
@@ -272,25 +277,47 @@ export class GameMap {
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-        if (layer.properties === undefined) {
-            layer.properties = [];
+        this.setProperty(layer, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.triggerLayersChange();
+    }
+
+    public setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ) {
+        const object = this.findObject(areaName, "area");
+        if (object === undefined) {
+            console.warn('Could not find area "' + areaName + '" when calling setProperty');
+            return;
         }
-        const property = layer.properties.find((property) => property.name === propertyName);
+        this.setProperty(object, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.triggerAreasChange();
+    }
+
+    private setProperty(
+        holder: { properties?: ITiledMapProperty[] },
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ): void {
+        if (holder.properties === undefined) {
+            holder.properties = [];
+        }
+        const property = holder.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
             if (propertyValue === undefined) {
                 return;
             }
-            layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
+            holder.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
         }
         if (propertyValue === undefined) {
-            const index = layer.properties.indexOf(property);
-            layer.properties.splice(index, 1);
+            const index = holder.properties.indexOf(property);
+            holder.properties.splice(index, 1);
         }
         property.value = propertyValue;
-
-        this.triggerAllProperties();
-        this.triggerLayersChange();
     }
 
     /**

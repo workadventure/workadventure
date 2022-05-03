@@ -130,6 +130,21 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         });
     }
 
+    setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | boolean | undefined
+    ): void {
+        sendToWorkadventure({
+            type: "setAreaProperty",
+            data: {
+                areaName,
+                propertyName: propertyName,
+                propertyValue: propertyValue,
+            },
+        });
+    }
+
     async getTiledMap(): Promise<ITiledMap> {
         const event = await queryWorkadventure({ type: "getMapData", data: undefined });
         return event.data as ITiledMap;

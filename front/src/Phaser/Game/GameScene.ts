@@ -1226,8 +1226,8 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.setPropertyStream.subscribe((setProperty) => {
-                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+            iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1453,6 +1453,15 @@ ${escapedMessage}
             this.loadNextGameFromExitUrl(propertyValue).catch((e) => console.error(e));
         }
         this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
+    }
+
+    private setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | boolean | undefined
+    ): void {
+        console.log(`${areaName}, ${propertyName}, ${propertyValue}`);
+        this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
