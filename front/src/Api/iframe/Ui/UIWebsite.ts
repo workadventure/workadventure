@@ -324,6 +324,15 @@ export class UIWebsiteCommands extends IframeApiContribution<UIWebsiteCommands> 
 
         return new UIWebsite(result);
     }
+
+    async getAll(): Promise<UIWebsite[]> {
+        const result = await queryWorkadventure({
+            type: "getUIWebsites",
+            data: undefined,
+        });
+
+        return result.map((current) => new UIWebsite(current));
+    }
 }
 
 export default new UIWebsiteCommands();

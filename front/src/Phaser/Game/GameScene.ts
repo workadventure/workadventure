@@ -1303,6 +1303,10 @@ ${escapedMessage}
             return uiWebsiteManager.open(websiteConfig);
         });
 
+        iframeListener.registerAnswerer("getUIWebsites", () => {
+            return uiWebsiteManager.getAll();
+        });
+
         iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
             return uiWebsiteManager.close(websiteId);
         });
@@ -1604,6 +1608,8 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
         iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

@@ -76,6 +76,10 @@ class UIWebsiteManager {
         return newWebsite;
     }
 
+    public getAll(): UIWebsite[] {
+        return get(uiWebsitesStore);
+    }
+
     public close(websiteId: string) {
         const uiWebsite = get(uiWebsitesStore).find((currentWebsite) => currentWebsite.id === websiteId);
 

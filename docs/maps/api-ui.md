@@ -278,3 +278,10 @@ You can close a website with the close function on the `UIWebsite` object
 ```ts
 myWebsite.close();
 ```
+
+## Get all UI websites
+You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
+
+```ts
+WA.ui.website.getAll();
+```
