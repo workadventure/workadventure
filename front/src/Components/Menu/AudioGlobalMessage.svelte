@@ -89,7 +89,7 @@
         <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
     <input
-      class="tw-hidden"
+        class="tw-hidden"
         type="file"
         id="input-send-audio"
         bind:this={fileInput}
