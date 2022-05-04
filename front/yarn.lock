@@ -7,6 +7,14 @@
   resolved "https://registry.yarnpkg.com/@16bits/nes.css/-/nes.css-2.3.2.tgz#e69db834119b33ae8d3cb044f106a07a17cadd6f"
   integrity sha512-nEM5PIth+Bab5JSOa4uUR+PMNUsNTYxA55oVlG3gXI/4LoYtWS767Uv9Pu/KCbHXVvnIjt4ZXt13kZw3083qTw==
 
+"@anatine/zod-openapi@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@anatine/zod-openapi/-/zod-openapi-1.3.0.tgz#b5b38c3d821b79674226aa7b327c88c371860d0d"
+  integrity sha512-l54DypUdDsIq1Uwjv4ib9IBkTXMKZQLUj7qvdFL51EExC5LdSSqOlTOyaVVZZGYgWPKM7ZjGklhdoknLz4EC+w==
+  dependencies:
+    ts-deepmerge "^1.1.0"
+    validator "^13.7.0"
+
 "@babel/runtime@^7.14.0":
   version "7.14.0"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.14.0.tgz#46794bc20b612c5f75e62dd071e24dfd95f1cbe6"
@@ -2055,6 +2063,13 @@ onetime@^5.1.0, onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
+openapi3-ts@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/openapi3-ts/-/openapi3-ts-2.0.2.tgz#a200dd838bf24c9086c8eedcfeb380b7eb31e82a"
+  integrity sha512-TxhYBMoqx9frXyOgnRHufjQfPXomTIHYKhSKJ6jHfj13kS8OEIhvmE8CTuQyKtjjWttAjX5DPxM1vmalEpo8Qw==
+  dependencies:
+    yaml "^1.10.2"
+
 optionator@^0.9.1:
   version "0.9.1"
   resolved "https://registry.yarnpkg.com/optionator/-/optionator-0.9.1.tgz#4f236a6373dae0566a6d43e1326674f50c291499"
@@ -2875,6 +2890,11 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
+ts-deepmerge@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/ts-deepmerge/-/ts-deepmerge-1.1.0.tgz#4236ae102199affe2e77690dcf198a420160eef2"
+  integrity sha512-VvwaV/6RyYMwT9d8dClmfHIsG2PCdm6WY430QKOIbPRR50Y/1Q2ilp4i2XEZeHFcNqfaYnAQzpyUC6XA0AqqBg==
+
 ts-deferred@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/ts-deferred/-/ts-deferred-1.0.4.tgz#58145ebaeef5b8f2a290b8cec3d060839f9489c7"
@@ -3065,6 +3085,11 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+validator@^13.7.0:
+  version "13.7.0"
+  resolved "https://registry.yarnpkg.com/validator/-/validator-13.7.0.tgz#4f9658ba13ba8f3d82ee881d3516489ea85c0857"
+  integrity sha512-nYXQLCBkpJ8X6ltALua9dRrZDHVYxjJ1wgskNt1lH9fzGjs3tgojGSCBjmEPwkWS1y29+DrizMTW19Pr9uB2nw==
 
 vite-plugin-rewrite-all@^0.1.2:
   version "0.1.2"

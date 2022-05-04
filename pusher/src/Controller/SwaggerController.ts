@@ -1,9 +1,11 @@
 import { BaseHttpController } from "./BaseHttpController";
 import * as fs from "fs";
+import { ADMIN_URL } from "../Enum/EnvironmentVariable";
+import SwaggerGenerator from "../Services/SwaggerGenerator";
 
 export class SwaggerController extends BaseHttpController {
     routes() {
-        this.app.get("/openapi", (req, res) => {
+        this.app.get("/openapi/pusher", (req, res) => {
             // Let's load the module dynamically (it may not exist in prod because part of the -dev packages)
             const swaggerJsdoc = require("swagger-jsdoc");
             const options = {
@@ -17,6 +19,43 @@ export class SwaggerController extends BaseHttpController {
                 apis: ["./src/Controller/*.ts"],
             };
 
+            res.json(swaggerJsdoc(options));
+        });
+
+        this.app.get("/openapi/admin", (req, res) => {
+            // Let's load the module dynamically (it may not exist in prod because part of the -dev packages)
+            const swaggerJsdoc = require("swagger-jsdoc");
+            const options = {
+                swaggerDefinition: {
+                    swagger: "2.0",
+                    //openapi: "3.0.0",
+                    info: {
+                        title: "WorkAdventure Pusher",
+                        version: "1.0.0",
+                        description:
+                            "This is a documentation about the endpoints called by the pusher. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
+                        contact: {
+                            email: "hello@workadventu.re",
+                        },
+                    },
+                    host: "pusher." + ADMIN_URL.replace("//", ""),
+                    tags: [
+                        {
+                            name: "AdminAPI",
+                            description: "Access to end points of the admin from the pusher",
+                        },
+                    ],
+                    securityDefinitions: {
+                        Bearer: {
+                            type: "apiKey",
+                            name: "Authorization",
+                            in: "header",
+                        },
+                    },
+                    ...SwaggerGenerator.definitions(),
+                },
+                apis: ["./src/Services/*.ts"],
+            };
             res.json(swaggerJsdoc(options));
         });
 
@@ -39,8 +78,16 @@ export class SwaggerController extends BaseHttpController {
                 if (err) {
                     return response.status(500).send(err.message);
                 }
-                const result = data.replace(/https:\/\/petstore\.swagger\.io\/v2\/swagger.json/g, "/openapi");
 
+                const urls = [
+                    { url: "/openapi/pusher", name: "Front -> Pusher" },
+                    { url: "/openapi/admin", name: "Pusher <- Admin" },
+                ];
+
+                const result = data.replace(
+                    /url: "https:\/\/petstore\.swagger\.io\/v2\/swagger.json"/g,
+                    `urls: ${JSON.stringify(urls)}, "urls.primaryName": "Pusher <- Admin"`
+                );
                 response.send(result);
 
                 return;

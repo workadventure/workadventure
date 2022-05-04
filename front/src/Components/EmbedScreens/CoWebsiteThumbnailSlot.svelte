@@ -10,6 +10,7 @@
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
     import uploadFile from "../images/jitsi.png";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let index: number;
     export let coWebsite: CoWebsite;
@@ -89,6 +90,7 @@
     class:ready={$state === "ready"}
     class:displayed={isMain || isHighlight}
     class:vertical
+    on:click={() => analyticsClient.stackOpenCloseMultiIframe()}
     on:click={onClick}
 >
     <img
