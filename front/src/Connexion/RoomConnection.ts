@@ -347,6 +347,10 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "xmppMessage": {
+                                console.log(
+                                    "RoomConnection => xmppMessage => ",
+                                    subMessage.xmppMessage.stanza.toString()
+                                );
                                 const elementExtParsed = parse(subMessage.xmppMessage.stanza);
 
                                 if (elementExtParsed == undefined) {

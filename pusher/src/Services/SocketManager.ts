@@ -238,6 +238,7 @@ export class SocketManager implements ZoneEventListener {
                     );
                     //disconnect of xmpp server
                     if (client.xmppClient) {
+                        console.log("end => close");
                         client.xmppClient.close();
                     }
                     console.warn("Connection lost to back server");
@@ -430,6 +431,7 @@ export class SocketManager implements ZoneEventListener {
                 } finally {
                     //disconnect of xmpp server
                     if (socket.xmppClient) {
+                        console.log("leaveRoom => close");
                         socket.xmppClient.close();
                     }
                     //delete Client.roomId;
@@ -736,6 +738,7 @@ export class SocketManager implements ZoneEventListener {
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );
         }
+        console.log("SocketManager => handleXmppMessage => ", xmppMessage.getStanza());
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 }

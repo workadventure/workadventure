@@ -69,6 +69,7 @@ export class PusherRoom {
         this.listeners.delete(socket);
         //const client = this.xmppListeners.get(socket.userUuid);
         if (socket.xmppClient) {
+            console.log("leave => close");
             socket.xmppClient.close();
             //this.xmppListeners.delete(socket.userUuid);
         }
