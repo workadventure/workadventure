@@ -1460,7 +1460,6 @@ ${escapedMessage}
         propertyName: string,
         propertyValue: string | number | boolean | undefined
     ): void {
-        console.log(`${areaName}, ${propertyName}, ${propertyValue}`);
         this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
     }
 

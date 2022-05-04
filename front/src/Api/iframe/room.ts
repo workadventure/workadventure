@@ -9,12 +9,15 @@ import { apiCallback } from "./registeredCallbacks";
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
+import { isChangeAreaEvent } from "../Events/ChangeAreaEvent";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 
 const enterLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 const leaveLayerStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
+const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
+const leaveAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
 
 interface TileDescriptor {
     x: number;
@@ -65,6 +68,20 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 leaveLayerStreams.get(payloadData.name)?.next();
             },
         }),
+        apiCallback({
+            type: "enterAreaEvent",
+            typeChecker: isChangeAreaEvent,
+            callback: (payloadData: ChangeLayerEvent) => {
+                enterAreaStreams.get(payloadData.name)?.next();
+            },
+        }),
+        apiCallback({
+            type: "leaveAreaEvent",
+            typeChecker: isChangeAreaEvent,
+            callback: (payloadData) => {
+                leaveAreaStreams.get(payloadData.name)?.next();
+            },
+        }),
     ];
 
     /**
@@ -106,6 +123,26 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
         if (subject === undefined) {
             subject = new Subject<void>();
             leaveLayerStreams.set(layerName, subject);
+        }
+
+        return subject;
+    }
+
+    onEnterArea(areaName: string): Subject<void> {
+        let subject = enterAreaStreams.get(areaName);
+        if (subject === undefined) {
+            subject = new Subject<void>();
+            enterAreaStreams.set(areaName, subject);
+        }
+
+        return subject;
+    }
+
+    onLeaveArea(areaName: string): Subject<void> {
+        let subject = leaveAreaStreams.get(areaName);
+        if (subject === undefined) {
+            subject = new Subject<void>();
+            leaveAreaStreams.set(areaName, subject);
         }
 
         return subject;

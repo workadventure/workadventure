@@ -78,7 +78,7 @@
                  "rotation":0,
                  "text":
                     {
-                     "text":"Play around with various settings to modify this Area properties.",
+                     "text":"Play around with various settings to modify this Area properties. Press 'update' button to apply changes.",
                      "wrap":true
                     },
                  "type":"",

@@ -16,6 +16,16 @@
                 const openWebisteField = document.getElementById('openWebiste');
                 const jitsiRoomField = document.getElementById('jitsiRoom');
                 const jitsiTriggerField = document.getElementById('jitsiTrigger');
+                const onAreaEnterField = document.getElementById('onAreaEnter');
+                const onAreaLeaveField = document.getElementById('onAreaLeave');
+
+                WA.room.onEnterArea('Center').subscribe(() => {
+                    console.log(onAreaEnterField.value || 'default area enter message');
+                });
+
+                WA.room.onLeaveArea('Center').subscribe(() => {
+                    console.log(onAreaLeaveField.value || 'default area leave message');
+                });
 
                 updateButton.addEventListener('click', () => {
                     WA.room.setAreaProperty('Center', 'focusable', focusableField.checked);
@@ -36,6 +46,8 @@ silent: <input type="checkbox" id="silent" value=0 /><br/>
 openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br/>
 jitsiRoom: <input type="text" id="jitsiRoom" value="Meeting Room" /><br/>
 jitsiTrigger: <input type="text" id="jitsiTrigger" value="onaction" /><br/>
+onAreaEnterLog: <input type="text" id="onAreaEnter" value="Area entered" /><br/>
+onAreaLeaveLog: <input type="text" id="onAreaLeave" value="Area left" /><br/>
 
 <button id="updateButton">Update</button>
 
