@@ -36,7 +36,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private randomizeButton!: Button;
     private finishButton!: Button;
 
-    private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
+    private selectedLayers: number[];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
 
@@ -94,6 +94,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public create(): void {
+        this.selectedLayers = [0, 0, 0, 0, 0, 0];
         this.tryLoadLastUsedWokaLayers();
         waScaleManager.zoomModifier = 1;
         this.createSlotBackgroundTextures();
@@ -154,11 +155,10 @@ export class CustomizeScene extends AbstractCharacterScene {
         try {
             const savedWokaLayers = gameManager.getCharacterLayers();
             if (savedWokaLayers && savedWokaLayers.length !== 0) {
-                this.selectedLayers = [];
                 for (let i = 0; i < savedWokaLayers.length; i += 1) {
-                    this.selectedLayers.push(
-                        this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i])
-                    );
+                    const index = this.layers[i].findIndex((item) => item.id === gameManager.getCharacterLayers()[i]);
+                    // set first item as default if not found
+                    this.selectedLayers[i] = index !== -1 ? index : 0;
                 }
             }
         } catch {
