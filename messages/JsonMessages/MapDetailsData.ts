@@ -39,6 +39,7 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "report" feature is enabled or not on this room',
         example: true,
     }),
+    miniLogo: z.optional(z.nullable(z.string())),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.optional(z.nullable(z.string())), {
         description: "The URL of the image to be used on the loading page",

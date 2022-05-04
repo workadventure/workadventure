@@ -5,6 +5,7 @@ import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVaria
 import type { Translation } from "../i18n/i18n-types";
 import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
+import {connectionManager} from "../Connexion/ConnectionManager";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -183,9 +184,9 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}`;
+    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }
 
 export function getMeUrl() {
-    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}`;
+    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }
