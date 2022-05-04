@@ -30,7 +30,7 @@
     }
 
     .menu-item {
-      @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-base tw-items-center tw-pl-4;
+      @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-base tw-items-center tw-pl-4 tw-text-white;
     }
 
     .menu-item-container:hover, .active {
