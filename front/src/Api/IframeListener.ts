@@ -35,6 +35,7 @@ import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -111,6 +112,9 @@ class IframeListener {
 
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
+    private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
+    public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -276,6 +280,8 @@ class IframeListener {
                         this._setTilesStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
                         this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyUIWebsite") {
+                        this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
                         const dataName = iframeEvent.data.name;
                         this.iframeCloseCallbacks.get(iframe)?.push(() => {

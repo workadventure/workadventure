@@ -102,6 +102,7 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1298,6 +1299,18 @@ ${escapedMessage}
             return coWebsiteManager.closeCoWebsites();
         });
 
+        iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
+            return uiWebsiteManager.open(websiteConfig);
+        });
+
+        iframeListener.registerAnswerer("getUIWebsites", () => {
+            return uiWebsiteManager.getAll();
+        });
+
+        iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
+            return uiWebsiteManager.close(websiteId);
+        });
+
         iframeListener.registerAnswerer("getMapData", () => {
             return {
                 data: this.gameMap.getMap(),
@@ -1594,6 +1607,9 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
+        iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

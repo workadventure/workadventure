@@ -39,6 +39,7 @@ import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./ui/UIWebsite";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -152,6 +153,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("modifyEmbeddedWebsite"),
         data: isEmbeddedWebsiteEvent,
     }),
+    z.object({
+        type: z.literal("modifyUIWebsite"),
+        data: isModifyUIWebsiteEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -260,6 +265,18 @@ export const iframeQueryMapTypeGuards = {
     movePlayerTo: {
         query: isMovePlayerToEventConfig,
         answer: isMovePlayerToEventAnswer,
+    },
+    openUIWebsite: {
+        query: isCreateUIWebsiteEvent,
+        answer: isUIWebsite,
+    },
+    closeUIWebsite: {
+        query: z.string(),
+        answer: z.undefined(),
+    },
+    getUIWebsites: {
+        query: z.undefined(),
+        answer: z.array(isUIWebsite),
     },
 };
 
