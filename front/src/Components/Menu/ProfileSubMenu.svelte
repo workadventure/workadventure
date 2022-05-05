@@ -62,7 +62,7 @@
 
 <div class="customize-main">
     <div class="submenu">
-        <section class="centered-column tw-w-80 tw-m-auto">
+        <section class="centered-column resizing-width tw-m-auto resizing-text">
             <button
                 type="button"
                 class="tw-w-full outline"
@@ -115,7 +115,7 @@
     </div>
 
     <div class="content">
-        <section class="centered-column tw-w-full tw-m-auto">
+        <section class="centered-column tw-w-full tw-m-auto resizing-text">
             {#if $userIsConnected && $profileAvailable}
                 {#if PROFILE_URL != undefined}
                     <iframe
@@ -126,14 +126,14 @@
                 {/if}
                 <button
                     type="button"
-                    class="btn light tw-w-80 tw-justify-center"
+                    class="btn outline resizing-width tw-justify-center"
                     on:click={() => analyticsClient.logout()}
                     on:click={logOut}>{$LL.menu.profile.logout()}</button
                 >
             {:else}
                 <a
                     type="button"
-                    class="btn light tw-w-80 tw-justify-center"
+                    class="btn light resizing-width tw-justify-center"
                     href="/login"
                     on:click={() => analyticsClient.login()}
                 >
