@@ -9,6 +9,7 @@ import { LayoutMode } from "./LayoutManager";
 import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import {gameManager} from "../Phaser/Game/GameManager";
 
 export enum iframeStates {
     closed = 1,
@@ -357,6 +358,18 @@ class CoWebsiteManager {
 
     private activateMainLoaderAnimation() {
         this.desactivateMainLoaderAnimation();
+        const customLogo = gameManager.currentStartedRoom.loadingCowebsiteLogo;
+        console.log(customLogo);
+
+        if(customLogo){
+            console.info('need logo creation');
+            const logo = document.createElement("img");
+            logo.id = "custom-logo";
+            logo.src = customLogo;
+            this.cowebsiteLoaderDom.parentNode?.replaceChild(logo, this.cowebsiteLoaderDom);
+            this.cowebsiteLoaderDom.style.display = "block";
+            return;
+        }
 
         this.cowebsiteLoaderDom.style.display = "block";
         this.loaderAnimationInterval.interval = setInterval(() => {

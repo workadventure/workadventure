@@ -463,6 +463,10 @@ class AdminApi implements AdminInterface {
         }
         return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}&playUri=${playUri}`;
     }
+
+    async logoutOauth(token: string): Promise<void> {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
+    }
 }
 
 export const adminApi = new AdminApi();

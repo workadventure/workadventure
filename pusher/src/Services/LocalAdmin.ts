@@ -3,8 +3,9 @@ import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, DISABLE_ANONYMOUS} from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import Axios from "axios";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -51,6 +52,7 @@ class LocalAdmin implements AdminInterface {
             loadingLogo: null,
             loginSceneLogo: null,
             showPoweredBy: true,
+            loadingCowebsiteLogo: null,
         });
     }
 
@@ -88,6 +90,10 @@ class LocalAdmin implements AdminInterface {
     getProfileUrl(accessToken: string, playUri: string): string {
         new Error("No admin backoffice set!");
         return "";
+    }
+
+    async logoutOauth(token: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 }
 

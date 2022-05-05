@@ -113,6 +113,7 @@ export class MapController extends BaseHttpController {
                             req.header("accept-language")
                         )
                     );
+                    console.log(mapDetails);
 
                     if (DISABLE_ANONYMOUS) mapDetails.authenticationMandatory = true;
 
