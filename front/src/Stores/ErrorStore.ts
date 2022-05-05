@@ -10,7 +10,7 @@ interface ErrorMessage {
  * A store that contains a list of error messages to be displayed.
  */
 function createErrorStore() {
-    const { subscribe, set, update } = writable<ErrorMessage[]>([]);
+    const { subscribe, update } = writable<ErrorMessage[]>([]);
 
     return {
         subscribe,

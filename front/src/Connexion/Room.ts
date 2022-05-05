@@ -1,7 +1,4 @@
-import * as rax from "retry-axios";
-import Axios from "axios";
 import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
-import type { CharacterTexture } from "./LocalUser";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -18,14 +15,9 @@ export interface RoomRedirect {
 
 export class Room {
     public readonly id: string;
-    /**
-     * @deprecated
-     */
-    private readonly isPublic: boolean;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
     private _mapUrl: string | undefined;
-    private instance: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
@@ -33,19 +25,13 @@ export class Room {
     private _canReport: boolean = false;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
 
         if (this.id.startsWith("/")) {
             this.id = this.id.substr(1);
-        }
-        if (this.id.startsWith("_/") || this.id.startsWith("*/")) {
-            this.isPublic = true;
-        } else if (this.id.startsWith("@/")) {
-            this.isPublic = false;
-        } else {
-            throw new Error("Invalid room ID");
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -87,8 +73,10 @@ export class Room {
 
         const currentRoom = new Room(baseUrl);
         let instance: string = "global";
-        if (currentRoom.isPublic) {
-            instance = currentRoom.getInstance();
+        if (currentRoom.id.startsWith("_/") || currentRoom.id.startsWith("*/")) {
+            const match = /[_*]\/([^/]+)\/.+/.exec(currentRoom.id);
+            if (!match) throw new Error('Could not extract instance from "' + currentRoom.id + '"');
+            instance = match[1];
         }
 
         baseUrl.pathname = "/_/" + instance + "/" + absoluteExitSceneUrl.host + absoluteExitSceneUrl.pathname;
@@ -112,11 +100,14 @@ export class Room {
                 data.authenticationMandatory = Boolean(data.authenticationMandatory);
             }
 
-            if (isRoomRedirect(data)) {
+            const roomRedirectChecking = isRoomRedirect.safeParse(data);
+            const mapDetailsDataChecking = isMapDetailsData.safeParse(data);
+
+            if (roomRedirectChecking.success) {
                 return {
                     redirectUrl: data.redirectUrl,
                 };
-            } else if (isMapDetailsData(data)) {
+            } else if (mapDetailsDataChecking.success) {
                 console.log("Map ", this.id, " resolves to URL ", data.mapUrl);
                 this._mapUrl = data.mapUrl;
                 this._group = data.group;
@@ -130,8 +121,12 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                this._showPoweredBy = data.showPoweredBy ?? true;
                 return new MapDetail(data.mapUrl);
             } else {
+                console.log(data);
+                console.error("roomRedirectChecking", roomRedirectChecking.error.issues);
+                console.error("mapDetailsDataChecking", mapDetailsDataChecking.error.issues);
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
@@ -145,31 +140,6 @@ export class Room {
                 console.error("Error => getMapDetail", e);
             }
             throw e;
-        }
-    }
-
-    /**
-     * Instance name is:
-     * - In a public URL: the second part of the URL ( _/[instance]/map.json)
-     * - In a private URL: [organizationId/worldId]
-     *
-     * @deprecated
-     */
-    public getInstance(): string {
-        if (this.instance !== undefined) {
-            return this.instance;
-        }
-
-        if (this.isPublic) {
-            const match = /[_*]\/([^/]+)\/.+/.exec(this.id);
-            if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
-            this.instance = match[1];
-            return this.instance;
-        } else {
-            const match = /@\/([^/]+)\/([^/]+)\/.+/.exec(this.id);
-            if (!match) throw new Error('Could not extract instance from "' + this.id + '"');
-            this.instance = match[1] + "/" + match[2];
-            return this.instance;
         }
     }
 
@@ -244,5 +214,9 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get showPoweredBy(): boolean | undefined {
+        return this._showPoweredBy;
     }
 }

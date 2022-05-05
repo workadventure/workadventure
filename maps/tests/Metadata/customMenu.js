@@ -1,7 +1,7 @@
 let menuIframeApi = undefined;
 
 WA.ui.registerMenuCommand('custom callback menu', () => {
-    WA.nav.openTab("https://workadventu.re/");
+    WA.chat.sendChatMessage('Custom menu clicked', 'Mr Robot');
 })
 
 WA.ui.registerMenuCommand('custom iframe menu', {iframe: 'customIframeMenu.html'});

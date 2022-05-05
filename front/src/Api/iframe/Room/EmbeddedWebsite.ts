@@ -1,9 +1,5 @@
 import { sendToWorkadventure } from "../IframeApiContribution";
-import type {
-    CreateEmbeddedWebsiteEvent,
-    ModifyEmbeddedWebsiteEvent,
-    Rectangle,
-} from "../../Events/EmbeddedWebsiteEvent";
+import type { CreateEmbeddedWebsiteEvent, Rectangle } from "../../Events/EmbeddedWebsiteEvent";
 
 export class EmbeddedWebsite {
     public readonly name: string;

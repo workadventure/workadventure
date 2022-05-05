@@ -54,7 +54,6 @@ import type {
     MessageUserMovedInterface,
     MessageUserPositionInterface,
     OnConnectInterface,
-    PlayerDetailsUpdatedMessageInterface,
     PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
@@ -72,7 +71,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { userIsAdminStore } from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -92,16 +91,16 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { locale } from "../../i18n/i18n-svelte";
-import { localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
-import type { VideoPeer } from "../../WebRtc/VideoPeer";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -139,7 +138,7 @@ interface DeleteGroupEventInterface {
 
 interface PlayerDetailsUpdatedInterface {
     type: "PlayerDetailsUpdated";
-    details: PlayerDetailsUpdatedMessageInterface;
+    details: PlayerDetailsUpdatedMessage;
 }
 
 export class GameScene extends DirtyScene {
@@ -175,20 +174,19 @@ export class GameScene extends DirtyScene {
     private emoteUnsubscribe!: Unsubscriber;
     private emoteMenuUnsubscribe!: Unsubscriber;
 
-    private volumeStoreUnsubscribers: Map<number, Unsubscriber> = new Map<number, Unsubscriber>();
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
     private followUsersColorStoreUnsubscribe!: Unsubscriber;
-    private currentPlayerGroupIdStoreUnsubscribe!: Unsubscriber;
+    private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
+    private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
 
     private biggestAvailableAreaStoreUnsubscribe!: () => void;
     MapUrlFile: string;
     roomUrl: string;
-    instance: string;
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
     lastMoveEventSent: HasPlayerMovedEvent = {
-        direction: "",
+        direction: "down",
         moving: false,
         x: -1000,
         y: -1000,
@@ -221,6 +219,9 @@ export class GameScene extends DirtyScene {
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
     private currentPlayerGroupId?: number;
+    private showVoiceIndicatorChangeMessageSent: boolean = false;
+    private jitsiDominantSpeaker: boolean = false;
+    private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -229,7 +230,6 @@ export class GameScene extends DirtyScene {
         });
         this.Terrains = [];
         this.groups = new Map<number, Sprite>();
-        this.instance = room.getInstance();
 
         this.MapUrlFile = MapUrlFile;
         this.roomUrl = room.key;
@@ -246,6 +246,8 @@ export class GameScene extends DirtyScene {
         this.listenToIframeEvents();
 
         this.load.image("iconTalk", "/resources/icons/icon_talking.png");
+        this.load.image("iconStatusIndicatorInside", "/resources/icons/icon_status_indicator_inside.png");
+        this.load.image("iconStatusIndicatorOutline", "/resources/icons/icon_status_indicator_outline.png");
 
         if (touchScreenManager.supportTouchScreen) {
             this.load.image(joystickBaseKey, joystickBaseImg);
@@ -634,55 +636,51 @@ export class GameScene extends DirtyScene {
         }
 
         const talkIconVolumeTreshold = 10;
-        const oldPeers = new Map<number, VideoPeer>();
+        let oldPeersNumber = 0;
         this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            this.volumeStoreUnsubscribers.forEach((unsubscribe) => unsubscribe());
-            this.volumeStoreUnsubscribers.clear();
-
-            for (const [key, videoStream] of peers) {
-                this.volumeStoreUnsubscribers.set(
-                    key,
-                    videoStream.volumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.MapPlayersByKey.get(key)?.showTalkIcon(volume > talkIconVolumeTreshold);
-                        }
-                    })
-                );
-            }
-
             const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeers.size) {
+            if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeers.size) {
+            } else if (newPeerNumber < oldPeersNumber) {
                 this.playSound("audio-webrtc-out");
-                const oldPeersKeys = oldPeers.keys();
-                const newPeersKeys = Array.from(peers.keys());
-                for (const oldKey of oldPeersKeys) {
-                    if (!newPeersKeys.includes(oldKey)) {
-                        this.MapPlayersByKey.get(oldKey)?.showTalkIcon(false, true);
-                    }
-                }
             }
             if (newPeerNumber > 0) {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume) {
-                            this.CurrentPlayer.showTalkIcon(volume > talkIconVolumeTreshold);
+                        if (volume === undefined) {
+                            return;
                         }
+                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
+                this.connection?.emitPlayerShowVoiceIndicator(false);
+                this.showVoiceIndicatorChangeMessageSent = false;
                 this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
                 if (this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
             }
-            oldPeers.clear();
-            for (const [key, val] of peers) {
-                oldPeers.set(key, val);
+            oldPeersNumber = peers.size;
+        });
+
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
+            (dominantSpeaker) => {
+                this.jitsiDominantSpeaker = dominantSpeaker;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
             }
+        );
+
+        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
+            this.jitsiParticipantsCount = participantsCount;
+            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+        });
+
+        availabilityStatusStore.subscribe((status) => {
+            this.connection?.emitPlayerStatusChange(status);
+            this.CurrentPlayer.setStatus(status);
         });
 
         this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
@@ -769,6 +767,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
+                        status: message.status,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -834,12 +833,12 @@ export class GameScene extends DirtyScene {
                     }
                     this.pendingEvents.enqueue({
                         type: "PlayerDetailsUpdated",
-                        details: {
-                            userId: message.userId,
-                            outlineColor: message.details.outlineColor,
-                            removeOutlineColor: message.details.removeOutlineColor,
-                        },
+                        details: message,
                     });
+                });
+
+                this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
+                    this.currentPlayerGroupId = message.groupId;
                 });
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
@@ -908,38 +907,15 @@ export class GameScene extends DirtyScene {
                     });
                 });
 
-                this.gameMap.onEnterZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            const zoomMargin = zone.properties?.find((property) => property.name === "zoom_margin");
-                            this.cameraManager.enterFocusMode(
-                                {
-                                    x: zone.x + zone.width * 0.5,
-                                    y: zone.y + zone.height * 0.5,
-                                    width: zone.width,
-                                    height: zone.height,
-                                },
-                                zoomMargin ? Math.max(0, Number(zoomMargin.value)) : undefined
-                            );
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendEnterZoneEvent(zone.name);
+                this.gameMap.onEnterArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMap.onLeaveZone((zones) => {
-                    for (const zone of zones) {
-                        const focusable = zone.properties?.find((property) => property.name === "focusable");
-                        if (focusable && focusable.value === true) {
-                            this.cameraManager.leaveFocusMode(this.CurrentPlayer, 1000);
-                            break;
-                        }
-                    }
-                    zones.forEach((zone) => {
-                        iframeListener.sendLeaveZoneEvent(zone.name);
+                this.gameMap.onLeaveArea((areas) => {
+                    areas.forEach((area) => {
+                        iframeListener.sendLeaveAreaEvent(area.name);
                     });
                 });
 
@@ -1049,6 +1025,7 @@ ${escapedMessage}
                 }, 100);
 
                 id = 0;
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for (const button of openPopupEvent.buttons) {
                     const button = HtmlUtils.getElementByIdOrFail<HTMLButtonElement>(
                         `popup-${openPopupEvent.popupId}-${id}`
@@ -1126,6 +1103,13 @@ ${escapedMessage}
                 soundManager
                     .playSound(this.load, this.sound, url.toString(), playSoundEvent.config)
                     .catch((e) => console.error(e));
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
+                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+                soundManager.stopSound(this.sound, url.toString());
             })
         );
 
@@ -1307,7 +1291,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName,
+                startLayerName: this.startPositionCalculator.startLayerName ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -1416,6 +1400,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const _exhaustiveCheck: never = event.target;
                 }
             }
@@ -1435,7 +1420,7 @@ ${escapedMessage}
             this.connection?.emitPlayerOutlineColor(color);
         });
 
-        iframeListener.registerAnswerer("removePlayerOutline", (message) => {
+        iframeListener.registerAnswerer("removePlayerOutline", () => {
             this.CurrentPlayer.removeApiOutlineColor();
             this.connection?.emitPlayerOutlineColor(null);
         });
@@ -1579,6 +1564,8 @@ ${escapedMessage}
         this.emoteMenuUnsubscribe();
         this.followUsersColorStoreUnsubscribe();
         this.biggestAvailableAreaStoreUnsubscribe();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber();
+        this.jitsiParticipantsCountStoreUnsubscriber();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -1869,7 +1856,7 @@ ${escapedMessage}
                     break;
                 }
                 default: {
-                    const tmp: never = event;
+                    const _exhaustiveCheck: never = event;
                 }
             }
         }
@@ -1948,6 +1935,9 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
+        if (addPlayerData.status !== undefined) {
+            player.setStatus(addPlayerData.status, true);
+        }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
         player.updatePosition(addPlayerData.position);
@@ -1975,6 +1965,17 @@ ${escapedMessage}
             type: "RemovePlayerEvent",
             userId,
         });
+    }
+
+    private tryChangeShowVoiceIndicatorState(show: boolean): void {
+        this.CurrentPlayer.showTalkIcon(show);
+        if (this.showVoiceIndicatorChangeMessageSent && !show) {
+            this.connection?.emitPlayerShowVoiceIndicator(false);
+            this.showVoiceIndicatorChangeMessageSent = false;
+        } else if (!this.showVoiceIndicatorChangeMessageSent && show) {
+            this.connection?.emitPlayerShowVoiceIndicator(true);
+            this.showVoiceIndicatorChangeMessageSent = true;
+        }
     }
 
     private doRemovePlayer(userId: number) {
@@ -2016,8 +2017,6 @@ ${escapedMessage}
             this.currentTick,
             {
                 ...message.position,
-                oldX: undefined,
-                oldY: undefined,
             },
             this.currentTick + POSITION_DELAY
         );
@@ -2070,7 +2069,7 @@ ${escapedMessage}
         this.groups.delete(groupId);
     }
 
-    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessageInterface): void {
+    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessage): void {
         const character = this.MapPlayersByKey.get(message.userId);
         if (character === undefined) {
             console.log(
@@ -2080,10 +2079,16 @@ ${escapedMessage}
             );
             return;
         }
-        if (message.removeOutlineColor) {
+        if (message.details?.removeOutlineColor) {
             character.removeApiOutlineColor();
-        } else {
-            character.setApiOutlineColor(message.outlineColor);
+        } else if (message.details?.outlineColor !== undefined) {
+            character.setApiOutlineColor(message.details?.outlineColor);
+        }
+        if (message.details?.showVoiceIndicator !== undefined) {
+            character.showTalkIcon(message.details?.showVoiceIndicator);
+        }
+        if (message.details?.status !== undefined) {
+            character.setStatus(message.details?.status);
         }
     }
 
@@ -2127,13 +2132,10 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        const silent = this.gameMap.getCurrentProperties().get(GameMapProperties.SILENT);
-        this.connection?.setSilent(!!silent);
         mediaManager.showMyCamera();
     }
 
     public disableMediaBehaviors() {
-        this.connection?.setSilent(true);
         mediaManager.hideMyCamera();
     }
 

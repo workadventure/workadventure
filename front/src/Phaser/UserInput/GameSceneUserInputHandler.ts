@@ -43,7 +43,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .then((path) => {
                 // Remove first step as it is for the tile we are currently standing on
                 path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch((reason) => {});
+                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
             })
             .catch((reason) => {
                 console.warn(reason);

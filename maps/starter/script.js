@@ -1,6 +1,6 @@
 /// <reference path="../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
 
-let currentPopup: any = undefined;
+let currentPopup = undefined;
 const today = new Date();
 const time = today.getHours() + ":" + today.getMinutes();
 

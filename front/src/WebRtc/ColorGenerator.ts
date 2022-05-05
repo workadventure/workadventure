@@ -14,14 +14,6 @@ export function getColorRgbFromHue(hue: number): { r: number; g: number; b: numb
     return hsv_to_rgb(hue, 0.5, 0.95);
 }
 
-function stringToDouble(string: string): number {
-    let num = 1;
-    for (const char of string.split("")) {
-        num *= char.charCodeAt(0);
-    }
-    return (num % 255) / 255;
-}
-
 //todo: test this.
 function hsv_to_rgb(hue: number, saturation: number, brightness: number): { r: number; g: number; b: number } {
     const h_i = Math.floor(hue * 6);

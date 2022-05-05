@@ -1,14 +1,8 @@
-import type * as tg from "generic-type-guard";
-import type {
-    IframeEvent,
-    IframeEventMap,
-    IframeQuery,
-    IframeQueryMap,
-    IframeResponseEventMap,
-} from "../Events/IframeEvent";
+import { z } from "zod";
+import type { IframeEvent, IframeQuery, IframeQueryMap, IframeResponseEventMap } from "../Events/IframeEvent";
 import type { IframeQueryWrapper } from "../Events/IframeEvent";
 
-export function sendToWorkadventure(content: IframeEvent<keyof IframeEventMap>) {
+export function sendToWorkadventure(content: IframeEvent) {
     window.parent.postMessage(content, "*");
 }
 
@@ -48,12 +42,10 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
     });
 }
 
-type GuardedType<Guard extends tg.TypeGuard<unknown>> = Guard extends tg.TypeGuard<infer T> ? T : never;
-
 export interface IframeCallback<
     Key extends keyof IframeResponseEventMap,
     T = IframeResponseEventMap[Key],
-    Guard = tg.TypeGuard<T>
+    Guard = z.ZodType<T>
 > {
     typeChecker: Guard;
     callback: (payloadData: T) => void;

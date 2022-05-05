@@ -1,6 +1,6 @@
 import { PointInterface } from "./PointInterface";
 import { Identificable } from "./Identificable";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
+import { ViewportInterface } from "../../Model/Websocket/ViewportMessage";
 import {
     BatchMessage,
     CompanionMessage,
@@ -9,7 +9,7 @@ import {
     SubMessage,
 } from "../../Messages/generated/messages_pb";
 import { ClientDuplexStream } from "grpc";
-import { Zone } from "_Model/Zone";
+import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 

@@ -4,6 +4,14 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+enum AvailabilityStatus {
+  UNCHANGED = 0;
+  ONLINE = 1;
+  SILENT = 2;
+  AWAY = 3;
+  JITSI = 4;
+}
+
 message PositionMessage {
   int32 x = 1;
   int32 y = 2;
@@ -29,10 +37,6 @@ message ViewportMessage {
   int32 bottom = 4;
 }
 
-message SilentMessage {
-  bool silent = 1;
-}
-
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
@@ -50,12 +54,10 @@ message PingMessage {
 }
 
 message SetPlayerDetailsMessage {
-  //string name = 1;
-  //repeated string characterLayers = 2;
-
-  // TODO: switch to google.protobuf.Int32Value when we migrate to ts-proto
-  uint32 outlineColor = 3;
-  bool removeOutlineColor = 4;
+  google.protobuf.UInt32Value outlineColor = 3;
+  google.protobuf.BoolValue removeOutlineColor = 4;
+  google.protobuf.BoolValue showVoiceIndicator = 5;
+  AvailabilityStatus status = 6;
 }
 
 message UserMovesMessage {
@@ -108,7 +110,6 @@ message LockGroupPromptMessage {
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
@@ -209,14 +210,34 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
+  AvailabilityStatus status = 10;
 }
 
 message UserLeftMessage {
   int32 userId = 1;
 }
 
+/*
+ * ErrorMessage is only used to console.error the message in the front
+ */
 message ErrorMessage {
   string message = 1;
+}
+
+/*
+ * ErrorScreenMessage is used to show the ErrorScreen in the front
+ */
+message ErrorScreenMessage {
+  string type = 1;
+  google.protobuf.StringValue code = 2;
+  google.protobuf.StringValue title = 3;
+  google.protobuf.StringValue subtitle = 4;
+  google.protobuf.StringValue details = 5;
+  google.protobuf.Int32Value timeToRetry = 6;
+  google.protobuf.BoolValue canRetryManual = 7;
+  google.protobuf.StringValue urlToRedirect = 8;
+  google.protobuf.StringValue buttonTitle = 9;
+  google.protobuf.StringValue image = 10;
 }
 
 message ItemStateMessage {
@@ -330,6 +351,7 @@ message ServerToClientMessage {
     FollowAbortMessage followAbortMessage = 23;
     InvalidTextureMessage invalidTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
+    ErrorScreenMessage errorScreenMessage = 26;
   }
 }
 
@@ -347,6 +369,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
+  AvailabilityStatus status = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -360,6 +383,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
+  AvailabilityStatus status = 11;
 }
 
 message UserLeftZoneMessage {
@@ -404,7 +428,6 @@ message PusherToBackMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;

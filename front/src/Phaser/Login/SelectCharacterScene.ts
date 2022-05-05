@@ -1,5 +1,4 @@
 import { gameManager } from "../Game/GameManager";
-import Rectangle = Phaser.GameObjects.Rectangle;
 import { EnableCameraSceneName } from "./EnableCameraScene";
 import { CustomizeSceneName } from "./CustomizeScene";
 import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -13,25 +12,26 @@ import { PinchManager } from "../UserInput/PinchManager";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
 import { PUSHER_URL } from "../../Enum/EnvironmentVariable";
-import { customizeAvailableStore } from "../../Stores/SelectCharacterSceneStore";
+import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+import { DraggableGrid } from "@home-based-studio/phaser3-utils";
+import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
+import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
+import { myCameraVisibilityStore } from "../../Stores/MyCameraStoreVisibility";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
 
 export class SelectCharacterScene extends AbstractCharacterScene {
-    protected readonly nbCharactersPerRow = 6;
-    protected selectedPlayer!: Phaser.Physics.Arcade.Sprite | null; // null if we are selecting the "customize" option
-    protected players: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
+    protected selectedWoka!: Phaser.GameObjects.Sprite | null; // null if we are selecting the "customize" option
     protected playerModels!: BodyResourceDescriptionInterface[];
 
-    protected selectedRectangle!: Rectangle;
-
-    protected currentSelectUser = 0;
-    protected pointerClicked: boolean = false;
-    protected pointerTimer: number = 0;
+    private charactersDraggableGrid!: DraggableGrid;
+    private collectionKeys!: string[];
+    private selectedCollectionIndex!: number;
+    private selectedGridItemIndex?: number;
+    private gridRowsCount: number = 1;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
@@ -44,7 +44,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.playerTextures = new PlayerTextures();
     }
 
-    preload() {
+    public preload() {
+        super.preload();
         const wokaMetadataKey = "woka-list" + gameManager.currentStartedRoom.href;
         this.cache.json.remove(wokaMetadataKey);
 
@@ -67,229 +68,237 @@ export class SelectCharacterScene extends AbstractCharacterScene {
                 }
             )
             .catch((e) => console.error(e));
+        this.playerModels = loadAllDefaultModels(this.load, this.playerTextures);
+        this.lazyloadingAttempt = false;
 
         //this function must stay at the end of preload function
         this.loader.addLoader();
     }
 
-    create() {
+    public create() {
+        waScaleManager.zoomModifier = 1;
+        this.selectedWoka = null;
+        this.selectedCollectionIndex = 0;
+        this.collectionKeys = this.playerTextures.getCollectionsKeys();
+        selectedCollection.set(this.getSelectedCollectionName());
+
         customizeAvailableStore.set(this.isCustomizationAvailable());
         selectCharacterSceneVisibleStore.set(true);
-        this.events.addListener("wake", () => {
-            waScaleManager.saveZoom();
-            waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
-            selectCharacterSceneVisibleStore.set(true);
-        });
 
         if (touchScreenManager.supportTouchScreen) {
             new PinchManager(this);
         }
 
-        waScaleManager.saveZoom();
-        waScaleManager.zoomModifier = isMediaBreakpointUp("md") ? 2 : 1;
-
-        const rectangleXStart = this.game.renderer.width / 2 - (this.nbCharactersPerRow / 2) * 32 + 16;
-        this.selectedRectangle = this.add.rectangle(rectangleXStart, 90, 32, 32).setStrokeStyle(2, 0xffffff);
-        this.selectedRectangle.setDepth(2);
-
-        /*create user*/
-        this.createCurrentPlayer();
-
-        this.input.keyboard.on("keyup-ENTER", () => {
-            return this.nextSceneToCameraScene();
+        this.charactersDraggableGrid = new DraggableGrid(this, {
+            position: { x: 0, y: 0 },
+            maskPosition: { x: 0, y: 0 },
+            dimension: { x: 485, y: 165 },
+            horizontal: true,
+            repositionToCenter: true,
+            itemsInRow: 1,
+            margin: {
+                left: ((innerWidth - 200) / waScaleManager.getActualZoom()) * 0.5,
+                right: ((innerWidth - 200) / waScaleManager.getActualZoom()) * 0.5,
+            },
+            spacing: 5,
+            debug: {
+                showDraggableSpace: false,
+            },
         });
 
-        this.input.keyboard.on("keydown-RIGHT", () => {
-            this.moveToRight();
-        });
-        this.input.keyboard.on("keydown-LEFT", () => {
-            this.moveToLeft();
-        });
-        this.input.keyboard.on("keydown-UP", () => {
-            this.moveToUp();
-        });
-        this.input.keyboard.on("keydown-DOWN", () => {
-            this.moveToDown();
-        });
+        this.bindEventHandlers();
+
+        this.onResize();
     }
 
     public nextSceneToCameraScene(): void {
-        if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
+        if (this.selectedWoka !== null && !areCharacterLayersValid([this.selectedWoka.texture.key])) {
             return;
         }
-        if (!this.selectedPlayer) {
+        if (!this.selectedWoka) {
             return;
         }
 
         analyticsClient.validationWoka("SelectWoka");
 
+        gameManager.setCharacterLayers([this.selectedWoka.texture.key]);
+        this.selectedWoka = null;
         this.scene.stop(SelectCharacterSceneName);
-        waScaleManager.restoreZoom();
-        gameManager.setCharacterLayers([this.selectedPlayer.texture.key]);
         gameManager.tryResumingGame(EnableCameraSceneName);
-        this.players = [];
         selectCharacterSceneVisibleStore.set(false);
         this.events.removeListener("wake");
     }
 
     public nextSceneToCustomizeScene(): void {
-        if (this.selectedPlayer !== null && !areCharacterLayersValid([this.selectedPlayer.texture.key])) {
+        if (this.selectedWoka !== null && !areCharacterLayersValid([this.selectedWoka.texture.key])) {
             return;
         }
+        this.selectedWoka = null;
+        myCameraVisibilityStore.set(false);
         this.scene.sleep(SelectCharacterSceneName);
-        waScaleManager.restoreZoom();
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
     }
 
-    createCurrentPlayer(): void {
-        for (let i = 0; i < this.playerModels.length; i++) {
-            const playerResource = this.playerModels[i];
-
-            //check already exist texture
-            if (this.players.find((c) => c.texture.key === playerResource.id)) {
-                continue;
-            }
-
-            const [middleX, middleY] = this.getCharacterPosition();
-            const player = this.physics.add.sprite(middleX, middleY, playerResource.id, 0);
-            this.setUpPlayer(player, i);
-            this.anims.create({
-                key: playerResource.id,
-                frames: this.anims.generateFrameNumbers(playerResource.id, { start: 0, end: 11 }),
-                frameRate: 8,
-                repeat: -1,
-            });
-            player.setInteractive().on("pointerdown", () => {
-                if (this.pointerClicked) {
-                    return;
-                }
-                if (this.currentSelectUser === i) {
-                    return;
-                }
-                //To not trigger two time the pointerdown events :
-                // We set a boolean to true so that pointerdown events does nothing when the boolean is true
-                // We set a timer that we decrease in update function to not trigger the pointerdown events twice
-                this.pointerClicked = true;
-                this.pointerTimer = 250;
-                this.currentSelectUser = i;
-                this.moveUser();
-            });
-            this.players.push(player);
-        }
-        if (this.currentSelectUser >= this.players.length) {
-            this.currentSelectUser = 0;
-        }
-        this.selectedPlayer = this.players[this.currentSelectUser];
-        this.selectedPlayer.play(this.playerModels[this.currentSelectUser].id);
-    }
-
-    protected moveUser() {
-        for (let i = 0; i < this.players.length; i++) {
-            const player = this.players[i];
-            this.setUpPlayer(player, i);
-        }
-        this.updateSelectedPlayer();
-    }
-
-    public moveToLeft() {
-        if (this.currentSelectUser === 0) {
-            return;
-        }
-        this.currentSelectUser -= 1;
-        this.moveUser();
-    }
-
-    public moveToRight() {
-        if (this.currentSelectUser === this.players.length - 1) {
-            return;
-        }
-        this.currentSelectUser += 1;
-        this.moveUser();
-    }
-
-    protected moveToUp() {
-        if (this.currentSelectUser < this.nbCharactersPerRow) {
-            return;
-        }
-        this.currentSelectUser -= this.nbCharactersPerRow;
-        this.moveUser();
-    }
-
-    protected moveToDown() {
-        if (this.currentSelectUser + this.nbCharactersPerRow > this.players.length - 1) {
-            return;
-        }
-        this.currentSelectUser += this.nbCharactersPerRow;
-        this.moveUser();
-    }
-
-    protected defineSetupPlayer(num: number) {
-        const deltaX = 32;
-        const deltaY = 32;
-        let [playerX, playerY] = this.getCharacterPosition(); // player X and player y are middle of the
-
-        playerX = playerX - deltaX * 2.5 + deltaX * (num % this.nbCharactersPerRow); // calcul position on line users
-        playerY = playerY - deltaY * 2 + deltaY * Math.floor(num / this.nbCharactersPerRow); // calcul position on column users
-
-        const playerVisible = true;
-        const playerScale = 1;
-        const playerOpacity = 1;
-
-        // if selected
-        if (num === this.currentSelectUser) {
-            this.selectedRectangle.setX(playerX);
-            this.selectedRectangle.setY(playerY);
-        }
-
-        return { playerX, playerY, playerScale, playerOpacity, playerVisible };
-    }
-
-    protected setUpPlayer(player: Phaser.Physics.Arcade.Sprite, num: number) {
-        const { playerX, playerY, playerScale, playerOpacity, playerVisible } = this.defineSetupPlayer(num);
-        player.setBounce(0.2);
-        player.setCollideWorldBounds(false);
-        player.setVisible(playerVisible);
-        player.setScale(playerScale, playerScale);
-        player.setAlpha(playerOpacity);
-        player.setX(playerX);
-        player.setY(playerY);
-    }
-
-    /**
-     * Returns pixel position by on column and row number
-     */
-    protected getCharacterPosition(): [number, number] {
-        return [this.game.renderer.width / 2, this.game.renderer.height / 2.5];
-    }
-
-    protected updateSelectedPlayer(): void {
-        this.selectedPlayer?.anims?.pause(this.selectedPlayer?.anims.currentAnim.frames[0]);
-        const player = this.players[this.currentSelectUser];
-        player?.play(this.playerModels[this.currentSelectUser].id);
-        this.selectedPlayer = player;
-        localUserStore.setPlayerCharacterIndex(this.currentSelectUser);
-    }
-
-    update(time: number, delta: number): void {
-        // pointerTimer is set to 250 when pointerdown events is trigger
-        // After 250ms, pointerClicked is set to false and the pointerdown events can be trigger again
-        this.pointerTimer -= delta;
-        if (this.pointerTimer <= 0) {
-            this.pointerClicked = false;
-        }
-
+    public update(): void {
         if (this.lazyloadingAttempt) {
-            //re-render players list
-            this.createCurrentPlayer();
-            this.moveUser();
             this.lazyloadingAttempt = false;
         }
     }
 
     public onResize(): void {
-        //move position of user
-        this.moveUser();
+        this.handleCharactersGridOnResize();
+    }
+
+    public getSelectedCollectionName(): string {
+        return this.collectionKeys[this.selectedCollectionIndex] ?? "";
+    }
+
+    public getCollectionKeysSize(): number {
+        return this.playerTextures.getCollectionsKeys().length;
+    }
+
+    public selectPreviousCollection(): void {
+        this.selectedCollectionIndex = (this.selectedCollectionIndex + 1) % this.collectionKeys.length;
+        selectedCollection.set(this.getSelectedCollectionName());
+        this.populateGrid();
+    }
+
+    public selectNextCollection(): void {
+        if (this.collectionKeys.length === 1) {
+            return;
+        }
+        this.selectedCollectionIndex =
+            this.selectedCollectionIndex - 1 < 0 ? this.collectionKeys.length - 1 : this.selectedCollectionIndex - 1;
+        selectedCollection.set(this.getSelectedCollectionName());
+        this.populateGrid();
+    }
+
+    private handleCharactersGridOnResize(): void {
+        const ratio = innerHeight / innerWidth;
+        this.gridRowsCount = ratio > 1 || innerHeight > 900 ? 2 : 1;
+        const gridHeight = this.gridRowsCount === 2 ? 210 : 105;
+        const gridWidth = innerWidth / waScaleManager.getActualZoom();
+        const gridPos = {
+            x: this.cameras.main.worldView.x + this.cameras.main.width / 2,
+            y: this.cameras.main.worldView.y + this.cameras.main.height * (ratio > 1 ? 0.5 : 0.575),
+        };
+
+        try {
+            this.charactersDraggableGrid.changeDraggableSpacePosAndSize(
+                gridPos,
+                { x: gridWidth, y: gridHeight },
+                gridPos
+            );
+        } catch (error) {
+            console.warn(error);
+        }
+        this.charactersDraggableGrid.setItemsInRow(this.gridRowsCount);
+        this.populateGrid();
+    }
+
+    private populateGrid(): void {
+        const wokaDimension = 100;
+
+        this.selectedWoka = null;
+        this.charactersDraggableGrid.clearAllItems();
+        const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
+        for (let i = 0; i < textures.length; i += 1) {
+            const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
+            this.charactersDraggableGrid.addItem(slot);
+        }
+        this.charactersDraggableGrid.moveContentToBeginning();
+        void this.charactersDraggableGrid.moveContentTo(0.5, textures.length * 50);
+    }
+
+    private bindEventHandlers(): void {
+        this.bindKeyboardEventHandlers();
+        this.events.addListener("wake", () => {
+            selectCharacterSceneVisibleStore.set(true);
+        });
+
+        this.input.keyboard.on("keyup-ENTER", () => {
+            return this.nextSceneToCameraScene();
+        });
+
+        this.charactersDraggableGrid.on(DraggableGridEvent.ItemClicked, (item: WokaSlot) => {
+            this.selectGridItem(item);
+        });
+    }
+
+    private selectGridItem(item: WokaSlot): void {
+        this.selectedGridItemIndex = this.charactersDraggableGrid.getAllItems().indexOf(item);
+        if (this.charactersDraggableGrid.getDraggableSpaceWidth() < this.charactersDraggableGrid.getGridSize().x) {
+            void this.charactersDraggableGrid.centerOnItem(this.selectedGridItemIndex, 500);
+        }
+        this.charactersDraggableGrid.getAllItems().forEach((slot) => (slot as WokaSlot).select(false));
+        this.selectedWoka?.stop()?.setFrame(0);
+        this.selectedWoka = item.getSprite();
+        const wokaKey = this.selectedWoka.texture.key;
+        this.createWokaAnimation(wokaKey);
+        this.selectedWoka.play(wokaKey);
+        item.select(true);
+    }
+
+    private bindKeyboardEventHandlers(): void {
+        this.input.keyboard.on("keyup-SPACE", () => {
+            this.selectNextCollection();
+        });
+        this.input.keyboard.on("keydown-LEFT", () => {
+            this.selectNextGridItem(true, true);
+        });
+        this.input.keyboard.on("keydown-RIGHT", () => {
+            this.selectNextGridItem(false, true);
+        });
+        this.input.keyboard.on("keydown-UP", () => {
+            this.selectNextGridItem(true, false);
+        });
+        this.input.keyboard.on("keydown-DOWN", () => {
+            this.selectNextGridItem(false, false);
+        });
+        this.input.keyboard.on("keydown-W", () => {
+            this.selectNextGridItem(true, false);
+        });
+        this.input.keyboard.on("keydown-S", () => {
+            this.selectNextGridItem(false, false);
+        });
+        this.input.keyboard.on("keydown-A", () => {
+            this.selectNextGridItem(true, true);
+        });
+        this.input.keyboard.on("keydown-D", () => {
+            this.selectNextGridItem(false, true);
+        });
+    }
+
+    private selectNextGridItem(previous: boolean = false, horizontally: boolean): void {
+        if (this.selectedGridItemIndex === undefined) {
+            this.selectedGridItemIndex = 0;
+        }
+        if (
+            previous
+                ? this.selectedGridItemIndex > 0
+                : this.selectedGridItemIndex < this.charactersDraggableGrid.getAllItems().length - 1
+        ) {
+            // NOTE: getItemsInRowCount() not working properly. Fix on lib side needed
+            const jump = horizontally ? this.gridRowsCount : 1;
+            const item = this.charactersDraggableGrid.getAllItems()[
+                this.selectedGridItemIndex + (previous ? -jump : jump)
+            ] as WokaSlot;
+            if (!item) {
+                return;
+            }
+            this.selectedGridItemIndex += previous ? -1 : 1;
+            this.selectGridItem(item);
+        }
+    }
+
+    private createWokaAnimation(key: string): void {
+        this.anims.create({
+            key,
+            frames: this.anims.generateFrameNumbers(key, { start: 0, end: 11 }),
+            frameRate: 8,
+            repeat: -1,
+        });
     }
 
     private isCustomizationAvailable(): boolean {

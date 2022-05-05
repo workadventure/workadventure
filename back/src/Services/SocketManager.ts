@@ -2,11 +2,9 @@ import { GameRoom } from "../Model/GameRoom";
 import {
     ItemEventMessage,
     ItemStateMessage,
-    PlayGlobalMessage,
     PointMessage,
     RoomJoinedMessage,
     ServerToClientMessage,
-    SilentMessage,
     SubMessage,
     UserMovedMessage,
     UserMovesMessage,
@@ -35,12 +33,10 @@ import {
     FollowAbortMessage,
     VariableMessage,
     BatchToPusherRoomMessage,
-    SubToPusherRoomMessage,
     SetPlayerDetailsMessage,
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
-    RoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -60,9 +56,9 @@ import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Zone } from "_Model/Zone";
+import { Zone } from "../Model/Zone";
 import Debug from "debug";
-import { Admin } from "_Model/Admin";
+import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 
 const debug = Debug("sockermanager");
@@ -161,10 +157,6 @@ export class SocketManager {
 
     handleSetPlayerDetails(room: GameRoom, user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         room.updatePlayerDetails(user, playerDetailsMessage);
-    }
-
-    handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
-        room.setSilent(user, silentMessage.getSilent());
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {
@@ -331,6 +323,7 @@ export class SocketManager {
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
+            userJoinedZoneMessage.setStatus(thing.getStatus());
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
@@ -338,11 +331,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
-            if (thing.outlineColor === undefined) {
+            const outlineColor = thing.getOutlineColor();
+            if (outlineColor === undefined) {
                 userJoinedZoneMessage.setHasoutline(false);
             } else {
                 userJoinedZoneMessage.setHasoutline(true);
-                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+                userJoinedZoneMessage.setOutlinecolor(outlineColor);
             }
 
             const subMessage = new SubToPusherMessage();
@@ -657,6 +651,7 @@ export class SocketManager {
                 userJoinedMessage.setUserid(thing.id);
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
+                userJoinedMessage.setStatus(thing.getStatus());
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {

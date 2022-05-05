@@ -15,6 +15,7 @@ function onError(e: Error) {
 function onRejection(reason: Error) {
     if (reason instanceof Error) {
         let _reason = reason;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const errPrototype = Object.getPrototypeOf(reason);
         const nameProperty = Object.getOwnPropertyDescriptor(errPrototype, "name");
 
