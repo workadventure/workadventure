@@ -54,7 +54,7 @@ export class Loader {
             .catch((e) => console.warn("Could not load logo: ", logoResource, e));
 
         let poweredByLogoPromise: CancelablePromise<Texture> | undefined;
-        if (gameManager.currentStartedRoom.loadingLogo) {
+        if (gameManager.currentStartedRoom.loadingLogo && gameManager.currentStartedRoom.showPoweredBy !== false) {
             poweredByLogoPromise = this.superLoad.image(
                 "poweredByLogo",
                 "static/images/Powered_By_WorkAdventure_Small.png"
