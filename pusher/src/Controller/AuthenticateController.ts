@@ -431,7 +431,10 @@ export class AuthenticateController extends BaseHttpController {
 
                         //get login profile
                         res.status(302);
-                        res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken, playUri as string));
+                        res.setHeader(
+                            "Location",
+                            adminService.getProfileUrl(authTokenData.accessToken, playUri as string)
+                        );
                         res.send("");
                         return;
                     } catch (error) {
