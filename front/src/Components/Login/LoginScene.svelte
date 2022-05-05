@@ -63,7 +63,7 @@
     <section class="action">
         <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{$LL.login.continue()}</button>
     </section>
-    {#if logo !== logoImg}
+    {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-center powered-by">
             <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" />
         </section>
