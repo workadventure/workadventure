@@ -76,6 +76,7 @@ import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -90,7 +91,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import { locale } from "../../i18n/i18n-svelte";
+import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -100,8 +101,9 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -598,14 +600,30 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     this.scene.sleep();
-                    this.scene.launch(ReconnectingSceneName);
+                    errorScreenStore.setError(
+                        ErrorScreenMessage.fromPartial({
+                            type: "reconnecting",
+                            code: "CONNECTION_LOST",
+                            title: get(LL).warning.connectionLostTitle(),
+                            details: get(LL).warning.connectionLostSubtitle(),
+                        })
+                    );
+                    //this.scene.launch(ReconnectingSceneName);
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         this.scene.sleep();
-                        this.scene.launch(ReconnectingSceneName);
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "reconnecting",
+                                code: "CONNECTION_LOST",
+                                title: get(LL).warning.connectionLostTitle(),
+                                details: get(LL).warning.connectionLostSubtitle(),
+                            })
+                        );
+                        //this.scene.launch(ReconnectingSceneName);
                     }
                 }, 1000);
             }
@@ -889,7 +907,9 @@ export class GameScene extends DirtyScene {
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 if (this.scene.isSleeping()) {
-                    this.scene.stop(ReconnectingSceneName);
+                    const error = get(errorScreenStore);
+                    if (error && error?.type === "reconnecting") errorScreenStore.delete();
+                    //this.scene.stop(ReconnectingSceneName);
                 }
 
                 //init user position and play trigger to check layers properties
@@ -1108,6 +1128,13 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
+                const url = new URL(stopSoundEvent.url, this.MapUrlFile);
+                soundManager.stopSound(this.sound, url.toString());
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {
                 this.MapPlayersByKey.get(data.id)?.registerActionsMenuAction({
                     actionName: data.actionKey,
@@ -1271,6 +1298,18 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {
             return coWebsiteManager.closeCoWebsites();
+        });
+
+        iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
+            return uiWebsiteManager.open(websiteConfig);
+        });
+
+        iframeListener.registerAnswerer("getUIWebsites", () => {
+            return uiWebsiteManager.getAll();
+        });
+
+        iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
+            return uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -1569,6 +1608,9 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
+        iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 

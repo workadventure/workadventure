@@ -87,10 +87,6 @@ class LocalAdmin implements AdminInterface {
         new Error("No admin backoffice set!");
         return "";
     }
-
-    async logoutOauth(token: string): Promise<void> {
-        return Promise.reject(new Error("No admin backoffice set!"));
-    }
 }
 
 export const localAdmin = new LocalAdmin();

@@ -2,7 +2,7 @@ import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
-import type { DesktopCapturerSource } from "@wa-preload-app";
+import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

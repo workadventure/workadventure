@@ -68,6 +68,7 @@
 
   &-loader {
     width: 20%;
+    display: none;
 
     #smoke {
       @for $i from 1 through 3 {
@@ -92,7 +93,7 @@
 
   &-buffer {
     iframe {
-      z-index: 45 !important;
+      z-index: 201 !important;
       pointer-events: none !important;
       overflow: hidden;
       border: 0;

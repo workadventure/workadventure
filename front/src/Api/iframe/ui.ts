@@ -14,6 +14,8 @@ import {
     isActionsMenuActionClickedEvent,
 } from "../Events/ActionsMenuActionClickedEvent";
 import { Observable, Subject } from "rxjs";
+import type { UIWebsiteCommands } from "./Ui/UIWebsite";
+import website from "./Ui/UIWebsite";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -282,6 +284,10 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         });
         actionMessages.set(actionMessage.uuid, actionMessage);
         return actionMessage;
+    }
+
+    get website(): UIWebsiteCommands {
+        return website;
     }
 }
 

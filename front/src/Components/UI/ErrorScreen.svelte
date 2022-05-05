@@ -2,6 +2,7 @@
     import { fly } from "svelte/transition";
     import { errorScreenStore } from "../../Stores/ErrorScreenStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
     import { onDestroy } from "svelte";
 
@@ -10,13 +11,17 @@
     import reload from "../images/reload.png";
     let errorScreen = get(errorScreenStore);
 
-    function click() {
-        window.location.reload();
-    }
-    let details = errorScreen.details;
-    let timeVar = errorScreen.timeToRetry ?? 0;
+    import error from "./images/error.png";
+    let errorLogo = errorScreen?.image ?? error;
 
-    if (errorScreen.type === "retry") {
+    function click() {
+        if (errorScreen?.type === "unauthorized") void connectionManager.logout();
+        else window.location.reload();
+    }
+    let details = errorScreen?.details ?? "";
+    let timeVar = errorScreen?.timeToRetry ?? 0;
+
+    if (errorScreen?.type === "retry") {
         let interval = setInterval(() => {
             if (timeVar <= 1000) click();
             timeVar -= 1000;
@@ -27,24 +32,29 @@
     $: detailsStylized = (details ?? "").replace("{time}", `${timeVar / 1000}`);
 </script>
 
-<main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
-    <div style="width: 90%;">
-        <img src={logo} alt="WorkAdventure" class="logo" />
-        <div><img src={$errorScreenStore.image} alt="" class="icon" /></div>
-        {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
-        <p>{$errorScreenStore.subtitle}</p>
-        {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
-        <p class="details">
-            {detailsStylized}{#if $errorScreenStore.type === "retry"}<div class="loading" />{/if}
-        </p>
-        {#if $errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual}
-            <button type="button" class="nes-btn is-primary button" on:click={click}>
-                <img src={reload} alt="" class="reload" />
-                {$errorScreenStore.buttonTitle}
-            </button>
-        {/if}
-    </div>
-</main>
+{#if $errorScreenStore}
+    <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
+        <div style="width: 90%;">
+            <img src={logo} alt="WorkAdventure" class="logo" />
+            <div><img src={errorLogo} alt="Error logo" class="icon" /></div>
+            {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
+            {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
+            {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
+            <p class="details">
+                {detailsStylized}
+                {#if $errorScreenStore.type === "retry" || $errorScreenStore.type === "reconnecting"}
+                    <div class="loading" />
+                {/if}
+            </p>
+            {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
+                <button type="button" class="nes-btn is-primary button" on:click={click}>
+                    {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
+                    {$errorScreenStore.buttonTitle}
+                </button>
+            {/if}
+        </div>
+    </main>
+{/if}
 
 <style lang="scss">
     main.errorScreen {
