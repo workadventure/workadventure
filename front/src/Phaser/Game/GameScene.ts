@@ -226,6 +226,7 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
+    private allowProximityMeeting: boolean = true;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1111,12 +1112,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = false;
                 this.disableMediaBehaviors();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = true;
                 this.enableMediaBehaviors();
             })
         );
@@ -2181,7 +2184,9 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        mediaManager.showMyCamera();
+        if (this.allowProximityMeeting) {
+            mediaManager.showMyCamera();
+        }
     }
 
     public disableMediaBehaviors() {
