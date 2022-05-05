@@ -11,6 +11,7 @@ import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
@@ -131,6 +132,19 @@ export class GameMapPropertiesListener {
                     openJitsiRoomFunction();
                     inJitsiStore.set(true);
                 }
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction("bbbMeeting");
+                bbbFactory.setStopped(true);
+                bbbFactory.stop();
+            } else {
+                bbbFactory.setStopped(false);
+                void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
+                    this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
+                });
             }
         });
 

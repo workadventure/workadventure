@@ -93,6 +93,8 @@ services:
       - STUN_SERVER
       - JITSI_URL
       - JITSI_ISS
+      - BBB_URL
+      - BBB_SECRET
       - MAX_PER_GROUP
       - STORE_VARIABLES_FOR_LOCAL_MAPS
       - REDIS_HOST=redis
