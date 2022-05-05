@@ -122,7 +122,6 @@ export class Room {
                 }
                 this._canReport = data.canReport ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
-                console.info("LOGO", data.loadingCowebsiteLogo);
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;

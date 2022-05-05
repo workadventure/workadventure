@@ -359,10 +359,8 @@ class CoWebsiteManager {
     private activateMainLoaderAnimation() {
         this.desactivateMainLoaderAnimation();
         const customLogo = gameManager.currentStartedRoom.loadingCowebsiteLogo;
-        console.log(customLogo);
 
         if (customLogo) {
-            console.info("need logo creation");
             const logo = document.createElement("img");
             logo.id = "custom-logo";
             logo.src = customLogo;
