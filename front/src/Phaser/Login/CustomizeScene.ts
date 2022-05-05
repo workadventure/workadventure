@@ -36,7 +36,7 @@ export class CustomizeScene extends AbstractCharacterScene {
     private randomizeButton!: Button;
     private finishButton!: Button;
 
-    private selectedLayers: number[];
+    private selectedLayers: number[] = [0, 0, 0, 0, 0, 0];
     private layers: BodyResourceDescriptionInterface[][] = [];
     private selectedBodyPartType?: CustomWokaBodyPart;
 
