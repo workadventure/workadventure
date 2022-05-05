@@ -104,6 +104,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -645,6 +646,10 @@ export class GameScene extends DirtyScene {
         // From now, this game scene will be notified of reposition events
         this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) => {
             this.cameraManager.updateCameraOffset(box);
+        });
+        embedScreenLayoutStore.subscribe((layout) => {
+            this.reposition();
+            console.log(layout);
         });
 
         new GameMapPropertiesListener(this, this.gameMap).register();

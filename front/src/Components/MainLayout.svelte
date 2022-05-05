@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    import { embedScreenLayout, hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
     import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
     import { requestVisitCardsStore } from "../Stores/GameStore";
@@ -64,7 +64,7 @@
             <MenuIcon />
         {/if}
 
-        {#if $embedScreenLayout === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
+        {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
         {/if}
     </aside>

@@ -17,6 +17,9 @@ function findBiggestAvailableArea(): Box {
             yEnd: iframe.offsetTop + iframe.offsetHeight,
         }));
 
+    console.log(Array.from(document.getElementsByClassName("video-container")));
+    // const videoContainers: Box[] =
+
     // create vertices arrays and insert game canvas edges
     const xVertices = [game.offsetLeft, game.offsetWidth];
     const yVertices = [game.offsetTop, game.offsetHeight];
@@ -49,7 +52,7 @@ function findBiggestAvailableArea(): Box {
             allSquares.push(...findSquares(x, y, occupiedSpace));
         }
     }
-    console.log(allSquares);
+    // console.log(allSquares);
 
     // remove squares with occupied areas
     const freeSquares = allSquares.filter((square) => {
@@ -86,7 +89,7 @@ function findBiggestAvailableArea(): Box {
         yEnd: yVertices[biggestFreeAreaSquare.yEnd],
     };
 
-    console.log(freeSpace);
+    // console.log(freeSpace);
     return freeSpace;
 
     // console.log(occupiedSpace);
