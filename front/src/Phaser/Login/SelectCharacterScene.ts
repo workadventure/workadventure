@@ -95,6 +95,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             dimension: { x: 485, y: 165 },
             horizontal: true,
             repositionToCenter: true,
+            reverseScrollForTrackpad: true,
             itemsInRow: 1,
             margin: {
                 left: ((innerWidth - 200) / waScaleManager.getActualZoom()) * 0.5,

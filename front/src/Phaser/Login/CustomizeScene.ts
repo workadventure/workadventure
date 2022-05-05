@@ -198,6 +198,7 @@ export class CustomizeScene extends AbstractCharacterScene {
             dimension: { x: 485, y: 165 },
             horizontal: true,
             repositionToCenter: true,
+            reverseScrollForTrackpad: true,
             itemsInRow: 1,
             margin: {
                 left: (innerWidth / waScaleManager.getActualZoom() - this.SLOT_DIMENSION) * 0.5,
