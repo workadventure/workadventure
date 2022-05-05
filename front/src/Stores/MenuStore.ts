@@ -5,7 +5,7 @@ import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVaria
 import type { Translation } from "../i18n/i18n-types";
 import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import {connectionManager} from "../Connexion/ConnectionManager";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);

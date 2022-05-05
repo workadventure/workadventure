@@ -3,9 +3,8 @@ import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import {ADMIN_API_URL, DISABLE_ANONYMOUS} from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
-import Axios from "axios";
 
 /**
  * A local class mocking a real admin if no admin is configured.

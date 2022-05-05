@@ -9,7 +9,7 @@ import { LayoutMode } from "./LayoutManager";
 import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
 import { analyticsClient } from "../Administration/AnalyticsClient";
-import {gameManager} from "../Phaser/Game/GameManager";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 export enum iframeStates {
     closed = 1,
@@ -361,8 +361,8 @@ class CoWebsiteManager {
         const customLogo = gameManager.currentStartedRoom.loadingCowebsiteLogo;
         console.log(customLogo);
 
-        if(customLogo){
-            console.info('need logo creation');
+        if (customLogo) {
+            console.info("need logo creation");
             const logo = document.createElement("img");
             logo.id = "custom-logo";
             logo.src = customLogo;
