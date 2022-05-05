@@ -115,7 +115,7 @@
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
-                    <button type="button" class="tw-flex menu-item tw-align middle">
+                    <button type="button" class="tw-flex menu-item">
                         {translateMenuName(submenu)}
                     </button>
                     <img src={chevronImg} class="menu-icon" alt="open submenu" />
