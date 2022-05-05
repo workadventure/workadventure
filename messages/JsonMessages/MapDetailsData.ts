@@ -49,6 +49,10 @@ export const isMapDetailsData = z.object({
         description: "The URL of the image to be used on the LoginScene",
         example: "https://example.com/logo_login.png",
     }),
+    showPoweredBy: extendApi(z.boolean(), {
+        description: "The URL of the image to be used on the name scene",
+        example: "https://example.com/logo_login.png",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

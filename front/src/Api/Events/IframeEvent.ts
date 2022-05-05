@@ -98,6 +98,14 @@ export const isIframeEventWrapper = z.union([
         data: z.undefined(),
     }),
     z.object({
+        type: z.literal("disablePlayerProximityMeeting"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restorePlayerProximityMeeting"),
+        data: z.undefined(),
+    }),
+    z.object({
         type: z.literal("displayBubble"),
         data: z.undefined(),
     }),
