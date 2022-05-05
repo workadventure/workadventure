@@ -71,9 +71,10 @@ export interface AdminInterface {
 
     /**
      * @param accessToken
+     * @param playUri
      * @return string
      */
-    getProfileUrl(accessToken: string): string;
+    getProfileUrl(accessToken: string, playUri: string): string;
 
     /**
      * @param token

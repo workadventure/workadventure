@@ -2,10 +2,10 @@ import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
 import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
-import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { Translation } from "../i18n/i18n-types";
 import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
@@ -14,7 +14,6 @@ export const userIsConnected = writable(false);
 export const profileAvailable = writable(true);
 
 menuVisiblilityStore.subscribe((value) => {
-    if (value) analyticsClient.openedMenu();
     if (userIsConnected && value && IDENTITY_URL != null) {
         axios.get(getMeUrl()).catch((err) => {
             console.error("menuVisiblilityStore => err => ", err);
@@ -185,9 +184,9 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}`;
+    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }
 
 export function getMeUrl() {
-    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}`;
+    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }

@@ -5,7 +5,7 @@
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
     import { onDestroy, onMount } from "svelte";
-    import type { DesktopCapturerSource } from "@wa-preload-app";
+    import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
 
     let desktopCapturerSources: DesktopCapturerSource[] = [];
     let interval: ReturnType<typeof setInterval>;
