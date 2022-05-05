@@ -1103,6 +1103,24 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerControlStream.subscribe(() => {
+                this.userInputManager.restoreControls();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
+                this.disableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
+                this.enableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
                 const duration = cameraSetEvent.smooth ? 1000 : 0;
                 cameraSetEvent.lock
@@ -1189,11 +1207,6 @@ ${escapedMessage}
             })
         );
 
-        this.iframeSubscriptionList.push(
-            iframeListener.enablePlayerControlStream.subscribe(() => {
-                this.userInputManager.restoreControls();
-            })
-        );
         this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
                 this.loadNextGameFromExitUrl(url)

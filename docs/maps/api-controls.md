@@ -14,7 +14,7 @@ When controls are disabled, the user cannot move anymore using keyboard input. T
 
 Example:
 
-```javascript
+```ts
 WA.room.onEnterLayer('myZone').subscribe(() => {
     WA.controls.disablePlayerControls();
     WA.ui.openPopup("popupRectangle", 'This is an imporant message!', [{
@@ -25,5 +25,28 @@ WA.room.onEnterLayer('myZone').subscribe(() => {
             popup.close();
         }
     }]);
-})
+});
+```
+
+### Disabling / restoring proximity meeting
+
+```
+WA.controls.disablePlayerProximityMeeting(): void
+WA.controls.restorePlayerProximityMeeting(): void
+```
+
+These 2 methods can be used to completely disable player proximity meeting and to enable them again.
+
+When proximity meeting are disabled, the user cannot speak with anyone.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('myZone').subscribe(() => {
+    WA.controls.disablePlayerProximityMeeting();
+});
+
+WA.room.onLeaveLayer('myZone').subscribe(() => {
+    WA.controls.restorePlayerProximityMeeting();
+});
 ```
