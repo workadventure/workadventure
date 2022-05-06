@@ -96,6 +96,7 @@ export class User implements Movable {
 
     public get silent(): boolean {
         return (
+            this.availabilityStatus === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             this.availabilityStatus === AvailabilityStatus.SILENT ||
             this.availabilityStatus === AvailabilityStatus.JITSI
         );

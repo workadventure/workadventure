@@ -10,6 +10,7 @@ enum AvailabilityStatus {
   SILENT = 2;
   AWAY = 3;
   JITSI = 4;
+  DENY_PROXIMITY_MEETING = 5;
 }
 
 message PositionMessage {

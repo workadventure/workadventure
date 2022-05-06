@@ -186,7 +186,7 @@ export class UserInputManager {
         this.isInputDisabled = false;
     }
 
-    isControlsEnable() {
+    get isControlsEnabled() {
         return !this.isInputDisabled;
     }
 
