@@ -176,7 +176,6 @@ export class UserInputManager {
         this.scene.input.keyboard.removeAllListeners();
     }
 
-    //todo: should we also disable the joystick?
     disableControls() {
         this.scene.input.keyboard.removeAllKeys();
         this.isInputDisabled = true;
@@ -186,6 +185,11 @@ export class UserInputManager {
         this.initKeyBoardEvent();
         this.isInputDisabled = false;
     }
+
+    isControlsEnable() {
+        return !this.isInputDisabled;
+    }
+
     getEventListForGameTick(): ActiveEventList {
         const eventsMap = new ActiveEventList();
         if (this.isInputDisabled) {
@@ -266,7 +270,7 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_DOWN,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if (!pointer.wasTouch) {
+                if (!pointer.wasTouch || this.isInputDisabled) {
                     return;
                 }
                 this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);

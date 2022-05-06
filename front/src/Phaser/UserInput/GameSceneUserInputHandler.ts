@@ -25,6 +25,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
+
+        if (!this.gameScene.userInputManager.isControlsEnable()) {
+            return;
+        }
+
         for (const object of gameObjects) {
             if (object instanceof Player || object instanceof RemotePlayer) {
                 return;
