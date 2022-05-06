@@ -101,7 +101,9 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
+import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -224,6 +226,7 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
+    private allowProximityMeeting: boolean = true;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1102,6 +1105,26 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerControlStream.subscribe(() => {
+                this.userInputManager.restoreControls();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = false;
+                this.disableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = true;
+                this.enableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
                 const duration = cameraSetEvent.smooth ? 1000 : 0;
                 cameraSetEvent.lock
@@ -1189,11 +1212,6 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.enablePlayerControlStream.subscribe(() => {
-                this.userInputManager.restoreControls();
-            })
-        );
-        this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
                 this.loadNextGameFromExitUrl(url)
                     .then(() => {
@@ -1215,7 +1233,7 @@ ${escapedMessage}
                     this.CurrentPlayer.y,
                     "circleSprite-white"
                 );
-                scriptedBubbleSprite.setDisplayOrigin(48, 48);
+                scriptedBubbleSprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
                 this.add.existing(scriptedBubbleSprite);
             })
         );
@@ -1296,6 +1314,18 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {
             return coWebsiteManager.closeCoWebsites();
+        });
+
+        iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
+            return uiWebsiteManager.open(websiteConfig);
+        });
+
+        iframeListener.registerAnswerer("getUIWebsites", () => {
+            return uiWebsiteManager.getAll();
+        });
+
+        iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
+            return uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -1594,6 +1624,9 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
+        iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
@@ -2063,7 +2096,7 @@ ${escapedMessage}
                 ? "circleSprite-red"
                 : "circleSprite-white"
         );
-        sprite.setDisplayOrigin(48, 48);
+        sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
@@ -2151,7 +2184,9 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        mediaManager.showMyCamera();
+        if (this.allowProximityMeeting) {
+            mediaManager.showMyCamera();
+        }
     }
 
     public disableMediaBehaviors() {

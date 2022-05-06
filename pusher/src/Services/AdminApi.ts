@@ -457,11 +457,15 @@ class AdminApi implements AdminInterface {
         });
     }
 
-    getProfileUrl(accessToken: string): string {
+    getProfileUrl(accessToken: string, playUri: string): string {
         if (!OPID_PROFILE_SCREEN_PROVIDER) {
             throw new Error("No admin backoffice set!");
         }
-        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
+        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}&playUri=${playUri}`;
+    }
+
+    async logoutOauth(token: string): Promise<void> {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }
 

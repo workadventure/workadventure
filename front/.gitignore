@@ -5,3 +5,4 @@ dist/
 *.sh
 !templater.sh
 /public/iframe_api.js
+/public/es.js
