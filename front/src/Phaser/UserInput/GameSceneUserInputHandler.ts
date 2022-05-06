@@ -26,7 +26,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return;
         }
 
-        if (!this.gameScene.userInputManager.isControlsEnable()) {
+        if (!this.gameScene.userInputManager.isControlsEnabled) {
             return;
         }
 
