@@ -3,8 +3,7 @@ import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
 declare let window: any;
 
 class AnalyticsClient {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private posthogPromise: Promise<any> | undefined;
+    private posthogPromise: Promise<typeof import("posthog-js").default> | undefined;
 
     constructor() {
         if (POSTHOG_API_KEY && POSTHOG_URL) {
