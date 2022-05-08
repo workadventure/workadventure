@@ -934,3 +934,8 @@ div.emoji-picker {
               user-select: none; /* Non-prefixed version, currently
                                     supported by Chrome, Edge, Opera and Firefox */
 }
+
+// TODO: remove once https://github.com/nostalgic-css/NES.css/pull/482 is released
+.nes-container.is-rounded {
+    border-image-repeat: stretch;
+}
