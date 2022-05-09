@@ -67,10 +67,10 @@
             <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
         </label>
     {:else}
-        {#each [...usersList] as [userName, user]}
+        {#each [...usersList] as [jid, user]}
             <li class={user.status}>
                 <div>
-                    <span>{userName}</span>
+                    <span>{user.nick}</span>
                     <div>
                         {#if user.status === USER_STATUS_DISCONNECTED}
                             <button src="btn btn-primary" disabled>

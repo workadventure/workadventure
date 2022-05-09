@@ -73,6 +73,7 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
+    mucRooms: Array<any> | undefined;
 }
 
 interface UpgradeFailedInvalidData {
@@ -316,6 +317,7 @@ export class IoSocketController {
                             userRoomToken: undefined,
                             jabberId: null,
                             jabberPassword: null,
+                            mucRooms: []
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -445,6 +447,7 @@ export class IoSocketController {
                                 textures: memberTextures,
                                 jabberId: userData.jabberId,
                                 jabberPassword: userData.jabberPassword,
+                                mucRooms: userData.mucRooms,
                                 position: {
                                     x: x,
                                     y: y,
@@ -651,6 +654,7 @@ export class IoSocketController {
         client.listenedZones = new Set<Zone>();
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
+        client.mucRooms = ws.mucRooms;
         return client;
     }
 }

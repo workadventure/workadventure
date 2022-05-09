@@ -25,6 +25,7 @@ export class Room {
     private _canReport: boolean = false;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    private _mucRooms: Array<any> | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -121,6 +122,9 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+
+                this._mucRooms = data.mucRooms ?? undefined;
+
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -213,5 +217,9 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get mucRooms(): Array<any> | undefined {
+        return this._mucRooms;
     }
 }

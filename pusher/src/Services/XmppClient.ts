@@ -145,10 +145,10 @@ export class XmppClient {
                 .then(() => {
                     console.log("XmppClient => start");
                 })
-                .catch((err) => {
+                .catch((err: Error) => {
                     console.error("XmppClient => start => Error =>", err);
                     xmpp.stop();
-                    rej(e);
+                    rej(err);
                 });
 
             xmpp.on("stanza", (stanza: unknown) => {

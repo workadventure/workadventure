@@ -5,8 +5,9 @@ import { MucRoom } from "./MucRoom";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
-import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/messages";
 import ElementExt from "./Lib/ElementExt";
+import {XmppConnectionStatusChangeMessage_Status as Status} from "../Messages/ts-proto-generated/protos/messages";
+import {connectionManager} from "../Connexion/ConnectionManager";
 
 export class XmppClient {
     private jid: string | undefined;

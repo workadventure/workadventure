@@ -44,6 +44,7 @@ export const isFetchMemberDataByUuidResponse = z.object({
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
     jabberId: extendApi(z.optional(z.nullable(z.string())), { description: "", example: "" }),
     jabberPassword: extendApi(z.optional(z.nullable(z.string())), { description: "", example: "" }),
+    mucRooms: extendApi(z.array(z.any()), { description: "", example: "" }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;

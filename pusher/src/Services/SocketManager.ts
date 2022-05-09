@@ -267,6 +267,7 @@ export class SocketManager implements ZoneEventListener {
             streamToPusher.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');

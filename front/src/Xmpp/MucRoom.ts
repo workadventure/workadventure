@@ -8,10 +8,12 @@ import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
+import {localUserStore} from "../Connexion/LocalUserStore";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
+    nick: string,
     roomId: string;
     status: string;
     isInSameMap: boolean;
@@ -36,7 +38,27 @@ export class MucRoom {
         this.presenceStore = writable<UserList>(new Map<string, User>());
     }
 
-    public connect() {
+    public async connect() {
+        const toMucSubscriber = jid(this.roomJid.local, this.roomJid.domain);
+
+        // Get all subscribed users of the room, need to be called in first place before we get al presence state
+        const messageMucListAllUsers = xml(
+            "iq",
+            {
+                type: "get",
+                to: toMucSubscriber.toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "subscriptions",
+                {
+                    xmlns: "urn:xmpp:mucsub:0",
+                }
+            )
+        );
+        this.connection.emitXmlMessage(messageMucListAllUsers);
+
         const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
         const messagePresence = xml(
             "presence",
@@ -77,7 +99,7 @@ export class MucRoom {
         this.connection.emitXmlMessage(roster);*/
 
         //create MUC subscriber
-        const toMucSubscriber = jid(this.roomJid.local, this.roomJid.domain);
+        //await new Promise(r => setTimeout(r, 5000));
         const messageMucSubscribe = xml(
             "iq",
             {
@@ -92,11 +114,12 @@ export class MucRoom {
                     xmlns: "urn:xmpp:mucsub:0",
                     nick: gameManager.getPlayerName(),
                 },
-                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+                xml("event", {node: "urn:xmpp:mucsub:nodes:messages"}),
+                xml("event", {node: "urn:xmpp:mucsub:nodes:presence"})
             )
         );
         this.connection.emitXmlMessage(messageMucSubscribe);
+
     }
 
     public disconnect() {
@@ -106,12 +129,12 @@ export class MucRoom {
 
     onMessage(xml: ElementExt): void {
         let handledMessage = false;
+        const me = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
 
         // We are receiving the presence from someone
         if (xml.getName() === "presence") {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
-            const me = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
 
             //It's me and I want a profile details
             //TODO create profile details with XMPP connection
@@ -122,21 +145,15 @@ export class MucRoom {
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
+                const jid = x.getChild('item')?.getAttr('jid').split('/')[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 this.presenceStore.update((list) => {
-                    if (type === "unavailable") {
-                        list.set(from.resource, {
-                            roomId,
-                            status: USER_STATUS_DISCONNECTED,
-                            isInSameMap: roomId === getRoomId(),
-                        });
-                    } else {
-                        list.set(from.resource, {
-                            roomId,
-                            status: USER_STATUS_AVAILABLE,
-                            isInSameMap: roomId === getRoomId(),
-                        });
-                    }
+                    list.set(jid, {
+                        nick: from.resource,
+                        roomId,
+                        status: (type === "unavailable")?USER_STATUS_DISCONNECTED:USER_STATUS_AVAILABLE,
+                        isInSameMap: roomId === getRoomId(),
+                    });
 
                     //update size of presence users
                     numberPresenceUserStore.set(list.size);
@@ -145,10 +162,33 @@ export class MucRoom {
 
                 handledMessage = true;
             }
+        } else if(xml.getName() === "iq"){
+            const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
+            const roomId = xml.getChild("room")?.getAttr("id");
+            if(subscriptions) {
+                subscriptions.forEach(subscription => {
+                    const user = localUserStore.getLocalUser();
+                    const jid = subscription.getAttr("jid");
+                    if((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid))+'@ejabberd' !== jid) {
+                        this.presenceStore.update((list) => {
+                            list.set(jid, {
+                                nick: subscription.getAttr("nick"),
+                                roomId,
+                                status: USER_STATUS_DISCONNECTED,
+                                isInSameMap: roomId === getRoomId(),
+                            });
+                            numberPresenceUserStore.set(list.size);
+                            return list;
+                        });
+                    }
+                });
+                handledMessage = true;
+            }
         }
 
         if (!handledMessage) {
             console.warn("Unhandled message targeted at the room: ", xml.toString());
+            console.warn("Message name : ", xml.getName());
         }
     }
 
@@ -156,5 +196,20 @@ export class MucRoom {
         return {
             subscribe: this.presenceStore.subscribe,
         };
+    }
+
+    private static encode(name: string | null | undefined){
+        if(!name) return name;
+        return name
+            .replace('\\', '\\5c')
+            .replace(' ','\\20')
+            .replace('*', '\\22')
+            .replace('&', '\\26')
+            .replace('\'', '\\27')
+            .replace('/', '\\2f')
+            .replace(':', '\\3a')
+            .replace('<', '\\3c')
+            .replace('>', '\\3e')
+            .replace('@', '\\40')
     }
 }

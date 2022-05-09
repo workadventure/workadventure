@@ -94,7 +94,6 @@ import { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
-import { localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
