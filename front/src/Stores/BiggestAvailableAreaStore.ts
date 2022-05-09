@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import { MathUtils } from "../Utils/MathUtils";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
@@ -17,7 +18,7 @@ function findBiggestAvailableArea(): Box {
             yEnd: iframe.offsetTop + iframe.offsetHeight,
         }));
 
-    console.log(Array.from(document.getElementsByClassName("video-container")));
+    // console.log(Array.from(document.getElementsByClassName("video-container")));
     // const videoContainers: Box[] =
 
     // create vertices arrays and insert game canvas edges
@@ -32,7 +33,7 @@ function findBiggestAvailableArea(): Box {
     xVertices.sort();
     yVertices.sort();
 
-    // NOTE: cannot use fill() here it makes references to a single array
+    // NOTE: cannot use fill() here, it makes references to a single array
     const occupiedSpace: boolean[][] = new Array(xVertices.length);
     for (let x = 0; x < xVertices.length; x += 1) {
         occupiedSpace[x] = new Array(yVertices.length);
@@ -56,17 +57,11 @@ function findBiggestAvailableArea(): Box {
 
     // remove squares with occupied areas
     const freeSquares = allSquares.filter((square) => {
-        let occupiedVerticesCounter = 0;
-        for (let x = square.xStart; x <= square.xEnd; x += 1) {
-            for (let y = square.yStart; y <= square.yEnd; y += 1) {
-                if (occupiedSpace[x][y]) {
-                    occupiedVerticesCounter++;
-                }
-            }
-        }
-        // Up to 2 occupied vertices inside rectangle mean it is bordering with occupied area
-        return occupiedVerticesCounter <= 2;
+        // TODO: check every box not just iframes
+        return !isOverlappingWithBoxes(square, iframeBoxes, xVertices, yVertices);
     });
+
+    console.log(freeSquares);
 
     // get biggest free square
     const freeSquaresAreas = freeSquares
@@ -101,7 +96,31 @@ function findBiggestAvailableArea(): Box {
 
 function isPartOfBoxes(x: number, y: number, boxes: Box[]): boolean {
     for (const box of boxes) {
-        if ((x === box.xStart || x === box.xEnd) && (y === box.yStart || y === box.yEnd)) {
+        if (x >= box.xStart && x <= box.xEnd && y >= box.yStart && y <= box.yEnd) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function isOverlappingWithBoxes(box: Box, targetBoxes: Box[], xVertices: number[], yVertices: number[]): boolean {
+    for (const target of targetBoxes) {
+        if (
+            MathUtils.doRectanglesOverlap(
+                {
+                    x: xVertices[box.xStart],
+                    y: yVertices[box.yStart],
+                    width: xVertices[box.xEnd] - xVertices[box.xStart],
+                    height: yVertices[box.yEnd] - yVertices[box.yStart],
+                },
+                {
+                    x: target.xStart,
+                    y: target.yStart,
+                    width: target.xEnd - target.xStart,
+                    height: target.yEnd - target.yStart,
+                }
+            )
+        ) {
             return true;
         }
     }
