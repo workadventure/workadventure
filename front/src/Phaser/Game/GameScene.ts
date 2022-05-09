@@ -183,6 +183,7 @@ export class GameScene extends DirtyScene {
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
     private biggestAvailableAreaStoreUnsubscriber!: Unsubscriber;
+    private availabilityStatusStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -227,6 +228,7 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
+    private allowProximityMeeting: boolean = true;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -702,7 +704,7 @@ export class GameScene extends DirtyScene {
             this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
         });
 
-        availabilityStatusStore.subscribe((status) => {
+        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((status) => {
             this.connection?.emitPlayerStatusChange(status);
             this.CurrentPlayer.setStatus(status);
         });
@@ -1116,12 +1118,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = false;
                 this.disableMediaBehaviors();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
+                this.allowProximityMeeting = true;
                 this.enableMediaBehaviors();
             })
         );
@@ -1617,6 +1621,7 @@ ${escapedMessage}
         this.biggestAvailableAreaStoreUnsubscriber();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
+        this.availabilityStatusStoreUnsubscriber();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -2186,7 +2191,9 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        mediaManager.showMyCamera();
+        if (this.allowProximityMeeting) {
+            mediaManager.showMyCamera();
+        }
     }
 
     public disableMediaBehaviors() {
