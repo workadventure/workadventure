@@ -47,6 +47,8 @@ export default defineConfig({
                 "DISABLE_ANONYMOUS",
                 "OPID_LOGIN_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
+                "PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS",
+                "PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS",
             ],
         }),
         pluginRewriteAll(),

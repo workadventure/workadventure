@@ -27,6 +27,10 @@ export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
 export const OPID_LOGIN_SCREEN_PROVIDER = getEnvConfig("OPID_LOGIN_SCREEN_PROVIDER");
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
+const PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS = parseInt(getEnvConfig("PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS") || "0");
+const PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS = parseInt(
+    getEnvConfig("PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS") || "0"
+);
 
 export {
     DEBUG_MODE,
@@ -44,4 +48,6 @@ export {
     JITSI_URL,
     JITSI_PRIVATE_MODE,
     FALLBACK_LOCALE,
+    PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS,
+    PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS,
 };

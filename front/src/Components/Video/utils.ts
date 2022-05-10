@@ -1,5 +1,6 @@
 import type { UserSimplePeerInterface } from "../../WebRtc/SimplePeer";
 import { STUN_SERVER, TURN_PASSWORD, TURN_SERVER, TURN_USER } from "../../Enum/EnvironmentVariable";
+import adapter from "webrtc-adapter";
 
 export function getColorByString(str: string): string | null {
     let hash = 0;
@@ -61,4 +62,49 @@ export function getIceServersConfig(user: UserSimplePeerInterface): RTCIceServer
         });
     }
     return config;
+}
+
+export function getSdpTransform(videoBandwidth = 0) {
+    return (sdp: string) => {
+        sdp = updateBandwidthRestriction(sdp, videoBandwidth, "video");
+
+        return sdp;
+    };
+}
+
+function updateBandwidthRestriction(sdp: string, bandwidth: integer, mediaType: string): string {
+    if (bandwidth <= 0) {
+        return sdp;
+    }
+
+    let modifier = "AS";
+    // Firefox doesn't support "AS"
+    if (adapter.browserDetails.browser === "firefox") {
+        bandwidth = (bandwidth >>> 0) * 1000;
+        modifier = "TIAS";
+    }
+
+    for (
+        let targetMediaPos = sdp.indexOf(`m=${mediaType}`);
+        targetMediaPos !== -1;
+        targetMediaPos = sdp.indexOf(`m=${mediaType}`, targetMediaPos + 1)
+    ) {
+        const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
+        const nextBWPos = sdp.indexOf(`b=${modifier}:`, targetMediaPos + 1);
+
+        let mediaSlice = sdp.slice(targetMediaPos);
+        const mustCreateBWField = nextBWPos === -1 || (nextBWPos > nextMediaPos && nextMediaPos !== -1);
+        if (mustCreateBWField) {
+            // insert b= after c= line.
+            mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${bandwidth}$2`);
+        } else {
+            // update b= with new 'bandwidth'
+            mediaSlice = mediaSlice.replace(new RegExp(`b=${modifier}:.*(\r?\n)`), `b=${modifier}:${bandwidth}$1`);
+        }
+
+        // update the sdp
+        sdp = sdp.slice(0, targetMediaPos) + mediaSlice;
+    }
+
+    return sdp;
 }

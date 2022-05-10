@@ -2,11 +2,12 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { MESSAGE_TYPE_CONSTRAINT, PeerStatus } from "./VideoPeer";
 import type { UserSimplePeerInterface } from "./SimplePeer";
 import { Readable, readable, writable, Writable } from "svelte/store";
-import { getIceServersConfig } from "../Components/Video/utils";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
+import { PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS } from "../Enum/EnvironmentVariable";
 
 /**
  * A peer connection used to transmit video / audio signals between 2 peers.
@@ -35,6 +36,7 @@ export class ScreenSharingPeer extends Peer {
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS),
         });
 
         this.userId = user.userId;
