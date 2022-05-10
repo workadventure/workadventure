@@ -891,7 +891,6 @@ export class GameScene extends DirtyScene {
         });
 
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
-            console.log(availabilityStatus);
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
         });
