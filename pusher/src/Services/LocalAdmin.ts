@@ -16,6 +16,7 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        const matched = playUri.match('/[_@*]/.+/.+/');
         return Promise.resolve({
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -24,6 +25,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
+            mucRooms: [{name: 'Default Room', uri: matched?.join().substring(0, -1)}]
         });
     }
 

@@ -497,7 +497,7 @@ export class AuthenticateController extends BaseHttpController {
      * @param email
      * @param playUri
      * @param IPAddress
-     * @return 
+     * @return
      |object
      * @private
      */
@@ -516,6 +516,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
             jabberId: null,
             jabberPassword: null,
+            mucRooms: []
         };
         try {
             data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
