@@ -562,7 +562,6 @@ export class RoomConnection implements RoomConnection {
                 outlineColor: color,
             });
         }
-
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "setPlayerDetailsMessage",
