@@ -14,12 +14,13 @@ import {
     newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
-import { getIceServersConfig } from "../Components/Video/utils";
+import { getIceServersConfig, getSdpTransform } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS } from "../Enum/EnvironmentVariable";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -63,6 +64,7 @@ export class VideoPeer extends Peer {
             config: {
                 iceServers: getIceServersConfig(user),
             },
+            sdpTransform: getSdpTransform(PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS),
         });
 
         this.userId = user.userId;

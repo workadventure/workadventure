@@ -138,6 +138,7 @@
     "ts-proto-descriptors": "^1.7.1",
     "typesafe-i18n": "^5.14.0",
     "uuid": "^9.0.0",
+    "webrtc-adapter": "^8.1.1",
     "zod": "^3.19.1"
   }
 }

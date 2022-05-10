@@ -95,6 +95,8 @@ services:
             EJABBERD_WS_URI: ws://ejabberd:5443/ws
             ENABLE_CHAT: "$ENABLE_CHAT"
             ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
+            PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS: "$PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS"
+            PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS: "$PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS"
         labels:
             - "traefik.enable=true"
             - "traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)"
