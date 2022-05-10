@@ -687,7 +687,8 @@ export class GameScene extends DirtyScene {
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
                 },
-                this.companion
+                this.companion,
+                get(availabilityStatusStore)
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
@@ -711,7 +712,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
-                        status: message.status,
+                        availabilityStatus: message.availabilityStatus,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -889,9 +890,10 @@ export class GameScene extends DirtyScene {
             this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
         });
 
-        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((status) => {
-            this.connection?.emitPlayerStatusChange(status);
-            this.CurrentPlayer.setStatus(status);
+        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
+            console.log(availabilityStatus);
+            this.connection?.emitPlayerStatusChange(availabilityStatus);
+            this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -1993,8 +1995,8 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
-        if (addPlayerData.status !== undefined) {
-            player.setStatus(addPlayerData.status, true);
+        if (addPlayerData.availabilityStatus !== undefined) {
+            player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2145,8 +2147,8 @@ ${escapedMessage}
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
-        if (message.details?.status !== undefined) {
-            character.setStatus(message.details?.status);
+        if (message.details?.availabilityStatus !== undefined) {
+            character.setAvailabilityStatus(message.details?.availabilityStatus);
         }
     }
 

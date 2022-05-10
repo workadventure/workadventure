@@ -175,6 +175,7 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setIpaddress(client.IPAddress);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
+            joinRoomMessage.setAvailabilitystatus(client.availabilityStatus);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
 

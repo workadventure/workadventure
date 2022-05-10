@@ -29,7 +29,7 @@ function createPlayersStore() {
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
-                        status: message.status,
+                        availabilityStatus: message.status,
                         color: getRandomColor(),
                     });
                     return users;
@@ -59,7 +59,7 @@ function createPlayersStore() {
                     characterLayers: [],
                     visitCardUrl: null,
                     companion: null,
-                    status: AvailabilityStatus.ONLINE,
+                    availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
                     color: getRandomColor(),
                 });
