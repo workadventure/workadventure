@@ -414,6 +414,13 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
     }
 }
 
+// This promise is important to queue the calls to "getUserMedia"
+// Otherwise, this can happen:
+// User requests a start then a stop of the camera quickly
+// The promise to start the cam starts. Before the promise is fulfilled, the camera is stopped.
+// Then, the MediaStream of the camera start resolves (resulting in the LED being turned on instead of off)
+let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resolve(undefined);
+
 /**
  * A store containing the MediaStream object (or null if nothing requested, or Error if an error occurred)
  */
@@ -422,50 +429,59 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     ($mediaStreamConstraintsStore, set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
 
-        async function initStream(constraints: MediaStreamConstraints) {
-            try {
-                if (currentStream) {
-                    //we need stop all tracks to make sure the old stream will be garbage collected
-                    //currentStream.getTracks().forEach((t) => t.stop());
-                }
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                set({
-                    type: "success",
-                    stream: currentStream,
-                });
-                return;
-            } catch (e) {
-                if (constraints.video !== false || constraints.audio !== false) {
-                    console.info(
-                        "Error. Unable to get microphone and/or camera access. Trying audio only.",
-                        constraints,
-                        e
-                    );
-                    // TODO: does it make sense to pop this error when retrying?
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
+        function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
+            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
+                return navigator.mediaDevices
+                    .getUserMedia(constraints)
+                    .then((stream) => {
+                        // Close old stream
+                        if (currentStream) {
+                            //we need stop all tracks to make sure the old stream will be garbage collected
+                            currentStream.getTracks().forEach((t) => t.stop());
+                        }
+
+                        currentStream = stream;
+                        set({
+                            type: "success",
+                            stream: currentStream,
+                        });
+                        return stream;
+                    })
+                    .catch((e) => {
+                        if (constraints.video !== false || constraints.audio !== false) {
+                            console.info(
+                                "Error. Unable to get microphone and/or camera access. Trying audio only.",
+                                constraints,
+                                e
+                            );
+                            // TODO: does it make sense to pop this error when retrying?
+                            set({
+                                type: "error",
+                                error: e instanceof Error ? e : new Error("An unknown error happened"),
+                            });
+                            // Let's try without video constraints
+                            if (constraints.video !== false) {
+                                requestedCameraState.disableWebcam();
+                            }
+                            if (constraints.audio !== false) {
+                                requestedMicrophoneState.disableMicrophone();
+                            }
+                        } else if (!constraints.video && !constraints.audio) {
+                            set({
+                                type: "error",
+                                error: new MediaStreamConstraintsError(),
+                            });
+                        } else {
+                            console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
+                            set({
+                                type: "error",
+                                error: e instanceof Error ? e : new Error("An unknown error happened"),
+                            });
+                        }
+                        return undefined;
                     });
-                    // Let's try without video constraints
-                    if (constraints.video !== false) {
-                        requestedCameraState.disableWebcam();
-                    }
-                    if (constraints.audio !== false) {
-                        requestedMicrophoneState.disableMicrophone();
-                    }
-                } else if (!constraints.video && !constraints.audio) {
-                    set({
-                        type: "error",
-                        error: new MediaStreamConstraintsError(),
-                    });
-                } else {
-                    console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                }
-            }
+            });
+            return currentGetUserMediaPromise;
         }
 
         if (navigator.mediaDevices === undefined) {
@@ -491,46 +507,62 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             }
         }
 
-        applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
-        applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
-
-        if (implementCorrectTrackBehavior) {
-            //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
-            if (currentStream === null) {
-                // we need to assign a first value to the stream because getUserMedia is async
-                set({
-                    type: "success",
-                    stream: null,
-                });
-                initStream(constraints).catch((e) => {
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                });
-            }
-        } else {
-            //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
-            if (constraints.audio === false && constraints.video === false) {
-                currentStream = null;
-                set({
-                    type: "success",
-                    stream: null,
-                });
-            } //we reemit the stream if it was muted just to be sure
-            else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
-                initStream(constraints).catch((e) => {
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                });
-            }
-            oldConstraints = {
-                video: !!constraints.video,
-                audio: !!constraints.audio,
-            };
+        if (currentStream === null) {
+            // we need to assign a first value to the stream because getUserMedia is async
+            set({
+                type: "success",
+                stream: null,
+            });
         }
+
+        (async () => {
+            await applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
+            await applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
+
+            if (implementCorrectTrackBehavior) {
+                //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
+                if (currentStream === null) {
+                    initStream(constraints).catch((e) => {
+                        set({
+                            type: "error",
+                            error: e instanceof Error ? e : new Error("An unknown error happened"),
+                        });
+                    });
+                }
+            } else {
+                //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
+                if (constraints.audio === false && constraints.video === false) {
+                    currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
+                        if (currentStream) {
+                            //we need stop all tracks to make sure the old stream will be garbage collected
+                            currentStream.getTracks().forEach((t) => t.stop());
+                        }
+
+                        currentStream = null;
+                        set({
+                            type: "success",
+                            stream: null,
+                        });
+                        return undefined;
+                    });
+                } //we reemit the stream if it was muted just to be sure
+                else if (
+                    constraints.audio /* && !oldConstraints.audio*/ ||
+                    (!oldConstraints.video && constraints.video)
+                ) {
+                    initStream(constraints).catch((e) => {
+                        set({
+                            type: "error",
+                            error: e instanceof Error ? e : new Error("An unknown error happened"),
+                        });
+                    });
+                }
+                oldConstraints = {
+                    video: !!constraints.video,
+                    audio: !!constraints.audio,
+                };
+            }
+        })().catch((e) => console.error(e));
     }
 );
 
