@@ -15,6 +15,7 @@ export const REDIS_HOST = process.env.REDIS_HOST || undefined;
 export const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379") || 6379;
 export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
+export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 
 export {
     MINIMUM_DISTANCE,
