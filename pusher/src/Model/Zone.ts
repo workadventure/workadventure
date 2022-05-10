@@ -50,7 +50,7 @@ export class UserDescriptor {
         private name: string,
         private characterLayers: CharacterLayerMessage[],
         private position: PositionMessage,
-        private status: AvailabilityStatus,
+        private availabilityStatus: AvailabilityStatus,
         private visitCardUrl: string | null,
         private companion?: CompanionMessage,
         private outlineColor?: number
@@ -71,7 +71,7 @@ export class UserDescriptor {
             message.getName(),
             message.getCharacterlayersList(),
             position,
-            message.getStatus(),
+            message.getAvailabilitystatus(),
             message.getVisitcardurl(),
             message.getCompanion(),
             message.getHasoutline() ? message.getOutlinecolor() : undefined
@@ -92,9 +92,9 @@ export class UserDescriptor {
         } else {
             this.outlineColor = playerDetails.getOutlinecolor()?.getValue();
         }
-        const status = playerDetails.getStatus();
-        if (status !== undefined) {
-            this.status = status;
+        const availabilityStatus = playerDetails.getAvailabilitystatus();
+        if (availabilityStatus !== undefined) {
+            this.availabilityStatus = availabilityStatus;
         }
     }
 
@@ -105,7 +105,7 @@ export class UserDescriptor {
         userJoinedMessage.setName(this.name);
         userJoinedMessage.setCharacterlayersList(this.characterLayers);
         userJoinedMessage.setPosition(this.position);
-        userJoinedMessage.setStatus(this.status);
+        userJoinedMessage.setAvailabilitystatus(this.availabilityStatus);
         if (this.visitCardUrl) {
             userJoinedMessage.setVisitcardurl(this.visitCardUrl);
         }

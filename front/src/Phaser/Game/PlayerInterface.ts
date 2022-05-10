@@ -8,7 +8,7 @@ export interface PlayerInterface {
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
-    status: AvailabilityStatus;
+    availabilityStatus: AvailabilityStatus;
     color?: string;
     outlineColor?: number;
 }

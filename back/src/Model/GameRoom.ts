@@ -145,7 +145,7 @@ export class GameRoom {
             joinRoomMessage.getIpaddress(),
             position,
             this.positionNotifier,
-            joinRoomMessage.getStatus(),
+            joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
