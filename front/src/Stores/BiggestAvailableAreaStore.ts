@@ -166,4 +166,8 @@ function createBiggestAvailableAreaStore() {
     };
 }
 
+export function getGridCoordinates(x: number, y: number, verticesX: number[], verticesY: number[]): [number, number] {
+    return [verticesX.findIndex((vertexX) => vertexX === x), verticesY.findIndex((vertexY) => vertexY === y)];
+}
+
 export const biggestAvailableAreaStore = createBiggestAvailableAreaStore();
