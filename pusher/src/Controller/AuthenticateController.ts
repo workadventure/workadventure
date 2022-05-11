@@ -8,7 +8,7 @@ import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
-import {isErrorApiData} from "../Messages/JsonMessages/ErrorApiData";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export interface TokenInterface {
     userUuid: string;
@@ -199,7 +199,7 @@ export class AuthenticateController extends BaseHttpController {
                             locale: authTokenData?.locale,
                         });
                     } catch (err) {
-                        if(Axios.isAxiosError(err)){
+                        if (Axios.isAxiosError(err)) {
                             const errorType = isErrorApiData.safeParse(err?.response?.data);
                             if (errorType.success) {
                                 res.sendStatus(err?.response?.status ?? 500);

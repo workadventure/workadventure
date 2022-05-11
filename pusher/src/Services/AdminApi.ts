@@ -34,8 +34,14 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(isWokaDetail), { description: 'This data represents the textures (WOKA) that will be available to users.', $ref: "#/definitions/WokaDetail" }),
-    messages: extendApi(z.array(z.unknown()), { description: "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning." }),
+    textures: extendApi(z.array(isWokaDetail), {
+        description: "This data represents the textures (WOKA) that will be available to users.",
+        $ref: "#/definitions/WokaDetail",
+    }),
+    messages: extendApi(z.array(z.unknown()), {
+        description:
+            "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning.",
+    }),
 
     anonymous: extendApi(z.optional(z.boolean()), {
         description: "Defines whether it is possible to login as anonymous on a WorkAdventure room.",

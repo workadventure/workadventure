@@ -8,7 +8,7 @@ import {
 } from "../Messages/JsonMessages/ErrorApiData";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import { isWokaDetail, wokaList, wokaTexture} from "../Messages/JsonMessages/PlayerTextures";
+import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
 
 class SwaggerGenerator {
     definitions(type: string | null) {
@@ -18,10 +18,10 @@ class SwaggerGenerator {
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
-                WokaDetail: generateSchema(isWokaDetail)
-            }
+                WokaDetail: generateSchema(isWokaDetail),
+            },
         };
-        if(type === 'external'){
+        if (type === "external") {
             return definitions;
         }
         return {
@@ -40,7 +40,7 @@ class SwaggerGenerator {
                 //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),
                 WokaDetail: generateSchema(isWokaDetail),
                 WokaList: generateSchema(wokaList),
-                WokaTexture: generateSchema(wokaTexture)
+                WokaTexture: generateSchema(wokaTexture),
             },
         };
     }
