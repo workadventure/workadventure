@@ -26,7 +26,6 @@ export const SelectCharacterSceneName = "SelectCharacterScene";
 export class SelectCharacterScene extends AbstractCharacterScene {
     protected selectedWoka!: Phaser.GameObjects.Sprite | null; // null if we are selecting the "customize" option
     protected playerModels!: BodyResourceDescriptionInterface[];
-    protected currentSelectedItem!: WokaSlot;
 
     private charactersDraggableGrid!: DraggableGrid;
     private collectionKeys!: string[];
@@ -204,18 +203,19 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.charactersDraggableGrid.clearAllItems();
         const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
 
+        let currentSelectedItem = null;
         for (let i = 0; i < textures.length; i += 1) {
             const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
 
             //ini current Select Item to the first
-            if (i === 0) this.currentSelectedItem = slot;
+            if (i === 0) currentSelectedItem = slot;
 
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
 
         //Select the first Woka
-        if (this.currentSelectedItem) this.selectGridItem(this.currentSelectedItem);
+        if (currentSelectedItem) this.selectGridItem(currentSelectedItem);
     }
 
     private bindEventHandlers(): void {
