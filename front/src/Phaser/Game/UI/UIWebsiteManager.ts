@@ -59,6 +59,8 @@ class UIWebsiteManager {
                     website.margin.right = websiteEvent.margin.right;
                 }
             }
+
+            uiWebsitesStore.update(website);
         });
     }
 

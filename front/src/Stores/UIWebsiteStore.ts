@@ -11,6 +11,11 @@ function createUIWebsiteStore() {
         add: (uiWebsite: UIWebsite) => {
             update((currentArray) => [...currentArray, uiWebsite]);
         },
+        update: (uiWebsite: UIWebsite) => {
+            update((currentArray) =>
+                currentArray.map((currentWebsite) => (currentWebsite.id === uiWebsite.id ? uiWebsite : currentWebsite))
+            );
+        },
         remove: (uiWebsite: UIWebsite) => {
             update((currentArray) => currentArray.filter((currentWebsite) => currentWebsite.id !== uiWebsite.id));
         },

@@ -1,6 +1,7 @@
 import {RoomConnection} from "../front/src/Connexion/RoomConnection";
 import {connectionManager} from "../front/src/Connexion/ConnectionManager";
 import * as WebSocket from "ws"
+import { AvailabilityStatus } from '../front/src/Messages/ts-proto-generated/protos/messages';
 
 let userMovedCount = 0;
 
@@ -22,7 +23,9 @@ async function startOneUser(): Promise<void> {
             bottom: 200,
             left: 500,
             right: 800
-        }, null);
+        },
+        null,
+        AvailabilityStatus.ONLINE);
 
     const connection = onConnect.connection;
 
