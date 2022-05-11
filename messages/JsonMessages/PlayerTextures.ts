@@ -13,7 +13,7 @@ export const wokaTexture = z.object({
     name: extendApi(z.string(), {description: 'The name of the texture.', example: 'Hair 1'}),
     url: extendApi(z.string(), {description: 'The URL of the image of the texture.', example: 'http://example.com/resources/customisation/character_hairs/character_hairs1.png'}),
     tags: extendApi(z.array(z.string()).optional(), {deprecated: true}),
-    tintable: extendApi(z.boolean().optional(), {description: 'Whether the color is customizable or not.', example: true}),
+    tintable: extendApi(z.boolean().optional(), {description: 'Whether the color is customizable or not. Not used yet.', example: true}),
 });
 
 export type WokaTexture = z.infer<typeof wokaTexture>;
