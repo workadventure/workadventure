@@ -174,12 +174,12 @@ export class GameScene extends DirtyScene {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
     private iframeSubscriptionList!: Array<Subscription>;
-    private peerStoreUnsubscribe!: Unsubscriber;
-    private emoteUnsubscribe!: Unsubscriber;
-    private emoteMenuUnsubscribe!: Unsubscriber;
+    private peerStoreUnsubscriber!: Unsubscriber;
+    private emoteUnsubscriber!: Unsubscriber;
+    private emoteMenuUnsubscriber!: Unsubscriber;
 
     private localVolumeStoreUnsubscriber: Unsubscriber | undefined;
-    private followUsersColorStoreUnsubscribe!: Unsubscriber;
+    private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
     private biggestAvailableAreaStoreUnsubscriber!: Unsubscriber;
@@ -645,95 +645,12 @@ export class GameScene extends DirtyScene {
 
         this.reposition();
 
-        // From now, this game scene will be notified of reposition events
-        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) => {
-            this.cameraManager.updateCameraOffset(box);
-        });
-        embedScreenLayoutStore.subscribe((layout) => {
-            this.reposition();
-            console.log(layout);
-        });
-
         new GameMapPropertiesListener(this, this.gameMap).register();
 
         if (!this.room.isDisconnected()) {
             this.scene.sleep();
             this.connect();
         }
-
-        const talkIconVolumeTreshold = 10;
-        let oldPeersNumber = 0;
-        this.peerStoreUnsubscribe = peerStore.subscribe((peers) => {
-            const newPeerNumber = peers.size;
-            if (newPeerNumber > oldPeersNumber) {
-                this.playSound("audio-webrtc-in");
-            } else if (newPeerNumber < oldPeersNumber) {
-                this.playSound("audio-webrtc-out");
-            }
-            if (newPeerNumber > 0) {
-                if (!this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
-                        if (volume === undefined) {
-                            return;
-                        }
-                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
-                    });
-                }
-            } else {
-                this.CurrentPlayer.showTalkIcon(false, true);
-                this.connection?.emitPlayerShowVoiceIndicator(false);
-                this.showVoiceIndicatorChangeMessageSent = false;
-                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
-                if (this.localVolumeStoreUnsubscriber) {
-                    this.localVolumeStoreUnsubscriber();
-                    this.localVolumeStoreUnsubscriber = undefined;
-                }
-            }
-            oldPeersNumber = peers.size;
-        });
-
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
-            (dominantSpeaker) => {
-                this.jitsiDominantSpeaker = dominantSpeaker;
-                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-            }
-        );
-
-        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
-            this.jitsiParticipantsCount = participantsCount;
-            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
-        });
-
-        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((status) => {
-            this.connection?.emitPlayerStatusChange(status);
-            this.CurrentPlayer.setStatus(status);
-        });
-
-        this.emoteUnsubscribe = emoteStore.subscribe((emote) => {
-            if (emote) {
-                this.CurrentPlayer?.playEmote(emote.url);
-                this.connection?.emitEmoteEvent(emote.url);
-                emoteStore.set(null);
-            }
-        });
-
-        this.emoteMenuUnsubscribe = emoteMenuStore.subscribe((emoteMenu) => {
-            if (emoteMenu) {
-                this.userInputManager.disableControls();
-            } else {
-                this.userInputManager.restoreControls();
-            }
-        });
-
-        this.followUsersColorStoreUnsubscribe = followUsersColorStore.subscribe((color) => {
-            if (color !== undefined) {
-                this.CurrentPlayer.setFollowOutlineColor(color);
-                this.connection?.emitPlayerOutlineColor(color);
-            } else {
-                this.CurrentPlayer.removeFollowOutlineColor();
-                this.connection?.emitPlayerOutlineColor(null);
-            }
-        });
 
         Promise.all([
             this.connectionAnswerPromiseDeferred.promise as Promise<unknown>,
@@ -771,10 +688,13 @@ export class GameScene extends DirtyScene {
                     right: camera.scrollX + camera.width,
                     bottom: camera.scrollY + camera.height,
                 },
-                this.companion
+                this.companion,
+                get(availabilityStatusStore)
             )
             .then((onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+
+                this.subscribeToStores();
 
                 lazyLoadPlayerCharacterTextures(this.superLoad, onConnect.room.characterLayers)
                     .then((layers) => {
@@ -793,7 +713,7 @@ export class GameScene extends DirtyScene {
                         characterLayers: message.characterLayers,
                         name: message.name,
                         position: message.position,
-                        status: message.status,
+                        availabilityStatus: message.availabilityStatus,
                         visitCardUrl: message.visitCardUrl,
                         companion: message.companion,
                         userUuid: message.userUuid,
@@ -956,6 +876,92 @@ export class GameScene extends DirtyScene {
                 // });
             })
             .catch((e) => console.error(e));
+    }
+
+    private subscribeToStores(): void {
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
+            (dominantSpeaker) => {
+                this.jitsiDominantSpeaker = dominantSpeaker;
+                this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+            }
+        );
+
+        this.jitsiParticipantsCountStoreUnsubscriber = jitsiParticipantsCountStore.subscribe((participantsCount) => {
+            this.jitsiParticipantsCount = participantsCount;
+            this.tryChangeShowVoiceIndicatorState(this.jitsiDominantSpeaker && this.jitsiParticipantsCount > 1);
+        });
+
+        this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
+            this.connection?.emitPlayerStatusChange(availabilityStatus);
+            this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+        });
+
+        this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
+            if (emote) {
+                this.CurrentPlayer?.playEmote(emote.url);
+                this.connection?.emitEmoteEvent(emote.url);
+                emoteStore.set(null);
+            }
+        });
+
+        this.emoteMenuUnsubscriber = emoteMenuStore.subscribe((emoteMenu) => {
+            if (emoteMenu) {
+                this.userInputManager.disableControls();
+            } else {
+                this.userInputManager.restoreControls();
+            }
+        });
+
+        this.followUsersColorStoreUnsubscriber = followUsersColorStore.subscribe((color) => {
+            if (color !== undefined) {
+                this.CurrentPlayer.setFollowOutlineColor(color);
+                this.connection?.emitPlayerOutlineColor(color);
+            } else {
+                this.CurrentPlayer.removeFollowOutlineColor();
+                this.connection?.emitPlayerOutlineColor(null);
+            }
+        });
+
+        // From now, this game scene will be notified of reposition events
+        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) => {
+            this.cameraManager.updateCameraOffset(box);
+        });
+
+        embedScreenLayoutStore.subscribe((layout) => {
+            this.reposition();
+            console.log(layout);
+        });
+
+        const talkIconVolumeTreshold = 10;
+        let oldPeersNumber = 0;
+        this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
+            const newPeerNumber = peers.size;
+            if (newPeerNumber > oldPeersNumber) {
+                this.playSound("audio-webrtc-in");
+            } else if (newPeerNumber < oldPeersNumber) {
+                this.playSound("audio-webrtc-out");
+            }
+            if (newPeerNumber > 0) {
+                if (!this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
+                        if (volume === undefined) {
+                            return;
+                        }
+                        this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
+                    });
+                }
+            } else {
+                this.CurrentPlayer.showTalkIcon(false, true);
+                this.connection?.emitPlayerShowVoiceIndicator(false);
+                this.showVoiceIndicatorChangeMessageSent = false;
+                this.MapPlayersByKey.forEach((remotePlayer) => remotePlayer.showTalkIcon(false, true));
+                if (this.localVolumeStoreUnsubscriber) {
+                    this.localVolumeStoreUnsubscriber();
+                    this.localVolumeStoreUnsubscriber = undefined;
+                }
+            }
+            oldPeersNumber = peers.size;
+        });
     }
 
     //todo: into dedicated classes
@@ -1614,10 +1620,10 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager.destroy();
-        this.peerStoreUnsubscribe();
-        this.emoteUnsubscribe();
-        this.emoteMenuUnsubscribe();
-        this.followUsersColorStoreUnsubscribe();
+        this.peerStoreUnsubscriber();
+        this.emoteUnsubscriber();
+        this.emoteMenuUnsubscriber();
+        this.followUsersColorStoreUnsubscriber();
         this.biggestAvailableAreaStoreUnsubscriber();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
@@ -1994,8 +2000,8 @@ ${escapedMessage}
         if (addPlayerData.outlineColor !== undefined) {
             player.setApiOutlineColor(addPlayerData.outlineColor);
         }
-        if (addPlayerData.status !== undefined) {
-            player.setStatus(addPlayerData.status, true);
+        if (addPlayerData.availabilityStatus !== undefined) {
+            player.setAvailabilityStatus(addPlayerData.availabilityStatus, true);
         }
         this.MapPlayers.add(player);
         this.MapPlayersByKey.set(player.userId, player);
@@ -2146,8 +2152,8 @@ ${escapedMessage}
         if (message.details?.showVoiceIndicator !== undefined) {
             character.showTalkIcon(message.details?.showVoiceIndicator);
         }
-        if (message.details?.status !== undefined) {
-            character.setStatus(message.details?.status);
+        if (message.details?.availabilityStatus !== undefined) {
+            character.setAvailabilityStatus(message.details?.availabilityStatus);
         }
     }
 

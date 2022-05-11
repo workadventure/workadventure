@@ -19,6 +19,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -276,7 +277,8 @@ class ConnectionManager {
         characterLayers: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null
+        companion: string | null,
+        availabilityStatus: AvailabilityStatus
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -286,7 +288,8 @@ class ConnectionManager {
                 characterLayers,
                 position,
                 viewport,
-                companion
+                companion,
+                availabilityStatus
             );
 
             connection.onConnectError((error: object) => {
@@ -340,9 +343,15 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    void this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
-                        (connection) => resolve(connection)
-                    );
+                    void this.connectToRoomSocket(
+                        roomUrl,
+                        name,
+                        characterLayers,
+                        position,
+                        viewport,
+                        companion,
+                        availabilityStatus
+                    ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });

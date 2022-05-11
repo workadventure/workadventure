@@ -236,8 +236,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.talkIcon.show(show, forceClose);
     }
 
-    public setStatus(status: AvailabilityStatus, instant: boolean = false): void {
-        this.statusDot.setStatus(status, instant);
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant: boolean = false): void {
+        this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
     }
 
     public addCompanion(name: string, texturePromise?: CancelablePromise<string>): void {
