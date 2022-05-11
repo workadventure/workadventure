@@ -11,7 +11,7 @@
 #RUN yarn proto
 
 # typescript build
-FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as builder
+FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 RUN yarn install
@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 RUN yarn run tsc
 
 # final production image
-FROM node:14.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d
+FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c
 WORKDIR /usr/src
 COPY back/yarn.lock back/package.json ./
 ENV NODE_ENV=production

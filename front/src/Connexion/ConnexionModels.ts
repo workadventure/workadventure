@@ -15,7 +15,7 @@ export interface MessageUserPositionInterface {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
-    status: AvailabilityStatus;
+    availabilityStatus: AvailabilityStatus;
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
@@ -31,7 +31,7 @@ export interface MessageUserJoined {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
-    status: AvailabilityStatus;
+    availabilityStatus: AvailabilityStatus;
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;

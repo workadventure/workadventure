@@ -47,8 +47,11 @@ class LocalAdmin implements AdminInterface {
             contactPage: null,
             group: null,
             iframeAuthentication: null,
+            miniLogo: null,
             loadingLogo: null,
             loginSceneLogo: null,
+            showPoweredBy: true,
+            loadingCowebsiteLogo: null,
         });
     }
 
@@ -83,9 +86,13 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
-    getProfileUrl(accessToken: string): string {
+    getProfileUrl(accessToken: string, playUri: string): string {
         new Error("No admin backoffice set!");
         return "";
+    }
+
+    async logoutOauth(token: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
     }
 }
 

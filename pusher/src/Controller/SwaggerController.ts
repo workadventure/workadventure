@@ -2,7 +2,6 @@ import { BaseHttpController } from "./BaseHttpController";
 import * as fs from "fs";
 import { ADMIN_URL } from "../Enum/EnvironmentVariable";
 import SwaggerGenerator from "../Services/SwaggerGenerator";
-import swaggerJsdoc from "swagger-jsdoc";
 
 export class SwaggerController extends BaseHttpController {
     routes() {

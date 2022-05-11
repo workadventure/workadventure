@@ -427,7 +427,7 @@ export class AuthenticateController extends BaseHttpController {
     profileCallback() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
-            const { token } = parse(req.path_query);
+            const { token, playUri } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -440,7 +440,10 @@ export class AuthenticateController extends BaseHttpController {
 
                         //get login profile
                         res.status(302);
-                        res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken));
+                        res.setHeader(
+                            "Location",
+                            adminService.getProfileUrl(authTokenData.accessToken, playUri as string)
+                        );
                         res.send("");
                         return;
                     } catch (error) {

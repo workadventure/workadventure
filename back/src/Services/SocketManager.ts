@@ -323,7 +323,7 @@ export class SocketManager {
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
-            userJoinedZoneMessage.setStatus(thing.getStatus());
+            userJoinedZoneMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
@@ -651,7 +651,7 @@ export class SocketManager {
                 userJoinedMessage.setUserid(thing.id);
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
-                userJoinedMessage.setStatus(thing.getStatus());
+                userJoinedMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {
@@ -852,14 +852,14 @@ export class SocketManager {
             return;
         }
 
-        const versionNumber = room.incrementVersion();
+        const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            const worldFullMessage = new RefreshRoomMessage();
-            worldFullMessage.setRoomid(roomId);
-            worldFullMessage.setVersionnumber(versionNumber);
+            const refreshRoomMessage = new RefreshRoomMessage();
+            refreshRoomMessage.setRoomid(roomId);
+            refreshRoomMessage.setVersionnumber(versionNumber);
 
             const clientMessage = new ServerToClientMessage();
-            clientMessage.setRefreshroommessage(worldFullMessage);
+            clientMessage.setRefreshroommessage(refreshRoomMessage);
 
             recipient.socket.write(clientMessage);
         });

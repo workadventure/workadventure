@@ -10,6 +10,14 @@ export class WorkadventureControlsCommands extends IframeApiContribution<Workadv
     restorePlayerControls(): void {
         sendToWorkadventure({ type: "restorePlayerControls", data: undefined });
     }
+
+    disablePlayerProximityMeeting(): void {
+        sendToWorkadventure({ type: "disablePlayerProximityMeeting", data: undefined });
+    }
+
+    restorePlayerProximityMeeting(): void {
+        sendToWorkadventure({ type: "restorePlayerProximityMeeting", data: undefined });
+    }
 }
 
 export default new WorkadventureControlsCommands();

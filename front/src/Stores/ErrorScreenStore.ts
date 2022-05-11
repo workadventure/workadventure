@@ -5,12 +5,15 @@ import { ErrorScreenMessage } from "../Messages/ts-proto-generated/protos/messag
  * A store that contains one error of type WAError to be displayed.
  */
 function createErrorScreenStore() {
-    const { subscribe, set } = writable<ErrorScreenMessage>(undefined);
+    const { subscribe, set } = writable<ErrorScreenMessage | undefined>(undefined);
 
     return {
         subscribe,
         setError: (e: ErrorScreenMessage): void => {
             set(e);
+        },
+        delete: () => {
+            set(undefined);
         },
     };
 }
