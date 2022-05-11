@@ -11,9 +11,17 @@ Create your own Admin API and connect it to WorkAdventure if:
 Be aware that WorkAdventure is licensed under "AGPL-3 restricted by the commons clause". It means in particular you are not allowed to sell a version of WorkAdventure online as a service. If in doubt, please contact us at hello@workadventu.re. We can offer special licenses depending on your use-case.
 
 ## Architecture
-[![](https://mermaid.ink/img/pako:eNpdkEFrwzAMhf-K0S4JpJexMDBjkNIVBjuE7VDKvIMbK4tJYgdHXldK__sUklKYTk9PTx9CZ6i8QZDwHfTQiLd35QTXSKcORVG-sgq-RXlX1w-Puc7mdnW0hhp5P_wuhhS5yJfVeJhZOx_awvygoxhwnk21TbbBO0rF02r1LMpEQRnHBoOCVEzOOlnrqk3nBXTmH3W_-1Sw9zGIIx5GS6jg6wbnixlYmN66STPzNisZz_zJvrIhgx5Dr63hD5wnWwE12DNUsnQYKehOgXIXjsbBaMIXY8kHkLXuRsxAR_IfJ1eBpBDxGtpYzef2S-ryBwzWbw8)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNpdkEFrwzAMhf-K0S4JpJexMDBjkNIVBjuE7VDKvIMbK4tJYgdHXldK__sUklKYTk9PTx9CZ6i8QZDwHfTQiLd35QTXSKcORVG-sgq-RXlX1w-Puc7mdnW0hhp5P_wuhhS5yJfVeJhZOx_awvygoxhwnk21TbbBO0rF02r1LMpEQRnHBoOCVEzOOlnrqk3nBXTmH3W_-1Sw9zGIIx5GS6jg6wbnixlYmN66STPzNisZz_zJvrIhgx5Dr63hD5wnWwE12DNUsnQYKehOgXIXjsbBaMIXY8kHkLXuRsxAR_IfJ1eBpBDxGtpYzef2S-ryBwzWbw8)
-<figcaption class="figure-caption text-center">Diagram of the architecture of Work Adventure</figcaption>
-<br>
+```mermaid
+graph LR
+    style API stroke:#ff475a,stroke-width:2px,stroke: 5 5
+    subgraph WorkAdventure
+        F(Front) <--> P("Pusher") --> B(Back)
+    end
+    subgraph YW["Your website"]
+        API("Admin API")
+        P ---> API
+    end
+```
 
 First you need to understand how Work Adventure architecture is made.
 Work Adventure is divided in 3 sections :
