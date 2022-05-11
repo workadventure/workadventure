@@ -39,7 +39,7 @@ export type WokaList = z.infer<typeof wokaList>;
 export const wokaPartNames = ["woka", "body", "eyes", "hair", "clothes", "hat", "accessory"];
 
 export const isWokaDetail = z.object({
-    id: extendApi(z.string(), {description: 'The identifier of the woka in the database.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
+    id: extendApi(z.string(), {description: 'The unique identifier of the Woka.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
     url: extendApi(z.optional(z.string()), {description: 'The URL of the image of the woka.', example: 'http://example.com/resources/characters/pipoya/male.png'}),
     layer: extendApi(z.optional(z.string()), {description: 'The layer of where the woka will be rendered.'}),
 });
