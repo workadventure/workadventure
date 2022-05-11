@@ -60,7 +60,7 @@ sequenceDiagram
     P -->>- F: WokaList
 ```
 
-There are 3 end points that are the most important :
+The most important endpoints are:
 - `/api/map`<br>
   _On the sequence diagram this is the call n°2._<br>
   This end point returns a map mapping map name to file name of the map.
