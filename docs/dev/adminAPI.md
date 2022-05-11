@@ -63,7 +63,7 @@ sequenceDiagram
 The most important endpoints are:
 - `/api/map`<br>
   _On the sequence diagram this is the call n°2._<br>
-  This end point returns a map mapping map name to file name of the map.
+  This end point maps the URL of the map to the map info (in particular the URL to the Tiled JSON file.
   It will process the playURI and the uuid to return the information of the map if the user can access it.<br>
   In case of success, this endpoint returns a `MapDetailsData` object.
 - `/api/room/access`<br>
