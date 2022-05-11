@@ -9,7 +9,7 @@ import {extendApi} from "@anatine/zod-openapi";
 //The list of all the player textures, both the default models and the partial textures used for customization
 
 export const wokaTexture = z.object({
-    id: extendApi(z.string(), {description: 'The identifier of the texture in the database.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
+    id: extendApi(z.string(), {description: 'A unique identifier for this texture.', example: '03395306-5dee-4b16-a034-36f2c5f2324a'}),
     name: extendApi(z.string(), {description: 'The name of the texture.', example: 'Hair 1'}),
     url: extendApi(z.string(), {description: 'The URL of the image of the texture.', example: 'http://example.com/resources/customisation/character_hairs/character_hairs1.png'}),
     tags: extendApi(z.array(z.string()).optional(), {deprecated: true}),
