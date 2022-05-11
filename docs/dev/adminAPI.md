@@ -24,7 +24,7 @@ graph LR
 ```
 
 First you need to understand how Work Adventure architecture is made.
-Work Adventure is divided in 3 sections :
+WorkAdventure is divided in 3 sections :
 - **Front**<br>
     The front is the visible part of Work Adventure, the one that serves the game.
 - **Pusher**<br>
