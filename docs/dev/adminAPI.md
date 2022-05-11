@@ -40,9 +40,25 @@ If you are reading this documentation this is surely because you want to impleme
 **Important!** It is not your site that will call the pusher but the reverse.<br>
 The pusher will directly ask your admin API for the information and authorizations it needs.
 
-[![](https://mermaid.ink/img/pako:eNqNkk9LxDAQxb9KyNUtvfewsFILggtFWbz0MiajDTZ_TCYsy7Lf3cRutWtdMKdkfu_NvJAcubASecUDfkQ0AmsFbx50Z1haDjwpoRwYYg2DwBpvDS1Zm1kbQ49-CTftfcYbqZXJh1EBkayJ-mVyNKxYr29YW7FSgxtr7VhLnlQFp35I7lkkWGTDFlyNBGoINRB8W79w8zeeTfPW6hKEwBCuTF0oLqY3SKLfYr5J7n972EUlHzE4awIuwvxDPcu2t-9QDirQlWS_-EWu58Qe5tYpwgT4imv0GpRMz3_Mso5Tjxo7XqWtwUgeho535pSk0UkgvJOKrOfVKwwBVzw_4tPBCF6RjziJzl_orDp9AnkPvDI)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqNkk9LxDAQxb9KyNUtvfewsFILggtFWbz0MiajDTZ_TCYsy7Lf3cRutWtdMKdkfu_NvJAcubASecUDfkQ0AmsFbx50Z1haDjwpoRwYYg2DwBpvDS1Zm1kbQ49-CTftfcYbqZXJh1EBkayJ-mVyNKxYr29YW7FSgxtr7VhLnlQFp35I7lkkWGTDFlyNBGoINRB8W79w8zeeTfPW6hKEwBCuTF0oLqY3SKLfYr5J7n972EUlHzE4awIuwvxDPcu2t-9QDirQlWS_-EWu58Qe5tYpwgT4imv0GpRMz3_Mso5Tjxo7XqWtwUgeho535pSk0UkgvJOKrOfVKwwBVzw_4tPBCF6RjziJzl_orDp9AnkPvDI)
-<figcaption class="figure-caption text-center">Sequence diagram of the initialization of the Game Scene</figcaption>
-<br>
+```mermaid
+sequenceDiagram
+    participant F as Front
+    participant P as Pusher
+    participant API as Admin API
+    autonumber
+    F ->>+ P: /map
+    P ->>+ API: /api/map
+    API -->>- P: MapDetailsData
+    P -->>- F: MapDetailsData
+    F ->>+ P: /room/access
+    P ->>+ API: /api/room/access
+    API -->>- P: FetchMemberDataByUuidResponse
+    P -->>- F: FetchMemberDataByUuidResponse
+    F ->>+ P: /woka/list
+    P ->>+ API: /api/woka/list
+    API -->>- P: WokaList
+    P -->>- F: WokaList
+```
 
 There are 3 end points that are the most important :
 - `/api/map`<br>
