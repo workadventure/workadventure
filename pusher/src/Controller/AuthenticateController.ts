@@ -7,6 +7,8 @@ import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
+import Axios from "axios";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export interface TokenInterface {
     userUuid: string;
@@ -197,6 +199,13 @@ export class AuthenticateController extends BaseHttpController {
                             locale: authTokenData?.locale,
                         });
                     } catch (err) {
+                        if (Axios.isAxiosError(err)) {
+                            const errorType = isErrorApiData.safeParse(err?.response?.data);
+                            if (errorType.success) {
+                                res.sendStatus(err?.response?.status ?? 500);
+                                return res.json(errorType.data);
+                            }
+                        }
                         console.info("User was not connected", err);
                     }
                 }
