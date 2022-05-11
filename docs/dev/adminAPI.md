@@ -1,9 +1,14 @@
 # Implement your own admin API
 ## Why
-The major interest in developing your own admin API is first of all to integrate Work Adventure into an existing computer system.
-To be able to manage the accesses and the rooms be even according to what already exists.
-To do this, you must link the existing user database with Work Adventure.
-In addition, the advantage of implementing your own admin API is to be able to create rooms or access dynamically to Work Adventure.
+Create your own Admin API and connect it to WorkAdventure if:
+
+- you want to connect WorkAdventure to your own database
+- you want some of your users to have special privileges (tags)
+- you want to create rooms dynamically
+- you want to have "pretty URLs" for your rooms
+
+{.alert.alert-warning}
+Be aware that WorkAdventure is licensed under "AGPL-3 restricted by the commons clause". It means in particular you are not allowed to sell a version of WorkAdventure online as a service. If in doubt, please contact us at hello@workadventu.re. We can offer special licenses depending on your use-case.
 
 ## Architecture
 [![](https://mermaid.ink/img/pako:eNpdkEFrwzAMhf-K0S4JpJexMDBjkNIVBjuE7VDKvIMbK4tJYgdHXldK__sUklKYTk9PTx9CZ6i8QZDwHfTQiLd35QTXSKcORVG-sgq-RXlX1w-Puc7mdnW0hhp5P_wuhhS5yJfVeJhZOx_awvygoxhwnk21TbbBO0rF02r1LMpEQRnHBoOCVEzOOlnrqk3nBXTmH3W_-1Sw9zGIIx5GS6jg6wbnixlYmN66STPzNisZz_zJvrIhgx5Dr63hD5wnWwE12DNUsnQYKehOgXIXjsbBaMIXY8kHkLXuRsxAR_IfJ1eBpBDxGtpYzef2S-ryBwzWbw8)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNpdkEFrwzAMhf-K0S4JpJexMDBjkNIVBjuE7VDKvIMbK4tJYgdHXldK__sUklKYTk9PTx9CZ6i8QZDwHfTQiLd35QTXSKcORVG-sgq-RXlX1w-Puc7mdnW0hhp5P_wuhhS5yJfVeJhZOx_awvygoxhwnk21TbbBO0rF02r1LMpEQRnHBoOCVEzOOlnrqk3nBXTmH3W_-1Sw9zGIIx5GS6jg6wbnixlYmN66STPzNisZz_zJvrIhgx5Dr63hD5wnWwE12DNUsnQYKehOgXIXjsbBaMIXY8kHkLXuRsxAR_IfJ1eBpBDxGtpYzef2S-ryBwzWbw8)
