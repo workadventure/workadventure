@@ -69,7 +69,7 @@ export class SwaggerController extends BaseHttpController {
                         title: "WorkAdventure External Admin",
                         version: "1.0.0",
                         description:
-                            "This is a documentation about the externals endpoints called by the pusher. \n You can find out more about WorkAdventure on [github](https://github.com/thecodingmachine/workadventure).",
+                            "This is a documentation about the external endpoints called by the pusher (aka the Admin API). \n Those endpoints should be implemented by the Admin API. The pusher will access those endpoints (just like webhooks). You can find out more about WorkAdventure and the Admin API on [GitHub](https://github.com/thecodingmachine/workadventure/blob/develop/docs/dev/adminAPI.md).",
                         contact: {
                             email: "hello@workadventu.re",
                         },
