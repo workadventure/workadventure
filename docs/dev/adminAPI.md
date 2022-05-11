@@ -76,7 +76,7 @@ The most important endpoints are:
   In case of success, this endpoint returns a `WokaList` object.
 
 ## What to do
-1. You will need to implement, in your website, all the URLs that are listed in this swagger documentation : [WA Pusher](http://pusher.workadventure.localhost/swagger-ui/).
+1. You will need to implement, in your website, all the URLs that are listed in this swagger documentation : [WA Pusher](https://pusher.workadventu.re/swagger-ui/).
 2. In the `.env` file :
    * Set the URL of your admin API, set the environment variable :
       `ADMIN_API_URL=http://example.com`
