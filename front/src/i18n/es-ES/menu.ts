@@ -107,16 +107,16 @@ const menu: NonNullable<Translation["menu"]> = {
         mapLink: "enlace a este mapa",
         copyrights: {
             map: {
-                title: "Copyrights del mapa",
-                empty: "El creador del mapa no ha declarado un copyright del mapa.",
+                title: "Derechos de autor del mapa",
+                empty: "El creador del mapa no ha declarado derechos de autor del mapa.",
             },
             tileset: {
-                title: "Copyrights de las fichas",
-                empty: "El creador del mapa no ha declarado un copyright de las fichas. Esto no significa que esas fichas no tengan licencia.",
+                title: "Derechos de autor de las fichas",
+                empty: "El creador del mapa no ha declarado derechos de autor de las fichas. Esto no significa que esas fichas no tengan licencia.",
             },
             audio: {
-                title: "Copyrights de los archivos de audio",
-                empty: "El creador del mapa no ha declarado un copyright de los archivos de audio. Esto no significa que esos archivos de audio no tengan licencia.",
+                title: "Derechos de autor de los archivos de audio",
+                empty: "El creador del mapa no ha declarado derechos de autor de los archivos de audio. Esto no significa que esos archivos de audio no tengan licencia.",
             },
         },
     },

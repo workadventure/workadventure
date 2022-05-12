@@ -12,7 +12,7 @@ const woka: NonNullable<Translation["woka"]> = {
     },
     selectWoka: {
         title: "Seleccionar su WOKA",
-        continue: "Continaur",
+        continue: "Continuar",
         customize: "Personalizar su WOKA",
     },
     menu: {
