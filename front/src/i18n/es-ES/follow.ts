@@ -19,7 +19,7 @@ const follow: NonNullable<Translation["follow"]> = {
             leader: "¿Quiere dejar de liderar?",
             follower: "¿Quiere dejar de seguir a {leader}?",
         },
-        yes: "Yes",
+        yes: "Sí",
         no: "No",
     },
 };
