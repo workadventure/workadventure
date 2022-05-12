@@ -7,6 +7,8 @@ const muc: BaseTranslation = {
         isHere: "Is here!",
         teleport: "Teleport",
         search: "Just look it up!",
+        walkTo: "Walk to",
+        teleporting: "Teleporting ...",
     },
     mucRoom: {
         reconnecting: "Connection to presence server in progress",

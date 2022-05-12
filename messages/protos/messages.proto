@@ -179,7 +179,6 @@ message UserMovedMessage {
 message AccessRoomMessage {
   string userIdentifier = 1;
   string playUri = 2;
-  string ipAddress = 3;
 }
 
 message TeleportMessage{

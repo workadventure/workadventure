@@ -7,6 +7,8 @@ const muc: NonNullable<Translation["muc"]> = {
         isHere: "Sur cette map!",
         teleport: "Téléporter",
         search: "Il suffit de chercher !",
+        walkTo: "Marcher jusqu'à",
+        teleporting: "Téléportation ...",
     },
     mucRoom: {
         reconnecting: "Connexion au serveur...",

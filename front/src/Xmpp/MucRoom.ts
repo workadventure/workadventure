@@ -9,25 +9,30 @@ import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import {localUserStore} from "../Connexion/LocalUserStore";
-import Axios from "axios";
-import {PUSHER_URL} from "../Enum/EnvironmentVariable";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
     nick: string,
     roomId: string;
+    uuid: string,
     status: string;
     isInSameMap: boolean;
 };
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
-export function goToWorkAdventureRoomId(roomId: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
-    const userIdentifier = localUserStore.getLocalUser()?.uuid;
-    if (userIdentifier) {
-        connection.emitAccessRoomMessage(userIdentifier, roomId, "");
-    }
+export const loadingTeleportStore = writable(false);
+
+export function goToWorkAdventureRoomId(roomId: string, uuid: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
+    loadingTeleportStore.set(true);
+    connection.emitAccessRoomMessage(uuid, roomId);
+    return mouseEvent;
+}
+
+export function goToUser(roomId: string, uuid: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
+    loadingTeleportStore.set(true);
+    connection.emitAskPosition(uuid, roomId);
     return mouseEvent;
 }
 
@@ -43,7 +48,7 @@ export class MucRoom {
         this.presenceStore = writable<UserList>(new Map<string, User>());
     }
 
-    public async connect() {
+    public connect() {
         const toMucSubscriber = jid(this.roomJid.local, this.roomJid.domain);
 
         // Get all subscribed users of the room, need to be called in first place before we get al presence state
@@ -79,6 +84,10 @@ export class MucRoom {
             //add window location and have possibility to teleport on the user
             xml("room", {
                 id: window.location.toString(),
+            }),
+            //add uuid of the user to identify and target them on teleport
+            xml("user", {
+                uuid: localUserStore.getLocalUser()?.uuid,
             })
         );
         this.connection.emitXmlMessage(messagePresence);
@@ -152,10 +161,12 @@ export class MucRoom {
             if (x) {
                 const jid = x.getChild('item')?.getAttr('jid').split('/')[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
+                const uuid = xml.getChild("user")?.getAttr("uuid");
                 this.presenceStore.update((list) => {
                     list.set(jid, {
                         nick: from.resource,
                         roomId,
+                        uuid,
                         status: (type === "unavailable")?USER_STATUS_DISCONNECTED:USER_STATUS_AVAILABLE,
                         isInSameMap: roomId === getRoomId(),
                     });
@@ -179,6 +190,7 @@ export class MucRoom {
                             list.set(jid, {
                                 nick: subscription.getAttr("nick"),
                                 roomId,
+                                uuid: '',
                                 status: USER_STATUS_DISCONNECTED,
                                 isInSameMap: roomId === getRoomId(),
                             });

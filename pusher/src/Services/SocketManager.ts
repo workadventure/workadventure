@@ -752,7 +752,7 @@ export class SocketManager implements ZoneEventListener {
                 await adminService.fetchMemberDataByUuid(
                     accessRoomMessage.getUseridentifier(),
                     accessRoomMessage.getPlayuri(),
-                    accessRoomMessage.getIpaddress(),
+                    client.IPAddress,
                     []
                 );
 

@@ -58,6 +58,7 @@ import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import {layoutManagerActionStore} from "../Stores/LayoutManagerStore";
 import LL from "../i18n/i18n-svelte";
+import {loadingTeleportStore} from "../Xmpp/MucRoom";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -603,6 +604,7 @@ export class RoomConnection implements RoomConnection {
                     if(message.moveToPositionMessage && message.moveToPositionMessage.position) {
                         const tileIndex = gameManager.getCurrentGameScene().getGameMap().getTileIndexAt(message.moveToPositionMessage.position.x, message.moveToPositionMessage.position.y);
                         gameManager.getCurrentGameScene().moveTo(tileIndex);
+                        loadingTeleportStore.set(false);
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
@@ -1073,14 +1075,13 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitAccessRoomMessage(uuid: string, playUri: string, ipAddress: string): void {
+    public emitAccessRoomMessage(uuid: string, playUri: string): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "accessRoomMessage",
                 accessRoomMessage: {
                     userIdentifier: uuid,
-                    playUri,
-                    ipAddress
+                    playUri
                 },
             },
         }).finish();
