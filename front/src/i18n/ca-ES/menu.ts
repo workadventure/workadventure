@@ -107,16 +107,16 @@ const menu: NonNullable<Translation["menu"]> = {
         mapLink: "Enllaç a aquest mapa",
         copyrights: {
             map: {
-                title: "Copyrights del mapa",
-                empty: "El creador del mapa no ha declarat un copyright del mapa.",
+                title: "Drets d'autor del mapa",
+                empty: "El creador del mapa no ha declarat drets d'autor del mapa.",
             },
             tileset: {
-                title: "Copyrights de les rajoles",
-                empty: "El creador del mapa no ha declarat un copyright de les rajoles. Això no significa que aquestes rajoles no tinguin llicència.",
+                title: "Drets d'autor de les rajoles",
+                empty: "El creador del mapa no ha declarat drets d'autor de les rajoles. Això no significa que aquestes rajoles no tinguin llicència.",
             },
             audio: {
-                title: "Copyrights dels arxius d'audio",
-                empty: "El creador del mapa no ha declarat un copyright dels arxius d'audio. Això no significa que aquests arxius d'audio no tinguin llicència.",
+                title: "Drets d'autor dels arxius d'audio",
+                empty: "El creador del mapa no ha declarat drets d'autor dels arxius d'audio. Això no significa que aquests arxius d'audio no tinguin llicència.",
             },
         },
     },
