@@ -126,6 +126,8 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     XmppMessage xmppMessage = 19;
+    AccessRoomMessage accessRoomMessage = 20;
+    AskPositionMessage askPositionMessage = 21;
   }
 }
 
@@ -174,6 +176,22 @@ message UserMovedMessage {
   PositionMessage position = 2;
 }
 
+message AccessRoomMessage {
+  string userIdentifier = 1;
+  string playUri = 2;
+  string ipAddress = 3;
+}
+
+message TeleportMessage{
+  string userIdentifier = 1;
+  string playUri = 2;
+  bool canAccess = 3;
+}
+
+message MoveToPositionMessage{
+  PositionMessage position = 1;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -187,6 +205,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     XmppMessage xmppMessage = 11;
+    AccessRoomMessage accessRoomMessage = 12;
   }
 }
 
@@ -340,6 +359,12 @@ message XmppSettingsMessage{
   repeated MucRoomDefinitionMessage rooms = 3;
 }
 
+message AskPositionMessage{
+  string userIdentifier = 1;
+  string playUri = 2;
+}
+
+
 /**
  * Status of the connection to the XMPP server.
  * In case something goes wrong with the XMPP server, we are notified here.
@@ -383,6 +408,8 @@ message ServerToClientMessage {
     ErrorScreenMessage errorScreenMessage = 26;
     XmppSettingsMessage xmppSettingsMessage = 27;
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 28;
+    TeleportMessage teleportMessage = 29;
+    MoveToPositionMessage moveToPositionMessage = 30;
   }
 }
 
@@ -473,6 +500,8 @@ message PusherToBackMessage {
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
+    AskPositionMessage askPositionMessage = 20;
+    MoveToPositionMessage moveToPositionMessage = 21;
   }
 }
 
@@ -493,6 +522,7 @@ message SubToPusherMessage {
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
+    TeleportMessage teleportMessage = 12;
   }
 }
 

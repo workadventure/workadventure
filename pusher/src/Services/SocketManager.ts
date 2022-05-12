@@ -1,6 +1,7 @@
 import { PusherRoom } from "../Model/PusherRoom";
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
+    AccessRoomMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -32,6 +33,7 @@ import {
     ViewportMessage,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
+    TeleportMessage,
     TokenExpiredMessage,
     VariableMessage,
     ErrorMessage,
@@ -40,10 +42,10 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
-    XmppMessage,
+    XmppMessage, AskPositionMessage
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
+import {ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -125,10 +127,10 @@ export class SocketManager implements ZoneEventListener {
             .on("end", () => {
                 console.warn(
                     "Admin connection lost to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "'"
+                    apiClient.getChannel().getTarget() +
+                    "' for room '" +
+                    roomId +
+                    "'"
                 );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
@@ -139,10 +141,10 @@ export class SocketManager implements ZoneEventListener {
             .on("error", (err: Error) => {
                 console.error(
                     "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        roomId +
-                        "':",
+                    apiClient.getChannel().getTarget() +
+                    "' for room '" +
+                    roomId +
+                    "':",
                     err
                 );
                 if (!client.disconnecting) {
@@ -231,10 +233,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("end", () => {
                     console.warn(
                         "Connection lost to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            client.roomId +
-                            "'"
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        client.roomId +
+                        "'"
                     );
                     //disconnect of xmpp server
                     if (client.xmppClient) {
@@ -251,10 +253,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("error", (err: Error) => {
                     console.error(
                         "Error in connection to back server '" +
-                            apiClient.getChannel().getTarget() +
-                            "' for room '" +
-                            client.roomId +
-                            "':",
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        client.roomId +
+                        "':",
                         err
                     );
                     if (!client.disconnecting) {
@@ -741,6 +743,43 @@ export class SocketManager implements ZoneEventListener {
         }
         console.log("SocketManager => handleXmppMessage => ", xmppMessage.getStanza());
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+    }
+
+    async handleAccessRoomMessage(client: ExSocketInterface, accessRoomMessage: AccessRoomMessage) {
+        let canAccess = false;
+        if (ADMIN_API_URL) {
+            try {
+                await adminService.fetchMemberDataByUuid(
+                    accessRoomMessage.getUseridentifier(),
+                    accessRoomMessage.getPlayuri(),
+                    accessRoomMessage.getIpaddress(),
+                    []
+                );
+
+                canAccess = true;
+            } catch (err) {
+                console.warn("Access forbidden to this map => ", err);
+                //
+            }
+        } else {
+            canAccess = true;
+        }
+        const teleportMessage = new TeleportMessage();
+        teleportMessage.setCanaccess(canAccess);
+        teleportMessage.setPlayuri(accessRoomMessage.getPlayuri());
+        teleportMessage.setUseridentifier(accessRoomMessage.getUseridentifier());
+        if (!client.disconnecting) {
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setTeleportmessage(teleportMessage);
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setAskpositionmessage(askPositionMessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 

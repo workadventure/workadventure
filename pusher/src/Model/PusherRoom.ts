@@ -25,7 +25,7 @@ export enum GameRoomPolicyTypes {
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public mucRooms: MucRoomDefinitionInterface[] | null = null;
+    public mucRooms: Array<Object> = [];
 
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;

@@ -62,7 +62,7 @@
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
                 <p class="room-name"><!-- {mucRoom.name} --></p>
-                <UsersList usersListStore={mucRoom.getPresenceStore()} />
+                <UsersList usersListStore={mucRoom.getPresenceStore()} connection={mucRoom.connection}/>
             {/each}
         {:else}
             <div class="reconnecting center">{$LL.muc.mucRoom.reconnecting()}</div>

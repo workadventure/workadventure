@@ -21,6 +21,7 @@ import {
     VariableMessage,
     LockGroupPromptMessage,
     XmppMessage,
+    AccessRoomMessage, AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -73,7 +74,7 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
-    mucRooms: Array<any> | undefined;
+    mucRooms: Array<Array<Object>> | undefined;
 }
 
 interface UpgradeFailedInvalidData {
@@ -606,6 +607,10 @@ export class IoSocketController {
                     );
                 } else if (message.hasXmppmessage()) {
                     socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
+                } else if (message.hasAccessroommessage()) {
+                    socketManager.handleAccessRoomMessage(client, message.getAccessroommessage() as AccessRoomMessage).then().catch();
+                } else if (message.hasAskpositionmessage()) {
+                    socketManager.handleAskPositionMessage(client, message.getAskpositionmessage() as AskPositionMessage);
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

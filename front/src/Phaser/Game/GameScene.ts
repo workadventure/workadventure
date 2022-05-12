@@ -934,6 +934,9 @@ export class GameScene extends DirtyScene {
 
                 // Connect to XMPP
                 this.xmppClient = new XmppClient(this.connection);
+
+                // Get position from UUID only after the connection to the pusher is established
+                this.tryMovePlayerWithMoveToUuidParameter();
             })
             .catch((e) => console.error(e));
     }
@@ -1626,20 +1629,33 @@ ${escapedMessage}
                         endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
                     }
                 }
-                this.pathfindingManager
-                    .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
-                    .then((path) => {
-                        if (path && path.length > 0) {
-                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                        }
-                    })
-                    .catch((reason) => console.warn(reason));
+
+                this.moveTo(endPos);
 
                 urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
         }
+    }
+
+    private tryMovePlayerWithMoveToUuidParameter(): void {
+        const uuidParam = urlManager.getHashParameter("moveToUuid");
+        if (uuidParam){
+            this.connection?.emitAskPosition(uuidParam, this.roomUrl);
+            urlManager.clearHashParameter();
+        }
+    }
+
+    public moveTo(position: { x: number; y: number; }){
+        this.pathfindingManager
+            .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .then((path) => {
+                if (path && path.length > 0) {
+                    this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                }
+            })
+            .catch((reason) => console.warn(reason));
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {

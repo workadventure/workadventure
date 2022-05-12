@@ -10,6 +10,7 @@ const warning: NonNullable<Translation["warning"]> = {
     accessDenied: {
         camera: "摄像头访问权限被拒绝。点击这里检查你的浏览器权限。",
         screenSharing: "屏幕共享权限被拒绝。点击这里检查你的浏览器权限。",
+        teleport: "您无权传送给此用户。",
     },
     importantMessage: "重要消息",
     connectionLost: "连接丢失。重新连接中...",

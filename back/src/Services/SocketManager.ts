@@ -37,6 +37,8 @@ import {
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
+    AskPositionMessage,
+    MoveToPositionMessage
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -912,6 +914,26 @@ export class SocketManager {
         }
         group.lock(message.getLock());
         room.emitLockGroupEvent(user, group.getId());
+    }
+
+    handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
+        const moveToPositionMessage = new MoveToPositionMessage();
+
+        if(room) {
+            const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
+            const position = userToJoin?.getPosition();
+            if (position) {
+                moveToPositionMessage.setPosition(ProtobufUtils.toPositionMessage(position));
+
+                const clientMessage = new ServerToClientMessage();
+                clientMessage.setMovetopositionmessage(moveToPositionMessage);
+                user.socket.write(clientMessage);
+            }
+
+            if(room.isEmpty()) {
+                // TODO delete room;
+            }
+        }
     }
 }
 

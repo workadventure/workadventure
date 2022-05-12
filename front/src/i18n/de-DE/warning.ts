@@ -11,6 +11,7 @@ const warning: NonNullable<Translation["warning"]> = {
         camera: "Zugriff auf die Kamera verweigert. Hier klicken um deine Browser Berechtigungen zu prüfen.",
         screenSharing:
             "Zugriff auf die Bildschirmfreigabe verweigert. Hier klicken um deine Browser Berechtigungen zu prüfen.",
+        teleport: "Sie dürfen sich nicht zu diesem Benutzer beamen.",
     },
     importantMessage: "Wichtige Nachricht",
     connectionLost: "Verbindungen unterbrochen. Wiederverbinden...",

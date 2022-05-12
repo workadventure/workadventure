@@ -10,6 +10,7 @@ const warning: BaseTranslation = {
     accessDenied: {
         camera: "Camera access denied. Click here and check your browser permissions.",
         screenSharing: "Screen sharing denied. Click here and check your browser permissions.",
+        teleport: "You have no right to teleport to this user."
     },
     importantMessage: "Important message",
     connectionLost: "Connection lost. Reconnecting...",

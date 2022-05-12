@@ -9,6 +9,8 @@ import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import {localUserStore} from "../Connexion/LocalUserStore";
+import Axios from "axios";
+import {PUSHER_URL} from "../Enum/EnvironmentVariable";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -21,8 +23,11 @@ export type User = {
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
-export function goToWorkAdventureRoomId(roomId: string, mouseEvent: MouseEvent | undefined) {
-    window.location.href = roomId;
+export function goToWorkAdventureRoomId(roomId: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
+    const userIdentifier = localUserStore.getLocalUser()?.uuid;
+    if (userIdentifier) {
+        connection.emitAccessRoomMessage(userIdentifier, roomId, "");
+    }
     return mouseEvent;
 }
 

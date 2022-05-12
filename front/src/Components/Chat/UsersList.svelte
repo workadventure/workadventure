@@ -12,9 +12,12 @@
     import { goToWorkAdventureRoomId, USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
     import { onMount } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
+    import {RoomConnection} from "../../Connexion/RoomConnection";
 
     export let usersListStore: UsersStore;
     let usersList: UserList = new Map<string, User>();
+
+    export let connection: RoomConnection;
 
     onMount(() => {
         usersListStore.subscribe((value: UserList) => {
@@ -78,7 +81,7 @@
                             </button>
                         {:else if user.isInSameMap === false}
                             <button
-                                on:click={(event) => goToWorkAdventureRoomId(user.roomId, event)}
+                                on:click={(event) => goToWorkAdventureRoomId(user.roomId, event, connection)}
                                 src="btn btn-primary"
                             >
                                 {$LL.muc.userList.teleport()}
