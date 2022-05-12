@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const woka: BaseTranslation = {
+const woka: NonNullable<Translation["woka"]> = {
     customWoka: {
         title: "Personalice su WOKA",
         navigation: {

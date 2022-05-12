@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const report: BaseTranslation = {
+const report: NonNullable<Translation["report"]> = {
     block: {
         title: "Bloquear",
         content: "Bloquear cualquier comunicación desde y hacia {userName}. Este cambio se puede revertir.",

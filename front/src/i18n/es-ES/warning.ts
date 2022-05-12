@@ -1,9 +1,9 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
 const upgradeLink = ADMIN_URL + "/pricing";
 
-const warning: BaseTranslation = {
+const warning: NonNullable<Translation["warning"]> = {
     title: "¡Atención!",
     content: `¡Este mundo está acercándose a su límite! Puede actualizar su capacidad <a href="${upgradeLink}" target="_blank">aquí</a>`,
     limit: "¡Este mundo está acercándose a su límite!",

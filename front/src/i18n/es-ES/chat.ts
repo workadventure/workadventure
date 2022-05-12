@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const chat: BaseTranslation = {
+const chat: NonNullable<Translation["chat"]> = {
     intro: "Aquí está su histórico del chat:",
     enter: "Escriba su mensaje...",
     menu: {

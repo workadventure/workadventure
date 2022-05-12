@@ -15,7 +15,7 @@ import emoji from "./emoji";
 import trigger from "./trigger";
 
 const es_ES: Translation = {
-    ...(en_US as Translation)
+    ...(en_US as Translation),
     audio,
     camera,
     chat,

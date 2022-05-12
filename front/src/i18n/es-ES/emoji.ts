@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 
-const emoji: BaseTranslation = {
+const emoji: NonNullable<Translation["emoji"]> = {
     search: "Buscar emojis...",
     categories: {
         recents: "Emojis recientes",
