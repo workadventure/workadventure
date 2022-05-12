@@ -43,7 +43,7 @@
     "mkdirp": "^1.0.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v18.5.0",
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "uuidv4": "^6.0.7"
   },
   "devDependencies": {
@@ -51,14 +51,14 @@
     "@types/circular-json": "^0.4.0",
     "@types/debug": "^4.1.5",
     "@types/http-status-codes": "^1.2.0",
-    "@types/jasmine": "^3.5.10",
+    "@types/jasmine": "^4.0.3",
     "@types/jsonwebtoken": "^8.3.8",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "@types/mkdirp": "^1.0.1",
     "@types/uuidv4": "^5.0.0",
     "eslint": "^6.8.0",
-    "jasmine": "^3.5.0",
+    "jasmine": "^4.0.3",
     "ts-node-dev": "^1.0.0-pre.44",
     "typescript": "^3.8.3"
   }

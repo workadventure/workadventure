@@ -7,6 +7,8 @@ import { openIDClient } from "../Services/OpenIDClient";
 import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
+import Axios from "axios";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export interface TokenInterface {
     userUuid: string;
@@ -216,6 +218,13 @@ export class AuthenticateController extends BaseHttpController {
                             locale: authTokenData?.locale,
                         });
                     } catch (err) {
+                        if (Axios.isAxiosError(err)) {
+                            const errorType = isErrorApiData.safeParse(err?.response?.data);
+                            if (errorType.success) {
+                                res.sendStatus(err?.response?.status ?? 500);
+                                return res.json(errorType.data);
+                            }
+                        }
                         console.info("User was not connected", err);
                     }
                 }
@@ -437,7 +446,7 @@ export class AuthenticateController extends BaseHttpController {
     profileCallback() {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
-            const { token } = parse(req.path_query);
+            const { token, playUri } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -450,7 +459,10 @@ export class AuthenticateController extends BaseHttpController {
 
                         //get login profile
                         res.status(302);
-                        res.setHeader("Location", adminService.getProfileUrl(authTokenData.accessToken));
+                        res.setHeader(
+                            "Location",
+                            adminService.getProfileUrl(authTokenData.accessToken, playUri as string)
+                        );
                         res.send("");
                         return;
                     } catch (error) {
@@ -517,7 +529,7 @@ export class AuthenticateController extends BaseHttpController {
      * @param playUri
      * @param IPAddress
      * @return
-        |object
+     |object
      * @private
      */
     private async getUserByUserIdentifier(

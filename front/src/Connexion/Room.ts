@@ -23,6 +23,8 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport: boolean = false;
+    private _miniLogo: string | undefined;
+    private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _mucRooms: Array<any> | undefined;
@@ -120,6 +122,8 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._miniLogo = data.miniLogo ?? undefined;
+                this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
@@ -212,8 +216,16 @@ export class Room {
         return this._canReport;
     }
 
+    get loadingCowebsiteLogo(): string | undefined {
+        return this._loadingCowebsiteLogo;
+    }
+
     get loadingLogo(): string | undefined {
         return this._loadingLogo;
+    }
+
+    get miniLogo(): string | undefined {
+        return this._miniLogo;
     }
 
     get loginSceneLogo(): string | undefined {

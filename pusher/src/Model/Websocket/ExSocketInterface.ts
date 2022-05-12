@@ -2,6 +2,7 @@ import { PointInterface } from "./PointInterface";
 import { Identificable } from "./Identificable";
 import { ViewportInterface } from "../../Model/Websocket/ViewportMessage";
 import {
+    AvailabilityStatus,
     BatchMessage,
     CompanionMessage,
     PusherToBackMessage,
@@ -29,6 +30,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     position: PointInterface;
     viewport: ViewportInterface;
     companion?: CompanionMessage;
+    availabilityStatus: AvailabilityStatus;
     /**
      * Pushes an event that will be sent in the next batch of events
      */

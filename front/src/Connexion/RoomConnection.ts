@@ -204,6 +204,7 @@ export class RoomConnection implements RoomConnection {
      * @param position
      * @param viewport
      * @param companion
+     * @param availabilityStatus
      */
     public constructor(
         token: string | null,
@@ -212,7 +213,8 @@ export class RoomConnection implements RoomConnection {
         characterLayers: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null
+        companion: string | null,
+        availabilityStatus: AvailabilityStatus
     ) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
@@ -234,6 +236,9 @@ export class RoomConnection implements RoomConnection {
         url += "&right=" + Math.floor(viewport.right);
         if (typeof companion === "string") {
             url += "&companion=" + encodeURIComponent(companion);
+        }
+        if (typeof availabilityStatus === "number") {
+            url += "&availabilityStatus=" + availabilityStatus;
         }
 
         if (RoomConnection.websocketFactory) {
@@ -622,9 +627,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerStatusChange(status: AvailabilityStatus): void {
+    public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
-            status,
+            availabilityStatus,
         });
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -647,7 +652,6 @@ export class RoomConnection implements RoomConnection {
                 outlineColor: color,
             });
         }
-
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "setPlayerDetailsMessage",
@@ -759,7 +763,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            status: message.status,
+            availabilityStatus: message.availabilityStatus,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,

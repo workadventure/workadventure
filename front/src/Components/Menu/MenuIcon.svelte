@@ -11,6 +11,9 @@
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+
+    let miniLogo = gameManager.currentStartedRoom.miniLogo ?? logoWA;
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -57,7 +60,7 @@
         />
     {:else}
         <img
-            src={logoWA}
+            src={miniLogo}
             alt={$LL.menu.icon.open.menu()}
             class="nes-pointer"
             draggable="false"

@@ -34,11 +34,17 @@ export const isFetchMemberDataByUuidResponse = z.object({
         description: "URL of the visitCard of the user fetched.",
         example: "https://mycompany.com/contact/me",
     }),
-    textures: extendApi(z.array(isWokaDetail), { $ref: "#/definitions/WokaDetail" }),
-    messages: extendApi(z.array(z.unknown()), { description: "List of user's messages." }),
+    textures: extendApi(z.array(isWokaDetail), {
+        description: "This data represents the textures (WOKA) that will be available to users.",
+        $ref: "#/definitions/WokaDetail",
+    }),
+    messages: extendApi(z.array(z.unknown()), {
+        description:
+            "Sets messages that will be displayed when the user logs in to the WA room. These messages are used for ban or ban warning.",
+    }),
 
     anonymous: extendApi(z.optional(z.boolean()), {
-        description: "Whether the user if logged as anonymous or not",
+        description: "Defines whether it is possible to login as anonymous on a WorkAdventure room.",
         example: false,
     }),
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
@@ -113,7 +119,7 @@ class AdminApi implements AdminInterface {
          *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad9"
          *     responses:
          *       200:
-         *         description: The details of the member
+         *         description: The details of the map
          *         schema:
          *             $ref: "#/definitions/MapDetailsData"
          *       401:
@@ -165,7 +171,7 @@ class AdminApi implements AdminInterface {
          * /api/room/access:
          *   get:
          *     tags: ["AdminAPI"]
-         *     description: Returns member's informations if he can access this room
+         *     description: Returns the member's information if he can access this room
          *     security:
          *      - Bearer: []
          *     produces:
@@ -184,6 +190,7 @@ class AdminApi implements AdminInterface {
          *        example: "http://play.workadventure.localhost/@/teamSlug/worldSLug/roomSlug"
          *      - name: "ipAddress"
          *        in: "query"
+         *        description: "IP Address of the user logged in, allows you to check whether a user has been banned or not"
          *        required: true
          *        type: "string"
          *        example: "127.0.0.1"
@@ -460,11 +467,15 @@ class AdminApi implements AdminInterface {
         });
     }
 
-    getProfileUrl(accessToken: string): string {
+    getProfileUrl(accessToken: string, playUri: string): string {
         if (!OPID_PROFILE_SCREEN_PROVIDER) {
             throw new Error("No admin backoffice set!");
         }
-        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}`;
+        return `${OPID_PROFILE_SCREEN_PROVIDER}?accessToken=${accessToken}&playUri=${playUri}`;
+    }
+
+    async logoutOauth(token: string): Promise<void> {
+        await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 }
 
