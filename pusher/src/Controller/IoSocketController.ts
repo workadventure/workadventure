@@ -41,6 +41,7 @@ import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
 import { adminService } from "../Services/AdminService";
 import { ErrorApiData, isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 
 /**
  * The object passed between the "open" and the "upgrade" methods when opening a websocket
@@ -71,7 +72,7 @@ interface UpgradeData {
 
 interface UpgradeFailedInvalidData {
     rejected: true;
-    reason: "tokenInvalid" | "textureInvalid" | null;
+    reason: "tokenInvalid" | "textureInvalid" | "invalidVersion" | null;
     message: string;
     roomId: string;
 }
@@ -262,6 +263,32 @@ export class IoSocketController {
                         const right = Number(query.right);
                         const name = query.name;
                         const availabilityStatus = Number(query.availabilityStatus);
+                        const version = query.version;
+
+                        if (version !== apiVersionHash) {
+                            return res.upgrade(
+                                {
+                                    rejected: true,
+                                    reason: "error",
+                                    error: {
+                                        type: "retry",
+                                        title: "Please refresh",
+                                        subtitle: "New version available",
+                                        image: "/resources/icons/new_version.png",
+                                        code: "NEW_VERSION",
+                                        details:
+                                            "A new version of WorkAdventure is available. Please refresh your window",
+                                        canRetryManual: true,
+                                        buttonTitle: "Refresh",
+                                        timeToRetry: 999999,
+                                    },
+                                } as UpgradeFailedData,
+                                websocketKey,
+                                websocketProtocol,
+                                websocketExtensions,
+                                context
+                            );
+                        }
 
                         let companion: CompanionMessage | undefined = undefined;
 
