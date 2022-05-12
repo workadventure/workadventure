@@ -14,6 +14,8 @@ const warning: BaseTranslation = {
     },
     importantMessage: "Important message",
     connectionLost: "Connection lost. Reconnecting...",
+    connectionLostTitle: "Connection lost",
+    connectionLostSubtitle: "Reconnecting",
 };
 
 export default warning;

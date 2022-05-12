@@ -48,6 +48,7 @@ class LocalAdmin implements AdminInterface {
             iframeAuthentication: null,
             loadingLogo: null,
             loginSceneLogo: null,
+            showPoweredBy: true,
         });
     }
 

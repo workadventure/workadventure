@@ -76,6 +76,7 @@ import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
 
 import EVENT_TYPE = Phaser.Scenes.Events;
 import Texture = Phaser.Textures.Texture;
@@ -90,7 +91,7 @@ import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
-import { locale } from "../../i18n/i18n-svelte";
+import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
 import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
@@ -102,7 +103,9 @@ import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
-import { PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
+import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -600,14 +603,30 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     this.scene.sleep();
-                    this.scene.launch(ReconnectingSceneName);
+                    errorScreenStore.setError(
+                        ErrorScreenMessage.fromPartial({
+                            type: "reconnecting",
+                            code: "CONNECTION_LOST",
+                            title: get(LL).warning.connectionLostTitle(),
+                            details: get(LL).warning.connectionLostSubtitle(),
+                        })
+                    );
+                    //this.scene.launch(ReconnectingSceneName);
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         this.scene.sleep();
-                        this.scene.launch(ReconnectingSceneName);
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "reconnecting",
+                                code: "CONNECTION_LOST",
+                                title: get(LL).warning.connectionLostTitle(),
+                                details: get(LL).warning.connectionLostSubtitle(),
+                            })
+                        );
+                        //this.scene.launch(ReconnectingSceneName);
                     }
                 }, 1000);
             }
@@ -893,7 +912,9 @@ export class GameScene extends DirtyScene {
                 // Analyze tags to find if we are admin. If yes, show console.
 
                 if (this.scene.isSleeping()) {
-                    this.scene.stop(ReconnectingSceneName);
+                    const error = get(errorScreenStore);
+                    if (error && error?.type === "reconnecting") errorScreenStore.delete();
+                    //this.scene.stop(ReconnectingSceneName);
                 }
 
                 //init user position and play trigger to check layers properties
@@ -1094,6 +1115,24 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerControlStream.subscribe(() => {
+                this.userInputManager.restoreControls();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
+                this.disableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
+                this.enableMediaBehaviors();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.cameraSetStream.subscribe((cameraSetEvent) => {
                 const duration = cameraSetEvent.smooth ? 1000 : 0;
                 cameraSetEvent.lock
@@ -1181,11 +1220,6 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.enablePlayerControlStream.subscribe(() => {
-                this.userInputManager.restoreControls();
-            })
-        );
-        this.iframeSubscriptionList.push(
             iframeListener.loadPageStream.subscribe((url: string) => {
                 this.loadNextGameFromExitUrl(url)
                     .then(() => {
@@ -1207,7 +1241,7 @@ ${escapedMessage}
                     this.CurrentPlayer.y,
                     "circleSprite-white"
                 );
-                scriptedBubbleSprite.setDisplayOrigin(48, 48);
+                scriptedBubbleSprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
                 this.add.existing(scriptedBubbleSprite);
             })
         );
@@ -1288,6 +1322,18 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("closeCoWebsites", () => {
             return coWebsiteManager.closeCoWebsites();
+        });
+
+        iframeListener.registerAnswerer("openUIWebsite", (websiteConfig) => {
+            return uiWebsiteManager.open(websiteConfig);
+        });
+
+        iframeListener.registerAnswerer("getUIWebsites", () => {
+            return uiWebsiteManager.getAll();
+        });
+
+        iframeListener.registerAnswerer("closeUIWebsite", (websiteId) => {
+            return uiWebsiteManager.close(websiteId);
         });
 
         iframeListener.registerAnswerer("getMapData", () => {
@@ -1587,6 +1633,9 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("getCoWebsites");
         iframeListener.unregisterAnswerer("setPlayerOutline");
         iframeListener.unregisterAnswerer("setVariable");
+        iframeListener.unregisterAnswerer("openUIWebsite");
+        iframeListener.unregisterAnswerer("getUIWebsites");
+        iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
 
@@ -2069,7 +2118,7 @@ ${escapedMessage}
                 ? "circleSprite-red"
                 : "circleSprite-white"
         );
-        sprite.setDisplayOrigin(48, 48);
+        sprite.setDisplayOrigin(48, 48).setDepth(DEPTH_BUBBLE_CHAT_SPRITE);
         this.add.existing(sprite);
         this.groups.set(groupPositionMessage.groupId, sprite);
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {

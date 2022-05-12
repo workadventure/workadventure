@@ -571,6 +571,7 @@ export class GameRoom {
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,
+                showPoweredBy: true,
             };
         }
 

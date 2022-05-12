@@ -26,6 +26,7 @@ export class Room {
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
     private _mucRooms: Array<any> | undefined;
+    private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -94,7 +95,6 @@ export class Room {
                 },
             });
 
-
             const data = result.data;
 
             if (data.authenticationMandatory !== undefined) {
@@ -122,6 +122,7 @@ export class Room {
                 this._canReport = data.canReport ?? false;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
+                this._showPoweredBy = data.showPoweredBy ?? true;
 
                 this._mucRooms = data.mucRooms ?? undefined;
 
@@ -221,5 +222,9 @@ export class Room {
 
     get mucRooms(): Array<any> | undefined {
         return this._mucRooms;
+    }
+
+    get showPoweredBy(): boolean | undefined {
+        return this._showPoweredBy;
     }
 }
