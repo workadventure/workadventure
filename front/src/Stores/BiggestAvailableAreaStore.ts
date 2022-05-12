@@ -1,130 +1,80 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { MathUtils } from "../Utils/MathUtils";
+import { highlightedEmbedScreen } from "./EmbedScreensStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
 function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-    // map iframes to Box'es and remove ones outside of the game canvas space
-    const iframeBoxes: Box[] = Array.from(document.getElementsByTagName("iframe"))
-        .filter((iframe) => iframe.offsetLeft < game.offsetWidth)
-        .map((iframe) => ({
-            xStart: iframe.offsetLeft,
-            yStart: iframe.offsetTop,
-            xEnd: iframe.offsetLeft + iframe.offsetWidth,
-            yEnd: iframe.offsetTop + iframe.offsetHeight,
-        }));
 
-    // console.log(Array.from(document.getElementsByClassName("video-container")));
-    // const videoContainers: Box[] =
+    const blockers: Box[] = [];
+
+    const screenOnTop = get(highlightedEmbedScreen)?.embed;
+    if (screenOnTop) {
+        //@ts-ignore
+        const iframe = screenOnTop.iframe;
+        if (iframe) {
+            blockers.push({
+                xStart: iframe.offsetLeft,
+                yStart: iframe.offsetTop,
+                xEnd: iframe.offsetWidth,
+                yEnd: iframe.offsetHeight,
+            });
+        }
+    }
+
+    if (blockers.length === 0) {
+        return {
+            xStart: 0,
+            yStart: 0,
+            xEnd: game.offsetWidth,
+            yEnd: game.offsetHeight,
+        };
+    }
 
     // create vertices arrays and insert game canvas edges
-    const xVertices = [game.offsetLeft, game.offsetWidth];
-    const yVertices = [game.offsetTop, game.offsetHeight];
+    const verticesX = [game.offsetLeft, game.offsetWidth];
+    const verticesY = [game.offsetTop, game.offsetHeight];
 
     // populate with all vertices
-    for (const box of iframeBoxes) {
-        xVertices.push(box.xStart, box.xEnd);
-        yVertices.push(box.yStart, box.yEnd);
+    for (const blocker of blockers) {
+        verticesX.push(blocker.xStart, blocker.xEnd);
+        verticesY.push(blocker.yStart, blocker.yEnd);
     }
-    xVertices.sort();
-    yVertices.sort();
+    verticesX.sort();
+    verticesY.sort();
 
     // NOTE: cannot use fill() here, it makes references to a single array
-    const occupiedSpace: boolean[][] = new Array(xVertices.length);
-    for (let x = 0; x < xVertices.length; x += 1) {
-        occupiedSpace[x] = new Array(yVertices.length);
+    const occupiedGrid: boolean[][] = new Array(verticesY.length - 1);
+    for (let j = 0; j < verticesY.length - 1; j += 1) {
+        occupiedGrid[j] = new Array(verticesX.length - 1).fill(false);
     }
 
-    // check if given vertex is a part of something occupying the view
-    for (let x = 0; x < xVertices.length; x += 1) {
-        for (let y = 0; y < yVertices.length; y += 1) {
-            occupiedSpace[x][y] = isPartOfBoxes(xVertices[x], yVertices[y], iframeBoxes);
-        }
-    }
-
-    // create an array of all possible squares
-    const allSquares: Box[] = [];
-    for (let x = 0; x < occupiedSpace.length - 1; x += 1) {
-        for (let y = 0; y < occupiedSpace[x].length - 1; y += 1) {
-            allSquares.push(...findAllFreeBoxes(x, y, occupiedSpace));
-        }
-    }
-    // console.log(allSquares);
-
-    // remove squares with occupied areas
-    const freeSquares = allSquares.filter((square) => {
-        // TODO: check every box not just iframes
-        return !isOverlappingWithBoxes(square, iframeBoxes, xVertices, yVertices);
-    });
-
-    console.log(freeSquares);
-
-    // get biggest free square
-    const freeSquaresAreas = freeSquares
-        .map((square) => ({ square, area: getBoxArea(square, xVertices, yVertices) }))
-        .sort((a, b) => {
-            if (a.area < b.area) {
-                return 1;
+    for (const blocker of blockers) {
+        const [left, top] = getGridCoordinates(blocker.xStart, blocker.yStart, verticesX, verticesY);
+        const [right, bottom] = getGridCoordinates(blocker.xEnd, blocker.yEnd, verticesX, verticesY);
+        for (let j = top; j < bottom; j += 1) {
+            for (let i = left; i < right; i += 1) {
+                occupiedGrid[j][i] = true;
             }
-            if (a.area > b.area) {
-                return -1;
-            }
-            return 0;
-        });
-
-    const biggestFreeAreaSquare = freeSquaresAreas[0].square;
-    const freeSpace = {
-        xStart: xVertices[biggestFreeAreaSquare.xStart],
-        xEnd: xVertices[biggestFreeAreaSquare.xEnd],
-        yStart: yVertices[biggestFreeAreaSquare.yStart],
-        yEnd: yVertices[biggestFreeAreaSquare.yEnd],
-    };
-
-    // console.log(freeSpace);
-    return freeSpace;
-
-    // console.log(occupiedSpace);
-    // console.log(`game: ${game.offsetLeft}, ${game.offsetTop}, ${game.offsetWidth}, ${game.offsetHeight}`);
-    // console.log('______________');
-    // console.log(`xVertices: ${xVertices}`);
-    // console.log(`YVertices: ${yVertices}`);
-}
-
-function isPartOfBoxes(x: number, y: number, boxes: Box[]): boolean {
-    for (const box of boxes) {
-        if (x >= box.xStart && x <= box.xEnd && y >= box.yStart && y <= box.yEnd) {
-            return true;
         }
     }
-    return false;
-}
 
-function isOverlappingWithBoxes(box: Box, targetBoxes: Box[], xVertices: number[], yVertices: number[]): boolean {
-    for (const target of targetBoxes) {
-        if (
-            MathUtils.doRectanglesOverlap(
-                {
-                    x: xVertices[box.xStart],
-                    y: yVertices[box.yStart],
-                    width: xVertices[box.xEnd] - xVertices[box.xStart],
-                    height: yVertices[box.yEnd] - yVertices[box.yStart],
-                },
-                {
-                    x: target.xStart,
-                    y: target.yStart,
-                    width: target.xEnd - target.xStart,
-                    height: target.yEnd - target.yStart,
-                }
-            )
-        ) {
-            return true;
+    // create an array of all free boxes
+    const freeBoxes: Box[] = [];
+    for (let x = 0; x < occupiedGrid.length - 1; x += 1) {
+        for (let y = 0; y < occupiedGrid[x].length - 1; y += 1) {
+            freeBoxes.push(...findAllFreeBoxes(x, y, occupiedGrid));
         }
     }
-    return false;
+
+    const biggestFreeArea = freeBoxes
+        .map((box) => ({ box, area: getBoxArea(box, verticesX, verticesY) }))
+        .sort((a, b) => b.area - a.area)[0];
+
+    return biggestFreeArea.box;
 }
 
 export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): number {
