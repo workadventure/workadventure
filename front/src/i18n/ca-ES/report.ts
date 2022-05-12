@@ -8,7 +8,8 @@ const report: NonNullable<Translation["report"]> = {
         block: "Bloquejar aquest usuari",
     },
     title: "Denunciar",
-    content: "Enviar un missatge de denúncia als administradors d'aquesta habitació. Pot ser que després suspenguin a aquest usuari.",
+    content:
+        "Enviar un missatge de denúncia als administradors d'aquesta habitació. Pot ser que després suspenguin a aquest usuari.",
     message: {
         title: "El vostre missatge: ",
         empty: "El missatge de denúncia no pot estar buit.",
