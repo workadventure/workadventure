@@ -105,9 +105,9 @@ export class MucRoom {
             xml("x", {
                 xmlns: "http://jabber.org/protocol/muc",
             }),
-            //add window location and have possibility to teleport on the user
+            //add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
-                id: window.location.toString(),
+                id: window.location.href.split('#')[0].toString(),
             }),
             //add uuid of the user to identify and target them on teleport
             xml("user", {
