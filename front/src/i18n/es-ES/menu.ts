@@ -34,7 +34,7 @@ const menu: NonNullable<Translation["menu"]> = {
             },
             long: {
                 high: "Vídeo de calidad alta (120 fps)",
-                medium: "Vídeo de calidad media (60 fps, recommended)",
+                medium: "Vídeo de calidad media (60 fps, recomendado)",
                 small: "Vídeo de calidad reducida (40 fps)",
                 minimum: "Vídeo de calidad mínima (20 fps)",
             },
@@ -49,7 +49,7 @@ const menu: NonNullable<Translation["menu"]> = {
             },
             long: {
                 high: "Vídeo de calidad alta (30 fps)",
-                medium: "Vídeo de calidad media (20 fps, recommended)",
+                medium: "Vídeo de calidad media (20 fps, recomendado)",
                 small: "Vídeo de calidad reducida  (10 fps)",
                 minimum: "Vídeo de calidad mínima (5 fps)",
             },
