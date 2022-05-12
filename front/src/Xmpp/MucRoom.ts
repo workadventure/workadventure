@@ -9,6 +9,11 @@ import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import {localUserStore} from "../Connexion/LocalUserStore";
+import Axios from "axios";
+import {PUSHER_URL} from "../Enum/EnvironmentVariable";
+import {layoutManagerActionStore} from "../Stores/LayoutManagerStore";
+import {get} from "svelte/store";
+import LL from "../i18n/i18n-svelte";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -22,22 +27,15 @@ export type User = {
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
-export const loadingTeleportStore = writable(false);
-
-export function goToWorkAdventureRoomId(roomId: string, uuid: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
-    loadingTeleportStore.set(true);
-    connection.emitAccessRoomMessage(uuid, roomId);
-    return mouseEvent;
+export type Teleport = {
+    state: boolean,
+    to: string | null
 }
-
-export function goToUser(roomId: string, uuid: string, mouseEvent: MouseEvent | undefined, connection: RoomConnection) {
-    loadingTeleportStore.set(true);
-    connection.emitAskPosition(uuid, roomId);
-    return mouseEvent;
-}
+export type TeleportStore = Readable<Teleport>;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
+    private teleportStore: Writable<Teleport>
 
     constructor(
         private connection: RoomConnection,
@@ -46,6 +44,32 @@ export class MucRoom {
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
+        this.teleportStore = writable<Teleport>({state: false, to: null});
+    }
+
+    public goTo(type: string, playUri: string, uuid: string){
+        this.teleportStore.set({state: true, to: uuid});
+        if(type === 'room'){
+            Axios
+                .get(`${PUSHER_URL}/room/access`, { params: { token: localUserStore.getAuthToken(), playUri, uuid }})
+                .then((_) => {
+                    window.location.assign(`${playUri}#moveToUuid=${uuid}`);
+                })
+                .catch((error) => {
+                    layoutManagerActionStore.addAction({
+                        uuid: "cantTeleport",
+                        type: "warning",
+                        message: get(LL).warning.accessDenied.teleport(),
+                        callback: () => {
+                            layoutManagerActionStore.removeAction('cantTeleport')
+                        },
+                        userInputManager: undefined,
+                    });
+                    this.resetTeleportStore();
+                });
+        } else if(type === 'user'){
+            this.connection.emitAskPosition(uuid, playUri);
+        }
     }
 
     public connect() {
@@ -92,28 +116,7 @@ export class MucRoom {
         );
         this.connection.emitXmlMessage(messagePresence);
 
-        //create list of user
-        /*const roster = xml("iq", {
-                from: this.jid,
-                type: 'set',
-                id: 'roster_2'
-            },
-            xml("query", {
-                    xmlns: 'jabber:iq:roster'
-                },
-                xml("item", {
-                        jid: this.roomJid.domain,
-                        name: gameManager.getPlayerName()
-                    },
-                    xml("group", "Servants")
-                )
-            ),
-        );
-        console.log('roster', roster);
-        this.connection.emitXmlMessage(roster);*/
-
-        //create MUC subscriber
-        //await new Promise(r => setTimeout(r, 5000));
+        // Create MUC subscriber
         const messageMucSubscribe = xml(
             "iq",
             {
@@ -150,7 +153,7 @@ export class MucRoom {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
 
-            //It's me and I want a profile details
+            //It's me (are you sure ?) and I want a profile details
             //TODO create profile details with XMPP connection
             if (from.toString() === me.toString()) {
                 return;
@@ -213,6 +216,16 @@ export class MucRoom {
         return {
             subscribe: this.presenceStore.subscribe,
         };
+    }
+
+    public getTeleportStore(): TeleportStore {
+        return {
+            subscribe: this.teleportStore.subscribe,
+        };
+    }
+
+    public resetTeleportStore(): void {
+        this.teleportStore.set({state: false, to: null});
     }
 
     private static encode(name: string | null | undefined){

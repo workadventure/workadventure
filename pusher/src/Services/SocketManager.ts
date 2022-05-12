@@ -1,7 +1,6 @@
 import { PusherRoom } from "../Model/PusherRoom";
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
-    AccessRoomMessage,
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
@@ -33,7 +32,6 @@ import {
     ViewportMessage,
     WebRtcSignalToServerMessage,
     WorldConnexionMessage,
-    TeleportMessage,
     TokenExpiredMessage,
     VariableMessage,
     ErrorMessage,
@@ -45,7 +43,7 @@ import {
     XmppMessage, AskPositionMessage
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import {ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY} from "../Enum/EnvironmentVariable";
+import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
 import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -743,36 +741,6 @@ export class SocketManager implements ZoneEventListener {
         }
         console.log("SocketManager => handleXmppMessage => ", xmppMessage.getStanza());
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
-    }
-
-    async handleAccessRoomMessage(client: ExSocketInterface, accessRoomMessage: AccessRoomMessage) {
-        let canAccess = false;
-        if (ADMIN_API_URL) {
-            try {
-                await adminService.fetchMemberDataByUuid(
-                    accessRoomMessage.getUseridentifier(),
-                    accessRoomMessage.getPlayuri(),
-                    client.IPAddress,
-                    []
-                );
-
-                canAccess = true;
-            } catch (err) {
-                console.warn("Access forbidden to this map => ", err);
-                //
-            }
-        } else {
-            canAccess = true;
-        }
-        const teleportMessage = new TeleportMessage();
-        teleportMessage.setCanaccess(canAccess);
-        teleportMessage.setPlayuri(accessRoomMessage.getPlayuri());
-        teleportMessage.setUseridentifier(accessRoomMessage.getUseridentifier());
-        if (!client.disconnecting) {
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setTeleportmessage(teleportMessage);
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        }
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {

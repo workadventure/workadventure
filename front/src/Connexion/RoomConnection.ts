@@ -45,8 +45,6 @@ import {
     AvailabilityStatus,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    AccessRoomMessage as AccessRoomMessageProto,
-    TeleportMessage as TeleportMessageProto,
     MoveToPositionMessage as MoveToPositionMessageProto
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
@@ -56,9 +54,7 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
-import {layoutManagerActionStore} from "../Stores/LayoutManagerStore";
-import LL from "../i18n/i18n-svelte";
-import {loadingTeleportStore} from "../Xmpp/MucRoom";
+import {mucRoomsStore} from "../Stores/MucRoomsStore";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -179,9 +175,6 @@ export class RoomConnection implements RoomConnection {
     private readonly _xmppMessageStream = new Subject<ElementExt>();
     public readonly xmppMessageStream = this._xmppMessageStream.asObservable();
 
-    private readonly _accessRoomMessageStream = new Subject<AccessRoomMessageProto>();
-    public readonly accessRoomMessageStream = this._accessRoomMessageStream.asObservable();
-
     // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
     private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
     public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
@@ -193,9 +186,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
-
-    private readonly _teleportMessageStream = new Subject<TeleportMessageProto>();
-    public readonly teleportMessageStream = this._teleportMessageStream.asObservable();
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
@@ -373,10 +363,6 @@ export class RoomConnection implements RoomConnection {
                                     break;
                                 }
                                 this._xmppMessageStream.next(elementExtParsed);
-                                break;
-                            }
-                            case "accessRoomMessage": {
-                                this._accessRoomMessageStream.next(subMessage.accessRoomMessage);
                                 break;
                             }
                             default: {
@@ -582,29 +568,13 @@ export class RoomConnection implements RoomConnection {
                     }
                     break;
                 }
-                case "teleportMessage": {
-                    console.log(message.teleportMessage);
-                    if(message.teleportMessage.canAccess) {
-                        window.location.assign(message.teleportMessage.playUri + `#moveToUuid=${message.teleportMessage.userIdentifier}`);
-                    } else {
-                        layoutManagerActionStore.addAction({
-                            uuid: "cantTeleport",
-                            type: "warning",
-                            message: get(LL).warning.accessDenied.teleport(),
-                            callback: () => {
-                                layoutManagerActionStore.removeAction('cantTeleport')
-                            },
-                            userInputManager: undefined,
-                        });
-                    }
-                    this._teleportMessageStream.next(message.teleportMessage);
-                    break;
-                }
                 case "moveToPositionMessage": {
                     if(message.moveToPositionMessage && message.moveToPositionMessage.position) {
                         const tileIndex = gameManager.getCurrentGameScene().getGameMap().getTileIndexAt(message.moveToPositionMessage.position.x, message.moveToPositionMessage.position.y);
                         gameManager.getCurrentGameScene().moveTo(tileIndex);
-                        loadingTeleportStore.set(false);
+                        get(mucRoomsStore).forEach(mucRoom => {
+                            mucRoom.resetTeleportStore();
+                        });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
@@ -1068,20 +1038,6 @@ export class RoomConnection implements RoomConnection {
                 $case: "xmppMessage",
                 xmppMessage: {
                     stanza: xml.toString(),
-                },
-            },
-        }).finish();
-
-        this.socket.send(bytes);
-    }
-
-    public emitAccessRoomMessage(uuid: string, playUri: string): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "accessRoomMessage",
-                accessRoomMessage: {
-                    userIdentifier: uuid,
-                    playUri
                 },
             },
         }).finish();

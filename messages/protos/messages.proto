@@ -126,8 +126,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     XmppMessage xmppMessage = 19;
-    AccessRoomMessage accessRoomMessage = 20;
-    AskPositionMessage askPositionMessage = 21;
+    AskPositionMessage askPositionMessage = 20;
   }
 }
 
@@ -176,17 +175,6 @@ message UserMovedMessage {
   PositionMessage position = 2;
 }
 
-message AccessRoomMessage {
-  string userIdentifier = 1;
-  string playUri = 2;
-}
-
-message TeleportMessage{
-  string userIdentifier = 1;
-  string playUri = 2;
-  bool canAccess = 3;
-}
-
 message MoveToPositionMessage{
   PositionMessage position = 1;
 }
@@ -204,7 +192,6 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     XmppMessage xmppMessage = 11;
-    AccessRoomMessage accessRoomMessage = 12;
   }
 }
 
@@ -407,8 +394,7 @@ message ServerToClientMessage {
     ErrorScreenMessage errorScreenMessage = 26;
     XmppSettingsMessage xmppSettingsMessage = 27;
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 28;
-    TeleportMessage teleportMessage = 29;
-    MoveToPositionMessage moveToPositionMessage = 30;
+    MoveToPositionMessage moveToPositionMessage = 29;
   }
 }
 
@@ -521,7 +507,6 @@ message SubToPusherMessage {
     EmoteEventMessage emoteEventMessage = 9;
     ErrorMessage errorMessage = 10;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 11;
-    TeleportMessage teleportMessage = 12;
   }
 }
 

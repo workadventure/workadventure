@@ -4,4 +4,4 @@ dist/
 /package-lock.json
 *.sh
 !templater.sh
-/public/iframe_api.js
+/svelte-check-watch/public/iframe_api.js

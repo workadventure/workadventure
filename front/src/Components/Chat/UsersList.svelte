@@ -1,6 +1,5 @@
 <script lang="ts">
-    import type { User, UserList, UsersStore } from "../../Xmpp/MucRoom";
-    import { loadingTeleportStore } from "../../Xmpp/MucRoom";
+    import type {Teleport, TeleportStore, User, UserList, UsersStore} from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
     import {
         walkAutomaticallyStore,
@@ -10,24 +9,29 @@
         shareLink,
         updateInputFieldValue,
     } from "../../Stores/GuestMenuStore";
-    import { goToWorkAdventureRoomId, goToUser, USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
-    import { onMount } from "svelte";
+    import { USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
+    import {createEventDispatcher, onMount} from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
-    import {RoomConnection} from "../../Connexion/RoomConnection";
-    import Spinner from "./Spinner.svelte";
+    import {localUserStore} from "../../Connexion/LocalUserStore";
 
     export let usersListStore: UsersStore;
     let usersList: UserList = new Map<string, User>();
-    let loadingTeleport: boolean = false;
 
-    export let connection: RoomConnection;
+    export let teleportStore: TeleportStore;
+    let teleport: Teleport = {state: false, to: null};
+
+    const dispatch = createEventDispatcher();
+
+    function goTo(type: string, roomId: string, uuid: string) {
+        dispatch('goTo', {type, roomId, uuid});
+    }
 
     onMount(() => {
         usersListStore.subscribe((value: UserList) => {
             usersList = value;
         });
-        loadingTeleportStore.subscribe(value => {
-            loadingTeleport = value;
+        teleportStore.subscribe((value: Teleport) => {
+            teleport = value;
         });
     });
 
@@ -81,23 +85,24 @@
                 <div>
                     <span>{user.nick}</span>
                     <div>
-                        {#if loadingTeleport === true}
-                            <button src="btn btn-primary" >
-                                {$LL.muc.userList.teleporting()}</button>
+                        {#if teleport.state === true}
+                            {#if teleport.to === user.uuid}
+                                <button src="btn btn-primary" >{$LL.muc.userList.teleporting()}</button>
+                            {/if}
                         {:else if user.status === USER_STATUS_DISCONNECTED}
                             <button src="btn btn-primary" disabled>
                                 {$LL.muc.userList.disconnected()}
                             </button>
                         {:else if user.isInSameMap === false}
                             <button
-                                on:click={(event) => goToWorkAdventureRoomId(user.roomId, user.uuid, event, connection)}
+                                on:click={() => goTo('room', user.roomId, localUserStore.getLocalUser()?.uuid || '')}
                                 src="btn btn-primary"
                             >
                                 {$LL.muc.userList.teleport()}
                             </button>
                         {:else}
                             <button
-                                    on:click={(event) => goToUser(user.roomId, user.uuid, event, connection)}
+                                    on:click={() => goTo('user', user.roomId, user.uuid)}
                                     src="btn btn-primary"
                             >
                                 {$LL.muc.userList.walkTo()}

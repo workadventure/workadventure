@@ -23,7 +23,6 @@ export const isMapDetailsData = z.object({
     }),
     mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
         description: 'The MUC room is a room of message',
-        example: "[org/world]",
     }),
 
     contactPage: extendApi(z.optional(z.nullable(z.string())), {

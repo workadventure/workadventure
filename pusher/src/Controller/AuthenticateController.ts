@@ -14,12 +14,31 @@ export interface TokenInterface {
 
 export class AuthenticateController extends BaseHttpController {
     routes() {
+        this.roomAccess();
         this.openIDLogin();
         this.openIDCallback();
         this.register();
         this.anonymLogin();
         this.profileCallback();
         this.me();
+    }
+
+    roomAccess(){
+        this.app.get("/room/access", async (req, res) => {
+            try {
+                const {uuid, playUri} = parse(req.path_query);
+                if (!uuid || !playUri) {
+                    throw new Error("Missing uuid and playUri parameters.");
+                }
+                return res.json(await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, []));
+            } catch (e) {
+                console.warn(e);
+            }
+            res.status(500);
+            res.send("User cannot be identified.");
+            return;
+            }
+        );
     }
 
     openIDLogin() {
@@ -498,7 +517,7 @@ export class AuthenticateController extends BaseHttpController {
      * @param playUri
      * @param IPAddress
      * @return
-     |object
+        |object
      * @private
      */
     private async getUserByUserIdentifier(

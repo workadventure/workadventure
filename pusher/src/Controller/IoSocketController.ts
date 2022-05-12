@@ -21,7 +21,7 @@ import {
     VariableMessage,
     LockGroupPromptMessage,
     XmppMessage,
-    AccessRoomMessage, AskPositionMessage,
+    AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -607,8 +607,6 @@ export class IoSocketController {
                     );
                 } else if (message.hasXmppmessage()) {
                     socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
-                } else if (message.hasAccessroommessage()) {
-                    socketManager.handleAccessRoomMessage(client, message.getAccessroommessage() as AccessRoomMessage).then().catch();
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(client, message.getAskpositionmessage() as AskPositionMessage);
                 }
