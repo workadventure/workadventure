@@ -3,7 +3,7 @@ import { getGridCoordinates } from "../../../src/Stores/BiggestAvailableAreaStor
 import { Box } from "../../../src/WebRtc/LayoutManager";
 
 describe("Biggest Area 2. Create Occupied Grid", () => {
-    it("should be true", () => {
+    it("Should be exact as predefined occupied grid", () => {
         const blocker1: Box = { xStart: 50, yStart: 100, xEnd: 150, yEnd: 300 };
         const blocker2: Box = { xStart: 200, yStart: 50, xEnd: 650, yEnd: 350 };
         const blocker3: Box = { xStart: 400, yStart: 400, xEnd: 600, yEnd: 600 };

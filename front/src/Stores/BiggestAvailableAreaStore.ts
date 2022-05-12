@@ -50,7 +50,7 @@ function findBiggestAvailableArea(): Box {
     const allSquares: Box[] = [];
     for (let x = 0; x < occupiedSpace.length - 1; x += 1) {
         for (let y = 0; y < occupiedSpace[x].length - 1; y += 1) {
-            allSquares.push(...findSquares(x, y, occupiedSpace));
+            allSquares.push(...findAllFreeBoxes(x, y, occupiedSpace));
         }
     }
     // console.log(allSquares);
@@ -65,7 +65,7 @@ function findBiggestAvailableArea(): Box {
 
     // get biggest free square
     const freeSquaresAreas = freeSquares
-        .map((square) => ({ square, area: getSquareArea(square, xVertices, yVertices) }))
+        .map((square) => ({ square, area: getBoxArea(square, xVertices, yVertices) }))
         .sort((a, b) => {
             if (a.area < b.area) {
                 return 1;
@@ -127,28 +127,9 @@ function isOverlappingWithBoxes(box: Box, targetBoxes: Box[], xVertices: number[
     return false;
 }
 
-function findSquares(left: number, top: number, grid: boolean[][]): Box[] {
-    if (grid.length < 2) {
-        return [];
-    }
-    if (grid[0].length < 2) {
-        return [];
-    }
-
-    const squares: Box[] = [];
-
-    for (let x = left + 1; x < grid.length; x += 1) {
-        for (let y = top + 1; y < grid[x].length; y += 1) {
-            squares.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
-        }
-    }
-
-    return squares;
-}
-
-function getSquareArea(square: Box, xVertices: number[], yVertices: number[]): number {
-    const width = xVertices[square.xEnd] - xVertices[square.xStart];
-    const height = yVertices[square.yEnd] - yVertices[square.yStart];
+export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): number {
+    const width = xVertices[box.xEnd + 1] - xVertices[box.xStart];
+    const height = yVertices[box.yEnd + 1] - yVertices[box.yStart];
     return width * height;
 }
 
@@ -164,6 +145,37 @@ function createBiggestAvailableAreaStore() {
             set(findBiggestAvailableArea());
         },
     };
+}
+
+export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): Box[] {
+    if (grid.length === 0) {
+        return [];
+    }
+    if (grid[0].length === 0) {
+        return [];
+    }
+    if (grid[top][left] === true) {
+        return [];
+    }
+
+    const squares: Box[] = [];
+
+    // we expect grid rows to be of the same length
+    let xEnd = grid[0].length;
+
+    for (let y = top; y < grid.length; y += 1) {
+        for (let x = left; x < xEnd; x += 1) {
+            // do not add squares with occupied parts
+            if (grid[y][x] === true) {
+                // no point in trying to find free square after this column
+                xEnd = x;
+                break;
+            }
+            squares.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
+        }
+    }
+
+    return squares;
 }
 
 export function getGridCoordinates(x: number, y: number, verticesX: number[], verticesY: number[]): [number, number] {
