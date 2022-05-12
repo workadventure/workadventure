@@ -1,0 +1,25 @@
+import type { BaseTranslation } from "../i18n-types";
+
+const report: BaseTranslation = {
+    block: {
+        title: "Bloquear",
+        content: "Bloquear cualquier comunicación desde y hacia {userName}. Este cambio se puede revertir.",
+        unblock: "Desbloquear este usuario",
+        block: "Bloquear este usuario",
+    },
+    title: "Reportar",
+    content: "Enviar un mensaje de reporte a los administradores de esta habitación. Puede que luego suspendan a este usuario.",
+    message: {
+        title: "Su mensaje: ",
+        empty: "El mensaje de reporte no puede estar vacío.",
+    },
+    submit: "Reportar a este usuario",
+    moderate: {
+        title: "Moderar a {userName}",
+        block: "Bloquear",
+        report: "Reportar",
+        noSelect: "ERROR : No se ha seleccionado una acción.",
+    },
+};
+
+export default report;
