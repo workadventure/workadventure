@@ -7,19 +7,19 @@ services:
       - --providers.docker
       # Entry points
       - --entryPoints.web.address=:${HTTP_PORT}
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
-      - --entryPoints.websecure.address=:${HTTPS_PORT}
+#      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+#      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+#      - --entryPoints.websecure.address=:${HTTPS_PORT}
       # HTTP challenge
-      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
+#      - --certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}
+#      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+#      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
       # Let's Encrypt's staging server
       # uncomment during testing to avoid rate limiting
       #- --certificatesresolvers.dnsresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
     ports:
       - "${HTTP_PORT}:80"
-      - "${HTTPS_PORT}:443"
+#      - "${HTTPS_PORT}:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DATA_DIR}/letsencrypt/:/letsencrypt/
@@ -49,11 +49,11 @@ services:
       - "traefik.http.routers.front.rule=Host(`${FRONT_HOST}`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=80"
-      - "traefik.http.routers.front-ssl.rule=Host(`${FRONT_HOST}`)"
-      - "traefik.http.routers.front-ssl.entryPoints=websecure"
-      - "traefik.http.routers.front-ssl.service=front"
-      - "traefik.http.routers.front-ssl.tls=true"
-      - "traefik.http.routers.front-ssl.tls.certresolver=myresolver"
+#      - "traefik.http.routers.front-ssl.rule=Host(`${FRONT_HOST}`)"
+#      - "traefik.http.routers.front-ssl.entryPoints=websecure"
+#      - "traefik.http.routers.front-ssl.service=front"
+#      - "traefik.http.routers.front-ssl.tls=true"
+#      - "traefik.http.routers.front-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
   pusher:
@@ -63,7 +63,7 @@ services:
       - SECRET_JITSI_KEY
       - SECRET_KEY
       - API_URL
-      - FRONT_URL=https://${FRONT_HOST}
+      - FRONT_URL=http://${FRONT_HOST}
       - JITSI_URL
       - JITSI_ISS
       - DISABLE_ANONYMOUS
@@ -71,11 +71,11 @@ services:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`${PUSHER_HOST}`)"
-      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
-      - "traefik.http.routers.pusher-ssl.service=pusher"
-      - "traefik.http.routers.pusher-ssl.tls=true"
-      - "traefik.http.routers.pusher-ssl.tls.certresolver=myresolver"
+#      - "traefik.http.routers.pusher-ssl.rule=Host(`${PUSHER_HOST}`)"
+#      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
+#      - "traefik.http.routers.pusher-ssl.service=pusher"
+#      - "traefik.http.routers.pusher-ssl.tls=true"
+#      - "traefik.http.routers.pusher-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
   back:
@@ -100,11 +100,11 @@ services:
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
-      - "traefik.http.routers.back-ssl.rule=Host(`${BACK_HOST}`)"
-      - "traefik.http.routers.back-ssl.entryPoints=websecure"
-      - "traefik.http.routers.back-ssl.service=back"
-      - "traefik.http.routers.back-ssl.tls=true"
-      - "traefik.http.routers.back-ssl.tls.certresolver=myresolver"
+#      - "traefik.http.routers.back-ssl.rule=Host(`${BACK_HOST}`)"
+#      - "traefik.http.routers.back-ssl.entryPoints=websecure"
+#      - "traefik.http.routers.back-ssl.service=back"
+#      - "traefik.http.routers.back-ssl.tls=true"
+#      - "traefik.http.routers.back-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
   icon:
@@ -113,11 +113,11 @@ services:
       - "traefik.http.routers.icon.rule=Host(`${ICON_HOST}`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
-      - "traefik.http.routers.icon-ssl.rule=Host(`${ICON_HOST}`)"
-      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
-      - "traefik.http.routers.icon-ssl.service=icon"
-      - "traefik.http.routers.icon-ssl.tls=true"
-      - "traefik.http.routers.icon-ssl.tls.certresolver=myresolver"
+#      - "traefik.http.routers.icon-ssl.rule=Host(`${ICON_HOST}`)"
+#      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
+#      - "traefik.http.routers.icon-ssl.service=icon"
+#      - "traefik.http.routers.icon-ssl.tls=true"
+#      - "traefik.http.routers.icon-ssl.tls.certresolver=myresolver"
 
   redis:
     image: redis:6
