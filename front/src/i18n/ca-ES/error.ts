@@ -12,7 +12,7 @@ const error: NonNullable<Translation["error"]> = {
         details: "Si voleu més informació, podeu contactar amb l'administrador o contacteu amb nosaltres a: hello@workadventu.re",
     },
     connectionRetry: {
-        unableConnect: "No s'ha pogut conectar amb WorkAdventure. Esteu contectats a internet?",
+        unableConnect: "No s'ha pogut conectar amb WorkAdventure. Esteu conectats a internet?",
     },
     error: "Error",
 };

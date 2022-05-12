@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 const login: NonNullable<Translation["login"]> = {
     input: {
         name: {
-            placeholder: "Introduiu el vostre nombre",
+            placeholder: "Introduïu el vostre nombre",
             empty: "El nom està buit",
         },
     },

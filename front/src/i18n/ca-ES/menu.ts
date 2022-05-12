@@ -84,7 +84,7 @@ const menu: NonNullable<Translation["menu"]> = {
         text: "Text",
         audio: "Audio",
         warning: "Emissió a totes les habitacions del món",
-        enter: "Introduiu el vostre missatge aquí...",
+        enter: "Introduïu el vostre missatge aquí...",
         send: "Enviar",
     },
     globalAudio: {
@@ -95,7 +95,7 @@ const menu: NonNullable<Translation["menu"]> = {
         gettingStarted: {
             title: "Començar",
             description:
-                "WorkAdventure us permet crear un espai en línia per comunicar-vos espontàneament amb altres. I tot comença creant el vostre propi espai. Escolliu d'una gran selecció de mapes prefabricats pel nostre equip.",
+                "WorkAdventure us permet crear un espai en línia per comunicar-vos espontàneament amb altres. I tot comença creant el vostre propi espai. Escolliu entre una gran selecció de mapes prefabricats pel nostre equip.",
         },
         createMap: {
             title: "Crear el vostre mapa",
