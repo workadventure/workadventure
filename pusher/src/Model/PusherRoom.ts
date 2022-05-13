@@ -1,8 +1,8 @@
-import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
-import {PositionDispatcher} from "./PositionDispatcher";
-import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
-import {ZoneEventListener} from "../Model/Zone";
-import {apiClientRepository} from "../Services/ApiClientRepository";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
+import { PositionDispatcher } from "./PositionDispatcher";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
+import { ZoneEventListener } from "../Model/Zone";
+import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
     BatchToPusherRoomMessage,
     ErrorMessage,
@@ -11,8 +11,8 @@ import {
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
-import {ClientReadableStream} from "grpc";
-import {XmppClient} from "../Services/XmppClient";
+import { ClientReadableStream } from "grpc";
+import { XmppClient } from "../Services/XmppClient";
 
 const debug = Debug("room");
 

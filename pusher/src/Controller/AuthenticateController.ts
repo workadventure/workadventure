@@ -21,23 +21,24 @@ export class AuthenticateController extends BaseHttpController {
         this.me();
     }
 
-    roomAccess(){
+    roomAccess() {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/room/access", async (req, res) => {
             try {
-                const {uuid, playUri} = parse(req.path_query);
+                const { uuid, playUri } = parse(req.path_query);
                 if (!uuid || !playUri) {
                     throw new Error("Missing uuid and playUri parameters.");
                 }
-                return res.json(await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, []));
+                return res.json(
+                    await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                );
             } catch (e) {
                 console.warn(e);
             }
             res.status(500);
             res.send("User cannot be identified.");
             return;
-            }
-        );
+        });
     }
 
     openIDLogin() {
@@ -544,7 +545,7 @@ export class AuthenticateController extends BaseHttpController {
             userRoomToken: undefined,
             jabberId: null,
             jabberPassword: null,
-            mucRooms: []
+            mucRooms: [],
         };
         try {
             data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);

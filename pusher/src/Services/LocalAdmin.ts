@@ -17,7 +17,7 @@ class LocalAdmin implements AdminInterface {
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
         // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-        const matched = playUri.match('/[_@*]/.+/.+/');
+        const matched = playUri.match("/[_@*]/.+/.+/");
         return Promise.resolve({
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
-            mucRooms: [{name: 'Default Room', uri: matched?.join().substring(0, -1)}]
+            mucRooms: [{ name: "Default Room", uri: matched?.join().substring(0, -1) }],
         });
     }
 

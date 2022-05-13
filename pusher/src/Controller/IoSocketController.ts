@@ -324,7 +324,7 @@ export class IoSocketController {
                             userRoomToken: undefined,
                             jabberId: null,
                             jabberPassword: null,
-                            mucRooms: []
+                            mucRooms: [],
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -615,7 +615,10 @@ export class IoSocketController {
                 } else if (message.hasXmppmessage()) {
                     socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
-                    socketManager.handleAskPositionMessage(client, message.getAskpositionmessage() as AskPositionMessage);
+                    socketManager.handleAskPositionMessage(
+                        client,
+                        message.getAskpositionmessage() as AskPositionMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */

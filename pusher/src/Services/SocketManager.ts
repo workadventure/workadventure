@@ -40,7 +40,8 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
-    XmppMessage, AskPositionMessage
+    XmppMessage,
+    AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
@@ -125,10 +126,10 @@ export class SocketManager implements ZoneEventListener {
             .on("end", () => {
                 console.warn(
                     "Admin connection lost to back server '" +
-                    apiClient.getChannel().getTarget() +
-                    "' for room '" +
-                    roomId +
-                    "'"
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "'"
                 );
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
@@ -139,10 +140,10 @@ export class SocketManager implements ZoneEventListener {
             .on("error", (err: Error) => {
                 console.error(
                     "Error in connection to back server '" +
-                    apiClient.getChannel().getTarget() +
-                    "' for room '" +
-                    roomId +
-                    "':",
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
                     err
                 );
                 if (!client.disconnecting) {
@@ -232,10 +233,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("end", () => {
                     console.warn(
                         "Connection lost to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        client.roomId +
-                        "'"
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "'"
                     );
                     if (client.xmppClient) {
                         client.xmppClient.close();
@@ -250,10 +251,10 @@ export class SocketManager implements ZoneEventListener {
                 .on("error", (err: Error) => {
                     console.error(
                         "Error in connection to back server '" +
-                        apiClient.getChannel().getTarget() +
-                        "' for room '" +
-                        client.roomId +
-                        "':",
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
                         err
                     );
                     if (!client.disconnecting) {

@@ -48,5 +48,5 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
-    mucRooms: Array<Array<string>>
+    mucRooms: Array<Array<string>>;
 }
