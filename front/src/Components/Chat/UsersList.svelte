@@ -81,7 +81,7 @@
         </label>
     {:else}
         {#each [...usersList] as [jid, user]}
-            <li class={user.status}>
+            <li class={user.status} id={jid}>
                 <div>
                     <span>{user.nick}</span>
                     <div>
