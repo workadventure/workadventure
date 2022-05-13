@@ -45,7 +45,7 @@ import {
     AvailabilityStatus,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    MoveToPositionMessage as MoveToPositionMessageProto
+    MoveToPositionMessage as MoveToPositionMessageProto,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -54,7 +54,7 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
-import {mucRoomsStore} from "../Stores/MucRoomsStore";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -570,10 +570,16 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "moveToPositionMessage": {
-                    if(message.moveToPositionMessage && message.moveToPositionMessage.position) {
-                        const tileIndex = gameManager.getCurrentGameScene().getGameMap().getTileIndexAt(message.moveToPositionMessage.position.x, message.moveToPositionMessage.position.y);
+                    if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
+                        const tileIndex = gameManager
+                            .getCurrentGameScene()
+                            .getGameMap()
+                            .getTileIndexAt(
+                                message.moveToPositionMessage.position.x,
+                                message.moveToPositionMessage.position.y
+                            );
                         gameManager.getCurrentGameScene().moveTo(tileIndex);
-                        get(mucRoomsStore).forEach(mucRoom => {
+                        get(mucRoomsStore).forEach((mucRoom) => {
                             mucRoom.resetTeleportStore();
                         });
                     }
@@ -1045,13 +1051,13 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitAskPosition(uuid: string, playUri: string){
+    public emitAskPosition(uuid: string, playUri: string) {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "askPositionMessage",
                 askPositionMessage: {
                     userIdentifier: uuid,
-                    playUri
+                    playUri,
                 },
             },
         }).finish();

@@ -1699,13 +1699,13 @@ ${escapedMessage}
 
     private tryMovePlayerWithMoveToUuidParameter(): void {
         const uuidParam = urlManager.getHashParameter("moveToUuid");
-        if (uuidParam){
+        if (uuidParam) {
             this.connection?.emitAskPosition(uuidParam, this.roomUrl);
             urlManager.clearHashParameter();
         }
     }
 
-    public moveTo(position: { x: number; y: number; }){
+    public moveTo(position: { x: number; y: number }) {
         this.pathfindingManager
             .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
             .then((path) => {

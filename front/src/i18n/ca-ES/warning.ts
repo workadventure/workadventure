@@ -10,7 +10,7 @@ const warning: NonNullable<Translation["warning"]> = {
     accessDenied: {
         camera: "Accés a la càmera denegat. Feu clic aquí i reviseu els permissos del vostre navegador.",
         screenSharing: "Compartir pantalla denegat. Feu clic aquí i reviseu els permissos del vostre navegador.",
-        teleport: "Não está autorizado a teletransportar-se para este utilizador."
+        teleport: "Não está autorizado a teletransportar-se para este utilizador.",
     },
     importantMessage: "Missatge important",
     connectionLost: "Conexió perduda. Reconectant...",

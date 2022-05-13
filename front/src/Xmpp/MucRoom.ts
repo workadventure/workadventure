@@ -8,19 +8,19 @@ import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import {localUserStore} from "../Connexion/LocalUserStore";
+import { localUserStore } from "../Connexion/LocalUserStore";
 import Axios from "axios";
-import {PUSHER_URL} from "../Enum/EnvironmentVariable";
-import {layoutManagerActionStore} from "../Stores/LayoutManagerStore";
-import {get} from "svelte/store";
+import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
+import { get } from "svelte/store";
 import LL from "../i18n/i18n-svelte";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
-    nick: string,
+    nick: string;
     roomId: string;
-    uuid: string,
+    uuid: string;
     status: string;
     isInSameMap: boolean;
 };
@@ -28,14 +28,14 @@ export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
 export type Teleport = {
-    state: boolean,
-    to: string | null
-}
+    state: boolean;
+    to: string | null;
+};
 export type TeleportStore = Readable<Teleport>;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
-    private teleportStore: Writable<Teleport>
+    private teleportStore: Writable<Teleport>;
 
     constructor(
         private connection: RoomConnection,
@@ -44,14 +44,13 @@ export class MucRoom {
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
-        this.teleportStore = writable<Teleport>({state: false, to: null});
+        this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
-    public goTo(type: string, playUri: string, uuid: string){
-        this.teleportStore.set({state: true, to: uuid});
-        if(type === 'room'){
-            Axios
-                .get(`${PUSHER_URL}/room/access`, { params: { token: localUserStore.getAuthToken(), playUri, uuid }})
+    public goTo(type: string, playUri: string, uuid: string) {
+        this.teleportStore.set({ state: true, to: uuid });
+        if (type === "room") {
+            Axios.get(`${PUSHER_URL}/room/access`, { params: { token: localUserStore.getAuthToken(), playUri, uuid } })
                 .then((_) => {
                     window.location.assign(`${playUri}#moveToUuid=${uuid}`);
                 })
@@ -61,13 +60,13 @@ export class MucRoom {
                         type: "warning",
                         message: get(LL).warning.accessDenied.teleport(),
                         callback: () => {
-                            layoutManagerActionStore.removeAction('cantTeleport')
+                            layoutManagerActionStore.removeAction("cantTeleport");
                         },
                         userInputManager: undefined,
                     });
                     this.resetTeleportStore();
                 });
-        } else if(type === 'user'){
+        } else if (type === "user") {
             this.connection.emitAskPosition(uuid, playUri);
         }
     }
@@ -84,12 +83,9 @@ export class MucRoom {
                 from: this.jid,
                 id: uuidv4(),
             },
-            xml(
-                "subscriptions",
-                {
-                    xmlns: "urn:xmpp:mucsub:0",
-                }
-            )
+            xml("subscriptions", {
+                xmlns: "urn:xmpp:mucsub:0",
+            })
         );
         this.connection.emitXmlMessage(messageMucListAllUsers);
 
@@ -107,7 +103,7 @@ export class MucRoom {
             }),
             //add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
-                id: window.location.href.split('#')[0].toString(),
+                id: window.location.href.split("#")[0].toString(),
             }),
             //add uuid of the user to identify and target them on teleport
             xml("user", {
@@ -131,12 +127,11 @@ export class MucRoom {
                     xmlns: "urn:xmpp:mucsub:0",
                     nick: gameManager.getPlayerName(),
                 },
-                xml("event", {node: "urn:xmpp:mucsub:nodes:messages"}),
-                xml("event", {node: "urn:xmpp:mucsub:nodes:presence"})
+                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
             )
         );
         this.connection.emitXmlMessage(messageMucSubscribe);
-
     }
 
     public disconnect() {
@@ -162,7 +157,7 @@ export class MucRoom {
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
-                const jid = x.getChild('item')?.getAttr('jid').split('/')[0];
+                const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 this.presenceStore.update((list) => {
@@ -170,7 +165,7 @@ export class MucRoom {
                         nick: from.resource,
                         roomId,
                         uuid,
-                        status: (type === "unavailable")?USER_STATUS_DISCONNECTED:USER_STATUS_AVAILABLE,
+                        status: type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         isInSameMap: roomId === getRoomId(),
                     });
 
@@ -181,19 +176,19 @@ export class MucRoom {
 
                 handledMessage = true;
             }
-        } else if(xml.getName() === "iq"){
+        } else if (xml.getName() === "iq") {
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const roomId = xml.getChild("room")?.getAttr("id");
-            if(subscriptions) {
-                subscriptions.forEach(subscription => {
+            if (subscriptions) {
+                subscriptions.forEach((subscription) => {
                     const user = localUserStore.getLocalUser();
                     const jid = subscription.getAttr("jid");
-                    if((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid))+'@ejabberd' !== jid) {
+                    if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid) {
                         this.presenceStore.update((list) => {
                             list.set(jid, {
                                 nick: subscription.getAttr("nick"),
                                 roomId,
-                                uuid: '',
+                                uuid: "",
                                 status: USER_STATUS_DISCONNECTED,
                                 isInSameMap: roomId === getRoomId(),
                             });
@@ -225,21 +220,21 @@ export class MucRoom {
     }
 
     public resetTeleportStore(): void {
-        this.teleportStore.set({state: false, to: null});
+        this.teleportStore.set({ state: false, to: null });
     }
 
-    private static encode(name: string | null | undefined){
-        if(!name) return name;
+    private static encode(name: string | null | undefined) {
+        if (!name) return name;
         return name
-            .replace('\\/g', '\\5c')
-            .replace(' /g','\\20')
-            .replace('*/g', '\\22')
-            .replace('&/g', '\\26')
-            .replace('\'/g', '\\27')
-            .replace('//g', '\\2f')
-            .replace(':/g', '\\3a')
-            .replace('</g', '\\3c')
-            .replace('>/g', '\\3e')
-            .replace('@/g', '\\40')
+            .replace("\\/g", "\\5c")
+            .replace(" /g", "\\20")
+            .replace("*/g", "\\22")
+            .replace("&/g", "\\26")
+            .replace("'/g", "\\27")
+            .replace("//g", "\\2f")
+            .replace(":/g", "\\3a")
+            .replace("</g", "\\3c")
+            .replace(">/g", "\\3e")
+            .replace("@/g", "\\40");
     }
 }
