@@ -22,6 +22,7 @@ export const OPID_SCOPE = process.env.OPID_SCOPE || "openid email";
 export const OPID_USERNAME_CLAIM = process.env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = process.env.OPID_LOCALE_CLAIM || "locale";
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
+export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = process.env.EJABBERD_DOMAIN || "";
 export const EJABBERD_JWT_SECRET: string = process.env.EJABBERD_JWT_SECRET || "";
 

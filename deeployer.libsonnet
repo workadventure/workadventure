@@ -22,6 +22,7 @@
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
          "REDIS_HOST": "redis",
+         "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -41,6 +42,7 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
               "REDIS_HOST": "redis",
+              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -59,6 +61,8 @@
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
+              "FRONT_URL": "https://play-"+url,
+              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
               "FRONT_URL": "https://play-"+url,
               "EJABBERD_DOMAIN": "ejabberd",
               # Only used if you set up a JWT authentication mechanism in Ejabberd
