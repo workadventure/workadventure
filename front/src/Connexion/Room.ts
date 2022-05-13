@@ -27,7 +27,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
-    private _mucRooms: Array<any> | undefined;
+    private _mucRooms: Array<Object> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
@@ -232,7 +232,7 @@ export class Room {
         return this._loginSceneLogo;
     }
 
-    get mucRooms(): Array<any> | undefined {
+    get mucRooms(): Array<Object> | undefined {
         return this._mucRooms;
     }
 
