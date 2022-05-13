@@ -1,6 +1,6 @@
-import { BaseTranslation } from "../i18n-types";
+import {Translation} from "../i18n-types";
 
-const muc: BaseTranslation = {
+const muc: NonNullable<Translation["muc"]> = {
     title: "Users list",
     userList: {
         disconnected: "Disconnected",

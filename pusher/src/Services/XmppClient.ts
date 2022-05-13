@@ -74,7 +74,6 @@ export class XmppClient {
                 password: this.clientPassword,
                 roomId: this.clientSocket.roomId,
             });
-            //debug(xmpp); // Display XMPP logs if environment variable XMPP_DEBUG is set
 
             xmpp.on("error", (err: string) => {
                 console.error("XmppClient => receive => error =>", err);

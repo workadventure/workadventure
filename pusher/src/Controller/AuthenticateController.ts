@@ -10,10 +10,6 @@ import { adminService } from "../Services/AdminService";
 import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
-export interface TokenInterface {
-    userUuid: string;
-}
-
 export class AuthenticateController extends BaseHttpController {
     routes() {
         this.roomAccess();

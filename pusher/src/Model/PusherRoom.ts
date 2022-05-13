@@ -1,8 +1,8 @@
-import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import { PositionDispatcher } from "./PositionDispatcher";
-import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
-import { ZoneEventListener } from "../Model/Zone";
-import { apiClientRepository } from "../Services/ApiClientRepository";
+import {ExSocketInterface} from "../Model/Websocket/ExSocketInterface";
+import {PositionDispatcher} from "./PositionDispatcher";
+import {ViewportInterface} from "../Model/Websocket/ViewportMessage";
+import {ZoneEventListener} from "../Model/Zone";
+import {apiClientRepository} from "../Services/ApiClientRepository";
 import {
     BatchToPusherRoomMessage,
     ErrorMessage,
@@ -11,17 +11,10 @@ import {
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
-import { ClientReadableStream } from "grpc";
-import { XmppClient } from "../Services/XmppClient";
-import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import {ClientReadableStream} from "grpc";
+import {XmppClient} from "../Services/XmppClient";
 
 const debug = Debug("room");
-
-export enum GameRoomPolicyTypes {
-    ANONYMOUS_POLICY = 1,
-    MEMBERS_ONLY_POLICY,
-    USE_TAGS_POLICY,
-}
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
@@ -31,7 +24,6 @@ export class PusherRoom {
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    //private xmppListeners: Map<string, XmppClient> = new Map();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
@@ -56,22 +48,16 @@ export class PusherRoom {
         if (!this.mucRooms) {
             return;
         }
-        const xmppClient = new XmppClient(socket, this.mucRooms);
-        //await xmppClient.joinRoom(this.groupId || this.roomUrl, socket.name);
 
-        //this.xmppListeners.set(socket.userUuid, xmppClient);
-        socket.xmppClient = xmppClient;
+        socket.xmppClient = new XmppClient(socket, this.mucRooms);
         socket.pusherRoom = this;
     }
 
     public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-        //const client = this.xmppListeners.get(socket.userUuid);
         if (socket.xmppClient) {
-            console.log("leave => close");
             socket.xmppClient.close();
-            //this.xmppListeners.delete(socket.userUuid);
         }
         socket.pusherRoom = undefined;
     }
@@ -161,12 +147,8 @@ export class PusherRoom {
         this.backConnection.cancel();
 
         debug("Closing connections to XMPP server for room %s", this.roomUrl);
-        /*for (const [id, client] of this.xmppListeners) {
-            client.close();
-        }*/
         for (const client of this.listeners) {
             client.xmppClient?.close();
         }
-        //this.xmppListeners.clear();
     }
 }

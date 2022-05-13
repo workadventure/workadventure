@@ -38,7 +38,7 @@ import {
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
     AskPositionMessage,
-    MoveToPositionMessage
+    MoveToPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -919,7 +919,7 @@ export class SocketManager {
     handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
         const moveToPositionMessage = new MoveToPositionMessage();
 
-        if(room) {
+        if (room) {
             const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
             const position = userToJoin?.getPosition();
             if (position) {
@@ -930,7 +930,7 @@ export class SocketManager {
                 user.socket.write(clientMessage);
             }
 
-            if(room.isEmpty()) {
+            if (room.isEmpty()) {
                 // TODO delete room;
             }
         }

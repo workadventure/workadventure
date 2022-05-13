@@ -37,13 +37,11 @@ export class XmppClient {
 
             const from = xml.getAttr("from");
 
-            console.log("XmppClient => xmppMessageStream => from", from);
             if (from) {
                 const fromJid = jid(from);
                 const roomJid = jid(fromJid.local, fromJid.domain);
 
                 const room = this.rooms.get(roomJid.toString());
-                console.log("XmppClient => xmppMessageStream => room", room);
                 if (room) {
                     room.onMessage(xml);
                     handledMessage = true;

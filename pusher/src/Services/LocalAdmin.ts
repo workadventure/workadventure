@@ -16,6 +16,7 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
+        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
         const matched = playUri.match('/[_@*]/.+/.+/');
         return Promise.resolve({
             email: userIdentifier,
