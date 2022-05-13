@@ -22,6 +22,7 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     roomAccess(){
+        //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/room/access", async (req, res) => {
             try {
                 const {uuid, playUri} = parse(req.path_query);
