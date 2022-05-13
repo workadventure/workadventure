@@ -231,15 +231,15 @@ export class MucRoom {
     private static encode(name: string | null | undefined){
         if(!name) return name;
         return name
-            .replace('\\', '\\5c')
-            .replace(' ','\\20')
-            .replace('*', '\\22')
-            .replace('&', '\\26')
-            .replace('\'', '\\27')
-            .replace('/', '\\2f')
-            .replace(':', '\\3a')
-            .replace('<', '\\3c')
-            .replace('>', '\\3e')
-            .replace('@', '\\40')
+            .replace('\\/g', '\\5c')
+            .replace(' /g','\\20')
+            .replace('*/g', '\\22')
+            .replace('&/g', '\\26')
+            .replace('\'/g', '\\27')
+            .replace('//g', '\\2f')
+            .replace(':/g', '\\3a')
+            .replace('</g', '\\3c')
+            .replace('>/g', '\\3e')
+            .replace('@/g', '\\40')
     }
 }
