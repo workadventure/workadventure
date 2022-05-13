@@ -2,21 +2,21 @@ import type { Translation } from "../i18n-types";
 
 const woka: NonNullable<Translation["woka"]> = {
     customWoka: {
-        title: "Personalice su WOKA",
+        title: "Personalitzar el vostre WOKA",
         navigation: {
-            return: "Volver",
-            back: "Atrás",
+            return: "Tornar",
+            back: "Enrere",
             finish: "Acabar",
-            next: "Siguiente",
+            next: "Segūent",
         },
     },
     selectWoka: {
-        title: "Seleccionar su WOKA",
-        continue: "Continaur",
-        customize: "Personalizar su WOKA",
+        title: "Seleccionar el vostre WOKA",
+        continue: "Continuar",
+        customize: "Personalitzar el vostre WOKA",
     },
     menu: {
-        businessCard: "Tarjeta de visita",
+        businessCard: "Targeta de visita",
     },
 };
 
