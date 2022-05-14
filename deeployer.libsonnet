@@ -65,7 +65,7 @@
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
               "EJABBERD_DOMAIN": "ejabberd",
               # Only used if you set up a JWT authentication mechanism in Ejabberd
-              "EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
+              "EJABBERD_JWT_SECRET": env.ADMIN_API_TOKEN,
 
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
