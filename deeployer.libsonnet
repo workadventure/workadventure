@@ -63,7 +63,6 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
-              "FRONT_URL": "https://play-"+url,
               "EJABBERD_DOMAIN": "ejabberd",
               # Only used if you set up a JWT authentication mechanism in Ejabberd
               "EJABBERD_JWT_SECRET": "mySecretJwtToken",
