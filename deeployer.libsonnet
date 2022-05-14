@@ -63,19 +63,21 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
-              "EJABBERD_DOMAIN": "ejabberd",
-              # Only used if you set up a JWT authentication mechanism in Ejabberd
-              "EJABBERD_JWT_SECRET": env.ADMIN_API_TOKEN,
 
             } + (if adminUrl != null then {
+              # Admin
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+              # Opid client
               "OPID_CLIENT_ID": "auth-code-client",
               "OPID_CLIENT_SECRET": "mySecretHydraWA2022",
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
               "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
+              # Ejabberd
+              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
+              "EJABBERD_JWT_SECRET": env.ADMIN_API_TOKEN,
             } else {})
           },
     "front": {
