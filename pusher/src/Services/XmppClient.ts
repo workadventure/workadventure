@@ -67,15 +67,13 @@ export class XmppClient {
         try {
             let status: "disconnected" | "connected" = "disconnected";
             const xmpp = client({
-                service: `ws://${EJABBERD_DOMAIN}:5443/ws`,
+                service: "ws://ejabberd:5443/ws",
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
                 password: this.clientPassword,
                 roomId: this.clientSocket.roomId,
             });
-            console.log("url ejabberd", `ws://${EJABBERD_DOMAIN}:5443/ws`);
-            console.log("xmpp", xmpp);
 
             xmpp.on("error", (err: string) => {
                 console.error("XmppClient => receive => error =>", err);
