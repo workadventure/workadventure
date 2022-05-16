@@ -22,6 +22,22 @@ function findBiggestAvailableArea(): Box {
                 xEnd: iframe.offsetWidth,
                 yEnd: iframe.offsetHeight,
             });
+        } else {
+            //@ts-ignore
+            const remoteStream = screenOnTop.remoteStream;
+            const videoElements = Array.from(document.getElementsByTagName("video"));
+            if (remoteStream && videoElements.length > 0) {
+                const video = videoElements.find((video) => video.srcObject?.id === remoteStream.id);
+                if (video) {
+                    const bounds = video.getBoundingClientRect();
+                    blockers.push({
+                        xStart: bounds.x,
+                        yStart: bounds.y,
+                        xEnd: bounds.right,
+                        yEnd: bounds.bottom,
+                    });
+                }
+            }
         }
     }
 
@@ -43,8 +59,8 @@ function findBiggestAvailableArea(): Box {
         verticesX.push(blocker.xStart, blocker.xEnd);
         verticesY.push(blocker.yStart, blocker.yEnd);
     }
-    verticesX.sort();
-    verticesY.sort();
+    verticesX.sort((a, b) => a - b);
+    verticesY.sort((a, b) => a - b);
 
     // NOTE: cannot use fill() here, it makes references to a single array
     const occupiedGrid: boolean[][] = new Array(verticesY.length - 1);
@@ -64,8 +80,8 @@ function findBiggestAvailableArea(): Box {
 
     // create an array of all free boxes
     const freeBoxes: Box[] = [];
-    for (let x = 0; x < occupiedGrid.length - 1; x += 1) {
-        for (let y = 0; y < occupiedGrid[x].length - 1; y += 1) {
+    for (let x = 0; x < occupiedGrid.length; x += 1) {
+        for (let y = 0; y < occupiedGrid[x].length; y += 1) {
             freeBoxes.push(...findAllFreeBoxes(x, y, occupiedGrid));
         }
     }
@@ -74,7 +90,19 @@ function findBiggestAvailableArea(): Box {
         .map((box) => ({ box, area: getBoxArea(box, verticesX, verticesY) }))
         .sort((a, b) => b.area - a.area)[0];
 
-    return biggestFreeArea.box;
+    console.log({
+        xStart: verticesX[biggestFreeArea.box.xStart],
+        yStart: verticesX[biggestFreeArea.box.yStart],
+        xEnd: verticesY[biggestFreeArea.box.xEnd],
+        yEnd: verticesY[biggestFreeArea.box.yEnd],
+    });
+
+    return {
+        xStart: verticesX[biggestFreeArea.box.xStart],
+        yStart: verticesX[biggestFreeArea.box.yStart],
+        xEnd: verticesY[biggestFreeArea.box.xEnd],
+        yEnd: verticesY[biggestFreeArea.box.yEnd],
+    };
 }
 
 export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): number {
