@@ -89,14 +89,36 @@ export class MucRoom {
         );
         this.connection.emitXmlMessage(messageMucListAllUsers);
 
+
         const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
+        // Create MUC subscriber
+        const messageMucSubscribe = xml(
+            "iq",
+            {
+                type: "set",
+                to: toMucSubscriber.toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "subscribe",
+                {
+                    xmlns: "urn:xmpp:mucsub:0",
+                    nick: this.jid.split('/')[0]+gameManager.getPlayerName(),
+                },
+                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+            )
+        );
+        this.connection.emitXmlMessage(messageMucSubscribe);
+
         const messagePresence = xml(
             "presence",
             {
                 to: to.toString(),
                 from: this.jid,
-                /*type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
-                persistent: true*/
+                //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
+                //persistent: true
             },
             xml("x", {
                 xmlns: "http://jabber.org/protocol/muc",
@@ -111,27 +133,6 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messagePresence);
-
-        // Create MUC subscriber
-        const messageMucSubscribe = xml(
-            "iq",
-            {
-                type: "set",
-                to: toMucSubscriber.toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml(
-                "subscribe",
-                {
-                    xmlns: "urn:xmpp:mucsub:0",
-                    nick: gameManager.getPlayerName(),
-                },
-                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
-            )
-        );
-        this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
     public disconnect() {
@@ -148,11 +149,13 @@ export class MucRoom {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
 
+            if(from.resource === '') return;
+
             //It's me (are you sure ?) and I want a profile details
             //TODO create profile details with XMPP connection
-            if (from.toString() === me.toString()) {
-                return;
-            }
+            //if (from.toString() === me.toString()) {
+            //    return;
+            //}
 
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
@@ -160,50 +163,56 @@ export class MucRoom {
                 const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
-                this.presenceStore.update((list) => {
-                    list.set(jid, {
-                        nick: from.resource,
-                        roomId,
-                        uuid,
-                        status: type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
-                        isInSameMap: roomId === getRoomId(),
-                    });
-
-                    //update size of presence users
-                    numberPresenceUserStore.set(list.size);
-                    return list;
-                });
+                this.updateUser(jid, from.resource.replace(jid,''), roomId, uuid, type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE);
 
                 handledMessage = true;
             }
-        } else if (xml.getName() === "iq") {
+        // Manage registered subscriptions old and new one
+        } else if (xml.getName() === "iq" && xml.getAttr('type') === 'result') {
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const roomId = xml.getChild("room")?.getAttr("id");
             if (subscriptions) {
                 subscriptions.forEach((subscription) => {
-                    const user = localUserStore.getLocalUser();
                     const jid = subscription.getAttr("jid");
-                    if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid) {
-                        this.presenceStore.update((list) => {
-                            list.set(jid, {
-                                nick: subscription.getAttr("nick"),
-                                roomId,
-                                uuid: "",
-                                status: USER_STATUS_DISCONNECTED,
-                                isInSameMap: roomId === getRoomId(),
-                            });
-                            numberPresenceUserStore.set(list.size);
-                            return list;
-                        });
-                    }
+                    const nick = subscription.getAttr("nick").replace(jid,'');
+                    this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
                 });
                 handledMessage = true;
+            } else {
+                const subscription = xml.getChild("subscribe");
+                if (subscription) {
+                    const jid = subscription.getAttr("nick").split('@ejabberd')[0]+'@ejabberd';
+                    const nick = subscription.getAttr("nick").replace(jid, '');
+                    this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
+                    handledMessage = true;
+                }
             }
         }
 
         if (!handledMessage) {
             console.warn("Unhandled message targeted at the room: ", xml.toString());
             console.warn("Message name : ", xml.getName());
+        }
+    }
+
+    private getCurrentStatus(jid: string){
+        return get(this.presenceStore).get(jid)?.status ?? USER_STATUS_DISCONNECTED;
+    }
+
+    private updateUser(jid: string, nick: string, roomId: string, uuid: string, status: string) {
+        const user = localUserStore.getLocalUser();
+        if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid) {
+            this.presenceStore.update((list) => {
+                list.set(jid, {
+                    nick,
+                    roomId,
+                    uuid,
+                    status,
+                    isInSameMap: roomId === getRoomId(),
+                });
+                numberPresenceUserStore.set(list.size);
+                return list;
+            });
         }
     }
 
@@ -226,15 +235,15 @@ export class MucRoom {
     private static encode(name: string | null | undefined) {
         if (!name) return name;
         return name
-            .replace("\\/g", "\\5c")
-            .replace(" /g", "\\20")
-            .replace("*/g", "\\22")
-            .replace("&/g", "\\26")
-            .replace("'/g", "\\27")
-            .replace("//g", "\\2f")
-            .replace(":/g", "\\3a")
-            .replace("</g", "\\3c")
-            .replace(">/g", "\\3e")
-            .replace("@/g", "\\40");
+            .replace(/\\/g, "\\5c")
+            .replace(/ /g, "\\20")
+            .replace(/\*/g, "\\22")
+            .replace(/&/g, "\\26")
+            .replace(/'/g, "\\27")
+            .replace(/\//g, "\\2f")
+            .replace(/:/g, "\\3a")
+            .replace(/</g, "\\3c")
+            .replace(/>/g, "\\3e")
+            .replace(/@/g, "\\40");
     }
 }
