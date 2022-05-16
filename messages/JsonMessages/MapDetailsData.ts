@@ -39,6 +39,11 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "report" feature is enabled or not on this room',
         example: true,
     }),
+    loadingCowebsiteLogo: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The URL of the image to be used on the cowebsite loading page",
+        example: "https://example.com/logo.gif",
+    }),
+    miniLogo: z.optional(z.nullable(z.string())),
     // The URL of the logo image on the loading screen
     loadingLogo: extendApi(z.optional(z.nullable(z.string())), {
         description: "The URL of the image to be used on the loading page",
@@ -47,6 +52,10 @@ export const isMapDetailsData = z.object({
     // The URL of the logo image on "LoginScene"
     loginSceneLogo: extendApi(z.optional(z.nullable(z.string())), {
         description: "The URL of the image to be used on the LoginScene",
+        example: "https://example.com/logo_login.png",
+    }),
+    showPoweredBy: extendApi(z.boolean(), {
+        description: "The URL of the image to be used on the name scene",
         example: "https://example.com/logo_login.png",
     }),
 });
