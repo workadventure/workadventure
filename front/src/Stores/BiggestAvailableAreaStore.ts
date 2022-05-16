@@ -143,17 +143,25 @@ export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): 
     let xEnd = grid[0].length;
 
     for (let y = top; y < grid.length; y += 1) {
-        for (let x = left; x < xEnd; x += 1) {
+        let found = false;
+        const lastXEnd = xEnd;
+        let x;
+        for (x = left; x < xEnd; x += 1) {
             // do not add boxes with occupied parts
             if (grid[y][x] === true) {
                 // no point in trying to find free box after this column
                 xEnd = x;
+                found = true;
                 break;
             }
-            boxes.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
+        }
+        if (found || x === lastXEnd) {
+            boxes.push({ xStart: left, yStart: top, xEnd: x - 1, yEnd: y });
+        }
+        if (x === left && grid[y][x] === true) {
+            break;
         }
     }
-
     return boxes;
 }
 
