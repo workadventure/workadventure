@@ -64,7 +64,6 @@
     "ts-proto": "^1.96.0",
     "typesafe-i18n": "^5.4.0",
     "uuidv4": "^6.2.10",
-    "webrtc-adapter": "^8.1.1",
     "zod": "^3.14.3"
   },
   "scripts": {
