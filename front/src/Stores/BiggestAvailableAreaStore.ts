@@ -8,6 +8,12 @@ import { highlightedEmbedScreen } from "./EmbedScreensStore";
  */
 function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
+    const wholeScreenBox = {
+        xStart: 0,
+        yStart: 0,
+        xEnd: game.offsetWidth,
+        yEnd: game.offsetHeight,
+    };
 
     const blockers: Box[] = [];
 
@@ -43,12 +49,7 @@ function findBiggestAvailableArea(): Box {
     }
 
     if (blockers.length === 0) {
-        return {
-            xStart: 0,
-            yStart: 0,
-            xEnd: game.offsetWidth,
-            yEnd: game.offsetHeight,
-        };
+        return wholeScreenBox;
     }
 
     // create vertices arrays and insert game canvas edges
@@ -87,15 +88,21 @@ function findBiggestAvailableArea(): Box {
         }
     }
 
-    const biggestFreeArea = freeBoxes
-        .map((box) => ({ box, area: getBoxArea(box, verticesX, verticesY) }))
-        .sort((a, b) => b.area - a.area)[0];
+    let biggestArea = 0;
+    let biggestBox = wholeScreenBox;
+    for (const box of freeBoxes) {
+        const area = getBoxArea(box, verticesX, verticesY);
+        if (area > biggestArea) {
+            biggestArea = area;
+            biggestBox = box;
+        }
+    }
 
     return {
-        xStart: verticesX[biggestFreeArea.box.xStart],
-        yStart: verticesY[biggestFreeArea.box.yStart],
-        xEnd: verticesX[biggestFreeArea.box.xEnd + 1],
-        yEnd: verticesY[biggestFreeArea.box.yEnd + 1],
+        xStart: verticesX[biggestBox.xStart],
+        yStart: verticesY[biggestBox.yStart],
+        xEnd: verticesX[biggestBox.xEnd + 1],
+        yEnd: verticesY[biggestBox.yEnd + 1],
     };
 }
 
@@ -130,24 +137,24 @@ export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): 
         return [];
     }
 
-    const squares: Box[] = [];
+    const boxes: Box[] = [];
 
     // we expect grid rows to be of the same length
     let xEnd = grid[0].length;
 
     for (let y = top; y < grid.length; y += 1) {
         for (let x = left; x < xEnd; x += 1) {
-            // do not add squares with occupied parts
+            // do not add boxes with occupied parts
             if (grid[y][x] === true) {
-                // no point in trying to find free square after this column
+                // no point in trying to find free box after this column
                 xEnd = x;
                 break;
             }
-            squares.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
+            boxes.push({ xStart: left, yStart: top, xEnd: x, yEnd: y });
         }
     }
 
-    return squares;
+    return boxes;
 }
 
 export function getGridCoordinates(x: number, y: number, verticesX: number[], verticesY: number[]): [number, number] {
