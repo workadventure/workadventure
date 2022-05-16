@@ -92,7 +92,7 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, localVolumeStore } from "../../Stores/MediaStore";
+import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -228,7 +228,6 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
-    private allowProximityMeeting: boolean = true;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1124,14 +1123,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
-                this.allowProximityMeeting = false;
+                denyProximityMeetingStore.set(true);
                 this.disableMediaBehaviors();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
-                this.allowProximityMeeting = true;
+                denyProximityMeetingStore.set(false);
                 this.enableMediaBehaviors();
             })
         );
@@ -2197,7 +2196,7 @@ ${escapedMessage}
     }
 
     public enableMediaBehaviors() {
-        if (this.allowProximityMeeting) {
+        if (!get(denyProximityMeetingStore)) {
             mediaManager.showMyCamera();
         }
     }
