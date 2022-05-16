@@ -90,18 +90,11 @@ function findBiggestAvailableArea(): Box {
         .map((box) => ({ box, area: getBoxArea(box, verticesX, verticesY) }))
         .sort((a, b) => b.area - a.area)[0];
 
-    console.log({
-        xStart: verticesX[biggestFreeArea.box.xStart],
-        yStart: verticesX[biggestFreeArea.box.yStart],
-        xEnd: verticesY[biggestFreeArea.box.xEnd],
-        yEnd: verticesY[biggestFreeArea.box.yEnd],
-    });
-
     return {
         xStart: verticesX[biggestFreeArea.box.xStart],
-        yStart: verticesX[biggestFreeArea.box.yStart],
-        xEnd: verticesY[biggestFreeArea.box.xEnd],
-        yEnd: verticesY[biggestFreeArea.box.yEnd],
+        yStart: verticesY[biggestFreeArea.box.yStart],
+        xEnd: verticesX[biggestFreeArea.box.xEnd + 1],
+        yEnd: verticesY[biggestFreeArea.box.yEnd + 1],
     };
 }
 
