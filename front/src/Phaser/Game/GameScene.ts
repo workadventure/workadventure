@@ -104,7 +104,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
-import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -183,6 +183,8 @@ export class GameScene extends DirtyScene {
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
     private biggestAvailableAreaStoreUnsubscriber!: Unsubscriber;
+    private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
+    private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
@@ -926,9 +928,12 @@ export class GameScene extends DirtyScene {
             this.cameraManager.updateCameraOffset(box);
         });
 
-        embedScreenLayoutStore.subscribe((layout) => {
+        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
             this.reposition();
-            console.log(layout);
+        });
+
+        this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
+            this.reposition();
         });
 
         const talkIconVolumeTreshold = 10;
@@ -1624,6 +1629,8 @@ ${escapedMessage}
         this.emoteMenuUnsubscriber();
         this.followUsersColorStoreUnsubscriber();
         this.biggestAvailableAreaStoreUnsubscriber();
+        this.highlightedEmbedScreenUnsubscriber();
+        this.embedScreenLayoutStoreUnsubscriber();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
         this.jitsiParticipantsCountStoreUnsubscriber();
         this.availabilityStatusStoreUnsubscriber();

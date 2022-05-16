@@ -200,6 +200,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
             ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom,
             ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom
         );
+        this.scene.markDirty();
     }
 
     public isCameraLocked(): boolean {
