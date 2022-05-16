@@ -27,6 +27,7 @@ function findBiggestAvailableArea(): Box {
             const remoteStream = screenOnTop.remoteStream;
             const videoElements = Array.from(document.getElementsByTagName("video"));
             if (remoteStream && videoElements.length > 0) {
+                //@ts-ignore
                 const video = videoElements.find((video) => video.srcObject?.id === remoteStream.id);
                 if (video) {
                     const bounds = video.getBoundingClientRect();
