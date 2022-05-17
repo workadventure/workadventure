@@ -929,7 +929,9 @@ export class GameScene extends DirtyScene {
         });
 
         this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            this.reposition();
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
         });
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
