@@ -182,7 +182,6 @@ export class GameScene extends DirtyScene {
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
-    private biggestAvailableAreaStoreUnsubscriber!: Unsubscriber;
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
@@ -923,11 +922,6 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        // From now, this game scene will be notified of reposition events
-        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) => {
-            this.cameraManager.updateCameraOffset(box);
-        });
-
         this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
             this.time.delayedCall(0, () => {
                 this.reposition();
@@ -1630,7 +1624,6 @@ ${escapedMessage}
         this.emoteUnsubscriber();
         this.emoteMenuUnsubscriber();
         this.followUsersColorStoreUnsubscriber();
-        this.biggestAvailableAreaStoreUnsubscriber();
         this.highlightedEmbedScreenUnsubscriber();
         this.embedScreenLayoutStoreUnsubscriber();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber();
@@ -2174,7 +2167,7 @@ ${escapedMessage}
 
     public onResize(): void {
         super.onResize();
-        this.reposition();
+        this.reposition(true);
 
         // Send new viewport to server
         const camera = this.cameras.main;
@@ -2199,9 +2192,10 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(): void {
+    private reposition(instant: boolean = false): void {
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();
+        this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
     }
 
     public enableMediaBehaviors() {
@@ -2276,7 +2270,7 @@ ${escapedMessage}
             return;
         }
         waScaleManager.handleZoomByFactor(zoomFactor);
-        biggestAvailableAreaStore.recompute();
+        // biggestAvailableAreaStore.recompute();
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
