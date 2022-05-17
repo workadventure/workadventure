@@ -30,7 +30,7 @@ function findBiggestAvailableArea(): Box {
             });
         } else {
             //@ts-ignore
-            const remoteStream = screenOnTop.remoteStream;
+            const remoteStream = screenOnTop.remoteStream ?? screenOnTop._remoteStreams[0];
             const videoElements = Array.from(document.getElementsByTagName("video"));
             if (remoteStream && videoElements.length > 0) {
                 //@ts-ignore
