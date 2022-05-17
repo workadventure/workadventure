@@ -98,6 +98,7 @@ services:
       - MAX_PER_GROUP
       - STORE_VARIABLES_FOR_LOCAL_MAPS
       - REDIS_HOST=redis
+      - PROMETHEUS_AUTHORIZATION_TOKEN
     labels:
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
       - "traefik.http.routers.back.entryPoints=web"

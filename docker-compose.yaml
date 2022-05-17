@@ -39,6 +39,7 @@ services:
       ICON_URL: //icon.workadventure.localhost
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_3: yarn typesafe-i18n
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -148,6 +149,7 @@ services:
       REDIS_HOST: redis
       NODE_ENV: development
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+      PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
     volumes:
       - ./back:/usr/src/app
     labels:
