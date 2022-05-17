@@ -32,7 +32,7 @@ export class User implements Movable {
         public readonly IPAddress: string,
         private position: PointInterface,
         private positionNotifier: PositionNotifier,
-        private status: AvailabilityStatus,
+        private availabilityStatus: AvailabilityStatus,
         public readonly socket: UserSocket,
         public readonly tags: string[],
         public readonly visitCardUrl: string | null,
@@ -90,15 +90,16 @@ export class User implements Movable {
         return this.outlineColor;
     }
 
-    public getStatus(): AvailabilityStatus {
-        return this.status;
+    public getAvailabilityStatus(): AvailabilityStatus {
+        return this.availabilityStatus;
     }
 
     public get silent(): boolean {
         return (
-            this.status === AvailabilityStatus.SILENT ||
-            this.status === AvailabilityStatus.JITSI ||
-            this.status === AvailabilityStatus.BBB
+            this.availabilityStatus === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            this.availabilityStatus === AvailabilityStatus.SILENT ||
+            this.availabilityStatus === AvailabilityStatus.JITSI ||
+            this.availabilityStatus === AvailabilityStatus.BBB
         );
     }
 
@@ -142,10 +143,10 @@ export class User implements Movable {
         }
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
-        const status = details.getStatus();
+        const availabilityStatus = details.getAvailabilitystatus();
         let sendStatusUpdate = false;
-        if (status && status !== this.status) {
-            this.status = status;
+        if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
+            this.availabilityStatus = availabilityStatus;
             sendStatusUpdate = true;
         }
 
@@ -161,7 +162,7 @@ export class User implements Movable {
             playerDetails.setShowvoiceindicator(new BoolValue().setValue(this.voiceIndicatorShown));
         }
         if (sendStatusUpdate) {
-            playerDetails.setStatus(details.getStatus());
+            playerDetails.setAvailabilitystatus(details.getAvailabilitystatus());
         }
 
         this.positionNotifier.updatePlayerDetails(this, playerDetails);

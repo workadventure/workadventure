@@ -12,7 +12,7 @@
     let errorScreen = get(errorScreenStore);
 
     import error from "./images/error.png";
-    let errorLogo = errorScreen?.image ?? error;
+    let errorLogo = errorScreen?.image || error;
 
     function click() {
         if (errorScreen?.type === "unauthorized") void connectionManager.logout();
