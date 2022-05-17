@@ -60,12 +60,9 @@ services:
     image: thecodingmachine/workadventure-pusher:${VERSION}
     command: yarn run runprod
     environment:
-      - SECRET_JITSI_KEY
       - SECRET_KEY
       - API_URL
       - FRONT_URL=https://${FRONT_HOST}
-      - JITSI_URL
-      - JITSI_ISS
       - DISABLE_ANONYMOUS
     labels:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"

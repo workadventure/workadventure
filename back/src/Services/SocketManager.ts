@@ -573,23 +573,32 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+    public async handleQueryJitsiJwtMessage(gameRoom: GameRoom, user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
+
+        const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
 
         if (SECRET_JITSI_KEY === "") {
             throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
         }
 
-        // Let's see if the current client has
-        const isAdmin = user.tags.includes(tag);
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes('admin')) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            }
+        }
+
 
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
                 iss: JITSI_ISS,
                 sub: JITSI_URL,
-                room: room,
+                room: jitsiRoom,
                 moderator: isAdmin,
             },
             SECRET_JITSI_KEY,
@@ -604,7 +613,7 @@ export class SocketManager {
         );
 
         const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
+        sendJitsiJwtMessage.setJitsiroom(jitsiRoom);
         sendJitsiJwtMessage.setJwt(jwt);
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -613,7 +622,7 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public async handleJoinBBBMeetingMessage(user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
+    public async handleJoinBBBMeetingMessage(gameRoom: GameRoom, user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
         const meetingName = joinBBBMeetingMessage.getMeetingname();
 
@@ -633,6 +642,21 @@ export class SocketManager {
 
             return;
         }
+
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes('admin')) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            } else if (moderatorTag === undefined) {
+                // If the bbbMeetingAdminTag is not set, everyone is a moderator.
+                isAdmin = true;
+            }
+        }
+
         const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
@@ -656,7 +680,7 @@ export class SocketManager {
 
         // XXX: figure out how to know if the user has admin status and use the moderatorPW
         // in that case
-        const clientURL = api.administration.join(user.name, meetingId, moderatorPW, {
+        const clientURL = api.administration.join(user.name, meetingId, isAdmin ? moderatorPW : attendeePW, {
             ...joinParams,
             userID: user.id,
             joinViaHtml5: true,

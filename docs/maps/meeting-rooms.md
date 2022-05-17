@@ -62,10 +62,12 @@ You can grant moderator rights to some of your members. Jitsi moderators can:
 *   Publish a Jitsi meeting on Youtube Live (you will need a Youtube Live account)
 *   Record a meeting to Dropbox (you will need a Dropbox account)
 *   Mute someone
-*   Mute everybody expect one speaker
+*   Mute everybody except one speaker
 *   Kick users out of the meeting
 
-In order to grant moderator rights to a given user, you can add a `jitsiRoomAdminTag` property to your Jitsi object. For instance, if you write a property:
+All users with the "admin" tag are moderators.
+
+In order to grant moderator rights to users with other tags, you can add a `jitsiRoomAdminTag` property to your Jitsi object. For instance, if you write a property:
 
     jitsiRoomAdminTag: speaker
 
@@ -124,7 +126,32 @@ In order to create a BigBlueButton session zone:
 {.alert.alert-info}
 All participants join BigBlueButton as moderators.
 
-## Using another BigBlueButton server
+## Granting moderator controls in Big Blue Button
+
+{.alert.alert-info}
+By default, all users are moderators. If you want to configure who gets moderator controls, you will need to configure tags. You need a pro account to edit member tags.
+
+In order to grant moderator rights to users with other tags, you can add a `bbbMeetingAdminTag` property to your BBB object. For instance, if you write a property:
+
+    bbbMeetingAdminTag: speaker
+
+then, any of your member with the `speaker` tag will be automatically granted moderator rights over this BBB instance.
+
+Furthermore, all users with the "admin" tag are moderators.
+
+If you do not pass any `bbbMeetingAdminTag` property, everybody can moderate the BBB meeting room.
+
+You can read more about [managing member tags in the admin documentation](/admin-guide/manage-members).
+
+## Configuring your BigBlueButton server
+
+### SAAS version
+
+As of now, your WorkAdventure online subscription does not come with a Big Blue Button account. You will therefore have
+to get this from a third-party vendor. You can configure the Big Blue Button credentials to your third-party vendor 
+in ... TODO
+
+### Self-hosted version
 
 WorkAdventure will come configured with test BigBlueButton credentials, provided by [Blindside Networks](https://blindsidenetworks.com) as default server for testing integrations.
 

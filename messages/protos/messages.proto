@@ -86,7 +86,6 @@ message EmoteEventMessage {
 
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
-  string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
 }
 
 message JoinBBBMeetingMessage {
