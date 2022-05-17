@@ -24,7 +24,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         }),
     ];
 
-    onEnterArea(areaName: string): Subject<void> {
+    onEnter(areaName: string): Subject<void> {
         let subject = enterAreaStreams.get(areaName);
         if (subject === undefined) {
             subject = new Subject<void>();
@@ -34,7 +34,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return subject;
     }
 
-    onLeaveArea(areaName: string): Subject<void> {
+    onLeave(areaName: string): Subject<void> {
         let subject = leaveAreaStreams.get(areaName);
         if (subject === undefined) {
             subject = new Subject<void>();
@@ -44,11 +44,7 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return subject;
     }
 
-    setAreaProperty(
-        areaName: string,
-        propertyName: string,
-        propertyValue: string | number | boolean | undefined
-    ): void {
+    setProperty(areaName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
         sendToWorkadventure({
             type: "setAreaProperty",
             data: {

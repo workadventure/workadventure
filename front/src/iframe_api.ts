@@ -13,6 +13,7 @@ import nav, { CoWebsite } from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
 import sound from "./Api/iframe/sound";
+import area from "./Api/iframe/area";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
 import { createState } from "./Api/iframe/state";
 import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
@@ -47,6 +48,7 @@ const wa = {
     chat,
     sound,
     room,
+    area,
     player,
     camera,
     state: globalState,

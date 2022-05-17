@@ -19,21 +19,21 @@
                 const onAreaEnterField = document.getElementById('onAreaEnter');
                 const onAreaLeaveField = document.getElementById('onAreaLeave');
 
-                WA.room.onEnterArea('Center').subscribe(() => {
+                WA.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');
                 });
 
-                WA.room.onLeaveArea('Center').subscribe(() => {
+                WA.area.onLeave('Center').subscribe(() => {
                     console.log(onAreaLeaveField.value || 'default area leave message');
                 });
 
                 updateButton.addEventListener('click', () => {
-                    WA.room.setAreaProperty('Center', 'focusable', focusableField.checked);
-                    WA.room.setAreaProperty('Center', 'silent', silentField.checked);
-                    WA.room.setAreaProperty('Center', 'zoom_margin', zoomMarginField.value || undefined);
-                    WA.room.setAreaProperty('Center', 'openWebsite', openWebisteField.value || undefined);
-                    WA.room.setAreaProperty('Center', 'jitsiRoom', jitsiRoomField.value || undefined);
-                    WA.room.setAreaProperty('Center', 'jitsiTrigger', jitsiTriggerField.value || undefined);
+                    WA.area.setProperty('Center', 'focusable', focusableField.checked);
+                    WA.area.setProperty('Center', 'silent', silentField.checked);
+                    WA.area.setProperty('Center', 'zoom_margin', zoomMarginField.value || undefined);
+                    WA.area.setProperty('Center', 'openWebsite', openWebisteField.value || undefined);
+                    WA.area.setProperty('Center', 'jitsiRoom', jitsiRoomField.value || undefined);
+                    WA.area.setProperty('Center', 'jitsiTrigger', jitsiTriggerField.value || undefined);
                 });
             });
         })
