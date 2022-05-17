@@ -36,6 +36,7 @@ import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKey
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
+import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -59,6 +60,15 @@ class IframeListener {
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
+    private readonly _enablePlayerControlStream: Subject<void> = new Subject();
+    public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
+
+    private readonly _disablePlayerProximityMeetingStream: Subject<void> = new Subject();
+    public readonly disablePlayerProximityMeetingStream = this._disablePlayerProximityMeetingStream.asObservable();
+
+    private readonly _enablePlayerProximityMeetingStream: Subject<void> = new Subject();
+    public readonly enablePlayerProximityMeetingStream = this._enablePlayerProximityMeetingStream.asObservable();
+
     private readonly _cameraSetStream: Subject<CameraSetEvent> = new Subject();
     public readonly cameraSetStream = this._cameraSetStream.asObservable();
 
@@ -73,9 +83,6 @@ class IframeListener {
         new Subject();
     public readonly removeActionsMenuKeyFromRemotePlayerEvent =
         this._removeActionsMenuKeyFromRemotePlayerEvent.asObservable();
-
-    private readonly _enablePlayerControlStream: Subject<void> = new Subject();
-    public readonly enablePlayerControlStream = this._enablePlayerControlStream.asObservable();
 
     private readonly _closePopupStream: Subject<ClosePopupEvent> = new Subject();
     public readonly closePopupStream = this._closePopupStream.asObservable();
@@ -115,6 +122,9 @@ class IframeListener {
 
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
+    private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
+    public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -266,6 +276,10 @@ class IframeListener {
                         this._disablePlayerControlStream.next();
                     } else if (iframeEvent.type === "restorePlayerControls") {
                         this._enablePlayerControlStream.next();
+                    } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
+                        this._disablePlayerProximityMeetingStream.next();
+                    } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
+                        this._enablePlayerProximityMeetingStream.next();
                     } else if (iframeEvent.type === "displayBubble") {
                         this._displayBubbleStream.next();
                     } else if (iframeEvent.type === "removeBubble") {
@@ -282,6 +296,8 @@ class IframeListener {
                         this._setTilesStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
                         this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyUIWebsite") {
+                        this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
                         const dataName = iframeEvent.data.name;
                         this.iframeCloseCallbacks.get(iframe)?.push(() => {

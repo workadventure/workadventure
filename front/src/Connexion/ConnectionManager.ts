@@ -19,6 +19,8 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
     private localUser!: LocalUser;
@@ -124,6 +126,12 @@ class ConnectionManager {
                 await this.checkAuthUserConnexion();
                 analyticsClient.loggedWithSso();
             } catch (err) {
+                if (Axios.isAxiosError(err)) {
+                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                    if (errorType.success) {
+                        throw err;
+                    }
+                }
                 console.error(err);
                 const redirect = this.loadOpenIDScreen();
                 if (redirect === null) {
@@ -276,7 +284,8 @@ class ConnectionManager {
         characterLayers: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null
+        companion: string | null,
+        availabilityStatus: AvailabilityStatus
     ): Promise<OnConnectInterface> {
         return new Promise<OnConnectInterface>((resolve, reject) => {
             const connection = new RoomConnection(
@@ -286,7 +295,8 @@ class ConnectionManager {
                 characterLayers,
                 position,
                 viewport,
-                companion
+                companion,
+                availabilityStatus
             );
 
             connection.onConnectError((error: object) => {
@@ -295,7 +305,32 @@ class ConnectionManager {
             });
 
             connection.connectionErrorStream.subscribe((event: CloseEvent) => {
-                console.log("connectionErrorStream => An error occurred while connecting to socket server. Retrying");
+                console.info(
+                    "An error occurred while connecting to socket server. Retrying => Event: ",
+                    event.reason,
+                    event.code,
+                    event
+                );
+
+                //However, Chrome will rarely report any close code 1006 reasons to the Javascript side.
+                //This is likely due to client security rules in the WebSocket spec to prevent abusing WebSocket.
+                //(such as using it to scan for open ports on a destination server, or for generating lots of connections for a denial-of-service attack).
+                // more detail here: https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+                if (event.code === 1006) {
+                    //check cookies
+                    const cookies = document.cookie.split(";");
+                    for (const cookie of cookies) {
+                        //check id cookie posthog exist
+                        const numberIndexPh = cookie.indexOf("_posthog=");
+                        if (numberIndexPh !== -1) {
+                            //if exist, remove posthog cookie
+                            document.cookie =
+                                cookie.slice(0, numberIndexPh + 9) +
+                                "; domain=.workadventu.re; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+                        }
+                    }
+                }
+
                 reject(
                     new Error(
                         "An error occurred while connecting to socket server. Retrying. Code: " +
@@ -315,9 +350,15 @@ class ConnectionManager {
                 this.reconnectingTimeout = setTimeout(() => {
                     //todo: allow a way to break recursion?
                     //todo: find a way to avoid recursive function. Otherwise, the call stack will grow indefinitely.
-                    void this.connectToRoomSocket(roomUrl, name, characterLayers, position, viewport, companion).then(
-                        (connection) => resolve(connection)
-                    );
+                    void this.connectToRoomSocket(
+                        roomUrl,
+                        name,
+                        characterLayers,
+                        position,
+                        viewport,
+                        companion,
+                        availabilityStatus
+                    ).then((connection) => resolve(connection));
                 }, 4000 + Math.floor(Math.random() * 2000));
             });
         });

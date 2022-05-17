@@ -40,6 +40,7 @@ import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRem
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
+import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./ui/UIWebsite";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -95,6 +96,14 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("restorePlayerControls"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disablePlayerProximityMeeting"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restorePlayerProximityMeeting"),
         data: z.undefined(),
     }),
     z.object({
@@ -156,6 +165,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("modifyEmbeddedWebsite"),
         data: isEmbeddedWebsiteEvent,
+    }),
+    z.object({
+        type: z.literal("modifyUIWebsite"),
+        data: isModifyUIWebsiteEvent,
     }),
 ]);
 
@@ -265,6 +278,18 @@ export const iframeQueryMapTypeGuards = {
     movePlayerTo: {
         query: isMovePlayerToEventConfig,
         answer: isMovePlayerToEventAnswer,
+    },
+    openUIWebsite: {
+        query: isCreateUIWebsiteEvent,
+        answer: isUIWebsite,
+    },
+    closeUIWebsite: {
+        query: z.string(),
+        answer: z.undefined(),
+    },
+    getUIWebsites: {
+        query: z.undefined(),
+        answer: z.array(isUIWebsite),
     },
 };
 

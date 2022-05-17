@@ -8,10 +8,22 @@ import {
 } from "../Messages/JsonMessages/ErrorApiData";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
-import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
+import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
 
 class SwaggerGenerator {
-    definitions() {
+    definitions(type: string | null) {
+        const definitions = {
+            definitions: {
+                AdminApiData: generateSchema(isAdminApiData),
+                ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
+                FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
+                MapDetailsData: generateSchema(isMapDetailsData),
+                WokaDetail: generateSchema(isWokaDetail),
+            },
+        };
+        if (type === "external") {
+            return definitions;
+        }
         return {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),
@@ -27,6 +39,8 @@ class SwaggerGenerator {
                 //RoomRedirect: generateSchema(isRoomRedirect),
                 //UserMessageAdminMessageInterface: generateSchema(isUserMessageAdminMessageInterface),
                 WokaDetail: generateSchema(isWokaDetail),
+                WokaList: generateSchema(wokaList),
+                WokaTexture: generateSchema(wokaTexture),
             },
         };
     }

@@ -13,6 +13,8 @@ const warning: NonNullable<Translation["warning"]> = {
     },
     importantMessage: "重要消息",
     connectionLost: "连接丢失。重新连接中...",
+    connectionLostTitle: "连接丢失。",
+    connectionLostSubtitle: "重新连接中",
 };
 
 export default warning;

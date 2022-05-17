@@ -22,6 +22,7 @@ export const OPID_SCOPE = process.env.OPID_SCOPE || "openid email";
 export const OPID_USERNAME_CLAIM = process.env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = process.env.OPID_LOCALE_CLAIM || "locale";
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
+export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
 export const ENABLE_OPENAPI_ENDPOINT = process.env.ENABLE_OPENAPI_ENDPOINT === "true";
