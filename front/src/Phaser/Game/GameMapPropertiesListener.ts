@@ -18,7 +18,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
+import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -138,9 +138,11 @@ export class GameMapPropertiesListener {
         this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("bbbMeeting");
+                inBbbStore.set(false);
                 bbbFactory.setStopped(true);
                 bbbFactory.stop();
             } else {
+                inBbbStore.set(true);
                 bbbFactory.setStopped(false);
                 void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
                     this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
