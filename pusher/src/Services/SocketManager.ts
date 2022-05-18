@@ -21,7 +21,6 @@ import {
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
-    SendJitsiJwtMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -44,7 +43,6 @@ import {
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
-import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";

@@ -45,19 +45,11 @@ import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
 import { cpuTracker } from "./CpuTracker";
-import {
-    GROUP_RADIUS,
-    JITSI_ISS,
-    MINIMUM_DISTANCE,
-    SECRET_JITSI_KEY,
-    TURN_STATIC_AUTH_SECRET,
-} from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
 import BigbluebuttonJs from "bigbluebutton-js";
-import { BBB_URL, BBB_SECRET } from "../Enum/EnvironmentVariable";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -579,8 +571,9 @@ export class SocketManager {
         queryJitsiJwtMessage: QueryJitsiJwtMessage
     ) {
         const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
+        const jitsiSettings = gameRoom.getJitsiSettings();
 
-        if (SECRET_JITSI_KEY === "") {
+        if (jitsiSettings === undefined || !jitsiSettings.secret) {
             throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
         }
 
@@ -598,12 +591,12 @@ export class SocketManager {
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
-                iss: JITSI_ISS,
-                sub: JITSI_URL,
+                iss: jitsiSettings.iss,
+                sub: jitsiSettings.url,
                 room: jitsiRoom,
                 moderator: isAdmin,
             },
-            SECRET_JITSI_KEY,
+            jitsiSettings.secret,
             {
                 expiresIn: "1d",
                 algorithm: "HS256",
@@ -631,8 +624,9 @@ export class SocketManager {
     ) {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
         const meetingName = joinBBBMeetingMessage.getMeetingname();
+        const bbbSettings = gameRoom.getBbbSettings();
 
-        if (BBB_URL.length == 0 || BBB_SECRET.length == 0) {
+        if (bbbSettings === undefined) {
             const errorStr =
                 "Unable to join the conference because either " +
                 "the BBB_URL or BBB_SECRET environment variables are not set.";
@@ -663,16 +657,16 @@ export class SocketManager {
             }
         }
 
-        const api = BigbluebuttonJs.api(BBB_URL, BBB_SECRET);
+        const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
         // It seems bbb-api is limiting password length to 50 chars
         const maxPWLen = 50;
         const attendeePW = crypto
-            .createHmac("sha256", BBB_SECRET)
+            .createHmac("sha256", bbbSettings.secret)
             .update(`attendee-${meetingId}`)
             .digest("hex")
             .slice(0, maxPWLen);
         const moderatorPW = crypto
-            .createHmac("sha256", BBB_SECRET)
+            .createHmac("sha256", bbbSettings.secret)
             .update(`moderator-${meetingId}`)
             .digest("hex")
             .slice(0, maxPWLen);

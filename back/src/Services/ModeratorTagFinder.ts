@@ -1,5 +1,4 @@
-import {ITiledMap, ITiledMapLayer, ITiledMapProperty} from "@workadventure/tiled-map-type-guard/dist";
-
+import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard/dist";
 
 export class ModeratorTagFinder {
     /**
@@ -30,12 +29,12 @@ export class ModeratorTagFinder {
     }
 
     private registerProperties(properties: ITiledMapProperty[], mainProperty: string, tagProperty: string): void {
-        let mainValue: string|undefined = undefined;
-        let tagValue: string|undefined = undefined;
+        let mainValue: string | undefined = undefined;
+        let tagValue: string | undefined = undefined;
         for (const property of properties ?? []) {
-            if (property.name === mainProperty && typeof property.value === 'string') {
+            if (property.name === mainProperty && typeof property.value === "string") {
                 mainValue = property.value;
-            } else if (property.name === tagProperty && typeof property.value === 'string') {
+            } else if (property.name === tagProperty && typeof property.value === "string") {
                 tagValue = property.value;
             }
         }
@@ -44,7 +43,7 @@ export class ModeratorTagFinder {
         }
     }
 
-    public getModeratorTag(roomName: string): string|undefined {
+    public getModeratorTag(roomName: string): string | undefined {
         return this._roomModerators.get(roomName);
     }
 }

@@ -842,14 +842,12 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string | undefined): void {
+    public emitQueryJitsiJwtMessage(jitsiRoom: string): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "queryJitsiJwtMessage",
                 queryJitsiJwtMessage: {
                     jitsiRoom,
-                    tag: tag ?? "", // empty string is sent as "undefined" by ts-proto
-                    // TODO: when we migrated "pusher" to ts-proto, migrate this to a StringValue
                 },
             },
         }).finish();

@@ -90,9 +90,7 @@ export class GameMapPropertiesListener {
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        const adminTag = allProps.get(GameMapProperties.JITSI_ADMIN_ROOM_TAG) as string | undefined;
-
-                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
+                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
                     } else {
                         let domain = jitsiUrl || JITSI_URL;
                         if (domain === undefined) {
