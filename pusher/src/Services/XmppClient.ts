@@ -9,7 +9,7 @@ import {
     XmppSettingsMessage,
 } from "../Messages/generated/messages_pb";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
+import { EJABBERD_DOMAIN, EJABBERD_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
 const { client, xml, jid } = require("@xmpp/client");
