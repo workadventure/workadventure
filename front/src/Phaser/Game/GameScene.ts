@@ -601,6 +601,10 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     this.scene.sleep();
+                    if (get(errorScreenStore)) {
+                        // If an error message is already displayed, don't display the "connection lost" message.
+                        return;
+                    }
                     errorScreenStore.setError(
                         ErrorScreenMessage.fromPartial({
                             type: "reconnecting",
@@ -616,6 +620,10 @@ export class GameScene extends DirtyScene {
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         this.scene.sleep();
+                        if (get(errorScreenStore)) {
+                            // If an error message is already displayed, don't display the "connection lost" message.
+                            return;
+                        }
                         errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
