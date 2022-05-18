@@ -67,7 +67,7 @@ export class XmppClient {
         try {
             let status: "disconnected" | "connected" = "disconnected";
             const xmpp = client({
-                service: `ws://${EJABBERD_DOMAIN}:5443/ws`,
+                service: `ws://${EJABBERD_URI}/ws`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",

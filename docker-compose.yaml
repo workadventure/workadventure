@@ -92,6 +92,7 @@ services:
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       ENABLE_OPENAPI_ENDPOINT: "true"
       EJABBERD_DOMAIN: ejabberd
+      EJABBERD_URI: ejabberd:5443
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
     volumes:

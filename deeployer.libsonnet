@@ -77,6 +77,7 @@
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               # Ejabberd
               "EJABBERD_DOMAIN": "xmpp-admin-"+url,
+              "EJABBERD_URI": "adminxmpp-"+url,
               "EJABBERD_JWT_SECRET": env.ADMIN_API_TOKEN,
             } else {})
           },
