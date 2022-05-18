@@ -142,11 +142,12 @@ class AdminApi implements AdminInterface {
         });
 
         const mapDetailData = isMapDetailsData.safeParse(res.data);
-        const roomRedirect = isRoomRedirect.safeParse(res.data);
 
         if (mapDetailData.success) {
             return mapDetailData.data;
         }
+
+        const roomRedirect = isRoomRedirect.safeParse(res.data);
 
         if (roomRedirect.success) {
             return roomRedirect.data;

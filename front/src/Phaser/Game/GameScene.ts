@@ -604,6 +604,10 @@ export class GameScene extends DirtyScene {
             if (this.isReconnecting) {
                 setTimeout(() => {
                     this.scene.sleep();
+                    if (get(errorScreenStore)) {
+                        // If an error message is already displayed, don't display the "connection lost" message.
+                        return;
+                    }
                     errorScreenStore.setError(
                         ErrorScreenMessage.fromPartial({
                             type: "reconnecting",
@@ -619,6 +623,10 @@ export class GameScene extends DirtyScene {
                 setTimeout(() => {
                     if (this.connection === undefined) {
                         this.scene.sleep();
+                        if (get(errorScreenStore)) {
+                            // If an error message is already displayed, don't display the "connection lost" message.
+                            return;
+                        }
                         errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
@@ -1564,7 +1572,7 @@ ${escapedMessage}
             layoutManagerActionStore.addAction({
                 uuid: "roomAccessDenied",
                 type: "warning",
-                message: "Room access denied. You don't have right to access on this room.",
+                message: get(LL).warning.accessDenied.room(),
                 callback: () => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
                 },
