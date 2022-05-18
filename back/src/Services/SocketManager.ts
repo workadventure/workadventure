@@ -328,7 +328,7 @@ export class SocketManager {
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
-            userJoinedZoneMessage.setStatus(thing.getStatus());
+            userJoinedZoneMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
@@ -573,8 +573,11 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    public async handleQueryJitsiJwtMessage(gameRoom: GameRoom, user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-
+    public async handleQueryJitsiJwtMessage(
+        gameRoom: GameRoom,
+        user: User,
+        queryJitsiJwtMessage: QueryJitsiJwtMessage
+    ) {
         const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
 
         if (SECRET_JITSI_KEY === "") {
@@ -583,7 +586,7 @@ export class SocketManager {
 
         // Let's see if the current client has moderator rights
         let isAdmin = false;
-        if (user.tags.includes('admin')) {
+        if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
             const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
@@ -591,7 +594,6 @@ export class SocketManager {
                 isAdmin = true;
             }
         }
-
 
         const jwt = Jwt.sign(
             {
@@ -622,7 +624,11 @@ export class SocketManager {
         user.socket.write(serverToClientMessage);
     }
 
-    public async handleJoinBBBMeetingMessage(gameRoom: GameRoom, user: User, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
+    public async handleJoinBBBMeetingMessage(
+        gameRoom: GameRoom,
+        user: User,
+        joinBBBMeetingMessage: JoinBBBMeetingMessage
+    ) {
         const meetingId = joinBBBMeetingMessage.getMeetingid();
         const meetingName = joinBBBMeetingMessage.getMeetingname();
 
@@ -645,7 +651,7 @@ export class SocketManager {
 
         // Let's see if the current client has moderator rights
         let isAdmin = false;
-        if (user.tags.includes('admin')) {
+        if (user.tags.includes("admin")) {
             isAdmin = true;
         } else {
             const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
@@ -739,7 +745,7 @@ export class SocketManager {
                 userJoinedMessage.setUserid(thing.id);
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
-                userJoinedMessage.setStatus(thing.getStatus());
+                userJoinedMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {

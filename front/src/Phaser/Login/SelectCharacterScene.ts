@@ -203,12 +203,20 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka = null;
         this.charactersDraggableGrid.clearAllItems();
         const textures = this.playerTextures.getWokaCollectionTextures(this.getSelectedCollectionName());
+
+        let currentSelectedItem = null;
         for (let i = 0; i < textures.length; i += 1) {
             const slot = new WokaSlot(this, textures[i].id).setDisplaySize(wokaDimension, wokaDimension);
+
+            //ini current Select Item to the first
+            if (i === 0) currentSelectedItem = slot;
+
             this.charactersDraggableGrid.addItem(slot);
         }
         this.charactersDraggableGrid.moveContentToBeginning();
-        void this.charactersDraggableGrid.moveContentTo(0.5, textures.length * 50);
+
+        //Select the first Woka
+        if (currentSelectedItem) this.selectGridItem(currentSelectedItem);
     }
 
     private bindEventHandlers(): void {

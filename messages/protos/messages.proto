@@ -10,6 +10,8 @@ enum AvailabilityStatus {
   SILENT = 2;
   AWAY = 3;
   JITSI = 4;
+  BBB = 5;
+  DENY_PROXIMITY_MEETING = 6;
 }
 
 message PositionMessage {
@@ -57,7 +59,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.UInt32Value outlineColor = 3;
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
-  AvailabilityStatus status = 6;
+  AvailabilityStatus availabilityStatus = 6;
 }
 
 message UserMovesMessage {
@@ -217,7 +219,7 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
-  AvailabilityStatus status = 10;
+  AvailabilityStatus availabilityStatus = 10;
 }
 
 message UserLeftMessage {
@@ -382,7 +384,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
-  AvailabilityStatus status = 11;
+  AvailabilityStatus availabilityStatus = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -396,7 +398,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
-  AvailabilityStatus status = 11;
+  AvailabilityStatus availabilityStatus = 11;
 }
 
 message UserLeftZoneMessage {

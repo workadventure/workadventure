@@ -30,7 +30,7 @@ interface JitsiApi {
 
     addListener: (type: string, callback: Function) => void;
     removeListener: (type: string, callback: Function) => void;
-
+    getParticipantsInfo(): { displayName: string; participantId: string }[];
     dispose: () => void;
 }
 
@@ -275,10 +275,11 @@ class JitsiFactory {
     }
 
     private onDominantSpeakerChanged(data: { id: string }): void {
-        userIsJitsiDominantSpeakerStore.set(
-            //@ts-ignore
-            data.id === this.getCurrentParticipantId(this.jitsiApi?.getParticipantsInfo())
-        );
+        if (this.jitsiApi) {
+            userIsJitsiDominantSpeakerStore.set(
+                data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
+            );
+        }
     }
 
     private onParticipantsCountChange(): void {

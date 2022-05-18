@@ -33,7 +33,7 @@ import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
-import {ModeratorTagFinder} from "../Services/ModeratorTagFinder";
+import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -146,7 +146,7 @@ export class GameRoom {
             joinRoomMessage.getIpaddress(),
             position,
             this.positionNotifier,
-            joinRoomMessage.getStatus(),
+            joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -661,29 +661,29 @@ export class GameRoom {
         return this.groups.get(id);
     }
 
-    private jitsiModeratorTagFinder: ModeratorTagFinder|undefined;
+    private jitsiModeratorTagFinder: ModeratorTagFinder | undefined;
 
     /**
      * Returns the moderator tag associated with jitsiRoom
      */
-    public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string|undefined> {
+    public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
         if (this.jitsiModeratorTagFinder === undefined) {
             const map = await this.getMap();
-            this.jitsiModeratorTagFinder = new ModeratorTagFinder(map, 'jitsiRoom', 'jitsiRoomAdminTag');
+            this.jitsiModeratorTagFinder = new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
         }
 
         return this.jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
     }
 
-    private bbbModeratorTagFinder: ModeratorTagFinder|undefined;
+    private bbbModeratorTagFinder: ModeratorTagFinder | undefined;
 
     /**
      * Returns the moderator tag associated with bbbMeeting
      */
-    public async getModeratorTagForBbbMeeting(bbbMeeting: string): Promise<string|undefined> {
+    public async getModeratorTagForBbbMeeting(bbbMeeting: string): Promise<string | undefined> {
         if (this.bbbModeratorTagFinder === undefined) {
             const map = await this.getMap();
-            this.bbbModeratorTagFinder = new ModeratorTagFinder(map, 'bbbMeeting', 'bbbMeetingAdminTag');
+            this.bbbModeratorTagFinder = new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
         }
 
         return this.bbbModeratorTagFinder.getModeratorTag(bbbMeeting);

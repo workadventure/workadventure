@@ -19,7 +19,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   front:
-    image: thecodingmachine/nodejs:14
+    image: thecodingmachine/nodejs:16
     environment:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
@@ -33,6 +33,7 @@ services:
       ICON_URL: /icon
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_3: yarn typesafe-i18n
       TURN_SERVER: "turn:localhost:3478,turns:localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
@@ -55,7 +56,7 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   pusher:
-    image: thecodingmachine/nodejs:14
+    image: thecodingmachine/nodejs:16
     command: yarn dev
     #command: yarn run prod
     #command: yarn run profile
@@ -119,7 +120,7 @@ services:
       - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:16
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -153,7 +154,7 @@ services:
       - "traefik.http.routers.back-ssl.service=back"
 
   uploader:
-    image: thecodingmachine/nodejs:12
+    image: thecodingmachine/nodejs:16
     command: yarn dev
     #command: yarn run profile
     environment:
@@ -174,7 +175,6 @@ services:
       - "traefik.http.routers.uploader-ssl.service=uploader"
 
   messages:
-    #image: thecodingmachine/nodejs:14
     image: thecodingmachine/workadventure-back-base:latest
     environment:
       #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
