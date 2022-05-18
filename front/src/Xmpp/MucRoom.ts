@@ -36,6 +36,7 @@ export type TeleportStore = Readable<Teleport>;
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
+    private nickCount: number = 0;
 
     constructor(
         private connection: RoomConnection,
@@ -45,6 +46,10 @@ export class MucRoom {
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
+    }
+
+    private getPlayerName(){
+        return (gameManager.getPlayerName() ?? "unknown") + ((this.nickCount > 0)?`[${this.nickCount}]`:'');
     }
 
     public goTo(type: string, playUri: string, uuid: string) {
@@ -72,14 +77,15 @@ export class MucRoom {
     }
 
     public connect() {
-        const toMucSubscriber = jid(this.roomJid.local, this.roomJid.domain);
+        this.sendSubscribe();
+    }
 
-        // Get all subscribed users of the room, need to be called in first place before we get al presence state
+    private requestAllSubscribers() {
         const messageMucListAllUsers = xml(
             "iq",
             {
                 type: "get",
-                to: toMucSubscriber.toString(),
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
                 from: this.jid,
                 id: uuidv4(),
             },
@@ -88,34 +94,13 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messageMucListAllUsers);
+    }
 
-
-        const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
-        // Create MUC subscriber
-        const messageMucSubscribe = xml(
-            "iq",
-            {
-                type: "set",
-                to: toMucSubscriber.toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml(
-                "subscribe",
-                {
-                    xmlns: "urn:xmpp:mucsub:0",
-                    nick: this.jid.split('/')[0]+gameManager.getPlayerName(),
-                },
-                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
-            )
-        );
-        this.connection.emitXmlMessage(messageMucSubscribe);
-
+    private sendPresence() {
         const messagePresence = xml(
             "presence",
             {
-                to: to.toString(),
+                to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
                 from: this.jid,
                 //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
                 //persistent: true
@@ -133,19 +118,49 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messagePresence);
+        console.warn('[XMPP]', 'Presence sent');
+    }
+
+    private sendSubscribe() {
+        const messageMucSubscribe = xml(
+            "iq",
+            {
+                type: "set",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "subscribe",
+                {
+                    xmlns: "urn:xmpp:mucsub:0",
+                    nick: this.getPlayerName(),
+                },
+                xml("event", {node: "urn:xmpp:mucsub:nodes:messages"}),
+                xml("event", {node: "urn:xmpp:mucsub:nodes:presence"})
+            )
+        );
+        this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
     public disconnect() {
-        const to = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
+        const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
         return xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
     }
 
     onMessage(xml: ElementExt): void {
         let handledMessage = false;
-        const me = jid(this.roomJid.local, this.roomJid.domain, gameManager.getPlayerName() ?? "unknown");
 
+        if(xml.getAttr('type') === 'error'){
+            if (xml.getChild('error')?.getChildText('text') === 'That nickname is already in use by another occupant') {
+                this.nickCount += 1;
+                this.sendSubscribe();
+                //this.sendPresence(me);
+                handledMessage = true;
+            }
+        }
         // We are receiving the presence from someone
-        if (xml.getName() === "presence") {
+        else if (xml.getName() === "presence") {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
 
@@ -163,18 +178,19 @@ export class MucRoom {
                 const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
-                this.updateUser(jid, from.resource.replace(jid,''), roomId, uuid, type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE);
+                this.updateUser(jid, from.resource, roomId, uuid, type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE);
 
                 handledMessage = true;
             }
+        }
         // Manage registered subscriptions old and new one
-        } else if (xml.getName() === "iq" && xml.getAttr('type') === 'result') {
+        else if (xml.getName() === "iq" && xml.getAttr('type') === 'result') {
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const roomId = xml.getChild("room")?.getAttr("id");
             if (subscriptions) {
                 subscriptions.forEach((subscription) => {
                     const jid = subscription.getAttr("jid");
-                    const nick = subscription.getAttr("nick").replace(jid,'');
+                    const nick = subscription.getAttr("nick");
                     this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
                 });
                 handledMessage = true;
@@ -182,8 +198,12 @@ export class MucRoom {
                 const subscription = xml.getChild("subscribe");
                 if (subscription) {
                     const jid = subscription.getAttr("nick").split('@ejabberd')[0]+'@ejabberd';
-                    const nick = subscription.getAttr("nick").replace(jid, '');
+                    const nick = subscription.getAttr("nick");
                     this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
+                    if(nick === this.getPlayerName()){
+                        this.sendPresence();
+                        this.requestAllSubscribers();
+                    }
                     handledMessage = true;
                 }
             }
@@ -201,7 +221,7 @@ export class MucRoom {
 
     private updateUser(jid: string, nick: string, roomId: string, uuid: string, status: string) {
         const user = localUserStore.getLocalUser();
-        if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid) {
+        if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid && nick !== this.getPlayerName()) {
             this.presenceStore.update((list) => {
                 list.set(jid, {
                     nick,

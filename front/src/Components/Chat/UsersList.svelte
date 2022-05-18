@@ -83,7 +83,14 @@
         {#each [...usersList] as [jid, user]}
             <li class={user.status} id={jid}>
                 <div>
-                    <span>{user.nick}</span>
+                    <div class="nick">
+                        {#if user.nick.match(/\[\d*]/)}
+                            <span>{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
+                            <span class="no">#{user.nick.match(/\[\d*]/).join().replace('[','').replace(']','')}</span>
+                        {:else}
+                            <span>{user.nick}</span>
+                        {/if}
+                    </div>
                     <div>
                         {#if teleport.state === true}
                             {#if teleport.to === user.uuid}
@@ -126,6 +133,15 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+    }
+    ul li div.nick span.no{
+        color: gray;
+        font-size: 0.8rem;
+        margin-left: 5px;
+        margin-bottom: 1px;
+    }
+    ul li div.nick{
+        align-items: flex-end;
     }
     button[disabled] {
         color: white;
