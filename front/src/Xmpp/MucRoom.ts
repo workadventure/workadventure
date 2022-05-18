@@ -48,8 +48,8 @@ export class MucRoom {
         this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
-    private getPlayerName(){
-        return (gameManager.getPlayerName() ?? "unknown") + ((this.nickCount > 0)?`[${this.nickCount}]`:'');
+    private getPlayerName() {
+        return (gameManager.getPlayerName() ?? "unknown") + (this.nickCount > 0 ? `[${this.nickCount}]` : "");
     }
 
     public goTo(type: string, playUri: string, uuid: string) {
@@ -118,7 +118,7 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messagePresence);
-        console.warn('[XMPP]', 'Presence sent');
+        console.warn("[XMPP]", "Presence sent");
     }
 
     private sendSubscribe() {
@@ -136,8 +136,8 @@ export class MucRoom {
                     xmlns: "urn:xmpp:mucsub:0",
                     nick: this.getPlayerName(),
                 },
-                xml("event", {node: "urn:xmpp:mucsub:nodes:messages"}),
-                xml("event", {node: "urn:xmpp:mucsub:nodes:presence"})
+                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
             )
         );
         this.connection.emitXmlMessage(messageMucSubscribe);
@@ -151,8 +151,8 @@ export class MucRoom {
     onMessage(xml: ElementExt): void {
         let handledMessage = false;
 
-        if(xml.getAttr('type') === 'error'){
-            if (xml.getChild('error')?.getChildText('text') === 'That nickname is already in use by another occupant') {
+        if (xml.getAttr("type") === "error") {
+            if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
                 this.nickCount += 1;
                 this.sendSubscribe();
                 //this.sendPresence(me);
@@ -164,7 +164,7 @@ export class MucRoom {
             const from = jid(xml.getAttr("from"));
             const type = xml.getAttr("type");
 
-            if(from.resource === '') return;
+            if (from.resource === "") return;
 
             //It's me (are you sure ?) and I want a profile details
             //TODO create profile details with XMPP connection
@@ -178,29 +178,35 @@ export class MucRoom {
                 const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
-                this.updateUser(jid, from.resource, roomId, uuid, type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE);
+                this.updateUser(
+                    jid,
+                    from.resource,
+                    roomId,
+                    uuid,
+                    type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE
+                );
 
                 handledMessage = true;
             }
         }
         // Manage registered subscriptions old and new one
-        else if (xml.getName() === "iq" && xml.getAttr('type') === 'result') {
+        else if (xml.getName() === "iq" && xml.getAttr("type") === "result") {
             const subscriptions = xml.getChild("subscriptions")?.getChildren("subscription");
             const roomId = xml.getChild("room")?.getAttr("id");
             if (subscriptions) {
                 subscriptions.forEach((subscription) => {
                     const jid = subscription.getAttr("jid");
                     const nick = subscription.getAttr("nick");
-                    this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
+                    this.updateUser(jid, nick, roomId, "", this.getCurrentStatus(jid));
                 });
                 handledMessage = true;
             } else {
                 const subscription = xml.getChild("subscribe");
                 if (subscription) {
-                    const jid = subscription.getAttr("nick").split('@ejabberd')[0]+'@ejabberd';
+                    const jid = subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
                     const nick = subscription.getAttr("nick");
-                    this.updateUser(jid, nick, roomId, '', this.getCurrentStatus(jid));
-                    if(nick === this.getPlayerName()){
+                    this.updateUser(jid, nick, roomId, "", this.getCurrentStatus(jid));
+                    if (nick === this.getPlayerName()) {
                         this.sendPresence();
                         this.requestAllSubscribers();
                     }
@@ -215,13 +221,16 @@ export class MucRoom {
         }
     }
 
-    private getCurrentStatus(jid: string){
+    private getCurrentStatus(jid: string) {
         return get(this.presenceStore).get(jid)?.status ?? USER_STATUS_DISCONNECTED;
     }
 
     private updateUser(jid: string, nick: string, roomId: string, uuid: string, status: string) {
         const user = localUserStore.getLocalUser();
-        if ((MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid && nick !== this.getPlayerName()) {
+        if (
+            (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid &&
+            nick !== this.getPlayerName()
+        ) {
             this.presenceStore.update((list) => {
                 list.set(jid, {
                     nick,

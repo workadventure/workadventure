@@ -86,7 +86,13 @@
                     <div class="nick">
                         {#if user.nick.match(/\[\d*]/)}
                             <span>{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
-                            <span class="no">#{user.nick.match(/\[\d*]/).join().replace('[','').replace(']','')}</span>
+                            <span class="no">
+                                #{user.nick
+                                    .match(/\[\d*]/)
+                                    ?.join()
+                                    ?.replace("[", "")
+                                    ?.replace("]", "")}
+                            </span>
                         {:else}
                             <span>{user.nick}</span>
                         {/if}
@@ -134,13 +140,13 @@
         flex-direction: row;
         justify-content: space-between;
     }
-    ul li div.nick span.no{
+    ul li div.nick span.no {
         color: gray;
         font-size: 0.8rem;
         margin-left: 5px;
         margin-bottom: 1px;
     }
-    ul li div.nick{
+    ul li div.nick {
         align-items: flex-end;
     }
     button[disabled] {
