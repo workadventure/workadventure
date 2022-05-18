@@ -1,6 +1,8 @@
 import { Subject } from "rxjs";
 import { ChangeAreaEvent, isChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
+import { CreateAreaEvent } from "../Events/CreateAreaEvent";
+import { Area } from "./Area/Area";
+import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
 const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
@@ -23,6 +25,16 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
             },
         }),
     ];
+
+    create(createAreaEvent: CreateAreaEvent): Area {
+        queryWorkadventure({
+            type: "createArea",
+            data: createAreaEvent,
+        }).catch((e) => {
+            console.error(e);
+        });
+        return new Area(createAreaEvent);
+    }
 
     onEnter(areaName: string): Subject<void> {
         let subject = enterAreaStreams.get(areaName);
