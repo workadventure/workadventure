@@ -33,21 +33,15 @@ function findBiggestAvailableArea(): Box {
             });
         }
     } else {
-        //@ts-ignore
-        const remoteStream = screenOnTop.embed.remoteStream ?? screenOnTop.embed._remoteStreams[0];
-        const videoElements = Array.from(document.getElementsByTagName("video"));
-        if (remoteStream && videoElements.length > 0) {
-            //@ts-ignore
-            const video = videoElements.find((video) => video.srcObject?.id === remoteStream.id);
-            if (video) {
-                const bounds = video.getBoundingClientRect();
-                blockers.push({
-                    xStart: bounds.x,
-                    yStart: bounds.y,
-                    xEnd: bounds.right,
-                    yEnd: bounds.bottom,
-                });
-            }
+        const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+        for (const blocker of blockingElements) {
+            const bounds = blocker.getBoundingClientRect();
+            blockers.push({
+                xStart: bounds.x,
+                yStart: bounds.y,
+                xEnd: bounds.right,
+                yEnd: bounds.bottom,
+            });
         }
     }
 
