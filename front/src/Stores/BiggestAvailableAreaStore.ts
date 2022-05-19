@@ -17,10 +17,13 @@ function findBiggestAvailableArea(): Box {
 
     const blockers: Box[] = [];
 
-    const screenOnTop = get(highlightedEmbedScreen)?.embed;
-    if (screenOnTop) {
-        //@ts-ignore
-        const iframe = screenOnTop.iframe;
+    const screenOnTop = get(highlightedEmbedScreen);
+    if (!screenOnTop) {
+        return wholeScreenBox;
+    }
+
+    if (screenOnTop.type === "cowebsite") {
+        const iframe = screenOnTop.embed.getIframe();
         if (iframe) {
             blockers.push({
                 xStart: iframe.offsetLeft,
@@ -28,22 +31,22 @@ function findBiggestAvailableArea(): Box {
                 xEnd: iframe.offsetWidth,
                 yEnd: iframe.offsetHeight,
             });
-        } else {
+        }
+    } else {
+        //@ts-ignore
+        const remoteStream = screenOnTop.embed.remoteStream ?? screenOnTop.embed._remoteStreams[0];
+        const videoElements = Array.from(document.getElementsByTagName("video"));
+        if (remoteStream && videoElements.length > 0) {
             //@ts-ignore
-            const remoteStream = screenOnTop.remoteStream ?? screenOnTop._remoteStreams[0];
-            const videoElements = Array.from(document.getElementsByTagName("video"));
-            if (remoteStream && videoElements.length > 0) {
-                //@ts-ignore
-                const video = videoElements.find((video) => video.srcObject?.id === remoteStream.id);
-                if (video) {
-                    const bounds = video.getBoundingClientRect();
-                    blockers.push({
-                        xStart: bounds.x,
-                        yStart: bounds.y,
-                        xEnd: bounds.right,
-                        yEnd: bounds.bottom,
-                    });
-                }
+            const video = videoElements.find((video) => video.srcObject?.id === remoteStream.id);
+            if (video) {
+                const bounds = video.getBoundingClientRect();
+                blockers.push({
+                    xStart: bounds.x,
+                    yStart: bounds.y,
+                    xEnd: bounds.right,
+                    yEnd: bounds.bottom,
+                });
             }
         }
     }
