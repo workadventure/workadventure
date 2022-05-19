@@ -42,7 +42,7 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        console.warn('Jabber credentials:');
+        console.warn("Jabber credentials:");
         console.warn(clientSocket.jabberId, clientSocket.jabberPassword);
         const clientJID = jid(clientSocket.jabberId);
         this.clientID = clientJID.local;
@@ -67,9 +67,9 @@ export class XmppClient {
         rej: (reason?: unknown) => void
     ): void {
         try {
-            console.log('Jabber URI & DOMAIN : ', EJABBERD_URI, EJABBERD_DOMAIN);
+            console.log("Jabber URI & DOMAIN : ", EJABBERD_URI, EJABBERD_DOMAIN);
             let status: "disconnected" | "connected" = "disconnected";
-            const config  = {
+            const config = {
                 service: `ws://${EJABBERD_URI}/ws`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
@@ -77,7 +77,7 @@ export class XmppClient {
                 password: this.clientPassword,
                 roomId: this.clientSocket.roomId,
             };
-            console.log('Config ws :', config);
+            console.log("Config ws :", config);
             const xmpp = client(config);
 
             xmpp.on("error", (err: string) => {
