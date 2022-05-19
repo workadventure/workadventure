@@ -63,8 +63,8 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
-    public readonly areas: ITiledMapObject[] = [];
 
+    private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
     private readonly areasPositionOffsetY: number = 16;
 
     public exitUrls: Array<string> = [];
@@ -79,7 +79,9 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
-        this.areas = this.tiledObjects.filter((object) => ["zone", "area"].includes(object.type));
+        this.tiledObjects
+            .filter((object) => ["zone", "area"].includes(object.type))
+            .forEach((area) => this.areas.set(area.name, area));
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -360,6 +362,14 @@ export class GameMap {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
+    public getAreaWithName(name: string): ITiledMapObject | undefined {
+        return this.areas.get(name);
+    }
+
+    public setArea(name: string, area: ITiledMapObject): void {
+        this.areas.set(name, area);
+    }
+
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
@@ -473,6 +483,7 @@ export class GameMap {
         let areasChange = false;
         if (enterAreas.size > 0) {
             const areasArray = Array.from(enterAreas);
+
             for (const callback of this.enterAreaCallbacks) {
                 callback(areasArray, areasByNewPosition);
             }
@@ -542,14 +553,16 @@ export class GameMap {
     }
 
     private getAreasOnPosition(position?: { x: number; y: number }, offsetY: number = 0): ITiledMapObject[] {
-        return position
-            ? this.areas.filter((area) => {
-                  if (!position) {
-                      return false;
-                  }
-                  return MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area);
-              })
-            : [];
+        if (!position) {
+            return [];
+        }
+        const overlappedAreas: ITiledMapObject[] = [];
+        for (const area of this.areas.values()) {
+            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
+                overlappedAreas.push(area);
+            }
+        }
+        return overlappedAreas;
     }
 
     private getTileProperty(index: number): Array<ITiledMapProperty> {

@@ -59,7 +59,7 @@
                  "ellipse":true,
                  "height":128,
                  "id":9,
-                 "name":"",
+                 "name":"jitsi2",
                  "properties":[
                         {
                          "name":"jitsiRoom",
@@ -81,8 +81,13 @@
                 {
                  "height":130.187286397813,
                  "id":11,
-                 "name":"",
+                 "name":"jitsi1",
                  "properties":[
+                        {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":true
+                        }, 
                         {
                          "name":"jitsiRoom",
                          "type":"string",
@@ -115,7 +120,7 @@
                 {
                  "height":62.2854864433812,
                  "id":13,
-                 "name":"",
+                 "name":"website",
                  "properties":[
                         {
                          "name":"focusable",
@@ -137,7 +142,7 @@
                 {
                  "height":127.762816131237,
                  "id":15,
-                 "name":"",
+                 "name":"focusable",
                  "properties":[
                         {
                          "name":"focusable",
