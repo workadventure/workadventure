@@ -202,6 +202,9 @@ export class XmppClient {
                 return xmpp;
             })
             .catch((e) => console.error(e));
+
+        //cancel promise
+        this.clientPromise.cancel();
     }
 
     async send(stanza: string): Promise<void> {
