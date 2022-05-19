@@ -42,6 +42,8 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
+        console.warn('Jabber credentials:');
+        console.warn(clientSocket.jabberId, clientSocket.jabberPassword);
         const clientJID = jid(clientSocket.jabberId);
         this.clientID = clientJID.local;
         this.clientDomain = clientJID.domain;
@@ -65,6 +67,7 @@ export class XmppClient {
         rej: (reason?: unknown) => void
     ): void {
         try {
+            console.log('Jabber URI & DOMAIN : ', EJABBERD_URI, EJABBERD_DOMAIN);
             let status: "disconnected" | "connected" = "disconnected";
             const xmpp = client({
                 service: `ws://${EJABBERD_URI}/ws`,

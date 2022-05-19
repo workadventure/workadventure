@@ -1,5 +1,4 @@
 import jid from "@xmpp/jid";
-
 import { Observable, Subject } from "rxjs";
 import { MucRoom } from "./MucRoom";
 import type { RoomConnection } from "../Connexion/RoomConnection";
