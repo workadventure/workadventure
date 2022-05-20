@@ -77,17 +77,30 @@ You can read more about [managing member tags in the admin documentation](/admin
 
 ## Using another Jitsi server
 
+### SAAS version
+
+You can configure the Jitsi credentials to your third-party vendor in world edit form.
+
+<div class="text-center">
+    <figure class="figure">
+        <img src="images/admin_meeting_server_editing_jitsi.png" class="figure-img img-fluid rounded w-75" alt="" />
+        <figcaption class="figure-caption">Screenshot of world edit page</figcaption>
+    </figure>
+</div>
+
+### Self-hosted version
+
 WorkAdventure usually comes with a default Jitsi meet installation. If you are using the online version at `workadventu.re`, we are handling a Jitsi meet cluster for you. If you are running the self-hosted version of WorkAdventure, the administrator probably set up a Jitsi meet instance too.
 
 You have the possibility, in your map, to override the Jitsi meet instance that will be used by default. This can be useful for regulatory reasons. Maybe your company wants to keep control on the video streams and therefore, wants to self-host a Jitsi instance? Or maybe you want to use a very special configuration or very special version of Jitsi?
 
-Use the `jitsiUrl` property to in the Jitsi object to specify the Jitsi instance that should be used. Beware, `jitsiUrl` takes in parameter a **domain name**, without the protocol. So you should use:  
-`jitsiUrl: meet.jit.si`  
-and not  
+Use the `jitsiUrl` property to in the Jitsi object to specify the Jitsi instance that should be used. Beware, `jitsiUrl` takes in parameter a **domain name**, without the protocol. So you should use:
+`jitsiUrl: meet.jit.si`
+and not
 `jitsiUrl: https://meet.jit.si`
 
 {.alert.alert-info}
-When you use `jitsiUrl`, the targeted Jitsi instance must be public. You cannot use moderation features or the JWT 
+When you use `jitsiUrl`, the targeted Jitsi instance must be public. You cannot use moderation features or the JWT
 tokens authentication with maps configured using the `jitsiUrl` property.
 
 ## Full control over the Jitsi room name
@@ -148,8 +161,15 @@ You can read more about [managing member tags in the admin documentation](/admin
 ### SAAS version
 
 As of now, your WorkAdventure online subscription does not come with a Big Blue Button account. You will therefore have
-to get this from a third-party vendor. You can configure the Big Blue Button credentials to your third-party vendor 
-in ... TODO
+to get this from a third-party vendor. You can configure the Big Blue Button credentials to your third-party vendor
+in world edit form.
+
+<div class="text-center">
+    <figure class="figure">
+        <img src="images/admin_meeting_server_editing_bbb.png" class="figure-img img-fluid rounded w-75" alt="" />
+        <figcaption class="figure-caption">Screenshot of world edit page</figcaption>
+    </figure>
+</div>
 
 ### Self-hosted version
 
