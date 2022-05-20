@@ -60,6 +60,10 @@ class UIWebsiteManager {
                 }
             }
 
+            if (websiteEvent.canOverlapPlayer !== undefined) {
+                website.canOverlapPlayer = websiteEvent.canOverlapPlayer;
+            }
+
             uiWebsitesStore.update(website);
         });
     }
@@ -71,6 +75,7 @@ class UIWebsiteManager {
             visible: websiteConfig.visible ?? true,
             allowPolicy: websiteConfig.allowPolicy ?? "",
             allowApi: websiteConfig.allowApi ?? false,
+            canOverlapPlayer: websiteConfig.canOverlapPlayer ?? true,
         };
 
         uiWebsitesStore.add(newWebsite);

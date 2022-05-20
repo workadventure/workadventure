@@ -199,6 +199,7 @@ export class UIWebsite {
     private _position: UIWebsitePositionInternal;
     private _size: UIWebsiteSizeInternal;
     private _margin: UIWebsiteMarginInternal;
+    private _canOverlapPlayer: boolean;
 
     constructor(config: UIWebsiteCore) {
         this.id = config.id;
@@ -209,6 +210,7 @@ export class UIWebsite {
         this._position = new UIWebsitePositionInternal(this, config.position);
         this._size = new UIWebsiteSizeInternal(this, config.size);
         this._margin = new UIWebsiteMarginInternal(this, config.margin ?? {});
+        this._canOverlapPlayer = config.canOverlapPlayer ?? true;
     }
 
     public get url() {
@@ -301,6 +303,21 @@ export class UIWebsite {
                     left: this._margin.left,
                     right: this._margin.right,
                 },
+            },
+        });
+    }
+
+    public get canOverlapPlayer() {
+        return this._canOverlapPlayer;
+    }
+
+    public set canOverlapPlayer(canOverlapPlayer: boolean) {
+        this._canOverlapPlayer = canOverlapPlayer;
+        sendToWorkadventure({
+            type: "modifyUIWebsite",
+            data: {
+                id: this.id,
+                canOverlapPlayer: this._canOverlapPlayer,
             },
         });
     }

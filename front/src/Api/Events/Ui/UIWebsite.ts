@@ -42,10 +42,11 @@ export const isCreateUIWebsiteEvent = z.object({
     url: z.string(),
     visible: z.boolean().optional(),
     allowApi: z.boolean().optional(),
-    allowPolicy: z.optional(z.string()),
+    allowPolicy: z.string().optional(),
     position: isUIWebsitePosition,
     size: isUIWebsiteSize,
     margin: isUIWebsiteMargin.optional(),
+    canOverlapPlayer: z.boolean().optional(),
 });
 
 export type CreateUIWebsiteEvent = z.infer<typeof isCreateUIWebsiteEvent>;
@@ -57,6 +58,7 @@ export const isModifyUIWebsiteEvent = z.object({
     position: isUIWebsitePosition.optional(),
     size: isUIWebsiteSize.optional(),
     margin: isUIWebsiteMargin.optional(),
+    canOverlapPlayer: z.boolean().optional(),
 });
 
 export type ModifyUIWebsiteEvent = z.infer<typeof isModifyUIWebsiteEvent>;
@@ -70,6 +72,7 @@ export const isUIWebsite = z.object({
     position: isUIWebsitePosition,
     size: isUIWebsiteSize,
     margin: isUIWebsiteMargin.optional(),
+    canOverlapPlayer: z.boolean(),
 });
 
 export type UIWebsite = z.infer<typeof isUIWebsite>;

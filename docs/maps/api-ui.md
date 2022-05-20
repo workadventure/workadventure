@@ -250,6 +250,7 @@ interface UIWebsite {
         left?: string,
         right?: string,
     },
+    canOverlapPlayer?: boolean,     // Define if the iframe can overlap the player
     close(): Promise<void>,         // Close the current website instance
 }
 ```
