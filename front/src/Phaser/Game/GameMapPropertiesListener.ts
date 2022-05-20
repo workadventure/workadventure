@@ -11,13 +11,14 @@ import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { JITSI_PRIVATE_MODE, JITSI_URL } from "../../Enum/EnvironmentVariable";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores/AudioManagerStore";
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
+import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -89,9 +90,7 @@ export class GameMapPropertiesListener {
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        const adminTag = allProps.get(GameMapProperties.JITSI_ADMIN_ROOM_TAG) as string | undefined;
-
-                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName, adminTag);
+                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
                     } else {
                         let domain = jitsiUrl || JITSI_URL;
                         if (domain === undefined) {
@@ -131,6 +130,21 @@ export class GameMapPropertiesListener {
                     openJitsiRoomFunction();
                     inJitsiStore.set(true);
                 }
+            }
+        });
+
+        this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
+            if (newValue === undefined) {
+                layoutManagerActionStore.removeAction("bbbMeeting");
+                inBbbStore.set(false);
+                bbbFactory.setStopped(true);
+                bbbFactory.stop();
+            } else {
+                inBbbStore.set(true);
+                bbbFactory.setStopped(false);
+                void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
+                    this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
+                });
             }
         });
 

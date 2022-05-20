@@ -98,7 +98,8 @@ export class User implements Movable {
         return (
             this.availabilityStatus === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
             this.availabilityStatus === AvailabilityStatus.SILENT ||
-            this.availabilityStatus === AvailabilityStatus.JITSI
+            this.availabilityStatus === AvailabilityStatus.JITSI ||
+            this.availabilityStatus === AvailabilityStatus.BBB
         );
     }
 
