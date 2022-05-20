@@ -79,7 +79,7 @@ You can read more about [managing member tags in the admin documentation](/admin
 
 ### SAAS version
 
-You can configure the Jitsi credentials to your third-party vendor in world edit form.
+If you are using the online version at `workadventu.re`, we are handling a Jitsi meet cluster for you. In the very specific case where you would like to use your own Jitsi server, you can configure the Jitsi credentials to your third-party vendor in the world edit form.
 
 <div class="text-center">
     <figure class="figure">
@@ -87,6 +87,8 @@ You can configure the Jitsi credentials to your third-party vendor in world edit
         <figcaption class="figure-caption">Screenshot of world edit page</figcaption>
     </figure>
 </div>
+
+Please note that the Jitsi server you are using MUST be configured to [support JWT authentication](https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md).
 
 ### Self-hosted version
 
