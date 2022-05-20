@@ -28,6 +28,7 @@ COPY front/nginx.conf /etc/nginx/conf.d/default.conf
 COPY front/templater.sh /
 
 COPY --from=builder /usr/src/dist /usr/share/nginx/html
+COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
 
 EXPOSE 80
-CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && envsubst < /usr/share/nginx/html/server.template.json > /usr/share/nginx/html/server.json && exec nginx -g 'daemon off;'"]

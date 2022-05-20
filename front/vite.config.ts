@@ -23,6 +23,7 @@ export default defineConfig({
             variables: [
                 "SKIP_RENDER_OPTIMIZATIONS",
                 "DISABLE_NOTIFICATIONS",
+                "SERVER_ID",
                 "PUSHER_URL",
                 "UPLOADER_URL",
                 "ADMIN_URL",
