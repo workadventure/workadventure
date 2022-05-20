@@ -33,6 +33,7 @@ services:
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
       HOST: "0.0.0.0"
       NODE_ENV: development
+      SERVER_ID: "$SERVER_ID"
       PUSHER_URL: //pusher.workadventure.localhost
       UPLOADER_URL: //uploader.workadventure.localhost
       #ADMIN_URL: //workadventure.localhost
