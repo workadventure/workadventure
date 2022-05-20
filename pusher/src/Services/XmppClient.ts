@@ -67,18 +67,15 @@ export class XmppClient {
         rej: (reason?: unknown) => void
     ): void {
         try {
-            console.log("Jabber URI & DOMAIN : ", EJABBERD_URI, EJABBERD_DOMAIN);
             let status: "disconnected" | "connected" = "disconnected";
-            const config = {
+            const xmpp = client({
                 service: `ws://${EJABBERD_URI}/ws`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
                 password: this.clientPassword,
                 roomId: this.clientSocket.roomId,
-            };
-            console.log("Config ws :", config);
-            const xmpp = client(config);
+            });
 
             xmpp.on("error", (err: string) => {
                 console.error("XmppClient => receive => error =>", err);
