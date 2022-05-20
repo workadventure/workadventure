@@ -1569,7 +1569,7 @@ ${escapedMessage}
             layoutManagerActionStore.addAction({
                 uuid: "roomAccessDenied",
                 type: "warning",
-                message: "Room access denied. You don't have right to access on this room.",
+                message: get(LL).warning.accessDenied.room(),
                 callback: () => {
                     layoutManagerActionStore.removeAction("roomAccessDenied");
                 },
@@ -1625,18 +1625,18 @@ ${escapedMessage}
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
-        this.userInputManager.destroy();
+        this.userInputManager?.destroy();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
-        this.cameraManager.destroy();
-        this.peerStoreUnsubscriber();
-        this.emoteUnsubscriber();
-        this.emoteMenuUnsubscriber();
-        this.followUsersColorStoreUnsubscriber();
-        this.biggestAvailableAreaStoreUnsubscriber();
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber();
-        this.jitsiParticipantsCountStoreUnsubscriber();
-        this.availabilityStatusStoreUnsubscriber();
+        this.cameraManager?.destroy();
+        this.peerStoreUnsubscriber?.();
+        this.emoteUnsubscriber?.();
+        this.emoteMenuUnsubscriber?.();
+        this.followUsersColorStoreUnsubscriber?.();
+        this.biggestAvailableAreaStoreUnsubscriber?.();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
+        this.jitsiParticipantsCountStoreUnsubscriber?.();
+        this.availabilityStatusStoreUnsubscriber?.();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
