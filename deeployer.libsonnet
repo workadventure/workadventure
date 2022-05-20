@@ -78,7 +78,7 @@
               # Ejabberd
               "EJABBERD_DOMAIN": "xmpp-admin-"+url,
               "EJABBERD_URI": "adminxmpp-"+url,
-              "EJABBERD_JWT_SECRET": env.ADMIN_API_TOKEN,
+              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
             } else {})
           },
     "front": {
