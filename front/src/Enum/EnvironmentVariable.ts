@@ -1,8 +1,6 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
-const START_ROOM_URL: string =
-    getEnvConfig("START_ROOM_URL") || "/_/global/maps.workadventure.localhost/Floor1/floor1.json";
 const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
 export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "//workadventu.re";
 const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
@@ -32,7 +30,6 @@ const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 
 export {
     DEBUG_MODE,
-    START_ROOM_URL,
     SKIP_RENDER_OPTIMIZATIONS,
     DISABLE_NOTIFICATIONS,
     PUSHER_URL,

@@ -27,6 +27,9 @@ export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATI
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
 export const ENABLE_OPENAPI_ENDPOINT = process.env.ENABLE_OPENAPI_ENDPOINT === "true";
 
+// The URL to use if the user is visiting the first time and hitting the "/" route.
+export const START_ROOM_URL: string = process.env.START_ROOM_URL || "/_/global/maps.workadventu.re/starter/map.json";
+
 export {
     SECRET_KEY,
     API_URL,

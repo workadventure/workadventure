@@ -39,7 +39,6 @@ services:
       - TURN_PASSWORD
       - TURN_STATIC_AUTH_SECRET
       - STUN_SERVER
-      - START_ROOM_URL
       - SKIP_RENDER_OPTIMIZATIONS
       - MAX_PER_GROUP
       - MAX_USERNAME_LENGTH
@@ -67,6 +66,7 @@ services:
       - JITSI_URL
       - JITSI_ISS
       - DISABLE_ANONYMOUS
+      - START_ROOM_URL
     labels:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"

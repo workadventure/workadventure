@@ -72,6 +72,7 @@
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
               "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
+              "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
             } else {})
           },
     "front": {
@@ -91,7 +92,6 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
         "ICON_URL": "//icon-"+url,
       }
     },
