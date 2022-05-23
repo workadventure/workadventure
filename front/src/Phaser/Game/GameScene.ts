@@ -929,7 +929,9 @@ export class GameScene extends DirtyScene {
         });
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            this.reposition();
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
         });
 
         const talkIconVolumeTreshold = 10;

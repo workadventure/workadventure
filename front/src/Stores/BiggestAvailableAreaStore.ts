@@ -1,7 +1,6 @@
-import { get, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { highlightedEmbedScreen } from "./EmbedScreensStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
@@ -15,14 +14,13 @@ function findBiggestAvailableArea(): Box {
         yEnd: game.offsetHeight,
     };
 
-    const blockers: Box[] = [];
-
-    const screenOnTop = get(highlightedEmbedScreen);
-    if (!screenOnTop) {
+    const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+    if (blockingElements.length === 0) {
         return wholeScreenBox;
     }
 
-    const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+    const blockers: Box[] = [];
+
     for (const blocker of blockingElements) {
         const bounds = blocker.getBoundingClientRect();
         blockers.push({
@@ -31,10 +29,6 @@ function findBiggestAvailableArea(): Box {
             xEnd: bounds.right,
             yEnd: bounds.bottom,
         });
-    }
-
-    if (blockers.length === 0) {
-        return wholeScreenBox;
     }
 
     // create vertices arrays and insert game canvas edges
