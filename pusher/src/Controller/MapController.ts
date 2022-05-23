@@ -106,15 +106,17 @@ export class MapController extends BaseHttpController {
 
             (async () => {
                 try {
-                    const mapDetails = isMapDetailsData.parse(
-                        await adminService.fetchMapDetails(
-                            query.playUri as string,
-                            query.authToken as string,
-                            req.header("accept-language")
-                        )
+                    let mapDetails = await adminService.fetchMapDetails(
+                        query.playUri as string,
+                        query.authToken as string,
+                        req.header("accept-language")
                     );
 
-                    if (DISABLE_ANONYMOUS) mapDetails.authenticationMandatory = true;
+                    const mapDetailsParsed = isMapDetailsData.safeParse(mapDetails);
+                    if (DISABLE_ANONYMOUS && mapDetailsParsed.success) {
+                        mapDetails = mapDetailsParsed.data;
+                        mapDetails.authenticationMandatory = true;
+                    }
 
                     res.json(mapDetails);
                     return;
