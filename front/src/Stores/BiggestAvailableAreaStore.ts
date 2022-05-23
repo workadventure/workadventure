@@ -1,112 +1,94 @@
-import { get, writable } from "svelte/store";
+import { writable } from "svelte/store";
 import type { Box } from "../WebRtc/LayoutManager";
 import { HtmlUtils } from "../WebRtc/HtmlUtils";
-import { LayoutMode } from "../WebRtc/LayoutManager";
-import { embedScreenLayout } from "./EmbedScreensStore";
 
 /**
  * Tries to find the biggest available box of remaining space (this is a space where we can center the character)
  */
 function findBiggestAvailableArea(): Box {
     const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
-    if (get(embedScreenLayout) === LayoutMode.VideoChat) {
-        const children = document.querySelectorAll<HTMLDivElement>("div.chat-mode > div");
-        const htmlChildren = Array.from(children.values());
+    const wholeScreenBox = {
+        xStart: 0,
+        yStart: 0,
+        xEnd: game.offsetWidth,
+        yEnd: game.offsetHeight,
+    };
 
-        // No chat? Let's go full center
-        if (htmlChildren.length === 0) {
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
+    const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+    if (blockingElements.length === 0) {
+        return wholeScreenBox;
+    }
 
-        const lastDiv = htmlChildren[htmlChildren.length - 1];
-        // Compute area between top right of the last div and bottom right of window
-        const area1 =
-            (game.offsetWidth - (lastDiv.offsetLeft + lastDiv.offsetWidth)) * (game.offsetHeight - lastDiv.offsetTop);
+    const blockers: Box[] = [];
 
-        // Compute area between bottom of last div and bottom of the screen on whole width
-        const area2 = game.offsetWidth * (game.offsetHeight - (lastDiv.offsetTop + lastDiv.offsetHeight));
+    for (const blocker of blockingElements) {
+        const bounds = blocker.getBoundingClientRect();
+        blockers.push({
+            xStart: bounds.x,
+            yStart: bounds.y,
+            xEnd: bounds.right,
+            yEnd: bounds.bottom,
+        });
+    }
 
-        if (area1 < 0 && area2 < 0) {
-            // If screen is full, let's not attempt something foolish and simply center character in the middle.
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
-        if (area1 <= area2) {
-            return {
-                xStart: 0,
-                yStart: lastDiv.offsetTop + lastDiv.offsetHeight,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        } else {
-            return {
-                xStart: lastDiv.offsetLeft + lastDiv.offsetWidth,
-                yStart: lastDiv.offsetTop,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
-    } else {
-        // Possible destinations: at the center bottom or at the right bottom.
-        const mainSectionChildren = Array.from(
-            document.querySelectorAll<HTMLDivElement>("div.main-section > div").values()
-        );
-        const sidebarChildren = Array.from(document.querySelectorAll<HTMLDivElement>("aside.sidebar > div").values());
+    // create vertices arrays and insert game canvas edges
+    const verticesX = [game.offsetLeft, game.offsetWidth];
+    const verticesY = [game.offsetTop, game.offsetHeight];
 
-        // No presentation? Let's center on the screen
-        if (mainSectionChildren.length === 0) {
-            return {
-                xStart: 0,
-                yStart: 0,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        }
+    // populate with all vertices
+    for (const blocker of blockers) {
+        verticesX.push(blocker.xStart, blocker.xEnd);
+        verticesY.push(blocker.yStart, blocker.yEnd);
+    }
+    verticesX.sort((a, b) => a - b);
+    verticesY.sort((a, b) => a - b);
 
-        // At this point, we know we have at least one element in the main section.
-        const lastPresentationDiv = mainSectionChildren[mainSectionChildren.length - 1];
+    // NOTE: cannot use fill() here, it makes references to a single array
+    const occupiedGrid: boolean[][] = new Array(verticesY.length - 1);
+    for (let j = 0; j < verticesY.length - 1; j += 1) {
+        occupiedGrid[j] = new Array(verticesX.length - 1).fill(false);
+    }
 
-        const presentationArea =
-            (game.offsetHeight - (lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight)) *
-            (lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth);
-
-        let leftSideBar: number;
-        let bottomSideBar: number;
-        if (sidebarChildren.length === 0) {
-            leftSideBar = HtmlUtils.getElementByIdOrFail<HTMLDivElement>("sidebar").offsetLeft;
-            bottomSideBar = 0;
-        } else {
-            const lastSideBarChildren = sidebarChildren[sidebarChildren.length - 1];
-            leftSideBar = lastSideBarChildren.offsetLeft;
-            bottomSideBar = lastSideBarChildren.offsetTop + lastSideBarChildren.offsetHeight;
-        }
-        const sideBarArea = (game.offsetWidth - leftSideBar) * (game.offsetHeight - bottomSideBar);
-
-        if (presentationArea <= sideBarArea) {
-            return {
-                xStart: leftSideBar,
-                yStart: bottomSideBar,
-                xEnd: game.offsetWidth,
-                yEnd: game.offsetHeight,
-            };
-        } else {
-            return {
-                xStart: 0,
-                yStart: lastPresentationDiv.offsetTop + lastPresentationDiv.offsetHeight,
-                xEnd: /*lastPresentationDiv.offsetLeft + lastPresentationDiv.offsetWidth*/ game.offsetWidth, // To avoid flickering when a chat start, we center on the center of the screen, not the center of the main content area
-                yEnd: game.offsetHeight,
-            };
+    for (const blocker of blockers) {
+        const [left, top] = getGridCoordinates(blocker.xStart, blocker.yStart, verticesX, verticesY);
+        const [right, bottom] = getGridCoordinates(blocker.xEnd, blocker.yEnd, verticesX, verticesY);
+        for (let j = top; j < bottom; j += 1) {
+            for (let i = left; i < right; i += 1) {
+                occupiedGrid[j][i] = true;
+            }
         }
     }
+
+    // create an array of all free boxes
+    const freeBoxes: Box[] = [];
+    for (let x = 0; x < occupiedGrid.length; x += 1) {
+        for (let y = 0; y < occupiedGrid[x].length; y += 1) {
+            freeBoxes.push(...findAllFreeBoxes(x, y, occupiedGrid));
+        }
+    }
+
+    let biggestArea = 0;
+    let biggestBox = wholeScreenBox;
+    for (const box of freeBoxes) {
+        const area = getBoxArea(box, verticesX, verticesY);
+        if (area > biggestArea) {
+            biggestArea = area;
+            biggestBox = box;
+        }
+    }
+
+    return {
+        xStart: verticesX[biggestBox.xStart],
+        yStart: verticesY[biggestBox.yStart],
+        xEnd: verticesX[biggestBox.xEnd + 1],
+        yEnd: verticesY[biggestBox.yEnd + 1],
+    };
+}
+
+export function getBoxArea(box: Box, xVertices: number[], yVertices: number[]): number {
+    const width = xVertices[box.xEnd + 1] - xVertices[box.xStart];
+    const height = yVertices[box.yEnd + 1] - yVertices[box.yStart];
+    return width * height;
 }
 
 /**
@@ -121,6 +103,49 @@ function createBiggestAvailableAreaStore() {
             set(findBiggestAvailableArea());
         },
     };
+}
+
+export function findAllFreeBoxes(left: number, top: number, grid: boolean[][]): Box[] {
+    if (grid.length === 0) {
+        return [];
+    }
+    if (grid[0].length === 0) {
+        return [];
+    }
+    if (grid[top][left] === true) {
+        return [];
+    }
+
+    const boxes: Box[] = [];
+
+    // we expect grid rows to be of the same length
+    let xEnd = grid[0].length;
+
+    for (let y = top; y < grid.length; y += 1) {
+        let found = false;
+        const lastXEnd = xEnd;
+        let x;
+        for (x = left; x < xEnd; x += 1) {
+            // do not add boxes with occupied parts
+            if (grid[y][x] === true) {
+                // no point in trying to find free box after this column
+                xEnd = x;
+                found = true;
+                break;
+            }
+        }
+        if (found || x === lastXEnd) {
+            boxes.push({ xStart: left, yStart: top, xEnd: x - 1, yEnd: y });
+        }
+        if (x === left && grid[y][x] === true) {
+            break;
+        }
+    }
+    return boxes;
+}
+
+export function getGridCoordinates(x: number, y: number, verticesX: number[], verticesY: number[]): [number, number] {
+    return [verticesX.findIndex((vertexX) => vertexX === x), verticesY.findIndex((vertexY) => vertexY === y)];
 }
 
 export const biggestAvailableAreaStore = createBiggestAvailableAreaStore();

@@ -105,6 +105,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -182,9 +183,10 @@ export class GameScene extends DirtyScene {
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
+    private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
+    private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
 
-    private biggestAvailableAreaStoreUnsubscriber!: () => void;
     MapUrlFile: string;
     roomUrl: string;
 
@@ -936,10 +938,17 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        // From now, this game scene will be notified of reposition events
-        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) =>
-            this.cameraManager.updateCameraOffset(box)
-        );
+        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
+        });
+
+        this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
+        });
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
@@ -1633,7 +1642,8 @@ ${escapedMessage}
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
-        this.biggestAvailableAreaStoreUnsubscriber?.();
+        this.highlightedEmbedScreenUnsubscriber?.();
+        this.embedScreenLayoutStoreUnsubscriber?.();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
@@ -2175,7 +2185,7 @@ ${escapedMessage}
 
     public onResize(): void {
         super.onResize();
-        this.reposition();
+        this.reposition(true);
 
         // Send new viewport to server
         const camera = this.cameras.main;
@@ -2200,9 +2210,10 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(): void {
+    private reposition(instant: boolean = false): void {
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();
+        this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
     }
 
     public enableMediaBehaviors() {
@@ -2277,7 +2288,7 @@ ${escapedMessage}
             return;
         }
         waScaleManager.handleZoomByFactor(zoomFactor);
-        biggestAvailableAreaStore.recompute();
+        // biggestAvailableAreaStore.recompute();
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {
