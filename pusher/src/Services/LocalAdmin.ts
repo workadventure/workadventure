@@ -3,7 +3,7 @@ import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { GameRoomPolicyTypes } from "../Model/PusherRoom";
-import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 /**
@@ -30,6 +30,13 @@ class LocalAdmin implements AdminInterface {
 
     fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect> {
         const roomUrl = new URL(playUri);
+
+        if (roomUrl.pathname === "/") {
+            roomUrl.pathname = START_ROOM_URL;
+            return Promise.resolve({
+                redirectUrl: roomUrl.toString(),
+            });
+        }
 
         const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (!match) {

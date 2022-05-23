@@ -107,6 +107,7 @@ const defaultInterfaceConfig = {
         "shortcuts",
         "tileview",
         "videobackgroundblur",
+        "select-background",
         "download",
         "help",
         "mute-everyone" /*'security'*/,

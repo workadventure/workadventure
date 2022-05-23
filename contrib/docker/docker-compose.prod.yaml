@@ -39,7 +39,6 @@ services:
       - TURN_PASSWORD
       - TURN_STATIC_AUTH_SECRET
       - STUN_SERVER
-      - START_ROOM_URL
       - SKIP_RENDER_OPTIMIZATIONS
       - MAX_PER_GROUP
       - MAX_USERNAME_LENGTH
@@ -60,13 +59,11 @@ services:
     image: thecodingmachine/workadventure-pusher:${VERSION}
     command: yarn run runprod
     environment:
-      - SECRET_JITSI_KEY
       - SECRET_KEY
       - API_URL
       - FRONT_URL=https://${FRONT_HOST}
-      - JITSI_URL
-      - JITSI_ISS
       - DISABLE_ANONYMOUS
+      - START_ROOM_URL
     labels:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
@@ -93,6 +90,8 @@ services:
       - STUN_SERVER
       - JITSI_URL
       - JITSI_ISS
+      - BBB_URL
+      - BBB_SECRET
       - MAX_PER_GROUP
       - STORE_VARIABLES_FOR_LOCAL_MAPS
       - REDIS_HOST=redis

@@ -6,6 +6,40 @@ import { extendApi } from "@anatine/zod-openapi";
  * All other files are automatically copied from this file on container startup / build
  */
 
+const isBbbData = z.object({
+    url: extendApi(z.string(), {
+        description: 'The full URL to your BigBlueButton server. Do not forget the trailing "/bigbluebutton/".',
+        example: "https://test-install.blindsidenetworks.com/bigbluebutton/",
+    }),
+    secret: extendApi(z.string(), {
+        description:
+            'The BigBlueButton secret. From your BBB instance, you can get the correct values using the command: "bbb-conf --secret"',
+    }),
+});
+
+const isJitsiData = z.object({
+    url: extendApi(z.string(), {
+        description: "The domain name of your Jitsi server.",
+        example: "meet.jit.si",
+    }),
+    iss: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The Jitsi ISS setting. See https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md",
+        default: false,
+    }),
+    secret: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The Jitsi secret setting. See https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md",
+    }),
+});
+
+const isMapThirdPartyData = z.object({
+    bbb: extendApi(z.optional(z.nullable(isBbbData)), {
+        description: "Use these settings to override default BigBlueButton settings.",
+    }),
+    jitsi: extendApi(z.optional(z.nullable(isJitsiData)), {
+        description: "Use these settings to override default Jitsi settings.",
+    }),
+});
+
 export const isMapDetailsData = z.object({
     // @ts-ignore
     mapUrl: extendApi(z.string(), {
@@ -58,6 +92,12 @@ export const isMapDetailsData = z.object({
         description: "The URL of the image to be used on the name scene",
         example: "https://example.com/logo_login.png",
     }),
+    thirdParty: extendApi(z.optional(z.nullable(isMapThirdPartyData)), {
+        description: "Configuration data for third party services",
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;
+export type MapThirdPartyData = z.infer<typeof isMapThirdPartyData>;
+export type MapBbbData = z.infer<typeof isBbbData>;
+export type MapJitsiData = z.infer<typeof isJitsiData>;

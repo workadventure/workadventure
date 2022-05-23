@@ -14,6 +14,8 @@ import {
     WebRtcStartMessage,
     QueryJitsiJwtMessage,
     SendJitsiJwtMessage,
+    JoinBBBMeetingMessage,
+    BBBMeetingClientURLMessage,
     SendUserMessage,
     JoinRoomMessage,
     Zone as ProtoZone,
@@ -37,22 +39,17 @@ import {
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
+    ErrorMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
 import { cpuTracker } from "./CpuTracker";
-import {
-    GROUP_RADIUS,
-    JITSI_ISS,
-    MINIMUM_DISTANCE,
-    SECRET_JITSI_KEY,
-    TURN_STATIC_AUTH_SECRET,
-} from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
+import BigbluebuttonJs from "bigbluebutton-js";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -568,26 +565,38 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+    public async handleQueryJitsiJwtMessage(
+        gameRoom: GameRoom,
+        user: User,
+        queryJitsiJwtMessage: QueryJitsiJwtMessage
+    ) {
+        const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
+        const jitsiSettings = gameRoom.getJitsiSettings();
 
-        if (SECRET_JITSI_KEY === "") {
+        if (jitsiSettings === undefined || !jitsiSettings.secret) {
             throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
         }
 
-        // Let's see if the current client has
-        const isAdmin = user.tags.includes(tag);
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes("admin")) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            }
+        }
 
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
-                iss: JITSI_ISS,
-                sub: JITSI_URL,
-                room: room,
+                iss: jitsiSettings.iss,
+                sub: jitsiSettings.url,
+                room: jitsiRoom,
                 moderator: isAdmin,
             },
-            SECRET_JITSI_KEY,
+            jitsiSettings.secret,
             {
                 expiresIn: "1d",
                 algorithm: "HS256",
@@ -599,11 +608,90 @@ export class SocketManager {
         );
 
         const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
+        sendJitsiJwtMessage.setJitsiroom(jitsiRoom);
         sendJitsiJwtMessage.setJwt(jwt);
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+
+        user.socket.write(serverToClientMessage);
+    }
+
+    public async handleJoinBBBMeetingMessage(
+        gameRoom: GameRoom,
+        user: User,
+        joinBBBMeetingMessage: JoinBBBMeetingMessage
+    ) {
+        const meetingId = joinBBBMeetingMessage.getMeetingid();
+        const meetingName = joinBBBMeetingMessage.getMeetingname();
+        const bbbSettings = gameRoom.getBbbSettings();
+
+        if (bbbSettings === undefined) {
+            const errorStr =
+                "Unable to join the conference because either " +
+                "the BBB_URL or BBB_SECRET environment variables are not set.";
+
+            console.error(errorStr);
+
+            const errorMessage = new ErrorMessage();
+            errorMessage.setMessage(errorStr);
+
+            const serverToClientMessage = new ServerToClientMessage();
+            serverToClientMessage.setErrormessage(errorMessage);
+            user.socket.write(serverToClientMessage);
+
+            return;
+        }
+
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes("admin")) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            } else if (moderatorTag === undefined) {
+                // If the bbbMeetingAdminTag is not set, everyone is a moderator.
+                isAdmin = true;
+            }
+        }
+
+        const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
+        // It seems bbb-api is limiting password length to 50 chars
+        const maxPWLen = 50;
+        const attendeePW = crypto
+            .createHmac("sha256", bbbSettings.secret)
+            .update(`attendee-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+        const moderatorPW = crypto
+            .createHmac("sha256", bbbSettings.secret)
+            .update(`moderator-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+
+        // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
+        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createURL = api.administration.create(meetingName, meetingId, createOptions);
+        await BigbluebuttonJs.http(createURL);
+
+        const joinParams: Record<string, string> = {};
+
+        // XXX: figure out how to know if the user has admin status and use the moderatorPW
+        // in that case
+        const clientURL = api.administration.join(user.name, meetingId, isAdmin ? moderatorPW : attendeePW, {
+            ...joinParams,
+            userID: user.id,
+            joinViaHtml5: true,
+        });
+
+        const bbbMeetingClientURLMessage = new BBBMeetingClientURLMessage();
+        bbbMeetingClientURLMessage.setMeetingid(meetingId);
+        bbbMeetingClientURLMessage.setClienturl(clientURL);
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setBbbmeetingclienturlmessage(bbbMeetingClientURLMessage);
 
         user.socket.write(serverToClientMessage);
     }
