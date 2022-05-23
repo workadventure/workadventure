@@ -272,6 +272,10 @@ export const iframeQueryMapTypeGuards = {
         query: isCreateAreaEvent,
         answer: z.undefined(),
     },
+    deleteArea: {
+        query: z.string(),
+        answer: z.undefined(),
+    },
     setPlayerOutline: {
         query: isColorEvent,
         answer: z.undefined(),

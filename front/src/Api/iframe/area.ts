@@ -36,6 +36,15 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return new Area(createAreaEvent);
     }
 
+    delete(name: string): void {
+        queryWorkadventure({
+            type: "deleteArea",
+            data: name,
+        }).catch((e) => {
+            console.error(e);
+        });
+    }
+
     onEnter(areaName: string): Subject<void> {
         let subject = enterAreaStreams.get(areaName);
         if (subject === undefined) {

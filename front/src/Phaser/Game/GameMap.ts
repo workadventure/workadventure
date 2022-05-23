@@ -370,6 +370,10 @@ export class GameMap {
         this.areas.set(name, area);
     }
 
+    public deleteArea(name: string): void {
+        this.areas.delete(name);
+    }
+
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
