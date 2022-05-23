@@ -114,7 +114,7 @@
         {
          "columns":11,
          "firstgid":1,
-         "image":"..\/tileset1.png",
+         "image":"..\/..\/..\/assets\/tileset1.png",
          "imageheight":352,
          "imagewidth":352,
          "margin":0,
