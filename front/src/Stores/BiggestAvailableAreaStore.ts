@@ -22,27 +22,15 @@ function findBiggestAvailableArea(): Box {
         return wholeScreenBox;
     }
 
-    if (screenOnTop.type === "cowebsite") {
-        const iframe = screenOnTop.embed.getIframe();
-        if (iframe) {
-            blockers.push({
-                xStart: iframe.offsetLeft,
-                yStart: iframe.offsetTop,
-                xEnd: iframe.offsetWidth,
-                yEnd: iframe.offsetHeight,
-            });
-        }
-    } else {
-        const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
-        for (const blocker of blockingElements) {
-            const bounds = blocker.getBoundingClientRect();
-            blockers.push({
-                xStart: bounds.x,
-                yStart: bounds.y,
-                xEnd: bounds.right,
-                yEnd: bounds.bottom,
-            });
-        }
+    const blockingElements = Array.from(document.getElementsByClassName("screen-blocker"));
+    for (const blocker of blockingElements) {
+        const bounds = blocker.getBoundingClientRect();
+        blockers.push({
+            xStart: bounds.x,
+            yStart: bounds.y,
+            xEnd: bounds.right,
+            yEnd: bounds.bottom,
+        });
     }
 
     if (blockers.length === 0) {
