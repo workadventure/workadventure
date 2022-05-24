@@ -36,6 +36,17 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return new Area(createAreaEvent);
     }
 
+    get(name: string): Promise<Area | undefined> {
+        const areaEvent = queryWorkadventure({
+            type: "getArea",
+            data: name,
+        }).catch((e) => {
+            console.error(e);
+        });
+
+        return new Area(areaEvent);
+    }
+
     delete(name: string): void {
         queryWorkadventure({
             type: "deleteArea",

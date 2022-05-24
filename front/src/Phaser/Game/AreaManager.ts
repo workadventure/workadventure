@@ -1,18 +1,17 @@
 import { Subscription } from "rxjs";
 import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
-import { Area } from "../../Api/iframe/Area/Area";
 import { iframeListener } from "../../Api/IframeListener";
 import { GameMap } from "./GameMap";
 
 export class AreaManager {
     private readonly gameMap: GameMap;
 
-    private readonly areas: Map<string, Area>;
+    // private readonly areas: Map<string, Area>;
     private readonly subscription: Subscription;
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
-        this.areas = new Map<string, Area>();
+        // this.areas = new Map<string, Area>();
 
         this.registerIFrameEventAnswerers();
 
@@ -43,7 +42,7 @@ export class AreaManager {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
-            this.areas.set(createAreaEvent.name, new Area(createAreaEvent));
+            // this.areas.set(createAreaEvent.name, new Area(createAreaEvent));
             this.gameMap.setArea(createAreaEvent.name, {
                 ...createAreaEvent,
                 id: -1,
@@ -56,6 +55,13 @@ export class AreaManager {
                 polyline: [],
                 properties: [],
             });
+        });
+
+        iframeListener.registerAnswerer("getArea", (name: string) => {
+            // const website = this.embeddedWebsites.get(name);
+            // if (website === undefined) {
+            //     throw new Error('Cannot find embedded website with name "' + name + '"');
+            // }
         });
 
         // TODO: Do we also want to unregister actions from onEnter onLeave streams?
