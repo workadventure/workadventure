@@ -11,6 +11,7 @@ import { get } from "svelte/store";
 import { screenSharingLocalStreamStore } from "../Stores/ScreenSharingStore";
 import { playersStore } from "../Stores/PlayersStore";
 import { peerStore, screenSharingPeerStore } from "../Stores/PeerStore";
+import { Subscription } from "rxjs";
 
 export interface UserSimplePeerInterface {
     userId: number;
@@ -32,6 +33,7 @@ export class SimplePeer {
     private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
     private readonly stopLocalScreenSharingStreamCallback: StopScreenSharingCallback;
     private readonly unsubscribers: (() => void)[] = [];
+    private readonly rxJsUnsubscribers: Subscription[] = [];
     private readonly userId: number;
     private lastWebrtcUserName: string | undefined;
     private lastWebrtcPassword: string | undefined;
@@ -75,27 +77,37 @@ export class SimplePeer {
      */
     private initialise() {
         //receive signal by gemer
-        this.Connection.webRtcSignalToClientMessageStream.subscribe((message: WebRtcSignalReceivedMessageInterface) => {
-            this.receiveWebrtcSignal(message);
-        });
+        this.rxJsUnsubscribers.push(
+            this.Connection.webRtcSignalToClientMessageStream.subscribe(
+                (message: WebRtcSignalReceivedMessageInterface) => {
+                    this.receiveWebrtcSignal(message);
+                }
+            )
+        );
 
         //receive signal by gemer
-        this.Connection.webRtcScreenSharingSignalToClientMessageStream.subscribe(
-            (message: WebRtcSignalReceivedMessageInterface) => {
-                this.receiveWebrtcScreenSharingSignal(message);
-            }
+        this.rxJsUnsubscribers.push(
+            this.Connection.webRtcScreenSharingSignalToClientMessageStream.subscribe(
+                (message: WebRtcSignalReceivedMessageInterface) => {
+                    this.receiveWebrtcScreenSharingSignal(message);
+                }
+            )
         );
 
         mediaManager.showMyCamera();
 
         //receive message start
-        this.Connection.webRtcStartMessageStream.subscribe((message: UserSimplePeerInterface) => {
-            this.receiveWebrtcStart(message);
-        });
+        this.rxJsUnsubscribers.push(
+            this.Connection.webRtcStartMessageStream.subscribe((message: UserSimplePeerInterface) => {
+                this.receiveWebrtcStart(message);
+            })
+        );
 
-        this.Connection.webRtcDisconnectMessageStream.subscribe((data: WebRtcDisconnectMessageInterface): void => {
-            this.closeConnection(data.userId);
-        });
+        this.rxJsUnsubscribers.push(
+            this.Connection.webRtcDisconnectMessageStream.subscribe((data: WebRtcDisconnectMessageInterface): void => {
+                this.closeConnection(data.userId);
+            })
+        );
     }
 
     private receiveWebrtcStart(user: UserSimplePeerInterface): void {
@@ -219,7 +231,7 @@ export class SimplePeer {
                 );
                 return;
             }
-            //create temp perr to close
+            //create temp peer to close
             peer.toClose = true;
             peer.destroy();
             // FIXME: I don't understand why "Closing connection with" message is displayed TWICE before "Nb users in peerConnectionArray"
@@ -234,7 +246,9 @@ export class SimplePeer {
                 this.Users.splice(userIndex, 1);
             }
         } catch (err) {
-            console.error("closeConnection", err);
+            console.error("An error occurred in closeConnection", err);
+        } finally {
+            this.PeerConnectionArray.delete(userId);
         }
 
         //if user left discussion, clear array peer connection of sharing
@@ -267,7 +281,9 @@ export class SimplePeer {
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
             peer.destroy();
         } catch (err) {
-            console.error("closeConnection", err);
+            console.error("An error occurred in closeScreenSharingConnection", err);
+        } finally {
+            this.PeerScreenSharingConnectionArray.delete(userId);
         }
     }
 
@@ -287,6 +303,9 @@ export class SimplePeer {
     public unregister() {
         for (const unsubscriber of this.unsubscribers) {
             unsubscriber();
+        }
+        for (const subscription of this.rxJsUnsubscribers) {
+            subscription.unsubscribe();
         }
         peerStore.cleanupStore();
         screenSharingPeerStore.cleanupStore();
