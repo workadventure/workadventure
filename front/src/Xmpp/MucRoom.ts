@@ -145,7 +145,9 @@ export class MucRoom {
 
     public disconnect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
-        return xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
+        const messageMucSubscribe = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
+        this.connection.emitXmlMessage(messageMucSubscribe);
+        return messageMucSubscribe;
     }
 
     onMessage(xml: ElementExt): void {
