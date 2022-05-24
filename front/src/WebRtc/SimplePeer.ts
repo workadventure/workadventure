@@ -26,8 +26,6 @@ export type RemotePeer = VideoPeer | ScreenSharingPeer;
  * This class manages connections to all the peers in the same group as me.
  */
 export class SimplePeer {
-    private Users: Array<UserSimplePeerInterface> = new Array<UserSimplePeerInterface>(); //todo: this array should be fusionned with PeerConnectionArray
-
     private PeerScreenSharingConnectionArray: Map<number, ScreenSharingPeer> = new Map<number, ScreenSharingPeer>();
     private PeerConnectionArray: Map<number, VideoPeer> = new Map<number, VideoPeer>();
     private readonly sendLocalScreenSharingStreamCallback: StartScreenSharingCallback;
@@ -111,7 +109,6 @@ export class SimplePeer {
     }
 
     private receiveWebrtcStart(user: UserSimplePeerInterface): void {
-        this.Users.push(user);
         // Note: the clients array contain the list of all clients (even the ones we are already connected to in case a user joins a group)
         // So we can receive a request we already had before. (which will abort at the first line of createPeerConnection)
         // This would be symmetrical to the way we handle disconnection.
@@ -135,7 +132,7 @@ export class SimplePeer {
                 peerConnection.destroy();
                 const peerConnexionDeleted = this.PeerConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw new Error("Error to delete peer connection");
+                    throw new Error("Error deleting peer connection");
                 }
                 //return this.createPeerConnection(user, localStream);
             } else {
@@ -182,20 +179,20 @@ export class SimplePeer {
         user: UserSimplePeerInterface,
         stream: MediaStream | null
     ): ScreenSharingPeer | null {
-        const peerConnection = this.PeerScreenSharingConnectionArray.get(user.userId);
-        if (peerConnection) {
-            if (peerConnection.destroyed) {
-                peerConnection.toClose = true;
-                peerConnection.destroy();
+        const peerScreenSharingConnection = this.PeerScreenSharingConnectionArray.get(user.userId);
+        if (peerScreenSharingConnection) {
+            if (peerScreenSharingConnection.destroyed) {
+                peerScreenSharingConnection.toClose = true;
+                peerScreenSharingConnection.destroy();
                 const peerConnexionDeleted = this.PeerScreenSharingConnectionArray.delete(user.userId);
                 if (!peerConnexionDeleted) {
-                    throw new Error("Error to delete peer connection");
+                    throw new Error("Error deleting peer connection");
                 }
-                this.createPeerConnection(user);
+                //this.createPeerConnection(user);
             } else {
-                peerConnection.toClose = false;
+                peerScreenSharingConnection.toClose = false;
+                return null;
             }
-            return null;
         }
 
         // Enrich the user with last known credentials (if they are not set in the user object, which happens when a user triggers the screen sharing)
@@ -238,25 +235,16 @@ export class SimplePeer {
             // I do understand the method closeConnection is called twice, but I don't understand how they manage to run in parallel.
 
             this.closeScreenSharingConnection(userId);
-
-            const userIndex = this.Users.findIndex((user) => user.userId === userId);
-            if (userIndex < 0) {
-                throw new Error("Couldn't delete user");
-            } else {
-                this.Users.splice(userIndex, 1);
-            }
         } catch (err) {
             console.error("An error occurred in closeConnection", err);
         } finally {
             this.PeerConnectionArray.delete(userId);
         }
 
-        //if user left discussion, clear array peer connection of sharing
-        if (this.Users.length === 0) {
+        //if the user left the discussion, clear screen sharing.
+        if (this.PeerConnectionArray.size === 0) {
             for (const userId of this.PeerScreenSharingConnectionArray.keys()) {
                 this.closeScreenSharingConnection(userId);
-                this.PeerScreenSharingConnectionArray.delete(userId);
-                screenSharingPeerStore.removePeer(userId);
             }
         }
 
@@ -285,6 +273,8 @@ export class SimplePeer {
         } finally {
             this.PeerScreenSharingConnectionArray.delete(userId);
         }
+
+        screenSharingPeerStore.removePeer(userId);
     }
 
     public closeAllConnections() {
@@ -378,8 +368,8 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public sendLocalScreenSharingStream(localScreenCapture: MediaStream) {
-        for (const user of this.Users) {
-            this.sendLocalScreenSharingStreamToUser(user.userId, localScreenCapture);
+        for (const userId of this.PeerConnectionArray.keys()) {
+            this.sendLocalScreenSharingStreamToUser(userId, localScreenCapture);
         }
     }
 
@@ -387,8 +377,8 @@ export class SimplePeer {
      * Triggered locally when clicking on the screen sharing button
      */
     public stopLocalScreenSharingStream(stream: MediaStream) {
-        for (const user of this.Users) {
-            this.stopLocalScreenSharingStreamToUser(user.userId, stream);
+        for (const userId of this.PeerConnectionArray.keys()) {
+            this.stopLocalScreenSharingStreamToUser(userId, stream);
         }
     }
 
