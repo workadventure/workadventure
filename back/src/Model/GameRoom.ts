@@ -25,14 +25,23 @@ import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
+import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "../Messages/JsonMessages/MapDetailsData";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
-import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import {
+    ADMIN_API_URL,
+    BBB_SECRET,
+    BBB_URL,
+    JITSI_ISS,
+    JITSI_URL,
+    SECRET_JITSI_KEY,
+} from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
+import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
+import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -64,7 +73,8 @@ export class GameRoom {
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
-        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        private thirdParty: MapThirdPartyData | undefined
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -106,7 +116,8 @@ export class GameRoom {
             onLeaves,
             onEmote,
             onLockGroup,
-            onPlayerDetailsUpdated
+            onPlayerDetailsUpdated,
+            mapDetails.thirdParty ?? undefined
         );
 
         return gameRoom;
@@ -145,7 +156,7 @@ export class GameRoom {
             joinRoomMessage.getIpaddress(),
             position,
             this.positionNotifier,
-            joinRoomMessage.getStatus(),
+            joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -658,5 +669,62 @@ export class GameRoom {
 
     public getGroupById(id: number): Group | undefined {
         return this.groups.get(id);
+    }
+
+    private jitsiModeratorTagFinder: ModeratorTagFinder | undefined;
+
+    /**
+     * Returns the moderator tag associated with jitsiRoom
+     */
+    public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
+        if (this.jitsiModeratorTagFinder === undefined) {
+            const map = await this.getMap();
+            this.jitsiModeratorTagFinder = new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
+        }
+
+        return this.jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
+    }
+
+    private bbbModeratorTagFinder: ModeratorTagFinder | undefined;
+
+    /**
+     * Returns the moderator tag associated with bbbMeeting
+     */
+    public async getModeratorTagForBbbMeeting(bbbMeeting: string): Promise<string | undefined> {
+        if (this.bbbModeratorTagFinder === undefined) {
+            const map = await this.getMap();
+            this.bbbModeratorTagFinder = new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
+        }
+
+        return this.bbbModeratorTagFinder.getModeratorTag(bbbMeeting);
+    }
+
+    public getJitsiSettings(): MapJitsiData | undefined {
+        const jitsi = this.thirdParty?.jitsi;
+        if (jitsi) {
+            return jitsi;
+        }
+        if (JITSI_URL) {
+            return {
+                url: JITSI_URL,
+                iss: JITSI_ISS,
+                secret: SECRET_JITSI_KEY,
+            };
+        }
+        return undefined;
+    }
+
+    public getBbbSettings(): MapBbbData | undefined {
+        const bbb = this.thirdParty?.bbb;
+        if (bbb) {
+            return bbb;
+        }
+        if (BBB_URL && BBB_SECRET) {
+            return {
+                url: BBB_URL,
+                secret: BBB_SECRET,
+            };
+        }
+        return undefined;
     }
 }

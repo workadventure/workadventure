@@ -35,6 +35,7 @@ import {
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
+    BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
@@ -49,6 +50,7 @@ import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
+import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 
 const manualPingDelay = 20000;
 
@@ -92,6 +94,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _sendJitsiJwtMessageStream = new Subject<SendJitsiJwtMessageTsProto>();
     public readonly sendJitsiJwtMessageStream = this._sendJitsiJwtMessageStream.asObservable();
+
+    private readonly _bbbMeetingClientURLMessageStream = new Subject<BBBMeetingClientURLMessageTsProto>();
+    public readonly bbbMeetingClientURLMessageStream = this._bbbMeetingClientURLMessageStream.asObservable();
 
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
@@ -154,6 +159,7 @@ export class RoomConnection implements RoomConnection {
      * @param position
      * @param viewport
      * @param companion
+     * @param availabilityStatus
      */
     public constructor(
         token: string | null,
@@ -162,7 +168,8 @@ export class RoomConnection implements RoomConnection {
         characterLayers: string[],
         position: PositionInterface,
         viewport: ViewportInterface,
-        companion: string | null
+        companion: string | null,
+        availabilityStatus: AvailabilityStatus
     ) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
@@ -185,6 +192,10 @@ export class RoomConnection implements RoomConnection {
         if (typeof companion === "string") {
             url += "&companion=" + encodeURIComponent(companion);
         }
+        if (typeof availabilityStatus === "number") {
+            url += "&availabilityStatus=" + availabilityStatus;
+        }
+        url += "&version=" + apiVersionHash;
 
         if (RoomConnection.websocketFactory) {
             this.socket = RoomConnection.websocketFactory(url);
@@ -438,6 +449,10 @@ export class RoomConnection implements RoomConnection {
                     this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
                     break;
                 }
+                case "bbbMeetingClientURLMessage": {
+                    this._bbbMeetingClientURLMessageStream.next(message.bbbMeetingClientURLMessage);
+                    break;
+                }
                 case "groupUsersUpdateMessage": {
                     this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
@@ -537,9 +552,9 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerStatusChange(status: AvailabilityStatus): void {
+    public emitPlayerStatusChange(availabilityStatus: AvailabilityStatus): void {
         const message = SetPlayerDetailsMessageTsProto.fromPartial({
-            status,
+            availabilityStatus,
         });
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
@@ -562,7 +577,6 @@ export class RoomConnection implements RoomConnection {
                 outlineColor: color,
             });
         }
-
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "setPlayerDetailsMessage",
@@ -674,7 +688,7 @@ export class RoomConnection implements RoomConnection {
             characterLayers,
             visitCardUrl: message.visitCardUrl,
             position: ProtobufClientUtils.toPointInterface(position),
-            status: message.status,
+            availabilityStatus: message.availabilityStatus,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
@@ -828,14 +842,27 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitQueryJitsiJwtMessage(jitsiRoom: string, tag: string | undefined): void {
+    public emitQueryJitsiJwtMessage(jitsiRoom: string): void {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "queryJitsiJwtMessage",
                 queryJitsiJwtMessage: {
                     jitsiRoom,
-                    tag: tag ?? "", // empty string is sent as "undefined" by ts-proto
-                    // TODO: when we migrated "pusher" to ts-proto, migrate this to a StringValue
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitJoinBBBMeeting(meetingId: string, props: Map<string, string | number | boolean>): void {
+        const meetingName = props.get("meetingName") as string;
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "joinBBBMeetingMessage",
+                joinBBBMeetingMessage: {
+                    meetingId,
+                    meetingName,
                 },
             },
         }).finish();

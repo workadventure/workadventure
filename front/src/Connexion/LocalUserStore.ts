@@ -1,6 +1,5 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { v4 as uuidv4 } from "uuid";
-import { START_ROOM_URL } from "../Enum/EnvironmentVariable";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -174,9 +173,7 @@ class LocalUserStore {
     }
 
     getLastRoomUrl(): string {
-        return (
-            localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + START_ROOM_URL
-        );
+        return localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + "/";
     }
 
     getLastRoomUrlCacheApi(): Promise<string | undefined> {

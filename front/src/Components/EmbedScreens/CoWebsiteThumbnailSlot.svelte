@@ -6,10 +6,12 @@
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
     import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
+    import { BBBCoWebsite } from "../../WebRtc/CoWebsite/BBBCoWebsite";
     import { iframeStates } from "../../WebRtc/CoWebsiteManager";
     import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 
-    import uploadFile from "../images/jitsi.png";
+    import jitsiIcon from "../images/jitsi.png";
+    import meetingIcon from "../images/meeting.svg";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let index: number;
@@ -20,12 +22,20 @@
     let iconLoaded = false;
     let state = coWebsite.getStateSubscriber();
     let isJitsi: boolean = coWebsite instanceof JitsiCoWebsite;
+    let isBBB: boolean = coWebsite instanceof BBBCoWebsite;
+    let isMeeting: boolean = isJitsi || isBBB;
     const mainState = coWebsiteManager.getMainStateSubscriber();
 
     onMount(() => {
-        icon.src = isJitsi
-            ? uploadFile
-            : `${ICON_URL}/icon?url=${coWebsite.getUrl().hostname}&size=64..96..256&fallback_icon_color=14304c`;
+        if (isJitsi) {
+            icon.src = jitsiIcon;
+        } else if (isBBB) {
+            icon.src = meetingIcon;
+        } else {
+            icon.src = `${ICON_URL}/icon?url=${
+                coWebsite.getUrl().hostname
+            }&size=64..96..256&fallback_icon_color=14304c`;
+        }
         icon.alt = coWebsite.getUrl().hostname;
         icon.onload = () => {
             iconLoaded = true;
@@ -96,7 +106,7 @@
     <img
         class="cowebsite-icon noselect nes-pointer"
         class:hide={!iconLoaded}
-        class:jitsi={isJitsi}
+        class:meeting={isMeeting}
         bind:this={icon}
         on:dragstart|preventDefault={noDrag}
         alt=""
@@ -194,8 +204,8 @@
     </svg>
 
     <!-- TODO use trigger message property -->
-    <div class="cowebsite-hover" class:hide={!isJitsi} style="width: max-content;">
-        <p>Open / Close Jitsi meeting!</p>
+    <div class="cowebsite-hover" class:hide={!isMeeting} style="width: max-content;">
+        <p>Open / Close meeting</p>
     </div>
 </div>
 
@@ -329,7 +339,7 @@
                 display: none;
             }
 
-            &.jitsi {
+            &.meeting {
                 padding: 7px;
             }
         }

@@ -128,7 +128,7 @@ export class Group implements Movable {
 
         for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
             //  Todo: Merge two groups with a leader
-            if (user.group || this.isFull()) return; //we ignore users that are already in a group.
+            if (user.silent || user.group || this.isFull()) return; //we ignore users that are already in a group.
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
             if (distance < this.groupRadius) {
                 this.join(user);

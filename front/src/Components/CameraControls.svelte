@@ -13,7 +13,7 @@
     import lockImg from "./images/lock.svg";
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { peerStore } from "../Stores/PeerStore";
-    import { embedScreenLayout } from "../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
@@ -49,10 +49,10 @@
     }
 
     function switchLayoutMode() {
-        if ($embedScreenLayout === LayoutMode.Presentation) {
-            $embedScreenLayout = LayoutMode.VideoChat;
+        if ($embedScreenLayoutStore === LayoutMode.Presentation) {
+            $embedScreenLayoutStore = LayoutMode.VideoChat;
         } else {
-            $embedScreenLayout = LayoutMode.Presentation;
+            $embedScreenLayoutStore = LayoutMode.Presentation;
         }
     }
 
@@ -79,7 +79,7 @@
 
 <div class="btn-cam-action">
     <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
-        {#if $embedScreenLayout === LayoutMode.Presentation}
+        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
             <img class="noselect" src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
         {:else}
             <img class="noselect" src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode" />

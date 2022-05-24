@@ -30,7 +30,7 @@ interface JitsiApi {
 
     addListener: (type: string, callback: Function) => void;
     removeListener: (type: string, callback: Function) => void;
-
+    getParticipantsInfo(): { displayName: string; participantId: string }[];
     dispose: () => void;
 }
 
@@ -107,6 +107,7 @@ const defaultInterfaceConfig = {
         "shortcuts",
         "tileview",
         "videobackgroundblur",
+        "select-background",
         "download",
         "help",
         "mute-everyone" /*'security'*/,
@@ -275,10 +276,11 @@ class JitsiFactory {
     }
 
     private onDominantSpeakerChanged(data: { id: string }): void {
-        userIsJitsiDominantSpeakerStore.set(
-            //@ts-ignore
-            data.id === this.getCurrentParticipantId(this.jitsiApi?.getParticipantsInfo())
-        );
+        if (this.jitsiApi) {
+            userIsJitsiDominantSpeakerStore.set(
+                data.id === this.getCurrentParticipantId(this.jitsiApi.getParticipantsInfo())
+            );
+        }
     }
 
     private onParticipantsCountChange(): void {
