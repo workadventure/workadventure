@@ -272,6 +272,10 @@ export const iframeQueryMapTypeGuards = {
         query: isCreateAreaEvent,
         answer: z.undefined(),
     },
+    modifyArea: {
+        query: isAreaEvent,
+        answer: z.undefined(),
+    },
     deleteArea: {
         query: z.string(),
         answer: z.undefined(),

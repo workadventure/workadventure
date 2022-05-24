@@ -9,6 +9,8 @@
             WA.onInit().then(() => {
                 console.log('After WA init');
 
+                const areas = {};
+
                 const createButton = document.getElementById('createButton');
                 const deleteButton = document.getElementById('deleteButton');
 
@@ -28,10 +30,11 @@
                         width: Number(widthField.value) ?? 320,
                         height: Number(heightField.value) ?? 320,
                     });
-                    console.log(area);
+                    areas[nameField.value] = area;
+                    console.log(areas);
                     
                     WA.area.onEnter(nameField.value).subscribe(() => {
-                    console.log(`${nameField.value} area enter message`);
+                        console.log(`${nameField.value} area enter message`);
                     });
                     WA.area.onLeave(nameField.value).subscribe(() => {
                         console.log(`${nameField.value} area leave message`);

@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { ChangeAreaEvent, isChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import { CreateAreaEvent } from "../Events/CreateAreaEvent";
+import { CreateAreaEvent, ModifyAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -40,6 +40,15 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         queryWorkadventure({
             type: "deleteArea",
             data: name,
+        }).catch((e) => {
+            console.error(e);
+        });
+    }
+
+    modify(modifyAreaEvent: ModifyAreaEvent): void {
+        queryWorkadventure({
+            type: "modifyArea",
+            data: modifyAreaEvent,
         }).catch((e) => {
             console.error(e);
         });

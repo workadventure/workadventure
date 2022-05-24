@@ -1,4 +1,5 @@
-import { CreateAreaEvent } from "../../Api/Events/CreateAreaEvent";
+import { Subscription } from "rxjs";
+import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { Area } from "../../Api/iframe/Area/Area";
 import { iframeListener } from "../../Api/IframeListener";
 import { GameMap } from "./GameMap";
@@ -6,13 +7,34 @@ import { GameMap } from "./GameMap";
 export class AreaManager {
     private readonly gameMap: GameMap;
 
-    private areas: Map<string, Area>;
+    private readonly areas: Map<string, Area>;
+    private readonly subscription: Subscription;
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
         this.areas = new Map<string, Area>();
 
         this.registerIFrameEventAnswerers();
+
+        this.subscription = iframeListener.modifyAreaStream.subscribe((modifyAreaEvent: ModifyAreaEvent) => {
+            const area = this.gameMap.getAreaWithName(modifyAreaEvent.name);
+            if (!area) {
+                throw new Error(`Could not find area with the name "${modifyAreaEvent.name}" in your map`);
+            }
+
+            if (modifyAreaEvent.x !== undefined) {
+                area.x = modifyAreaEvent.x;
+            }
+            if (modifyAreaEvent.y !== undefined) {
+                area.y = modifyAreaEvent.y;
+            }
+            if (modifyAreaEvent.width !== undefined) {
+                area.width = modifyAreaEvent.width;
+            }
+            if (modifyAreaEvent.height !== undefined) {
+                area.height = modifyAreaEvent.height;
+            }
+        });
     }
 
     private registerIFrameEventAnswerers(): void {
@@ -39,7 +61,10 @@ export class AreaManager {
         // TODO: Do we also want to unregister actions from onEnter onLeave streams?
         iframeListener.registerAnswerer("deleteArea", (name: string) => {
             this.gameMap.deleteArea(name);
-            console.log(`TRY DO DELETE ${name}`);
         });
+    }
+
+    close(): void {
+        this.subscription.unsubscribe();
     }
 }

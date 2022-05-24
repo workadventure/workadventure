@@ -37,6 +37,7 @@ import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionCl
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -122,6 +123,9 @@ class IframeListener {
 
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
+    private readonly _modifyAreaStream: Subject<ModifyAreaEvent> = new Subject();
+    public readonly modifyAreaStream = this._modifyAreaStream.asObservable();
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
@@ -296,6 +300,8 @@ class IframeListener {
                         this._setTilesStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
                         this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyArea") {
+                        this._modifyAreaStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyUIWebsite") {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
