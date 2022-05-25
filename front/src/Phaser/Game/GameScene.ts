@@ -895,6 +895,27 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
+        console.error(
+            "subscribeToStores => Check all subscriber undefined ",
+            this.userIsJitsiDominantSpeakerStoreUnsubscriber,
+            this.jitsiParticipantsCountStoreUnsubscriber,
+            this.availabilityStatusStoreUnsubscriber,
+            this.emoteUnsubscriber,
+            this.emoteMenuUnsubscriber,
+            this.followUsersColorStoreUnsubscriber,
+            this.peerStoreUnsubscriber
+        );
+        if (
+            this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
+            this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
+            this.availabilityStatusStoreUnsubscriber != undefined ||
+            this.emoteUnsubscriber != undefined ||
+            this.emoteMenuUnsubscriber != undefined ||
+            this.followUsersColorStoreUnsubscriber != undefined ||
+            this.peerStoreUnsubscriber != undefined
+        )
+            throw new Error("subscribeToStores => Check subscriber");
+
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
                 this.jitsiDominantSpeaker = dominantSpeaker;
