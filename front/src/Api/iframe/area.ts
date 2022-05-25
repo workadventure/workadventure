@@ -27,11 +27,9 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
     ];
 
     create(createAreaEvent: CreateAreaEvent): Area {
-        queryWorkadventure({
+        void queryWorkadventure({
             type: "createArea",
             data: createAreaEvent,
-        }).catch((e) => {
-            console.error(e);
         });
         return new Area(createAreaEvent);
     }
@@ -40,30 +38,24 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         const areaEvent = await queryWorkadventure({
             type: "getArea",
             data: name,
-        }).catch((e) => {
-            console.error(e);
         });
 
         return new Area(areaEvent);
     }
 
     delete(name: string): void {
-        queryWorkadventure({
+        void queryWorkadventure({
             type: "deleteArea",
             data: name,
-        }).catch((e) => {
-            console.error(e);
         });
         enterAreaStreams.delete(name);
         leaveAreaStreams.delete(name);
     }
 
     modify(modifyAreaEvent: ModifyAreaEvent): void {
-        queryWorkadventure({
+        void queryWorkadventure({
             type: "modifyArea",
             data: modifyAreaEvent,
-        }).catch((e) => {
-            console.error(e);
         });
     }
 
