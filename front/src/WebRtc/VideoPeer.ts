@@ -25,7 +25,7 @@ export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 export class VideoPeer extends Peer {
     public toClose: boolean = false;
     public _connected: boolean = false;
-    private remoteStream!: MediaStream;
+    public remoteStream!: MediaStream;
     private blocked: boolean = false;
     public readonly userId: number;
     public readonly userUuid: string;

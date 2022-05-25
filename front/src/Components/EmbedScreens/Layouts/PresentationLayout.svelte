@@ -67,7 +67,7 @@
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
                         {#key $highlightedEmbedScreen.embed.getId()}
-                            <div class="highlighted-cowebsite-container nes-container is-rounded">
+                            <div class="highlighted-cowebsite-container nes-container is-rounded screen-blocker">
                                 <div
                                     id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
                                     class="highlighted-cowebsite"

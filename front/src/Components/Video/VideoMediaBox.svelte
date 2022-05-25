@@ -54,7 +54,7 @@
 </script>
 
 <div
-    class="video-container"
+    class="video-container screen-blocker"
     class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
