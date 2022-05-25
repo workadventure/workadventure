@@ -34,7 +34,7 @@
     <h2>{$LL.woka.selectWoka.title()}</h2>
 </section>
 <section class="category">
-    {#if $collectionsSizeStore}
+    {#if $collectionsSizeStore > 1}
         <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
         <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
