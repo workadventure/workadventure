@@ -129,7 +129,7 @@ export class XmppClient {
         return room;
     }
 
-    public leaveMuc(name: string): void {
+    public leaveMuc(name: string, unsubscribe: boolean = false): void {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "leaveMuc called before we received the XMPP connection details. There is a race condition."
@@ -142,7 +142,7 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        room.disconnect();
+        room.disconnect(unsubscribe);
         this.rooms.delete(roomUrl.toString());
 
         mucRoomsStore.removeMucRoom(room);

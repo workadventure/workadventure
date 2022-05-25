@@ -61,7 +61,7 @@
         {/if}
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
-                <p class="room-name"><!-- {mucRoom.name} --></p>
+                <p class="room-name">{mucRoom.name}</p>
                 <UsersList
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}

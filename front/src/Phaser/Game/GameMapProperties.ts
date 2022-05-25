@@ -19,6 +19,7 @@ export enum GameMapProperties {
     JITSI_WIDTH = "jitsiWidth",
     JITSI_NO_PREFIX = "jitsiNoPrefix",
     NAME = "name",
+    CHAT_NAME = "chatName",
     OPEN_TAB = "openTab",
     OPEN_WEBSITE = "openWebsite",
     OPEN_WEBSITE_ALLOW_API = "openWebsiteAllowApi",

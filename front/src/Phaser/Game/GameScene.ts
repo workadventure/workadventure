@@ -2374,4 +2374,8 @@ ${escapedMessage}
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
     }
+
+    public getXmppClient(): XmppClient {
+        return this.xmppClient;
+    }
 }

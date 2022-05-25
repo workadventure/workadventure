@@ -81,6 +81,18 @@ class UrlManager {
             }, {});
     }
 
+    public getWorldUri(): string {
+        return window.location.pathname.match("/[_@*]/.+/.+/")?.join() ?? '';
+    }
+
+    public getWorldUrl(): string {
+        return `${window.location.protocol}//${window.location.host}${this.getWorldUri()}`;
+    }
+
+    public getPlayUri(): string {
+        return `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    }
+
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
     }

@@ -118,7 +118,7 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messagePresence);
-        console.warn("[XMPP]", "Presence sent");
+        console.warn("[XMPP]", ">> Presence sent");
     }
 
     private sendSubscribe() {
@@ -136,22 +136,62 @@ export class MucRoom {
                     xmlns: "urn:xmpp:mucsub:0",
                     nick: this.getPlayerName(),
                 },
+                xml("event", { node: "urn:xmpp:mucsub:nodes:subscribers" }),
                 xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+                xml("event", { node: "urn:xmpp:mucsub:nodes:config"} ),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:affiliations" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:system" }),
+                xml("event", { node: "urn:xmpp:mucsub:nodes:subject" })
             )
         );
         this.connection.emitXmlMessage(messageMucSubscribe);
+        console.warn("[XMPP]", ">> Subscribe sent");
     }
 
-    public disconnect() {
-        const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
-        const messageMucSubscribe = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
+    private sendUnsubscribe() {
+        const messageMucSubscribe = xml(
+            "iq",
+            {
+                type: "set",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(
+                "unsubscribe",
+                {
+                    xmlns: "urn:xmpp:mucsub:0"
+                },
+            )
+        );
         this.connection.emitXmlMessage(messageMucSubscribe);
+        console.warn("[XMPP]", ">> Unsubscribe sent");
+    }
+
+    public disconnect(unsubscribe: boolean = false) {
+        const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
+        const messageMucSubscribe = xml(
+            "presence",
+            { to: to.toString(), from: this.jid, type: "unavailable" },
+            xml(
+                "persistent",
+                {
+                    state: unsubscribe?"false":"true"
+                },
+            )
+        );
+        this.connection.emitXmlMessage(messageMucSubscribe);
+        if(unsubscribe){
+            this.sendUnsubscribe();
+        }
         return messageMucSubscribe;
     }
 
     onMessage(xml: ElementExt): void {
         let handledMessage = false;
+
+        console.warn('[XMPP] << Message received : '+xml.getName());
 
         if (xml.getAttr("type") === "error") {
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
@@ -212,14 +252,13 @@ export class MucRoom {
                         this.sendPresence();
                         this.requestAllSubscribers();
                     }
-                    handledMessage = true;
+                    //handledMessage = true;
                 }
             }
         }
 
         if (!handledMessage) {
             console.warn("Unhandled message targeted at the room: ", xml.toString());
-            console.warn("Message name : ", xml.getName());
         }
     }
 
