@@ -12,7 +12,10 @@
                 const areas = {};
 
                 const createButton = document.getElementById('createButton');
+                const updateButton = document.getElementById('updateButton');
                 const deleteButton = document.getElementById('deleteButton');
+                const getButton = document.getElementById('getButton');
+                const printButton = document.getElementById('printButton');
 
                 const nameField = document.getElementById('name');
                 const xField = document.getElementById('x');
@@ -22,6 +25,10 @@
 
                 const deleteNameField = document.getElementById('deleteName');
 
+                const getNameField = document.getElementById('getName');
+
+                let currentlySelectedArea = undefined;
+
                 createButton.addEventListener('click', () => {
                     const area = WA.area.create({
                         name: nameField.value,
@@ -30,8 +37,8 @@
                         width: Number(widthField.value) ?? 320,
                         height: Number(heightField.value) ?? 320,
                     });
+                    currentlySelectedArea = area;
                     areas[nameField.value] = area;
-                    console.log(areas);
                     
                     WA.area.onEnter(nameField.value).subscribe(() => {
                         console.log(`${nameField.value} area enter message`);
@@ -41,8 +48,43 @@
                     });
                 });
 
+                updateButton.addEventListener('click', async () => {
+                    const area = await WA.area.get(nameField.value);
+                    if (area) {
+                        if (xField.value) {
+                            console.log('change x to:' + xField.value)
+                            area.x = Number(xField.value);
+                        }
+                        if (yField.value) {
+                            console.log('change y to:' + yField.value)
+                            area.y = Number(yField.value);
+                        }
+                        if (widthField.value) {
+                            console.log('change width to:' + widthField.value)
+                            area.width = Number(widthField.value);
+                        }
+                        if (heightField.value) {
+                            console.log('change height to:' + heightField.value)
+                            area.height = Number(heightField.value);
+                        }
+                    }
+                });
+
                 deleteButton.addEventListener('click', () => {
                     WA.area.delete(deleteNameField.value);
+                    if (currentlySelectedArea.name === deleteNameField.value) {
+                        currentlySelectedArea = undefined;
+                    }
+                });
+
+                getButton.addEventListener('click', async () => {
+                    const area = await WA.area.get(getNameField.value);
+                    currentlySelectedArea = area;
+                    console.log(area);
+                });
+
+                printButton.addEventListener('click', async () => {
+                    console.log(currentlySelectedArea);
                 });
             });
         })
@@ -56,11 +98,21 @@ width: <input type="text" id="width" value=320 /><br/>
 height: <input type="text" id="height" value=320 /><br/>
 
 <button id="createButton">Create Area</button>
+<button id="updateButton">Update Area</button>
 
 <br><br><br>
 
 name: <input type="text" id="deleteName" value='DynamicArea' /><br/>
 <button id="deleteButton">Delete Area</button>
+
+<br><br><br>
+
+name: <input type="text" id="getName" value='DynamicArea' /><br/>
+<button id="getButton">Get Area</button>
+
+<br><br><br>
+
+<button id="printButton">Print Current Area Info</button>
 
 </body>
 </html>

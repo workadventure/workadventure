@@ -82,7 +82,7 @@ export class Area implements IArea {
             type: "modifyArea",
             data: {
                 name: this.name,
-                x: this._x,
+                height: this._height,
             },
         });
     }

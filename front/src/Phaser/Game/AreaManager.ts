@@ -16,7 +16,7 @@ export class AreaManager {
         this.registerIFrameEventAnswerers();
 
         this.subscription = iframeListener.modifyAreaStream.subscribe((modifyAreaEvent: ModifyAreaEvent) => {
-            const area = this.gameMap.getAreaWithName(modifyAreaEvent.name);
+            const area = this.gameMap.getArea(modifyAreaEvent.name);
             if (!area) {
                 throw new Error(`Could not find area with the name "${modifyAreaEvent.name}" in your map`);
             }
@@ -38,7 +38,7 @@ export class AreaManager {
 
     private registerIFrameEventAnswerers(): void {
         iframeListener.registerAnswerer("createArea", (createAreaEvent: CreateAreaEvent) => {
-            if (this.gameMap.getAreaWithName(createAreaEvent.name)) {
+            if (this.gameMap.getArea(createAreaEvent.name)) {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
@@ -58,10 +58,17 @@ export class AreaManager {
         });
 
         iframeListener.registerAnswerer("getArea", (name: string) => {
-            // const website = this.embeddedWebsites.get(name);
-            // if (website === undefined) {
-            //     throw new Error('Cannot find embedded website with name "' + name + '"');
-            // }
+            const area = this.gameMap.getArea(name);
+            if (area === undefined) {
+                throw new Error(`Cannot find area with name "${name}"`);
+            }
+            return {
+                name: area.name,
+                width: area.width,
+                height: area.height,
+                x: area.x,
+                y: area.y,
+            };
         });
 
         // TODO: Do we also want to unregister actions from onEnter onLeave streams?
