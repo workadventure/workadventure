@@ -25,6 +25,7 @@ import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
+import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -106,6 +107,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -183,9 +185,10 @@ export class GameScene extends DirtyScene {
     private followUsersColorStoreUnsubscriber!: Unsubscriber;
     private userIsJitsiDominantSpeakerStoreUnsubscriber!: Unsubscriber;
     private jitsiParticipantsCountStoreUnsubscriber!: Unsubscriber;
+    private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
+    private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
 
-    private biggestAvailableAreaStoreUnsubscriber!: () => void;
     MapUrlFile: string;
     roomUrl: string;
 
@@ -821,6 +824,13 @@ export class GameScene extends DirtyScene {
                     this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });
 
+                /**
+                 * Triggered when we receive the URL to join a meeting on BBB
+                 */
+                this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
+                    bbbFactory.start(message.clientURL);
+                });
+
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
                     this.showWorldFullError(message);
                 });
@@ -896,6 +906,29 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
+        console.error(
+            "subscribeToStores => Check all subscriber undefined ",
+            this.userIsJitsiDominantSpeakerStoreUnsubscriber,
+            this.jitsiParticipantsCountStoreUnsubscriber,
+            this.availabilityStatusStoreUnsubscriber,
+            this.emoteUnsubscriber,
+            this.emoteMenuUnsubscriber,
+            this.followUsersColorStoreUnsubscriber,
+            this.biggestAvailableAreaStoreUnsubscriber,
+            this.peerStoreUnsubscriber
+        );
+        if (
+            this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
+            this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
+            this.availabilityStatusStoreUnsubscriber != undefined ||
+            this.emoteUnsubscriber != undefined ||
+            this.emoteMenuUnsubscriber != undefined ||
+            this.followUsersColorStoreUnsubscriber != undefined ||
+            this.biggestAvailableAreaStoreUnsubscriber != undefined ||
+            this.peerStoreUnsubscriber != undefined
+        )
+            throw new Error("subscribeToStores => Check subscriber");
+
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
                 this.jitsiDominantSpeaker = dominantSpeaker;
@@ -939,10 +972,17 @@ export class GameScene extends DirtyScene {
             }
         });
 
-        // From now, this game scene will be notified of reposition events
-        this.biggestAvailableAreaStoreUnsubscriber = biggestAvailableAreaStore.subscribe((box) =>
-            this.cameraManager.updateCameraOffset(box)
-        );
+        this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
+        });
+
+        this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
+            this.time.delayedCall(0, () => {
+                this.reposition();
+            });
+        });
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
@@ -1629,18 +1669,19 @@ ${escapedMessage}
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
         this.messageSubscription?.unsubscribe();
-        this.userInputManager.destroy();
+        this.userInputManager?.destroy();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
-        this.cameraManager.destroy();
-        this.peerStoreUnsubscriber();
-        this.emoteUnsubscriber();
-        this.emoteMenuUnsubscriber();
-        this.followUsersColorStoreUnsubscriber();
-        this.biggestAvailableAreaStoreUnsubscriber();
-        this.userIsJitsiDominantSpeakerStoreUnsubscriber();
-        this.jitsiParticipantsCountStoreUnsubscriber();
-        this.availabilityStatusStoreUnsubscriber();
+        this.cameraManager?.destroy();
+        this.peerStoreUnsubscriber?.();
+        this.emoteUnsubscriber?.();
+        this.emoteMenuUnsubscriber?.();
+        this.followUsersColorStoreUnsubscriber?.();
+        this.highlightedEmbedScreenUnsubscriber?.();
+        this.embedScreenLayoutStoreUnsubscriber?.();
+        this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
+        this.jitsiParticipantsCountStoreUnsubscriber?.();
+        this.availabilityStatusStoreUnsubscriber?.();
         iframeListener.unregisterAnswerer("getState");
         iframeListener.unregisterAnswerer("loadTileset");
         iframeListener.unregisterAnswerer("getMapData");
@@ -2192,7 +2233,7 @@ ${escapedMessage}
 
     public onResize(): void {
         super.onResize();
-        this.reposition();
+        this.reposition(true);
 
         // Send new viewport to server
         const camera = this.cameras.main;
@@ -2217,9 +2258,10 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(): void {
+    private reposition(instant: boolean = false): void {
         // Recompute camera offset if needed
         biggestAvailableAreaStore.recompute();
+        this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
     }
 
     public enableMediaBehaviors() {
@@ -2294,7 +2336,7 @@ ${escapedMessage}
             return;
         }
         waScaleManager.handleZoomByFactor(zoomFactor);
-        biggestAvailableAreaStore.recompute();
+        // biggestAvailableAreaStore.recompute();
     }
 
     public createSuccessorGameScene(autostart: boolean, reconnecting: boolean) {

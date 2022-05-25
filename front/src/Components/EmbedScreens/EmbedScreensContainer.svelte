@@ -2,11 +2,11 @@
     import PresentationLayout from "./Layouts/PresentationLayout.svelte";
     import MozaicLayout from "./Layouts/MozaicLayout.svelte";
     import { LayoutMode } from "../../WebRtc/LayoutManager";
-    import { embedScreenLayout } from "../../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
 </script>
 
 <div id="embedScreensContainer">
-    {#if $embedScreenLayout === LayoutMode.Presentation}
+    {#if $embedScreenLayoutStore === LayoutMode.Presentation}
         <PresentationLayout />
     {:else}
         <MozaicLayout />

@@ -20,7 +20,7 @@
     }
 </script>
 
-<div class="video-container {cssClass ? cssClass : ''}" class:hide={!stream}>
+<div class="video-container screen-blocker {cssClass ? cssClass : ''}" class:hide={!stream}>
     {#if stream}
         <video
             use:srcObject={stream}

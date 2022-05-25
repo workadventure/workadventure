@@ -3,6 +3,7 @@ import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
 import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
+import type {} from "../Api/desktop";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

@@ -3,7 +3,7 @@ import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
 import { get, Readable, Writable, writable } from "svelte/store";
-import { embedScreenLayout, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
+import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
 import type { CoWebsite } from "./CoWebsite/CoWesbite";
@@ -600,7 +600,7 @@ class CoWebsiteManager {
 
         if (
             isMediaBreakpointDown("lg") &&
-            get(embedScreenLayout) === LayoutMode.Presentation &&
+            get(embedScreenLayoutStore) === LayoutMode.Presentation &&
             mainCoWebsite &&
             mainCoWebsite.getId() !== coWebsite.getId() &&
             mainCoWebsite.getState() !== "asleep"

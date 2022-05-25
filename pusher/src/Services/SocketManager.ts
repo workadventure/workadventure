@@ -13,6 +13,7 @@ import {
     FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
+    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -20,7 +21,6 @@ import {
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
-    SendJitsiJwtMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -44,9 +44,7 @@ import {
     AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
 import { emitInBatch } from "./IoSocketHelpers";
-import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
@@ -477,49 +475,17 @@ export class SocketManager implements ZoneEventListener {
     }
 
     public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        try {
-            const room = queryJitsiJwtMessage.getJitsiroom();
-            const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
 
-            if (SECRET_JITSI_KEY === "") {
-                throw new Error(
-                    "You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi."
-                );
-            }
+        client.backConnection.write(pusherToBackMessage);
+    }
 
-            // Let's see if the current client has
-            const isAdmin = client.tags.includes(tag);
+    public handleJoinBBBMeetingMessage(client: ExSocketInterface, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setJoinbbbmeetingmessage(joinBBBMeetingMessage);
 
-            const jwt = Jwt.sign(
-                {
-                    aud: "jitsi",
-                    iss: JITSI_ISS,
-                    sub: JITSI_URL,
-                    room: room,
-                    moderator: isAdmin,
-                },
-                SECRET_JITSI_KEY,
-                {
-                    expiresIn: "1d",
-                    algorithm: "HS256",
-                    header: {
-                        alg: "HS256",
-                        typ: "JWT",
-                    },
-                }
-            );
-
-            const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-            sendJitsiJwtMessage.setJitsiroom(room);
-            sendJitsiJwtMessage.setJwt(jwt);
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        } catch (e) {
-            console.error("An error occurred while generating the Jitsi JWT token: ", e);
-        }
+        client.backConnection.write(pusherToBackMessage);
     }
 
     public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {

@@ -15,6 +15,7 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
+    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
@@ -105,9 +106,16 @@ const roomManager: IRoomManagerServer = {
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
                         } else if (message.hasQueryjitsijwtmessage()) {
-                            socketManager.handleQueryJitsiJwtMessage(
+                            await socketManager.handleQueryJitsiJwtMessage(
+                                room,
                                 user,
                                 message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
+                            );
+                        } else if (message.hasJoinbbbmeetingmessage()) {
+                            await socketManager.handleJoinBBBMeetingMessage(
+                                room,
+                                user,
+                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
