@@ -907,7 +907,6 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber,
             this.emoteMenuUnsubscriber,
             this.followUsersColorStoreUnsubscriber,
-            this.biggestAvailableAreaStoreUnsubscriber,
             this.peerStoreUnsubscriber
         );
         if (
@@ -917,7 +916,6 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.biggestAvailableAreaStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined
         )
             throw new Error("subscribeToStores => Check subscriber");
