@@ -54,6 +54,8 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         }).catch((e) => {
             console.error(e);
         });
+        enterAreaStreams.delete(name);
+        leaveAreaStreams.delete(name);
     }
 
     modify(modifyAreaEvent: ModifyAreaEvent): void {

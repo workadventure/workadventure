@@ -5,13 +5,10 @@ import { GameMap } from "./GameMap";
 
 export class AreaManager {
     private readonly gameMap: GameMap;
-
-    // private readonly areas: Map<string, Area>;
     private readonly subscription: Subscription;
 
     constructor(gameMap: GameMap) {
         this.gameMap = gameMap;
-        // this.areas = new Map<string, Area>();
 
         this.registerIFrameEventAnswerers();
 
@@ -42,7 +39,6 @@ export class AreaManager {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
-            // this.areas.set(createAreaEvent.name, new Area(createAreaEvent));
             this.gameMap.setArea(createAreaEvent.name, {
                 ...createAreaEvent,
                 id: -1,
