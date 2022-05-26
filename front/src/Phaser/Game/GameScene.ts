@@ -72,7 +72,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    editorModeStore,
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -186,6 +191,7 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+    private editorModeStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -201,6 +207,7 @@ export class GameScene extends DirtyScene {
         oldY: -1000,
     };
 
+    private editorMode: boolean = false;
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     public userInputManager!: UserInputManager;
@@ -903,7 +910,8 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber,
             this.emoteMenuUnsubscriber,
             this.followUsersColorStoreUnsubscriber,
-            this.peerStoreUnsubscriber
+            this.peerStoreUnsubscriber,
+            this.editorModeStoreUnsubscriber
         );
         if (
             this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
@@ -912,9 +920,14 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined
+            this.peerStoreUnsubscriber != undefined ||
+            this.editorModeStoreUnsubscriber != undefined
         )
             throw new Error("subscribeToStores => Check subscriber");
+
+        this.editorModeStoreUnsubscriber = editorModeStore.subscribe((editorMode) => {
+            this.editorMode = editorMode;
+        });
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
@@ -1659,6 +1672,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
+        this.editorModeStoreUnsubscriber?.();
         this.peerStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
@@ -1924,7 +1938,9 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        if (!this.editorMode) {
+            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        }
 
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {

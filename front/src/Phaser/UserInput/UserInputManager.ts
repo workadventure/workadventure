@@ -3,6 +3,8 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
+import { editorModeStore } from "../../Stores/GameStore";
+import { get } from "svelte/store";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -288,6 +290,11 @@ export class UserInputManager {
                 return;
             }
             this.userInputHandler.handleSpaceKeyUpEvent(event);
+        });
+
+        this.scene.input.keyboard.on("keydown-E", (event: Event) => {
+            editorModeStore.set(!get(editorModeStore));
+            console.log(`IN EDITOR MODE: ${get(editorModeStore)}`);
         });
     }
 }
