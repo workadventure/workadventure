@@ -927,6 +927,12 @@ export class GameScene extends DirtyScene {
 
         this.editorModeStoreUnsubscriber = editorModeStore.subscribe((editorMode) => {
             this.editorMode = editorMode;
+            if (editorMode) {
+                this.CurrentPlayer.finishFollowingPath(true);
+                this.cameraManager.stopFollow();
+            } else {
+                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+            }
         });
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
@@ -1940,6 +1946,8 @@ ${escapedMessage}
         this.currentTick = time;
         if (!this.editorMode) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        } else {
+            this.cameraManager.move(this.userInputManager.getEventListForGameTick());
         }
 
         // Let's handle all events

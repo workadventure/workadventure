@@ -3,6 +3,7 @@ import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
 import { hasMovedEventName, Player } from "../Player/Player";
 import { WaScaleManager, WaScaleManagerEvent, WaScaleManagerFocusTarget } from "../Services/WaScaleManager";
+import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
 import type { GameScene } from "./GameScene";
 
 export enum CameraMode {
@@ -45,6 +46,8 @@ export class CameraManager extends Phaser.Events.EventEmitter {
 
     private playerToFollow?: Player;
     private cameraLocked: boolean;
+
+    private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
     constructor(scene: GameScene, cameraBounds: { x: number; y: number }, waScaleManager: WaScaleManager) {
         super();
@@ -155,11 +158,31 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.restoreZoom(duration);
     }
 
+    public move(moveEvents: ActiveEventList): void {
+        if (moveEvents.get(UserInputEvent.MoveUp)) {
+            this.camera.scrollY -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.scene.markDirty();
+        } else if (moveEvents.get(UserInputEvent.MoveDown)) {
+            this.camera.scrollY += this.EDITOR_MODE_SCROLL_SPEED;
+            this.scene.markDirty();
+        }
+
+        if (moveEvents.get(UserInputEvent.MoveLeft)) {
+            this.camera.scrollX -= this.EDITOR_MODE_SCROLL_SPEED;
+            this.scene.markDirty();
+        } else if (moveEvents.get(UserInputEvent.MoveRight)) {
+            this.camera.scrollX += this.EDITOR_MODE_SCROLL_SPEED;
+            this.scene.markDirty();
+        }
+        // TODO: Send info to backend about viewport change
+    }
+
     public startFollowPlayer(player: Player, duration: number = 0): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
             this.camera.startFollow(player, true);
+            this.scene.markDirty();
             return;
         }
         const oldPos = { x: this.camera.scrollX, y: this.camera.scrollY };
@@ -183,6 +206,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
                 this.camera.startFollow(player, true);
             },
         });
+    }
+
+    public stopFollow(): void {
+        this.camera.stopFollow();
+        this.setCameraMode(CameraMode.Positioned);
+        this.scene.markDirty();
     }
 
     /**

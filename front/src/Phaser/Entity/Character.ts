@@ -301,6 +301,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     move(x: number, y: number) {
+        console.log("move");
         const body = this.getBody();
 
         body.setVelocity(x, y);
