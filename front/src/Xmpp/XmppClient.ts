@@ -112,7 +112,7 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, isPersistent: boolean = true): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
@@ -120,7 +120,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, this.jid);
+        const room = new MucRoom(this.connection, name, roomUrl, this.jid, isPersistent);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 
@@ -129,7 +129,7 @@ export class XmppClient {
         return room;
     }
 
-    public leaveMuc(name: string, unsubscribe: boolean = false): void {
+    public leaveMuc(name: string): void {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "leaveMuc called before we received the XMPP connection details. There is a race condition."
@@ -142,7 +142,7 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        room.disconnect(unsubscribe);
+        room.disconnect();
         this.rooms.delete(roomUrl.toString());
 
         mucRoomsStore.removeMucRoom(room);

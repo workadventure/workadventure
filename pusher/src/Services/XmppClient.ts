@@ -40,6 +40,7 @@ export class XmppClient {
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
+    private deleteSubscribeOnDisconnect: boolean = false;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         const clientJID = jid(clientSocket.jabberId);
@@ -153,7 +154,15 @@ export class XmppClient {
             xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
                 // @ts-ignore
-                xmppMessage.setStanza(stanza.toString());
+                const stanzaString = stanza.toString();
+                xmppMessage.setStanza(stanzaString);
+
+
+                if(stanzaString.includes('deleteSubscribeOnDisconnect="true"') && !stanzaString.includes('type="unavailable"')) {
+                    this.deleteSubscribeOnDisconnect = true;
+                } else if(stanzaString.includes('deleteSubscribeOnDisconnect="true"') && stanzaString.includes('type="unavailable"')) {
+                    this.deleteSubscribeOnDisconnect = false;
+                }
 
                 const subMessage = new SubMessage();
                 subMessage.setXmppmessage(xmppMessage);
@@ -188,7 +197,13 @@ export class XmppClient {
         this.clientPromise
             .then(async (xmpp) => {
                 //send presence unavailable to notify server
-                await xmpp.send(xml("presence", { type: "unavailable" }));
+                await xmpp.send(
+                    xml("presence", {type: "unavailable"},
+                        xml("user", {
+                            deleteSubscribeOnDisconnect: this.deleteSubscribeOnDisconnect?"true":"false"
+                        })
+                    )
+                );
                 await xmpp.stop();
 
                 //cancel promise
@@ -197,9 +212,8 @@ export class XmppClient {
                 return xmpp;
             })
             .catch((e) => console.error(e));
-
         //cancel promise
-        this.clientPromise.cancel();
+        setTimeout(() => this.clientPromise.cancel(), 0);
     }
 
     async send(stanza: string): Promise<void> {

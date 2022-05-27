@@ -18,7 +18,6 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import { inJitsiStore, silentStore } from "../../Stores/MediaStore";
 import {gameManager} from "./GameManager";
 import {urlManager} from "../../Url/UrlManager";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
@@ -141,10 +140,10 @@ export class GameMapPropertiesListener {
                 const playUri = urlManager.getPlayUri()+'/';
 
                 if (oldValue !== undefined) {
-                    gameManager.getCurrentGameScene().getXmppClient().leaveMuc(playUri + oldValue, true);
+                    gameManager.getCurrentGameScene().getXmppClient().leaveMuc(playUri + oldValue);
                 }
                 if (newValue !== undefined) {
-                    gameManager.getCurrentGameScene().getXmppClient().joinMuc(newValue.toString(), playUri + newValue);
+                    gameManager.getCurrentGameScene().getXmppClient().joinMuc(newValue.toString(), playUri + newValue, false);
                 }
         });
 

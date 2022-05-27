@@ -9,7 +9,7 @@
         shareLink,
         updateInputFieldValue,
     } from "../../Stores/GuestMenuStore";
-    import { USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
+    import {USER_STATUS_AVAILABLE, USER_STATUS_DISCONNECTED} from "../../Xmpp/MucRoom";
     import { createEventDispatcher, onMount } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -85,7 +85,7 @@
                 <div>
                     <div class="nick">
                         {#if user.nick.match(/\[\d*]/)}
-                            <span>{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
+                            <span class:is-admin="{user.isModerator}">{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
                             <span class="no">
                                 #{user.nick
                                     .match(/\[\d*]/)
@@ -94,7 +94,7 @@
                                     ?.replace("]", "")}
                             </span>
                         {:else}
-                            <span>{user.nick}</span>
+                            <span class:is-admin="{user.isModerator}">{user.nick}</span>
                         {/if}
                     </div>
                     <div>
@@ -148,6 +148,9 @@
     }
     ul li div.nick {
         align-items: flex-end;
+    }
+    ul li div.nick span.is-admin {
+        color: red;
     }
     button[disabled] {
         color: white;
