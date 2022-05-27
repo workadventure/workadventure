@@ -885,17 +885,6 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
-        console.error(
-            "subscribeToStores => Check all subscriber undefined ",
-            this.userIsJitsiDominantSpeakerStoreUnsubscriber,
-            this.jitsiParticipantsCountStoreUnsubscriber,
-            this.availabilityStatusStoreUnsubscriber,
-            this.emoteUnsubscriber,
-            this.emoteMenuUnsubscriber,
-            this.followUsersColorStoreUnsubscriber,
-            this.biggestAvailableAreaStoreUnsubscriber,
-            this.peerStoreUnsubscriber
-        );
         if (
             this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
             this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
@@ -905,8 +894,21 @@ export class GameScene extends DirtyScene {
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.biggestAvailableAreaStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined
-        )
-            throw new Error("subscribeToStores => Check subscriber");
+        ) {
+            console.error(
+                "subscribeToStores => Check all subscriber undefined ",
+                this.userIsJitsiDominantSpeakerStoreUnsubscriber,
+                this.jitsiParticipantsCountStoreUnsubscriber,
+                this.availabilityStatusStoreUnsubscriber,
+                this.emoteUnsubscriber,
+                this.emoteMenuUnsubscriber,
+                this.followUsersColorStoreUnsubscriber,
+                this.biggestAvailableAreaStoreUnsubscriber,
+                this.peerStoreUnsubscriber
+            );
+
+            throw new Error("One store is already subscribed.");
+        }
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
