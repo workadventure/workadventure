@@ -43,13 +43,13 @@ export interface AdminInterface {
      * @param reportedUserUuid
      * @param reportedUserComment
      * @param reporterUserUuid
-     * @param reportWorldSlug
+     * @param roomUrl
      */
     reportPlayer(
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string,
+        roomUrl: string,
         locale?: string
     ): Promise<unknown>;
 
