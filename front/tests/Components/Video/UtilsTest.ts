@@ -94,23 +94,25 @@ describe("getSdpTransform()", () => {
     });
 
     // Expected sdp where the audio and application medias have no 'b' fields
-    // and the video medias should have 'b=AS:<bw>'.
+    // and the video medias should have 'b=TIAS=:<bw*1000>' and 'b=AS:<bw>'.
     const expectedDefaultSdp = (bw: integer) => {
         return `
           m=audio
           c=IN IP4 0.0.0.0
           m=video
           c=IN IP4 0.0.0.0
+          b=TIAS:${bw * 1000}
           b=AS:${bw}
           m=video
           c=IN IP4 0.0.0.0
+          b=TIAS:${bw * 1000}
           b=AS:${bw}
           m=application
           c=IN IP4 0.0.0.0`.replace(/^[\s]*/gm, "");
     };
 
     // Expected sdp where the audio and application medias have a 'b' field
-    // and the video medias should have 'b=AS:<bw>'.
+    // and the video medias should have 'b=TIAS=:<bw*1000>' and 'b=AS:<bw>'.
     const expectedFullBWSdp = (bw: integer) => {
         return `
           m=audio
@@ -118,9 +120,11 @@ describe("getSdpTransform()", () => {
           b=AS:11
           m=video
           c=IN IP4 0.0.0.0
+          b=TIAS:${bw * 1000}
           b=AS:${bw}
           m=video
           c=IN IP4 0.0.0.0
+          b=TIAS:${bw * 1000}
           b=AS:${bw}
           m=application
           c=IN IP4 0.0.0.0

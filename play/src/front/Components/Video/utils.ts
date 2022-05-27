@@ -83,23 +83,20 @@ function updateBandwidthRestriction(sdp: string, bandwidth: integer, mediaType: 
         targetMediaPos !== -1;
         targetMediaPos = sdp.indexOf(`m=${mediaType}`, targetMediaPos + 1)
     ) {
-        const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
-        for (const modifier of ["TIAS", "AS"]) {
+        // offer TIAS and AS (in this order)
+        for (const modifier of ["AS", "TIAS"]) {
+            const nextMediaPos = sdp.indexOf(`m=`, targetMediaPos + 1);
             const newBandwidth = modifier === "TIAS" ? (bandwidth >>> 0) * 1000 : bandwidth;
             const nextBWPos = sdp.indexOf(`b=${modifier}:`, targetMediaPos + 1);
 
             let mediaSlice = sdp.slice(targetMediaPos);
-            const mustCreateBWField = nextBWPos === -1 || (nextBWPos > nextMediaPos && nextMediaPos !== -1);
-            if (mustCreateBWField) {
-                // insert b= after c= line.
-                mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${newBandwidth}$2`);
-            } else {
-                // update b= with new 'bandwidth'
-                mediaSlice = mediaSlice.replace(
-                    new RegExp(`b=${modifier}:.*(\r?\n)`),
-                    `b=${modifier}:${newBandwidth}$1`
-                );
+            const bwFieldAlreadyExists = nextBWPos !== -1 && (nextBWPos < nextMediaPos || nextMediaPos === -1);
+            if (bwFieldAlreadyExists) {
+                // delete it
+                mediaSlice = mediaSlice.replace(new RegExp(`b=${modifier}:.*[\r?\n]`), "");
             }
+            // insert b= after c= line.
+            mediaSlice = mediaSlice.replace(/c=IN (.*)(\r?\n)/, `c=IN $1$2b=${modifier}:${newBandwidth}$2`);
 
             // update the sdp
             sdp = sdp.slice(0, targetMediaPos) + mediaSlice;
