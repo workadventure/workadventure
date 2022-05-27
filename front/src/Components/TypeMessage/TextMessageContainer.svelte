@@ -6,9 +6,9 @@
     const MAX_MESSAGES = 3;
 </script>
 
-<div class="main-text-message-container">
+<div class="main-text-message-container tw-flex">
     {#each $textMessageStore.slice(0, MAX_MESSAGES) as message (message.id)}
-        <div animate:flip={{ duration: 250 }}>
+        <div animate:flip={{ duration: 250 }} class="tw-flex">
             <TextMessage {message} />
         </div>
     {/each}

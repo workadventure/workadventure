@@ -38,12 +38,12 @@
 </script>
 
 <div
-    class="nes-container is-rounded my-cam-video-container"
+    class="my-cam-video-container"
     class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
     bind:this={cameraContainer}
 >
     {#if $silentStore}
-        <div class="is-silent">{$LL.camera.my.silentZone()}</div>
+        <div class="is-silent tw-bg-medium-purple tw-rounded tw-text-white tw-w-48 tw-self-center tw-m-1 tw-p-1 tw-min-h-10 tw-text-center tw-items-center tw-flex tw-justify-center">{$LL.camera.my.silentZone()}</div>
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <video class="my-cam-video" use:srcObject={stream} autoplay muted playsinline />
         <SoundMeterWidget volume={$localVolumeStore} />
@@ -84,9 +84,9 @@
         transform: scaleX(-1);
     }
 
-    .is-silent {
-        font-size: 2em;
-        color: white;
-        padding: 40px 20px;
-    }
+    //.is-silent {
+    //    font-size: 2em;
+    //    color: white;
+    //    padding: 40px 20px;
+    //}
 </style>
