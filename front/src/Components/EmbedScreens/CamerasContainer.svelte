@@ -21,6 +21,7 @@
         flex: 0 0 25%;
         overflow-y: auto;
         overflow-x: hidden;
+        pointer-events: auto;
         z-index: 152;
 
         &:first-child {
