@@ -15,6 +15,8 @@ const warning: NonNullable<Translation["warning"]> = {
     connectionLost: "连接丢失。重新连接中...",
     connectionLostTitle: "连接丢失。",
     connectionLostSubtitle: "重新连接中",
+    waitingConnectionTitle: "Waiting for connection", // TODO: translate
+    waitingConnectionSubtitle: "Connecting", // TODO: translate
 };
 
 export default warning;

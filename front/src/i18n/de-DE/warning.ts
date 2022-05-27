@@ -16,6 +16,8 @@ const warning: NonNullable<Translation["warning"]> = {
     connectionLost: "Verbindungen unterbrochen. Wiederverbinden...",
     connectionLostTitle: "Verbindungen unterbrochen",
     connectionLostSubtitle: "Wiederverbinden",
+    waitingConnectionTitle: "Auf Verbindung warten",
+    waitingConnectionSubtitle: "Verbinden",
 };
 
 export default warning;
