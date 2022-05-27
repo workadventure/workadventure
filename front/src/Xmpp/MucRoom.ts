@@ -175,9 +175,9 @@ export class MucRoom {
             "presence",
             { to: to.toString(), from: this.jid, type: "unavailable" },
             xml(
-                "persistent",
+                "deleteSubscribe",
                 {
-                    state: unsubscribe?"false":"true"
+                    state: unsubscribe?"true":"false"
                 },
             )
         );
@@ -220,13 +220,18 @@ export class MucRoom {
                 const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
-                this.updateUser(
-                    jid,
-                    from.resource,
-                    roomId,
-                    uuid,
-                    type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE
-                );
+                const deleteSubscribe = xml.getChild("deleteSubscribe")?.getAttr("state");
+                if(deleteSubscribe !== undefined && deleteSubscribe === "true"){
+                    this.deleteUser(jid);
+                } else {
+                    this.updateUser(
+                        jid,
+                        from.resource,
+                        roomId,
+                        uuid,
+                        type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE
+                    );
+                }
 
                 handledMessage = true;
             }
@@ -252,7 +257,7 @@ export class MucRoom {
                         this.sendPresence();
                         this.requestAllSubscribers();
                     }
-                    //handledMessage = true;
+                    handledMessage = true;
                 }
             }
         }
@@ -284,6 +289,13 @@ export class MucRoom {
                 return list;
             });
         }
+    }
+
+    private deleteUser(jid: string){
+        this.presenceStore.update((list) => {
+            list.delete(jid);
+            return list;
+        });
     }
 
     public getPresenceStore(): UsersStore {

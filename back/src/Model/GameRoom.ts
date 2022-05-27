@@ -121,7 +121,8 @@ export class GameRoom {
             mapDetails.thirdParty ?? undefined
         );
 
-        await gameRoom.getMucManager();
+        const mucManager = await gameRoom.getMucManager();
+        await mucManager.init();
 
         return gameRoom;
     }

@@ -152,6 +152,10 @@ services:
       NODE_ENV: development
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+      EJABBERD_DOMAIN: ejabberd
+      EJABBERD_URI: ejabberd:5443
+      EJABBERD_USER: $EJABBERD_USER
+      EJABBERD_PASSWORD: $EJABBERD_PASSWORD
     volumes:
       - ./back:/usr/src/app
     labels:
