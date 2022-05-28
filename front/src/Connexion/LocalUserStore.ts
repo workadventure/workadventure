@@ -5,6 +5,7 @@ const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
 const requestedCameraStateKey = "requestedCameraStateKey";
+const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
 const gameQualityKey = "gameQuality";
@@ -69,6 +70,14 @@ class LocalUserStore {
 
     setRequestedCameraState(value: boolean): void {
         localStorage.setItem(requestedCameraStateKey, JSON.stringify(value));
+    }
+
+    getRequestedMicrophoneState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedMicrophoneStateKey) || "true");
+    }
+
+    setRequestedMicrophoneState(value: boolean): void {
+        localStorage.setItem(requestedMicrophoneStateKey, JSON.stringify(value));
     }
 
     setCharacterLayers(layers: string[]): void {
