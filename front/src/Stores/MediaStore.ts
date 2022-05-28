@@ -38,12 +38,18 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
 
     return {
         subscribe,
-        enableMicrophone: () => set(true),
-        disableMicrophone: () => set(false),
+        enableMicrophone: () => {
+            set(true);
+            localUserStore.setRequestedMicrophoneState(true);
+        },
+        disableMicrophone: () => {
+            set(false);
+            localUserStore.setRequestedMicrophoneState(false);
+        },
     };
 }
 
