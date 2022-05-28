@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
+const requestedCameraStateKey = "requestedCameraStateKey";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
 const gameQualityKey = "gameQuality";
@@ -60,6 +61,14 @@ class LocalUserStore {
 
     getCustomCursorPosition(): { activeRow: number; selectedLayers: number[] } | null {
         return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
+    }
+
+    getRequestedCameraState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedCameraStateKey) || "true");
+    }
+
+    setRequestedCameraState(value: boolean): void {
+        localStorage.setItem(requestedCameraStateKey, JSON.stringify(value));
     }
 
     setCharacterLayers(layers: string[]): void {
