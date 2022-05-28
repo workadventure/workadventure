@@ -12,18 +12,25 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+
 import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedCameraState());
 
     return {
         subscribe,
-        enableWebcam: () => set(true),
-        disableWebcam: () => set(false),
+        enableWebcam: () => {
+            set(true);
+            localUserStore.setRequestedCameraState(true);
+        },
+        disableWebcam: () => {
+            set(false);
+            localUserStore.setRequestedCameraState(false);
+        },
     };
 }
 
