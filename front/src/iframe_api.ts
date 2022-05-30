@@ -8,7 +8,6 @@ import {
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
-import type { IframeCallback } from "./Api/iframe/IframeApiContribution";
 import nav, { CoWebsite } from "./Api/iframe/nav";
 import controls from "./Api/iframe/controls";
 import ui from "./Api/iframe/ui";
