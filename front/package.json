@@ -91,8 +91,8 @@
       "yarn run svelte-check"
     ],
     "*.{ts,svelte}": [
-      "yarn run fix",
-      "yarn run pretty"
+      "DEBUG= node_modules/.bin/eslint --fix",
+      "prettier --write"
     ]
   }
 }

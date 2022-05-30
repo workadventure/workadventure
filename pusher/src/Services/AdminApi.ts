@@ -8,7 +8,6 @@ import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
-import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
 
 export interface AdminBannedData {
