@@ -521,8 +521,8 @@ export class GameScene extends DirtyScene {
                             GameMapProperties.ALLOW_API,
                             object.properties
                         );
+                        const policy = PropertyUtils.findStringProperty(GameMapProperties.POLICY, object.properties);
 
-                        // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
                             object.name,
                             url,
@@ -532,7 +532,7 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            "",
+                            policy ?? "",
                             "map",
                             1
                         );
