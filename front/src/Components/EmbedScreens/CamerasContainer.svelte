@@ -22,6 +22,8 @@
         overflow-y: auto;
         overflow-x: hidden;
         pointer-events: auto;
+        max-height: 100%;
+        height: max-content;
         &:first-child {
             margin-top: 2%;
         }
