@@ -67,7 +67,6 @@ export class AreaManager {
             };
         });
 
-        // TODO: Do we also want to unregister actions from onEnter onLeave streams?
         iframeListener.registerAnswerer("deleteArea", (name: string) => {
             this.gameMap.deleteArea(name);
         });

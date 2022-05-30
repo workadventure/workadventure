@@ -59,7 +59,7 @@
                  "ellipse":true,
                  "height":128,
                  "id":9,
-                 "name":"jitsi2",
+                 "name":"",
                  "properties":[
                         {
                          "name":"jitsiRoom",
@@ -81,7 +81,7 @@
                 {
                  "height":130.187286397813,
                  "id":11,
-                 "name":"jitsi1",
+                 "name":"",
                  "properties":[
                         {
                          "name":"focusable",
@@ -103,7 +103,7 @@
                 {
                  "height":97.8323080428344,
                  "id":12,
-                 "name":"silent zone area",
+                 "name":"",
                  "properties":[
                         {
                          "name":"silent",
@@ -120,7 +120,7 @@
                 {
                  "height":62.2854864433812,
                  "id":13,
-                 "name":"website",
+                 "name":"",
                  "properties":[
                         {
                          "name":"focusable",
@@ -142,7 +142,7 @@
                 {
                  "height":127.762816131237,
                  "id":15,
-                 "name":"focusable",
+                 "name":"",
                  "properties":[
                         {
                          "name":"focusable",

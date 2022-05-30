@@ -66,6 +66,8 @@ export class GameMap {
 
     private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
     private readonly areasPositionOffsetY: number = 16;
+    private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
+    private unnamedAreasCounter = 0;
 
     public exitUrls: Array<string> = [];
 
@@ -81,7 +83,17 @@ export class GameMap {
         // NOTE: We leave "zone" for legacy reasons
         this.tiledObjects
             .filter((object) => ["zone", "area"].includes(object.type))
-            .forEach((area) => this.areas.set(area.name, area));
+            .forEach((area) => {
+                let name = area.name;
+                if (!name) {
+                    name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
+                    this.unnamedAreasCounter++;
+                }
+                if (this.areas.get(name)) {
+                    console.warn(`Area name "${name}" is already being used! Please use unique names`);
+                }
+                this.areas.set(name, area);
+            });
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -371,6 +383,14 @@ export class GameMap {
     }
 
     public deleteArea(name: string): void {
+        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY).find(
+            (area) => area.name === name
+        );
+        if (area) {
+            for (const callback of this.leaveAreaCallbacks) {
+                callback([area], []);
+            }
+        }
         this.areas.delete(name);
     }
 

@@ -43,8 +43,8 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return new Area(areaEvent);
     }
 
-    delete(name: string): void {
-        void queryWorkadventure({
+    async delete(name: string): Promise<void> {
+        await queryWorkadventure({
             type: "deleteArea",
             data: name,
         });
