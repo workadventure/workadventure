@@ -86,9 +86,9 @@
             <TextMessageContainer />
         {/if}
 
-        {#if $soundPlayingStore}
+        <!--{#if $soundPlayingStore}-->
             <AudioPlaying url={$soundPlayingStore} />
-        {/if}
+        <!--{/if}-->
 
         {#if $warningContainerStore}
             <WarningContainer />
