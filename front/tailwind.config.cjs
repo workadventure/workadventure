@@ -21,6 +21,7 @@ module.exports = {
             "pop-yellow": "#F9E81E",
             "pop-red": "#FF475a",
             grey: "#f6f6f6",
+            dark: "#0F1F2D",
 
             //Useful adds
             white: "#FFFFFF",
