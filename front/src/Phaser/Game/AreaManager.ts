@@ -18,6 +18,8 @@ export class AreaManager {
                 throw new Error(`Could not find area with the name "${modifyAreaEvent.name}" in your map`);
             }
 
+            const insideBefore = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name);
+
             if (modifyAreaEvent.x !== undefined) {
                 area.x = modifyAreaEvent.x;
             }
@@ -29,6 +31,14 @@ export class AreaManager {
             }
             if (modifyAreaEvent.height !== undefined) {
                 area.height = modifyAreaEvent.height;
+            }
+
+            const insideAfter = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name);
+
+            if (insideBefore && !insideAfter) {
+                this.gameMap.triggerSpecificAreaOnLeave(area);
+            } else if (!insideBefore && insideAfter) {
+                this.gameMap.triggerSpecificAreaOnEnter(area);
             }
         });
     }

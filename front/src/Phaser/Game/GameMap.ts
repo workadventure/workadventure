@@ -225,7 +225,6 @@ export class GameMap {
      */
     public onEnterArea(callback: areaChangeCallback) {
         this.enterAreaCallbacks.push(callback);
-        this.triggerAreasChange();
     }
 
     /**
@@ -381,7 +380,27 @@ export class GameMap {
 
     public setArea(name: string, area: ITiledMapObject): void {
         this.areas.set(name, area);
+        if (this.isPlayerInsideArea(name)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+
+    public isPlayerInsideArea(areaName: string): boolean {
+        return (
+            this.getAreasOnPosition(this.position, this.areasPositionOffsetY).findIndex(
+                (area) => area.name === areaName
+            ) !== -1
+        );
+    }
+
+    public triggerSpecificAreaOnEnter(area: ITiledMapObject): void {
         for (const callback of this.enterAreaCallbacks) {
+            callback([area], []);
+        }
+    }
+
+    public triggerSpecificAreaOnLeave(area: ITiledMapObject): void {
+        for (const callback of this.leaveAreaCallbacks) {
             callback([area], []);
         }
     }
@@ -391,9 +410,7 @@ export class GameMap {
             (area) => area.name === name
         );
         if (area) {
-            for (const callback of this.leaveAreaCallbacks) {
-                callback([area], []);
-            }
+            this.triggerSpecificAreaOnLeave(area);
         }
         this.areas.delete(name);
     }
