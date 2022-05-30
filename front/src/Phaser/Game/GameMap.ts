@@ -225,6 +225,7 @@ export class GameMap {
      */
     public onEnterArea(callback: areaChangeCallback) {
         this.enterAreaCallbacks.push(callback);
+        this.triggerAreasChange();
     }
 
     /**
@@ -380,6 +381,9 @@ export class GameMap {
 
     public setArea(name: string, area: ITiledMapObject): void {
         this.areas.set(name, area);
+        for (const callback of this.enterAreaCallbacks) {
+            callback([area], []);
+        }
     }
 
     public deleteArea(name: string): void {
