@@ -82,50 +82,6 @@ Example :
 WA.room.setProperty("wikiLayer", "openWebsite", "https://www.wikipedia.org/");
 ```
 
-### Working with area objects
-You can use Tiled objects of special type `area` to hold various properties, instead of layers. They too can be modified with scripting API.
-### Detecting when the user enters/leaves an area
-
-```ts
-WA.room.onEnterArea(name: string): Subscription
-WA.room.onLeaveArea(name: string): Subscription
-```
-
-Listens to the position of the current user. The event is triggered when the user enters or leaves a given area.
-
-- **name**: the name of the area as defined in Tiled.
-
-Example:
-
-```ts
-const myAreaSubscriber = WA.room.onEnterArea("myArea").subscribe(() => {
-  WA.chat.sendChatMessage("Hello!", "Mr Robot");
-});
-
-WA.room.onLeaveArea("myArea").subscribe(() => {
-  WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
-  myAreaSubscriber.unsubscribe();
-});
-```
-
-### Set/Create properties in an Area object
-
-```ts
-WA.room.setAreaProperty(areaName : string, propertyName : string, propertyValue : string | number | boolean | undefined) : void;
-```
-
-Set the value of the `propertyName` property of the area `areaName` at `propertyValue`. If the property doesn't exist,
-create the property `propertyName` and set the value of the property at `propertyValue`.
-
-Note :
-To unset a property from an area, use `setProperty` with `propertyValue` set to `undefined`.
-
-Example :
-
-```ts
-WA.room.setAreaProperty("wikiArea", "openWebsite", "https://www.wikipedia.org/");
-```
-
 ### Get the room id
 
 ```ts
