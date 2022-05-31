@@ -47,6 +47,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    BanUserByUuidMessage as BanUserByUuidMessageProto, ErrorScreenMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -194,6 +195,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
+
+    private readonly _banUserByUuidMessageStream = new Subject<BanUserByUuidMessageProto>();
+    public readonly banUserByUuidMessageProtoStream = this._banUserByUuidMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -522,7 +526,9 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "banUserMessage": {
-                    adminMessagesService.onSendusermessage(message.banUserMessage);
+                    const error = {type: 'error', code: 'USER_BANNED'}
+                    errorScreenStore.setError(error as ErrorScreenMessage);
+                    //adminMessagesService.onSendusermessage(message.banUserMessage);
                     break;
                 }
                 case "worldFullWarningMessage": {
@@ -1056,6 +1062,23 @@ export class RoomConnection implements RoomConnection {
                 askPositionMessage: {
                     userIdentifier: uuid,
                     playUri,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitBanUserByUuid(playUri: string, uuidToBan: string, name: string, message: string) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "banUserByUuidMessage",
+                banUserByUuidMessage: {
+                    playUri,
+                    uuidToBan,
+                    name,
+                    message,
+                    byUserEmail: localUserStore.getLocalUser()?.email ?? ''
                 },
             },
         }).finish();

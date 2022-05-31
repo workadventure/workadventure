@@ -101,6 +101,10 @@ class LocalAdmin implements AdminInterface {
     async logoutOauth(token: string): Promise<void> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
+
+    banUserByUuid(uuidToBan: string, playUri: string, name: string, message: string, byUserEmail: string): Promise<boolean> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
 }
 
 export const localAdmin = new LocalAdmin();

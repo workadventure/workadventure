@@ -115,6 +115,14 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -136,6 +144,7 @@ message ClientToServerMessage {
     JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
     XmppMessage xmppMessage = 20;
     AskPositionMessage askPositionMessage = 21;
+    BanUserByUuidMessage banUserByUuidMessage = 22;
   }
 }
 

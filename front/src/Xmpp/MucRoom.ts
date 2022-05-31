@@ -27,6 +27,7 @@ export type User = {
 };
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
+export type UserStore = Readable<User>;
 
 export type Teleport = {
     state: boolean;
@@ -38,6 +39,8 @@ export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
     private nickCount: number = 0;
+    private meStore: Writable<User>;
+    private connectionFinished: boolean = false;
 
     constructor(
         private connection: RoomConnection,
@@ -48,6 +51,7 @@ export class MucRoom {
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
+        this.meStore = writable<User>();
     }
 
     private getPlayerName() {
@@ -78,7 +82,45 @@ export class MucRoom {
         }
     }
 
+    public ban(user: string, name: string, playUri: string){
+        const userJID = jid(user);
+        this.affiliate("outcast", userJID);
+        this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test");
+    }
+
+    public rankUp(userJID: JID){
+        this.affiliate("admin", userJID);
+    }
+
+    public rankDown(userJID: JID){
+        this.affiliate("none", userJID);
+    }
+
+    private affiliate(type: string, userJID: JID) {
+        const messageMucAffiliateUser = xml(
+            "iq",
+            {
+                type: "set",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml("query",
+                {
+                    xmlns: "http://jabber.org/protocol/muc#admin",
+                },
+                xml("item", {
+                    affiliation: type,
+                    jid: userJID
+                },
+                    xml("reason", {}, "test"))
+            )
+        );
+        this.connection.emitXmlMessage(messageMucAffiliateUser);
+    }
+
     public connect() {
+        if(this.connectionFinished) return;
         this.sendSubscribe();
     }
 
@@ -187,6 +229,7 @@ export class MucRoom {
         if(!this.isPersistent){
             this.sendUnsubscribe();
         }
+        this.connectionFinished = true;
         return messageMucSubscribe;
     }
 
@@ -195,12 +238,18 @@ export class MucRoom {
 
         console.warn('[XMPP] << Message received : '+xml.getName());
 
+        if(this.connectionFinished) return;
+
         if (xml.getAttr("type") === "error") {
+            console.info(xml.getChild("error")?.getAttr('type'));
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
                 this.nickCount += 1;
                 this.sendSubscribe();
                 //this.sendPresence(me);
                 handledMessage = true;
+            } else if(xml.getChild("error")?.getChildText("text") === "You have been banned from this room"){
+                handledMessage = true;
+                this.connectionFinished = true;
             }
         }
         // We are receiving the presence from someone
@@ -224,9 +273,14 @@ export class MucRoom {
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 const role = x.getChild("item")?.getAttr("role");
-                const affiliation = jid(x.getChild("item")?.getAttr("affiliation"));
+                const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
-                if(deleteSubscribeOnDisconnect !== undefined && deleteSubscribeOnDisconnect === "true" && type === "unavailable"){
+                if(
+                    type === "unavailable" && (
+                    (deleteSubscribeOnDisconnect !== undefined && deleteSubscribeOnDisconnect === "true")
+                    || affiliation === "outcast"
+                    )
+                ){
                     this.deleteUser(userJID.toString());
                 } else {
                     this.updateUser(
@@ -238,7 +292,7 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE
                     );
                 }
-                //handledMessage = true;
+                handledMessage = true;
             }
         }
         // Manage registered subscriptions old and new one
@@ -288,6 +342,10 @@ export class MucRoom {
         return get(this.presenceStore).get(jid.toString())?.uuid ?? '';
     }
 
+    private getMe() {
+        return get(this.meStore);
+    }
+
     private updateUser(jid: string|JID, nick: string, roomId: string|null = null, uuid: string|null = null, isModerator: boolean|null = null, status: string|null = null) {
         const user = localUserStore.getLocalUser();
         if (
@@ -306,6 +364,16 @@ export class MucRoom {
                 numberPresenceUserStore.set(list.size);
                 return list;
             });
+        } else {
+            const me = this.getMe();
+            this.meStore.set({
+                nick,
+                roomId: roomId ?? me?.roomId ?? '',
+                uuid: uuid ?? me?.uuid ?? '',
+                isModerator: isModerator ?? me?.isModerator ?? false,
+                status: status ?? me?.status ?? '',
+                isInSameMap: (roomId ?? me?.roomId ?? '') === getRoomId(),
+            });
         }
     }
 
@@ -319,6 +387,12 @@ export class MucRoom {
     public getPresenceStore(): UsersStore {
         return {
             subscribe: this.presenceStore.subscribe,
+        };
+    }
+
+    public getMeStore(): UserStore {
+        return {
+            subscribe: this.meStore.subscribe,
         };
     }
 

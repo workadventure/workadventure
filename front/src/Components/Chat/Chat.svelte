@@ -65,7 +65,8 @@
                 <UsersList
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}
-                    on:goTo={(event) => mucRoom.goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                    meStore={mucRoom.getMeStore()}
+                    mucRoom={mucRoom}
                 />
             {/each}
         {:else}

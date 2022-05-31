@@ -23,7 +23,7 @@ import {
     LockGroupPromptMessage,
     XmppMessage,
     AskPositionMessage,
-    AvailabilityStatus,
+    AvailabilityStatus, BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -651,6 +651,11 @@ export class IoSocketController {
                     socketManager.handleAskPositionMessage(
                         client,
                         message.getAskpositionmessage() as AskPositionMessage
+                    );
+                } else if (message.hasBanuserbyuuidmessage()) {
+                    socketManager.handleBanUserByUuidMessage(
+                        client,
+                        message.getBanuserbyuuidmessage() as BanUserByUuidMessage
                     );
                 }
 
