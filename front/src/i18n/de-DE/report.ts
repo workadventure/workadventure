@@ -7,6 +7,11 @@ const report: NonNullable<Translation["report"]> = {
         unblock: "Blockierung für diesen Nutzer aufheben",
         block: "Blockiere diesen Nutzer",
     },
+    ban: {
+        title: "Verbannt",
+        content: "Benutzer {userName} aus der laufenden Welt bannen. Dies kann aus der Administration gelöscht werden.",
+        ban: "Diesen Benutzer sperren",
+    },
     title: "Melden",
     content:
         "Verfasse eine Beschwerde an die Administratoren dieses Raums. Diese können den Nutzer anschließend bannen.",
@@ -20,6 +25,7 @@ const report: NonNullable<Translation["report"]> = {
         block: "Blockieren",
         report: "Melden",
         noSelect: "FEHLER : Es ist keine Handlung ausgewählt.",
+        ban: "Verbannt"
     },
 };
 

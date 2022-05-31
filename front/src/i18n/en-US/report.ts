@@ -7,6 +7,11 @@ const report: BaseTranslation = {
         unblock: "Unblock this user",
         block: "Block this user",
     },
+    ban: {
+        title: "Banish",
+        content: "Ban user {userName} from the running world. This can be cancelled from the administration.",
+        ban: "Ban this user",
+    },
     title: "Report",
     content: "Send a report message to the administrators of this room. They may later ban this user.",
     message: {
@@ -19,6 +24,7 @@ const report: BaseTranslation = {
         block: "Block",
         report: "Report",
         noSelect: "ERROR : There is no action selected.",
+        ban: "Banish"
     },
 };
 

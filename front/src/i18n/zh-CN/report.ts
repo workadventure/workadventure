@@ -7,6 +7,11 @@ const report: NonNullable<Translation["report"]> = {
         unblock: "解除屏蔽该用户",
         block: "屏蔽该用户",
     },
+    ban: { // TODO TRANSLATE
+        title: "Banish",
+        content: "Ban user {userName} from the running world. This can be cancelled from the administration.",
+        ban: "Ban this user",
+    },
     title: "举报",
     content: "发送举报信息给这个房间的管理员，他们后续可能禁用该用户。",
     message: {
@@ -19,6 +24,7 @@ const report: NonNullable<Translation["report"]> = {
         block: "屏蔽",
         report: "举报",
         noSelect: "错误：未选择行为。",
+        ban: "Ban" // TODO translate
     },
 };
 

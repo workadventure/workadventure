@@ -8,9 +8,12 @@
     import { connectionManager } from "../../Connexion/ConnectionManager";
     import { get } from "svelte/store";
     import LL from "../../i18n/i18n-svelte";
+    import {userIsAdminStore} from "../../Stores/GameStore";
+    import BanSubMenu from "./BanSubMenu.svelte";
 
     let blockActive = true;
     let reportActive = !blockActive;
+    let userIsAdmin = get(userIsAdminStore);
     let disableReport: boolean = false;
     let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
@@ -88,6 +91,9 @@
             <ReportSubMenu {userUUID} />
         {:else}
             <p>{$LL.report.moderate.noSelect()}</p>
+        {/if}
+        {#if userIsAdmin}
+            <BanSubMenu {userUUID} {userName}/>
         {/if}
     </section>
 </div>

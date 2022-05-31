@@ -14,6 +14,7 @@ import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
 import LL from "../i18n/i18n-svelte";
+import {userIsAdminStore} from "../Stores/GameStore";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -152,6 +153,10 @@ export class MucRoom {
             xml("x", {
                 xmlns: "http://jabber.org/protocol/muc",
             }),
+            xml("item",{
+                affiliation: get(userIsAdminStore)?"admin":"member",
+                role: "participant",
+            }),
             //add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
                 id: window.location.href.split("#")[0].toString(),
@@ -224,13 +229,11 @@ export class MucRoom {
                 deleteSubscribeOnDisconnect: !this.isPersistent?"true":"false"
             })
         );
-        console.log("[XMPP]", ">> Presence unavailable sent");
+        console.warn("[XMPP]", ">> Presence unavailable sent");
         this.connection.emitXmlMessage(messageMucSubscribe);
         if(!this.isPersistent){
             this.sendUnsubscribe();
         }
-        this.connectionFinished = true;
-        return messageMucSubscribe;
     }
 
     onMessage(xml: ElementExt): void {
@@ -245,7 +248,6 @@ export class MucRoom {
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
                 this.nickCount += 1;
                 this.sendSubscribe();
-                //this.sendPresence(me);
                 handledMessage = true;
             } else if(xml.getChild("error")?.getChildText("text") === "You have been banned from this room"){
                 handledMessage = true;
@@ -318,6 +320,10 @@ export class MucRoom {
                     }
                     handledMessage = true;
                 }
+            }
+            if(!handledMessage){
+                console.warn("[XMPP] << Result received");
+                handledMessage = true;
             }
         }
 

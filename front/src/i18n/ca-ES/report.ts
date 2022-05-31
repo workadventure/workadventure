@@ -7,6 +7,11 @@ const report: NonNullable<Translation["report"]> = {
         unblock: "Desbloquejar aquest usuari",
         block: "Bloquejar aquest usuari",
     },
+    ban: {
+        title: "Banish",
+        content: "Banir utilizador {userName} do mundo em execução. Isto poderá ser cancelado da administração." ,
+        ban: "Banir este utilizador",
+    },
     title: "Denunciar",
     content:
         "Enviar un missatge de denúncia als administradors d'aquesta habitació. Pot ser que després suspenguin a aquest usuari.",
@@ -20,6 +25,7 @@ const report: NonNullable<Translation["report"]> = {
         block: "Bloquejar",
         report: "Denunciar",
         noSelect: "ERROR : No s'ha seleccionat una acció.",
+        ban: "Banish"
     },
 };
 

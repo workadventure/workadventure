@@ -62,6 +62,9 @@
 </script>
 
 <ul>
+    {#if me?.isModerator}
+        <li>Vous êtes modérateur</li>
+    {/if}
     {#if [...$usersListStore].length === 0}
         <p>This room is empty, copy this link to invite colleague or friend!</p>
         <input type="text" readonly id="input-share-link" class="link-url" value={getLink()} />
@@ -102,17 +105,17 @@
                     <div>
                         {#if me.isModerator && user.status === USER_STATUS_AVAILABLE}
                             <button
-                                    on:click={() => mucRoom.ban(jid, user.nick, user.roomId)}
+                                    on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
                                     src="btn btn-alert"
                             >Bannir</button>
                             {#if user.isModerator}
                                 <button
-                                        on:click={() => mucRoom.rankDown(jid)}
+                                        on:click|preventDefault={() => mucRoom.rankDown(jid)}
                                         src="btn btn-alert"
                                 >Rank down</button>
                             {:else}
                                 <button
-                                        on:click={() => mucRoom.rankUp(jid)}
+                                        on:click|preventDefault={() => mucRoom.rankUp(jid)}
                                         src="btn btn-alert"
                                 >Rank up</button>
                             {/if}
@@ -127,13 +130,13 @@
                             </button>
                         {:else if user.isInSameMap === false}
                             <button
-                                on:click={() => mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
+                                on:click|preventDefault={() => mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
                                 src="btn btn-primary"
                             >
                                 {$LL.muc.userList.teleport()}
                             </button>
                         {:else}
-                            <button on:click={() => mucRoom.goTo("user", user.roomId, user.uuid)} src="btn btn-primary">
+                            <button on:click|preventDefault={() => mucRoom.goTo("user", user.roomId, user.uuid)} src="btn btn-primary">
                                 {$LL.muc.userList.walkTo()}
                             </button>
                         {/if}

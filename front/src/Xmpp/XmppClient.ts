@@ -144,7 +144,6 @@ export class XmppClient {
         }
         room.disconnect();
         this.rooms.delete(roomUrl.toString());
-
         mucRoomsStore.removeMucRoom(room);
     }
 
