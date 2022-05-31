@@ -1,10 +1,8 @@
 import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
 import {
-    IframeResponseEvent,
-    IframeResponseEventMap,
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
-    isIframeResponseEventWrapper,
+    isIframeResponseEvent,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
@@ -190,45 +188,46 @@ declare global {
 
 window.WA = wa;
 
-window.addEventListener(
-    "message",
-    <T extends keyof IframeResponseEventMap>(message: TypedMessageEvent<IframeResponseEvent<T>>) => {
-        if (message.source !== window.parent) {
-            return; // Skip message in this event listener
+window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
+    if (message.source !== window.parent) {
+        return; // Skip message in this event listener
+    }
+    const payload = message.data;
+
+    //console.debug(payload);
+
+    const safeParseErrorAnswerEvent = isIframeErrorAnswerEvent.safeParse(payload);
+    if (safeParseErrorAnswerEvent.success) {
+        const payloadData = safeParseErrorAnswerEvent.data;
+        const queryId = payloadData.id;
+        const payloadError = payloadData.error;
+
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error("In Iframe API, got an error answer for a question that we have no track of.");
         }
-        const payload = message.data;
+        resolver.reject(new Error(payloadError));
 
-        //console.debug(payload);
+        answerPromises.delete(queryId);
+    } else if (isIframeAnswerEvent(payload)) {
+        const queryId = payload.id;
+        const payloadData = payload.data;
 
-        if (isIframeErrorAnswerEvent(payload)) {
-            const queryId = payload.id;
-            const payloadError = payload.error;
+        const resolver = answerPromises.get(queryId);
+        if (resolver === undefined) {
+            throw new Error("In Iframe API, got an answer for a question that we have no track of.");
+        }
+        resolver.resolve(payloadData);
 
-            const resolver = answerPromises.get(queryId);
-            if (resolver === undefined) {
-                throw new Error("In Iframe API, got an error answer for a question that we have no track of.");
-            }
-            resolver.reject(new Error(payloadError));
+        answerPromises.delete(queryId);
+    } else {
+        const safeParsedPayload = isIframeResponseEvent.safeParse(payload);
+        if (safeParsedPayload.success) {
+            const payloadData = safeParsedPayload.data;
 
-            answerPromises.delete(queryId);
-        } else if (isIframeAnswerEvent(payload)) {
-            const queryId = payload.id;
-            const payloadData = payload.data;
-
-            const resolver = answerPromises.get(queryId);
-            if (resolver === undefined) {
-                throw new Error("In Iframe API, got an answer for a question that we have no track of.");
-            }
-            resolver.resolve(payloadData);
-
-            answerPromises.delete(queryId);
-        } else if (isIframeResponseEventWrapper(payload)) {
-            const payloadData = payload.data;
-
-            const callback = registeredCallbacks[payload.type];
-            if (callback?.typeChecker.safeParse(payloadData).success) {
-                callback?.callback(payloadData);
-            }
+            const callback = registeredCallbacks[payloadData.type];
+            // @ts-ignore
+            callback?.(payloadData.data);
         }
     }
-);
+});

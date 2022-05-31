@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { isSetVariableEvent, SetVariableEvent } from "../Events/SetVariableEvent";
+import { SetVariableEvent } from "../Events/SetVariableEvent";
 
 export class WorkadventureStateCommands extends IframeApiContribution<WorkadventureStateCommands> {
     private setVariableResolvers = new Subject<SetVariableEvent>();
@@ -31,7 +31,6 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
     callbacks = [
         apiCallback({
             type: "setVariable",
-            typeChecker: isSetVariableEvent,
             callback: (payloadData) => {
                 if (payloadData.target === this.target) {
                     this.setVariableResolvers.next(payloadData);
