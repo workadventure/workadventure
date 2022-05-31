@@ -8,7 +8,7 @@
 
 <div class="layout-manager-list tw-flex tw-flex-col tw-m-auto tw-right-0 tw-left-0 tw-absolute tw-bottom-10">
     {#each $layoutManagerActionStore as action}
-        <div class="{action.type} tw-bg-dark-purple/95 tw-rounded tw-text-white tw-w-48 tw-self-center tw-m-1 tw-p-1 tw-border-light-blue tw-border-solid tw-align-middle tw-min-h-10" on:click={() => onClick(action.callback)}>
+        <div class="{action.type} nes-container is-rounded tw-bg-dark-purple/95 tw-rounded tw-text-white tw-w-48 tw-self-center tw-m-1 tw-p-1 tw-border-light-blue tw-border-solid tw-align-middle tw-min-h-10" on:click={() => onClick(action.callback)}>
             <p class="tw-text-center tw-text-light-blue tw-m-0 tw-p-2">{action.message}</p>
         </div>
     {/each}

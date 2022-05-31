@@ -38,7 +38,7 @@
 </script>
 
 <div
-    class="my-cam-video-container"
+    class="nes-container is-rounded my-cam-video-container"
     class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
     bind:this={cameraContainer}
 >
