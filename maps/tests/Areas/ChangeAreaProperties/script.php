@@ -6,7 +6,7 @@
         window.addEventListener('load', () => {
             //@ts-ignore
             WA.camera.onCameraUpdate((worldView) => console.log(worldView));
-            WA.onInit().then(() => {
+            WA.onInit().then(async () => {
                 console.log('After WA init');
                 const updateButton = document.getElementById('updateButton');
 
@@ -19,21 +19,23 @@
                 const onAreaEnterField = document.getElementById('onAreaEnter');
                 const onAreaLeaveField = document.getElementById('onAreaLeave');
 
-                WA.area.onEnter('Center').subscribe(() => {
+                WA.room.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');
                 });
 
-                WA.area.onLeave('Center').subscribe(() => {
+                WA.room.area.onLeave('Center').subscribe(() => {
                     console.log(onAreaLeaveField.value || 'default area leave message');
                 });
 
+                const area = await WA.room.area.get('Center');
+
                 updateButton.addEventListener('click', () => {
-                    WA.area.setProperty('Center', 'focusable', focusableField.checked);
-                    WA.area.setProperty('Center', 'silent', silentField.checked);
-                    WA.area.setProperty('Center', 'zoom_margin', zoomMarginField.value || undefined);
-                    WA.area.setProperty('Center', 'openWebsite', openWebisteField.value || undefined);
-                    WA.area.setProperty('Center', 'jitsiRoom', jitsiRoomField.value || undefined);
-                    WA.area.setProperty('Center', 'jitsiTrigger', jitsiTriggerField.value || undefined);
+                    area.setProperty('focusable', focusableField.checked);
+                    area.setProperty('silent', silentField.checked);
+                    area.setProperty('zoom_margin', zoomMarginField.value || undefined);
+                    area.setProperty('openWebsite', openWebisteField.value || undefined);
+                    area.setProperty('jitsiRoom', jitsiRoomField.value || undefined);
+                    area.setProperty('jitsiTrigger', jitsiTriggerField.value || undefined);
                 });
             });
         })

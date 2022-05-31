@@ -30,7 +30,7 @@
                 let currentlySelectedArea = undefined;
 
                 createButton.addEventListener('click', () => {
-                    const area = WA.area.create({
+                    const area = WA.room.area.create({
                         name: nameField.value,
                         x: Number(xField.value) ?? 0,
                         y: Number(yField.value) ?? 0,
@@ -40,16 +40,16 @@
                     currentlySelectedArea = area;
                     areas[nameField.value] = area;
                     
-                    WA.area.onEnter(nameField.value).subscribe(() => {
+                    WA.room.area.onEnter(nameField.value).subscribe(() => {
                         console.log(`${nameField.value} area enter message`);
                     });
-                    WA.area.onLeave(nameField.value).subscribe(() => {
+                    WA.room.area.onLeave(nameField.value).subscribe(() => {
                         console.log(`${nameField.value} area leave message`);
                     });
                 });
 
                 updateButton.addEventListener('click', async () => {
-                    const area = await WA.area.get(nameField.value);
+                    const area = await WA.room.area.get(nameField.value);
                     if (area) {
                         if (xField.value) {
                             console.log('change x to:' + xField.value)
@@ -71,14 +71,14 @@
                 });
 
                 deleteButton.addEventListener('click', () => {
-                    WA.area.delete(deleteNameField.value);
+                    WA.room.area.delete(deleteNameField.value);
                     if (currentlySelectedArea.name === deleteNameField.value) {
                         currentlySelectedArea = undefined;
                     }
                 });
 
                 getButton.addEventListener('click', async () => {
-                    const area = await WA.area.get(getNameField.value);
+                    const area = await WA.room.area.get(getNameField.value);
                     currentlySelectedArea = area;
                     console.log(area);
                 });

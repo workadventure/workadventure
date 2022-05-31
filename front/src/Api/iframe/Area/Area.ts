@@ -27,20 +27,15 @@ export class Area implements IArea {
         this.type;
     }
 
-    public get x() {
-        return this._x;
-    }
-
-    public get y() {
-        return this._y;
-    }
-
-    public get width() {
-        return this._width;
-    }
-
-    public get height() {
-        return this._height;
+    public setProperty(propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        sendToWorkadventure({
+            type: "setAreaProperty",
+            data: {
+                areaName: this.name,
+                propertyName: propertyName,
+                propertyValue: propertyValue,
+            },
+        });
     }
 
     public set x(x: number) {
@@ -85,5 +80,21 @@ export class Area implements IArea {
                 height: this._height,
             },
         });
+    }
+
+    public get x() {
+        return this._x;
+    }
+
+    public get y() {
+        return this._y;
+    }
+
+    public get width() {
+        return this._width;
+    }
+
+    public get height() {
+        return this._height;
     }
 }

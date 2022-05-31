@@ -2,7 +2,7 @@ import { Subject } from "rxjs";
 import { ChangeAreaEvent, isChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import { CreateAreaEvent, ModifyAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
 const enterAreaStreams: Map<string, Subject<void>> = new Map<string, Subject<void>>();
@@ -77,17 +77,6 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         }
 
         return subject;
-    }
-
-    setProperty(areaName: string, propertyName: string, propertyValue: string | number | boolean | undefined): void {
-        sendToWorkadventure({
-            type: "setAreaProperty",
-            data: {
-                areaName,
-                propertyName: propertyName,
-                propertyValue: propertyValue,
-            },
-        });
     }
 }
 

@@ -112,12 +112,6 @@ return [
                         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-room.md',
                     ],
                     [
-                        'title' => 'Area',
-                        'url' => '/map-building/api-area.md',
-                        'markdown' => 'maps.api-area',
-                        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-area.md',
-                    ],
-                    [
                         'title' => 'State',
                         'url' => '/map-building/api-state.md',
                         'markdown' => 'maps.api-state',
