@@ -1,5 +1,5 @@
 import { Subject } from "rxjs";
-import { ChangeAreaEvent, isChangeAreaEvent } from "../Events/ChangeAreaEvent";
+import { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import { CreateAreaEvent, ModifyAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
@@ -12,14 +12,12 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
     callbacks = [
         apiCallback({
             type: "enterAreaEvent",
-            typeChecker: isChangeAreaEvent,
             callback: (payloadData: ChangeAreaEvent) => {
                 enterAreaStreams.get(payloadData.name)?.next();
             },
         }),
         apiCallback({
             type: "leaveAreaEvent",
-            typeChecker: isChangeAreaEvent,
             callback: (payloadData) => {
                 leaveAreaStreams.get(payloadData.name)?.next();
             },
