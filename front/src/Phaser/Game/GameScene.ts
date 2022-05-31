@@ -90,7 +90,7 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { followUsersColorStore } from "../../Stores/FollowStore";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
@@ -1641,6 +1641,7 @@ ${escapedMessage}
     }
 
     public cleanupClosingScene(): void {
+        // make sure we restart CameraControls
         this.disableMediaBehaviors();
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites();
@@ -1649,6 +1650,8 @@ ${escapedMessage}
         for (const script of scripts) {
             iframeListener.unregisterScript(script);
         }
+
+        followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
