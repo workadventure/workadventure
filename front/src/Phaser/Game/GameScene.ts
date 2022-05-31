@@ -1641,6 +1641,7 @@ ${escapedMessage}
     }
 
     public cleanupClosingScene(): void {
+        this.disableMediaBehaviors();
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites();
         // Stop the script, if any

@@ -897,11 +897,9 @@ export class RoomConnection implements RoomConnection {
     public emitFollowAbort(): void {
         const isLeader = get(followRoleStore) === "leader";
         if (!this.userId) {
-            console.log("R1");
             return;
         }
 
-        console.log("emit follow abort message");
         this.send({
             message: {
                 $case: "followAbortMessage",
