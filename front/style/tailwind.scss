@@ -30,7 +30,7 @@
         }
 
         .menu-item {
-            @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-sm tw-items-center tw-pl-1 tw-text-white tw-align-middle tw-text-left tw-break-words;
+            @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-sm tw-items-center tw-pl-1 tw-text-white tw-align-middle tw-text-left tw-break-words tw-outline-none;
             @apply md:tw-text-base md:tw-pl-3 md:tw-mr-1;
         }
 
