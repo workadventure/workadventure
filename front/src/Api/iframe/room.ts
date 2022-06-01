@@ -9,6 +9,8 @@ import { apiCallback } from "./registeredCallbacks";
 import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
+import area from "./area";
+import { WorkadventureAreaCommands } from "./area";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -169,6 +171,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     get website(): WorkadventureRoomWebsiteCommands {
         return website;
+    }
+
+    get area(): WorkadventureAreaCommands {
+        return area;
     }
 }
 

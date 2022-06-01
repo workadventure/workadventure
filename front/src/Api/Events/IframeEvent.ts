@@ -10,7 +10,7 @@ import { isOpenPopupEvent } from "./OpenPopupEvent";
 import { isOpenTabEvent } from "./OpenTabEvent";
 import type { UserInputChatEvent } from "./UserInputChatEvent";
 import { isLayerEvent } from "./LayerEvent";
-import { isSetPropertyEvent } from "./setPropertyEvent";
+import { isSetPropertyEvent } from "./SetPropertyEvent";
 import { isLoadSoundEvent } from "./LoadSoundEvent";
 import { isPlaySoundEvent } from "./PlaySoundEvent";
 import { isStopSoundEvent } from "./StopSoundEvent";
@@ -39,7 +39,9 @@ import type { RemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
 import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./ui/UIWebsite";
+import { isAreaEvent, isCreateAreaEvent } from "./CreateAreaEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -134,6 +136,10 @@ export const isIframeEventWrapper = z.union([
         data: isSetPropertyEvent,
     }),
     z.object({
+        type: z.literal("setAreaProperty"),
+        data: isSetAreaPropertyEvent,
+    }),
+    z.object({
         type: z.literal("loadSound"),
         data: isLoadSoundEvent,
     }),
@@ -164,6 +170,10 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("modifyUIWebsite"),
         data: isModifyUIWebsiteEvent,
+    }),
+    z.object({
+        type: z.literal("modifyArea"),
+        data: isAreaEvent,
     }),
 ]);
 
@@ -256,6 +266,22 @@ export const iframeQueryMapTypeGuards = {
     },
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
+        answer: z.undefined(),
+    },
+    createArea: {
+        query: isCreateAreaEvent,
+        answer: z.undefined(),
+    },
+    getArea: {
+        query: z.string(),
+        answer: isCreateAreaEvent,
+    },
+    modifyArea: {
+        query: isAreaEvent,
+        answer: z.undefined(),
+    },
+    deleteArea: {
+        query: z.string(),
         answer: z.undefined(),
     },
     setPlayerOutline: {

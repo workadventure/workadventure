@@ -25,6 +25,23 @@ export class PropertyUtils {
         return property;
     }
 
+    public static findStringProperty(
+        name: string,
+        properties: ITiledMapProperty[] | undefined,
+        context?: string
+    ): string | undefined {
+        const property = PropertyUtils.findProperty(name, properties);
+        if (property === undefined) {
+            return undefined;
+        }
+        if (typeof property !== "string") {
+            throw new Error(
+                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : "")
+            );
+        }
+        return property;
+    }
+
     public static mustFindProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined,
