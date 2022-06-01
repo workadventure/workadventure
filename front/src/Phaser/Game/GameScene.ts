@@ -933,6 +933,7 @@ export class GameScene extends DirtyScene {
             this.editorMode = editorMode;
             if (editorMode) {
                 this.CurrentPlayer.finishFollowingPath(true);
+                this.CurrentPlayer.stop();
                 this.cameraManager.stopFollow();
             } else {
                 this.cameraManager.startFollowPlayer(this.CurrentPlayer);
@@ -2249,7 +2250,10 @@ ${escapedMessage}
         super.onResize();
         this.reposition(true);
 
-        // Send new viewport to server
+        this.sendViewportToServer();
+    }
+
+    public sendViewportToServer(): void {
         const camera = this.cameras.main;
         this.connection?.setViewport({
             left: camera.scrollX,

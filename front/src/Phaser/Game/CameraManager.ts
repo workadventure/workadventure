@@ -159,22 +159,30 @@ export class CameraManager extends Phaser.Events.EventEmitter {
     }
 
     public move(moveEvents: ActiveEventList): void {
+        let sendViewportUpdate = false;
         if (moveEvents.get(UserInputEvent.MoveUp)) {
             this.camera.scrollY -= this.EDITOR_MODE_SCROLL_SPEED;
             this.scene.markDirty();
+            sendViewportUpdate = true;
         } else if (moveEvents.get(UserInputEvent.MoveDown)) {
             this.camera.scrollY += this.EDITOR_MODE_SCROLL_SPEED;
             this.scene.markDirty();
+            sendViewportUpdate = true;
         }
 
         if (moveEvents.get(UserInputEvent.MoveLeft)) {
             this.camera.scrollX -= this.EDITOR_MODE_SCROLL_SPEED;
             this.scene.markDirty();
+            sendViewportUpdate = true;
         } else if (moveEvents.get(UserInputEvent.MoveRight)) {
             this.camera.scrollX += this.EDITOR_MODE_SCROLL_SPEED;
             this.scene.markDirty();
+            sendViewportUpdate = true;
         }
-        // TODO: Send info to backend about viewport change
+
+        if (sendViewportUpdate) {
+            this.scene.sendViewportToServer();
+        }
     }
 
     public startFollowPlayer(player: Player, duration: number = 0): void {
