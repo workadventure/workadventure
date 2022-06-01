@@ -84,6 +84,11 @@
                  "name":"",
                  "properties":[
                         {
+                         "name":"focusable",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
                          "name":"jitsiRoom",
                          "type":"string",
                          "value":"MeetingRoom"
@@ -98,7 +103,7 @@
                 {
                  "height":97.8323080428344,
                  "id":12,
-                 "name":"silent zone area",
+                 "name":"",
                  "properties":[
                         {
                          "name":"silent",
@@ -318,7 +323,7 @@
         {
          "columns":10,
          "firstgid":1,
-         "image":"..\/assets\/tileset5_export.png",
+         "image":"..\/..\/..\/assets\/tileset5_export.png",
          "imageheight":320,
          "imagewidth":320,
          "margin":0,
@@ -337,7 +342,7 @@
         {
          "columns":10,
          "firstgid":101,
-         "image":"..\/assets\/tileset6_export.png",
+         "image":"..\/..\/..\/assets\/tileset6_export.png",
          "imageheight":320,
          "imagewidth":320,
          "margin":0,
@@ -356,7 +361,7 @@
         {
          "columns":11,
          "firstgid":201,
-         "image":"..\/assets\/tileset1.png",
+         "image":"..\/..\/..\/assets\/tileset1.png",
          "imageheight":352,
          "imagewidth":352,
          "margin":0,
@@ -375,7 +380,7 @@
         {
          "columns":11,
          "firstgid":322,
-         "image":"..\/assets\/tileset1-repositioning.png",
+         "image":"..\/..\/..\/assets\/tileset1-repositioning.png",
          "imageheight":352,
          "imagewidth":352,
          "margin":0,
@@ -394,7 +399,7 @@
         {
          "columns":6,
          "firstgid":443,
-         "image":"..\/assets\/Special_Zones.png",
+         "image":"..\/..\/..\/assets\/Special_Zones.png",
          "imageheight":64,
          "imagewidth":192,
          "margin":0,

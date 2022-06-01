@@ -17,6 +17,7 @@ import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { AreaManager } from "./AreaManager";
 
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -222,6 +223,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
+    private areaManager!: AreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
@@ -521,8 +523,8 @@ export class GameScene extends DirtyScene {
                             GameMapProperties.ALLOW_API,
                             object.properties
                         );
+                        const policy = PropertyUtils.findStringProperty(GameMapProperties.POLICY, object.properties);
 
-                        // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
                             object.name,
                             url,
@@ -532,7 +534,7 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            "",
+                            policy ?? "",
                             "map",
                             1
                         );
@@ -544,6 +546,8 @@ export class GameScene extends DirtyScene {
         this.gameMap.exitUrls.forEach((exitUrl) => {
             this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
+
+        this.areaManager = new AreaManager(this.gameMap);
 
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMap,
@@ -1314,8 +1318,8 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.setPropertyStream.subscribe((setProperty) => {
-                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+            iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1555,6 +1559,14 @@ ${escapedMessage}
         this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
+    private setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | boolean | undefined
+    ): void {
+        this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
+    }
+
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
         if (phaserLayer != undefined) {
@@ -1686,6 +1698,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
+        this.areaManager?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
