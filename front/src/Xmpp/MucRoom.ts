@@ -85,8 +85,8 @@ export class MucRoom {
 
     public ban(user: string, name: string, playUri: string){
         const userJID = jid(user);
-        this.affiliate("outcast", userJID);
-        this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test");
+        //this.affiliate("outcast", userJID);
+        this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
     }
 
     public rankUp(userJID: JID){
@@ -325,6 +325,19 @@ export class MucRoom {
                 console.warn("[XMPP] << Result received");
                 handledMessage = true;
             }
+        } else if (xml.getName() === "message"){
+            const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
+
+            if (x) {
+                const userJID = jid(x.getChild("item")?.getAttr("jid"));
+                userJID.setResource('');
+                const role = x.getChild("item")?.getAttr("role");
+                const affiliation = x.getChild("item")?.getAttr("affiliation");
+                if(affiliation === "outcast"){
+                    this.deleteUser(userJID);
+                    handledMessage = true;
+                }
+            }
         }
 
         if (!handledMessage) {
@@ -365,7 +378,7 @@ export class MucRoom {
                     uuid: uuid ?? this.getUuid(jid),
                     isModerator: isModerator ?? this.getIsModerator(jid),
                     status: status ?? this.getStatus(jid),
-                    isInSameMap: (roomId ?? this.getRoomId(jid)) === getRoomId(),
+                    isInSameMap: (roomId ?? this.getRoomId(jid)) === getRoomId()
                 });
                 numberPresenceUserStore.set(list.size);
                 return list;
@@ -378,14 +391,14 @@ export class MucRoom {
                 uuid: uuid ?? me?.uuid ?? '',
                 isModerator: isModerator ?? me?.isModerator ?? false,
                 status: status ?? me?.status ?? '',
-                isInSameMap: (roomId ?? me?.roomId ?? '') === getRoomId(),
+                isInSameMap: (roomId ?? me?.roomId ?? '') === getRoomId()
             });
         }
     }
 
-    private deleteUser(jid: string){
+    private deleteUser(jid: string|JID){
         this.presenceStore.update((list) => {
-            list.delete(jid);
+            list.delete(jid.toString());
             return list;
         });
     }
