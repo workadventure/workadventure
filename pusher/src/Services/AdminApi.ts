@@ -10,7 +10,7 @@ import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
-import {isMucRoomDefinition} from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -49,8 +49,13 @@ export const isFetchMemberDataByUuidResponse = z.object({
         example: false,
     }),
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    jabberId: extendApi(z.optional(z.nullable(z.string())), { description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server", example: "john.doe@myxpppserver.example.com" }),
-    jabberPassword: extendApi(z.optional(z.nullable(z.string())), { description: "The password to connect to the XMPP server of this user" }),
+    jabberId: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
+        example: "john.doe@myxpppserver.example.com",
+    }),
+    jabberPassword: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The password to connect to the XMPP server of this user",
+    }),
     mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),

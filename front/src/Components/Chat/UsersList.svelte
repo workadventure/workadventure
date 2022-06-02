@@ -1,20 +1,12 @@
 <script lang="ts">
-    import type { TeleportStore, UsersStore } from "../../Xmpp/MucRoom";
+    import type { TeleportStore, User, UsersStore } from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
-    import {
-        walkAutomaticallyStore,
-        canShare,
-        getLink,
-        copyLink,
-        shareLink,
-        updateInputFieldValue,
-    } from "../../Stores/GuestMenuStore";
     import { USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
-    import {createEventDispatcher} from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import {activeSubMenuStore, menuVisiblilityStore, subMenusStore} from "../../Stores/MenuStore";
-    import {chatVisibilityStore} from "../../Stores/ChatStore";
+    import { activeSubMenuStore, menuVisiblilityStore, subMenusStore } from "../../Stores/MenuStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
 
     export let usersListStore: UsersStore;
 
@@ -26,11 +18,15 @@
         dispatch("goTo", { type, roomId, uuid });
     }
 
-    function filter(user){
-        return $searchValue === null || $searchValue === "" || user.nick.toLocaleLowerCase().indexOf($searchValue?.toLocaleLowerCase()) !== -1;
+    function filter(user: User) {
+        return (
+            $searchValue === null ||
+            $searchValue === "" ||
+            user.nick.toLocaleLowerCase().indexOf($searchValue?.toLocaleLowerCase()) !== -1
+        );
     }
 
-    function openInviteMenu(){
+    function openInviteMenu() {
         chatVisibilityStore.set(false);
         activeSubMenuStore.set(2);
         menuVisiblilityStore.set(true);
@@ -50,12 +46,12 @@
                             {#if user.nick.match(/\[\d*]/)}
                                 <span>{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
                                 <span class="no">
-                                #{user.nick
+                                    #{user.nick
                                         .match(/\[\d*]/)
                                         ?.join()
                                         ?.replace("[", "")
                                         ?.replace("]", "")}
-                            </span>
+                                </span>
                             {:else}
                                 <span>{user.nick}</span>
                             {/if}
@@ -71,8 +67,9 @@
                                 </button>
                             {:else if user.isInSameMap === false}
                                 <button
-                                        on:click={() => goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
-                                        src="btn btn-primary"
+                                    on:click={() =>
+                                        goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
+                                    src="btn btn-primary"
                                 >
                                     {$LL.muc.userList.teleport()}
                                 </button>

@@ -38,7 +38,7 @@ export class AuthenticateController extends BaseHttpController {
                 res.status(500);
                 res.send("User cannot be identified.");
                 return;
-            })().catch(e => console.error(e));
+            })().catch((e) => console.error(e));
         });
     }
 
