@@ -8,7 +8,7 @@
 
 <div class="layout-manager-list tw-flex tw-flex-col tw-m-auto tw-right-0 tw-left-0 tw-absolute tw-bottom-10">
     {#each $layoutManagerActionStore as action}
-        <div class="{action.type} tw-bg-dark-purple/95 tw-rounded tw-w-56 tw-self-center tw-m-1 tw-p-1 tw-border-solid tw-align-middle tw-min-h-10" on:click={() => onClick(action.callback)}>
+        <div class="{action.type} blue-dialog-box tw-w-56 tw-min-h-10" on:click={() => onClick(action.callback)}>
             <p class="tw-text-center tw-m-0 tw-p-2">{action.message}</p>
         </div>
     {/each}
