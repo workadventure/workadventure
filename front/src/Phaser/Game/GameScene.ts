@@ -904,7 +904,7 @@ export class GameScene extends DirtyScene {
                 this.xmppClient = new XmppClient(this.connection);
 
                 // Get position from UUID only after the connection to the pusher is established
-                this.tryMovePlayerWithMoveToUuidParameter();
+                this.tryMovePlayerWithMoveToUserParameter();
             })
             .catch((e) => console.error(e));
     }
@@ -1761,8 +1761,8 @@ ${escapedMessage}
         }
     }
 
-    private tryMovePlayerWithMoveToUuidParameter(): void {
-        const uuidParam = urlManager.getHashParameter("moveToUuid");
+    private tryMovePlayerWithMoveToUserParameter(): void {
+        const uuidParam = urlManager.getHashParameter("moveToUser");
         if (uuidParam) {
             this.connection?.emitAskPosition(uuidParam, this.roomUrl);
             urlManager.clearHashParameter();

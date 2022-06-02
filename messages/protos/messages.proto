@@ -502,7 +502,6 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
     AskPositionMessage askPositionMessage = 21;
-    MoveToPositionMessage moveToPositionMessage = 22;
   }
 }
 
