@@ -5,7 +5,7 @@
     import { createEventDispatcher } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { activeSubMenuStore, menuVisiblilityStore, subMenusStore } from "../../Stores/MenuStore";
+    import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
 
     export let usersListStore: UsersStore;
