@@ -41,7 +41,9 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     XmppMessage,
-    AskPositionMessage, BanUserByUuidMessage,
+    AskPositionMessage,
+    BanUserByUuidMessage,
+    JoinMucRoomMessage
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -730,6 +732,13 @@ export class SocketManager implements ZoneEventListener {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);
         }
+    }
+
+    handleJoinMucRoomMessage(client: ExSocketInterface, joinMucRoomMessage: JoinMucRoomMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setJoinmucroommessage(joinMucRoomMessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 

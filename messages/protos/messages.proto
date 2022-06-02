@@ -145,6 +145,7 @@ message ClientToServerMessage {
     XmppMessage xmppMessage = 20;
     AskPositionMessage askPositionMessage = 21;
     BanUserByUuidMessage banUserByUuidMessage = 22;
+    JoinMucRoomMessage joinMucRoomMessage = 23;
   }
 }
 
@@ -165,6 +166,10 @@ message VariableMessage {
 
 message XmppMessage {
   string stanza = 1;
+}
+
+message JoinMucRoomMessage{
+    MucRoomDefinitionMessage mucRoom = 1;
 }
 
 /**
@@ -420,6 +425,7 @@ message ServerToClientMessage {
     XmppSettingsMessage xmppSettingsMessage = 28;
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 30;
+    JoinMucRoomMessage joinMucRoomMessage = 31;
   }
 }
 
@@ -512,6 +518,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
     AskPositionMessage askPositionMessage = 21;
+    JoinMucRoomMessage joinMucRoomMessage = 22;
   }
 }
 

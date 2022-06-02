@@ -2,7 +2,6 @@
     import type { TeleportStore, User, UsersStore, UserStore } from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
     import {MucRoom, USER_STATUS_AVAILABLE, USER_STATUS_DISCONNECTED} from "../../Xmpp/MucRoom";
-    import { onMount } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
@@ -11,7 +10,6 @@
     export let usersListStore: UsersStore;
 
     export let meStore: UserStore;
-    let me: User = {} as User;
 
     export let teleportStore: TeleportStore;
 
@@ -30,11 +28,6 @@
         activeSubMenuStore.set(2);
         menuVisiblilityStore.set(true);
     }
-    onMount(() => {
-        meStore.subscribe((value: User) => {
-            me = value;
-        });
-    });
 
     let message = '';
 
@@ -45,7 +38,7 @@
 </script>
 
 <ul>
-    {#if me?.isModerator}
+    {#if $meStore?.isModerator}
         <li>Vous êtes modérateur</li>
     {/if}
     {#if [...$usersListStore].length === 0}
@@ -71,7 +64,7 @@
                             {/if}
                         </div>
                         <div>
-                            {#if me.isModerator && user.status === USER_STATUS_AVAILABLE}
+                            {#if $meStore.isModerator && user.status === USER_STATUS_AVAILABLE}
                                 <button
                                         on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
                                         src="btn btn-alert"

@@ -6,6 +6,8 @@ import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoo
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
 // import ElementExt from "./Lib/ElementExt";
 import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
+import {urlManager} from "../Url/UrlManager";
+import {localUserStore} from "../Connexion/LocalUserStore";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -21,7 +23,6 @@ export class XmppClient {
             this.jid = settings.jid;
             this.conferenceDomain = settings.conferenceDomain;
 
-            console.log('settings :', settings.rooms);
             this.onConnect(settings.rooms);
         });
 
@@ -40,7 +41,22 @@ export class XmppClient {
                 const fromJid = jid(from);
                 const roomJid = jid(fromJid.local, fromJid.domain);
 
-                const room = this.rooms.get(roomJid.toString());
+                let room = this.rooms.get(roomJid.toString());
+                /*
+                if(!room) {
+                    if (xml.getName() === 'presence' && xml.getChild("user")) {
+                        const uuid = xml.getChild("user")?.getAttr("uuid");
+                        if(uuid === localUserStore.getLocalUser()?.uuid) {
+                            console.log('Message to handle :', xml.toString());
+                            const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
+                            const roomUrl = XmppClient.decode(fromJid.local) ?? '/error';
+                            const roomName = roomUrl.replace(urlManager.getPlayUri(), '').substring(1)
+                            this.joinMuc(roomName, 'live', roomUrl, deleteSubscribeOnDisconnect === 'false');
+                            room = this.rooms.get(roomJid.toString());
+                        }
+                    }
+                }
+                 */
                 if (room) {
                     room.onMessage(xml);
                     handledMessage = true;
@@ -119,8 +135,6 @@ export class XmppClient {
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
             );
         }
-
-        console.warn('Muc type :', type);
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
         const room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);

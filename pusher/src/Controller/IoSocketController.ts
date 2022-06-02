@@ -23,7 +23,9 @@ import {
     LockGroupPromptMessage,
     XmppMessage,
     AskPositionMessage,
-    AvailabilityStatus, BanUserByUuidMessage,
+    AvailabilityStatus,
+    BanUserByUuidMessage,
+    JoinMucRoomMessage
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -657,6 +659,11 @@ export class IoSocketController {
                     socketManager.handleBanUserByUuidMessage(
                         client,
                         message.getBanuserbyuuidmessage() as BanUserByUuidMessage
+                    );
+                } else if (message.hasJoinmucroommessage()){
+                    socketManager.handleJoinMucRoomMessage(
+                        client,
+                        message.getJoinmucroommessage() as JoinMucRoomMessage
                     );
                 }
 

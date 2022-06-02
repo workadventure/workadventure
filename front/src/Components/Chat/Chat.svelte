@@ -66,7 +66,7 @@
                 <p class="room-name">{mucRoom.name}</p>
                 {#if get(userIsAdminStore) && mucRoom.type !== 'default'}
                     <div>
-                        <button on:click|preventDefault={() => mucRoom.recreate()}>Réinitialiser</button>
+                        <button on:click|preventDefault={() => mucRoom.reInitialize()}>Réinitialiser</button>
                     </div>
                 {/if}
                 <UsersList

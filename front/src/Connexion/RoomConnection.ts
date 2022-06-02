@@ -47,7 +47,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    BanUserByUuidMessage as BanUserByUuidMessageProto, ErrorScreenMessage,
+    ErrorScreenMessage, MucRoomDefinitionMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -195,9 +195,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
-
-    private readonly _banUserByUuidMessageStream = new Subject<BanUserByUuidMessageProto>();
-    public readonly banUserByUuidMessageProtoStream = this._banUserByUuidMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -600,6 +597,15 @@ export class RoomConnection implements RoomConnection {
                         });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                    break;
+                }
+                case "joinMucRoomMessage": {
+                    if(message.joinMucRoomMessage.mucRoom) {
+                        // If the user is in the chatZone that he must join
+                        if(message.joinMucRoomMessage.mucRoom.type === 'live' && gameManager.getCurrentGameScene().getGameMap().getCurrentProperties().get('chatName') === message.joinMucRoomMessage.mucRoom.name) {
+                            gameManager.getCurrentGameScene().getXmppClient().joinMuc(message.joinMucRoomMessage.mucRoom.name, message.joinMucRoomMessage.mucRoom.type, message.joinMucRoomMessage.mucRoom.url, message.joinMucRoomMessage.mucRoom.type !== 'live');
+                        }
+                    }
                     break;
                 }
                 default: {
@@ -1078,6 +1084,23 @@ export class RoomConnection implements RoomConnection {
                     name,
                     message,
                     byUserEmail: localUserStore.getLocalUser()?.email ?? ''
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitJoinMucRoom(name: string, type: string, url: string){
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "joinMucRoomMessage",
+                joinMucRoomMessage: {
+                    mucRoom: {
+                        name,
+                        type,
+                        url
+                    } as MucRoomDefinitionMessage
                 },
             },
         }).finish();

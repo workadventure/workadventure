@@ -126,8 +126,13 @@ export class MucRoom {
         }
     }
 
-    public recreate(){
+    public reInitialize(){
+        // Destroy room in ejabberd
         this.destroy();
+        // Recreate room in ejabberd
+        setTimeout(() => this.sendPresence(), 100);
+        // Tell all users to subscribe to it
+        setTimeout(() => this.connection.emitJoinMucRoom(this.name, this.type, this.roomJid.local), 200);
     }
 
     public destroy(){

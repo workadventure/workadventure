@@ -30,6 +30,7 @@ import {
     WorldFullWarningToRoomMessage,
     ZoneMessage,
     LockGroupPromptMessage,
+    JoinMucRoomMessage
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -165,6 +166,12 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 message.getAskpositionmessage() as AskPositionMessage
+                            );
+                        } else if(message.hasJoinmucroommessage()) {
+                            socketManager.handleJoinMucRoomMessage(
+                                room,
+                                user,
+                                message.getJoinmucroommessage() as JoinMucRoomMessage
                             );
                         } else {
                             throw new Error("Unhandled message type");
