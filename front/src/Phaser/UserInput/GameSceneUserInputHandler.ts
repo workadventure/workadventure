@@ -3,7 +3,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
-import { editorModeStore } from "../../Stores/EditorStore";
+import { editorModeDragCameraPointerDownStore, editorModeStore } from "../../Stores/EditorStore";
 import { get } from "svelte/store";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
@@ -24,6 +24,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (this.gameScene.getEditorModeManager().isActive()) {
+            editorModeDragCameraPointerDownStore.set(false);
+        }
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
@@ -57,6 +60,20 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             });
     }
 
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        if (this.gameScene.getEditorModeManager().isActive()) {
+            editorModeDragCameraPointerDownStore.set(true);
+        }
+    }
+
+    public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        // TODO: Set pointerDown to false if moved out of the game screen
+        if (this.gameScene.getEditorModeManager().isActive() && this.gameScene.getEditorModeManager().isPointerDown()) {
+            // NOTE: Not a perfect solution but will do for now. dx / dy would be preferable?
+            this.gameScene.getCameraManager().scrollBy(-pointer.velocity.x / 10, -pointer.velocity.y / 10);
+        }
+    }
+
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
         switch (event.code) {
             case "KeyE": {
@@ -71,7 +88,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
-        console.log(event.code);
         switch (event.code) {
             case "Space": {
                 const activatableManager = this.gameScene.getActivatablesManager();
@@ -86,10 +102,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
         }
         return event;
-    }
-
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        // if (this.gameScene.)
     }
 
     public handleSpaceKeyUpEvent(event: Event): Event {

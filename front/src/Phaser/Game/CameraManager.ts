@@ -185,6 +185,12 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         }
     }
 
+    public scrollBy(x: number, y: number): void {
+        this.camera.scrollX += x;
+        this.camera.scrollY += y;
+        this.scene.markDirty();
+    }
+
     public startFollowPlayer(player: Player, duration: number = 0): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);

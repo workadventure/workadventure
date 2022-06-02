@@ -1,5 +1,8 @@
 import { Unsubscriber } from "svelte/store";
-import { editorModeStore } from "../../Stores/EditorStore";
+import {
+    editorModeDragCameraPointerDownStore as editorModePointerDownStore,
+    editorModeStore,
+} from "../../Stores/EditorStore";
 import { GameScene } from "./GameScene";
 
 export enum EditorTool {
@@ -14,12 +17,19 @@ export class EditorModeManager {
      */
     private active: boolean;
 
+    /**
+     * Is pointer currently down (map dragging etc)
+     */
+    private pointerDown: boolean;
+
     private editorModeUnsubscriber!: Unsubscriber;
+    private pointerDownUnsubscriber!: Unsubscriber;
 
     constructor(scene: GameScene) {
         this.scene = scene;
 
         this.active = false;
+        this.pointerDown = false;
 
         this.subscribeToStores();
     }
@@ -28,8 +38,13 @@ export class EditorModeManager {
         return this.active;
     }
 
+    public isPointerDown(): boolean {
+        return this.pointerDown;
+    }
+
     public destroy(): void {
         this.unsubscribeFromStores();
+        this.pointerDownUnsubscriber();
     }
 
     private subscribeToStores(): void {
@@ -42,6 +57,10 @@ export class EditorModeManager {
             } else {
                 this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer);
             }
+        });
+
+        this.pointerDownUnsubscriber = editorModePointerDownStore.subscribe((pointerDown) => {
+            this.pointerDown = pointerDown;
         });
     }
 

@@ -2369,6 +2369,10 @@ ${escapedMessage}
         return this.cameraManager;
     }
 
+    public getEditorModeManager(): EditorModeManager {
+        return this.editorModeManager;
+    }
+
     public getPathfindingManager(): PathfindingManager {
         return this.pathfindingManager;
     }

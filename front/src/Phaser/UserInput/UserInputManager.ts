@@ -270,16 +270,27 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_DOWN,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if (!pointer.wasTouch || this.isInputDisabled) {
+                if (this.isInputDisabled) {
                     return;
                 }
                 this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
+
+                if (!pointer.wasTouch) {
+                    return;
+                }
                 // Let's only display the joystick if there is one finger on the screen
                 if ((pointer.event as TouchEvent).touches.length === 1) {
                     this.joystick?.showAt(pointer.x, pointer.y);
                 } else {
                     this.joystick?.hide();
                 }
+            }
+        );
+
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_MOVE,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
             }
         );
 
