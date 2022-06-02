@@ -7,6 +7,7 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import {
+        activeSubMenuStore,
         checkSubMenuToShow,
         customMenuIframe,
         menuVisiblilityStore,
@@ -20,7 +21,7 @@
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
-    let activeSubMenu: MenuItem = $subMenusStore[0];
+    let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
@@ -28,13 +29,13 @@
     onMount(async () => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                void switchMenu($subMenusStore[0]);
+                void switchMenu($subMenusStore[$activeSubMenuStore]);
             }
         });
 
         checkSubMenuToShow();
 
-        await switchMenu($subMenusStore[0]);
+        await switchMenu($subMenusStore[$activeSubMenuStore]);
     });
 
     onDestroy(() => {
@@ -48,26 +49,32 @@
             activeSubMenu = menu;
             switch (menu.key) {
                 case SubMenusInterface.settings:
+                    activeSubMenuStore.set(0);
                     analyticsClient.menuSetting();
                     activeComponent = SettingsSubMenu;
                     break;
                 case SubMenusInterface.profile:
+                    activeSubMenuStore.set(1);
                     analyticsClient.menuProfile();
                     activeComponent = ProfileSubMenu;
                     break;
                 case SubMenusInterface.invite:
+                    activeSubMenuStore.set(2);
                     analyticsClient.menuInvite();
                     activeComponent = GuestSubMenu;
                     break;
                 case SubMenusInterface.aboutRoom:
+                    activeSubMenuStore.set(3);
                     analyticsClient.menuCredit();
                     activeComponent = AboutRoomSubMenu;
                     break;
                 case SubMenusInterface.globalMessages:
+                    activeSubMenuStore.set(4);
                     analyticsClient.globalMessage();
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     break;
                 case SubMenusInterface.contact:
+                    activeSubMenuStore.set(5);
                     analyticsClient.menuContact();
                     activeComponent = ContactSubMenu;
                     break;

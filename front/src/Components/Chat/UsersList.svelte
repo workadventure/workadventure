@@ -13,6 +13,8 @@
     import {createEventDispatcher} from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
+    import {activeSubMenuStore, menuVisiblilityStore, subMenusStore} from "../../Stores/MenuStore";
+    import {chatVisibilityStore} from "../../Stores/ChatStore";
 
     export let usersListStore: UsersStore;
 
@@ -23,31 +25,25 @@
     function goTo(type: string, roomId: string, uuid: string) {
         dispatch("goTo", { type, roomId, uuid });
     }
+
+    function filter(user){
+        return $searchValue === null || $searchValue === "" || user.nick.toLocaleLowerCase().indexOf($searchValue?.toLocaleLowerCase()) !== -1;
+    }
+
+    function openInviteMenu(){
+        chatVisibilityStore.set(false);
+        activeSubMenuStore.set(2);
+        menuVisiblilityStore.set(true);
+    }
 </script>
 
 <ul>
     {#if [...$usersListStore].length === 0}
         <p>This room is empty, copy this link to invite colleague or friend!</p>
-        <input type="text" readonly id="input-share-link" class="link-url" value={getLink()} />
-        {#if !canShare}
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
-        {:else}
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
-        {/if}
-        <label>
-            <input
-                    type="checkbox"
-                    class="nes-checkbox is-dark"
-                    bind:checked={$walkAutomaticallyStore}
-                    on:change={() => {
-                    updateInputFieldValue();
-                }}
-            />
-            <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
-        </label>
+        <button type="button" class="nes-btn is-primary" on:click={openInviteMenu}>{$LL.menu.sub.invite()}</button>
     {:else}
         {#each [...$usersListStore] as [jid, user]}
-            {#if $searchValue === undefined || $searchValue === "" || user.nick.toLocaleLowerCase().indexOf($searchValue.toLocaleLowerCase()) !== -1}
+            {#if filter(user)}
                 <li class={user.status} id={jid}>
                     <div>
                         <div class="nick">
