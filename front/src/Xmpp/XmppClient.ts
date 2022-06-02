@@ -1,16 +1,16 @@
 import jid from "@xmpp/jid";
-import { Observable, Subject } from "rxjs";
+// import { Subject } from "rxjs";
 import { MucRoom } from "./MucRoom";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
-import ElementExt from "./Lib/ElementExt";
+// import ElementExt from "./Lib/ElementExt";
 import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
 
 export class XmppClient {
     private jid: string | undefined;
     private conferenceDomain: string | undefined;
-    private subscriptions = new Map<string, Subject<ElementExt>>();
+    // private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
 
     constructor(private connection: RoomConnection) {
@@ -21,17 +21,18 @@ export class XmppClient {
             this.jid = settings.jid;
             this.conferenceDomain = settings.conferenceDomain;
 
+            console.log('settings :', settings.rooms);
             this.onConnect(settings.rooms);
         });
 
         connection.xmppMessageStream.subscribe((xml) => {
             let handledMessage = false;
-            const id = xml.getAttr("id");
-
-            if (id) {
-                this.subscriptions.get(id)?.next(xml);
-                handledMessage = true;
-            }
+            // const id = xml.getAttr("id");
+            //
+            // if (id) {
+            //     this.subscriptions.get(id)?.next(xml);
+            //     handledMessage = true;
+            // }
 
             const from = xml.getAttr("from");
 
@@ -70,57 +71,59 @@ export class XmppClient {
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
         xmppServerConnectionStatusStore.set(true);
 
-        for (const { name, url } of initialRoomDefinitions) {
-            this.joinMuc(name, url);
+        for (const { name, type, url } of initialRoomDefinitions) {
+            this.joinMuc(name, type, url);
         }
     }
 
-    /**
-     * Sends a message to the XMPP server.
-     * Generates a unique ID and tracks messages coming back.
-     *
-     * IMPORTANT: it is the responsibility of the caller to free the subscription later.
-     */
-    private sendMessage(message: ElementExt): Observable<ElementExt> {
-        let id = message.getAttr("id");
-        if (!id) {
-            id = this.generateId();
-            message.setAttrs({
-                id,
-            });
-        }
+    // /**
+    //  * Sends a message to the XMPP server.
+    //  * Generates a unique ID and tracks messages coming back.
+    //  *
+    //  * IMPORTANT: it is the responsibility of the caller to free the subscription later.
+    //  */
+    // private sendMessage(message: ElementExt): Observable<ElementExt> {
+    //     let id = message.getAttr("id");
+    //     if (!id) {
+    //         id = this.generateId();
+    //         message.setAttrs({
+    //             id,
+    //         });
+    //     }
+    //
+    //     this.connection.emitXmlMessage(message);
+    //
+    //     // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
+    //     // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
+    //     // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
+    //     // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
+    //     // FIXME: FIND A WAY TO TRACK ON DIFFERENT STRATEGIES (ROUTE BY ROOM, ETC...)
+    //     // PLUS IT SEEMS ID IS RETURNED ONLY ONCE!
+    //     const subject = new Subject<ElementExt>();
+    //     this.subscriptions.set(id, subject);
+    //     return subject.asObservable();
+    // }
 
-        this.connection.emitXmlMessage(message);
+    // private generateId(): string {
+    //     const length = 8;
+    //     const arr = new Uint8Array(length / 2);
+    //     window.crypto.getRandomValues(arr);
+    //     return Array.from(arr, (dec: number) => {
+    //         return dec.toString(16).padStart(2, "0");
+    //     }).join("");
+    // }
 
-        // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
-        // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
-        // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
-        // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
-        // FIXME: FIND A WAY TO TRACK ON DIFFERENT STRATEGIES (ROUTE BY ROOM, ETC...)
-        // PLUS IT SEEMS ID IS RETURNED ONLY ONCE!
-        const subject = new Subject<ElementExt>();
-        this.subscriptions.set(id, subject);
-        return subject.asObservable();
-    }
-
-    private generateId(): string {
-        const length = 8;
-        const arr = new Uint8Array(length / 2);
-        window.crypto.getRandomValues(arr);
-        return Array.from(arr, (dec: number) => {
-            return dec.toString(16).padStart(2, "0");
-        }).join("");
-    }
-
-    public joinMuc(name: string, waRoomUrl: string, isPersistent: boolean = true): MucRoom {
+    public joinMuc(name: string, type: string, waRoomUrl: string, isPersistent: boolean = true): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
             );
         }
 
+        console.warn('Muc type :', type);
+
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, this.jid, isPersistent);
+        const room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 
@@ -129,7 +132,7 @@ export class XmppClient {
         return room;
     }
 
-    public leaveMuc(name: string): void {
+    public leaveMuc(name: string, doDisconnect: boolean = true): void {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "leaveMuc called before we received the XMPP connection details. There is a race condition."
@@ -142,7 +145,9 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        room.disconnect();
+        if(doDisconnect){
+            room.disconnect();
+        }
         this.rooms.delete(roomUrl.toString());
         mucRoomsStore.removeMucRoom(room);
     }

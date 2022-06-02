@@ -37,6 +37,13 @@
         });
     });
 
+    let message = '';
+
+    function sendMessage(){
+        mucRoom.sendMessage(message);
+        message = '';
+    }
+
     //recreate user list
     searchValue.subscribe((value: string | null) => {
         usersList = new Map<string, User>();
@@ -146,6 +153,12 @@
         {/each}
     {/if}
 </ul>
+<div>
+    <input type="text" placeholder="Votre message ..." bind:value={message}/>
+    <button on:click|preventDefault={sendMessage} src="btn btn-primary">
+        Envoyer
+    </button>
+</div>
 
 <style>
     ul {

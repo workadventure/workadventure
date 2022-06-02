@@ -359,7 +359,8 @@ message BanUserMessage{
 
 message MucRoomDefinitionMessage {
   string url = 1;
-  string name = 2;
+  string type = 2;
+  string name = 3;
 }
 
 message XmppSettingsMessage{

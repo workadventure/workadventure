@@ -4,6 +4,7 @@ import type { PointInterface } from "../Connexion/ConnexionModels";
 
 export interface MucRoomDefinitionInterface {
     name: string;
+    type: string;
     url: string;
 }
 

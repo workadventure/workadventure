@@ -143,7 +143,7 @@ export class GameMapPropertiesListener {
                     gameManager.getCurrentGameScene().getXmppClient().leaveMuc(playUri + oldValue);
                 }
                 if (newValue !== undefined) {
-                    gameManager.getCurrentGameScene().getXmppClient().joinMuc(newValue.toString(), playUri + newValue, false);
+                    gameManager.getCurrentGameScene().getXmppClient().joinMuc(newValue.toString(), 'live', playUri + newValue, false);
                 }
         });
 
