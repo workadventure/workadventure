@@ -107,7 +107,7 @@ export class MucRoom {
         if (type === "room") {
             Axios.get(`${PUSHER_URL}/room/access`, { params: { token: localUserStore.getAuthToken(), playUri, uuid } })
                 .then((_) => {
-                    window.location.assign(`${playUri}#moveToUuid=${uuid}`);
+                    window.location.assign(`${playUri}#moveToUser=${uuid}`);
                 })
                 .catch((error) => {
                     layoutManagerActionStore.addAction({

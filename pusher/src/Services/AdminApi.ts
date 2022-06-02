@@ -10,6 +10,7 @@ import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
+import { isMucRoomDefinition } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export interface AdminBannedData {
     is_banned: boolean;
@@ -48,9 +49,16 @@ export const isFetchMemberDataByUuidResponse = z.object({
         example: false,
     }),
     userRoomToken: extendApi(z.optional(z.string()), { description: "", example: "" }),
-    jabberId: extendApi(z.optional(z.nullable(z.string())), { description: "", example: "" }),
-    jabberPassword: extendApi(z.optional(z.nullable(z.string())), { description: "", example: "" }),
-    mucRooms: extendApi(z.array(z.any()), { description: "", example: "" }),
+    jabberId: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The jid (JabberID) that can be used to connect this particular user to its XMPP server",
+        example: "john.doe@myxpppserver.example.com",
+    }),
+    jabberPassword: extendApi(z.optional(z.nullable(z.string())), {
+        description: "The password to connect to the XMPP server of this user",
+    }),
+    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
+        description: "The MUC room is a room of message",
+    }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;
@@ -308,7 +316,7 @@ class AdminApi implements AdminInterface {
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string,
+        roomUrl: string,
         locale?: string
     ) {
         /**
@@ -337,9 +345,9 @@ class AdminApi implements AdminInterface {
          *        description: "The identifier of the reporter user \n It can be an uuid or an email"
          *        type: "string"
          *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
-         *      - name: "reportWorldSlug"
+         *      - name: "roomUrl"
          *        in: "query"
-         *        description: "The slug of the world where the report is made"
+         *        description: "The URL of the room where the report is made"
          *        type: "string"
          *        example: "/@/teamSlug/worldSlug/roomSlug"
          *     responses:
@@ -352,7 +360,7 @@ class AdminApi implements AdminInterface {
                 reportedUserUuid,
                 reportedUserComment,
                 reporterUserUuid,
-                reportWorldSlug,
+                reportWorldSlug: roomUrl,
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },

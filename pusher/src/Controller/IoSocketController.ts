@@ -78,7 +78,7 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
-    mucRooms: Array<Array<Object>> | undefined;
+    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
 }
 
 interface UpgradeFailedInvalidData {
@@ -88,6 +88,7 @@ interface UpgradeFailedInvalidData {
     roomId: string;
 }
 import Jwt from "jsonwebtoken";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {

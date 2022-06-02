@@ -17,6 +17,7 @@ import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { AreaManager } from "./AreaManager";
 
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -90,7 +91,7 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { followUsersColorStore } from "../../Stores/FollowStore";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
@@ -224,6 +225,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
+    private areaManager!: AreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
@@ -524,8 +526,8 @@ export class GameScene extends DirtyScene {
                             GameMapProperties.ALLOW_API,
                             object.properties
                         );
+                        const policy = PropertyUtils.findStringProperty(GameMapProperties.POLICY, object.properties);
 
-                        // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
                             object.name,
                             url,
@@ -535,7 +537,7 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            "",
+                            policy ?? "",
                             "map",
                             1
                         );
@@ -547,6 +549,8 @@ export class GameScene extends DirtyScene {
         this.gameMap.exitUrls.forEach((exitUrl) => {
             this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
+
+        this.areaManager = new AreaManager(this.gameMap);
 
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMap,
@@ -900,7 +904,7 @@ export class GameScene extends DirtyScene {
                 this.xmppClient = new XmppClient(this.connection);
 
                 // Get position from UUID only after the connection to the pusher is established
-                this.tryMovePlayerWithMoveToUuidParameter();
+                this.tryMovePlayerWithMoveToUserParameter();
             })
             .catch((e) => console.error(e));
     }
@@ -914,7 +918,6 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber,
             this.emoteMenuUnsubscriber,
             this.followUsersColorStoreUnsubscriber,
-            this.biggestAvailableAreaStoreUnsubscriber,
             this.peerStoreUnsubscriber
         );
         if (
@@ -924,7 +927,6 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.biggestAvailableAreaStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined
         )
             throw new Error("subscribeToStores => Check subscriber");
@@ -1327,8 +1329,8 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.setPropertyStream.subscribe((setProperty) => {
-                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+            iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1568,6 +1570,14 @@ ${escapedMessage}
         this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
+    private setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | boolean | undefined
+    ): void {
+        this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
+    }
+
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
         if (phaserLayer != undefined) {
@@ -1654,6 +1664,8 @@ ${escapedMessage}
     }
 
     public cleanupClosingScene(): void {
+        // make sure we restart CameraControls
+        this.disableMediaBehaviors();
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
@@ -1661,6 +1673,8 @@ ${escapedMessage}
         for (const script of scripts) {
             iframeListener.unregisterScript(script);
         }
+
+        followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
@@ -1696,6 +1710,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
+        this.areaManager?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -1746,8 +1761,8 @@ ${escapedMessage}
         }
     }
 
-    private tryMovePlayerWithMoveToUuidParameter(): void {
-        const uuidParam = urlManager.getHashParameter("moveToUuid");
+    private tryMovePlayerWithMoveToUserParameter(): void {
+        const uuidParam = urlManager.getHashParameter("moveToUser");
         if (uuidParam) {
             this.connection?.emitAskPosition(uuidParam, this.roomUrl);
             urlManager.clearHashParameter();

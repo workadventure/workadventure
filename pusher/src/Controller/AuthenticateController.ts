@@ -22,22 +22,23 @@ export class AuthenticateController extends BaseHttpController {
     }
 
     roomAccess() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/room/access", async (req, res) => {
-            try {
-                const { uuid, playUri } = parse(req.path_query);
-                if (!uuid || !playUri) {
-                    throw new Error("Missing uuid and playUri parameters.");
+        this.app.get("/room/access", (req, res) => {
+            (async () => {
+                try {
+                    const { uuid, playUri } = parse(req.path_query);
+                    if (!uuid || !playUri) {
+                        throw new Error("Missing uuid and playUri parameters.");
+                    }
+                    return res.json(
+                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    );
+                } catch (e) {
+                    console.warn(e);
                 }
-                return res.json(
-                    await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
-                );
-            } catch (e) {
-                console.warn(e);
-            }
-            res.status(500);
-            res.send("User cannot be identified.");
-            return;
+                res.status(500);
+                res.send("User cannot be identified.");
+                return;
+            })().catch((e) => console.error(e));
         });
     }
 

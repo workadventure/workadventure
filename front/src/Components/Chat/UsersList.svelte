@@ -1,39 +1,38 @@
 <script lang="ts">
-    import type { Teleport, TeleportStore, User, UserList, UsersStore, UserStore } from "../../Xmpp/MucRoom";
+    import type { TeleportStore, User, UsersStore, UserStore } from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
-    import {
-        walkAutomaticallyStore,
-        canShare,
-        getLink,
-        copyLink,
-        shareLink,
-        updateInputFieldValue,
-    } from "../../Stores/GuestMenuStore";
     import {MucRoom, USER_STATUS_AVAILABLE, USER_STATUS_DISCONNECTED} from "../../Xmpp/MucRoom";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { onMount } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
+    import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
 
     export let usersListStore: UsersStore;
-    let usersList: UserList = new Map<string, User>();
 
     export let meStore: UserStore;
     let me: User = {} as User;
 
     export let teleportStore: TeleportStore;
-    let teleport: Teleport = { state: false, to: null };
 
     export let mucRoom: MucRoom;
 
+    function filter(user: User) {
+        return (
+            $searchValue === null ||
+            $searchValue === "" ||
+            user.nick.toLocaleLowerCase().indexOf($searchValue?.toLocaleLowerCase()) !== -1
+        );
+    }
+
+    function openInviteMenu() {
+        chatVisibilityStore.set(false);
+        activeSubMenuStore.set(2);
+        menuVisiblilityStore.set(true);
+    }
     onMount(() => {
-        usersListStore.subscribe((value: UserList) => {
-            usersList = value;
-        });
         meStore.subscribe((value: User) => {
             me = value;
-        });
-        teleportStore.subscribe((value: Teleport) => {
-            teleport = value;
         });
     });
 
@@ -43,29 +42,6 @@
         mucRoom.sendMessage(message);
         message = '';
     }
-
-    //recreate user list
-    searchValue.subscribe((value: string | null) => {
-        usersList = new Map<string, User>();
-        usersListStore.subscribe((users: UserList) => {
-            for (const userName of users.keys()) {
-                if (value == undefined || userName == undefined) {
-                    continue;
-                }
-                if (
-                    value == undefined ||
-                    value == "" ||
-                    userName.toLocaleLowerCase().indexOf(value.toLocaleLowerCase()) !== -1
-                ) {
-                    const userObject: User | undefined = users.get(userName);
-                    if (userObject == undefined) {
-                        continue;
-                    }
-                    usersList.set(userName, userObject);
-                }
-            }
-        });
-    });
 </script>
 
 <ul>
@@ -74,82 +50,68 @@
     {/if}
     {#if [...$usersListStore].length === 0}
         <p>This room is empty, copy this link to invite colleague or friend!</p>
-        <input type="text" readonly id="input-share-link" class="link-url" value={getLink()} />
-        {#if !canShare}
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}>{$LL.menu.invite.copy()}</button>
-        {:else}
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}>{$LL.menu.invite.share()}</button>
-        {/if}
-        <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={$walkAutomaticallyStore}
-                on:change={() => {
-                    updateInputFieldValue();
-                }}
-            />
-            <span>{$LL.menu.invite.walkAutomaticallyToPosition()}</span>
-        </label>
+        <button type="button" class="nes-btn is-primary" on:click={openInviteMenu}>{$LL.menu.sub.invite()}</button>
     {:else}
-        {#each [...usersList] as [jid, user]}
-            <li class={user.status} id={jid}>
-                <div>
-                    <div class="nick">
-                        {#if user.nick.match(/\[\d*]/)}
-                            <span class:is-admin="{user.isModerator}">{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
-                            <span class="no">
-                                #{user.nick
-                                    .match(/\[\d*]/)
-                                    ?.join()
-                                    ?.replace("[", "")
-                                    ?.replace("]", "")}
-                            </span>
-                        {:else}
-                            <span class:is-admin="{user.isModerator}">{user.nick}</span>
-                        {/if}
-                    </div>
+        {#each [...$usersListStore] as [jid, user]}
+            {#if filter(user)}
+                <li class={user.status} id={jid}>
                     <div>
-                        {#if me.isModerator && user.status === USER_STATUS_AVAILABLE}
-                            <button
-                                    on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
-                                    src="btn btn-alert"
-                            >Bannir</button>
-                            {#if user.isModerator}
-                                <button
-                                        on:click|preventDefault={() => mucRoom.rankDown(jid)}
-                                        src="btn btn-alert"
-                                >Rank down</button>
+                        <div class="nick">
+                            {#if user.nick.match(/\[\d*]/)}
+                                <span>{user.nick.substring(0, user.nick.search(/\[\d*]/))}</span>
+                                <span class="no">
+                                    #{user.nick
+                                        .match(/\[\d*]/)
+                                        ?.join()
+                                        ?.replace("[", "")
+                                        ?.replace("]", "")}
+                                </span>
                             {:else}
+                                <span>{user.nick}</span>
+                            {/if}
+                        </div>
+                        <div>
+                            {#if me.isModerator && user.status === USER_STATUS_AVAILABLE}
                                 <button
-                                        on:click|preventDefault={() => mucRoom.rankUp(jid)}
+                                        on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
                                         src="btn btn-alert"
-                                >Rank up</button>
+                                >Bannir</button>
+                                {#if user.isModerator}
+                                    <button
+                                            on:click|preventDefault={() => mucRoom.rankDown(jid)}
+                                            src="btn btn-alert"
+                                    >Rank down</button>
+                                {:else}
+                                    <button
+                                            on:click|preventDefault={() => mucRoom.rankUp(jid)}
+                                            src="btn btn-alert"
+                                    >Rank up</button>
+                                {/if}
                             {/if}
-                        {/if}
-                        {#if teleport.state === true}
-                            {#if teleport.to === user.uuid}
-                                <button src="btn btn-primary">{$LL.muc.userList.teleporting()}</button>
+                            {#if $teleportStore.state === true}
+                                {#if $teleportStore.to === user.uuid}
+                                    <button src="btn btn-primary">{$LL.muc.userList.teleporting()}</button>
+                                {/if}
+                            {:else if user.status === USER_STATUS_DISCONNECTED}
+                                <button src="btn btn-primary" disabled>
+                                    {$LL.muc.userList.disconnected()}
+                                </button>
+                            {:else if user.isInSameMap === false}
+                                <button
+                                        on:click|preventDefault={() => mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
+                                        src="btn btn-primary"
+                                >
+                                    {$LL.muc.userList.teleport()}
+                                </button>
+                            {:else}
+                                <button on:click|preventDefault={() => mucRoom.goTo("user", user.roomId, user.uuid)} src="btn btn-primary">
+                                    {$LL.muc.userList.walkTo()}
+                                </button>
                             {/if}
-                        {:else if user.status === USER_STATUS_DISCONNECTED}
-                            <button src="btn btn-primary" disabled>
-                                {$LL.muc.userList.disconnected()}
-                            </button>
-                        {:else if user.isInSameMap === false}
-                            <button
-                                on:click|preventDefault={() => mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
-                                src="btn btn-primary"
-                            >
-                                {$LL.muc.userList.teleport()}
-                            </button>
-                        {:else}
-                            <button on:click|preventDefault={() => mucRoom.goTo("user", user.roomId, user.uuid)} src="btn btn-primary">
-                                {$LL.muc.userList.walkTo()}
-                            </button>
-                        {/if}
+                        </div>
                     </div>
-                </div>
-            </li>
+                </li>
+            {/if}
         {/each}
     {/if}
 </ul>
