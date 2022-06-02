@@ -8,7 +8,9 @@ export interface UserInputHandlerInterface {
     ) => void;
     handlePointerUpEvent: (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => void;
     handlePointerDownEvent: (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => void;
-    handleSpaceKeyUpEvent: (event: Event) => Event;
+
+    handleKeyUpEvent: (event: KeyboardEvent) => KeyboardEvent;
+    handleKeyDownEvent: (event: KeyboardEvent) => KeyboardEvent;
 
     addSpaceEventListener: (callback: Function) => void;
     removeSpaceEventListner: (callback: Function) => void;

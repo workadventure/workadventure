@@ -73,12 +73,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import {
-    editorModeStore,
-    jitsiParticipantsCountStore,
-    userIsAdminStore,
-    userIsJitsiDominantSpeakerStore,
-} from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -112,6 +107,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { EditorModeManager } from "./EditorModeManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -192,7 +188,6 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
-    private editorModeStoreUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -208,7 +203,6 @@ export class GameScene extends DirtyScene {
         oldY: -1000,
     };
 
-    private editorMode: boolean = false;
     private gameMap!: GameMap;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     public userInputManager!: UserInputManager;
@@ -223,6 +217,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
+    private editorModeManager!: EditorModeManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
     private preloading: boolean = true;
@@ -604,6 +599,7 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
+        this.editorModeManager = new EditorModeManager(this);
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -914,8 +910,7 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber,
             this.emoteMenuUnsubscriber,
             this.followUsersColorStoreUnsubscriber,
-            this.peerStoreUnsubscriber,
-            this.editorModeStoreUnsubscriber
+            this.peerStoreUnsubscriber
         );
         if (
             this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
@@ -924,21 +919,10 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined ||
-            this.editorModeStoreUnsubscriber != undefined
-        )
+            this.peerStoreUnsubscriber != undefined
+        ) {
             throw new Error("subscribeToStores => Check subscriber");
-
-        this.editorModeStoreUnsubscriber = editorModeStore.subscribe((editorMode) => {
-            this.editorMode = editorMode;
-            if (editorMode) {
-                this.CurrentPlayer.finishFollowingPath(true);
-                this.CurrentPlayer.stop();
-                this.cameraManager.stopFollow();
-            } else {
-                this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-            }
-        });
+        }
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
@@ -1695,7 +1679,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
-        this.editorModeStoreUnsubscriber?.();
+        this.editorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
@@ -1962,7 +1946,7 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        if (!this.editorMode) {
+        if (!this.editorModeManager.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());

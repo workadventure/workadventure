@@ -3,6 +3,8 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
+import { editorModeStore } from "../../Stores/EditorStore";
+import { get } from "svelte/store";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -55,7 +57,40 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             });
     }
 
-    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {}
+    public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
+        switch (event.code) {
+            case "KeyE": {
+                editorModeStore.set(!get(editorModeStore));
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        return event;
+    }
+
+    public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
+        console.log(event.code);
+        switch (event.code) {
+            case "Space": {
+                const activatableManager = this.gameScene.getActivatablesManager();
+                const activatable = activatableManager.getSelectedActivatableObject();
+                if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
+                    activatable.activate();
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        return event;
+    }
+
+    public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
+        // if (this.gameScene.)
+    }
 
     public handleSpaceKeyUpEvent(event: Event): Event {
         const activatableManager = this.gameScene.getActivatablesManager();
