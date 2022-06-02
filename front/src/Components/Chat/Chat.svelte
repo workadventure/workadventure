@@ -43,14 +43,26 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
-    <p class="close-icon noselect" on:click={closeChat}>&times</p>
-    <section class="messagesList" bind:this={listDom}>
-        <ul>
-            <li><p class="system-text">{$LL.chat.intro()}</p></li>
-            {#each $chatMessagesStore as message, i}
-                <li><ChatElement {message} line={i} /></li>
-            {/each}
-        </ul>
+    <section class="tw-p-0" bind:this={listDom}>
+        <div class="tw-p-5">
+            <button on:click={closeChat} type="button" class="tw-inline-flex tw-h-auto tw-text-sm tw-items-center tw-bg-transparent tw-border tw-border-solid tw-border-light-blue tw-text-light-blue tw-rounded tw-space-x-2 tw-py-1 tw-px-3">
+                <span> &lt; </span>
+                <span> Back to chat menu </span>
+            </button>
+            <!-- <li><p class="">{$LL.chat.intro()}</p></li> -->
+            <!-- <div class="tw-flex tw-px-5 tw-py-4 tw-border-b-lighter-purple tw-border-0 tw-border-b tw-border-solid">
+                <p class="tw-mb-0 tw-text-sm tw-text-lighter-purple">Back to chat menu</p>
+                <div>
+                    <button class="tw-bg-transparent tw-text-lighter-purple" on:click={closeChat}>&times</button>
+                </div>
+            </div> -->
+            <div class="tw-my-10">
+                {#each $chatMessagesStore as message, i}
+                    <div><ChatElement {message} line={i} />
+                    </div>
+                {/each}
+            </div>
+        </div>
     </section>
     <section class="messageForm">
         <ChatMessageForm bind:handleForm={handleFormBlur} />
@@ -91,7 +103,7 @@
         display: flex;
         flex-direction: column;
 
-        padding: 10px;
+        // padding: 10px;
 
         border-bottom-right-radius: 16px;
         border-top-right-radius: 16px;
