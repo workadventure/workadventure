@@ -74,6 +74,7 @@ export class GameRoom {
         onEmote: EmoteCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        public readonly group: string | null,
         private thirdParty: MapThirdPartyData | undefined
     ) {
         // A zone is 10 sprites wide.
@@ -117,7 +118,8 @@ export class GameRoom {
             onEmote,
             onLockGroup,
             onPlayerDetailsUpdated,
-            mapDetails.thirdParty ?? undefined
+            mapDetails.group,
+            mapDetails.thirdParty ?? undefined,
         );
 
         return gameRoom;

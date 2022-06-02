@@ -21,18 +21,18 @@ class GaugeManager {
         this.nbClientsPerRoomGauge = new Gauge({
             name: "workadventure_nb_clients_per_room",
             help: "Number of clients per room",
-            labelNames: ["room"],
+            labelNames: ["room", "world"],
         });
 
         this.nbGroupsPerRoomCounter = new Counter({
             name: "workadventure_counter_groups_per_room",
             help: "Counter of groups per room",
-            labelNames: ["room"],
+            labelNames: ["room", "world"],
         });
         this.nbGroupsPerRoomGauge = new Gauge({
             name: "workadventure_nb_groups_per_room",
             help: "Number of groups per room",
-            labelNames: ["room"],
+            labelNames: ["room", "world"],
         });
     }
 
@@ -43,14 +43,14 @@ class GaugeManager {
         this.nbRoomsGauge.dec();
     }
 
-    incNbClientPerRoomGauge(roomId: string): void {
+    incNbClientPerRoomGauge(roomId: string, world: string | null): void {
         this.nbClientsGauge.inc();
-        this.nbClientsPerRoomGauge.inc({ room: roomId });
+        this.nbClientsPerRoomGauge.inc({ room: roomId, world: world ?? "" });
     }
 
-    decNbClientPerRoomGauge(roomId: string): void {
+    decNbClientPerRoomGauge(roomId: string, world: string | null): void {
         this.nbClientsGauge.dec();
-        this.nbClientsPerRoomGauge.dec({ room: roomId });
+        this.nbClientsPerRoomGauge.dec({ room: roomId, world: world ?? "" });
     }
 }
 

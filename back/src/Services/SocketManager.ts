@@ -73,11 +73,11 @@ export class SocketManager {
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
     constructor() {
-        clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string) => {
-            gaugeManager.incNbClientPerRoomGauge(roomId);
+        clientEventsEmitter.registerToClientJoin((clientUUid: string, roomId: string, world: string | null) => {
+            gaugeManager.incNbClientPerRoomGauge(roomId, world);
         });
-        clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string) => {
-            gaugeManager.decNbClientPerRoomGauge(roomId);
+        clientEventsEmitter.registerToClientLeave((clientUUid: string, roomId: string, world: string | null) => {
+            gaugeManager.decNbClientPerRoomGauge(roomId, world);
         });
     }
 
@@ -246,7 +246,7 @@ export class SocketManager {
                 debug('Room is empty. Deleting room "%s"', room.roomUrl);
             }
         } finally {
-            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
+            clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl, room.group);
             console.log("A user left");
         }
     }
@@ -306,7 +306,7 @@ export class SocketManager {
         //join world
         const user = room.join(socket, joinRoomMessage);
 
-        clientEventsEmitter.emitClientJoin(user.uuid, roomId);
+        clientEventsEmitter.emitClientJoin(user.uuid, roomId, room.group);
         console.log(new Date().toISOString() + " A user joined");
         return { room, user };
     }
