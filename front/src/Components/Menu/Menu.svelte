@@ -94,6 +94,7 @@
 
     function closeMenu() {
         menuVisiblilityStore.set(false);
+        activeSubMenuStore.set(0);
     }
 
     function onKeyDown(e: KeyboardEvent) {
