@@ -9,6 +9,8 @@ import { get } from "svelte/store";
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
 
+    private lastPointerDownPosition?: { x: number; y: number };
+
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
     }
@@ -26,6 +28,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (this.gameScene.getEditorModeManager().isActive()) {
             editorModeDragCameraPointerDownStore.set(false);
+            this.lastPointerDownPosition = undefined;
         }
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
@@ -67,10 +70,18 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        // TODO: Set pointerDown to false if moved out of the game screen
         if (this.gameScene.getEditorModeManager().isActive() && this.gameScene.getEditorModeManager().isPointerDown()) {
-            // NOTE: Not a perfect solution but will do for now. dx / dy would be preferable?
-            this.gameScene.getCameraManager().scrollBy(-pointer.velocity.x / 10, -pointer.velocity.y / 10);
+            if (pointer.rightButtonDown() || pointer.wasTouch) {
+                if (this.lastPointerDownPosition) {
+                    this.gameScene
+                        .getCameraManager()
+                        .scrollBy(
+                            this.lastPointerDownPosition.x - pointer.x,
+                            this.lastPointerDownPosition.y - pointer.y
+                        );
+                }
+                this.lastPointerDownPosition = { x: pointer.x, y: pointer.y };
+            }
         }
     }
 
