@@ -2075,7 +2075,11 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
+            iframeListener.sendRemotePlayerClickedEvent({
+                id: player.userId,
+                uuid: player.userUuid,
+                name: player.name,
+            });
         });
     }
 

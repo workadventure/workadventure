@@ -36,17 +36,17 @@ export interface ActionMessageOptions {
     callback: () => void;
 }
 
-export interface RemotePlayerInterface {
-    addAction(key: string, callback: Function): void;
-}
-
-export class RemotePlayer implements RemotePlayerInterface {
-    private id: number;
+export class RemotePlayer {
+    public readonly id: number;
+    public readonly uuid: string;
+    public readonly name: string;
 
     private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
 
-    constructor(id: number) {
-        this.id = id;
+    constructor(remotePlayer: RemotePlayerClickedEvent) {
+        this.id = remotePlayer.id;
+        this.uuid = remotePlayer.uuid;
+        this.name = remotePlayer.name;
     }
 
     public addAction(key: string, callback: Function): ActionsMenuAction {
@@ -96,14 +96,14 @@ export class ActionsMenuAction {
 }
 
 export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
-    public readonly _onRemotePlayerClicked: Subject<RemotePlayerInterface>;
-    public readonly onRemotePlayerClicked: Observable<RemotePlayerInterface>;
+    public readonly _onRemotePlayerClicked: Subject<RemotePlayer>;
+    public readonly onRemotePlayerClicked: Observable<RemotePlayer>;
 
     private currentlyClickedRemotePlayer?: RemotePlayer;
 
     constructor() {
         super();
-        this._onRemotePlayerClicked = new Subject<RemotePlayerInterface>();
+        this._onRemotePlayerClicked = new Subject<RemotePlayer>();
         this.onRemotePlayerClicked = this._onRemotePlayerClicked.asObservable();
     }
 
@@ -146,7 +146,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         apiCallback({
             type: "remotePlayerClickedEvent",
             callback: (payloadData: RemotePlayerClickedEvent) => {
-                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData.id);
+                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData);
                 this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
             },
         }),
