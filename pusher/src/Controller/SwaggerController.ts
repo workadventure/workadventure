@@ -233,7 +233,7 @@ export class SwaggerController extends BaseHttpController {
                 }
 
                 const urls = [
-                    { url: "/openapi/pusher", name: "Front <- Pusher" },
+                    { url: "/openapi/pusher", name: "Front -> Pusher <- Admin" },
                     { url: "/openapi/admin", name: "Pusher -> Admin" },
                     { url: "/openapi/external-admin", name: "Admin -> External Admin" },
                 ];

@@ -29,3 +29,18 @@ export async function getBackDump(): Promise<any> {
     })).data;
 }
 
+export async function getPusherRooms(): Promise<Record<string, number>> {
+    let url = 'http://pusher.workadventure.localhost/rooms';
+    if (fs.existsSync('/project')) {
+        // We are inside a container. Let's use a direct route
+        url = 'http://pusher:8080/rooms';
+    }
+
+    return (await axios({
+        url,
+        method: 'get',
+        headers: {
+            "Authorization": ADMIN_API_TOKEN
+        }
+    })).data;
+}
