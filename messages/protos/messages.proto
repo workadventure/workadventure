@@ -559,6 +559,15 @@ message BanMessage {
   string message = 4;
 }
 
+message RoomDescription {
+  string roomId = 1;
+  int32 nbUsers = 2;
+}
+
+message RoomsList {
+  repeated RoomDescription roomDescription = 1;
+}
+
 message EmptyMessage {
 
 }
@@ -577,4 +586,5 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc getRooms(EmptyMessage) returns (RoomsList);
 }
