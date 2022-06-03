@@ -46,7 +46,7 @@
     <section class="tw-p-0" bind:this={listDom}>
         <div class="tw-p-5">
             <button on:click={closeChat} type="button" class="tw-inline-flex tw-h-auto tw-text-sm tw-items-center tw-bg-transparent tw-border tw-border-solid tw-border-light-blue tw-text-light-blue tw-rounded tw-space-x-2 tw-py-1 tw-px-3">
-                <span> &lt; </span>
+                <img src="/static/images/arrow-left-blue.png" height="9" alt=""/>
                 <span> Back to chat menu </span>
             </button>
             <!-- <li><p class="">{$LL.chat.intro()}</p></li> -->
@@ -98,7 +98,7 @@
         height: 100vh;
         width: 30vw;
         min-width: 350px;
-        background: rgb(5, 31, 51, 0.9);
+        background: rgba(#1B1B29, 0.9);
         color: whitesmoke;
         display: flex;
         flex-direction: column;
