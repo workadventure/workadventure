@@ -123,7 +123,7 @@
             height: 100% !important;
             width: 100% !important;
             position: relative;
-            z-index: 200;
+            z-index: 150;
 
             &-container {
                 height: 100% !important;
@@ -132,7 +132,7 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 .actions {
-                    z-index: 202;
+                    z-index: 151;
                     position: absolute;
                     width: 100%;
                     top: 0;
