@@ -206,13 +206,15 @@ class ConnectionManager {
                     window.location.hash;
             }
 
-            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
-            //use href to keep # value
-            await localUserStore.setLastRoomUrl(new URL(roomPath).href);
+            const roomPathUrl = new URL(roomPath);
 
             //get detail map for anonymous login and set texture in local storage
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
-            this._currentRoom = await Room.createRoom(new URL(roomPath));
+            this._currentRoom = await Room.createRoom(roomPathUrl);
+
+            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+            //use href to keep # value
+            await localUserStore.setLastRoomUrl(roomPathUrl.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
