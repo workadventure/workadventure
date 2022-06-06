@@ -100,6 +100,10 @@
             overflow-y: auto;
             overflow-x: hidden;
         }
+
+        #full-medias {
+            overflow: hidden;
+        }
     }
 
     #embed-left-block {
