@@ -8,7 +8,6 @@ import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
-import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
 
 export interface AdminBannedData {
@@ -66,24 +65,10 @@ class AdminApi implements AdminInterface {
                 userId = authTokenData.identifier;
                 //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
-                try {
-                    // Decode token, in this case we don't need to create new token.
-                    authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
-                    userId = authTokenData.identifier;
-                    console.info("JWT expire, but decoded:", userId);
-                } catch (e) {
-                    if (e instanceof InvalidTokenError) {
-                        throw new Error("Token decrypted error");
-                        // The token was not good, redirect user on login page
-                        //res.status(401);
-                        //res.send("Token decrypted error");
-                        //return;
-                    } else {
-                        throw new Error("Error on decryption of token :" + e);
-                        //this.castErrorToResponse(e, res);
-                        //return;
-                    }
-                }
+                // Decode token, in this case we don't need to create new token.
+                authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
+                userId = authTokenData.identifier;
+                console.info("JWT expire, but decoded:", userId);
             }
         }
 

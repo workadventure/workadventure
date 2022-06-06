@@ -607,20 +607,22 @@ export class GameScene extends DirtyScene {
         if (!this.room.isDisconnected()) {
             if (this.isReconnecting) {
                 setTimeout(() => {
-                    this.scene.sleep();
-                    if (get(errorScreenStore)) {
-                        // If an error message is already displayed, don't display the "connection lost" message.
-                        return;
+                    if (this.connection === undefined) {
+                        this.scene.sleep();
+                        if (get(errorScreenStore)) {
+                            // If an error message is already displayed, don't display the "connection lost" message.
+                            return;
+                        }
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "reconnecting",
+                                code: "CONNECTION_LOST",
+                                title: get(LL).warning.connectionLostTitle(),
+                                details: get(LL).warning.connectionLostSubtitle(),
+                            })
+                        );
+                        //this.scene.launch(ReconnectingSceneName);
                     }
-                    errorScreenStore.setError(
-                        ErrorScreenMessage.fromPartial({
-                            type: "reconnecting",
-                            code: "CONNECTION_LOST",
-                            title: get(LL).warning.connectionLostTitle(),
-                            details: get(LL).warning.connectionLostSubtitle(),
-                        })
-                    );
-                    //this.scene.launch(ReconnectingSceneName);
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
@@ -634,9 +636,9 @@ export class GameScene extends DirtyScene {
                         errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
-                                code: "CONNECTION_LOST",
-                                title: get(LL).warning.connectionLostTitle(),
-                                details: get(LL).warning.connectionLostSubtitle(),
+                                code: "CONNECTION_PENDING",
+                                title: get(LL).warning.waitingConnectionTitle(),
+                                details: get(LL).warning.waitingConnectionSubtitle(),
                             })
                         );
                         //this.scene.launch(ReconnectingSceneName);
@@ -853,11 +855,9 @@ export class GameScene extends DirtyScene {
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
-                if (this.scene.isSleeping()) {
-                    const error = get(errorScreenStore);
-                    if (error && error?.type === "reconnecting") errorScreenStore.delete();
-                    //this.scene.stop(ReconnectingSceneName);
-                }
+                const error = get(errorScreenStore);
+                if (error && error?.type === "reconnecting") errorScreenStore.delete();
+                //this.scene.stop(ReconnectingSceneName);
 
                 //init user position and play trigger to check layers properties
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
@@ -899,16 +899,6 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
-        console.error(
-            "subscribeToStores => Check all subscriber undefined ",
-            this.userIsJitsiDominantSpeakerStoreUnsubscriber,
-            this.jitsiParticipantsCountStoreUnsubscriber,
-            this.availabilityStatusStoreUnsubscriber,
-            this.emoteUnsubscriber,
-            this.emoteMenuUnsubscriber,
-            this.followUsersColorStoreUnsubscriber,
-            this.peerStoreUnsubscriber
-        );
         if (
             this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
             this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
@@ -917,8 +907,20 @@ export class GameScene extends DirtyScene {
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
             this.peerStoreUnsubscriber != undefined
-        )
-            throw new Error("subscribeToStores => Check subscriber");
+        ) {
+            console.error(
+                "subscribeToStores => Check all subscriber undefined ",
+                this.userIsJitsiDominantSpeakerStoreUnsubscriber,
+                this.jitsiParticipantsCountStoreUnsubscriber,
+                this.availabilityStatusStoreUnsubscriber,
+                this.emoteUnsubscriber,
+                this.emoteMenuUnsubscriber,
+                this.followUsersColorStoreUnsubscriber,
+                this.peerStoreUnsubscriber
+            );
+
+            throw new Error("One store is already subscribed.");
+        }
 
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
