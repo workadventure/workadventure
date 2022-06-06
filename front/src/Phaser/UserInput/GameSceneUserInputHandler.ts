@@ -86,6 +86,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
+        if (get(editorModeStore)) {
+            this.gameScene.getEditorModeManager().handleKeyDownEvent(event);
+        }
         switch (event.code) {
             case "KeyE": {
                 editorModeStore.set(!get(editorModeStore));
@@ -99,8 +102,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleKeyUpEvent(event: KeyboardEvent): KeyboardEvent {
-        switch (event.code) {
-            case "Space": {
+        switch (event.key) {
+            // SPACE
+            case " ": {
                 const activatableManager = this.gameScene.getActivatablesManager();
                 const activatable = activatableManager.getSelectedActivatableObject();
                 if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
@@ -111,15 +115,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             default: {
                 break;
             }
-        }
-        return event;
-    }
-
-    public handleSpaceKeyUpEvent(event: Event): Event {
-        const activatableManager = this.gameScene.getActivatablesManager();
-        const activatable = activatableManager.getSelectedActivatableObject();
-        if (activatable && activatable.isActivatable() && activatableManager.isSelectingByDistanceEnabled()) {
-            activatable.activate();
         }
         return event;
     }

@@ -22,6 +22,11 @@ export class EditorModeManager {
      */
     private pointerDown: boolean;
 
+    /**
+     * What are we using right now
+     */
+    private activeTool: EditorTool;
+
     private editorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
@@ -45,6 +50,25 @@ export class EditorModeManager {
     public destroy(): void {
         this.unsubscribeFromStores();
         this.pointerDownUnsubscriber();
+    }
+
+    public handleKeyDownEvent(event: KeyboardEvent): void {
+        console.log(event.key);
+        switch (event.key) {
+            case "1": {
+                this.equipTool(EditorTool.AreaSelector);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    private equipTool(tool: EditorTool): void {
+        // TODO: Clear to neutral state (hide things etc)
+        this.activeTool = tool;
+        // TODO: activate tools specific things
     }
 
     private subscribeToStores(): void {
