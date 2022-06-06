@@ -1,5 +1,6 @@
 import { Unsubscriber } from "svelte/store";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { AreaPreview } from "../Components/MapEditor/AreaPreview";
 import { GameScene } from "./GameScene";
 
 export enum EditorTool {
@@ -25,6 +26,11 @@ export class MapEditorModeManager {
      */
     private activeTool: EditorTool;
 
+    /**
+     * Visual representations of map Areas objects
+     */
+    private areaPreviews: Map<string, AreaPreview>;
+
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
@@ -33,6 +39,10 @@ export class MapEditorModeManager {
 
         this.active = false;
         this.pointerDown = false;
+
+        this.activeTool = EditorTool.None;
+
+        this.areaPreviews = new Map<string, AreaPreview>();
 
         this.subscribeToStores();
     }
