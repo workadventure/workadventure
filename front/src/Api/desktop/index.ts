@@ -36,6 +36,9 @@ class DesktopApi {
             }
         });
 
+        console.log("Connecting to Overlay through MessagePort");
+        window.WAD.connectToOverlay();
+
         silentStore.subscribe((silent) => {
             this.isSilent = silent;
         });

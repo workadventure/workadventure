@@ -1,6 +1,6 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 
-import { createWindow, getWindow } from "./window";
+import {createOverlayWindow, createWindow, getWindow} from "./window";
 import { createTray } from "./tray";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
@@ -55,6 +55,7 @@ async function init() {
         // }
 
         await createWindow();
+        await createOverlayWindow();
         createTray();
 
         loadShortcuts();
