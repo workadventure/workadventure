@@ -1,10 +1,11 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { v4 as uuidv4 } from "uuid";
-import { START_ROOM_URL } from "../Enum/EnvironmentVariable";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
+const requestedCameraStateKey = "requestedCameraStateKey";
+const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
 const gameQualityKey = "gameQuality";
@@ -61,6 +62,22 @@ class LocalUserStore {
 
     getCustomCursorPosition(): { activeRow: number; selectedLayers: number[] } | null {
         return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
+    }
+
+    getRequestedCameraState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedCameraStateKey) || "true");
+    }
+
+    setRequestedCameraState(value: boolean): void {
+        localStorage.setItem(requestedCameraStateKey, JSON.stringify(value));
+    }
+
+    getRequestedMicrophoneState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedMicrophoneStateKey) || "true");
+    }
+
+    setRequestedMicrophoneState(value: boolean): void {
+        localStorage.setItem(requestedMicrophoneStateKey, JSON.stringify(value));
     }
 
     setCharacterLayers(layers: string[]): void {
@@ -174,9 +191,7 @@ class LocalUserStore {
     }
 
     getLastRoomUrl(): string {
-        return (
-            localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + START_ROOM_URL
-        );
+        return localStorage.getItem(lastRoomUrl) ?? window.location.protocol + "//" + window.location.host + "/";
     }
 
     getLastRoomUrlCacheApi(): Promise<string | undefined> {

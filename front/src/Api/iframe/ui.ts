@@ -1,18 +1,12 @@
-import { isButtonClickedEvent } from "../Events/ButtonClickedEvent";
-import { isMenuItemClickedEvent } from "../Events/ui/MenuItemClickedEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
-import { isMessageReferenceEvent } from "../Events/ui/TriggerActionMessageEvent";
 import { Menu } from "./Ui/Menu";
 import type { RequireOnlyOne } from "../types";
-import { isRemotePlayerClickedEvent, RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
-import {
-    ActionsMenuActionClickedEvent,
-    isActionsMenuActionClickedEvent,
-} from "../Events/ActionsMenuActionClickedEvent";
+import { RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
+import { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
 import { Observable, Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
@@ -116,7 +110,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     callbacks = [
         apiCallback({
             type: "buttonClickedEvent",
-            typeChecker: isButtonClickedEvent,
             callback: (payloadData) => {
                 const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
                 const popup = popups.get(payloadData.popupId);
@@ -130,7 +123,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "menuItemClicked",
-            typeChecker: isMenuItemClickedEvent,
             callback: (event) => {
                 const callback = menuCallbacks.get(event.menuItem);
                 const menu = menus.get(event.menuItem);
@@ -144,7 +136,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "messageTriggered",
-            typeChecker: isMessageReferenceEvent,
             callback: (event) => {
                 const actionMessage = actionMessages.get(event.uuid);
                 if (actionMessage) {
@@ -154,7 +145,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "remotePlayerClickedEvent",
-            typeChecker: isRemotePlayerClickedEvent,
             callback: (payloadData: RemotePlayerClickedEvent) => {
                 this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData.id);
                 this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
@@ -162,7 +152,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "actionsMenuActionClickedEvent",
-            typeChecker: isActionsMenuActionClickedEvent,
             callback: (payloadData: ActionsMenuActionClickedEvent) => {
                 this.currentlyClickedRemotePlayer?.callAction(payloadData.actionName);
             },

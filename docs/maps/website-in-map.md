@@ -38,3 +38,11 @@ to explicitly allow it, by setting an additional `allowApi` property to `true`.
         <figcaption class="figure-caption">A "website" object that can communicate using the Iframe API</figcaption>
     </figure>
 </div>
+
+### Setting the iFrame "allow" attribute
+
+By default, iFrames have limited rights in browsers. For instance, they cannot put their content in fullscreen, they cannot start your webcam, etc...
+
+If you want to grant additional access rights to your embedded iFrame, you should use the `policy` property. The value of this property will be directly used for the [`allow` atttribute of your iFrame](https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute).
+
+For instance, if you want an iFrame to be able to go in fullscreen, you will use the property `policy: fullscreen`

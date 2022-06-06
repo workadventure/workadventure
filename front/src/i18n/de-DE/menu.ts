@@ -59,8 +59,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
         privacySettings: {
             title: "Abwesenheitsmodus",
-            explanation:
-                'Falls der WorkAdventure Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.',
+            explanation: "Falls der WorkAdventure Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },

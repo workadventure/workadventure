@@ -189,17 +189,38 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * Updates the offset of the character compared to the center of the screen according to the layout manager
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
-    public updateCameraOffset(array: Box): void {
-        const xCenter = (array.xEnd - array.xStart) / 2 + array.xStart;
-        const yCenter = (array.yEnd - array.yStart) / 2 + array.yStart;
+    public updateCameraOffset(box: Box, instant: boolean = false): void {
+        const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;
+        const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
         const game = HtmlUtils.querySelectorOrFail<HTMLCanvasElement>("#game canvas");
         // Let's put this in Game coordinates by applying the zoom level:
 
-        this.camera.setFollowOffset(
-            ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom,
-            ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom
-        );
+        const followOffsetX = ((xCenter - game.offsetWidth / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
+        const followOffsetY = ((yCenter - game.offsetHeight / 2) * window.devicePixelRatio) / this.scene.scale.zoom;
+
+        if (instant) {
+            this.camera.setFollowOffset(followOffsetX, followOffsetY);
+            this.scene.markDirty();
+            return;
+        }
+
+        const oldFollowOffsetX = this.camera.followOffset.x;
+        const oldFollowOffsetY = this.camera.followOffset.y;
+
+        this.scene.tweens.addCounter({
+            from: 0,
+            to: 1,
+            duration: 500,
+            ease: Easing.QuadEaseOut,
+            onUpdate: (tween) => {
+                const progress = tween.getValue();
+                const newOffsetX = oldFollowOffsetX + (followOffsetX - oldFollowOffsetX) * progress;
+                const newOffsetY = oldFollowOffsetY + (followOffsetY - oldFollowOffsetY) * progress;
+                this.camera.setFollowOffset(newOffsetX, newOffsetY);
+                this.scene.markDirty();
+            },
+        });
     }
 
     public isCameraLocked(): boolean {

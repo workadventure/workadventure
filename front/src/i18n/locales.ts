@@ -28,17 +28,18 @@ export const setCurrentLocale = async (locale: Locales) => {
     setLocale(locale);
 };
 
-export const displayableLocales: { id: Locales; language: string; region: string }[] = locales.map((locale) => {
-    const [language, region] = locale.split("-");
+export const displayableLocales: { id: Locales; language: string | undefined; region: string | undefined }[] =
+    locales.map((locale) => {
+        const [language, region] = locale.split("-");
 
-    // backwards compatibility
-    if (!Intl.DisplayNames) {
-        return { id: locale, language, region };
-    }
+        // backwards compatibility
+        if (!Intl.DisplayNames) {
+            return { id: locale, language, region };
+        }
 
-    return {
-        id: locale,
-        language: new Intl.DisplayNames(locale, { type: "language" }).of(language),
-        region: new Intl.DisplayNames(locale, { type: "region" }).of(region),
-    };
-});
+        return {
+            id: locale,
+            language: new Intl.DisplayNames(locale, { type: "language" }).of(language),
+            region: new Intl.DisplayNames(locale, { type: "region" }).of(region),
+        };
+    });

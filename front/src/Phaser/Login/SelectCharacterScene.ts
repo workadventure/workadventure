@@ -194,6 +194,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         } catch (error) {
             console.warn(error);
         }
+        this.charactersDraggableGrid.setItemsInRow(this.gridRowsCount);
         this.populateGrid();
     }
 

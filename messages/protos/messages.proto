@@ -10,7 +10,8 @@ enum AvailabilityStatus {
   SILENT = 2;
   AWAY = 3;
   JITSI = 4;
-  DENY_PROXIMITY_MEETING = 5;
+  BBB = 5;
+  DENY_PROXIMITY_MEETING = 6;
 }
 
 message PositionMessage {
@@ -87,7 +88,13 @@ message EmoteEventMessage {
 
 message QueryJitsiJwtMessage {
   string jitsiRoom = 1;
-  string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
+}
+
+message JoinBBBMeetingMessage {
+  string meetingId = 1;
+  string meetingName = 2;
+  // Fix me Pusher linter fails because eslint-plugin version < 3.0
+  // map<string, string> userdata = 3;
 }
 
 message FollowRequestMessage {
@@ -126,6 +133,7 @@ message ClientToServerMessage {
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
+    JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
   }
 }
 
@@ -290,6 +298,11 @@ message SendJitsiJwtMessage {
   string jwt = 2;
 }
 
+message BBBMeetingClientURLMessage {
+  string meetingId = 1;
+  string clientURL = 2;
+}
+
 message SendUserMessage{
   string type = 1;
   string message = 2;
@@ -353,6 +366,7 @@ message ServerToClientMessage {
     InvalidTextureMessage invalidTextureMessage = 24;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
+    BBBMeetingClientURLMessage bbbMeetingClientURLMessage = 27;
   }
 }
 
@@ -443,6 +457,7 @@ message PusherToBackMessage {
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
+    JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
   }
 }
 
@@ -544,6 +559,15 @@ message BanMessage {
   string message = 4;
 }
 
+message RoomDescription {
+  string roomId = 1;
+  int32 nbUsers = 2;
+}
+
+message RoomsList {
+  repeated RoomDescription roomDescription = 1;
+}
+
 message EmptyMessage {
 
 }
@@ -562,4 +586,5 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc getRooms(EmptyMessage) returns (RoomsList);
 }

@@ -9,7 +9,11 @@ export function cors(req: Request, res: Response, next?: MiddlewareNext): Middle
         "Origin, X-Requested-With, Content-Type, Accept, Authorization, Pragma, Cache-Control"
     );
     res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    res.setHeader("access-control-allow-origin", FRONT_URL);
+    if (FRONT_URL === "*") {
+        res.setHeader("access-control-allow-origin", req.header("Origin"));
+    } else {
+        res.setHeader("access-control-allow-origin", FRONT_URL);
+    }
     res.setHeader("access-control-allow-credentials", "true");
 
     if (next) {

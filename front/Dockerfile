@@ -20,7 +20,9 @@ COPY front .
 #COPY --from=proto-builder /usr/src/ts-proto-generated/protos src/Messages/ts-proto-generated
 #RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/messages.ts
 #COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
-RUN yarn run typesafe-i18n && yarn run build-iframe-api && yarn build
+
+# upgrade RAM available to 6G
+RUN yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
 # final production image
 FROM nginx:1.21.6-alpine
@@ -29,6 +31,7 @@ COPY front/nginx.conf /etc/nginx/conf.d/default.conf
 COPY front/templater.sh /
 
 COPY --from=builder /usr/src/dist /usr/share/nginx/html
+COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
 
 EXPOSE 80
-CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && envsubst < /usr/share/nginx/html/server.template.json > /usr/share/nginx/html/server.json && exec nginx -g 'daemon off;'"]

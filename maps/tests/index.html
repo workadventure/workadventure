@@ -58,6 +58,14 @@
                 </tr>
                 <tr>
                     <td>
+                        <input type="radio" name="test-door-map"> Success <input type="radio" name="test-door-map"> Failure <input type="radio" name="test-door-map" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="DoorTest/map.json" target="_blank">Test Doors</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <input type="radio" name="test-start-tile-S1"> Success <input type="radio" name="test-start-tile-S1"> Failure <input type="radio" name="test-start-tile-S1" checked> Pending
                     </td>
                     <td>
@@ -170,18 +178,18 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-tiled-objects"> Success <input type="radio" name="test-tiled-objects"> Failure <input type="radio" name="test-tiled-objects" checked> Pending
-                    </td>
-                    <td>
-                        <a href="#" class="testLink" data-testmap="tiled_objects.json" target="_blank">Test Tiled Objects with properties</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
                         <input type="radio" name="test-silent-start"> Success <input type="radio" name="test-silent-start"> Failure <input type="radio" name="test-silent-start" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="Properties/silent_start.json" target="_blank">Test start on silent zone</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-bbb"> Success <input type="radio" name="test-bbb"> Failure <input type="radio" name="test-bbb" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="BBB/bbb.json" target="_blank">BBB layer</a>
                     </td>
                 </tr>
             </table>
@@ -420,6 +428,33 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="CoWebsite/cowebsite_jitsiroom.json" target="_blank">Open co-websites and Jitsi room by layer properties</a>
+                    </td>
+                </tr>
+            </table>
+            <h2>Areas</h2>
+            <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-areas-from-tiled"> Success <input type="radio" name="test-areas-from-tiled"> Failure <input type="radio" name="test-areas-from-tiled" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/AreaFromTiledMap/areas_from_tiled.json" target="_blank">Test areas created in Tiled</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-change-area-properties"> Success <input type="radio" name="test-change-area-properties"> Failure <input type="radio" name="test-change-area-properties" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/ChangeAreaProperties/edit_area_properties.json" target="_blank">Test change area properties</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-area-crud"> Success <input type="radio" name="test-area-crud"> Failure <input type="radio" name="test-area-crud" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/CRUD/area_crud.json" target="_blank">Test Area CRUD</a>
                     </td>
                 </tr>
             </table>

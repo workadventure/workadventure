@@ -14,6 +14,7 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
+    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PusherToBackMessage,
     QueryJitsiJwtMessage,
@@ -28,6 +29,7 @@ import {
     WorldFullWarningToRoomMessage,
     ZoneMessage,
     LockGroupPromptMessage,
+    RoomsList,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -104,9 +106,16 @@ const roomManager: IRoomManagerServer = {
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
                         } else if (message.hasQueryjitsijwtmessage()) {
-                            socketManager.handleQueryJitsiJwtMessage(
+                            await socketManager.handleQueryJitsiJwtMessage(
+                                room,
                                 user,
                                 message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
+                            );
+                        } else if (message.hasJoinbbbmeetingmessage()) {
+                            await socketManager.handleJoinBBBMeetingMessage(
+                                room,
+                                user,
+                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
@@ -321,6 +330,9 @@ const roomManager: IRoomManagerServer = {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => console.error(e));
         callback(null, new EmptyMessage());
+    },
+    getRooms(call: ServerUnaryCall<EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
+        callback(null, socketManager.getAllRooms());
     },
 };
 
