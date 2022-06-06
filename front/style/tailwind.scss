@@ -49,13 +49,16 @@
     }
 
     //Buttons - basic buttons appearance
-    button,
     .btn {
         @apply tw-border-none tw-rounded tw-min-h-10 tw-px-2 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex tw-no-underline tw-transition-colors tw-duration-300 tw-break-words;
         @apply md:tw-px-4;
         * {
             @apply clickable;
         }
+    }
+
+    button{
+        @apply tw-border-none tw-bg-transparent tw-text-white;
     }
 
     .btn:hover,
@@ -70,6 +73,15 @@
 
     .resizing-text {
         @apply tw-text-sm md:tw-text-base;
+    }
+
+    //form
+    .form-textarea{
+        @apply tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-border-0 tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple;
+    }
+
+    .wa-seachbar{
+        
     }
 }
 

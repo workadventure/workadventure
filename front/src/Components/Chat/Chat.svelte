@@ -5,12 +5,85 @@
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    import { ChevronUpIcon } from "svelte-feather-icons";
     import LL from "../../i18n/i18n-svelte";
+    import ChatUser from "./ChatUser.svelte";
+    import ChatForum from "./ChatForum.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
     let autoscroll: boolean;
+
+    let users = [
+        {
+            name: "Grégoire",
+            status: "In meeting room",
+            unreads: 0,
+            active: true,
+        },
+        {
+            name: "Julie",
+            status: "In meeting room",
+            unreads: 0,
+            active: true,
+        },
+        {
+            name: "Gaëlle",
+            status: "Talking with someone",
+            unreads: 2,
+            active: true,
+        },
+        {
+            name: "Hugo",
+            status: "Free",
+            unreads: 0,
+            active: true,
+        },
+        {
+            name: "Bernadette",
+            status: "Offline",
+            unreads: 0,
+            active: false,
+        },
+    ];
+
+    let showUsers = true;
+    let usersListUnreads = () => {
+        let n = 0;
+        users.forEach((u) => {
+            n += u.unreads || 0;
+        });
+        return n;
+    };
+
+    let forums = [
+        {
+            name: "Inside Workadventu.re",
+            activeUsers: 5,
+            unreads: 1,
+        },
+        {
+            name: "Random",
+            activeUsers: 12,
+            unreads: 0,
+        },
+        {
+            name: "World makers",
+            activeUsers: 4,
+            unreads: 5,
+        },
+    ];
+
+    let forumListUnreads = () => {
+        let n = 0;
+        forums.forEach((f) => {
+            n += f.unreads || 0;
+        });
+        return n;
+    };
+
+    let showForums = true;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -44,51 +117,85 @@
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <section class="tw-p-0" bind:this={listDom}>
-        <div class="tw-p-5">
-            <button on:click={closeChat} type="button" class="tw-inline-flex tw-h-auto tw-text-sm tw-items-center tw-bg-transparent tw-border tw-border-solid tw-border-light-blue tw-text-light-blue tw-rounded tw-space-x-2 tw-py-1 tw-px-3">
-                <img src="/static/images/arrow-left-blue.png" height="9" alt=""/>
-                <span> Back to chat menu </span>
-            </button>
-            <!-- <li><p class="">{$LL.chat.intro()}</p></li> -->
-            <!-- <div class="tw-flex tw-px-5 tw-py-4 tw-border-b-lighter-purple tw-border-0 tw-border-b tw-border-solid">
-                <p class="tw-mb-0 tw-text-sm tw-text-lighter-purple">Back to chat menu</p>
-                <div>
-                    <button class="tw-bg-transparent tw-text-lighter-purple" on:click={closeChat}>&times</button>
-                </div>
-            </div> -->
-            <div class="tw-my-10">
-                {#each $chatMessagesStore as message, i}
-                    <div><ChatElement {message} line={i} />
-                    </div>
-                {/each}
+        <!-- searchbar -->
+        <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+            <div class="tw-p-3">
+                <input
+                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-p-3 tw-pl-6 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                    placeholder="Search for user, message, channel, etc."
+                />
             </div>
         </div>
-    </section>
-    <section class="messageForm">
-        <ChatMessageForm bind:handleForm={handleFormBlur} />
+
+        <!-- chat users -->
+
+        <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-p-3 tw-flex tw-items-center">
+                {#if usersListUnreads()}
+                    <span
+                        class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                    >
+                        {usersListUnreads()}
+                    </span>
+                {/if}
+                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Users</p>
+                <button
+                    class="tw-text-lighter-purple"
+                    on:click={() => {
+                        showUsers = !showUsers;
+                    }}
+                >
+                    <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
+                </button>
+            </div>
+            {#if showUsers}
+                <div class="tw-mt-3">
+                    {#each users as user, i}
+                        <ChatUser {user} />
+                    {/each}
+                </div>
+                <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
+                    <span class="tw-underline tw-text-sm tw-text-lighter-purple">See more…</span>
+                </div>
+            {/if}
+        </div>
+
+        <!-- forum list -->
+
+        <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-p-3 tw-flex tw-items-center">
+                {#if forumListUnreads()}
+                    <span
+                        class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+                    >
+                        {forumListUnreads()}
+                    </span>
+                {/if}
+                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
+                <button
+                    class="tw-text-lighter-purple"
+                    on:click={() => {
+                        showForums = !showForums;
+                    }}
+                >
+                    <ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
+                </button>
+            </div>
+            {#if showForums}
+                <div class="tw-mt-3">
+                    {#each forums as forum, i}
+                        <ChatForum {forum} />
+                    {/each}
+                </div>
+                <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
+                    <span class="tw-underline tw-text-sm tw-text-lighter-purple">See more…</span>
+                </div>
+            {/if}
+        </div>
     </section>
 </aside>
 
 <style lang="scss">
-    p.close-icon {
-        position: absolute;
-        padding: 4px;
-        right: 12px;
-        font-size: 30px;
-        line-height: 25px;
-        cursor: pointer;
-    }
-
-    p.system-text {
-        border-radius: 8px;
-        margin-bottom: 10px;
-        padding: 6px;
-        overflow-wrap: break-word;
-        max-width: 100%;
-        background: gray;
-        display: inline-block;
-    }
-
     aside.chatWindow {
         z-index: 1000;
         pointer-events: auto;
@@ -98,29 +205,9 @@
         height: 100vh;
         width: 30vw;
         min-width: 350px;
-        background: rgba(#1B1B29, 0.9);
+        background: rgba(#1b1b29, 0.9);
         color: whitesmoke;
         display: flex;
         flex-direction: column;
-
-        // padding: 10px;
-
-        border-bottom-right-radius: 16px;
-        border-top-right-radius: 16px;
-
-        .messagesList {
-            margin-top: 35px;
-            overflow-y: auto;
-            flex: auto;
-
-            ul {
-                list-style-type: none;
-                padding-left: 0;
-            }
-        }
-        .messageForm {
-            flex: 0 70px;
-            padding-top: 15px;
-        }
     }
 </style>
