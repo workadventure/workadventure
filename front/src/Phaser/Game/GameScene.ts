@@ -107,7 +107,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-import { EditorModeManager } from "./EditorModeManager";
+import { MapEditorModeManager } from "./MapEditorModeManager";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -217,7 +217,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
-    private editorModeManager!: EditorModeManager;
+    private mapEditorModeManager!: MapEditorModeManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
     private preloading: boolean = true;
@@ -599,7 +599,7 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-        this.editorModeManager = new EditorModeManager(this);
+        this.mapEditorModeManager = new MapEditorModeManager(this);
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -1679,7 +1679,7 @@ ${escapedMessage}
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.cameraManager?.destroy();
-        this.editorModeManager?.destroy();
+        this.mapEditorModeManager?.destroy();
         this.peerStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
@@ -1946,7 +1946,7 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        if (!this.editorModeManager.isActive()) {
+        if (!this.mapEditorModeManager.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());
@@ -2369,8 +2369,8 @@ ${escapedMessage}
         return this.cameraManager;
     }
 
-    public getEditorModeManager(): EditorModeManager {
-        return this.editorModeManager;
+    public getMapEditorModeManager(): MapEditorModeManager {
+        return this.mapEditorModeManager;
     }
 
     public getPathfindingManager(): PathfindingManager {

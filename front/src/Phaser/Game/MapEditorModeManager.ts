@@ -1,15 +1,13 @@
 import { Unsubscriber } from "svelte/store";
-import {
-    editorModeDragCameraPointerDownStore as editorModePointerDownStore,
-    editorModeStore,
-} from "../../Stores/EditorStore";
+import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { GameScene } from "./GameScene";
 
 export enum EditorTool {
-    AreaSelector = 0,
+    None = "None",
+    AreaSelector = "AreaSelector",
 }
 
-export class EditorModeManager {
+export class MapEditorModeManager {
     private scene: GameScene;
 
     /**
@@ -27,7 +25,7 @@ export class EditorModeManager {
      */
     private activeTool: EditorTool;
 
-    private editorModeUnsubscriber!: Unsubscriber;
+    private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
     constructor(scene: GameScene) {
@@ -53,8 +51,11 @@ export class EditorModeManager {
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): void {
-        console.log(event.key);
         switch (event.key) {
+            case "`": {
+                this.equipTool(EditorTool.None);
+                break;
+            }
             case "1": {
                 this.equipTool(EditorTool.AreaSelector);
                 break;
@@ -66,13 +67,17 @@ export class EditorModeManager {
     }
 
     private equipTool(tool: EditorTool): void {
+        if (this.activeTool === tool) {
+            return;
+        }
+        console.log(`active tool: ${tool}`);
         // TODO: Clear to neutral state (hide things etc)
         this.activeTool = tool;
         // TODO: activate tools specific things
     }
 
     private subscribeToStores(): void {
-        this.editorModeUnsubscriber = editorModeStore.subscribe((active) => {
+        this.mapEditorModeUnsubscriber = mapEditorModeStore.subscribe((active) => {
             this.active = active;
             if (active) {
                 this.scene.CurrentPlayer.finishFollowingPath(true);
@@ -83,12 +88,12 @@ export class EditorModeManager {
             }
         });
 
-        this.pointerDownUnsubscriber = editorModePointerDownStore.subscribe((pointerDown) => {
+        this.pointerDownUnsubscriber = mapEditorModeDragCameraPointerDownStore.subscribe((pointerDown) => {
             this.pointerDown = pointerDown;
         });
     }
 
     private unsubscribeFromStores(): void {
-        this.editorModeUnsubscriber();
+        this.mapEditorModeUnsubscriber();
     }
 }

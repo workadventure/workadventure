@@ -3,7 +3,7 @@ import { RemotePlayer } from "../Entity/RemotePlayer";
 
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
-import { editorModeDragCameraPointerDownStore, editorModeStore } from "../../Stores/EditorStore";
+import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { get } from "svelte/store";
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
@@ -26,8 +26,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getEditorModeManager().isActive()) {
-            editorModeDragCameraPointerDownStore.set(false);
+        if (this.gameScene.getMapEditorModeManager().isActive()) {
+            mapEditorModeDragCameraPointerDownStore.set(false);
             this.lastPointerDownPosition = undefined;
         }
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
@@ -64,13 +64,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getEditorModeManager().isActive()) {
-            editorModeDragCameraPointerDownStore.set(true);
+        if (this.gameScene.getMapEditorModeManager().isActive()) {
+            mapEditorModeDragCameraPointerDownStore.set(true);
         }
     }
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getEditorModeManager().isActive() && this.gameScene.getEditorModeManager().isPointerDown()) {
+        if (
+            this.gameScene.getMapEditorModeManager().isActive() &&
+            this.gameScene.getMapEditorModeManager().isPointerDown()
+        ) {
             if (pointer.rightButtonDown() || pointer.wasTouch) {
                 if (this.lastPointerDownPosition) {
                     this.gameScene
@@ -86,12 +89,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
-        if (get(editorModeStore)) {
-            this.gameScene.getEditorModeManager().handleKeyDownEvent(event);
+        if (get(mapEditorModeStore)) {
+            this.gameScene.getMapEditorModeManager().handleKeyDownEvent(event);
         }
         switch (event.code) {
             case "KeyE": {
-                editorModeStore.set(!get(editorModeStore));
+                mapEditorModeStore.set(!get(mapEditorModeStore));
                 break;
             }
             default: {
