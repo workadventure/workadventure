@@ -20,8 +20,6 @@ class UrlManager {
         //@deprecated jwt url will be replace by "?token=<private access token>"
         else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
-        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
-            return GameConnexionTypes.room;
         }
         //@deprecated register url will be replace by "?token=<private access token>"
         else if (url.includes("register/")) {
@@ -29,7 +27,7 @@ class UrlManager {
         } else if (url === "/") {
             return GameConnexionTypes.empty;
         } else {
-            return GameConnexionTypes.unknown;
+            return GameConnexionTypes.room;
         }
     }
 
