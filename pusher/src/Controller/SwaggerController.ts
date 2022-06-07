@@ -173,40 +173,6 @@ export class SwaggerController extends BaseHttpController {
                             },
                         },
                     },
-                    "/api/loginurl/{organizationMemberToken}": {
-                        get: {
-                            security: [
-                                {
-                                    Header: [],
-                                },
-                            ],
-                            description: "Returns a member from the token",
-                            tags: ["ExternalAdminAPI"],
-                            parameters: [
-                                {
-                                    name: "organizationMemberToken",
-                                    in: "path",
-                                    description: "The token of member in the organization",
-                                    required: true,
-                                    type: "string",
-                                },
-                            ],
-                            responses: {
-                                200: {
-                                    description: "The details of the member",
-                                    schema: {
-                                        $ref: "#/definitions/AdminApiData",
-                                    },
-                                },
-                                401: {
-                                    description: "Error while retrieving the data because you are not authorized",
-                                    schema: {
-                                        $ref: "#/definitions/ErrorApiUnauthorizedData",
-                                    },
-                                },
-                            },
-                        },
-                    },
                 },
             };
             res.json(options);

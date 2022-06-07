@@ -14,7 +14,6 @@ class SwaggerGenerator {
     definitions(type: string | null) {
         const definitions = {
             definitions: {
-                AdminApiData: generateSchema(isAdminApiData),
                 ErrorApiUnauthorizedData: generateSchema(isErrorApiUnauthorizedData),
                 FetchMemberDataByUuidResponse: generateSchema(isFetchMemberDataByUuidResponse),
                 MapDetailsData: generateSchema(isMapDetailsData),
