@@ -31,6 +31,11 @@ export class MapEditorModeManager {
      */
     private areaPreviews: Map<string, AreaPreview>;
 
+    /**
+     * We are using layer to sort by depth, show and hide all areas at once
+     */
+    private depthLayerAreaPreviews: Phaser.GameObjects.Layer;
+
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
@@ -42,7 +47,8 @@ export class MapEditorModeManager {
 
         this.activeTool = EditorTool.None;
 
-        this.areaPreviews = new Map<string, AreaPreview>();
+        this.areaPreviews = this.createAreaPreviews();
+        this.depthLayerAreaPreviews = this.scene.add.layer(Array.from(this.areaPreviews.values())).setVisible(false);
 
         this.subscribeToStores();
     }
@@ -80,10 +86,42 @@ export class MapEditorModeManager {
         if (this.activeTool === tool) {
             return;
         }
-        console.log(`active tool: ${tool}`);
-        // TODO: Clear to neutral state (hide things etc)
+        this.clearToNeutralState();
         this.activeTool = tool;
-        // TODO: activate tools specific things
+        this.activateTool(tool);
+    }
+
+    /**
+     * Hide everything related to tools like Area Previews etc
+     */
+    private clearToNeutralState(): void {
+        this.depthLayerAreaPreviews.setVisible(false);
+    }
+
+    /**
+     * Show things necessary for tool's usage
+     */
+    private activateTool(tool: EditorTool): void {
+        switch (tool) {
+            case EditorTool.None: {
+                break;
+            }
+            case EditorTool.AreaSelector: {
+                this.depthLayerAreaPreviews.setVisible(true);
+                break;
+            }
+        }
+    }
+
+    private createAreaPreviews(): Map<string, AreaPreview> {
+        this.areaPreviews = new Map<string, AreaPreview>();
+        const areasData = this.scene.getGameMap().getAreas();
+
+        for (const [key, val] of areasData) {
+            this.areaPreviews.set(key, new AreaPreview(this.scene, { ...val }));
+        }
+
+        return this.areaPreviews;
     }
 
     private subscribeToStores(): void {

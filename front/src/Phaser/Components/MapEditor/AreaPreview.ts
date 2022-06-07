@@ -12,21 +12,23 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     private preview: Phaser.GameObjects.Rectangle;
 
     constructor(scene: Phaser.Scene, config: AreaPreviewConfig) {
-        super(scene, config.x, config.y);
+        super(scene, config.x + config.width * 0.5, config.y + config.height * 0.5);
 
         this.config = config;
 
-        this.preview = this.createPreview();
+        this.preview = this.createPreview(config);
 
         this.add([this.preview]);
 
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
 
+        console.log(config);
+
         this.scene.add.existing(this);
     }
 
-    private createPreview(): Phaser.GameObjects.Rectangle {
-        return this.scene.add.rectangle(0, 0, this.width, this.height, 0x0000ff, 0.5);
+    private createPreview(config: AreaPreviewConfig): Phaser.GameObjects.Rectangle {
+        return this.scene.add.rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5);
     }
 }
