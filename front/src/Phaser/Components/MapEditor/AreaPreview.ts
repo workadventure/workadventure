@@ -6,6 +6,11 @@ export type AreaPreviewConfig = Omit<
     "id" | "gid" | "visible" | "rotation" | "ellipse" | "polygon" | "polyline"
 >;
 
+export enum AreaPreviewEvent {
+    Clicked = "Clicked",
+    DoubleClicked = "DoubleClicked",
+}
+
 export class AreaPreview extends Phaser.GameObjects.Container {
     private config: AreaPreviewConfig;
 
@@ -41,7 +46,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     private bindEventHandlers(): void {
         this.preview.on(Phaser.Input.Events.POINTER_DOWN, () => {
-            console.log("POINTERDOWN ON AREA");
+            this.emit(AreaPreviewEvent.Clicked);
         });
     }
 }

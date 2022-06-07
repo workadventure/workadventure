@@ -121,6 +121,8 @@ export class MapEditorModeManager {
     }
 
     private setAreaPreviewsVisibility(visible: boolean): void {
+        // NOTE: I would really like to use Phaser Layers here but it seems that there's a problem with Areas still being
+        //       interactive when we hide whole Layer and thus forEach is needed.
         this.areaPreviews.forEach((area) => area.setVisible(visible));
     }
 
