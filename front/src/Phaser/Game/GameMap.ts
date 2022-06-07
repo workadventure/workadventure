@@ -87,6 +87,7 @@ export class GameMap {
                 let name = area.name;
                 if (!name) {
                     name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
+                    area.name = name;
                     this.unnamedAreasCounter++;
                 }
                 if (this.areas.get(name)) {

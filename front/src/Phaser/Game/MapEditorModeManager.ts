@@ -1,6 +1,6 @@
 import { Unsubscriber } from "svelte/store";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { AreaPreview } from "../Components/MapEditor/AreaPreview";
+import { AreaPreview, AreaPreviewEvent } from "../Components/MapEditor/AreaPreview";
 import { GameScene } from "./GameScene";
 
 export enum EditorTool {
@@ -112,12 +112,21 @@ export class MapEditorModeManager {
         const areasData = this.scene.getGameMap().getAreas();
 
         for (const [key, val] of areasData) {
-            this.areaPreviews.set(key, new AreaPreview(this.scene, { ...val }));
+            const areaPreview = new AreaPreview(this.scene, { ...val });
+            this.bindAreaPreviewEventHandlers(areaPreview);
+            this.areaPreviews.set(key, areaPreview);
         }
 
         this.setAreaPreviewsVisibility(false);
 
         return this.areaPreviews;
+    }
+
+    private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
+        areaPreview.on(AreaPreviewEvent.Clicked, () => {
+            console.log(areaPreview.getName());
+            console.log(this.scene.getGameMap().getArea(areaPreview.getName()));
+        });
     }
 
     private setAreaPreviewsVisibility(visible: boolean): void {

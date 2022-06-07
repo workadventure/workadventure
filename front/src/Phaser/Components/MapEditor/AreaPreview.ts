@@ -49,4 +49,8 @@ export class AreaPreview extends Phaser.GameObjects.Container {
             this.emit(AreaPreviewEvent.Clicked);
         });
     }
+
+    public getName(): string {
+        return this.config.name;
+    }
 }
