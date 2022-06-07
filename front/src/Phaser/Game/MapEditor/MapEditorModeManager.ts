@@ -1,11 +1,11 @@
 import { Unsubscriber } from "svelte/store";
-import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../Stores/MapEditorStore";
-import { AreaPreview, AreaPreviewEvent } from "../Components/MapEditor/AreaPreview";
-import { GameScene } from "./GameScene";
+import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
+import { GameScene } from "../GameScene";
+import { AreaEditorTool } from "./Tools/AreaEditorTool";
+import { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorTool {
-    None = "None",
-    AreaSelector = "AreaSelector",
+    AreaEditor = "AreaEditor",
 }
 
 export class MapEditorModeManager {
@@ -22,14 +22,14 @@ export class MapEditorModeManager {
     private pointerDown: boolean;
 
     /**
-     * What are we using right now
+     * Tools that we can work with inside Editor
      */
-    private activeTool: EditorTool;
+    private editorTools: Map<EditorTool, MapEditorTool>;
 
     /**
-     * Visual representations of map Areas objects
+     * What are we using right now
      */
-    private areaPreviews: Map<string, AreaPreview>;
+    private activeTool?: EditorTool;
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
@@ -40,9 +40,8 @@ export class MapEditorModeManager {
         this.active = false;
         this.pointerDown = false;
 
-        this.activeTool = EditorTool.None;
-
-        this.areaPreviews = this.createAreaPreviews();
+        this.editorTools = new Map<EditorTool, MapEditorTool>([[EditorTool.AreaEditor, new AreaEditorTool(this)]]);
+        this.activeTool = undefined;
 
         this.subscribeToStores();
     }
@@ -63,11 +62,11 @@ export class MapEditorModeManager {
     public handleKeyDownEvent(event: KeyboardEvent): void {
         switch (event.key) {
             case "`": {
-                this.equipTool(EditorTool.None);
+                this.equipTool();
                 break;
             }
             case "1": {
-                this.equipTool(EditorTool.AreaSelector);
+                this.equipTool(EditorTool.AreaEditor);
                 break;
             }
             default: {
@@ -76,63 +75,34 @@ export class MapEditorModeManager {
         }
     }
 
-    private equipTool(tool: EditorTool): void {
+    private equipTool(tool?: EditorTool): void {
         if (this.activeTool === tool) {
             return;
         }
         this.clearToNeutralState();
         this.activeTool = tool;
-        this.activateTool(tool);
+
+        if (tool !== undefined) {
+            this.activateTool();
+        }
     }
 
     /**
      * Hide everything related to tools like Area Previews etc
      */
     private clearToNeutralState(): void {
-        this.setAreaPreviewsVisibility(false);
+        if (this.activeTool) {
+            this.editorTools.get(this.activeTool)?.clear();
+        }
     }
 
     /**
      * Show things necessary for tool's usage
      */
-    private activateTool(tool: EditorTool): void {
-        switch (tool) {
-            case EditorTool.None: {
-                break;
-            }
-            case EditorTool.AreaSelector: {
-                this.setAreaPreviewsVisibility(true);
-                break;
-            }
+    private activateTool(): void {
+        if (this.activeTool) {
+            this.editorTools.get(this.activeTool)?.activate();
         }
-    }
-
-    private createAreaPreviews(): Map<string, AreaPreview> {
-        this.areaPreviews = new Map<string, AreaPreview>();
-        const areasData = this.scene.getGameMap().getAreas();
-
-        for (const [key, val] of areasData) {
-            const areaPreview = new AreaPreview(this.scene, { ...val });
-            this.bindAreaPreviewEventHandlers(areaPreview);
-            this.areaPreviews.set(key, areaPreview);
-        }
-
-        this.setAreaPreviewsVisibility(false);
-
-        return this.areaPreviews;
-    }
-
-    private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
-        areaPreview.on(AreaPreviewEvent.Clicked, () => {
-            console.log(areaPreview.getName());
-            console.log(this.scene.getGameMap().getArea(areaPreview.getName()));
-        });
-    }
-
-    private setAreaPreviewsVisibility(visible: boolean): void {
-        // NOTE: I would really like to use Phaser Layers here but it seems that there's a problem with Areas still being
-        //       interactive when we hide whole Layer and thus forEach is needed.
-        this.areaPreviews.forEach((area) => area.setVisible(visible));
     }
 
     private subscribeToStores(): void {
@@ -144,7 +114,7 @@ export class MapEditorModeManager {
                 this.scene.getCameraManager().stopFollow();
             } else {
                 this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer);
-                this.equipTool(EditorTool.None);
+                this.equipTool();
             }
         });
 
@@ -155,5 +125,9 @@ export class MapEditorModeManager {
 
     private unsubscribeFromStores(): void {
         this.mapEditorModeUnsubscriber();
+    }
+
+    public getScene(): GameScene {
+        return this.scene;
     }
 }
