@@ -23,12 +23,25 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         const bounds = this.getBounds();
         this.setSize(bounds.width, bounds.height);
 
-        console.log(config);
+        this.bindEventHandlers();
 
         this.scene.add.existing(this);
     }
 
+    public setVisible(value: boolean): this {
+        this.preview.setVisible(value);
+        return this;
+    }
+
     private createPreview(config: AreaPreviewConfig): Phaser.GameObjects.Rectangle {
-        return this.scene.add.rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5);
+        return this.scene.add
+            .rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5)
+            .setInteractive({ cursor: "pointer" });
+    }
+
+    private bindEventHandlers(): void {
+        this.preview.on(Phaser.Input.Events.POINTER_DOWN, () => {
+            console.log("POINTERDOWN ON AREA");
+        });
     }
 }

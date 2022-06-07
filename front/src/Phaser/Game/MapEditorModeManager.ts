@@ -31,11 +31,6 @@ export class MapEditorModeManager {
      */
     private areaPreviews: Map<string, AreaPreview>;
 
-    /**
-     * We are using layer to sort by depth, show and hide all areas at once
-     */
-    private depthLayerAreaPreviews: Phaser.GameObjects.Layer;
-
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
@@ -48,7 +43,6 @@ export class MapEditorModeManager {
         this.activeTool = EditorTool.None;
 
         this.areaPreviews = this.createAreaPreviews();
-        this.depthLayerAreaPreviews = this.scene.add.layer(Array.from(this.areaPreviews.values())).setVisible(false);
 
         this.subscribeToStores();
     }
@@ -95,7 +89,7 @@ export class MapEditorModeManager {
      * Hide everything related to tools like Area Previews etc
      */
     private clearToNeutralState(): void {
-        this.depthLayerAreaPreviews.setVisible(false);
+        this.setAreaPreviewsVisibility(false);
     }
 
     /**
@@ -107,7 +101,7 @@ export class MapEditorModeManager {
                 break;
             }
             case EditorTool.AreaSelector: {
-                this.depthLayerAreaPreviews.setVisible(true);
+                this.setAreaPreviewsVisibility(true);
                 break;
             }
         }
@@ -121,7 +115,13 @@ export class MapEditorModeManager {
             this.areaPreviews.set(key, new AreaPreview(this.scene, { ...val }));
         }
 
+        this.setAreaPreviewsVisibility(false);
+
         return this.areaPreviews;
+    }
+
+    private setAreaPreviewsVisibility(visible: boolean): void {
+        this.areaPreviews.forEach((area) => area.setVisible(visible));
     }
 
     private subscribeToStores(): void {
@@ -133,6 +133,7 @@ export class MapEditorModeManager {
                 this.scene.getCameraManager().stopFollow();
             } else {
                 this.scene.getCameraManager().startFollowPlayer(this.scene.CurrentPlayer);
+                this.equipTool(EditorTool.None);
             }
         });
 
