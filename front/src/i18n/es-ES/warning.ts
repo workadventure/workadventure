@@ -10,7 +10,7 @@ const warning: NonNullable<Translation["warning"]> = {
     accessDenied: {
         camera: "Acceso a la cámara denegado. Haga clic aquí y revise los permisos de su navegador.",
         screenSharing: "Compartir pantalla denegado. Haga clic aquí y revise los permisos de su navegador.",
-        room: "Acceso a la habitación denegado. No tiene permitido entrar en esta habitación.Room access denied.",
+        room: "Acceso a la habitación denegado. No tiene permitido entrar en esta habitación.",
     },
     importantMessage: "Mensaje importante",
     connectionLost: "Conexión perdida. Reconectando...",
