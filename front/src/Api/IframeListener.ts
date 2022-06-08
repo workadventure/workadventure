@@ -10,7 +10,6 @@ import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
     IframeResponseEvent,
-    IframeResponseEventMap,
     isIframeEventWrapper,
     isIframeQueryWrapper,
     isLookingLikeIframeEventWrapper,
@@ -556,7 +555,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;

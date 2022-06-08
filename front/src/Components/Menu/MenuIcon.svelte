@@ -75,7 +75,7 @@
         class="nes-pointer"
         draggable="false"
         on:dragstart|preventDefault={noDrag}
-        on:click={() => analyticsClient.openedMenu()}
+        on:click={() => analyticsClient.openedChat()}
         on:click={showChat}
     />
 </main>

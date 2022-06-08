@@ -84,6 +84,7 @@
   },
   "lint-staged": {
     "*.ts": [
+      "node_modules/.bin/eslint --fix",
       "prettier --write"
     ]
   }
