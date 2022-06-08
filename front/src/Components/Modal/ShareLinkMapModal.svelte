@@ -3,12 +3,11 @@
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
     interface ExtNavigator extends Navigator {
-        canShare?(data?: ShareData): Promise<boolean>;
     }
 
     const myNavigator: ExtNavigator = window.navigator;
     const haveNavigatorSharingFeature: boolean =
-        myNavigator && myNavigator.canShare != null && myNavigator.share != null;
+            myNavigator && myNavigator.share != null;
 
     let copied: boolean = false;
 
