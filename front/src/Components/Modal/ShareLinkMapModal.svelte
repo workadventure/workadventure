@@ -11,13 +11,12 @@
 
     let copied: boolean = false;
 
-    function copyLink() {
+    async function copyLink() {
         try {
             const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
             input.focus();
             input.select();
-            myNavigator.clipboard.writeText(input.value);
-            copied = true;
+            await myNavigator.clipboard.writeText(input.value);
         } catch (e) {
             console.error(e);
             copied = false;
@@ -31,7 +30,7 @@
             await myNavigator.share(shareData);
         } catch (err) {
             console.error("Error: " + err);
-            copyLink();
+            await copyLink();
         }
     }
 
