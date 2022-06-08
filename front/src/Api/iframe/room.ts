@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 
-import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import { ChangeLayerEvent, isChangeLayerEvent } from "../Events/ChangeLayerEvent";
+import { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
+import { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -44,25 +44,21 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 enterStreams.get(payloadData.name)?.next();
             },
             type: "enterEvent",
-            typeChecker: isEnterLeaveEvent,
         }),
         apiCallback({
             type: "leaveEvent",
-            typeChecker: isEnterLeaveEvent,
             callback: (payloadData) => {
                 leaveStreams.get(payloadData.name)?.next();
             },
         }),
         apiCallback({
             type: "enterLayerEvent",
-            typeChecker: isChangeLayerEvent,
             callback: (payloadData: ChangeLayerEvent) => {
                 enterLayerStreams.get(payloadData.name)?.next();
             },
         }),
         apiCallback({
             type: "leaveLayerEvent",
-            typeChecker: isChangeLayerEvent,
             callback: (payloadData) => {
                 leaveLayerStreams.get(payloadData.name)?.next();
             },

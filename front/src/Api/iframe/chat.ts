@@ -1,4 +1,4 @@
-import { isUserInputChatEvent, UserInputChatEvent } from "../Events/UserInputChatEvent";
+import { UserInputChatEvent } from "../Events/UserInputChatEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import { Subject } from "rxjs";
@@ -12,7 +12,6 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
                 chatStream.next(event.message);
             },
             type: "userInputChat",
-            typeChecker: isUserInputChatEvent,
         }),
     ];
 

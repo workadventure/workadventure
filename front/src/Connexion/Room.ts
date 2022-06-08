@@ -138,10 +138,10 @@ export class Room {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
-            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "Token decrypted error") {
+            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
-                window.location.assign("/login");
+                window.location.reload();
             } else if (axios.isAxiosError(e)) {
                 console.error("Error => getMapDetail", e, e.response);
             } else {

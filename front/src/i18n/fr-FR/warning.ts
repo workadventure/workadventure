@@ -17,6 +17,8 @@ const warning: NonNullable<Translation["warning"]> = {
     connectionLost: "Connexion perdue. Reconnexion...",
     connectionLostTitle: "Connexion perdue",
     connectionLostSubtitle: "Reconnexion",
+    waitingConnectionTitle: "En attente du serveur",
+    waitingConnectionSubtitle: "Connexion",
 };
 
 export default warning;

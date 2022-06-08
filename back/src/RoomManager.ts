@@ -30,6 +30,7 @@ import {
     WorldFullWarningToRoomMessage,
     ZoneMessage,
     LockGroupPromptMessage,
+    RoomsList,
     JoinMucRoomMessage
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
@@ -343,6 +344,9 @@ const roomManager: IRoomManagerServer = {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => console.error(e));
         callback(null, new EmptyMessage());
+    },
+    getRooms(call: ServerUnaryCall<EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
+        callback(null, socketManager.getAllRooms());
     },
 };
 
