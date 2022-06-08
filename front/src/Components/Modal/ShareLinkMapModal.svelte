@@ -16,7 +16,7 @@
             const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
             input.focus();
             input.select();
-            document.execCommand("copy");
+            myNavigator.clipboard.writeText(input.value);
             copied = true;
         } catch (e) {
             console.error(e);
