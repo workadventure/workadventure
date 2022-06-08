@@ -9,7 +9,21 @@ WA.room.onEnterZone('clock', () => {
 })
 
 WA.room.onLeaveZone('clock', closePopUp)
+/*
+const vsCode = await WA.ui.website.open({
+    url: "https://vscode.dev",
+    position: {
+        vertical: "middle",
+        horizontal: "middle",
+    },
+    size: {
+        height: '50vh',
+        width: "50vw",
+    },
+});
 
+vsCode.position.vertical = "top";
+*/
 function closePopUp(){
     if (currentPopup !== undefined) {
         currentPopup.close();
