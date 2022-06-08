@@ -12,6 +12,7 @@
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 
     let miniLogo = gameManager.currentStartedRoom.miniLogo ?? logoWA;
 
@@ -21,6 +22,10 @@
 
     function showChat() {
         chatVisibilityStore.set(true);
+    }
+
+    function toggleMapEditorMode() {
+        mapEditorModeStore.set(!$mapEditorModeStore);
     }
 
     function register() {
@@ -77,6 +82,14 @@
         on:dragstart|preventDefault={noDrag}
         on:click={() => analyticsClient.openedMenu()}
         on:click={showChat}
+    />
+    <img
+        src={logoRegister}
+        alt={$LL.menu.icon.open.chat()}
+        class="nes-pointer"
+        draggable="false"
+        on:dragstart|preventDefault={noDrag}
+        on:click={toggleMapEditorMode}
     />
 </main>
 
