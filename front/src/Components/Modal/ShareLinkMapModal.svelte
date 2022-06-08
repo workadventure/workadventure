@@ -2,12 +2,10 @@
     import { fly } from "svelte/transition";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
-    interface ExtNavigator extends Navigator {
-    }
+    interface ExtNavigator extends Navigator {}
 
     const myNavigator: ExtNavigator = window.navigator;
-    const haveNavigatorSharingFeature: boolean =
-            myNavigator && myNavigator.share != null;
+    const haveNavigatorSharingFeature: boolean = myNavigator && myNavigator.share != null;
 
     let copied: boolean = false;
 
