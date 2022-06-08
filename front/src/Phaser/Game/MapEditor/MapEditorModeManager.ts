@@ -27,7 +27,7 @@ export class MapEditorModeManager {
     private editorTools: Map<EditorTool, MapEditorTool>;
 
     /**
-     * What are we using right now
+     * What tool are we using right now
      */
     private activeTool?: EditorTool;
 
