@@ -10,7 +10,11 @@ WA.room.onEnterZone('clock', () => {
 
 WA.onInit().then(() => {
     WA.player.sharedState.arrivalTime = Date.now()
-    console.log("arrivalTime: " + WA.player.sharedState.arrivalTime)    
+    console.log("arrivalTime: " + WA.player.sharedState.arrivalTime)
+
+    WA.players.onVariableChange('arrivalTime', (user, value) => {
+        console.log('arrivalTime updated for user ', user, 'new value', value);
+    });
 });
 
 WA.room.onLeaveZone('clock', closePopUp)

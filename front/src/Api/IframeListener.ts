@@ -37,6 +37,7 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import {SetSharedPlayerVariableEvent} from "./Events/SetSharedPlayerVariableEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -540,6 +541,13 @@ class IframeListener {
         this.postMessage({
             type: "setVariable",
             data: setVariableEvent,
+        });
+    }
+
+    setSharedPlayerVariable(setSharedPlayerVariable: SetSharedPlayerVariableEvent) {
+        this.postMessage({
+            type: "setSharedPlayerVariable",
+            data: setSharedPlayerVariable,
         });
     }
 

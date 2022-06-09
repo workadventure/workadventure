@@ -366,6 +366,7 @@ export class Zone {
     }
 
     private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage) {
+        console.log('notifyPlayerDetailsUpdated', playerDetailsUpdatedMessage.getDetails()?.getSetvariable());
         for (const listener of this.listeners) {
             if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
                 continue;

@@ -40,6 +40,7 @@ import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
+import {isSetSharedPlayerVariableEvent} from "./SetSharedPlayerVariableEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -233,6 +234,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("setVariable"),
         data: isSetVariableEvent,
+    }),
+    z.object({
+        type: z.literal("setSharedPlayerVariable"),
+        data: isSetSharedPlayerVariableEvent,
     }),
     z.object({
         type: z.literal("messageTriggered"),

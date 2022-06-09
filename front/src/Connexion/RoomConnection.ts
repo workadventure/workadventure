@@ -288,6 +288,7 @@ export class RoomConnection implements RoomConnection {
                                 break;
                             }
                             case "playerDetailsUpdatedMessage": {
+                                console.log("playerDetailsUpdatedMessage");
                                 this._playerDetailsUpdatedMessageStream.next(subMessage.playerDetailsUpdatedMessage);
                                 break;
                             }
@@ -960,7 +961,7 @@ export class RoomConnection implements RoomConnection {
                         value: JSON.stringify(value)
                     }
                 })
-        
+
             },
         });
 
