@@ -13,8 +13,42 @@
     $: targets = message.targets || [];
     $: texts = message.text || [];
 
-    function urlifyText(text: string): string {
-        return HtmlUtils.urlify(text, chatStyleLink);
+    function translate(text: string) {
+        // let res = await fetch('https://api-free.deepl.com/v2/translate', {
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //         "auth_key": "d4df4313-9277-6916-b60c-efd4b5ecc305:fx",
+        //         "text": "Hello world",
+        //         "target_lang": "fr"
+        //     }
+        // })
+        var url = "https://api-free.deepl.com/v2/translate";
+        var xhr = new XMLHttpRequest();
+        var auth_key = xhr.open("POST", url);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                console.log(xhr.status);
+                console.log(xhr.responseText);
+            }
+        };
+        var data = "auth_key=" + auth_key + "&text=" + message + "&target_lang=" + lang;
+        xhr.send(data);
+
+        xhr.onload = () => {
+            var data = xhr.responseText;
+            console.log(data)
+        };
+        return text;
+    }
+
+    function urlifyText(text: string) {
+        debugger;
+        const newText = HtmlUtils.urlify(text, chatStyleLink);
+        if (newText != text) {
+            return newText;
+        }
+        return text;
     }
     function renderDate(date: Date) {
         return date.toLocaleTimeString(navigator.language, {
