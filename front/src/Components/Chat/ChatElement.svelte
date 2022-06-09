@@ -8,45 +8,14 @@
     export let message: ChatMessage;
     export let line: number;
     const chatStyleLink = "color: white; text-decoration: underline;";
+    const authKey = "d4df4313-9277-6916-b60c-efd4b5ecc305:fx";
 
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
     $: texts = message.text || [];
 
-    function translate(text: string, lang = "fr") {
-        // let res = await fetch('https://api-free.deepl.com/v2/translate', {
-        //     headers: {
-        //         "Content-Type": "application/json",
-        //         "auth_key": "d4df4313-9277-6916-b60c-efd4b5ecc305:fx",
-        //         "text": "Hello world",
-        //         "target_lang": "fr"
-        //     }
-        // })
-        var url = "https://api-free.deepl.com/v2/translate";
-        var xhr = new XMLHttpRequest();
-        var auth_key = xhr.open("POST", url);
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState === 4) {
-                console.log(xhr.status);
-                console.log(xhr.responseText);
-            }
-        };
-        var data = "auth_key=" + auth_key + "&text=" + message + "&target_lang=" + lang;
-        xhr.send(data);
-
-        return text;
-    }
-
     function urlifyText(text: string) {
-        debugger;
-        const newText = HtmlUtils.urlify(text, chatStyleLink);
-        // Check if is a url
-        if (newText != text) {
-            return newText;
-        }
-        // Is not a url. Translate it
-        return text;
+        return HtmlUtils.urlify(text, chatStyleLink);
     }
     function renderDate(date: Date) {
         return date.toLocaleTimeString(navigator.language, {
@@ -56,6 +25,54 @@
     }
     function isLastIteration(index: number) {
         return targets.length - 1 === index;
+    }
+
+    function showMyMessage(message: string): string {
+        return urlifyText(message);
+    }
+
+    function showOtherPeopleMessage(message: string): string {
+        const maybeUrlyfied = urlifyText(message);
+        // Check if is a url
+        if (maybeUrlyfied != message) {
+            return maybeUrlyfied;
+        }
+        // Is not a url. Translate it
+        return translate(message);
+    }
+
+    function fetchPost(url:string, params = {}, headers = {}) {
+        // return new Promise();
+    }
+
+    function translate(message: string, lang = "fr") {
+        // var url = "https://api-free.deepl.com/v2/translate";
+        // var xhr = new XMLHttpRequest();
+        // var auth_key = xhr.open("POST", url);
+        // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        // xhr.onreadystatechange = function () {
+        //     if (xhr.readyState === 4) {
+        //         console.log(xhr.status);
+        //         console.log(xhr.responseText);
+        //     }
+        // };
+        // var data = "auth_key=" + auth_key + "&text=" + message + "&target_lang=" + lang;
+        // xhr.send(data);
+
+        fetch(
+            "https://api-free.deepl.com/v2/translate?auth_key=" + authKey + "&text=" + message + "&target_lang=" + lang,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            }
+        )
+            .then((res) => res.json())
+            .then((res) => {
+                console.log(res.data);
+            });
+        return message;
     }
 </script>
 
@@ -76,12 +93,12 @@
         {:else if message.type === ChatMessageTypes.me}
             <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}
-                <div><p class="my-text">{@html urlifyText(text)}</p></div>
+                <div><p class="my-text">{@html showMyMessage(text)}</p></div>
             {/each}
         {:else}
             <h4><ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}
-                <div><p class="other-text">{@html urlifyText(text)}</p></div>
+                <div><p class="other-text">{@html showOtherPeopleMessage(text)}</p></div>
             {/each}
         {/if}
     </div>
