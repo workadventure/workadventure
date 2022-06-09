@@ -41,9 +41,11 @@
     function urlifyText(text: string) {
         debugger;
         const newText = HtmlUtils.urlify(text, chatStyleLink);
+        // Check if is a url
         if (newText != text) {
             return newText;
         }
+        // Is not a url. Translate it
         return text;
     }
     function renderDate(date: Date) {
