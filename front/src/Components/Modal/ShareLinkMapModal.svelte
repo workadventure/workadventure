@@ -2,23 +2,19 @@
     import { fly } from "svelte/transition";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
-    interface ExtNavigator extends Navigator {
-        canShare?(data?: ShareData): Promise<boolean>;
-    }
+    interface ExtNavigator extends Navigator {}
 
     const myNavigator: ExtNavigator = window.navigator;
-    const haveNavigatorSharingFeature: boolean =
-        myNavigator && myNavigator.canShare != null && myNavigator.share != null;
+    const haveNavigatorSharingFeature: boolean = myNavigator && myNavigator.share != null;
 
     let copied: boolean = false;
 
-    function copyLink() {
+    async function copyLink() {
         try {
             const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
             input.focus();
             input.select();
-            document.execCommand("copy");
-            copied = true;
+            await myNavigator.clipboard.writeText(input.value);
         } catch (e) {
             console.error(e);
             copied = false;
@@ -32,7 +28,7 @@
             await myNavigator.share(shareData);
         } catch (err) {
             console.error("Error: " + err);
-            copyLink();
+            await copyLink();
         }
     }
 
