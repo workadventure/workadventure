@@ -42,15 +42,21 @@
                 />{#if !isLastIteration(index)}, {/if}{/each} left
             <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.me}
-            <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
-            {#each texts as text}
-                <div><p class="my-text">{@html urlifyText(text)}</p></div>
-            {/each}
+            <div class="card_pink">
+                <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
+                {#each texts as text}
+                    <div>{@html urlifyText(text)}</div>
+                    <div class="blue-wa">{@html urlifyText(text)}</div>
+                {/each}
+            </div>
         {:else}
-            <h4><ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span></h4>
-            {#each texts as text}
-                <div><p class="other-text">{@html urlifyText(text)}</p></div>
-            {/each}
+            <div class="card_white">
+                <h4><ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span></h4>
+                {#each texts as text}
+                    <div class="blue-wa">{@html urlifyText(text)}</div>
+                    <div class="red-wa">{@html urlifyText(text)}</div>
+                {/each}
+            </div>
         {/if}
     </div>
 </div>
@@ -60,9 +66,30 @@
     p {
         font-family: Lato;
     }
+
+    .card_pink {
+        background-color: #ff465a;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem 0.5rem 1rem;
+    }
+
+    .card_white {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem 0.5rem 1rem;
+    }
+
+    .blue-wa {
+        color: #18314b;
+    }
+
+    .red-wa {
+        color: #ff465a;
+    }
     div.chatElement {
         display: flex;
         margin-bottom: 20px;
+        position: relative;
 
         .messagePart {
             flex-grow: 1;

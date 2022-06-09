@@ -27,7 +27,7 @@
 </script>
 
 <span class="subMenu">
-    <span class="chatPlayerName" style="color: {player.color || 'white'}" on:click={openSubMenu}>
+    <span class="chatPlayerName" style="color: #18314b " on:click={openSubMenu}>
         {player.name}
     </span>
     {#if isSubMenuOpen}
