@@ -1505,6 +1505,13 @@ ${escapedMessage}
                     localUserStore.setUserProperty(event.key, event.value);
                     break;
                 }
+                case "sharedPlayer":{
+                    this.connection?.emitPlayerSetVariable(event.key, event.value)
+                    // const clientToServerMessage = new ClientToServerMessage();
+                    // clientToServerMessage.setSetplayerdetailsmessage(message);
+                    // this.socket.send(clientToServerMessage.serializeBinary().buffer);
+                   break; 
+                }
                 default: {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const _exhaustiveCheck: never = event.target;
@@ -2217,6 +2224,9 @@ ${escapedMessage}
         }
         if (message.details?.availabilityStatus !== undefined) {
             character.setAvailabilityStatus(message.details?.availabilityStatus);
+        }
+        if (message.details?.setVariable !== undefined) {
+            console.log('doUpdatePlayerDetails', message.details.setVariable)
         }
     }
 

@@ -14,6 +14,7 @@ import {
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubMessage,
+    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
@@ -25,6 +26,7 @@ export class User implements Movable {
     public group?: Group;
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
+    private variables = new Map<string, string>();
 
     public constructor(
         public id: number,
@@ -150,7 +152,15 @@ export class User implements Movable {
             sendStatusUpdate = true;
         }
 
-        const playerDetails = new SetPlayerDetailsMessage();
+        if (details.hasSetvariable()) {
+            console.log("updateDetails back")
+            const setVariable = details.getSetvariable() as VariableMessage;
+            this.variables.set(setVariable.getName(), setVariable.getValue());
+        }
+
+       
+
+        /*const playerDetails = new SetPlayerDetailsMessage();
 
         if (this.outlineColor !== undefined) {
             playerDetails.setOutlinecolor(new UInt32Value().setValue(this.outlineColor));
@@ -163,8 +173,9 @@ export class User implements Movable {
         }
         if (sendStatusUpdate) {
             playerDetails.setAvailabilitystatus(details.getAvailabilitystatus());
-        }
-
-        this.positionNotifier.updatePlayerDetails(this, playerDetails);
+        }*/
+        this.positionNotifier.updatePlayerDetails(this, details);
     }
+
+
 }

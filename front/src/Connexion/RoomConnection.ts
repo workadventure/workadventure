@@ -51,6 +51,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { Console } from "console";
 
 const manualPingDelay = 20000;
 
@@ -946,5 +947,22 @@ export class RoomConnection implements RoomConnection {
         }
 
         this.socket.send(bytes);
+    }
+
+    public emitPlayerSetVariable(name: string, value :unknown): void {
+        console.log("emitPlayerSetVariable")
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
+                    setVariable: {
+                        name,
+                        value: JSON.stringify(value)
+                    }
+                })
+        
+            },
+        });
+
     }
 }

@@ -182,6 +182,10 @@ export class SocketManager {
         return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
     }
 
+    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
+    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
+    // }
+
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
         const remoteUser = room.getUsers().get(data.getReceiverid());

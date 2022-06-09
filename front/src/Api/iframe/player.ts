@@ -38,6 +38,7 @@ export const setUuid = (_uuid: string | undefined) => {
 
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
     readonly state = createState("player");
+    readonly sharedState = createState("sharedPlayer");
 
     callbacks = [
         apiCallback({

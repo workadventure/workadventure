@@ -9,7 +9,7 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
     private variables = new Map<string, unknown>();
     private variableSubscribers = new Map<string, Subject<unknown>>();
 
-    constructor(private target: "global" | "player") {
+    constructor(private target: "global" | "player"| "sharedPlayer") {
         super();
 
         this.setVariableResolvers.subscribe((event) => {
@@ -79,7 +79,7 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
     }
 }
 
-export function createState(target: "global" | "player"): WorkadventureStateCommands & { [key: string]: unknown } {
+export function createState(target: "global" | "player"| "sharedPlayer"): WorkadventureStateCommands & { [key: string]: unknown } {
     return new Proxy(new WorkadventureStateCommands(target), {
         get(target: WorkadventureStateCommands, p: PropertyKey, receiver: unknown): unknown {
             if (p in target) {

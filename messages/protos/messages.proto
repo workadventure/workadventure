@@ -60,6 +60,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
+  VariableMessage setVariable = 7;
 }
 
 message UserMovesMessage {
