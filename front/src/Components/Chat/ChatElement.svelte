@@ -35,10 +35,6 @@
         var data = "auth_key=" + auth_key + "&text=" + message + "&target_lang=" + lang;
         xhr.send(data);
 
-        xhr.onload = () => {
-            var data = xhr.responseText;
-            console.log(data)
-        };
         return text;
     }
 
