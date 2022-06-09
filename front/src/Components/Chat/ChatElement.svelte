@@ -13,7 +13,7 @@
     $: targets = message.targets || [];
     $: texts = message.text || [];
 
-    function translate(text: string) {
+    function translate(text: string, lang = "fr") {
         // let res = await fetch('https://api-free.deepl.com/v2/translate', {
         //     headers: {
         //         "Content-Type": "application/json",
