@@ -195,11 +195,7 @@
         content: '';
         display: block;
         background: white;
-        animation-name: loader;
-        animation-duration: .6s;
-        animation-direction: alternate;
-        animation-timing-function: ease;
-        animation-iteration-count: infinite;
+        animation: loader .6s ease infinite alternate;
         border-radius: 50%;
         margin-right: 5px;
 
