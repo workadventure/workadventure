@@ -143,11 +143,11 @@
             <div class="card_pink">
                 <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
                 {#each texts as text}
-                    <div class="blue-wa">{@html showNoTranslatedMessage(text)}</div>
+                    <div class="">{@html showNoTranslatedMessage(text)}</div>
                     {#await showTranslatedMessage(text)}
-                        <div class="red-wa">Traduction en cours...</div>
+                        <div class="blue-wa">Traduction en cours...</div>
                     {:then text}
-                        <div class="red-wa">{@html text}</div>
+                        <div class="blue-wa">{@html text}</div>
                     {/await}
                 {/each}
             </div>

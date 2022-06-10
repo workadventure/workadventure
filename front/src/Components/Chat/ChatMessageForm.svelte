@@ -22,9 +22,6 @@
         if (!newMessageText) return;
         chatMessagesStore.addPersonnalMessage(newMessageText);
 
-        let trad = await scriptUtils.translate(newMessageText, 'fr')
-        console.log('trad', trad.data.translations[0].text);
-
         newMessageText = "";
     }
 </script>
