@@ -13,6 +13,7 @@ module.exports = {
             "medium-purple": "#38384A",
             "light-purple": "#4D4B67",
             "lighter-purple": "#928EBB",
+            "light-purple-alt": '#7D7B9E',
             "dark-blue": "#1B1B29",
             "light-blue": "#56EAFF",
 
