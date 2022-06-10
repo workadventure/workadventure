@@ -4,6 +4,15 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import ChatPlayerName from "./ChatPlayerName.svelte";
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
+    import {
+        TranslationCache,
+        translationCache,
+        makeHash,
+        hashExists,
+        addHash,
+        getContentFromHash,
+    } from "../../Cache/TranslationCache";
+import { resolve } from "path";
 
     export let message: ChatMessage;
     export let line: number;
@@ -41,37 +50,87 @@
         return translate(message);
     }
 
-    function fetchPost(url:string, params = {}, headers = {}) {
-        // return new Promise();
+    function makeRequest(
+        url: string,
+        method: string = "GET",
+        headers: { [key: string]: any } = { "Content-Type": "application/x-www-form-urlencoded" }
+    ): Promise<XMLHttpRequest> {
+        // Create the XHR request
+        var request = new XMLHttpRequest();
+
+        // Return it as a Promise
+        return new Promise(function (resolve, reject) {
+            // Setup our HTTP request
+            request.open(method, url, true);
+
+            // Set headers
+            Object.keys(headers).forEach((headerName) => {
+                const headerContent: string = headers[headerName];
+                request.setRequestHeader(headerName, headerContent);
+            });
+
+            // Setup our listener to process compeleted requests
+            request.onreadystatechange = function () {
+                // Only run if the request is complete
+                if (request.readyState !== 4) return;
+
+                // Process the response
+                if (request.status >= 200 && request.status < 300) {
+                    // If successful
+                    resolve(request);
+                } else {
+                    // If failed
+                    reject({
+                        status: request.status,
+                        statusText: request.statusText,
+                    });
+                }
+            };
+
+            // Send the request
+            request.send();
+        });
     }
 
-    function translate(message: string, lang = "fr") {
-        // var url = "https://api-free.deepl.com/v2/translate";
-        // var xhr = new XMLHttpRequest();
-        // var auth_key = xhr.open("POST", url);
-        // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        // xhr.onreadystatechange = function () {
-        //     if (xhr.readyState === 4) {
-        //         console.log(xhr.status);
-        //         console.log(xhr.responseText);
-        //     }
-        // };
-        // var data = "auth_key=" + auth_key + "&text=" + message + "&target_lang=" + lang;
-        // xhr.send(data);
+    interface DeeplTranslationKey {
+        detected_source_language: string;
+        text: string;
+    }
 
-        fetch(
-            "https://api-free.deepl.com/v2/translate?auth_key=" + authKey + "&text=" + message + "&target_lang=" + lang,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            }
-        )
-            .then((res) => res.json())
-            .then((res) => {
-                console.log(res.data);
-            });
+    interface DeeplResponse {
+        translations: Array<DeeplTranslationKey>;
+    }
+
+    function translate(message: string, toLanguage = "fr"): string {
+        // return new Promise(function (resolve, reject) {
+
+        const hash: number = makeHash(toLanguage, message);
+        console.log("main", message, hash, hashExists(hash) ? "true" : "false");
+        if (hashExists(hash)) {
+            const content: TranslationCache = getContentFromHash(hash);
+            return content.translatedText;
+        } else {
+            makeRequest(
+                "https://api-free.deepl.com/v2/translate?auth_key=" +
+                    authKey +
+                    "&text=" +
+                    message +
+                    "&target_lang=" +
+                    toLanguage,
+                "POST"
+            )
+                .then((res) => {
+                    const data: DeeplResponse = JSON.parse(res.responseText);
+                    addHash(hash, data.translations[0].text, data.translations[0].detected_source_language);
+                    // resolve(data.translations[0].text);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    // reject(err);
+                });
+        }
+
+        // });
         return message;
     }
 </script>
