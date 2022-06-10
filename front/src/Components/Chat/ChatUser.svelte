@@ -16,7 +16,7 @@
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {user.name}
         </h1>
-        <p class="tw-text-xs tw-mb-0">
+        <p class="tw-text-xs tw-mb-0 tw-font-condensed">
             {user.status}
         </p>
     </div>

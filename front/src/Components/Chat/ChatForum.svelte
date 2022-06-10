@@ -15,7 +15,7 @@
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {forum.name}
         </h1>
-        <p class="tw-text-xs tw-mb-0 tw-text-green">
+        <p class="tw-text-xs tw-font-condensed tw-mb-0 tw-text-green">
             <b>
                 {forum.activeUsers}
             </b>
