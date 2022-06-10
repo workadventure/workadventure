@@ -43,6 +43,7 @@
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
+    <img class="traductor" src="resources/traductor.png" alt="Traductor icon" />
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
     <section class="messagesList" bind:this={listDom}>
         <ul>
@@ -67,6 +68,12 @@
         cursor: pointer;
     }
 
+    .traductor {
+        position: absolute;
+        top: -2.5rem;
+        right: 1.4rem;
+    }
+
     p.system-text {
         border-radius: 8px;
         margin-bottom: 10px;
@@ -81,7 +88,7 @@
         z-index: 1000;
         pointer-events: auto;
         position: absolute;
-        top: 0;
+        bottom: 0;
         left: 0;
         height: 100vh;
         width: 30vw;
@@ -90,6 +97,7 @@
         color: whitesmoke;
         display: flex;
         flex-direction: column;
+        max-height: 90vh;
 
         padding: 10px;
 

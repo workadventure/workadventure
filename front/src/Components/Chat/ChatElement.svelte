@@ -28,11 +28,11 @@
         return targets.length - 1 === index;
     }
 
-    function showMyMessage(message: string): string {
+    function showNoTranslatedMessage(message: string): string {
         return urlifyText(message);
     }
 
-    async function showOtherPeopleMessage(message: string): Promise<string> {
+    async function showTranslatedMessage(message: string): Promise<string> {
         const maybeUrlyfied = urlifyText(message);
         // Check if is a url
         if (maybeUrlyfied != message) {
@@ -98,8 +98,8 @@
             const hash: number = makeHash(toLanguage, message);
             if (hashExists(hash)) {
                 const content: TranslationCache = getContentFromHash(hash);
-                console.log("content", content.translatedText)
-                debugger
+                console.log("content", content.translatedText);
+                debugger;
                 resolve(content.translatedText);
             } else {
                 makeRequest(
@@ -140,19 +140,31 @@
                 />{#if !isLastIteration(index)}, {/if}{/each} left
             <span class="date">({renderDate(message.date)})</span>
         {:else if message.type === ChatMessageTypes.me}
-            <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
-            {#each texts as text}
-                <div><p class="my-text">{@html showMyMessage(text)}</p></div>
-            {/each}
+            <div class="card_pink">
+                <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
+                {#each texts as text}
+                    <div class="blue-wa">{@html showNoTranslatedMessage(text)}</div>
+                    {#await showTranslatedMessage(text)}
+                        <div class="red-wa">Traduction en cours...</div>
+                    {:then text}
+                        <div class="red-wa">{@html text}</div>
+                    {/await}
+                {/each}
+            </div>
         {:else}
-            <h4><ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span></h4>
-            {#each texts as text}
-                {#await showOtherPeopleMessage(text)}
-                    <div><p class="other-text" />Traduction en cours...</div>
-                {:then text}
-                    <div><p class="other-text">{@html text}</p></div>
-                {/await}
-            {/each}
+            <div class="card_white">
+                <h4>
+                    <ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span>
+                </h4>
+                {#each texts as text}
+                    <div class="blue-wa">{@html showNoTranslatedMessage(text)}</div>
+                    {#await showTranslatedMessage(text)}
+                        <div class="red-wa">Traduction en cours...</div>
+                    {:then text}
+                        <div class="red-wa">{@html text}</div>
+                    {/await}
+                {/each}
+            </div>
         {/if}
     </div>
 </div>
@@ -162,9 +174,30 @@
     p {
         font-family: Lato;
     }
+
+    .card_pink {
+        background-color: #ff465a;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem 0.5rem 1rem;
+    }
+
+    .card_white {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem 0.5rem 1rem;
+    }
+
+    .blue-wa {
+        color: #18314b;
+    }
+
+    .red-wa {
+        color: #ff465a;
+    }
     div.chatElement {
         display: flex;
         margin-bottom: 20px;
+        position: relative;
 
         .messagePart {
             flex-grow: 1;
