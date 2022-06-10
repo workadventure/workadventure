@@ -25,7 +25,6 @@ export const makeHash: Function = function (toLanguage: string, originalText: st
 };
 
 export const hashExists: Function = function (hash: number): boolean {
-    console.log("Start", translationCache.length)
     for (let i = 0; i < translationCache.length; i++) {
         const el = translationCache[i];
         console.log(hash, el)

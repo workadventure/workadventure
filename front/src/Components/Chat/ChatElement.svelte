@@ -4,15 +4,7 @@
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import ChatPlayerName from "./ChatPlayerName.svelte";
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
-    import {
-        TranslationCache,
-        translationCache,
-        makeHash,
-        hashExists,
-        addHash,
-        getContentFromHash,
-    } from "../../Cache/TranslationCache";
-import { resolve } from "path";
+    import { TranslationCache, makeHash, hashExists, addHash, getContentFromHash } from "../../Cache/TranslationCache";
 
     export let message: ChatMessage;
     export let line: number;
@@ -40,14 +32,14 @@ import { resolve } from "path";
         return urlifyText(message);
     }
 
-    function showOtherPeopleMessage(message: string): string {
+    async function showOtherPeopleMessage(message: string): Promise<string> {
         const maybeUrlyfied = urlifyText(message);
         // Check if is a url
         if (maybeUrlyfied != message) {
             return maybeUrlyfied;
         }
         // Is not a url. Translate it
-        return translate(message);
+        return await translate(message);
     }
 
     function makeRequest(
@@ -92,46 +84,44 @@ import { resolve } from "path";
         });
     }
 
-    interface DeeplTranslationKey {
+    interface DeeplTranslationEntry {
         detected_source_language: string;
         text: string;
     }
 
     interface DeeplResponse {
-        translations: Array<DeeplTranslationKey>;
+        translations: Array<DeeplTranslationEntry>;
     }
 
-    function translate(message: string, toLanguage = "fr"): string {
-        // return new Promise(function (resolve, reject) {
-
-        const hash: number = makeHash(toLanguage, message);
-        console.log("main", message, hash, hashExists(hash) ? "true" : "false");
-        if (hashExists(hash)) {
-            const content: TranslationCache = getContentFromHash(hash);
-            return content.translatedText;
-        } else {
-            makeRequest(
-                "https://api-free.deepl.com/v2/translate?auth_key=" +
-                    authKey +
-                    "&text=" +
-                    message +
-                    "&target_lang=" +
-                    toLanguage,
-                "POST"
-            )
-                .then((res) => {
-                    const data: DeeplResponse = JSON.parse(res.responseText);
-                    addHash(hash, data.translations[0].text, data.translations[0].detected_source_language);
-                    // resolve(data.translations[0].text);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    // reject(err);
-                });
-        }
-
-        // });
-        return message;
+    function translate(message: string, toLanguage = "fr"): Promise<string> {
+        return new Promise(function (resolve, reject) {
+            const hash: number = makeHash(toLanguage, message);
+            if (hashExists(hash)) {
+                const content: TranslationCache = getContentFromHash(hash);
+                console.log("content", content.translatedText)
+                debugger
+                resolve(content.translatedText);
+            } else {
+                makeRequest(
+                    "https://api-free.deepl.com/v2/translate?auth_key=" +
+                        authKey +
+                        "&text=" +
+                        message +
+                        "&target_lang=" +
+                        toLanguage,
+                    "POST"
+                )
+                    .then((res) => {
+                        const data: DeeplResponse = JSON.parse(res.responseText);
+                        addHash(hash, data.translations[0].detected_source_language, data.translations[0].text);
+                        resolve(data.translations[0].text);
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        reject(err);
+                    });
+            }
+        });
     }
 </script>
 
@@ -157,7 +147,11 @@ import { resolve } from "path";
         {:else}
             <h4><ChatPlayerName player={author} {line} />: <span class="date">({renderDate(message.date)})</span></h4>
             {#each texts as text}
-                <div><p class="other-text">{@html showOtherPeopleMessage(text)}</p></div>
+                {#await showOtherPeopleMessage(text)}
+                    <div><p class="other-text" />Traduction en cours...</div>
+                {:then text}
+                    <div><p class="other-text">{@html text}</p></div>
+                {/await}
             {/each}
         {/if}
     </div>
