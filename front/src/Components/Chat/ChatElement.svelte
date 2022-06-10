@@ -98,7 +98,6 @@
             const hash: number = makeHash(toLanguage, message);
             if (hashExists(hash)) {
                 const content: TranslationCache = getContentFromHash(hash);
-                console.log("content", content.translatedText);
                 debugger;
                 resolve(content.translatedText);
             } else {
