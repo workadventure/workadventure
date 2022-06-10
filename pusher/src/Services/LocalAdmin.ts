@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Default Room", uri: matched?.join().substring(0, -1) }],
+            mucRooms: [{ name: "Default Room", type: 'default', uri: matched?.join().substring(0, -1) }, { name: "Welcome", type: 'forum', uri: matched?.join()+'/welcome' }],
         });
     }
 

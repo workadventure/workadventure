@@ -42,7 +42,7 @@ export class MucManager {
                 chatZone.mucUrl = `${this.roomUrl}/${chatZone.chatName}`;
                 chatZone.mucCreated = false;
             });
-            // If the ADMIN_URL is not set, so there is no admin and we define a default chatForum MUC room
+            // If the ADMIN_URL is not set, so there is no admin, and we define a default chatForum MUC room
             if(mapDetails.mucRooms === null){
                 const chatName = 'Welcome';
                 this.chatZones.set(chatName, {chatName: chatName, mucUrl: `${this.roomUrl}/${chatName}`, mucCreated: false} as ChatZone);
