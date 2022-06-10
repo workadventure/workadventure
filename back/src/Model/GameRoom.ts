@@ -121,7 +121,7 @@ export class GameRoom {
             mapDetails.thirdParty ?? undefined
         );
 
-        const mucManager = await gameRoom.getMucManager();
+        const mucManager = await gameRoom.getMucManager(mapDetails);
         await mucManager.init();
 
         return gameRoom;
@@ -586,6 +586,7 @@ export class GameRoom {
                 authenticationMandatory: null,
                 group: null,
                 showPoweredBy: true,
+                mucRooms: null
             };
         }
 
@@ -669,7 +670,7 @@ export class GameRoom {
     private mucManagerPromise: Promise<MucManager> | undefined;
     private mucManagerLastLoad: Date | undefined;
 
-    private getMucManager(): Promise<MucManager> {
+    private getMucManager(mapDetails: MapDetailsData): Promise<MucManager> {
         const lastMapUrl = this.mapUrl;
         if (!this.mucManagerPromise) {
             // For localhost maps
@@ -677,7 +678,7 @@ export class GameRoom {
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {
-                    return new MucManager(this.roomUrl, map);
+                    return new MucManager(this.roomUrl, map, mapDetails);
                 })
                 .catch((e) => {
                     if (e instanceof LocalUrlError) {
@@ -694,7 +695,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        return new MucManager(this.roomUrl, null);
+                        return new MucManager(this.roomUrl, null, mapDetails);
                     } else {
                         // An error occurred while loading the map
                         // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
@@ -710,7 +711,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        return new MucManager(this.roomUrl, null);
+                        return new MucManager(this.roomUrl, null, mapDetails);
                     }
                 });
         }

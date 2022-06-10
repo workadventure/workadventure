@@ -1,6 +1,7 @@
 import {ITiledMap, ITiledMapLayer, ITiledMapObject} from "@workadventure/tiled-map-type-guard/dist";
 import Axios, {AxiosError, AxiosInstance} from "axios";
 import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
+import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
 
 interface ChatZone {
     chatName?: string;
@@ -21,24 +22,31 @@ export class MucManager {
      * @param roomUrl
      * @param map The map can be "null" if it is hosted on a private network. In this case, we assume this is a test setup and bypass any server-side checks.
      */
-    constructor(private roomUrl: string, private map: ITiledMap | null) {
+    constructor(private roomUrl: string, private map: ITiledMap | null, private mapDetails: MapDetailsData) {
+        const auth = Buffer.from(EJABBERD_USER+'@'+EJABBERD_DOMAIN+':'+EJABBERD_PASSWORD).toString('base64');
+        this.axios = Axios.create({
+            baseURL: 'http://'+EJABBERD_URI+'/api/',
+            headers: {
+                'Authorization': 'Basic '+auth,
+                timeout: 10000
+            }
+        });
+
+        this.chatZones = new Map<string, ChatZone>();
+
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
             this.chatZones = MucManager.findChatZonesInMap(map);
-            this.chatZones?.forEach(chatZone => {
+            this.chatZones.forEach(chatZone => {
                 chatZone.mucUrl = `${this.roomUrl}/${chatZone.chatName}`;
                 chatZone.mucCreated = false;
             });
-
-            const auth = Buffer.from(EJABBERD_USER+'@'+EJABBERD_DOMAIN+':'+EJABBERD_PASSWORD).toString('base64');
-            this.axios = Axios.create({
-                baseURL: 'http://'+EJABBERD_URI+'/api/',
-                headers: {
-                    'Authorization': 'Basic '+auth,
-                    timeout: 10000
-                }
-            });
+            // If the ADMIN_URL is not set, so there is no admin and we define a default chatForum MUC room
+            if(mapDetails.mucRooms === null){
+                const chatName = 'Welcome';
+                this.chatZones.set(chatName, {chatName: chatName, mucUrl: `${this.roomUrl}/${chatName}`, mucCreated: false} as ChatZone);
+            }
         }
     }
 

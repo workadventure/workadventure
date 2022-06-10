@@ -55,6 +55,9 @@ export const isMapDetailsData = z.object({
         description: 'The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)',
         example: "myorg/myworld",
     }),
+    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
+        description: "The MUC room is a room of message",
+    }),
 
     contactPage: extendApi(z.optional(z.nullable(z.string())), {
         description: "The URL to the contact page",
