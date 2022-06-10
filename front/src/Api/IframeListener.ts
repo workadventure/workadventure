@@ -38,6 +38,9 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import {SetSharedPlayerVariableEvent} from "./Events/SetSharedPlayerVariableEvent";
+import {EnablePlayersTrackingEvent} from "./Events/EnablePlayersTrackingEvent";
+import {AddPlayerInterface} from "../Phaser/Game/AddPlayerInterface";
+import {AddPlayerEvent, isAddPlayerEvent} from "./Events/AddPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -131,6 +134,8 @@ class IframeListener {
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
+    private readonly iframesTrackingPlayers = new Set<HTMLIFrameElement>();
+    private readonly iframesTrackingPlayersMovement = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
@@ -320,6 +325,8 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
+                    } else if (iframeEvent.type == "enablePlayersTracking") {
+                        this.enablePlayersTracking(iframeEvent.data, iframe);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -573,6 +580,15 @@ class IframeListener {
     }
 
     /**
+     * Sends the message... to all iframes listening for users.
+     */
+    public postMessageToPlayerListeners(message: IframeResponseEvent) {
+        for (const iframe of this.iframesTrackingPlayers) {
+            iframe.contentWindow?.postMessage(message, "*");
+        }
+    }
+
+    /**
      * Registers a callback that can be used to respond to some query (as defined in the IframeQueryMap type).
      *
      * Important! There can be only one "answerer" so registering a new one will unregister the old one.
@@ -604,6 +620,33 @@ class IframeListener {
                 );
             }
         }
+    }
+
+    private enablePlayersTracking(options: EnablePlayersTrackingEvent, iframe: HTMLIFrameElement) {
+        if (options.trackMovement) {
+            this.iframesTrackingPlayers.add(iframe);
+            this.iframesTrackingPlayersMovement.add(iframe);
+        } else if (options.trackPlayers) {
+            this.iframesTrackingPlayers.add(iframe);
+            this.iframesTrackingPlayersMovement.delete(iframe);
+        } else {
+            this.iframesTrackingPlayers.delete(iframe);
+            this.iframesTrackingPlayersMovement.delete(iframe);
+        }
+    }
+
+    public dispatchAddPlayerEvent(event: AddPlayerEvent) {
+        this.postMessageToPlayerListeners({
+            type: "addRemotePlayer",
+            data: event,
+        });
+    }
+
+    public dispatchRemovePlayerEvent(userId: number) {
+        this.postMessageToPlayerListeners({
+            type: "removeRemotePlayer",
+            data: userId,
+        });
     }
 }
 

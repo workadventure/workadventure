@@ -104,7 +104,11 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {
+    availabilityStatusToJSON,
+    ErrorScreenMessage,
+    PlayerDetailsUpdatedMessage
+} from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
@@ -1962,9 +1966,18 @@ ${escapedMessage}
                     break;
                 case "AddPlayerEvent":
                     this.doAddPlayer(event.event);
+                    iframeListener.dispatchAddPlayerEvent({
+                        userId: event.event.userId,
+                        name: event.event.name,
+                        userUuid: event.event.userUuid,
+                        outlineColor: event.event.outlineColor,
+                        availabilityStatus: availabilityStatusToJSON(event.event.availabilityStatus),
+                        position: event.event.position,
+                    });
                     break;
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
+                    iframeListener.dispatchRemovePlayerEvent(event.userId);
                     break;
                 case "UserMovedEvent": {
                     this.doUpdatePlayerPosition(event.event);
