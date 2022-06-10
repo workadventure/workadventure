@@ -5,11 +5,14 @@
     import ChatPlayerName from "./ChatPlayerName.svelte";
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
     import { TranslationCache, makeHash, hashExists, addHash, getContentFromHash } from "../../Cache/TranslationCache";
+    import LL from "../../i18n/i18n-svelte";
+    // import { WA } from "../../iframe_api"
 
     export let message: ChatMessage;
     export let line: number;
     const chatStyleLink = "color: white; text-decoration: underline;";
     const authKey = "d4df4313-9277-6916-b60c-efd4b5ecc305:fx";
+    let isUsingTranslation = true;
 
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
@@ -29,6 +32,7 @@
     }
 
     function showNoTranslatedMessage(message: string): string {
+        console.log(WA.state.hasVariable)
         return urlifyText(message);
     }
 
@@ -39,13 +43,22 @@
             return maybeUrlyfied;
         }
         // Is not a url. Translate it
-        return await translate(message);
+        if (isUsingTranslation) {
+            return await translate(message);
+        }
+        return await new Promise(function (resolve, reject) {
+            resolve(message);
+        });
     }
+
+    // function getCurrentLanguage(): string {
+    //     // return window.WA.state.hasVariable;
+    // }
 
     function makeRequest(
         url: string,
         method: string = "GET",
-        headers: { [key: string]: any } = { "Content-Type": "application/x-www-form-urlencoded" }
+        headers: { [key: string]: string } = { "Content-Type": "application/x-www-form-urlencoded" }
     ): Promise<XMLHttpRequest> {
         // Create the XHR request
         var request = new XMLHttpRequest();
@@ -142,12 +155,7 @@
             <div class="card_pink">
                 <h4>Me: <span class="date">({renderDate(message.date)})</span></h4>
                 {#each texts as text}
-                    <div class="">{@html showNoTranslatedMessage(text)}</div>
-                    {#await showTranslatedMessage(text)}
-                        <div class="blue-wa">Traduction en cours...</div>
-                    {:then text}
-                        <div class="blue-wa">{@html text}</div>
-                    {/await}
+                    <div>{@html showNoTranslatedMessage(text)}</div>
                 {/each}
             </div>
         {:else}
@@ -157,11 +165,13 @@
                 </h4>
                 {#each texts as text}
                     <div class="blue-wa">{@html showNoTranslatedMessage(text)}</div>
-                    {#await showTranslatedMessage(text)}
-                        <div class="red-wa">Traduction en cours...</div>
-                    {:then text}
-                        <div class="red-wa">{@html text}</div>
-                    {/await}
+                    {#if isUsingTranslation}
+                        {#await showTranslatedMessage(text)}
+                            <div class="red-wa">{@html $LL.chat.waitingTranslation()}</div>
+                        {:then text}
+                            <div class="red-wa">{@html text}</div>
+                        {/await}
+                    {/if}
                 {/each}
             </div>
         {/if}

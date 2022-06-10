@@ -7,6 +7,7 @@ const chat: BaseTranslation = {
         visitCard: "Visit card",
         addFriend: "Add friend",
     },
+    waitingTranslation: "Translation in progress...",
 };
 
 export default chat;
