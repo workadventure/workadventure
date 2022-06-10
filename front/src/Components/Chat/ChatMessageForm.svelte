@@ -43,6 +43,7 @@
         display: flex;
         padding-left: 4px;
         padding-right: 4px;
+        width: 100%;
 
         input {
             flex: auto;

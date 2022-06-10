@@ -95,6 +95,7 @@
     div.chatElement {
         display: flex;
         margin-bottom: 20px;
+        
 
         .messagePart {
             flex-grow: 1;
