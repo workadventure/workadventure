@@ -669,7 +669,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld("en", clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
