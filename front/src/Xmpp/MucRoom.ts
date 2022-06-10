@@ -48,7 +48,7 @@ export class MucRoom {
         public readonly name: string,
         private roomJid: JID,
         private jid: string,
-        private type: string,
+        public type: string,
         private isPersistent: boolean = true
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
@@ -166,15 +166,15 @@ export class MucRoom {
         this.connection.emitBanUserByUuid(playUri, userJID.local, name, "Test message de ban");
     }
 
-    public rankUp(userJID: JID){
+    public rankUp(userJID: string | JID){
         this.affiliate("admin", userJID);
     }
 
-    public rankDown(userJID: JID){
+    public rankDown(userJID: string | JID){
         this.affiliate("none", userJID);
     }
 
-    private affiliate(type: string, userJID: JID) {
+    private affiliate(type: string, userJID: string | JID) {
         const messageMucAffiliateUser = xml(
             "iq",
             {

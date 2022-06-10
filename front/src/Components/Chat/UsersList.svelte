@@ -139,9 +139,6 @@
     ul li div.nick {
         align-items: flex-end;
     }
-    ul li div.nick span.is-admin {
-        color: red;
-    }
     button[disabled] {
         color: white;
     }
