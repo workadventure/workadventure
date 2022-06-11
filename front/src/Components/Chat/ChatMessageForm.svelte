@@ -1,7 +1,6 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
     import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
-    import { scriptUtils } from "../../Api/ScriptUtils";
 
     export const handleForm = {
         blur() {
@@ -45,6 +44,7 @@
         display: flex;
         padding-left: 4px;
         padding-right: 4px;
+        width: 100%;
 
         ::placeholder {
             color: #18314b;

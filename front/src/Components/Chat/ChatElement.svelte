@@ -6,13 +6,13 @@
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
     import { TranslationCache, makeHash, hashExists, addHash, getContentFromHash } from "../../Cache/TranslationCache";
     import LL from "../../i18n/i18n-svelte";
-    // import { WA } from "../../iframe_api"
+    import { localUserStore } from "../../Connexion/LocalUserStore";
 
     export let message: ChatMessage;
     export let line: number;
     const chatStyleLink = "color: white; text-decoration: underline;";
     const authKey = "d4df4313-9277-6916-b60c-efd4b5ecc305:fx";
-    let isUsingTranslation = true;
+    let isUsingTranslation = localUserStore.hasEnabledTranslation();
 
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
@@ -32,28 +32,20 @@
     }
 
     function showNoTranslatedMessage(message: string): string {
-        console.log(WA.state.hasVariable)
         return urlifyText(message);
     }
 
     async function showTranslatedMessage(message: string): Promise<string> {
+        isUsingTranslation = localUserStore.hasEnabledTranslation();
+        console.log(isUsingTranslation)
         const maybeUrlyfied = urlifyText(message);
         // Check if is a url
         if (maybeUrlyfied != message) {
             return maybeUrlyfied;
         }
         // Is not a url. Translate it
-        if (isUsingTranslation) {
-            return await translate(message);
-        }
-        return await new Promise(function (resolve, reject) {
-            resolve(message);
-        });
+        return await translate(message);
     }
-
-    // function getCurrentLanguage(): string {
-    //     // return window.WA.state.hasVariable;
-    // }
 
     function makeRequest(
         url: string,
@@ -111,7 +103,6 @@
             const hash: number = makeHash(toLanguage, message);
             if (hashExists(hash)) {
                 const content: TranslationCache = getContentFromHash(hash);
-                debugger;
                 resolve(content.translatedText);
             } else {
                 makeRequest(
@@ -135,6 +126,7 @@
             }
         });
     }
+
 </script>
 
 <div class="chatElement">
@@ -179,8 +171,7 @@
 </div>
 
 <style lang="scss">
-    h4,
-    p {
+    .chatElement {
         font-family: Lato;
     }
 
@@ -218,21 +209,21 @@
                 color: gray;
             }
 
-            div > p {
-                border-radius: 8px;
-                margin-bottom: 10px;
-                padding: 6px;
-                overflow-wrap: break-word;
-                max-width: 100%;
-                display: inline-block;
-                &.other-text {
-                    background: gray;
-                }
+            // div > p {
+            //     border-radius: 8px;
+            //     margin-bottom: 10px;
+            //     padding: 6px;
+            //     overflow-wrap: break-word;
+            //     max-width: 100%;
+            //     display: inline-block;
+            //     &.other-text {
+            //         background: gray;
+            //     }
 
-                &.my-text {
-                    background: #6489ff;
-                }
-            }
+            //     &.my-text {
+            //         background: #6489ff;
+            //     }
+            // }
         }
     }
 </style>

@@ -28,6 +28,8 @@ const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
+const enableTranslation = "enableTranslation";
+const currentLanguage = "language";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -37,6 +39,24 @@ class LocalUserStore {
     getLocalUser(): LocalUser | null {
         const data = localStorage.getItem("localUser");
         return data ? JSON.parse(data) : null;
+    }
+
+    getLanguage(): string {
+        const data: string|null = localStorage.getItem(currentLanguage);
+        return data ? data : "en_US";
+    }
+
+    enableTranslation(): void {
+        localStorage.setItem(enableTranslation, "true");
+    }
+
+    disableTranslation(): void {
+        localStorage.setItem(enableTranslation, "false");
+    }
+
+    hasEnabledTranslation(): boolean {
+        const data: string|null = localStorage.getItem(enableTranslation);
+        return data && data == "true" ? true : false;
     }
 
     setName(name: string): void {
