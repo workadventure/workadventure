@@ -12,6 +12,8 @@
     let chatWindowElement: HTMLElement;
     let handleFormBlur: { blur(): void };
     let autoscroll: boolean;
+    let switchValue = true;
+    let translationEnabled = localUserStore.hasEnabledTranslation();
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -40,10 +42,10 @@
         }
     }
 
-    let switchValue = true;
     function toggleSwitch(e: any) {
-        const translationEnabled = e.target.checked ? true : false;
-        if(translationEnabled) {
+        translationEnabled = !translationEnabled;
+        // Store the data during the session
+        if (translationEnabled) {
             localUserStore.enableTranslation();
         } else {
             localUserStore.disableTranslation();
@@ -60,15 +62,15 @@
         <ul>
             <li><p class="system-text">{$LL.chat.intro()}</p></li>
             {#each $chatMessagesStore as message, i}
-                <li><ChatElement {message} line={i} /></li>
+                <li><ChatElement bind:translationEnabled {message} line={i} /></li>
             {/each}
         </ul>
     </section>
     <section class="messageForm">
-        <div class="transletSwitch">
-            <img width="29" height="29" src="resources/chat/translation-logo.png" alt="Translation logo" />
+        <div class="transletSwitch" on:click={toggleSwitch}>
+            <img src="resources/chat/translation-logo.png" alt="Translation logo" class="translation-logo"/>
             <label class="switch">
-                <input type="checkbox" bind:checked={switchValue} on:input={toggleSwitch} />
+                <input type="checkbox" bind:checked={translationEnabled} on:input={toggleSwitch} />
                 <span class="slider round" />
             </label>
         </div>
@@ -84,12 +86,6 @@
         font-size: 30px;
         line-height: 25px;
         cursor: pointer;
-    }
-    .transletSwitch {
-        display: flex;
-        align-items: center;
-        margin-left: 0.5em;
-        margin-right: 0.5em;
     }
 
     .traductor {
@@ -143,12 +139,30 @@
             flex: 0 70px;
             padding-top: 15px;
         }
+
+        .transletSwitch {
+            display: flex;
+            align-items: center;
+            margin-left: 0.5em;
+            margin-right: 0.5em;
+            border: solid rgb(5, 31, 51, 0.9) 2px;
+            border-radius: 40px;
+            padding-left: 0.3em;
+            padding-right: 0.3em;
+        }
         .switch {
             position: relative;
             display: inline-block;
             width: 60px;
             height: 34px;
-            margin-left: 0.5em;
+            margin-left: 0.3em;
+            margin-bottom: -0.1em;
+        }
+
+        .translation-logo {
+            border-radius: 20px;
+            width: 29px;
+            height: 29px;
         }
 
         .switch input {

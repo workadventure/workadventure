@@ -6,13 +6,12 @@
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
     import { TranslationCache, makeHash, hashExists, addHash, getContentFromHash } from "../../Cache/TranslationCache";
     import LL from "../../i18n/i18n-svelte";
-    import { localUserStore } from "../../Connexion/LocalUserStore";
 
     export let message: ChatMessage;
     export let line: number;
+    export let translationEnabled: boolean;
     const chatStyleLink = "color: white; text-decoration: underline;";
     const authKey = "d4df4313-9277-6916-b60c-efd4b5ecc305:fx";
-    let isUsingTranslation = localUserStore.hasEnabledTranslation();
 
     $: author = message.author as PlayerInterface;
     $: targets = message.targets || [];
@@ -32,12 +31,11 @@
     }
 
     function showNoTranslatedMessage(message: string): string {
+        console.log(translationEnabled)
         return urlifyText(message);
     }
 
     async function showTranslatedMessage(message: string): Promise<string> {
-        isUsingTranslation = localUserStore.hasEnabledTranslation();
-        console.log(isUsingTranslation)
         const maybeUrlyfied = urlifyText(message);
         // Check if is a url
         if (maybeUrlyfied != message) {
@@ -157,7 +155,7 @@
                 </h4>
                 {#each texts as text}
                     <div class="blue-wa">{@html showNoTranslatedMessage(text)}</div>
-                    {#if isUsingTranslation}
+                    {#if translationEnabled }
                         {#await showTranslatedMessage(text)}
                             <div class="red-wa">{@html $LL.chat.waitingTranslation()}</div>
                         {:then text}
