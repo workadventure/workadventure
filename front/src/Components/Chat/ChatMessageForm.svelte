@@ -57,8 +57,10 @@
             flex: auto;
             background-color: #254560;
             color: white;
-            border-bottom-left-radius: 4px;
-            border-top-left-radius: 4px;
+            //border-bottom-left-radius: 4px;
+            //border-top-left-radius: 4px;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
             border: none;
             font-size: 22px;
             font-family: Lato;

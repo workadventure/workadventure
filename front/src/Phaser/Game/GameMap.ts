@@ -63,9 +63,11 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
-    public readonly areas: ITiledMapObject[] = [];
 
+    private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
     private readonly areasPositionOffsetY: number = 16;
+    private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
+    private unnamedAreasCounter = 0;
 
     public exitUrls: Array<string> = [];
 
@@ -79,7 +81,19 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
-        this.areas = this.tiledObjects.filter((object) => ["zone", "area"].includes(object.type));
+        this.tiledObjects
+            .filter((object) => ["zone", "area"].includes(object.type))
+            .forEach((area) => {
+                let name = area.name;
+                if (!name) {
+                    name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
+                    this.unnamedAreasCounter++;
+                }
+                if (this.areas.get(name)) {
+                    console.warn(`Area name "${name}" is already being used! Please use unique names`);
+                }
+                this.areas.set(name, area);
+            });
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -224,6 +238,11 @@ export class GameMap {
         return this.flatLayers.find((layer) => layer.name === layerName);
     }
 
+    public findObject(objectName: string, objectType?: string): ITiledMapObject | undefined {
+        const object = this.getObjectWithName(objectName);
+        return !objectType ? object : objectType === object?.type ? object : undefined;
+    }
+
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
         return this.phaserLayers.find((layer) => layer.layer.name === layerName);
     }
@@ -272,25 +291,47 @@ export class GameMap {
             console.warn('Could not find layer "' + layerName + '" when calling setProperty');
             return;
         }
-        if (layer.properties === undefined) {
-            layer.properties = [];
+        this.setProperty(layer, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.triggerLayersChange();
+    }
+
+    public setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ) {
+        const object = this.findObject(areaName, "area");
+        if (object === undefined) {
+            console.warn('Could not find area "' + areaName + '" when calling setProperty');
+            return;
         }
-        const property = layer.properties.find((property) => property.name === propertyName);
+        this.setProperty(object, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.triggerAreasChange();
+    }
+
+    private setProperty(
+        holder: { properties?: ITiledMapProperty[] },
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ): void {
+        if (holder.properties === undefined) {
+            holder.properties = [];
+        }
+        const property = holder.properties.find((property) => property.name === propertyName);
         if (property === undefined) {
             if (propertyValue === undefined) {
                 return;
             }
-            layer.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
+            holder.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
             return;
         }
         if (propertyValue === undefined) {
-            const index = layer.properties.indexOf(property);
-            layer.properties.splice(index, 1);
+            const index = holder.properties.indexOf(property);
+            holder.properties.splice(index, 1);
         }
         property.value = propertyValue;
-
-        this.triggerAllProperties();
-        this.triggerLayersChange();
     }
 
     /**
@@ -331,6 +372,47 @@ export class GameMap {
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {
         return this.tiledObjects.find((object) => object.name === name);
+    }
+
+    public getArea(name: string): ITiledMapObject | undefined {
+        return this.areas.get(name);
+    }
+
+    public setArea(name: string, area: ITiledMapObject): void {
+        this.areas.set(name, area);
+        if (this.isPlayerInsideArea(name)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+
+    public isPlayerInsideArea(areaName: string): boolean {
+        return (
+            this.getAreasOnPosition(this.position, this.areasPositionOffsetY).findIndex(
+                (area) => area.name === areaName
+            ) !== -1
+        );
+    }
+
+    public triggerSpecificAreaOnEnter(area: ITiledMapObject): void {
+        for (const callback of this.enterAreaCallbacks) {
+            callback([area], []);
+        }
+    }
+
+    public triggerSpecificAreaOnLeave(area: ITiledMapObject): void {
+        for (const callback of this.leaveAreaCallbacks) {
+            callback([area], []);
+        }
+    }
+
+    public deleteArea(name: string): void {
+        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY).find(
+            (area) => area.name === name
+        );
+        if (area) {
+            this.triggerSpecificAreaOnLeave(area);
+        }
+        this.areas.delete(name);
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
@@ -446,6 +528,7 @@ export class GameMap {
         let areasChange = false;
         if (enterAreas.size > 0) {
             const areasArray = Array.from(enterAreas);
+
             for (const callback of this.enterAreaCallbacks) {
                 callback(areasArray, areasByNewPosition);
             }
@@ -515,14 +598,16 @@ export class GameMap {
     }
 
     private getAreasOnPosition(position?: { x: number; y: number }, offsetY: number = 0): ITiledMapObject[] {
-        return position
-            ? this.areas.filter((area) => {
-                  if (!position) {
-                      return false;
-                  }
-                  return MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area);
-              })
-            : [];
+        if (!position) {
+            return [];
+        }
+        const overlappedAreas: ITiledMapObject[] = [];
+        for (const area of this.areas.values()) {
+            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
+                overlappedAreas.push(area);
+            }
+        }
+        return overlappedAreas;
     }
 
     private getTileProperty(index: number): Array<ITiledMapProperty> {

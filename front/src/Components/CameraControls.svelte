@@ -78,7 +78,7 @@
 </script>
 
 <div class="btn-cam-action">
-    <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
+    <div class="btn-layout action-b-btn" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
             <img class="noselect" src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
         {:else}
@@ -87,7 +87,7 @@
     </div>
 
     <div
-        class="btn-follow"
+        class="btn-follow action-b-btn"
         class:hide={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
         class:disabled={$followStateStore !== "off"}
         on:click={() => analyticsClient.follow()}
@@ -97,7 +97,7 @@
     </div>
 
     <div
-        class="btn-lock"
+        class="btn-lock action-b-btn"
         class:hide={$peerStore.size === 0 || $silentStore}
         class:disabled={$currentPlayerGroupLockStateStore}
         on:click={() => analyticsClient.lockDiscussion()}
@@ -107,7 +107,7 @@
     </div>
 
     <div
-        class="btn-monitor"
+        class="btn-monitor action-b-btn"
         on:click={() => analyticsClient.screenSharing()}
         on:click={screenSharingClick}
         class:hide={!$screenSharingAvailableStore || $silentStore}
@@ -121,7 +121,7 @@
     </div>
 
     <div
-        class="btn-video"
+        class="btn-video action-b-btn"
         on:click={() => analyticsClient.camera()}
         on:click={cameraClick}
         class:disabled={!$requestedCameraState || $silentStore}
@@ -134,7 +134,7 @@
     </div>
 
     <div
-        class="btn-micro"
+        class="btn-micro action-b-btn"
         on:click={() => analyticsClient.microphone()}
         on:click={microphoneClick}
         class:disabled={!$requestedMicrophoneState || $silentStore}
@@ -149,6 +149,13 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
+    .action-b-btn{
+        background-color: theme('colors.medium-purple');
+        opacity: 0.95;
+    }
+    .action-b-btn:hover{
+        background-color: theme('colors.light-purple');
+    }
 
     .btn-cam-action {
         pointer-events: all;
@@ -178,7 +185,6 @@
         border: solid 0px black;
         width: 44px;
         height: 44px;
-        background: #666;
         box-shadow: 2px 2px 24px #444;
         border-radius: 48px;
         transform: translateY(15px);
@@ -200,7 +206,6 @@
         transform: translateY(0);
     }
     .btn-cam-action div:hover {
-        background: #407cf7;
         box-shadow: 4px 4px 48px #666;
         transition: 120ms;
     }

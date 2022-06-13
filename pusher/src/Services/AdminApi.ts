@@ -8,7 +8,6 @@ import { isWokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import qs from "qs";
 import { AdminInterface } from "./AdminInterface";
 import { AuthTokenData, jwtTokenManager } from "./JWTTokenManager";
-import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import { extendApi } from "@anatine/zod-openapi";
 
 export interface AdminBannedData {
@@ -66,24 +65,10 @@ class AdminApi implements AdminInterface {
                 userId = authTokenData.identifier;
                 //eslint-disable-next-line @typescript-eslint/no-unused-vars
             } catch (e) {
-                try {
-                    // Decode token, in this case we don't need to create new token.
-                    authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
-                    userId = authTokenData.identifier;
-                    console.info("JWT expire, but decoded:", userId);
-                } catch (e) {
-                    if (e instanceof InvalidTokenError) {
-                        throw new Error("Token decrypted error");
-                        // The token was not good, redirect user on login page
-                        //res.status(401);
-                        //res.send("Token decrypted error");
-                        //return;
-                    } else {
-                        throw new Error("Error on decryption of token :" + e);
-                        //this.castErrorToResponse(e, res);
-                        //return;
-                    }
-                }
+                // Decode token, in this case we don't need to create new token.
+                authTokenData = jwtTokenManager.verifyJWTToken(authToken, true);
+                userId = authTokenData.identifier;
+                console.info("JWT expire, but decoded:", userId);
             }
         }
 
@@ -305,7 +290,7 @@ class AdminApi implements AdminInterface {
         reportedUserUuid: string,
         reportedUserComment: string,
         reporterUserUuid: string,
-        reportWorldSlug: string,
+        roomUrl: string,
         locale?: string
     ) {
         /**
@@ -334,9 +319,9 @@ class AdminApi implements AdminInterface {
          *        description: "The identifier of the reporter user \n It can be an uuid or an email"
          *        type: "string"
          *        example: "998ce839-3dea-4698-8b41-ebbdf7688ad8"
-         *      - name: "reportWorldSlug"
+         *      - name: "roomUrl"
          *        in: "query"
-         *        description: "The slug of the world where the report is made"
+         *        description: "The URL of the room where the report is made"
          *        type: "string"
          *        example: "/@/teamSlug/worldSlug/roomSlug"
          *     responses:
@@ -349,7 +334,7 @@ class AdminApi implements AdminInterface {
                 reportedUserUuid,
                 reportedUserComment,
                 reporterUserUuid,
-                reportWorldSlug,
+                reportWorldSlug: roomUrl,
             },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}`, "Accept-Language": locale ?? "en" },

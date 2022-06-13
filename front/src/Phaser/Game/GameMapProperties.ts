@@ -29,6 +29,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",
     PLAY_AUDIO = "playAudio",
     PLAY_AUDIO_LOOP = "playAudioLoop",
+    POLICY = "policy",
     READABLE_BY = "readableBy",
     SCRIPT = "script",
     SCRIPT_DISABLE_MODULE_SUPPORT = "scriptDisableModuleSupport",

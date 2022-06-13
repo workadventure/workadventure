@@ -21,6 +21,11 @@
         flex: 0 0 25%;
         overflow-y: auto;
         overflow-x: hidden;
+        pointer-events: auto;
+        max-height: 100%;
+        height: max-content;
+        z-index: 152;
+
         &:first-child {
             margin-top: 2%;
         }

@@ -12,18 +12,25 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+
 import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedCameraState());
 
     return {
         subscribe,
-        enableWebcam: () => set(true),
-        disableWebcam: () => set(false),
+        enableWebcam: () => {
+            set(true);
+            localUserStore.setRequestedCameraState(true);
+        },
+        disableWebcam: () => {
+            set(false);
+            localUserStore.setRequestedCameraState(false);
+        },
     };
 }
 
@@ -31,12 +38,18 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
 
     return {
         subscribe,
-        enableMicrophone: () => set(true),
-        disableMicrophone: () => set(false),
+        enableMicrophone: () => {
+            set(true);
+            localUserStore.setRequestedMicrophoneState(true);
+        },
+        disableMicrophone: () => {
+            set(false);
+            localUserStore.setRequestedMicrophoneState(false);
+        },
     };
 }
 

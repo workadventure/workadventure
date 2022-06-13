@@ -28,7 +28,7 @@
 
 <form class="loginScene" on:submit|preventDefault={submit}>
     <section class="text-center">
-        <img src={logo} alt="" />
+        <img src={logo} alt="logo" class="main-logo" />
     </section>
     <section class="text-center">
         <h2>{$LL.login.input.name.placeholder()}</h2>
@@ -71,6 +71,8 @@
 </form>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     .loginScene {
         pointer-events: auto;
         margin: 20px auto 0;
@@ -89,6 +91,7 @@
 
         .terms-and-conditions {
             max-width: 400px;
+            font-size: 0.875rem;
         }
 
         p.err {
@@ -97,7 +100,7 @@
         }
 
         section {
-            margin: 10px;
+            margin: 5px;
 
             &.error-section {
                 min-height: 2rem;
@@ -110,12 +113,12 @@
 
             &.action {
                 text-align: center;
-                margin-top: 20px;
             }
 
             h2 {
                 font-family: "Press Start 2P";
-                margin: 1px;
+                font-size: 0.75rem;
+                margin: 0.5rem;
             }
 
             &.text-center {
@@ -138,13 +141,54 @@
 
             img {
                 width: 100%;
-                margin: 20px 0;
             }
 
             &.powered-by {
                 position: fixed;
                 bottom: 0;
                 right: 10px;
+                max-height: 5rem;
+                img {
+                    height: 2rem;
+                }
+            }
+
+            .main-logo {
+                max-height: 4rem;
+            }
+        }
+    }
+
+    @include media-breakpoint-down(sm) {
+        .loginScene {
+            .terms-and-conditions {
+                font-size: 1rem;
+            }
+            section {
+                margin: 5px;
+
+                img {
+                    margin: 10px 0;
+                }
+
+                h2 {
+                    font-size: 1.5rem;
+                }
+
+                .main-logo {
+                    max-height: 10rem;
+                }
+
+                &.action {
+                    margin-top: 10px;
+                }
+
+                &.powered-by {
+                    max-height: 8rem;
+                    img {
+                        height: 3rem;
+                    }
+                }
             }
         }
     }
