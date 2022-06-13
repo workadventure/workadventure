@@ -112,10 +112,6 @@
                 &.other-text {
                     background: gray;
                 }
-
-                &.my-text {
-                    background: #6489ff;
-                }
             }
         }
     }

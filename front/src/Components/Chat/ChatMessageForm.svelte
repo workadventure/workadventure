@@ -56,22 +56,6 @@
         padding-left: 4px;
         padding-right: 4px;
 
-        input {
-            flex: auto;
-            background-color: #254560;
-            color: white;
-            //border-bottom-left-radius: 4px;
-            //border-top-left-radius: 4px;
-            border-bottom-right-radius: 0;
-            border-top-right-radius: 0;
-            border: none;
-            font-size: 22px;
-            font-family: Lato;
-            padding-left: 6px;
-            min-width: 0; //Needed so that the input doesn't overflow the container in firefox
-            outline: none;
-        }
-
         // button {
         //     background-color: #254560;
         //     border-bottom-right-radius: 4px;

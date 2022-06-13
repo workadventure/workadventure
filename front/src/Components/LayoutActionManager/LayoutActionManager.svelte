@@ -32,7 +32,6 @@
         @apply tw-border-pop-yellow tw-text-pop-yellow;
     }
 
-
     @keyframes moveMessage {
         0% {
             bottom: 40px;

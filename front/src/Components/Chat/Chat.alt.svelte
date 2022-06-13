@@ -5,7 +5,6 @@
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import LL from "../../i18n/i18n-svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -70,26 +69,7 @@
 </aside>
 
 <style lang="scss">
-    p.close-icon {
-        position: absolute;
-        padding: 4px;
-        right: 12px;
-        font-size: 30px;
-        line-height: 25px;
-        cursor: pointer;
-    }
-
-    p.system-text {
-        border-radius: 8px;
-        margin-bottom: 10px;
-        padding: 6px;
-        overflow-wrap: break-word;
-        max-width: 100%;
-        background: gray;
-        display: inline-block;
-    }
-
-    aside.chatWindow {
+   aside.chatWindow {
         z-index: 1000;
         pointer-events: auto;
         position: absolute;
@@ -108,16 +88,6 @@
         border-bottom-right-radius: 16px;
         border-top-right-radius: 16px;
 
-        .messagesList {
-            margin-top: 35px;
-            overflow-y: auto;
-            flex: auto;
-
-            ul {
-                list-style-type: none;
-                padding-left: 0;
-            }
-        }
         .messageForm {
             flex: 0 70px;
             padding-top: 15px;

@@ -60,10 +60,5 @@
 
       overflow: auto;
     }
-
-    div.footer-text-message {
-      height: 50px;
-      text-align: center;
-    }
   }
 </style>

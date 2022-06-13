@@ -117,12 +117,6 @@
     margin-right: auto;
     z-index: 150;
 
-    section.interact-menu-title {
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: center;
-    }
-
   }
 
 </style>
