@@ -1,15 +1,16 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    // import { chatMessagesStore } from "../../Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
-    import ChatElement from "./ChatElement.svelte";
+    // import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { ChevronUpIcon } from "svelte-feather-icons";
-    import LL from "../../i18n/i18n-svelte";
+    // import LL from "../../i18n/i18n-svelte";
     import ChatUser from "./ChatUser.svelte";
     import ChatForum from "./ChatForum.svelte";
-    import ChatThread from "./Chat.alt.svelte";
+    // import ChatThread from "./Chat.alt.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -447,7 +448,7 @@
                 </div>
                 {#if showUsers}
                     <div class="tw-mt-3">
-                        {#each users as user, i}
+                        {#each users as user}
                             <div
                                 on:click={() => {
                                     activeThread = user;
@@ -486,7 +487,7 @@
                 </div>
                 {#if showForums}
                     <div class="tw-mt-3">
-                        {#each forums as forum, i}
+                        {#each forums as forum}
                             <ChatForum {forum} />
                         {/each}
                     </div>
