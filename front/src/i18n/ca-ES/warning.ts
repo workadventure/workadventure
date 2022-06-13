@@ -10,12 +10,14 @@ const warning: NonNullable<Translation["warning"]> = {
     accessDenied: {
         camera: "Accés a la càmera denegat. Feu clic aquí i reviseu els permissos del vostre navegador.",
         screenSharing: "Compartir pantalla denegat. Feu clic aquí i reviseu els permissos del vostre navegador.",
-        room: "Room access denied. You are not allowed to enter this room.", // TODO: translate
+        room: "Accés a l'habitació denegat. No t'és permès entrar a aquesta habitació.",
     },
     importantMessage: "Missatge important",
     connectionLost: "Conexió perduda. Reconectant...",
     connectionLostTitle: "Conexió perduda",
     connectionLostSubtitle: "Reconectant",
+    waitingConnectionTitle: "Esperant a la conexió",
+    waitingConnectionSubtitle: "Conectant",
 };
 
 export default warning;

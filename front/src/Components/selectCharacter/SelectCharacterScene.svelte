@@ -2,13 +2,16 @@
     import type { Game } from "../../Phaser/Game/Game";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import LL from "../../i18n/i18n-svelte";
-    import { customizeAvailableStore, selectedCollection } from "../../Stores/SelectCharacterSceneStore";
+    import {
+        collectionsSizeStore,
+        customizeAvailableStore,
+        selectedCollection,
+    } from "../../Stores/SelectCharacterSceneStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     export let game: Game;
 
     const selectCharacterScene = game.scene.getScene(SelectCharacterSceneName) as SelectCharacterScene;
-    const showArrows = selectCharacterScene.getCollectionKeysSize() > 1;
 
     function selectLeft() {
         selectCharacterScene.selectPreviousCollection();
@@ -31,7 +34,7 @@
     <h2>{$LL.woka.selectWoka.title()}</h2>
 </section>
 <section class="category">
-    {#if showArrows}
+    {#if $collectionsSizeStore > 1}
         <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
         <button class="selectCharacterButton nes-btn" on:click|preventDefault={selectRight}> &gt; </button>
@@ -74,7 +77,8 @@
 
         &.action {
             position: absolute;
-            bottom: 2vh;
+            margin-top: 70vh;
+            top: 0;
             width: 100%;
             text-align: center;
         }

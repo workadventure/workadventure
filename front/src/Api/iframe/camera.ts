@@ -2,7 +2,6 @@ import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribut
 import { Subject } from "rxjs";
 import type { WasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
 import { apiCallback } from "./registeredCallbacks";
-import { isWasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
 
 const moveStream = new Subject<WasCameraUpdatedEvent>();
 
@@ -10,7 +9,6 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
     callbacks = [
         apiCallback({
             type: "wasCameraUpdated",
-            typeChecker: isWasCameraUpdatedEvent,
             callback: (payloadData) => {
                 moveStream.next(payloadData);
             },

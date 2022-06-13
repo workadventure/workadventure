@@ -10,7 +10,6 @@ import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
     IframeResponseEvent,
-    IframeResponseEventMap,
     isIframeEventWrapper,
     isIframeQueryWrapper,
     isLookingLikeIframeEventWrapper,
@@ -19,7 +18,7 @@ import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
-import { SetPropertyEvent } from "./Events/setPropertyEvent";
+import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
@@ -35,7 +34,9 @@ import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -101,6 +102,9 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
+    private readonly _setAreaPropertyStream: Subject<SetAreaPropertyEvent> = new Subject();
+    public readonly setAreaPropertyStream = this._setAreaPropertyStream.asObservable();
+
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
 
@@ -118,6 +122,9 @@ class IframeListener {
 
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
+
+    private readonly _modifyAreaStream: Subject<ModifyAreaEvent> = new Subject();
+    public readonly modifyAreaStream = this._modifyAreaStream.asObservable();
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
@@ -244,6 +251,8 @@ class IframeListener {
                         this._hideLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "setProperty") {
                         this._setPropertyStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "setAreaProperty") {
+                        this._setAreaPropertyStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "cameraSet") {
                         this._cameraSetStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
@@ -290,6 +299,8 @@ class IframeListener {
                         this._setTilesStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
                         this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyArea") {
+                        this._modifyAreaStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyUIWebsite") {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
@@ -544,7 +555,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;

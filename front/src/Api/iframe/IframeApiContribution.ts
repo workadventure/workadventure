@@ -1,5 +1,4 @@
-import { z } from "zod";
-import type { IframeEvent, IframeQuery, IframeQueryMap, IframeResponseEventMap } from "../Events/IframeEvent";
+import type { IframeEvent, IframeQuery, IframeQueryMap } from "../Events/IframeEvent";
 import type { IframeQueryWrapper } from "../Events/IframeEvent";
 
 export function sendToWorkadventure(content: IframeEvent) {
@@ -34,25 +33,13 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
         );
 
         answerPromises.set(queryNumber, {
+            // @ts-ignore
             resolve,
             reject,
         });
 
         queryNumber++;
     });
-}
-
-export interface IframeCallback<
-    Key extends keyof IframeResponseEventMap,
-    T = IframeResponseEventMap[Key],
-    Guard = z.ZodType<T>
-> {
-    typeChecker: Guard;
-    callback: (payloadData: T) => void;
-}
-
-export interface IframeCallbackContribution<Key extends keyof IframeResponseEventMap> extends IframeCallback<Key> {
-    type: Key;
 }
 
 /**
@@ -63,7 +50,7 @@ export interface IframeCallbackContribution<Key extends keyof IframeResponseEven
 
 export abstract class IframeApiContribution<
     T extends {
-        callbacks: Array<IframeCallbackContribution<keyof IframeResponseEventMap>>;
+        callbacks: unknown[];
     }
 > {
     abstract callbacks: T["callbacks"];

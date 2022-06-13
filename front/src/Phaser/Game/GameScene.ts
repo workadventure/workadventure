@@ -17,6 +17,7 @@ import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
+import { AreaManager } from "./AreaManager";
 
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -90,7 +91,7 @@ import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
-import { followUsersColorStore } from "../../Stores/FollowStore";
+import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
@@ -222,6 +223,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
+    private areaManager!: AreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
@@ -521,8 +523,8 @@ export class GameScene extends DirtyScene {
                             GameMapProperties.ALLOW_API,
                             object.properties
                         );
+                        const policy = PropertyUtils.findStringProperty(GameMapProperties.POLICY, object.properties);
 
-                        // TODO: add a "allow" property to iframe
                         this.embeddedWebsiteManager.createEmbeddedWebsite(
                             object.name,
                             url,
@@ -532,7 +534,7 @@ export class GameScene extends DirtyScene {
                             object.height,
                             object.visible,
                             allowApi ?? false,
-                            "",
+                            policy ?? "",
                             "map",
                             1
                         );
@@ -544,6 +546,8 @@ export class GameScene extends DirtyScene {
         this.gameMap.exitUrls.forEach((exitUrl) => {
             this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
+
+        this.areaManager = new AreaManager(this.gameMap);
 
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMap,
@@ -603,20 +607,22 @@ export class GameScene extends DirtyScene {
         if (!this.room.isDisconnected()) {
             if (this.isReconnecting) {
                 setTimeout(() => {
-                    this.scene.sleep();
-                    if (get(errorScreenStore)) {
-                        // If an error message is already displayed, don't display the "connection lost" message.
-                        return;
+                    if (this.connection === undefined) {
+                        this.scene.sleep();
+                        if (get(errorScreenStore)) {
+                            // If an error message is already displayed, don't display the "connection lost" message.
+                            return;
+                        }
+                        errorScreenStore.setError(
+                            ErrorScreenMessage.fromPartial({
+                                type: "reconnecting",
+                                code: "CONNECTION_LOST",
+                                title: get(LL).warning.connectionLostTitle(),
+                                details: get(LL).warning.connectionLostSubtitle(),
+                            })
+                        );
+                        //this.scene.launch(ReconnectingSceneName);
                     }
-                    errorScreenStore.setError(
-                        ErrorScreenMessage.fromPartial({
-                            type: "reconnecting",
-                            code: "CONNECTION_LOST",
-                            title: get(LL).warning.connectionLostTitle(),
-                            details: get(LL).warning.connectionLostSubtitle(),
-                        })
-                    );
-                    //this.scene.launch(ReconnectingSceneName);
                 }, 0);
             } else if (this.connection === undefined) {
                 // Let's wait 1 second before printing the "connecting" screen to avoid blinking
@@ -630,9 +636,9 @@ export class GameScene extends DirtyScene {
                         errorScreenStore.setError(
                             ErrorScreenMessage.fromPartial({
                                 type: "reconnecting",
-                                code: "CONNECTION_LOST",
-                                title: get(LL).warning.connectionLostTitle(),
-                                details: get(LL).warning.connectionLostSubtitle(),
+                                code: "CONNECTION_PENDING",
+                                title: get(LL).warning.waitingConnectionTitle(),
+                                details: get(LL).warning.waitingConnectionSubtitle(),
                             })
                         );
                         //this.scene.launch(ReconnectingSceneName);
@@ -849,11 +855,9 @@ export class GameScene extends DirtyScene {
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
-                if (this.scene.isSleeping()) {
-                    const error = get(errorScreenStore);
-                    if (error && error?.type === "reconnecting") errorScreenStore.delete();
-                    //this.scene.stop(ReconnectingSceneName);
-                }
+                const error = get(errorScreenStore);
+                if (error && error?.type === "reconnecting") errorScreenStore.delete();
+                //this.scene.stop(ReconnectingSceneName);
 
                 //init user position and play trigger to check layers properties
                 this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
@@ -895,6 +899,29 @@ export class GameScene extends DirtyScene {
     }
 
     private subscribeToStores(): void {
+        if (
+            this.userIsJitsiDominantSpeakerStoreUnsubscriber != undefined ||
+            this.jitsiParticipantsCountStoreUnsubscriber != undefined ||
+            this.availabilityStatusStoreUnsubscriber != undefined ||
+            this.emoteUnsubscriber != undefined ||
+            this.emoteMenuUnsubscriber != undefined ||
+            this.followUsersColorStoreUnsubscriber != undefined ||
+            this.peerStoreUnsubscriber != undefined
+        ) {
+            console.error(
+                "subscribeToStores => Check all subscriber undefined ",
+                this.userIsJitsiDominantSpeakerStoreUnsubscriber,
+                this.jitsiParticipantsCountStoreUnsubscriber,
+                this.availabilityStatusStoreUnsubscriber,
+                this.emoteUnsubscriber,
+                this.emoteMenuUnsubscriber,
+                this.followUsersColorStoreUnsubscriber,
+                this.peerStoreUnsubscriber
+            );
+
+            throw new Error("One store is already subscribed.");
+        }
+
         this.userIsJitsiDominantSpeakerStoreUnsubscriber = userIsJitsiDominantSpeakerStore.subscribe(
             (dominantSpeaker) => {
                 this.jitsiDominantSpeaker = dominantSpeaker;
@@ -1293,8 +1320,8 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.setPropertyStream.subscribe((setProperty) => {
-                this.setPropertyLayer(setProperty.layerName, setProperty.propertyName, setProperty.propertyValue);
+            iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
+                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
             })
         );
 
@@ -1534,6 +1561,14 @@ ${escapedMessage}
         this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
+    private setAreaProperty(
+        areaName: string,
+        propertyName: string,
+        propertyValue: string | number | boolean | undefined
+    ): void {
+        this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
+    }
+
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
         if (phaserLayer != undefined) {
@@ -1620,6 +1655,8 @@ ${escapedMessage}
     }
 
     public cleanupClosingScene(): void {
+        // make sure we restart CameraControls
+        this.disableMediaBehaviors();
         // stop playing audio, close any open website, stop any open Jitsi
         coWebsiteManager.closeCoWebsites();
         // Stop the script, if any
@@ -1627,6 +1664,8 @@ ${escapedMessage}
         for (const script of scripts) {
             iframeListener.unregisterScript(script);
         }
+
+        followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
@@ -1661,6 +1700,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
+        this.areaManager?.close();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -2037,7 +2077,11 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            iframeListener.sendRemotePlayerClickedEvent({ id: player.userId });
+            iframeListener.sendRemotePlayerClickedEvent({
+                id: player.userId,
+                uuid: player.userUuid,
+                name: player.name,
+            });
         });
     }
 
