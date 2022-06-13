@@ -459,7 +459,7 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
@@ -492,7 +492,7 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
