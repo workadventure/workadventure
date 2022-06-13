@@ -59,7 +59,9 @@
         return n;
     };
 
-    let activeThread: any = null;
+    let activeThread: any = {
+
+    };
 
     let forums = [
         {
@@ -249,7 +251,7 @@
     <section class="tw-p-0" bind:this={listDom}>
         {#if activeThread !== null}
             <!-- thread -->
-            <div class="tw-flex tw-flex-col tw-h-full">
+            <div class="tw-flex tw-flex-col tw-h-full tw-over">
                 <div class="tw-p-5">
                     <button
                         on:click={() => {
@@ -263,7 +265,7 @@
                     </button>
                 </div>
 
-                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5">
+                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
 
                     <!-- if there is a user typing -->
 
@@ -427,7 +429,7 @@
             </div>
             <!-- chat users -->
 
-            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple tw-overflow-auto">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if usersListUnreads()}
                         <span
