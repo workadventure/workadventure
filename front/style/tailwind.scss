@@ -86,7 +86,11 @@
 
 
     .wa-chat-item{
-        @apply tw-flex tw-px-3 tw-mb-3 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
+        @apply tw-flex tw-px-6 tw-py-3 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
+
+        &:hover{
+            background-color: rgba(#4D4B67, .24);
+        }
     }
 }
 

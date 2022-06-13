@@ -427,7 +427,7 @@
             </div>
             <!-- chat users -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if usersListUnreads()}
                         <span
@@ -466,7 +466,7 @@
 
             <!-- forum list -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if forumListUnreads()}
                         <span
