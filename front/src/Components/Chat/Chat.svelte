@@ -145,7 +145,7 @@
                 flex: inherit;
 
                 p.room-name {
-                    margin-top: 10px;
+                    margin-top: 45px;
                 }
             }
 

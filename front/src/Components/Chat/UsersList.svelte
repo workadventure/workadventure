@@ -108,12 +108,15 @@
         {/each}
     {/if}
 </ul>
-<div>
-    <input type="text" placeholder="Votre message ..." bind:value={message}/>
-    <button on:click|preventDefault={sendMessage} src="btn btn-primary">
-        Envoyer
-    </button>
-</div>
+{#if mucRoom.type !== 'default'}
+    <div>
+        <input type="text" placeholder="Votre message ..." bind:value={message}/>
+        <button on:click|preventDefault={sendMessage} src="btn btn-primary">
+            Envoyer
+        </button>
+    </div>
+{/if}
+
 
 <style>
     ul {

@@ -61,6 +61,7 @@ export class GameRoom {
     private nextUserId: number = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
+    mucManager: MucManager | null = null;
 
     private constructor(
         public readonly roomUrl: string,
@@ -121,8 +122,8 @@ export class GameRoom {
             mapDetails.thirdParty ?? undefined
         );
 
-        const mucManager = await gameRoom.getMucManager(mapDetails);
-        await mucManager.init();
+        gameRoom.mucManager = await gameRoom.getMucManager(mapDetails);
+        await gameRoom.mucManager.init();
 
         return gameRoom;
     }

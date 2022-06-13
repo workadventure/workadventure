@@ -110,6 +110,14 @@ export class SocketManager {
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
         roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
 
+        if(room.mucManager){
+            const defaultForum = room.mucManager.getDefaultForum();
+            if(defaultForum && defaultForum.chatName && defaultForum.mucUrl){
+                roomJoinedMessage.setChatforumname(defaultForum.chatName);
+                roomJoinedMessage.setChatforumurl(defaultForum.mucUrl);
+            }
+        }
+
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();
             itemStateMessage.setItemid(itemId);

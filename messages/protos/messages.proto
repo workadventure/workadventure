@@ -294,6 +294,8 @@ message RoomJoinedMessage {
   string userRoomToken = 7;
   // We send the current skin of the current player.
   repeated CharacterLayerMessage characterLayer = 8;
+  string chatForumName = 9;
+  string chatForumUrl = 10;
 }
 
 message WebRtcStartMessage {

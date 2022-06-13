@@ -494,6 +494,11 @@
  "orientation":"orthogonal",
  "properties":[
         {
+         "name":"chatForumName",
+         "type":"string",
+         "value":"WelcomeTest"
+        }, 
+        {
          "name":"mapCopyright",
          "type":"string",
          "value":"Credits: Valdo Romao https:\/\/www.linkedin.com\/in\/valdo-romao\/ \nLicense: CC-BY-SA 3.0 (http:\/\/creativecommons.org\/licenses\/by-sa\/3.0\/)"

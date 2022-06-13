@@ -58,6 +58,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import room from "../Api/iframe/room";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -426,6 +427,12 @@ export class RoomConnection implements RoomConnection {
                     const characterLayers = roomJoinedMessage.characterLayer.map(
                         this.mapCharacterLayerToBodyResourceDescription.bind(this)
                     );
+
+                    if(!this.closed){
+                        if(roomJoinedMessage.chatForumName && roomJoinedMessage.chatForumUrl) {
+                            gameManager.getCurrentGameScene().getXmppClient().joinMuc(roomJoinedMessage.chatForumName, 'forum', roomJoinedMessage.chatForumUrl);
+                        }
+                    }
 
                     this._roomJoinedMessageStream.next({
                         connection: this,

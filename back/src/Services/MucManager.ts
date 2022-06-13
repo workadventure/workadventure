@@ -2,19 +2,21 @@ import {ITiledMap, ITiledMapLayer, ITiledMapObject} from "@workadventure/tiled-m
 import Axios, {AxiosError, AxiosInstance} from "axios";
 import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
 import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
+import {boolean} from "zod";
 
-interface ChatZone {
+interface Chat {
     chatName?: string;
     mucUrl?: string;
     mucCreated?: boolean;
+    type?: string;
 }
 
 export class MucManager {
 
     /**
-     * The list of the chat zone for the current room
+     * The list of chats for the current room
      */
-    private chatZones: Map<string, ChatZone> | undefined;
+    private chat: Map<string, Chat> | undefined;
 
     private axios: AxiosInstance | undefined;
 
@@ -32,22 +34,40 @@ export class MucManager {
             }
         });
 
-        this.chatZones = new Map<string, ChatZone>();
+        this.chat = new Map<string, Chat>();
 
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
-            this.chatZones = MucManager.findChatZonesInMap(map);
-            this.chatZones.forEach(chatZone => {
+            this.chat = MucManager.findChatInMap(map);
+            this.chat.forEach(chatZone => {
                 chatZone.mucUrl = `${this.roomUrl}/${chatZone.chatName}`;
                 chatZone.mucCreated = false;
             });
-            // If the ADMIN_URL is not set, so there is no admin, and we define a default chatForum MUC room
-            if(mapDetails.mucRooms === null){
-                const chatName = 'Welcome';
-                this.chatZones.set(chatName, {chatName: chatName, mucUrl: `${this.roomUrl}/${chatName}`, mucCreated: false} as ChatZone);
+            if(mapDetails.mucRooms){
+                // If the ADMIN exist we disable all the forums from the MAP
+                this.chat.forEach(chat => {
+                    if(chat.type === 'forum'){
+                        chat.mucCreated = true;
+                    }
+                });
+            } else {
+                // If the ADMIN_URL is not set, so there is no admin, and we define a default chatForum MUC room if it's not defined in the map
+                if(this.getDefaultForum() === null){
+                    this.chat.set('welcome', {chatName: 'welcome', mucUrl: `${this.roomUrl}/welcome`, mucCreated: false, type: 'forum'} as Chat);
+                }
             }
         }
+    }
+
+    public getDefaultForum(): Chat|null{
+        let defaultForum = null;
+        this.chat?.forEach(chat =>{
+            if(chat.type === 'forum'){
+                defaultForum = chat;
+            }
+        })
+        return defaultForum;
     }
 
     public async init(){
@@ -67,7 +87,7 @@ export class MucManager {
             });
             allMucRoomsOfWorld.forEach(mucRoom => {
                 let found = false;
-                this.chatZones?.forEach(chatZone => {
+                this.chat?.forEach(chatZone => {
                     if(found) return;
                     if (chatZone.mucUrl) {
                         if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()){
@@ -80,7 +100,7 @@ export class MucManager {
                     this.destroyMucRoom(mucRoom);
                 }
             });
-            this.chatZones?.forEach(chatZone => {
+            this.chat?.forEach(chatZone => {
                 if(chatZone.mucCreated) return;
                 if (chatZone.mucUrl) {
                     this.createMucRoom(chatZone);
@@ -90,15 +110,15 @@ export class MucManager {
         }
     }
 
-    private static findChatZonesInMap(map: ITiledMap): Map<string, ChatZone> {
-        const objects = new Map<string, ChatZone>();
+    private static findChatInMap(map: ITiledMap): Map<string, Chat> {
+        const objects = new Map<string, Chat>();
         for (const layer of map.layers) {
-            this.recursiveFindChatZonesInLayer(layer, objects);
+            this.recursiveFindChatInLayer(layer, objects);
         }
         return objects;
     }
 
-    private static recursiveFindChatZonesInLayer(layer: ITiledMapLayer, objects: Map<string, ChatZone>): void {
+    private static recursiveFindChatInLayer(layer: ITiledMapLayer, objects: Map<string, Chat>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
                 if (object.type === "area") {
@@ -110,19 +130,19 @@ export class MucManager {
                     }
 
                     // We store a copy of the object (to make it immutable)
-                    const chatZone = this.iTiledObjectToChatZone(object);
+                    const chatZone = this.iTiledObjectToChat(object);
                     objects.set(chatZone.chatName as string, chatZone);
                 }
             }
         } else if (layer.type === "group") {
             for (const innerLayer of layer.layers as ITiledMapLayer[]) {
-                this.recursiveFindChatZonesInLayer(innerLayer, objects);
+                this.recursiveFindChatInLayer(innerLayer, objects);
             }
         }
     }
 
-    private static iTiledObjectToChatZone(object: ITiledMapObject): ChatZone {
-        const variable: ChatZone = {};
+    private static iTiledObjectToChat(object: ITiledMapObject): Chat {
+        const variable: Chat = {};
 
         if (object.properties) {
             for (const property of object.properties) {
@@ -133,7 +153,14 @@ export class MucManager {
                             throw new Error('The persist property of variable "' + object.name + '" must be a string');
                         }
                         variable.chatName = value;
+                        variable.type = "live";
                         break;
+                    case "chatForumName":
+                        if (typeof value !== "string") {
+                            throw new Error('The persist property of variable "' + object.name + '" must be a string');
+                        }
+                        variable.chatName = value;
+                        variable.type = "forum";
                 }
             }
         }
@@ -154,7 +181,7 @@ export class MucManager {
             .catch(error => console.error(error));
     }
 
-    private async createMucRoom(chatZone: ChatZone) {
+    private async createMucRoom(chatZone: Chat) {
         await this.axios
             ?.post('create_room', {name: `${MucManager.encode(chatZone.mucUrl)}`, host: EJABBERD_DOMAIN, service: `conference.ejabberd`})
             .catch(error => console.error(error));
