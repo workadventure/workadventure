@@ -3,7 +3,7 @@
     export let user;
 </script>
 
-<div class={`tw-flex tw-px-3 tw-mb-3 tw-items-center ${user.active ? "" : "tw-opacity-50"}`}>
+<div class={`wa-chat-item ${user.active ? "" : "tw-opacity-50"}`}>
     <div class="tw-relative">
         <img class={``} src="/static/images/yoda-avatar.png" alt="Send" width="42" />
         {#if user.active}
