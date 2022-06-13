@@ -1,5 +1,6 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
+    import { SendIcon } from "svelte-feather-icons";
     import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
 
     export const handleForm = {
@@ -26,7 +27,9 @@
 
 <form on:submit|preventDefault={saveMessage}>
     <div class="tw-w-full tw-p-2">
-        <div class="tw-flex tw-items-center tw-relative tw-border tw-border-solid tw-rounded-full tw-px-3 tw-py-1 tw-bg-dark">
+        <div
+            class="tw-flex tw-items-center tw-relative tw-border tw-border-solid tw-rounded-full tw-px-3 tw-py-1 tw-bg-dark"
+        >
             <textarea
                 type="text"
                 bind:value={newMessageText}
@@ -39,9 +42,9 @@
             />
             <button
                 type="submit"
-                class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0"
+                class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
             >
-                <img src="/static/images/send.png" alt="Send" width="20" />
+                <SendIcon size="17"/>
             </button>
         </div>
     </div>
