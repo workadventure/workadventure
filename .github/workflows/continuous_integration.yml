@@ -54,6 +54,8 @@ jobs:
         env:
           PUSHER_URL: "//localhost:8080"
           ADMIN_URL: "//localhost:80"
+          # upgrade RAM available to 6GB
+          NODE_OPTIONS: --max-old-space-size=6144
         working-directory: "front"
 
       - name: "Build iframe-api"

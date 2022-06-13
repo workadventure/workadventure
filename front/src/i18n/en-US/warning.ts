@@ -16,6 +16,8 @@ const warning: BaseTranslation = {
     connectionLost: "Connection lost. Reconnecting...",
     connectionLostTitle: "Connection lost",
     connectionLostSubtitle: "Reconnecting",
+    waitingConnectionTitle: "Waiting for connection",
+    waitingConnectionSubtitle: "Connecting",
 };
 
 export default warning;

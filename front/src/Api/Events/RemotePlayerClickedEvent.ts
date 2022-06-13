@@ -1,8 +1,9 @@
 import { z } from "zod";
 
-// TODO: Change for player Clicked, add all neccessary data
 export const isRemotePlayerClickedEvent = z.object({
     id: z.number(),
+    uuid: z.string(),
+    name: z.string(),
 });
 
 /**
