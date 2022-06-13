@@ -96,7 +96,8 @@
   input[type="search"],
   input[type="tel"],
   select,
-  textarea {
+  textarea,
+  textarea[type="text"]{
     @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple tw-mb-5 tw-transition-all tw-duration-300;
     @apply placeholder:tw-text-lighter-purple;
   }
@@ -118,7 +119,10 @@
   .btn {
     &.light,
     &.dark,
-    &.outline {
+    &.outline,
+    &.disabled,
+    &.danger
+    {
       @apply tw-min-h-10;
     }
 
@@ -139,6 +143,14 @@
       .darken-icon {
         @apply tw-brightness-0;
       }
+    }
+
+    &.disabled {
+      @apply tw-bg-grey tw-text-dark-purple tw-cursor-not-allowed tw-opacity-60;
+    }
+
+    &.danger {
+      @apply tw-bg-pop-red tw-text-dark-purple;
     }
 
     &.close {

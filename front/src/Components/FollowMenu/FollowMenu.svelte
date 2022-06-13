@@ -34,7 +34,7 @@
 
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
   <div class="interact-menu blue-dialog-box outline-light
-    tw-text-center tw-w-72 tw-absolute tw-bottom-10 tw-left-0 tw-right-0">
+    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0">
     <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
     <div class="tw-flex tw-flex-row tw-justify-evenly">
       <button type="button" class="btn light" on:click|preventDefault={acceptFollowRequest}>{$LL.follow.interactMenu.yes()}</button>
@@ -70,7 +70,7 @@
 
 {#if $followStateStore === "active" || $followStateStore === "ending"}
   <div class="interact-status blue-dialog-box outline-light
-    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-10">
+    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36">
     {#if $followRoleStore === "follower"}
       <p class="tw-m-1">{$LL.follow.interactStatus.following({ leader: name($followUsersStore[0]) })}</p>
     {:else if $followUsersStore.length === 0}
