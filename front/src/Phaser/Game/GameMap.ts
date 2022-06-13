@@ -27,6 +27,11 @@ export type areaChangeCallback = (
     allAreasOnNewPosition: Array<ITiledMapObject>
 ) => void;
 
+export enum AreaType {
+    Static = "Static",
+    Dynamic = "Dynamic",
+}
+
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
  * It is used to handle layer properties.
@@ -64,10 +69,18 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    /**
+     * Areas that we can do CRUD operations on via scripting API
+     */
+    private readonly dynamicAreas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    /**
+     * Areas loaded from Tiled map file
+     */
+    private readonly staticAreas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+
     private readonly areasPositionOffsetY: number = 16;
-    private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
-    private unnamedAreasCounter = 0;
+    private readonly staticAreaNamePrefix = "STATIC_AREA_";
+    private unnamedStaticAreasCounter = 0;
 
     public exitUrls: Array<string> = [];
 
@@ -86,14 +99,14 @@ export class GameMap {
             .forEach((area) => {
                 let name = area.name;
                 if (!name) {
-                    name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
+                    name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
                     area.name = name;
-                    this.unnamedAreasCounter++;
+                    this.unnamedStaticAreasCounter++;
                 }
-                if (this.areas.get(name)) {
+                if (this.staticAreas.get(name)) {
                     console.warn(`Area name "${name}" is already being used! Please use unique names`);
                 }
-                this.areas.set(name, area);
+                this.staticAreas.set(name, area);
             });
 
         let depth = -2;
@@ -299,17 +312,22 @@ export class GameMap {
 
     public setAreaProperty(
         areaName: string,
+        areaType: AreaType,
         propertyName: string,
         propertyValue: string | number | undefined | boolean
     ) {
-        const object = this.findObject(areaName, "area");
-        if (object === undefined) {
+        const area = this.getArea(areaName, areaType);
+        if (area === undefined) {
             console.warn('Could not find area "' + areaName + '" when calling setProperty');
             return;
         }
-        this.setProperty(object, propertyName, propertyValue);
+        this.setProperty(area, propertyName, propertyValue);
         this.triggerAllProperties();
         this.triggerAreasChange();
+    }
+
+    public getAreas(areaType: AreaType): Map<string, ITiledMapObject> {
+        return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
     }
 
     private setProperty(
@@ -375,25 +393,21 @@ export class GameMap {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
-    public getArea(name: string): ITiledMapObject | undefined {
-        return this.areas.get(name);
+    public getArea(name: string, type: AreaType): ITiledMapObject | undefined {
+        return this.getAreas(type).get(name);
     }
 
-    public getAreas(): Map<string, ITiledMapObject> {
-        return this.areas;
-    }
-
-    public setArea(name: string, area: ITiledMapObject): void {
-        this.areas.set(name, area);
+    public setArea(name: string, type: AreaType, area: ITiledMapObject): void {
+        this.getAreas(type).set(name, area);
         if (this.isPlayerInsideArea(name)) {
             this.triggerSpecificAreaOnEnter(area);
         }
     }
 
-    public isPlayerInsideArea(areaName: string): boolean {
+    public isPlayerInsideArea(name: string, type: AreaType): boolean {
         return (
-            this.getAreasOnPosition(this.position, this.areasPositionOffsetY).findIndex(
-                (area) => area.name === areaName
+            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
+                (area) => area.name === name
             ) !== -1
         );
     }
@@ -410,14 +424,14 @@ export class GameMap {
         }
     }
 
-    public deleteArea(name: string): void {
-        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY).find(
+    public deleteArea(name: string, type: AreaType): void {
+        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).find(
             (area) => area.name === name
         );
         if (area) {
             this.triggerSpecificAreaOnLeave(area);
         }
-        this.areas.delete(name);
+        this.getAreas(type).delete(name);
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
@@ -602,12 +616,20 @@ export class GameMap {
         return properties;
     }
 
-    private getAreasOnPosition(position?: { x: number; y: number }, offsetY: number = 0): ITiledMapObject[] {
+    private getAreasOnPosition(
+        position?: { x: number; y: number },
+        offsetY: number = 0,
+        areaType?: AreaType
+    ): ITiledMapObject[] {
         if (!position) {
             return [];
         }
+        const areasOfInterest = areaType
+            ? this.getAreas(areaType).values()
+            : [...this.staticAreas.values(), ...this.dynamicAreas.values()];
+
         const overlappedAreas: ITiledMapObject[] = [];
-        for (const area of this.areas.values()) {
+        for (const area of areasOfInterest) {
             if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
                 overlappedAreas.push(area);
             }

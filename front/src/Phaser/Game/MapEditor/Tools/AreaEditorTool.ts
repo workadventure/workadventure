@@ -1,4 +1,5 @@
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
+import { AreaType } from "../../GameMap";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
@@ -30,7 +31,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private createAreaPreviews(): Map<string, AreaPreview> {
         this.areaPreviews = new Map<string, AreaPreview>();
-        const areasData = this.scene.getGameMap().getAreas();
+        const areasData = this.scene.getGameMap().getAreas(AreaType.Static);
 
         for (const [key, val] of areasData) {
             const areaPreview = new AreaPreview(this.scene, { ...val });
@@ -46,7 +47,7 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             console.log(areaPreview.getName());
-            console.log(this.scene.getGameMap().getArea(areaPreview.getName()));
+            console.log(this.scene.getGameMap().getArea(areaPreview.getName(), AreaType.Static));
         });
     }
 

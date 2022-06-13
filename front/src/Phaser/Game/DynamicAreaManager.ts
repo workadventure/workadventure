@@ -1,9 +1,9 @@
 import { Subscription } from "rxjs";
 import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import { GameMap } from "./GameMap";
+import { AreaType, GameMap } from "./GameMap";
 
-export class AreaManager {
+export class DynamicAreaManager {
     private readonly gameMap: GameMap;
     private readonly subscription: Subscription;
 
@@ -13,12 +13,12 @@ export class AreaManager {
         this.registerIFrameEventAnswerers();
 
         this.subscription = iframeListener.modifyAreaStream.subscribe((modifyAreaEvent: ModifyAreaEvent) => {
-            const area = this.gameMap.getArea(modifyAreaEvent.name);
+            const area = this.gameMap.getArea(modifyAreaEvent.name, AreaType.Dynamic);
             if (!area) {
-                throw new Error(`Could not find area with the name "${modifyAreaEvent.name}" in your map`);
+                throw new Error(`Could not find dynamic area with the name "${modifyAreaEvent.name}" in your map`);
             }
 
-            const insideBefore = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name);
+            const insideBefore = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name, AreaType.Dynamic);
 
             if (modifyAreaEvent.x !== undefined) {
                 area.x = modifyAreaEvent.x;
@@ -33,7 +33,7 @@ export class AreaManager {
                 area.height = modifyAreaEvent.height;
             }
 
-            const insideAfter = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name);
+            const insideAfter = this.gameMap.isPlayerInsideArea(modifyAreaEvent.name, AreaType.Dynamic);
 
             if (insideBefore && !insideAfter) {
                 this.gameMap.triggerSpecificAreaOnLeave(area);
@@ -45,11 +45,11 @@ export class AreaManager {
 
     private registerIFrameEventAnswerers(): void {
         iframeListener.registerAnswerer("createArea", (createAreaEvent: CreateAreaEvent) => {
-            if (this.gameMap.getArea(createAreaEvent.name)) {
+            if (this.gameMap.getArea(createAreaEvent.name, AreaType.Dynamic)) {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
-            this.gameMap.setArea(createAreaEvent.name, {
+            this.gameMap.setArea(createAreaEvent.name, AreaType.Dynamic, {
                 ...createAreaEvent,
                 id: -1,
                 gid: -1,
@@ -64,7 +64,7 @@ export class AreaManager {
         });
 
         iframeListener.registerAnswerer("getArea", (name: string) => {
-            const area = this.gameMap.getArea(name);
+            const area = this.gameMap.getArea(name, AreaType.Dynamic);
             if (area === undefined) {
                 throw new Error(`Cannot find area with name "${name}"`);
             }
@@ -78,7 +78,7 @@ export class AreaManager {
         });
 
         iframeListener.registerAnswerer("deleteArea", (name: string) => {
-            this.gameMap.deleteArea(name);
+            this.gameMap.deleteArea(name, AreaType.Dynamic);
         });
     }
 

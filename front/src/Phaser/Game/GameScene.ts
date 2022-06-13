@@ -17,7 +17,7 @@ import { EmoteManager } from "./EmoteManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
 import { EmbeddedWebsiteManager } from "./EmbeddedWebsiteManager";
-import { AreaManager } from "./AreaManager";
+import { DynamicAreaManager } from "./DynamicAreaManager";
 
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
@@ -38,7 +38,7 @@ import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { GameMap } from "./GameMap";
+import { AreaType, GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -225,7 +225,7 @@ export class GameScene extends DirtyScene {
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
-    private areaManager!: AreaManager;
+    private areaManager!: DynamicAreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
     private firstCameraUpdateSent: boolean = false;
@@ -549,7 +549,7 @@ export class GameScene extends DirtyScene {
             this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
 
-        this.areaManager = new AreaManager(this.gameMap);
+        this.areaManager = new DynamicAreaManager(this.gameMap);
 
         this.startPositionCalculator = new StartPositionCalculator(
             this.gameMap,
@@ -1324,7 +1324,12 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
-                this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
+                this.setAreaProperty(
+                    setProperty.areaName,
+                    AreaType.Dynamic,
+                    setProperty.propertyName,
+                    setProperty.propertyValue
+                );
             })
         );
 
@@ -1566,10 +1571,11 @@ ${escapedMessage}
 
     private setAreaProperty(
         areaName: string,
+        areaType: AreaType,
         propertyName: string,
         propertyValue: string | number | boolean | undefined
     ): void {
-        this.gameMap.setAreaProperty(areaName, propertyName, propertyValue);
+        this.gameMap.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
