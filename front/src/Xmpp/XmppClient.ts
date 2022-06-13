@@ -135,14 +135,15 @@ export class XmppClient {
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
             );
         }
-
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);
-        room.connect();
-        this.rooms.set(roomUrl.toString(), room);
+        let room = this.rooms.get(roomUrl.toString());
+        if(!room){
+            room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);
+            room.connect();
+            this.rooms.set(roomUrl.toString(), room);
 
-        mucRoomsStore.addMucRoom(room);
-
+            mucRoomsStore.addMucRoom(room);
+        }
         return room;
     }
 
