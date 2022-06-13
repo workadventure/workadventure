@@ -165,7 +165,11 @@ const roomManager: IRoomManagerServer = {
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error(
+                        "An error occurred while managing a message of type PusherToBackMessage:" +
+                            message.getMessageCase().toString(),
+                        e
+                    );
                     emitError(call, e);
                     call.end();
                 }
