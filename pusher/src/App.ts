@@ -11,6 +11,7 @@ import { SwaggerController } from "./Controller/SwaggerController";
 import HyperExpress from "hyper-express";
 import { cors } from "./Middleware/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
+import { PingController } from "./Controller/PingController";
 
 class App {
     public app: HyperExpress.compressors.TemplatedApp;
@@ -33,6 +34,7 @@ class App {
         new AdminController(webserver);
         new OpenIdProfileController(webserver);
         new WokaListController(webserver);
+        new PingController(webserver);
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(webserver);
         }
