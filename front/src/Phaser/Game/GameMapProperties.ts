@@ -25,6 +25,7 @@ export enum GameMapProperties {
     OPEN_WEBSITE_POLICY = "openWebsitePolicy",
     OPEN_WEBSITE_WIDTH = "openWebsiteWidth",
     OPEN_WEBSITE_POSITION = "openWebsitePosition",
+    OPEN_WEBSITE_CLOSABLE = "openWebsiteClosable",
     OPEN_WEBSITE_TRIGGER = "openWebsiteTrigger",
     OPEN_WEBSITE_TRIGGER_MESSAGE = "openWebsiteTriggerMessage",
     PLAY_AUDIO = "playAudio",

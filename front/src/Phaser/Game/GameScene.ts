@@ -1657,8 +1657,8 @@ ${escapedMessage}
     public cleanupClosingScene(): void {
         // make sure we restart CameraControls
         this.disableMediaBehaviors();
-        // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsites();
+        // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
+        coWebsiteManager.cleanup();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
