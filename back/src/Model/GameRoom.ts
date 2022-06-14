@@ -42,7 +42,7 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
-import Axios from "axios";
+import { MapLoadingError } from "../Services/MapLoadingError";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -706,7 +706,9 @@ export class GameRoom {
                             );
                         }
                     }
-                    throw e;
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
                 });
         }
 
@@ -714,7 +716,8 @@ export class GameRoom {
             const jitsiModeratorTagFinder = await this.jitsiModeratorTagFinderPromise;
             return jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
         } catch (e) {
-            if (e instanceof LocalUrlError || Axios.isAxiosError(e)) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
                 return undefined;
             }
             throw e;
@@ -755,7 +758,9 @@ export class GameRoom {
                             );
                         }
                     }
-                    throw e;
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
                 });
         }
 
@@ -763,7 +768,8 @@ export class GameRoom {
             const bbbModeratorTagFinder = await this.bbbModeratorTagFinderPromise;
             return bbbModeratorTagFinder.getModeratorTag(bbbRoom);
         } catch (e) {
-            if (e instanceof LocalUrlError || Axios.isAxiosError(e)) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
                 return undefined;
             }
             throw e;
