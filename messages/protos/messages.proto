@@ -588,3 +588,10 @@ service RoomManager {
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
 }
+
+/**
+ * Service handled by the "map-storage". Back servers connect to this service.
+ */
+service MapStorage {
+  // ... TODO ...
+}
