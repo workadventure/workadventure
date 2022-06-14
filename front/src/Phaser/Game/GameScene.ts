@@ -1990,7 +1990,9 @@ ${escapedMessage}
                     break;
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
-                    currentPlayerGroupLockStateStore.set(undefined);
+                    if (this.currentPlayerGroupId === event.groupId) {
+                        currentPlayerGroupLockStateStore.set(undefined);
+                    }
                     break;
                 }
                 default: {
