@@ -28,6 +28,7 @@ export class Area implements IArea {
     }
 
     public setProperty(propertyName: string, propertyValue: string | number | boolean | undefined): void {
+        console.log("SET PROPERTY");
         sendToWorkadventure({
             type: "setAreaProperty",
             data: {
