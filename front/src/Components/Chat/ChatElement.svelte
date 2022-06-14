@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { ChatMessageTypes } from "../../Stores/ChatStore";
-    import type { ChatMessage } from "../../Stores/ChatStore";
+    import { ChatMessageTypes } from "../../../chat/src/Stores/ChatStore";
+    import type { ChatMessage } from "../../../chat/src/Stores/ChatStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import ChatPlayerName from "./ChatPlayerName.svelte";
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";

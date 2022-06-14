@@ -1,7 +1,5 @@
 import { writable } from "svelte/store";
-import { playersStore } from "../../../src/Stores/PlayersStore";
 import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
-import { iframeListener } from "../../../src/Api/IframeListener";
 import { Subject } from "rxjs";
 
 export const chatVisibilityStore = writable(false);
@@ -25,8 +23,10 @@ export interface ChatMessage {
     text?: string[];
 }
 
+let players = new Map<number, PlayerInterface>();
+
 function getAuthor(authorId: number): PlayerInterface {
-    const author = playersStore.getPlayerById(authorId);
+    const author = players.get(authorId);
     if (!author) {
         throw new Error("Could not find data for author " + authorId);
     }
@@ -69,7 +69,8 @@ function createChatMessagesStore() {
             });
         },
         addPersonnalMessage(text: string) {
-            iframeListener.sendUserInputChat(text);
+            //TODO use message API to send message in iframe
+            //iframeListener.sendUserInputChat(text);
 
             _newChatMessageSubject.next(text);
             update((list) => {
@@ -109,7 +110,8 @@ function createChatMessagesStore() {
                     });
                 }
 
-                iframeListener.sendUserInputChat(text, origin);
+                //TODO use message API to send user input chat message
+                //iframeListener.sendUserInputChat(text, origin);
                 return list;
             });
             chatVisibilityStore.set(true);

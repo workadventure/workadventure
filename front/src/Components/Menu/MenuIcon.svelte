@@ -4,7 +4,7 @@
     import logoInvite from "../images/logo-invite-pixel.png";
     import logoRegister from "../images/logo-register-pixel.png";
     import { menuVisiblilityStore } from "../../Stores/MenuStore";
-    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore } from "../../../chat/src/Stores/ChatStore";
     import { limitMapStore } from "../../Stores/GameStore";
     import { get } from "svelte/store";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";

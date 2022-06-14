@@ -1,6 +1,6 @@
 import { derived } from "svelte/store";
 import { menuInputFocusStore } from "./MenuStore";
-import { chatInputFocusStore } from "./ChatStore";
+import { chatInputFocusStore } from "../../chat/src/Stores/ChatStore";
 import { showReportScreenStore, userReportEmpty } from "./ShowReportScreenStore";
 
 //derived from the focus on Menu, ConsoleGlobal, Chat and ...

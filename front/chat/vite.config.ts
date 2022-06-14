@@ -21,7 +21,6 @@ export default defineConfig({
         }),
         envConfig({
             variables: [
-                "DISABLE_NOTIFICATIONS",
                 "PUSHER_URL",
             ],
         }),

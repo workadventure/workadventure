@@ -1,5 +1,5 @@
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore } from "../Stores/ChatStore";
+import { chatMessagesStore } from "../../chat/src/Stores/ChatStore";
 import type { ChatEvent } from "./Events/ChatEvent";
 
 class ScriptUtils {
