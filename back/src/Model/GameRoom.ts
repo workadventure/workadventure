@@ -1,7 +1,7 @@
-import {PointInterface} from "./Websocket/PointInterface";
-import {Group} from "./Group";
-import {User, UserSocket} from "./User";
-import {PositionInterface} from "../Model/PositionInterface";
+import { PointInterface } from "./Websocket/PointInterface";
+import { Group } from "./Group";
+import { User, UserSocket } from "./User";
+import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
     EntersCallback,
@@ -10,8 +10,8 @@ import {
     MovesCallback,
     PlayerDetailsUpdatedCallback,
 } from "../Model/Zone";
-import {PositionNotifier} from "./PositionNotifier";
-import {Movable} from "../Model/Movable";
+import { PositionNotifier } from "./PositionNotifier";
+import { Movable } from "../Model/Movable";
 import {
     BatchToPusherRoomMessage,
     EmoteEventMessage,
@@ -21,18 +21,18 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
-import {ProtobufUtils} from "../Model/Websocket/ProtobufUtils";
-import {RoomSocket, ZoneSocket} from "../RoomManager";
-import {Admin} from "../Model/Admin";
-import {adminApi} from "../Services/AdminApi";
-import {isMapDetailsData, MapDetailsData, MapThirdPartyData} from "../Messages/JsonMessages/MapDetailsData";
-import {ITiledMap} from "@workadventure/tiled-map-type-guard/dist";
-import {mapFetcher} from "../Services/MapFetcher";
-import {VariablesManager} from "../Services/VariablesManager";
-import {LocalUrlError} from "../Services/LocalUrlError";
-import {emitErrorOnRoomSocket} from "../Services/MessageHelpers";
-import {VariableError} from "../Services/VariableError";
-import {MucManager} from "../Services/MucManager";
+import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { Admin } from "../Model/Admin";
+import { adminApi } from "../Services/AdminApi";
+import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "../Messages/JsonMessages/MapDetailsData";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { mapFetcher } from "../Services/MapFetcher";
+import { VariablesManager } from "../Services/VariablesManager";
+import { LocalUrlError } from "../Services/LocalUrlError";
+import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
+import { VariableError } from "../Services/VariableError";
+import { MucManager } from "../Services/MucManager";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
@@ -673,7 +673,7 @@ export class GameRoom {
         const lastMapUrl = this.mapUrl;
         if (!this.mucManagerPromise) {
             // For localhost maps
-            this.mapUrl = this.mapUrl.replace('http://maps.workadventure.localhost', 'http://maps:80');
+            this.mapUrl = this.mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
             this.mucManagerLastLoad = new Date();
             this.mucManagerPromise = this.getMap(true)
                 .then((map) => {

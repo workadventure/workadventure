@@ -25,7 +25,7 @@ import {
     AskPositionMessage,
     AvailabilityStatus,
     BanUserByUuidMessage,
-    JoinMucRoomMessage
+    JoinMucRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -660,7 +660,7 @@ export class IoSocketController {
                         client,
                         message.getBanuserbyuuidmessage() as BanUserByUuidMessage
                     );
-                } else if (message.hasJoinmucroommessage()){
+                } else if (message.hasJoinmucroommessage()) {
                     socketManager.handleJoinMucRoomMessage(
                         client,
                         message.getJoinmucroommessage() as JoinMucRoomMessage

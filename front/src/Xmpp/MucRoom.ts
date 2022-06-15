@@ -236,7 +236,7 @@ export class MucRoom {
                     userJID.setResource('');
                     const roomId = xml.getChild("room")?.getAttr("id");
                     const uuid = xml.getChild("user")?.getAttr("uuid");
-                    const role = x.getChild("item")?.getAttr("role");
+                    //const role = x.getChild("item")?.getAttr("role");
                     const affiliation = x.getChild("item")?.getAttr("affiliation");
                     const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
                     if (

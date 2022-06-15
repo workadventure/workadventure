@@ -43,7 +43,7 @@ import {
     XmppMessage,
     AskPositionMessage,
     BanUserByUuidMessage,
-    JoinMucRoomMessage
+    JoinMucRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -724,7 +724,12 @@ export class SocketManager implements ZoneEventListener {
                 banUserByUuidMessage.getMessage(),
                 banUserByUuidMessage.getByuseremail()
             );
-            await this.emitBan(banUserByUuidMessage.getUuidtoban(), banUserByUuidMessage.getMessage(), "banned", banUserByUuidMessage.getPlayuri());
+            await this.emitBan(
+                banUserByUuidMessage.getUuidtoban(),
+                banUserByUuidMessage.getMessage(),
+                "banned",
+                banUserByUuidMessage.getPlayuri()
+            );
         } catch (e) {
             console.error('An error occurred on "handleBanUserByUuidMessage"');
             console.error(e);

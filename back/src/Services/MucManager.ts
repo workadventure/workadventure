@@ -1,6 +1,6 @@
-import {ITiledMap, ITiledMapLayer, ITiledMapObject} from "@workadventure/tiled-map-type-guard/dist";
-import Axios, {AxiosError, AxiosInstance} from "axios";
-import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import Axios, { AxiosError, AxiosInstance } from "axios";
+import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
 
 interface ChatZone {
     chatName?: string;
@@ -9,7 +9,6 @@ interface ChatZone {
 }
 
 export class MucManager {
-
     /**
      * The list of the chat zone for the current room
      */
@@ -26,55 +25,57 @@ export class MucManager {
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
             this.chatZones = MucManager.findChatZonesInMap(map);
-            this.chatZones?.forEach(chatZone => {
+            this.chatZones?.forEach((chatZone) => {
                 chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName}`;
                 chatZone.mucCreated = false;
             });
 
-            const auth = Buffer.from(EJABBERD_USER+'@'+EJABBERD_DOMAIN+':'+EJABBERD_PASSWORD).toString('base64');
+            const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString(
+                "base64"
+            );
             this.axios = Axios.create({
-                baseURL: 'http://'+EJABBERD_URI+'/api/',
+                baseURL: "http://" + EJABBERD_URI + "/api/",
                 headers: {
-                    'Authorization': 'Basic '+auth,
-                    timeout: 10000
-                }
+                    Authorization: "Basic " + auth,
+                    timeout: 10000,
+                },
             });
         }
     }
 
-    public async init(){
+    public async init() {
         const allMucRooms = await this.getAllMucRooms();
         const allMucRoomsOfWorld: string[] = [];
-        if(Axios.isAxiosError(allMucRooms)){
-            console.warn('Error to get allMucRooms (AxiosError) : ', allMucRooms.response);
-        } else if (allMucRooms instanceof Error){
-            console.warn('Error to get allMucRooms : ',allMucRooms);
+        if (Axios.isAxiosError(allMucRooms)) {
+            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.response);
+        } else if (allMucRooms instanceof Error) {
+            console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
-            allMucRooms.forEach(mucRoom => {
-                const [local] = mucRoom.split('@');
+            allMucRooms.forEach((mucRoom) => {
+                const [local] = mucRoom.split("@");
                 const decoded = MucManager.decode(local);
-                if(decoded?.includes(this.roomUrl)){
+                if (decoded?.includes(this.roomUrl)) {
                     allMucRoomsOfWorld.push(decoded);
                 }
             });
             for (const mucRoom of allMucRoomsOfWorld) {
                 let found = false;
-                this.chatZones?.forEach(chatZone => {
-                    if(found) return;
+                this.chatZones?.forEach((chatZone) => {
+                    if (found) return;
                     if (chatZone.mucUrl) {
-                        if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()){
+                        if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()) {
                             found = true;
                             chatZone.mucCreated = true;
                         }
                     }
                 });
-                if(!found){
+                if (!found) {
                     await this.destroyMucRoom(mucRoom);
                 }
             }
-            if(this.chatZones) {
-                for (const [,chatZone] of this.chatZones) {
-                    if(chatZone.mucCreated) return;
+            if (this.chatZones) {
+                for (const [, chatZone] of this.chatZones) {
+                    if (chatZone.mucCreated) return;
                     if (chatZone.mucUrl) {
                         await this.createMucRoom(chatZone);
                         chatZone.mucCreated = true;
@@ -135,38 +136,42 @@ export class MucManager {
         return variable;
     }
 
-    private async getAllMucRooms(): Promise<Array<string>|Error>{
-        return await this.axios
-            ?.post('muc_online_rooms', {service: `conference.ejabberd`})
-            .then(response => response.data)
-            .catch(error => error as AxiosError) as Promise<Array<string>|Error>;
+    private async getAllMucRooms(): Promise<Array<string> | Error> {
+        return (await this.axios
+            ?.post("muc_online_rooms", { service: `conference.ejabberd` })
+            .then((response) => response.data as Array<string>)
+            .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
-    private async destroyMucRoom(name: string){
+    private async destroyMucRoom(name: string) {
         await this.axios
-            ?.post('destroy_room', {name: MucManager.encode(name), service: `conference.ejabberd`})
-            .catch(error => console.error(error));
+            ?.post("destroy_room", { name: MucManager.encode(name), service: `conference.ejabberd` })
+            .catch((error) => console.error(error));
     }
 
     private async createMucRoom(chatZone: ChatZone) {
         await this.axios
-            ?.post('create_room', {name: `${MucManager.encode(chatZone.mucUrl ?? '')}`, host: EJABBERD_DOMAIN, service: `conference.ejabberd`})
-            .catch(error => console.error(error));
+            ?.post("create_room", {
+                name: `${MucManager.encode(chatZone.mucUrl ?? "")}`,
+                host: EJABBERD_DOMAIN,
+                service: `conference.ejabberd`,
+            })
+            .catch((error) => console.error(error));
     }
 
     private static decode(name: string | null | undefined) {
         if (!name) return name;
         return name
-            .replace(/\\5c/g, '\\')
-            .replace(/\\20/g, ' ')
-            .replace(/\\22/g, '*')
-            .replace(/\\26/g, '&')
-            .replace(/\\27/g, '\'')
-            .replace(/\\2f/g, '/')
-            .replace(/\\3a/g, ':')
-            .replace(/\\3c/g, '<')
-            .replace(/\\3e/g, '>')
-            .replace(/\\40/g, '@');
+            .replace(/\\5c/g, "\\")
+            .replace(/\\20/g, " ")
+            .replace(/\\22/g, "*")
+            .replace(/\\26/g, "&")
+            .replace(/\\27/g, "'")
+            .replace(/\\2f/g, "/")
+            .replace(/\\3a/g, ":")
+            .replace(/\\3c/g, "<")
+            .replace(/\\3e/g, ">")
+            .replace(/\\40/g, "@");
     }
 
     private static encode(name: string | null | undefined) {

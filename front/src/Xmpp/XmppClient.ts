@@ -39,7 +39,7 @@ export class XmppClient {
                 const fromJid = jid(from);
                 const roomJid = jid(fromJid.local, fromJid.domain);
 
-                let room = this.rooms.get(roomJid.toString());
+                const room = this.rooms.get(roomJid.toString());
                 /*
                 if(!room) {
                     if (xml.getName() === 'presence' && xml.getChild("user")) {

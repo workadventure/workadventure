@@ -44,7 +44,7 @@ import {
     RoomDescription,
     AskPositionMessage,
     MoveToPositionMessage,
-    JoinMucRoomMessage
+    JoinMucRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1049,7 +1049,7 @@ export class SocketManager {
         }
     }
 
-    handleJoinMucRoomMessage(room: GameRoom, user: User, joinMucRoomMessage: JoinMucRoomMessage){
+    handleJoinMucRoomMessage(room: GameRoom, user: User, joinMucRoomMessage: JoinMucRoomMessage) {
         // TODO : Send the message to all the users of the World and not only the room for forum and private MucRoom
         room.getUsers().forEach((recipient) => {
             const clientMessage = new ServerToClientMessage();

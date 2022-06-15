@@ -472,8 +472,16 @@ class AdminApi implements AdminInterface {
         await Axios.get(ADMIN_API_URL + `/oauth/logout?token=${token}`);
     }
 
-    async banUserByUuid(uuidToBan: string, playUri: string, name: string, message: string, byUserEmail: string): Promise<boolean>{
-        return await Axios.post(ADMIN_API_URL + "/api/ban", {uuidToBan, playUri, name, message, byUserEmail},
+    async banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean> {
+        return await Axios.post(
+            ADMIN_API_URL + "/api/ban",
+            { uuidToBan, playUri, name, message, byUserEmail },
             {
                 headers: { Authorization: `${ADMIN_API_TOKEN}` },
             }
