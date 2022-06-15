@@ -31,18 +31,22 @@
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
                 </p>
-                <img src={$LL.camera.help.screen.firefox()} alt="help camera setup" class="tw-rounded-lg tw-w-5/6 md:tw-w-80"/>
+                <img
+                    src={$LL.camera.help.screen.firefox()}
+                    alt="help camera setup"
+                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80"
+                />
             {:else if isChrome && !isAndroid}
-                <img src={$LL.camera.help.screen.chrome()} alt="help camera setup" class="tw-rounded-lg tw-w-5/6 md:tw-w-80"/>
+                <img
+                    src={$LL.camera.help.screen.chrome()}
+                    alt="help camera setup"
+                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80"
+                />
             {/if}
         </p>
     </section>
     <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:click|preventDefault={refresh}
-            >{$LL.camera.help.refresh()}</button
-        >
-        <button type="submit" class="outline" on:click|preventDefault={close}
-            >{$LL.camera.help.continue()}</button
-        >
+        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
+        <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
     </section>
 </form>

@@ -35,7 +35,7 @@
 {#if $followStateStore === "requesting" && $followRoleStore === "follower"}
     <div
         class="interact-menu blue-dialog-box outline-light
-    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0"
+    tw-text-center tw-w-72 tw-absolute tw-bottom-36 tw-left-0 tw-right-0 tw-pointer-events-auto tw-z-[150] tw-right-0 tw-left-0 tw-m-auto"
     >
         <p class="tw-mt-2">{$LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) })}</p>
         <div class="tw-flex tw-flex-row tw-justify-evenly">
@@ -50,34 +50,31 @@
 {/if}
 
 {#if $followStateStore === "ending"}
-    <div class="interact-menu nes-container is-rounded">
-        <section>
-            <h2>{$LL.follow.interactMenu.title.interact()}</h2>
-        </section>
+    <div
+        class="blue-dialog-box outline-light
+    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36 tw-text-center tw-m-auto tw-right-0 tw-left-0 tw-z-[150]"
+    >
+        <p>{$LL.follow.interactMenu.title.interact()}</p>
         {#if $followRoleStore === "follower"}
-            <section class="interact-menu-question">
-                <p>{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</p>
-            </section>
+            <p class="tw-m-1">{$LL.follow.interactMenu.stop.follower({ leader: name($followUsersStore[0]) })}</p>
         {:else if $followRoleStore === "leader"}
-            <section class="interact-menu-question">
-                <p>{$LL.follow.interactMenu.stop.leader()}</p>
-            </section>
+            <p class="tw-m-1">{$LL.follow.interactMenu.stop.leader()}</p>
         {/if}
-        <section class="interact-menu-action">
-            <button type="button" class="nes-btn is-success" on:click|preventDefault={reset}
+        <div class="tw-flex tw-flex-row tw-justify-evenly">
+            <button type="button" class="btn light" on:click|preventDefault={reset}
                 >{$LL.follow.interactMenu.yes()}</button
             >
-            <button type="button" class="nes-btn is-error" on:click|preventDefault={abortEnding}
+            <button type="button" class="btn outline" on:click|preventDefault={abortEnding}
                 >{$LL.follow.interactMenu.no()}</button
             >
-        </section>
+        </div>
     </div>
 {/if}
 
 {#if $followStateStore === "active" || $followStateStore === "ending"}
     <div
-        class="interact-status blue-dialog-box outline-light
-    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36"
+        class="blue-dialog-box outline-light
+    tw-w-56 tw-min-h-10 tw-absolute tw-bottom-36 tw-text-center tw-m-auto tw-right-0 tw-left-0 tw-z-[150]"
     >
         {#if $followRoleStore === "follower"}
             <p class="tw-m-1">{$LL.follow.interactStatus.following({ leader: name($followUsersStore[0]) })}</p>
@@ -102,32 +99,3 @@
         {/if}
     </div>
 {/if}
-
-<style lang="scss">
-    .nes-container {
-        padding: 5px;
-    }
-
-    .interact-status {
-        text-align: center;
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        z-index: 400;
-    }
-
-    div.interact-menu {
-        pointer-events: auto;
-        position: absolute;
-        margin-left: auto;
-        margin-right: auto;
-        z-index: 150;
-
-        section.interact-menu-title {
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-        }
-    }
-</style>
