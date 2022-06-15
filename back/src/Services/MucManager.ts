@@ -51,13 +51,13 @@ export class MucManager {
             console.warn('Error to get allMucRooms : ',allMucRooms);
         } else {
             allMucRooms.forEach(mucRoom => {
-                const [local, domain] = mucRoom.split('@');
+                const [local, _] = mucRoom.split('@');
                 const decoded = MucManager.decode(local);
                 if(decoded?.includes(this.roomUrl)){
                     allMucRoomsOfWorld.push(decoded);
                 }
             });
-            allMucRoomsOfWorld.forEach(mucRoom => {
+            for (const mucRoom of allMucRoomsOfWorld) {
                 let found = false;
                 this.chatZones?.forEach(chatZone => {
                     if(found) return;
@@ -69,16 +69,18 @@ export class MucManager {
                     }
                 });
                 if(!found){
-                    this.destroyMucRoom(mucRoom);
+                    await this.destroyMucRoom(mucRoom);
                 }
-            });
-            this.chatZones?.forEach(chatZone => {
-                if(chatZone.mucCreated) return;
-                if (chatZone.mucUrl) {
-                    this.createMucRoom(chatZone);
-                    chatZone.mucCreated = true;
+            }
+            if(this.chatZones) {
+                for (const [_, chatZone] of this.chatZones) {
+                    if(chatZone.mucCreated) return;
+                    if (chatZone.mucUrl) {
+                        await this.createMucRoom(chatZone);
+                        chatZone.mucCreated = true;
+                    }
                 }
-            });
+            }
         }
     }
 

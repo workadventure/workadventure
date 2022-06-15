@@ -18,8 +18,8 @@ export const REDIS_PORT = parseInt(process.env.REDIS_PORT || "6379") || 6379;
 export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
-export const EJABBERD_URI = process.env.EJABBERD_URI || 'ejabberd:5443';
-export const EJABBERD_DOMAIN = process.env.EJABBERD_DOMAIN || 'ejabberd';
+export const EJABBERD_URI = process.env.EJABBERD_URI || '';
+export const EJABBERD_DOMAIN = process.env.EJABBERD_DOMAIN || '';
 export const EJABBERD_USER = process.env.EJABBERD_USER || '';
 export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || '';
 
