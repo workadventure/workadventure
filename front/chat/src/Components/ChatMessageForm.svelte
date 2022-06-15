@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LL from "../../i18n/i18n-svelte";
+    import LL from "../../../src/i18n/i18n-svelte";
     import { SendIcon } from "svelte-feather-icons";
     import { chatMessagesStore, chatInputFocusStore } from "../Stores/ChatStore";
 
@@ -44,7 +44,7 @@
                 type="submit"
                 class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
             >
-                <SendIcon size="17"/>
+                <SendIcon size="17" />
             </button>
         </div>
     </div>

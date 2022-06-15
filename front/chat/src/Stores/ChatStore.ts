@@ -23,7 +23,7 @@ export interface ChatMessage {
     text?: string[];
 }
 
-let players = new Map<number, PlayerInterface>();
+const players = new Map<number, PlayerInterface>();
 
 function getAuthor(authorId: number): PlayerInterface {
     const author = players.get(authorId);

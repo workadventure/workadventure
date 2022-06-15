@@ -1,7 +1,7 @@
 <script lang="ts">
     import { ChatMessageTypes } from "../Stores/ChatStore";
     import type { ChatMessage } from "../Stores/ChatStore";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    import { HtmlUtils } from "../../../src/WebRtc/HtmlUtils";
     import ChatPlayerName from "./ChatPlayerName.svelte";
     import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
 
@@ -13,7 +13,7 @@
     $: targets = message.targets || [];
     $: texts = message.text || [];
 
-    let me = message.type !== ChatMessageTypes.me
+    let me = message.type !== ChatMessageTypes.me;
 
     function urlifyText(text: string): string {
         return HtmlUtils.urlify(text, chatStyleLink);
@@ -31,11 +31,7 @@
 
 <div class="">
     <div class={`tw-flex ${me ? "tw-justify-end" : "tw-justify-start"}`}>
-        <div
-            class={`tw-w-3/4 tw-flex tw-items-start ${
-                me ? "tw-flex-row-reverse" : ""
-            }`}
-        >
+        <div class={`tw-w-3/4 tw-flex tw-items-start ${me ? "tw-flex-row-reverse" : ""}`}>
             {#if !me}
                 <img class={`tw-mt-4 tw-mr-3`} src="/static/images/yoda-avatar.png" alt="Send" width="36" />
             {/if}
@@ -55,7 +51,9 @@
                 {:else if message.type === ChatMessageTypes.me}
                     <div class="tw-px-2">
                         <div
-                            class="{`tw-flex tw-w-full tw-border-0 tw-border-b  tw-border-solid tw-text-xs tw-pb-1 ${me ?'tw-border-b-pop-red':'tw-border-light-blue'}`}"
+                            class={`tw-flex tw-w-full tw-border-0 tw-border-b  tw-border-solid tw-text-xs tw-pb-1 ${
+                                me ? "tw-border-b-pop-red" : "tw-border-light-blue"
+                            }`}
                         >
                             <span class="tw-text-[#7d7b9e]"> Me </span>
                             <span class="tw-ml-auto tw-text-[#5c588c]">{renderDate(message.date)}</span>
