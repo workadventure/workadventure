@@ -162,7 +162,6 @@ export class MucManager {
     private static decode(name: string | null | undefined) {
         if (!name) return '';
         return name
-            .replace(/\\5c/g, "\\")
             .replace(/\\20/g, " ")
             .replace(/\\22/g, "*")
             .replace(/\\26/g, "&")
@@ -171,7 +170,8 @@ export class MucManager {
             .replace(/\\3a/g, ":")
             .replace(/\\3c/g, "<")
             .replace(/\\3e/g, ">")
-            .replace(/\\40/g, "@");
+            .replace(/\\40/g, "@")
+            .replace(/\\5c/g, "\\");
     }
 
     private static encode(name: string | null | undefined) {
