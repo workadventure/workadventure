@@ -173,6 +173,7 @@
     }
 
     section {
+        overflow: auto;
         @apply tw-mb-4 tw-p-2 tw-h-full;
         .bottom-separator {
             border-bottom: 1px solid theme("colors.light-purple");

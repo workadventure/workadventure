@@ -1,9 +1,9 @@
 <script lang="ts">
     import { ChatMessageTypes } from "../Stores/ChatStore";
     import type { ChatMessage } from "../Stores/ChatStore";
-    import { HtmlUtils } from "../../../src/WebRtc/HtmlUtils";
+    import { HtmlUtils } from "../Utils/HtmlUtils";
     import ChatPlayerName from "./ChatPlayerName.svelte";
-    import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
+    import type { PlayerInterface } from "../Type/PlayerInterface";
 
     export let message: ChatMessage;
     export let line: number;

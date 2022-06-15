@@ -1,8 +1,7 @@
 import { writable } from "svelte/store";
-import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
+import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 
-export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
 
 const _newChatMessageSubject = new Subject<string>();
@@ -114,7 +113,6 @@ function createChatMessagesStore() {
                 //iframeListener.sendUserInputChat(text, origin);
                 return list;
             });
-            chatVisibilityStore.set(true);
         },
     };
 }

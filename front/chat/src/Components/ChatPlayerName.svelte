@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
+    import type { PlayerInterface } from "../Type/PlayerInterface";
     import { chatSubMenuVisibilityStore } from "../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";

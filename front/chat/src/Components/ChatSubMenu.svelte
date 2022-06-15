@@ -1,6 +1,6 @@
 <script lang="ts">
-    import LL from "../../../src/i18n/i18n-svelte";
-    import type { PlayerInterface } from "../../../src/Phaser/Game/PlayerInterface";
+    import LL from "../i18n/i18n-svelte";
+    import type { PlayerInterface } from "../Type/PlayerInterface";
 
     export let player: PlayerInterface;
 

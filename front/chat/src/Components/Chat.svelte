@@ -1,9 +1,8 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatVisibilityStore } from "../Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { HtmlUtils } from "../../../src/WebRtc/HtmlUtils";
+    import { HtmlUtils } from "../Utils/HtmlUtils";
     import { ChevronUpIcon } from "svelte-feather-icons";
     import ChatUser from "./ChatUser.svelte";
     import ChatForum from "./ChatForum.svelte";
@@ -226,7 +225,7 @@
     }
 
     function closeChat() {
-        chatVisibilityStore.set(false);
+        //TODO send post message API to close iframe
     }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {

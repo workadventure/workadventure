@@ -1,10 +1,10 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../Stores/ChatStore";
+    import { chatMessagesStore } from "../Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { HtmlUtils } from "../../../src/WebRtc/HtmlUtils";
+    import { HtmlUtils } from "../Utils/HtmlUtils";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -30,7 +30,7 @@
     }
 
     function closeChat() {
-        chatVisibilityStore.set(false);
+        //TODO send post message API to close iframe
     }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {

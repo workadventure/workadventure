@@ -66,6 +66,24 @@ services:
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
 
+  chat:
+    image: thecodingmachine/nodejs:16
+    container_name: chat
+    command: yarn run start
+    environment:
+      PUSHER_URL: //pusher.workadventure.localhost
+    volumes:
+      - ./front/chat:/usr/src/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=8080"
+      - "traefik.http.routers.chat-ssl.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.service=chat"
+
   pusher:
     image: thecodingmachine/nodejs:16
     command: yarn dev
