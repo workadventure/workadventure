@@ -55,7 +55,15 @@
         return n;
     };
 
-    let activeThread:unknown  = null;
+    let activeThread: {
+        type: string,
+        user_id: integer,
+        user_color: string,
+        user_name: string,
+        user_avatar: string,
+        time: string,
+        text: string,
+    }  = null;
 
     let forums = [
         {
@@ -250,7 +258,7 @@
     <section class="tw-p-0" bind:this={listDom}>
         {#if activeThread !== null}
             <!-- thread -->
-            <div class="tw-flex tw-flex-col tw-h-full">
+            <div class="tw-flex tw-flex-col tw-h-full tw-over">
                 <div class="tw-p-5">
                     <button
                         on:click={() => {
@@ -264,7 +272,7 @@
                     </button>
                 </div>
 
-                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5">
+                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
 
                     <!-- if there is a user typing -->
 
@@ -428,7 +436,7 @@
             </div>
             <!-- chat users -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple tw-overflow-auto">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if usersListUnreads()}
                         <span
@@ -460,14 +468,14 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
 
             <!-- forum list -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if forumListUnreads()}
                         <span
@@ -493,7 +501,7 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>

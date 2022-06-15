@@ -5,6 +5,7 @@
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
+    // import LL from "../../i18n/i18n-svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -69,7 +70,7 @@
 </aside>
 
 <style lang="scss">
-   aside.chatWindow {
+    aside.chatWindow {
         z-index: 1000;
         pointer-events: auto;
         position: absolute;

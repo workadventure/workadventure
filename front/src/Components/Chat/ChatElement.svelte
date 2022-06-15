@@ -88,31 +88,4 @@
     p {
         font-family: Lato;
     }
-    div.chatElement {
-        display: flex;
-        margin-bottom: 20px;
-
-        .messagePart {
-            flex-grow: 1;
-            max-width: 100%;
-            user-select: text;
-
-            span.date {
-                font-size: 80%;
-                color: gray;
-            }
-
-            div > p {
-                border-radius: 8px;
-                margin-bottom: 10px;
-                padding: 6px;
-                overflow-wrap: break-word;
-                max-width: 100%;
-                display: inline-block;
-                &.other-text {
-                    background: gray;
-                }
-            }
-        }
-    }
 </style>
