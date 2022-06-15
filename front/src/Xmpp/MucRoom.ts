@@ -236,7 +236,6 @@ export class MucRoom {
                     userJID.setResource('');
                     const roomId = xml.getChild("room")?.getAttr("id");
                     const uuid = xml.getChild("user")?.getAttr("uuid");
-                    //const role = x.getChild("item")?.getAttr("role");
                     const affiliation = x.getChild("item")?.getAttr("affiliation");
                     const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
                     if (
@@ -247,6 +246,7 @@ export class MucRoom {
                     ) {
                         this.deleteUser(userJID.toString());
                     } else {
+                        const role = x.getChild("item")?.getAttr("role");
                         this.updateUser(
                             userJID.toString(),
                             from.resource,

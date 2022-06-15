@@ -26,7 +26,7 @@ export class MucManager {
         if (map) {
             this.chatZones = MucManager.findChatZonesInMap(map);
             this.chatZones?.forEach((chatZone) => {
-                chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName}`;
+                chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName ?? ''}`;
                 chatZone.mucCreated = false;
             });
 
@@ -160,7 +160,7 @@ export class MucManager {
     }
 
     private static decode(name: string | null | undefined) {
-        if (!name) return name;
+        if (!name) return '';
         return name
             .replace(/\\5c/g, "\\")
             .replace(/\\20/g, " ")
@@ -175,7 +175,7 @@ export class MucManager {
     }
 
     private static encode(name: string | null | undefined) {
-        if (!name) return name;
+        if (!name) return '';
         return name
             .replace(/\\/g, "\\5c")
             .replace(/ /g, "\\20")
