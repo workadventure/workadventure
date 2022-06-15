@@ -6,7 +6,7 @@
 
     function openVisitCard() {
         if (player.visitCardUrl) {
-            //TODO use post message API and ask to display user visit card
+            //TODO open visite card
         }
     }
 </script>

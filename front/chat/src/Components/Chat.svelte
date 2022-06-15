@@ -55,7 +55,15 @@
         return n;
     };
 
-    let activeThread: unknown = null;
+    let activeThread: {
+        type: string,
+        user_id: integer,
+        user_color: string,
+        user_name: string,
+        user_avatar: string,
+        time: string,
+        text: string,
+    }  = null;
 
     let forums = [
         {
@@ -94,7 +102,7 @@
             user_avatar: "yoda2-avatar.png",
             info: "a rejoint conversation",
         },
-
+       
         {
             type: "message",
             user_id: 3,
@@ -190,7 +198,7 @@
         user_name: string,
         user_avatar: string,
         user_color: string,
-    } = {
+    } =  {
         user_id: 3,
         user_name: "Grégoire",
         user_avatar: "yoda2-avatar.png",
@@ -240,7 +248,7 @@
         if (!nextMsg) {
             return false;
         }
-        return nextMsg.type !== "event" && nextMsg.user_id === userID;
+        return nextMsg.type !== 'event' &&  nextMsg.user_id === userID;
     }
 </script>
 
@@ -250,7 +258,7 @@
     <section class="tw-p-0" bind:this={listDom}>
         {#if activeThread !== null}
             <!-- thread -->
-            <div class="tw-flex tw-flex-col tw-h-full">
+            <div class="tw-flex tw-flex-col tw-h-full tw-over">
                 <div class="tw-p-5">
                     <button
                         on:click={() => {
@@ -264,7 +272,8 @@
                     </button>
                 </div>
 
-                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5">
+                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
+
                     <!-- if there is a user typing -->
 
                     {#if !!threadListUserTyping}
@@ -289,13 +298,14 @@
                                         style={`border-bottom-color:${threadListUserTyping.user_color}`}
                                         class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}
                                     >
-                                        <!-- if the typer sent the latest message -->
+                                    <!-- if the typer sent the latest message -->
                                         {#if threadList[0].user_id !== threadListUserTyping.user_id}
                                             <span class=""> {threadListUserTyping.user_name} </span>
                                         {/if}
                                     </div>
-
+                                    
                                     <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+
                                         <!-- loading animation -->
                                         <div class="loading-group">
                                             <span class="loading-dot" />
@@ -308,7 +318,9 @@
                         </div>
                     {/if}
                     {#each threadList as message, i}
+
                         <div class={`${lastMessageIsFromSameUser(message.user_id, i) ? "" : "tw-mt-4"}`}>
+
                             <!-- if the message is a text/attachment -->
 
                             {#if ["message", "attachment"].includes(message.type)}
@@ -319,7 +331,8 @@
                                         }`}
                                     >
                                         {#if !message.me}
-                                            <!-- make image invisible and omit vertical margin if last message was by same user -->
+
+                                        <!-- make image invisible and omit vertical margin if last message was by same user -->
                                             <img
                                                 class={`tw-mr-2 ${
                                                     lastMessageIsFromSameUser(message.user_id, i)
@@ -335,6 +348,7 @@
                                         {/if}
 
                                         <div class={`tw-flex-auto ${message.me ? "" : ""}`}>
+
                                             <!-- message content -->
 
                                             {#if message.type === "message"}
@@ -342,7 +356,8 @@
                                                     style={`border-bottom-color:${message.user_color}`}
                                                     class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}
                                                 >
-                                                    <!-- if last message was by this user, ignore this part -->
+
+                                                <!-- if last message was by this user, ignore this part -->
                                                     {#if !lastMessageIsFromSameUser(message.user_id, i)}
                                                         {#if message.me}
                                                             <span> Me </span>
@@ -355,34 +370,38 @@
                                                             {message.time}
                                                         </span>
                                                     {/if}
+
+
                                                 </div>
 
                                                 <div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3`}>
                                                     <p class="tw-mb-0">{message.text}</p>
                                                 </div>
-                                            {:else if message.type === "attachment"}
-                                                <!-- attachment content -->
 
-                                                <div class="tw-flex tw-mt-1">
-                                                    <div
-                                                        class="tw-rounded tw-border tw-border-solid tw-border-[#979797] tw-p-3"
-                                                    >
-                                                        <div class="tw-text-xs tw-italic tw-mb-2">
-                                                            <span
-                                                                class="tw-font-bold"
-                                                                style={`color:${message.user_color}`}>Grégoire</span
-                                                            >
-                                                            <span> a envoyer un fichier </span>
-                                                        </div>
-                                                        <img src="/static/images/attach.svg" alt="attachment" />
+                                            {:else if message.type === "attachment"}
+
+                                            <!-- attachment content -->
+
+                                            <div class="tw-flex tw-mt-1">
+                                                <div class="tw-rounded tw-border tw-border-solid tw-border-[#979797] tw-p-3">
+
+                                                    <div class="tw-text-xs tw-italic tw-mb-2">
+                                                        <span class="tw-font-bold" style={`color:${message.user_color}`}>Grégoire</span>
+                                                        <span>
+                                                            a envoyer un fichier
+                                                        </span>
                                                     </div>
+                                                    <img src="/static/images/attach.svg" alt="attachment" />
+
                                                 </div>
+                                            </div>
                                             {/if}
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- if the message is an event, like someone joining the conversation -->
+                            <!-- if the message is an event, like someone joining the conversation -->
+
                             {:else if message.type === "event"}
                                 <div class="tw-flex tw-justify-center">
                                     <div
@@ -404,6 +423,7 @@
                     <ChatMessageForm bind:handleForm={handleFormBlur} />
                 </div>
             </div>
+
         {:else}
             <!-- searchbar -->
             <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
@@ -416,7 +436,7 @@
             </div>
             <!-- chat users -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple tw-overflow-auto">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if usersListUnreads()}
                         <span
@@ -448,14 +468,14 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
 
             <!-- forum list -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if forumListUnreads()}
                         <span
@@ -481,7 +501,7 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>

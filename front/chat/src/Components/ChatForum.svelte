@@ -1,8 +1,8 @@
 <script>
-    export let forum;
+    export let forum
 </script>
 
-<div class={`tw-flex tw-px-3 tw-mb-3 tw-items-center`}>
+<div class={`wa-chat-item`}>
     <div class="tw-relative">
         <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="42" />
         {#if forum.active}
