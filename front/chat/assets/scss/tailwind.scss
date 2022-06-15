@@ -93,6 +93,19 @@
     .outline-light {
         @apply tw-border-light-blue tw-border-solid
     }
+
+
+    .wa-chat-item{
+        @apply tw-flex tw-px-6 tw-py-3 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
+
+        &:hover{
+            background-color: rgba(#4D4B67, .24);
+        }
+
+        *{
+            cursor: pointer;
+        }
+    }
 }
 
 @layer utilities {
@@ -127,17 +140,17 @@
         @apply tw-text-light-blue tw-font-sans tw-text-base tw-font-normal;
     }
 
-  button,
-  .btn {
-    &.light,
-    &.dark,
-    &.outline {
-      @apply tw-min-h-10;
-    }
+    button,
+    .btn {
+        &.light,
+        &.dark,
+        &.outline {
+            @apply tw-min-h-10;
+        }
 
-    &.light {
-      @apply tw-bg-light-blue tw-text-dark-purple;
-    }
+        &.light {
+            @apply tw-bg-light-blue tw-text-dark-purple;
+        }
 
         &.dark {
             @apply tw-bg-dark-purple tw-text-light-blue;
@@ -188,7 +201,7 @@
         margin-left: -5px;
         border-width: 5px;
         border-color: theme("colors.medium-purple") theme("colors.transparent") theme("colors.transparent")
-            theme("colors.transparent");
+        theme("colors.transparent");
     }
 
     .clickable,
