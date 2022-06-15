@@ -27,7 +27,7 @@ export class MucManager {
         if (map) {
             this.chatZones = MucManager.findChatZonesInMap(map);
             this.chatZones?.forEach(chatZone => {
-                chatZone.mucUrl = `${this.roomUrl}/${chatZone.chatName}`;
+                chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName}`;
                 chatZone.mucCreated = false;
             });
 
@@ -51,7 +51,7 @@ export class MucManager {
             console.warn('Error to get allMucRooms : ',allMucRooms);
         } else {
             allMucRooms.forEach(mucRoom => {
-                const [local, _] = mucRoom.split('@');
+                const [local] = mucRoom.split('@');
                 const decoded = MucManager.decode(local);
                 if(decoded?.includes(this.roomUrl)){
                     allMucRoomsOfWorld.push(decoded);
@@ -73,7 +73,7 @@ export class MucManager {
                 }
             }
             if(this.chatZones) {
-                for (const [_, chatZone] of this.chatZones) {
+                for (const [,chatZone] of this.chatZones) {
                     if(chatZone.mucCreated) return;
                     if (chatZone.mucUrl) {
                         await this.createMucRoom(chatZone);
@@ -139,7 +139,7 @@ export class MucManager {
         return await this.axios
             ?.post('muc_online_rooms', {service: `conference.ejabberd`})
             .then(response => response.data)
-            .catch(error => error as AxiosError);
+            .catch(error => error as AxiosError) as Promise<Array<string>|Error>;
     }
 
     private async destroyMucRoom(name: string){
@@ -150,7 +150,7 @@ export class MucManager {
 
     private async createMucRoom(chatZone: ChatZone) {
         await this.axios
-            ?.post('create_room', {name: `${MucManager.encode(chatZone.mucUrl)}`, host: EJABBERD_DOMAIN, service: `conference.ejabberd`})
+            ?.post('create_room', {name: `${MucManager.encode(chatZone.mucUrl ?? '')}`, host: EJABBERD_DOMAIN, service: `conference.ejabberd`})
             .catch(error => console.error(error));
     }
 

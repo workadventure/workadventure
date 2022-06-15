@@ -14,7 +14,6 @@ import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { get } from "svelte/store";
 import LL from "../i18n/i18n-svelte";
-import {userIsAdminStore} from "../Stores/GameStore";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
