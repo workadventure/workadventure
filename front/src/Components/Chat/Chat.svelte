@@ -1,15 +1,16 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    // import { chatMessagesStore } from "../../Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
-    import ChatElement from "./ChatElement.svelte";
+    // import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { ChevronUpIcon } from "svelte-feather-icons";
-    import LL from "../../i18n/i18n-svelte";
+    // import LL from "../../i18n/i18n-svelte";
     import ChatUser from "./ChatUser.svelte";
     import ChatForum from "./ChatForum.svelte";
-    import ChatThread from "./Chat.alt.svelte";
+    // import ChatThread from "./Chat.alt.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -58,7 +59,9 @@
         return n;
     };
 
-    let activeThread: any = null;
+    let activeThread: any = {
+
+    };
 
     let forums = [
         {
@@ -248,7 +251,7 @@
     <section class="tw-p-0" bind:this={listDom}>
         {#if activeThread !== null}
             <!-- thread -->
-            <div class="tw-flex tw-flex-col tw-h-full">
+            <div class="tw-flex tw-flex-col tw-h-full tw-over">
                 <div class="tw-p-5">
                     <button
                         on:click={() => {
@@ -262,7 +265,7 @@
                     </button>
                 </div>
 
-                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5">
+                <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
 
                     <!-- if there is a user typing -->
 
@@ -426,7 +429,7 @@
             </div>
             <!-- chat users -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple tw-overflow-auto">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if usersListUnreads()}
                         <span
@@ -447,7 +450,7 @@
                 </div>
                 {#if showUsers}
                     <div class="tw-mt-3">
-                        {#each users as user, i}
+                        {#each users as user}
                             <div
                                 on:click={() => {
                                     activeThread = user;
@@ -458,14 +461,14 @@
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
 
             <!-- forum list -->
 
-            <div class="tw-px-3 tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
+            <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                 <div class="tw-p-3 tw-flex tw-items-center">
                     {#if forumListUnreads()}
                         <span
@@ -486,12 +489,12 @@
                 </div>
                 {#if showForums}
                     <div class="tw-mt-3">
-                        {#each forums as forum, i}
+                        {#each forums as forum}
                             <ChatForum {forum} />
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-                        <span class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed">See more…</span>
+                        <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">See more…</button>
                     </div>
                 {/if}
             </div>
