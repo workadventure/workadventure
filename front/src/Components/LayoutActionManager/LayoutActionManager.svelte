@@ -16,22 +16,19 @@
 
 <style lang="scss">
     div.layout-manager-list {
-
         z-index: 155;
         animation: moveMessage 0.7s;
         animation-iteration-count: infinite;
         animation-timing-function: ease-in-out;
-
     }
 
-    .message{
+    .message {
         @apply tw-border-light-blue tw-text-light-blue tw-border tw-border-solid;
     }
 
-    .warning{
+    .warning {
         @apply tw-border-pop-yellow tw-text-pop-yellow tw-border-solid;
     }
-
 
     @keyframes moveMessage {
         0% {
