@@ -135,7 +135,7 @@ export class XmppClient {
         }
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
         let room = this.rooms.get(roomUrl.toString());
-        if(!room){
+        if (!room) {
             room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);
             room.connect();
             this.rooms.set(roomUrl.toString(), room);
@@ -158,7 +158,7 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        if(doDisconnect){
+        if (doDisconnect) {
             room.disconnect();
         }
         this.rooms.delete(roomUrl.toString());

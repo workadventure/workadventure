@@ -169,7 +169,7 @@ export class GameScene extends DirtyScene {
         | GroupCreatedUpdatedEventInterface
         | DeleteGroupEventInterface
         | PlayerDetailsUpdatedInterface
-        >();
+    >();
     private initPosition: PositionInterface | null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
@@ -785,8 +785,8 @@ export class GameScene extends DirtyScene {
                     if (item === undefined) {
                         console.warn(
                             'Received an event about object "' +
-                            message.itemId +
-                            '" but cannot find this item on the map.'
+                                message.itemId +
+                                '" but cannot find this item on the map.'
                         );
                         return;
                     }
@@ -1080,8 +1080,8 @@ export class GameScene extends DirtyScene {
                 } else {
                     console.error(
                         "Error while opening a popup. Cannot find an object on the map with name '" +
-                        openPopupEvent.targetObject +
-                        "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map."
+                            openPopupEvent.targetObject +
+                            "'. The first parameter of WA.openPopup() must be the name of a rectangle object in your map."
                     );
                     return;
                 }
@@ -1590,8 +1590,8 @@ ${escapedMessage}
             if (phaserLayers.length === 0) {
                 console.warn(
                     'Could not find layer with name that contains "' +
-                    layerName +
-                    '" when calling WA.hideLayer / WA.showLayer'
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
                 );
                 return;
             }

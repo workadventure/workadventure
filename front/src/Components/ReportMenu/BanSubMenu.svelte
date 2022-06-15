@@ -1,8 +1,8 @@
 <script lang="ts">
     import { showReportScreenStore, userReportEmpty } from "../../Stores/ShowReportScreenStore";
     import LL from "../../i18n/i18n-svelte";
-    import {gameManager} from "../../Phaser/Game/GameManager";
-    import {urlManager} from "../../Url/UrlManager";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { urlManager } from "../../Url/UrlManager";
 
     export let userUUID: string | undefined;
     export let userName: string;
@@ -12,7 +12,9 @@
             console.error("There is no user to block");
             return;
         }
-        gameManager.getCurrentGameScene().connection?.emitBanUserByUuid(urlManager.getPlayUri(), userUUID, userName, "Message");
+        gameManager
+            .getCurrentGameScene()
+            .connection?.emitBanUserByUuid(urlManager.getPlayUri(), userUUID, userName, "Message");
         showReportScreenStore.set(userReportEmpty);
     }
 </script>

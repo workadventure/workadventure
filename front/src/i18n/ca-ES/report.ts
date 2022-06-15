@@ -9,7 +9,7 @@ const report: NonNullable<Translation["report"]> = {
     },
     ban: {
         title: "Banish",
-        content: "Banir utilizador {userName} do mundo em execução. Isto poderá ser cancelado da administração." ,
+        content: "Banir utilizador {userName} do mundo em execução. Isto poderá ser cancelado da administração.",
         ban: "Banir este utilizador",
     },
     title: "Denunciar",
@@ -25,7 +25,7 @@ const report: NonNullable<Translation["report"]> = {
         block: "Bloquejar",
         report: "Denunciar",
         noSelect: "ERROR : No s'ha seleccionat una acció.",
-        ban: "Banish"
+        ban: "Banish",
     },
 };
 

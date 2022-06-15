@@ -47,7 +47,8 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    ErrorScreenMessage, MucRoomDefinitionMessage,
+    ErrorScreenMessage,
+    MucRoomDefinitionMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -523,7 +524,7 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "banUserMessage": {
-                    const error = {type: 'error', code: 'USER_BANNED'}
+                    const error = { type: "error", code: "USER_BANNED" };
                     errorScreenStore.setError(error as ErrorScreenMessage);
                     //adminMessagesService.onSendusermessage(message.banUserMessage);
                     break;
@@ -600,10 +601,22 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "joinMucRoomMessage": {
-                    if(message.joinMucRoomMessage.mucRoom) {
+                    if (message.joinMucRoomMessage.mucRoom) {
                         // If the user is in the chatZone that he must join
-                        if(message.joinMucRoomMessage.mucRoom.type === 'live' && gameManager.getCurrentGameScene().getGameMap().getCurrentProperties().get('chatName') === message.joinMucRoomMessage.mucRoom.name) {
-                            gameManager.getCurrentGameScene().getXmppClient().joinMuc(message.joinMucRoomMessage.mucRoom.name, message.joinMucRoomMessage.mucRoom.type, message.joinMucRoomMessage.mucRoom.url, message.joinMucRoomMessage.mucRoom.type !== 'live');
+                        if (
+                            message.joinMucRoomMessage.mucRoom.type === "live" &&
+                            gameManager.getCurrentGameScene().getGameMap().getCurrentProperties().get("chatName") ===
+                                message.joinMucRoomMessage.mucRoom.name
+                        ) {
+                            gameManager
+                                .getCurrentGameScene()
+                                .getXmppClient()
+                                .joinMuc(
+                                    message.joinMucRoomMessage.mucRoom.name,
+                                    message.joinMucRoomMessage.mucRoom.type,
+                                    message.joinMucRoomMessage.mucRoom.url,
+                                    message.joinMucRoomMessage.mucRoom.type !== "live"
+                                );
                         }
                     }
                     break;
@@ -1083,7 +1096,7 @@ export class RoomConnection implements RoomConnection {
                     uuidToBan,
                     name,
                     message,
-                    byUserEmail: localUserStore.getLocalUser()?.email ?? ''
+                    byUserEmail: localUserStore.getLocalUser()?.email ?? "",
                 },
             },
         }).finish();
@@ -1091,7 +1104,7 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitJoinMucRoom(name: string, type: string, url: string){
+    public emitJoinMucRoom(name: string, type: string, url: string) {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {
                 $case: "joinMucRoomMessage",
@@ -1099,8 +1112,8 @@ export class RoomConnection implements RoomConnection {
                     mucRoom: {
                         name,
                         type,
-                        url
-                    } as MucRoomDefinitionMessage
+                        url,
+                    } as MucRoomDefinitionMessage,
                 },
             },
         }).finish();

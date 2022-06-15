@@ -26,7 +26,7 @@ export class MucManager {
         if (map) {
             this.chatZones = MucManager.findChatZonesInMap(map);
             this.chatZones?.forEach((chatZone) => {
-                chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName ?? ''}`;
+                chatZone.mucUrl = `${this.roomUrl}/${chatZone?.chatName ?? ""}`;
                 chatZone.mucCreated = false;
             });
 
@@ -51,7 +51,7 @@ export class MucManager {
         } else if (allMucRooms instanceof Error) {
             console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
-            if(allMucRooms) {
+            if (allMucRooms) {
                 allMucRooms.forEach((mucRoom) => {
                     const [local] = mucRoom.split("@");
                     const decoded = MucManager.decode(local);
@@ -60,7 +60,7 @@ export class MucManager {
                     }
                 });
             }
-            if(allMucRoomsOfWorld) {
+            if (allMucRoomsOfWorld) {
                 for (const mucRoom of allMucRoomsOfWorld) {
                     let found = false;
                     this.chatZones?.forEach((chatZone) => {
@@ -164,7 +164,7 @@ export class MucManager {
     }
 
     private static decode(name: string | null | undefined) {
-        if (!name) return '';
+        if (!name) return "";
         return name
             .replace(/\\20/g, " ")
             .replace(/\\22/g, "*")
@@ -179,7 +179,7 @@ export class MucManager {
     }
 
     private static encode(name: string | null | undefined) {
-        if (!name) return '';
+        if (!name) return "";
         return name
             .replace(/\\/g, "\\5c")
             .replace(/ /g, "\\20")
