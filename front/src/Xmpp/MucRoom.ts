@@ -237,6 +237,7 @@ export class MucRoom {
                     const roomId = xml.getChild("room")?.getAttr("id");
                     const uuid = xml.getChild("user")?.getAttr("uuid");
                     const affiliation = x.getChild("item")?.getAttr("affiliation");
+                    const role = x.getChild("item")?.getAttr("role");
                     const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
                     if (
                         type === "unavailable" && (
@@ -246,7 +247,6 @@ export class MucRoom {
                     ) {
                         this.deleteUser(userJID.toString());
                     } else {
-                        const role = x.getChild("item")?.getAttr("role");
                         this.updateUser(
                             userJID.toString(),
                             from.resource,
@@ -297,7 +297,7 @@ export class MucRoom {
             if (x) {
                 const userJID = jid(x.getChild("item")?.getAttr("jid"));
                 userJID.setResource('');
-                const role = x.getChild("item")?.getAttr("role");
+                //const role = x.getChild("item")?.getAttr("role");
                 const affiliation = x.getChild("item")?.getAttr("affiliation");
                 if(affiliation === "outcast"){
                     this.deleteUser(userJID);

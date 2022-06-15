@@ -51,26 +51,30 @@ export class MucManager {
         } else if (allMucRooms instanceof Error) {
             console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
-            allMucRooms.forEach((mucRoom) => {
-                const [local] = mucRoom.split("@");
-                const decoded = MucManager.decode(local);
-                if (decoded?.includes(this.roomUrl)) {
-                    allMucRoomsOfWorld.push(decoded);
-                }
-            });
-            for (const mucRoom of allMucRoomsOfWorld) {
-                let found = false;
-                this.chatZones?.forEach((chatZone) => {
-                    if (found) return;
-                    if (chatZone.mucUrl) {
-                        if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()) {
-                            found = true;
-                            chatZone.mucCreated = true;
-                        }
+            if(allMucRooms) {
+                allMucRooms.forEach((mucRoom) => {
+                    const [local] = mucRoom.split("@");
+                    const decoded = MucManager.decode(local);
+                    if (decoded?.includes(this.roomUrl)) {
+                        allMucRoomsOfWorld.push(decoded);
                     }
                 });
-                if (!found) {
-                    await this.destroyMucRoom(mucRoom);
+            }
+            if(allMucRoomsOfWorld) {
+                for (const mucRoom of allMucRoomsOfWorld) {
+                    let found = false;
+                    this.chatZones?.forEach((chatZone) => {
+                        if (found) return;
+                        if (chatZone.mucUrl) {
+                            if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()) {
+                                found = true;
+                                chatZone.mucCreated = true;
+                            }
+                        }
+                    });
+                    if (!found) {
+                        await this.destroyMucRoom(mucRoom);
+                    }
                 }
             }
             if (this.chatZones) {
