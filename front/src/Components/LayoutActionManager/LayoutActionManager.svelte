@@ -25,11 +25,11 @@
     }
 
     .message{
-        @apply tw-border-light-blue tw-text-light-blue;
+        @apply tw-border-light-blue tw-text-light-blue tw-border tw-border-solid;
     }
 
     .warning{
-        @apply tw-border-pop-yellow tw-text-pop-yellow;
+        @apply tw-border-pop-yellow tw-text-pop-yellow tw-border-solid;
     }
 
 
