@@ -593,5 +593,5 @@ service RoomManager {
  * Service handled by the "map-storage". Back servers connect to this service.
  */
 service MapStorage {
-  // ... TODO ...
+  rpc ping(PingMessage) returns (PingMessage);
 }

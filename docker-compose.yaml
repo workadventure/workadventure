@@ -148,6 +148,7 @@ services:
       NODE_ENV: development
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+      MAP_STORAGE_URL: "http://map-storage:3000"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -162,7 +163,7 @@ services:
 
   map-storage:
     image: thecodingmachine/nodejs:16
-    command: yarn dev
+    command: yarn start:dev
     #command: yarn run profile
     environment:
       DEBUG: "*"
@@ -177,7 +178,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
       - "traefik.http.routers.map-storage.entryPoints=web"
-      - "traefik.http.services.map-storage.loadbalancer.server.port=8080"
+      - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
       - "traefik.http.routers.map-storage-ssl.rule=Host(`map-storage.workadventure.localhost`)"
       - "traefik.http.routers.map-storage-ssl.entryPoints=websecure"
       - "traefik.http.routers.map-storage-ssl.tls=true"
