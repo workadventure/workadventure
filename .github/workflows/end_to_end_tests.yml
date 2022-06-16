@@ -25,7 +25,7 @@ jobs:
       - name: 'Setup .env file'
         run: cp .env.template .env
       - name: Build WorkAdventure
-        run: docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml build --parallel
+        run: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml build --parallel
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d
       - name: Wait for environment to Start
