@@ -3,7 +3,6 @@
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
@@ -22,22 +21,23 @@
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let activeSubMenu: MenuItem = $subMenusStore[0];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
 
-    onMount(() => {
+    onMount(async () => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                switchMenu($subMenusStore[0]);
+                void switchMenu($subMenusStore[0]);
             }
         });
 
         checkSubMenuToShow();
 
-        switchMenu($subMenusStore[0]);
+        await switchMenu($subMenusStore[0]);
     });
 
     onDestroy(() => {
@@ -46,26 +46,32 @@
         }
     });
 
-    function switchMenu(menu: MenuItem) {
+    async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
             switch (menu.key) {
                 case SubMenusInterface.settings:
+                    analyticsClient.menuSetting();
                     activeComponent = SettingsSubMenu;
                     break;
                 case SubMenusInterface.profile:
+                    analyticsClient.menuProfile();
                     activeComponent = ProfileSubMenu;
                     break;
                 case SubMenusInterface.invite:
+                    analyticsClient.menuInvite();
                     activeComponent = GuestSubMenu;
                     break;
                 case SubMenusInterface.aboutRoom:
+                    analyticsClient.menuCredit();
                     activeComponent = AboutRoomSubMenu;
                     break;
                 case SubMenusInterface.globalMessages:
-                    activeComponent = GlobalMessageSubMenu;
+                    analyticsClient.globalMessage();
+                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     break;
                 case SubMenusInterface.contact:
+                    analyticsClient.menuContact();
                     activeComponent = ContactSubMenu;
                     break;
             }
@@ -92,16 +98,11 @@
         }
     }
 
-    function translateMenuName(menu: MenuItem) {
-        if (menu.type === "scripting") {
-            return menu.label;
-        }
-
-        // Bypass the proxy of typesafe for getting the menu name : https://github.com/ivanhofer/typesafe-i18n/issues/156
-        const getMenuName = $LL.menu.sub[menu.key];
-
-        return getMenuName();
-    }
+    $: subMenuTranslations = $subMenusStore.map((subMenu) =>
+        subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]()
+    );
+    $: activeSubMenuTranslation =
+        activeSubMenu.type === "scripting" ? activeSubMenu.label : $LL.menu.sub[activeSubMenu.key]();
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -110,13 +111,13 @@
     <div class="menu-nav-sidebar" transition:fly={{ x: -1000, duration: 500 }}>
         <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
-            {#each $subMenusStore as submenu}
+            {#each $subMenusStore as submenu, i}
                 <div
                     class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
                     <button type="button" class="tw-flex menu-item">
-                        {translateMenuName(submenu)}
+                        {subMenuTranslations[i]}
                     </button>
                     <img src={chevronImg} class="menu-icon" alt="open submenu" />
                 </div>
@@ -125,7 +126,7 @@
     </div>
     <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
         <button type="button" class="close-window" on:click={closeMenu}>&times</button>
-        <h2>{translateMenuName(activeSubMenu)}</h2>
+        <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>
 </div>
