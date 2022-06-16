@@ -20,6 +20,7 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    PingMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
@@ -42,6 +43,7 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
+import { mapStorageClient } from "../Services/MapStorageClient";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -119,6 +121,12 @@ export class GameRoom {
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined
         );
+
+        mapStorageClient.ping(new PingMessage(), (err, res) => {
+            console.log(`==================================`);
+            console.log(err);
+            console.log(JSON.stringify(res));
+        });
 
         return gameRoom;
     }

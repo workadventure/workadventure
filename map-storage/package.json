@@ -42,6 +42,7 @@
     "@grpc/proto-loader": "^0.6.13",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
+    "@nestjs/microservices": "^8.4.7",
     "@nestjs/platform-express": "^8.0.0",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
     "reflect-metadata": "^0.1.13",
