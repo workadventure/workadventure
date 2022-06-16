@@ -314,6 +314,7 @@ jobs:
       - build-pusher
       - build-maps
       - build-uploader
+      - build-map-storage
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
