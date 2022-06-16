@@ -3,15 +3,15 @@
 # When the issue above is closed, we can move back messages building inside Dockerfile
 
 # protobuf build
-#FROM node:1.18.2-buster-slim@sha256:20bedf0c09de887379e59a41c04284974f5fb529cf0e13aab613473ce298da3d as proto-builder
-#WORKDIR /usr/src
-#COPY messages/yarn.lock messages/package.json ./
-#RUN yarn install
-#COPY messages .
-#RUN yarn ts-proto
+FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as proto-builder
+WORKDIR /usr/src
+COPY messages/yarn.lock messages/package.json ./
+RUN yarn install
+COPY messages .
+RUN yarn ts-proto
 
 # typescript build
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
+FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
 COPY front/yarn.lock front/package.json ./
 RUN yarn install --network-timeout 1000000
