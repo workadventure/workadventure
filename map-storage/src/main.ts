@@ -20,5 +20,6 @@ async function bootstrap() {
     // HTTP listens on port 3000
     await app.listen(3000);
     console.log(`Application is running on: ${await app.getUrl()}`);
+    console.log(`gRPC port is 50053`);
 }
 bootstrap().catch(e => console.error(e));
