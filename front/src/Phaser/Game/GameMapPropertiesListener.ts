@@ -18,8 +18,8 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import {gameManager} from "./GameManager";
-import {urlManager} from "../../Url/UrlManager";
+import { gameManager } from "./GameManager";
+import { urlManager } from "../../Url/UrlManager";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 
 interface OpenCoWebsite {
@@ -137,14 +137,20 @@ export class GameMapPropertiesListener {
 
         // Muc zone
         this.gameMap.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
-                const playUri = urlManager.getPlayUri()+'/';
+            const playUri = urlManager.getPlayUri() + "/";
 
-                if (oldValue !== undefined) {
-                    gameManager.getCurrentGameScene().getXmppClient().leaveMuc(playUri + oldValue);
-                }
-                if (newValue !== undefined) {
-                    gameManager.getCurrentGameScene().getXmppClient().joinMuc(newValue.toString(), 'live', playUri + newValue, false);
-                }
+            if (oldValue !== undefined) {
+                gameManager
+                    .getCurrentGameScene()
+                    .getXmppClient()
+                    .leaveMuc(playUri + oldValue);
+            }
+            if (newValue !== undefined) {
+                gameManager
+                    .getCurrentGameScene()
+                    .getXmppClient()
+                    .joinMuc(newValue.toString(), "live", playUri + newValue, false);
+            }
         });
 
         this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {

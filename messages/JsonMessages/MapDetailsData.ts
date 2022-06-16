@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
-import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.

@@ -25,7 +25,7 @@ const report: NonNullable<Translation["report"]> = {
         block: "Blockieren",
         report: "Melden",
         noSelect: "FEHLER : Es ist keine Handlung ausgewählt.",
-        ban: "Verbannt"
+        ban: "Verbannt",
     },
 };
 

@@ -82,7 +82,7 @@ class UrlManager {
     }
 
     public getWorldUri(): string {
-        return window.location.pathname.match("/[_@*]/.+/.+/")?.join() ?? '';
+        return window.location.pathname.match("/[_@*]/.+/.+/")?.join() ?? "";
     }
 
     public getWorldUrl(): string {

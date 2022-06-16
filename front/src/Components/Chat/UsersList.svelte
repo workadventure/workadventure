@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { TeleportStore, User, UsersStore, UserStore } from "../../Xmpp/MucRoom";
     import LL from "../../i18n/i18n-svelte";
-    import {MucRoom, USER_STATUS_AVAILABLE, USER_STATUS_DISCONNECTED} from "../../Xmpp/MucRoom";
+    import { MucRoom, USER_STATUS_AVAILABLE, USER_STATUS_DISCONNECTED } from "../../Xmpp/MucRoom";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
@@ -29,11 +29,11 @@
         menuVisiblilityStore.set(true);
     }
 
-    let message = '';
+    let message = "";
 
-    function sendMessage(){
+    function sendMessage() {
         mucRoom.sendMessage(message);
-        message = '';
+        message = "";
     }
 </script>
 
@@ -66,19 +66,17 @@
                         <div>
                             {#if $meStore.isModerator && user.status === USER_STATUS_AVAILABLE}
                                 <button
-                                        on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
-                                        src="btn btn-alert"
-                                >Bannir</button>
+                                    on:click|preventDefault={() => mucRoom.ban(jid, user.nick, user.roomId)}
+                                    src="btn btn-alert">Bannir</button
+                                >
                                 {#if user.isModerator}
-                                    <button
-                                            on:click|preventDefault={() => mucRoom.rankDown(jid)}
-                                            src="btn btn-alert"
-                                    >Rank down</button>
+                                    <button on:click|preventDefault={() => mucRoom.rankDown(jid)} src="btn btn-alert"
+                                        >Rank down</button
+                                    >
                                 {:else}
-                                    <button
-                                            on:click|preventDefault={() => mucRoom.rankUp(jid)}
-                                            src="btn btn-alert"
-                                    >Rank up</button>
+                                    <button on:click|preventDefault={() => mucRoom.rankUp(jid)} src="btn btn-alert"
+                                        >Rank up</button
+                                    >
                                 {/if}
                             {/if}
                             {#if $teleportStore.state === true}
@@ -91,13 +89,17 @@
                                 </button>
                             {:else if user.isInSameMap === false}
                                 <button
-                                        on:click|preventDefault={() => mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
-                                        src="btn btn-primary"
+                                    on:click|preventDefault={() =>
+                                        mucRoom.goTo("room", user.roomId, localUserStore.getLocalUser()?.uuid || "")}
+                                    src="btn btn-primary"
                                 >
                                     {$LL.muc.userList.teleport()}
                                 </button>
                             {:else}
-                                <button on:click|preventDefault={() => mucRoom.goTo("user", user.roomId, user.uuid)} src="btn btn-primary">
+                                <button
+                                    on:click|preventDefault={() => mucRoom.goTo("user", user.roomId, user.uuid)}
+                                    src="btn btn-primary"
+                                >
                                     {$LL.muc.userList.walkTo()}
                                 </button>
                             {/if}
@@ -108,15 +110,12 @@
         {/each}
     {/if}
 </ul>
-{#if mucRoom.type !== 'default'}
+{#if mucRoom.type !== "default"}
     <div>
-        <input type="text" placeholder="Votre message ..." bind:value={message}/>
-        <button on:click|preventDefault={sendMessage} src="btn btn-primary">
-            Envoyer
-        </button>
+        <input type="text" placeholder="Votre message ..." bind:value={message} />
+        <button on:click|preventDefault={sendMessage} src="btn btn-primary"> Envoyer </button>
     </div>
 {/if}
-
 
 <style>
     ul {

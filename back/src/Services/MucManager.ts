@@ -1,8 +1,7 @@
-import {ITiledMap, ITiledMapLayer, ITiledMapObject} from "@workadventure/tiled-map-type-guard/dist";
-import Axios, {AxiosError, AxiosInstance} from "axios";
-import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
-import {MapDetailsData} from "../Messages/JsonMessages/MapDetailsData";
-import {boolean} from "zod";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import Axios, { AxiosError, AxiosInstance } from "axios";
+import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
+import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 
 interface Chat {
     chatName?: string;
@@ -12,7 +11,6 @@ interface Chat {
 }
 
 export class MucManager {
-
     /**
      * The list of chats for the current room
      */
@@ -25,13 +23,13 @@ export class MucManager {
      * @param map The map can be "null" if it is hosted on a private network. In this case, we assume this is a test setup and bypass any server-side checks.
      */
     constructor(private roomUrl: string, private map: ITiledMap | null, private mapDetails: MapDetailsData) {
-        const auth = Buffer.from(EJABBERD_USER+'@'+EJABBERD_DOMAIN+':'+EJABBERD_PASSWORD).toString('base64');
+        const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString("base64");
         this.axios = Axios.create({
-            baseURL: 'http://'+EJABBERD_URI+'/api/',
+            baseURL: "http://" + EJABBERD_URI + "/api/",
             headers: {
-                'Authorization': 'Basic '+auth,
-                timeout: 10000
-            }
+                Authorization: "Basic " + auth,
+                timeout: 10000,
+            },
         });
 
         this.chat = new Map<string, Chat>();
@@ -40,73 +38,106 @@ export class MucManager {
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
             this.chat = MucManager.findChatInMap(map);
-            this.chat.forEach(chatZone => {
+            this.chat.forEach((chatZone) => {
                 chatZone.mucUrl = `${this.roomUrl}/${chatZone.chatName}`;
                 chatZone.mucCreated = false;
             });
-            if(mapDetails.mucRooms){
+            if (mapDetails.mucRooms) {
                 // If the ADMIN exist we disable all the forums from the MAP
-                this.chat.forEach(chat => {
-                    if(chat.type === 'forum'){
+                this.chat.forEach((chat) => {
+                    if (chat.type === "forum") {
                         chat.mucCreated = true;
                     }
                 });
             } else {
                 // If the ADMIN_URL is not set, so there is no admin, and we define a default chatForum MUC room if it's not defined in the map
-                if(this.getDefaultForum() === null){
-                    this.chat.set('welcome', {chatName: 'welcome', mucUrl: `${this.roomUrl}/welcome`, mucCreated: false, type: 'forum'} as Chat);
+                if (this.getDefaultForum() === null) {
+                    this.chat.set("welcome", {
+                        chatName: "welcome",
+                        mucUrl: `${this.roomUrl}/welcome`,
+                        mucCreated: false,
+                        type: "forum",
+                    } as Chat);
                 }
             }
         }
     }
 
-    public getDefaultForum(): Chat|null{
+    public getDefaultForum(): Chat | null {
         let defaultForum = null;
-        this.chat?.forEach(chat =>{
-            if(chat.type === 'forum'){
+        this.chat?.forEach((chat) => {
+            if (chat.type === "forum") {
                 defaultForum = chat;
             }
-        })
+        });
         return defaultForum;
     }
 
-    public async init(){
+    public async init() {
         const allMucRooms = await this.getAllMucRooms();
         const allMucRoomsOfWorld: string[] = [];
-        if(Axios.isAxiosError(allMucRooms)){
-            console.warn('Error to get allMucRooms (AxiosError) : ', allMucRooms.response);
-        } else if (allMucRooms instanceof Error){
-            console.warn('Error to get allMucRooms : ',allMucRooms);
+        if (Axios.isAxiosError(allMucRooms)) {
+            console.warn("Error to get allMucRooms (AxiosError) : ", allMucRooms.response);
+        } else if (allMucRooms instanceof Error) {
+            console.warn("Error to get allMucRooms : ", allMucRooms);
         } else {
-            allMucRooms.forEach(mucRoom => {
-                const [local, domain] = mucRoom.split('@');
+            allMucRooms.forEach((mucRoom) => {
+                const [local] = mucRoom.split("@");
                 const decoded = MucManager.decode(local);
-                if(decoded?.includes(this.roomUrl)){
+                if (decoded?.includes(this.roomUrl)) {
                     allMucRoomsOfWorld.push(decoded);
                 }
             });
-            allMucRoomsOfWorld.forEach(mucRoom => {
+            allMucRoomsOfWorld.forEach((mucRoom) => {
                 let found = false;
-                this.chat?.forEach(chatZone => {
-                    if(found) return;
+                this.chat?.forEach((chatZone) => {
+                    if (found) return;
                     if (chatZone.mucUrl) {
-                        if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()){
+                        if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()) {
                             found = true;
                             chatZone.mucCreated = true;
                         }
                     }
                 });
-                if(!found){
+                if (!found) {
                     this.destroyMucRoom(mucRoom);
                 }
             });
-            this.chat?.forEach(chatZone => {
-                if(chatZone.mucCreated) return;
-                if (chatZone.mucUrl) {
-                    this.createMucRoom(chatZone);
-                    chatZone.mucCreated = true;
+            if (allMucRooms) {
+                allMucRooms.forEach((mucRoom) => {
+                    const [local] = mucRoom.split("@");
+                    const decoded = MucManager.decode(local);
+                    if (decoded?.includes(this.roomUrl)) {
+                        allMucRoomsOfWorld.push(decoded);
+                    }
+                });
+            }
+            if (allMucRoomsOfWorld) {
+                for (const mucRoom of allMucRoomsOfWorld) {
+                    let found = false;
+                    this.chat?.forEach((chatZone) => {
+                        if (found) return;
+                        if (chatZone.mucUrl) {
+                            if (mucRoom.toLocaleLowerCase() === chatZone.mucUrl.toLocaleLowerCase()) {
+                                found = true;
+                                chatZone.mucCreated = true;
+                            }
+                        }
+                    });
+                    if (!found) {
+                        await this.destroyMucRoom(mucRoom);
+                    }
                 }
-            });
+            }
+            if (this.chat) {
+                for (const [, chatZone] of this.chat) {
+                    if (chatZone.mucCreated) return;
+                    if (chatZone.mucUrl) {
+                        await this.createMucRoom(chatZone);
+                        chatZone.mucCreated = true;
+                    }
+                }
+            }
         }
     }
 
@@ -168,42 +199,46 @@ export class MucManager {
         return variable;
     }
 
-    private async getAllMucRooms(): Promise<Array<string>|Error>{
-        return await this.axios
-            ?.post('muc_online_rooms', {service: `conference.ejabberd`})
-            .then(response => response.data)
-            .catch(error => error as AxiosError);
+    private async getAllMucRooms(): Promise<Array<string> | Error> {
+        return (await this.axios
+            ?.post("muc_online_rooms", { service: `conference.ejabberd` })
+            .then((response) => response.data as Array<string>)
+            .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
-    private async destroyMucRoom(name: string){
+    private async destroyMucRoom(name: string) {
         await this.axios
-            ?.post('destroy_room', {name: MucManager.encode(name), service: `conference.ejabberd`})
-            .catch(error => console.error(error));
+            ?.post("destroy_room", { name: MucManager.encode(name), service: `conference.ejabberd` })
+            .catch((error) => console.error(error));
     }
 
     private async createMucRoom(chatZone: Chat) {
         await this.axios
-            ?.post('create_room', {name: `${MucManager.encode(chatZone.mucUrl)}`, host: EJABBERD_DOMAIN, service: `conference.ejabberd`})
-            .catch(error => console.error(error));
+            ?.post("create_room", {
+                name: `${MucManager.encode(chatZone.mucUrl ?? "")}`,
+                host: EJABBERD_DOMAIN,
+                service: `conference.ejabberd`,
+            })
+            .catch((error) => console.error(error));
     }
 
     private static decode(name: string | null | undefined) {
-        if (!name) return name;
+        if (!name) return "";
         return name
-            .replace(/\\5c/g, '\\')
-            .replace(/\\20/g, ' ')
-            .replace(/\\22/g, '*')
-            .replace(/\\26/g, '&')
-            .replace(/\\27/g, '\'')
-            .replace(/\\2f/g, '/')
-            .replace(/\\3a/g, ':')
-            .replace(/\\3c/g, '<')
-            .replace(/\\3e/g, '>')
-            .replace(/\\40/g, '@');
+            .replace(/\\20/g, " ")
+            .replace(/\\22/g, "*")
+            .replace(/\\26/g, "&")
+            .replace(/\\27/g, "'")
+            .replace(/\\2f/g, "/")
+            .replace(/\\3a/g, ":")
+            .replace(/\\3c/g, "<")
+            .replace(/\\3e/g, ">")
+            .replace(/\\40/g, "@")
+            .replace(/\\5c/g, "\\");
     }
 
     private static encode(name: string | null | undefined) {
-        if (!name) return name;
+        if (!name) return "";
         return name
             .replace(/\\/g, "\\5c")
             .replace(/ /g, "\\20")

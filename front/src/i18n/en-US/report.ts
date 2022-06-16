@@ -24,7 +24,7 @@ const report: BaseTranslation = {
         block: "Block",
         report: "Report",
         noSelect: "ERROR : There is no action selected.",
-        ban: "Banish"
+        ban: "Banish",
     },
 };
 

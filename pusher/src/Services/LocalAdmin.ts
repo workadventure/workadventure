@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Default Room", type: 'default', uri: matched?.join() }],
+            mucRooms: [{ name: "Default Room", type: "default", uri: matched?.join() }],
         });
     }
 
@@ -102,7 +102,13 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
-    banUserByUuid(uuidToBan: string, playUri: string, name: string, message: string, byUserEmail: string): Promise<boolean> {
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

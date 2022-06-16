@@ -14,8 +14,8 @@
     import UsersList from "./UsersList.svelte";
     import Spinner from "./Spinner.svelte";
     import Search from "../Util/Search.svelte";
-    import {userIsAdminStore} from "../../Stores/GameStore";
-    import {get} from "svelte/store";
+    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { get } from "svelte/store";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -64,7 +64,7 @@
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
                 <p class="room-name">{mucRoom.name}</p>
-                {#if get(userIsAdminStore) && mucRoom.type !== 'default'}
+                {#if get(userIsAdminStore) && mucRoom.type !== "default"}
                     <div>
                         <button on:click|preventDefault={() => mucRoom.reInitialize()}>Réinitialiser</button>
                     </div>
@@ -73,7 +73,7 @@
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}
                     meStore={mucRoom.getMeStore()}
-                    mucRoom={mucRoom}
+                    {mucRoom}
                 />
             {/each}
         {:else}

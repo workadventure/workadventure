@@ -31,7 +31,7 @@ import {
     ZoneMessage,
     LockGroupPromptMessage,
     RoomsList,
-    JoinMucRoomMessage
+    JoinMucRoomMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -168,7 +168,7 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getAskpositionmessage() as AskPositionMessage
                             );
-                        } else if(message.hasJoinmucroommessage()) {
+                        } else if (message.hasJoinmucroommessage()) {
                             socketManager.handleJoinMucRoomMessage(
                                 room,
                                 user,

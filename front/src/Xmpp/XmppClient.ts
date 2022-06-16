@@ -6,8 +6,6 @@ import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoo
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
 // import ElementExt from "./Lib/ElementExt";
 import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
-import {urlManager} from "../Url/UrlManager";
-import {localUserStore} from "../Connexion/LocalUserStore";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -41,7 +39,7 @@ export class XmppClient {
                 const fromJid = jid(from);
                 const roomJid = jid(fromJid.local, fromJid.domain);
 
-                let room = this.rooms.get(roomJid.toString());
+                const room = this.rooms.get(roomJid.toString());
                 /*
                 if(!room) {
                     if (xml.getName() === 'presence' && xml.getChild("user")) {
@@ -137,7 +135,7 @@ export class XmppClient {
         }
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
         let room = this.rooms.get(roomUrl.toString());
-        if(!room){
+        if (!room) {
             room = new MucRoom(this.connection, name, roomUrl, this.jid, type, isPersistent);
             room.connect();
             this.rooms.set(roomUrl.toString(), room);
@@ -160,7 +158,7 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        if(doDisconnect){
+        if (doDisconnect) {
             room.disconnect();
         }
         this.rooms.delete(roomUrl.toString());

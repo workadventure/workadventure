@@ -158,10 +158,15 @@ export class XmppClient {
                 const stanzaString = stanza.toString();
                 xmppMessage.setStanza(stanzaString);
 
-
-                if(stanzaString.includes('deleteSubscribeOnDisconnect="true"') && !stanzaString.includes('type="unavailable"')) {
+                if (
+                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
+                    !stanzaString.includes('type="unavailable"')
+                ) {
                     this.deleteSubscribeOnDisconnect = true;
-                } else if(stanzaString.includes('deleteSubscribeOnDisconnect="true"') && stanzaString.includes('type="unavailable"')) {
+                } else if (
+                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
+                    stanzaString.includes('type="unavailable"')
+                ) {
                     this.deleteSubscribeOnDisconnect = false;
                 }
 
@@ -199,9 +204,11 @@ export class XmppClient {
             .then(async (xmpp) => {
                 //send presence unavailable to notify server
                 await xmpp.send(
-                    xml("presence", {type: "unavailable"},
+                    xml(
+                        "presence",
+                        { type: "unavailable" },
                         xml("user", {
-                            deleteSubscribeOnDisconnect: this.deleteSubscribeOnDisconnect?"true":"false"
+                            deleteSubscribeOnDisconnect: this.deleteSubscribeOnDisconnect ? "true" : "false",
                         })
                     )
                 );
