@@ -51,14 +51,14 @@ class UrlManager {
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);
     }
 
-    public getStartLayerNameFromUrl(): string | null {
+    public getStartPositionNameFromUrl(): string | undefined {
         const parameters = this.getHashParameters();
         for (const key in parameters) {
             if (parameters[key] === undefined) {
                 return key;
             }
         }
-        return null;
+        return undefined;
     }
 
     public getHashParameter(name: string): string | undefined {

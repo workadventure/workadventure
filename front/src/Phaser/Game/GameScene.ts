@@ -553,7 +553,7 @@ export class GameScene extends DirtyScene {
             this.gameMap,
             this.mapFile,
             this.initPosition,
-            urlManager.getStartLayerNameFromUrl()
+            urlManager.getStartPositionNameFromUrl()
         );
 
         startLayerNamesStore.set(this.startPositionCalculator.getStartPositionNames());
@@ -1397,7 +1397,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName ?? undefined,
+                startLayerName: this.startPositionCalculator.startPositionName ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),

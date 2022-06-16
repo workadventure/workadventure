@@ -3,46 +3,49 @@ import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileLayer }
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 
-const defaultStartLayerName = "start";
+const defaultStartPositionName = "start";
 
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
+
+    private startPositionName: string;
 
     constructor(
         private readonly gameMap: GameMap,
         private readonly mapFile: ITiledMap,
         private readonly initPosition: PositionInterface | null,
-        public readonly startLayerName: string | null
+        startPositionName?: string
     ) {
+        this.startPositionName = startPositionName || defaultStartPositionName;
         this.initStartXAndStartY();
     }
 
-    /**
-     *
-     * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the {defaultStartLayerName} if the {selectedLayer} did not yield any start points
-     */
-    public initPositionFromLayerName(selectedOrDefaultLayer: string | null, selectedLayer: string | null) {
-        if (!selectedOrDefaultLayer) {
-            selectedOrDefaultLayer = defaultStartLayerName;
-        }
+    public initPositionFromLayerName(selectedLayerName: string, defaultLayerName: string) {
         let foundLayer: ITiledMapLayer | null = null;
-        for (const layer of this.gameMap.flatLayers) {
-            if (layer.type !== "tilelayer") continue;
-            //we want to prioritize the selectedLayer other the start layer
+
+        console.log(selectedLayerName);
+
+        const tileLayers = this.gameMap.flatLayers.filter((layer) => layer.type === "tilelayer");
+        for (const layer of tileLayers) {
+            //we want to prioritize the selectedLayer rather than "start" layer
             if (
-                (selectedOrDefaultLayer === layer.name ||
-                    selectedOrDefaultLayer === `#${layer.name}` ||
-                    layer.name.endsWith("/" + selectedOrDefaultLayer)) &&
-                layer.type === "tilelayer" &&
-                (selectedOrDefaultLayer === defaultStartLayerName || this.isStartLayer(layer))
+                [layer.name, `#${layer.name}`].includes(selectedLayerName) ||
+                layer.name.endsWith("/" + selectedLayerName)
             ) {
                 foundLayer = layer;
                 break;
             }
         }
+        if (!foundLayer) {
+            for (const layer of tileLayers) {
+                if (layer.name === defaultStartPositionName || this.isStartLayer(layer)) {
+                    foundLayer = layer;
+                    break;
+                }
+            }
+        }
         if (foundLayer) {
-            const startPosition = this.startUser(foundLayer, selectedLayer);
+            const startPosition = this.startUser(foundLayer as ITiledMapTileLayer, defaultLayerName);
             this.startPosition = {
                 x: startPosition.x + this.mapFile.tilewidth / 2,
                 y: startPosition.y + this.mapFile.tileheight / 2,
@@ -64,18 +67,27 @@ export class StartPositionCalculator {
         return names;
     }
 
+    private initPositionFromArea(): boolean {
+        const area = this.gameMap.getArea(this.startPositionName);
+        if (!area) {
+            return false;
+        }
+        this.startPosition = {
+            x: area.x,
+            y: area.y,
+        };
+        return true;
+    }
+
     private initStartXAndStartY() {
         // If there is an init position passed
         if (this.initPosition !== null) {
             this.startPosition = this.initPosition;
         } else {
-            // Now, let's find the start layer
-            if (this.startLayerName) {
-                this.initPositionFromLayerName(this.startLayerName, this.startLayerName);
-            }
-            if (this.startPosition === undefined) {
-                // If we have no start layer specified or if the hash passed does not exist, let's go with the default start position.
-                this.initPositionFromLayerName(defaultStartLayerName, this.startLayerName);
+            // try to get starting position from Area object
+            if (!this.initPositionFromArea()) {
+                // if cannot, look for Layers
+                this.initPositionFromLayerName(this.startPositionName, defaultStartPositionName);
             }
         }
         // Still no start position? Something is wrong with the map, we need a "start" layer.
