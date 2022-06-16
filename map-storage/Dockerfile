@@ -13,20 +13,20 @@
 # typescript build
 FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
+COPY map-storage/yarn.lock map-storage/package.json ./
 RUN yarn install
-COPY back .
+COPY map-storage .
 #COPY --from=proto-builder /usr/src/generated src/Messages/generated
 ENV NODE_ENV=production
-RUN yarn run tsc
+RUN yarn run build
 
 # final production image
 FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c
 WORKDIR /usr/src
-COPY back/yarn.lock back/package.json ./
+COPY map-storage/yarn.lock map-storage/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder /usr/src/dist /usr/src/dist
 
 USER node
-CMD ["yarn", "run", "runprod"]
+CMD ["yarn", "run", "start:prod"]
