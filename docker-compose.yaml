@@ -148,7 +148,7 @@ services:
       NODE_ENV: development
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
-      MAP_STORAGE_URL: "http://map-storage:3000"
+      MAP_STORAGE_URL: "map-storage:50053"
     volumes:
       - ./back:/usr/src/app
     labels:

@@ -4,6 +4,8 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+package workadventure;
+
 enum AvailabilityStatus {
   UNCHANGED = 0;
   ONLINE = 1;

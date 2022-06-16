@@ -9,7 +9,7 @@
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
     "copy-to-front-ts-proto": "cp -rf ts-proto-generated/* ../front/src/Messages/ts-proto-generated/ && sed -i 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ../front/src/Messages/ts-proto-generated/protos/messages.ts",
     "copy-to-pusher": "rm -rf ../pusher/src/Messages/generated && cp -rf generated/ ../pusher/src/Messages/generated",
-    "copy-to-map-storage": "cp -rf ts-proto-nest-generated/* ../map-storage/src/Messages/ts-proto-nest-generated/",
+    "copy-to-map-storage": "cp -rf ts-proto-nest-generated/* ../map-storage/src/Messages/ts-proto-nest-generated/ && cp -rf protos/* ../map-storage/src/Messages/protos/",
     "json-copy-to-pusher": "rm -rf ../pusher/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../pusher/src/Messages/JsonMessages/",
     "json-copy-to-back": "rm -rf ../back/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../back/src/Messages/JsonMessages/",
     "json-copy-to-front": "rm -rf ../front/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../front/src/Messages/JsonMessages/",

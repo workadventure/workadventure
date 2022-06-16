@@ -4,7 +4,7 @@ import { util, configure } from "protobufjs/minimal";
 import * as Long from "long";
 import { Observable } from "rxjs";
 
-export const protobufPackage = "";
+export const protobufPackage = "workadventure";
 
 export enum AvailabilityStatus {
     UNCHANGED = 0,
@@ -541,7 +541,7 @@ export interface RoomsList {
 
 export interface EmptyMessage {}
 
-export const _PACKAGE_NAME = "";
+export const WORKADVENTURE_PACKAGE_NAME = "workadventure";
 
 /** Service handled by the "back". Pusher servers connect to this service. */
 
