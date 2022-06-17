@@ -358,7 +358,6 @@ export class IoSocketController {
 
                         let characterLayerObjs: WokaDetail[];
 
-                        //if (ADMIN_API_URL) {
                         try {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
@@ -414,28 +413,6 @@ export class IoSocketController {
                             );
                             console.error(e);
                             throw new Error("User cannot access this world");
-                        }
-                        //} else {
-                        if (!ADMIN_API_URL) {
-                            const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
-                            if (fetchedTextures === undefined) {
-                                // The textures we want to use do not exist!
-                                // We need to go in error.
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "textureInvalid",
-                                        message: "",
-                                        roomId,
-                                    } as UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                                return;
-                            }
-                            characterLayerObjs = fetchedTextures;
                         }
 
                         if (!userData.jabberId) {
