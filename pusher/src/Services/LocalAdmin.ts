@@ -2,7 +2,7 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import {DISABLE_ANONYMOUS, START_ROOM_URL} from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 /**
@@ -40,7 +40,7 @@ class LocalAdmin implements AdminInterface {
 
         const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (!match) {
-            throw new Error("URL format is not good : "+roomUrl.pathname);
+            throw new Error("URL format is not good : " + roomUrl.pathname);
         }
 
         const mapUrl = roomUrl.protocol + "//" + match[1];

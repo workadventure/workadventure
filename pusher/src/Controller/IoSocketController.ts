@@ -359,65 +359,62 @@ export class IoSocketController {
                         let characterLayerObjs: WokaDetail[];
 
                         //if (ADMIN_API_URL) {
+                        try {
                             try {
-                                try {
-                                    userData = await adminService.fetchMemberDataByUuid(
-                                        userIdentifier,
-                                        roomId,
-                                        IPAddress,
-                                        characterLayers,
-                                        locale
-                                    );
-                                } catch (err) {
-                                    if (Axios.isAxiosError(err)) {
-                                        const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                        if (errorType.success) {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: "error",
-                                                    status: err?.response?.status,
-                                                    error: errorType.data,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        } else {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: null,
-                                                    status: 500,
-                                                    message: err?.response?.data,
-                                                    roomId: roomId,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        }
-                                    }
-                                    throw err;
-                                }
-                                memberMessages = userData.messages;
-                                memberTags = userData.tags;
-                                memberVisitCardUrl = userData.visitCardUrl;
-                                memberTextures = userData.textures;
-                                memberUserRoomToken = userData.userRoomToken;
-                                characterLayerObjs = memberTextures;
-                            } catch (e) {
-                                console.log(
-                                    "access not granted for user " +
-                                        (userIdentifier || "anonymous") +
-                                        " and room " +
-                                        roomId
+                                userData = await adminService.fetchMemberDataByUuid(
+                                    userIdentifier,
+                                    roomId,
+                                    IPAddress,
+                                    characterLayers,
+                                    locale
                                 );
-                                console.error(e);
-                                throw new Error("User cannot access this world");
+                            } catch (err) {
+                                if (Axios.isAxiosError(err)) {
+                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                    if (errorType.success) {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                status: err?.response?.status,
+                                                error: errorType.data,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    } else {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: null,
+                                                status: 500,
+                                                message: err?.response?.data,
+                                                roomId: roomId,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    }
+                                }
+                                throw err;
                             }
+                            memberMessages = userData.messages;
+                            memberTags = userData.tags;
+                            memberVisitCardUrl = userData.visitCardUrl;
+                            memberTextures = userData.textures;
+                            memberUserRoomToken = userData.userRoomToken;
+                            characterLayerObjs = memberTextures;
+                        } catch (e) {
+                            console.log(
+                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                            );
+                            console.error(e);
+                            throw new Error("User cannot access this world");
+                        }
                         //} else {
                         if (!ADMIN_API_URL) {
                             const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
