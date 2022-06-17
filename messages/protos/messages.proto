@@ -631,4 +631,5 @@ service RoomManager {
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
 }

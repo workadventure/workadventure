@@ -27,13 +27,6 @@ npm run test
 
 ## Run on production like environment
 
-Build message types:
-
-```bash
-cd messages/
-yarn run proto-all
-```
-
 Start WorkAdventure with:
 
 ```bash
