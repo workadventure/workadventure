@@ -32,7 +32,6 @@ import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
-    ADMIN_API_URL,
     ADMIN_SOCKETS_TOKEN,
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
@@ -45,7 +44,6 @@ import { AdminMessageInterface, isAdminMessageInterface } from "../Model/Websock
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
-import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
