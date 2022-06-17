@@ -141,9 +141,9 @@
                 flex: inherit;
                 padding-top: 50px;
 
-                p.room-name {
+                /*p.room-name {
                     margin-top: 10px;
-                }
+                }*/
             }
 
             &.messagesList {
