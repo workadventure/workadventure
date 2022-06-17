@@ -2,6 +2,11 @@ import { PositionMessage, PositionMessage_Direction } from "../Messages/ts-proto
 
 import type { PointInterface } from "../Connexion/ConnexionModels";
 
+export interface MucRoomDefinitionInterface {
+    name: string;
+    url: string;
+}
+
 export class ProtobufClientUtils {
     public static toPointInterface(position: PositionMessage): PointInterface {
         let direction: "up" | "down" | "left" | "right";

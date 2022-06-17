@@ -13,6 +13,7 @@ import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
+import muc from "./muc";
 
 const zh_CN: Translation = {
     ...(en_US as Translation),
@@ -29,6 +30,7 @@ const zh_CN: Translation = {
     warning,
     emoji,
     trigger,
+    muc,
 };
 
 export default zh_CN;

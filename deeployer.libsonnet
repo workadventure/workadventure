@@ -64,15 +64,21 @@
               "FRONT_URL": "https://play-"+url,
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
+              # Admin
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+              # Opid client
               "OPID_CLIENT_ID": "auth-code-client",
-              "OPID_CLIENT_SECRET": "mySecretHydraWA2022",
+              "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
               "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+              # Ejabberd
+              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
+              "EJABBERD_URI": "adminxmpp-"+url,
+              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
             } else {})
           },
     "front": {

@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AskPositionMessage,
     BanMessage,
     BanUserMessage,
     BatchToPusherMessage,
@@ -160,6 +161,12 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
+                            );
+                        } else if (message.hasAskpositionmessage()) {
+                            socketManager.handleAskPositionMessage(
+                                room,
+                                user,
+                                message.getAskpositionmessage() as AskPositionMessage
                             );
                         } else {
                             throw new Error("Unhandled message type");

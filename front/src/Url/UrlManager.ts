@@ -67,6 +67,7 @@ class UrlManager {
 
     public clearHashParameter(): void {
         window.location.hash = "";
+        history.pushState("", document.title, window.location.pathname + window.location.search);
     }
 
     private getHashParameters(): Record<string, string> {

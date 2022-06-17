@@ -96,6 +96,7 @@
             width: 60px;
             padding-top: 0;
             margin: 5%;
+            image-rendering: pixelated;
         }
     }
 
@@ -110,6 +111,7 @@
                 pointer-events: auto;
                 width: 60px;
                 padding-top: 0;
+                image-rendering: pixelated;
             }
         }
         .menuIcon img:hover {
@@ -121,6 +123,7 @@
         .menuIcon {
             img {
                 width: 50px;
+                image-rendering: pixelated;
             }
         }
     }
