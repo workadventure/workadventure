@@ -4,7 +4,7 @@ import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
 import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
-import {localWokaService} from "./LocalWokaService";
+import { localWokaService } from "./LocalWokaService";
 
 /**
  * A local class mocking a real admin if no admin is configured.
@@ -23,9 +23,9 @@ class LocalAdmin implements AdminInterface {
             tags: [],
             messages: [],
             visitCardUrl: null,
-            textures: await localWokaService.fetchWokaDetails(characterLayers) ?? [],
+            textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            mucRooms: [{name: "Default", uri: playUri}],
+            mucRooms: [{ name: "Default", uri: playUri }],
         };
     }
 
