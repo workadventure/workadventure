@@ -18,7 +18,7 @@
 </script>
 
 <div class="audio-playing tw-bg-dark-blue/95" transition:fly={{ x: 210, duration: 500 }}>
-    <img src={megaphoneImg} alt="Audio playing" class="tw-bg-medium-purple tw-rounded-full"/>
+    <img src={megaphoneImg} alt="Audio playing" class="tw-bg-medium-purple tw-rounded-full" />
     <p>{$LL.audio.message()}</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded}>
         <track kind="captions" />

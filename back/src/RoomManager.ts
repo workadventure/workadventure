@@ -30,6 +30,7 @@ import {
     ZoneMessage,
     LockGroupPromptMessage,
     RoomsList,
+    PingMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -165,7 +166,11 @@ const roomManager: IRoomManagerServer = {
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error(
+                        "An error occurred while managing a message of type PusherToBackMessage:" +
+                            message.getMessageCase().toString(),
+                        e
+                    );
                     emitError(call, e);
                     call.end();
                 }
@@ -333,6 +338,9 @@ const roomManager: IRoomManagerServer = {
     },
     getRooms(call: ServerUnaryCall<EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
         callback(null, socketManager.getAllRooms());
+    },
+    ping(call: ServerUnaryCall<PingMessage>, callback: sendUnaryData<PingMessage>): void {
+        callback(null, call.request);
     },
 };
 

@@ -163,7 +163,7 @@
             >
         </select>
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
-        <select class="tw-w-full" bind:value={valueLocale}>
+        <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
             {#each displayableLocales as locale (locale.id)}
                 <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
             {/each}
@@ -177,12 +177,12 @@
         </div>
     </section>
     <section class="bottom-separator tw-flex tw-flex-col">
-        <div class="tooltip">
+        <div class="tooltip tw-w-fit">
             <h3 class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">
                 {$LL.menu.settings.privacySettings.title()}
                 <img src={infoImg} alt="info icon" width="18px" height="18px" />
             </h3>
-            <span class="tooltiptext">{$LL.menu.settings.privacySettings.explanation()}</span>
+            <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
         </div>
         <label>
             <input type="checkbox" bind:checked={valueCameraPrivacySettings} />

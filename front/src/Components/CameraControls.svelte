@@ -149,12 +149,12 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
-    .action-b-btn{
-        background-color: theme('colors.medium-purple');
+    .action-b-btn {
+        background-color: theme("colors.medium-purple");
         opacity: 0.95;
     }
-    .action-b-btn:hover{
-        background-color: theme('colors.light-purple');
+    .action-b-btn:hover {
+        background-color: theme("colors.light-purple");
     }
 
     .btn-cam-action {
