@@ -46,6 +46,7 @@
             closeChat();
         }
     }
+    console.info($xmppServerConnectionStatusStore, $mucRoomsStore);
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
@@ -55,13 +56,13 @@
 
     <!-- LIST USER SECTION -->
     <section class="roomsList">
-        <p class="system-text">{$LL.muc.title()}</p>
+        <p class="system-text chat-rooms">{$LL.muc.title()}</p>
         {#if $numberPresenceUserStore > 0}
             <Search id="search-user-connected" />
         {/if}
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
-                <p class="room-name"><!-- {mucRoom.name} --></p>
+                <!--<p class="room-name">{mucRoom.name}</p> -->
                 <UsersList
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}
@@ -100,13 +101,16 @@
 
     p.system-text {
         border-radius: 8px;
-        margin-bottom: 10px;
         padding: 6px;
         overflow-wrap: break-word;
         max-width: 100%;
         background: gray;
         display: inline-block;
         position: fixed;
+    }
+
+    p.system-text.chat-rooms {
+        margin-top: -50px;
     }
 
     aside.chatWindow {
@@ -135,6 +139,7 @@
                 height: auto;
                 max-height: 50%;
                 flex: inherit;
+                padding-top: 50px;
 
                 p.room-name {
                     margin-top: 10px;
@@ -160,6 +165,7 @@
             &.messageForm {
                 position: fixed;
                 bottom: 10px;
+                height: auto;
             }
         }
     }

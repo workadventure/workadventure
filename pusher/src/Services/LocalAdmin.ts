@@ -2,7 +2,7 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import {DISABLE_ANONYMOUS, START_ROOM_URL} from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 
 /**
@@ -16,8 +16,6 @@ class LocalAdmin implements AdminInterface {
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
-        // eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
-        const matched = playUri.match("/[_@*]/.+/.+/");
         return Promise.resolve({
             email: userIdentifier,
             userUuid: userIdentifier,
@@ -26,7 +24,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Default Room", uri: matched?.join().substring(0, -1) }],
+            mucRooms: [{ name: "Default", uri: playUri }],
         });
     }
 
@@ -42,7 +40,7 @@ class LocalAdmin implements AdminInterface {
 
         const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (!match) {
-            throw new Error("URL format is not good");
+            throw new Error("URL format is not good : "+roomUrl.pathname);
         }
 
         const mapUrl = roomUrl.protocol + "//" + match[1];

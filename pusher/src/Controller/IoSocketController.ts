@@ -358,7 +358,7 @@ export class IoSocketController {
 
                         let characterLayerObjs: WokaDetail[];
 
-                        if (ADMIN_API_URL) {
+                        //if (ADMIN_API_URL) {
                             try {
                                 try {
                                     userData = await adminService.fetchMemberDataByUuid(
@@ -418,7 +418,8 @@ export class IoSocketController {
                                 console.error(e);
                                 throw new Error("User cannot access this world");
                             }
-                        } else {
+                        //} else {
+                        if (!ADMIN_API_URL) {
                             const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
                             if (fetchedTextures === undefined) {
                                 // The textures we want to use do not exist!

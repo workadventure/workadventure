@@ -89,10 +89,10 @@ services:
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
-      EJABBERD_DOMAIN: ejabberd
-      EJABBERD_URI: ejabberd:5443
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
+      EJABBERD_DOMAIN: ejabberd
+      EJABBERD_URI: ejabberd:5443
     volumes:
       - ./pusher:/usr/src/app
     labels:

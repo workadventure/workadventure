@@ -42,8 +42,6 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        console.warn("Jabber credentials:");
-        console.warn(clientSocket.jabberId, clientSocket.jabberPassword);
         const clientJID = jid(clientSocket.jabberId);
         this.clientID = clientJID.local;
         this.clientDomain = clientJID.domain;
@@ -118,6 +116,7 @@ export class XmppClient {
                 xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
+                        console.log(definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
                         if (!definition.name || !definition.uri) {
                             throw new Error("Name and Uri cannot be empty!");

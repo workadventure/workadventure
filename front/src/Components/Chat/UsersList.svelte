@@ -100,6 +100,7 @@
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        align-items: center;
     }
     ul li div.nick span.no {
         color: gray;

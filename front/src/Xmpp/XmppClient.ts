@@ -21,6 +21,8 @@ export class XmppClient {
             this.jid = settings.jid;
             this.conferenceDomain = settings.conferenceDomain;
 
+            console.info('Settings room :', settings.rooms);
+
             this.onConnect(settings.rooms);
         });
 
