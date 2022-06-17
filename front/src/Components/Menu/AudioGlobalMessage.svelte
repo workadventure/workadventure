@@ -73,9 +73,9 @@
     }
 </script>
 
-<section class="section-input-send-audio">
+<section class="section-input-send-audio centered-column">
     <img
-        class="nes-pointer"
+        class="clickable tw-w-1/4"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
         on:click|preventDefault={() => {
@@ -89,6 +89,7 @@
         <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
     <input
+        class="tw-hidden"
         type="file"
         id="input-send-audio"
         bind:this={fileInput}
@@ -97,30 +98,3 @@
         }}
     />
 </section>
-
-<style lang="scss">
-    section.section-input-send-audio {
-        display: flex;
-        flex-direction: column;
-
-        height: 100%;
-        text-align: center;
-
-        img {
-            flex: 1 1 auto;
-            max-height: 80%;
-            margin-bottom: 20px;
-        }
-        p {
-            margin-bottom: 5px;
-            color: whitesmoke;
-            font-size: 1rem;
-            &.err {
-                color: #ce372b;
-            }
-        }
-        input {
-            display: none;
-        }
-    }
-</style>
