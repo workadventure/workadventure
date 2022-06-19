@@ -1,7 +1,6 @@
 <script lang="ts">
     import { SendIcon } from "svelte-feather-icons";
     import { chatMessagesStore, chatInputFocusStore } from "../Stores/ChatStore";
-    import LL from "../i18n/i18n-svelte";
 
     export const handleForm = {
         blur() {
@@ -34,7 +33,7 @@
                 type="text"
                 bind:value={newMessageText}
                 class="tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-border-0 tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
-                placeholder={$LL.chat.enter()}
+                placeholder="Enter your message..."
                 on:focus={onFocus}
                 on:blur={onBlur}
                 rows="1"
