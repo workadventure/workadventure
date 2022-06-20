@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
-    import { chatSubMenuVisibilityStore } from "../../../chat/src/Stores/ChatStore";
+    import { chatSubMenuVisibilityStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
     import ChatSubMenu from "./ChatSubMenu.svelte";
