@@ -20,37 +20,6 @@ export class StartPositionCalculator {
         this.initStartXAndStartY();
     }
 
-    public initPositionFromLayerName(selectedLayerName: string) {
-        let foundLayer: ITiledMapLayer | null = null;
-
-        const tileLayers = this.gameMap.flatLayers.filter((layer) => layer.type === "tilelayer");
-        for (const layer of tileLayers) {
-            //we want to prioritize the selectedLayer rather than "start" layer
-            if (
-                [layer.name, `#${layer.name}`].includes(selectedLayerName) ||
-                layer.name.endsWith("/" + selectedLayerName)
-            ) {
-                foundLayer = layer;
-                break;
-            }
-        }
-        if (!foundLayer) {
-            for (const layer of tileLayers) {
-                if (layer.name === this.DEFAULT_START_NAME || this.isStartLayer(layer)) {
-                    foundLayer = layer;
-                    break;
-                }
-            }
-        }
-        if (foundLayer) {
-            const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
-            this.startPosition = {
-                x: startPosition.x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
-                y: startPosition.y * this.mapFile.tileheight + this.mapFile.tileheight / 2,
-            };
-        }
-    }
-
     public getStartPositionNames(): string[] {
         const names: string[] = [];
         for (const obj of [...this.gameMap.flatLayers, ...this.gameMap.getAreas()]) {
@@ -65,11 +34,14 @@ export class StartPositionCalculator {
         return names;
     }
 
-    private initStartXAndStartY() {
+    public initStartXAndStartY(startPositionName?: string) {
         // If there is an init position passed
         if (this.initPosition) {
             this.startPosition = this.initPosition;
         } else {
+            if (startPositionName) {
+                this.startPositionName = startPositionName;
+            }
             // try to get starting position from Area object
             if (!this.initPositionFromArea()) {
                 // if cannot, look for Layers
@@ -102,6 +74,37 @@ export class StartPositionCalculator {
             return true;
         }
         return false;
+    }
+
+    private initPositionFromLayerName(selectedLayerName: string) {
+        let foundLayer: ITiledMapLayer | null = null;
+
+        const tileLayers = this.gameMap.flatLayers.filter((layer) => layer.type === "tilelayer");
+        for (const layer of tileLayers) {
+            //we want to prioritize the selectedLayer rather than "start" layer
+            if (
+                [layer.name, `#${layer.name}`].includes(selectedLayerName) ||
+                layer.name.endsWith("/" + selectedLayerName)
+            ) {
+                foundLayer = layer;
+                break;
+            }
+        }
+        if (!foundLayer) {
+            for (const layer of tileLayers) {
+                if (layer.name === this.DEFAULT_START_NAME || this.isStartObject(layer)) {
+                    foundLayer = layer;
+                    break;
+                }
+            }
+        }
+        if (foundLayer) {
+            const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
+            this.startPosition = {
+                x: startPosition.x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
+                y: startPosition.y * this.mapFile.tileheight + this.mapFile.tileheight / 2,
+            };
+        }
     }
 
     private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
