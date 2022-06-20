@@ -1,9 +1,16 @@
 <script>
     export let forum;
+    let forumMenuActive = false;
+    export let openForum;
+    let openChatForumMenu = () => {
+        forumMenuActive = !forumMenuActive;
+    };
+
+    import { MoreHorizontalIcon } from "svelte-feather-icons";
 </script>
 
 <div class={`wa-chat-item`}>
-    <div class="tw-relative">
+    <div class="tw-relative"  on:click={() => openForum(forum)}>
         <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="42" />
         {#if forum.active}
             <span
@@ -11,7 +18,7 @@
             />
         {/if}
     </div>
-    <div class="tw-flex-auto tw-ml-2">
+    <div class="tw-flex-auto tw-ml-2"  on:click={() => openForum(forum)}>
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {forum.name}
         </h1>
@@ -30,4 +37,17 @@
             {forum.unreads}
         </span>
     {/if}
+
+    <div class="wa-dropdown">
+        <!-- toggle -->
+        <button class="tw-text-light-purple" on:click={openChatForumMenu}>
+            <MoreHorizontalIcon />
+        </button>
+
+        <!-- menu -->
+        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`}>
+            <span class="wa-dropdown-item" on:click={() => openForum(forum)}> Open forum </span>
+            <div class="wa-dropdown-item">Delete forum</div>
+        </div>
+    </div>
 </div>

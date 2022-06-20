@@ -1,18 +1,24 @@
 <script>
-    import { MoreHorizontalIcon } from "svelte-feather-icons";
+    import {MoreHorizontalIcon} from "svelte-feather-icons";
+
     export let user;
+    export let openChat;
+    let chatMenuActive = false;
+    let openChatUserMenu = () => {
+        chatMenuActive = !chatMenuActive;
+    };
 </script>
 
-<div class={`wa-chat-item ${user.active ? "" : "tw-opacity-50"}`}>
-    <div class="tw-relative">
-        <img class={``} src="/static/images/yoda-avatar.png" alt="Send" width="42" />
+<div className={`wa-chat-item ${user.active ? "" : "tw-opacity-50"}`}>
+    <div className="tw-relative" on:click={() => openChat(user)}>
+        <img className={``} src="/static/images/yoda-avatar.png" alt="Send" width="42"/>
         {#if user.active}
             <span
                 class="tw-w-4 tw-h-4 tw-bg-pop-yellow tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple"
             />
         {/if}
     </div>
-    <div class="tw-flex-auto tw-ml-2">
+    <div class="tw-flex-auto tw-ml-2" on:click={() => openChat(user)}>
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {user.name}
         </h1>
@@ -28,9 +34,23 @@
             {user.unreads}
         </span>
     {/if}
-    <div>
-        <button class="tw-text-light-purple">
-            <MoreHorizontalIcon />
+
+    <div class="wa-dropdown">
+
+        <!-- toggle -->
+
+        <button class="tw-text-light-purple" on:click={openChatUserMenu}>
+            <MoreHorizontalIcon/>
         </button>
+
+        <div class={`wa-dropdown-menu ${chatMenuActive ? '': 'tw-invisible'}`}>
+            <span class="wa-dropdown-item" on:click={() => openChat(user)}>
+                Open Chat
+            </span>
+            <div class="wa-dropdown-item">
+                Delete chat
+            </div>
+        </div>
+
     </div>
 </div>
