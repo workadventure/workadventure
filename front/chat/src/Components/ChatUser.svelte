@@ -40,7 +40,7 @@
 
         <!-- toggle -->
 
-        <button class="tw-text-light-purple" on:click|stopPropagation={openChatUserMenu}>
+        <button class="tw-text-light-purple focus:outline-none" on:click|stopPropagation={openChatUserMenu}>
             <MoreHorizontalIcon/>
         </button>
 
