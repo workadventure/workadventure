@@ -1397,7 +1397,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startPositionName ?? undefined,
+                startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),

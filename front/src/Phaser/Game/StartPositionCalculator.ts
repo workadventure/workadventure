@@ -114,4 +114,8 @@ export class StartPositionCalculator {
         // legacy reasons
         return this.gameMap.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
     }
+
+    public getStartPositionName(): string {
+        return this.startPositionName;
+    }
 }
