@@ -1,6 +1,6 @@
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
-import type { ITiledMap, ITiledMapLayer, ITiledMapTileLayer } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
@@ -72,7 +72,6 @@ export class StartPositionCalculator {
         } else {
             // try to get starting position from Area object
             if (!this.initPositionFromArea()) {
-                console.log("no start area. Move to layer");
                 // if cannot, look for Layers
                 this.initPositionFromLayerName(this.startPositionName);
             }
@@ -91,56 +90,21 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromArea(): boolean {
-        const area = this.gameMap.getArea(this.startPositionName) || this.gameMap.getArea(this.DEFAULT_START_NAME);
-        if (!area) {
-            return false;
+        let area = this.gameMap.getArea(this.startPositionName);
+        if (area && this.gameMap.getObjectProperty(area, "start") === true) {
+            this.startPosition = MathUtils.randomPositionFromRect(area, 16);
+            return true;
         }
-        this.startPosition = MathUtils.randomPositionFromRect(area, 16);
-        return true;
+
+        area = this.gameMap.getArea(this.DEFAULT_START_NAME);
+        if (area) {
+            this.startPosition = MathUtils.randomPositionFromRect(area, 16);
+            return true;
+        }
+        return false;
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.gameMap.getLayerProperty(layer, GameMapProperties.START_LAYER) == true;
-    }
-
-    /**
-     *
-     * @param selectedLayer this is always the layer that is selected with the hash in the url
-     * @param selectedOrDefaultLayer  this can also be the default layer if the {selectedLayer} did not yield any start points
-     */
-    private startUser(selectedOrDefaultLayer: ITiledMapTileLayer, selectedLayer: string | null): PositionInterface {
-        const tiles = selectedOrDefaultLayer.data;
-        if (typeof tiles === "string") {
-            throw new Error("The content of a JSON map must be filled as a JSON array, not as a string");
-        }
-        const possibleStartPositions: PositionInterface[] = [];
-        tiles.forEach((objectKey: number, key: number) => {
-            if (objectKey === 0) {
-                return;
-            }
-            const y = Math.floor(key / selectedOrDefaultLayer.width);
-            const x = key % selectedOrDefaultLayer.width;
-
-            if (selectedLayer && this.gameMap.hasStartTile) {
-                const properties = this.gameMap.getPropertiesForIndex(objectKey);
-                if (
-                    !properties.length ||
-                    !properties.some((property) => property.name == "start" && property.value == selectedLayer)
-                ) {
-                    return;
-                }
-            }
-            possibleStartPositions.push({ x: x * this.mapFile.tilewidth, y: y * this.mapFile.tilewidth });
-        });
-        // Get a value at random amongst allowed values
-        if (possibleStartPositions.length === 0) {
-            console.warn('The start layer "' + selectedOrDefaultLayer.name + '" for this map is empty.');
-            return {
-                x: 0,
-                y: 0,
-            };
-        }
-        // Choose one of the available start positions at random amongst the list of available start positions.
-        return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
+        return this.gameMap.getObjectProperty(layer, GameMapProperties.START_LAYER) == true;
     }
 }
