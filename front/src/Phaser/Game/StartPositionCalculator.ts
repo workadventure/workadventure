@@ -1,5 +1,6 @@
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileLayer } from "../Map/ITiledMap";
+import { MathUtils } from "../../Utils/MathUtils";
+import type { ITiledMap, ITiledMapLayer, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
@@ -42,10 +43,10 @@ export class StartPositionCalculator {
             }
         }
         if (foundLayer) {
-            const startPosition = this.startUser(foundLayer as ITiledMapTileLayer, this.DEFAULT_START_NAME);
+            const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
             this.startPosition = {
-                x: startPosition.x + this.mapFile.tilewidth / 2,
-                y: startPosition.y + this.mapFile.tileheight / 2,
+                x: startPosition.x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
+                y: startPosition.y * this.mapFile.tileheight + this.mapFile.tileheight / 2,
             };
         }
     }
@@ -94,15 +95,12 @@ export class StartPositionCalculator {
         if (!area) {
             return false;
         }
-        this.startPosition = {
-            x: area.x,
-            y: area.y,
-        };
+        this.startPosition = MathUtils.randomPositionFromRect(area, 16);
         return true;
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.getProperty(layer, GameMapProperties.START_LAYER) == true;
+        return this.gameMap.getLayerProperty(layer, GameMapProperties.START_LAYER) == true;
     }
 
     /**
@@ -144,19 +142,5 @@ export class StartPositionCalculator {
         }
         // Choose one of the available start positions at random amongst the list of available start positions.
         return possibleStartPositions[Math.floor(Math.random() * possibleStartPositions.length)];
-    }
-
-    private getProperty(layer: ITiledMapLayer | ITiledMap, name: string): string | boolean | number | undefined {
-        const properties: ITiledMapProperty[] | undefined = layer.properties;
-        if (!properties) {
-            return undefined;
-        }
-        const obj = properties.find(
-            (property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase()
-        );
-        if (obj === undefined) {
-            return undefined;
-        }
-        return obj.value;
     }
 }

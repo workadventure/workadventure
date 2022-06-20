@@ -370,6 +370,20 @@ export class GameMap {
         throw new Error("No possible position found");
     }
 
+    public getLayerProperty(layer: ITiledMapLayer, propertyName: string): string | boolean | number | undefined {
+        const properties: ITiledMapProperty[] | undefined = layer.properties;
+        if (!properties) {
+            return undefined;
+        }
+        const obj = properties.find(
+            (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase()
+        );
+        if (obj === undefined) {
+            return undefined;
+        }
+        return obj.value;
+    }
+
     public getObjectWithName(name: string): ITiledMapObject | undefined {
         return this.tiledObjects.find((object) => object.name === name);
     }
