@@ -2,28 +2,25 @@ import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
-
-const defaultStartPositionName = "start";
-
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
 
     private startPositionName: string;
 
+    private readonly DEFAULT_START_NAME = "start";
+
     constructor(
         private readonly gameMap: GameMap,
         private readonly mapFile: ITiledMap,
-        private readonly initPosition: PositionInterface | null,
+        private readonly initPosition?: PositionInterface,
         startPositionName?: string
     ) {
-        this.startPositionName = startPositionName || defaultStartPositionName;
+        this.startPositionName = startPositionName || this.DEFAULT_START_NAME;
         this.initStartXAndStartY();
     }
 
-    public initPositionFromLayerName(selectedLayerName: string, defaultLayerName: string) {
+    public initPositionFromLayerName(selectedLayerName: string) {
         let foundLayer: ITiledMapLayer | null = null;
-
-        console.log(selectedLayerName);
 
         const tileLayers = this.gameMap.flatLayers.filter((layer) => layer.type === "tilelayer");
         for (const layer of tileLayers) {
@@ -38,14 +35,14 @@ export class StartPositionCalculator {
         }
         if (!foundLayer) {
             for (const layer of tileLayers) {
-                if (layer.name === defaultStartPositionName || this.isStartLayer(layer)) {
+                if (layer.name === this.DEFAULT_START_NAME || this.isStartLayer(layer)) {
                     foundLayer = layer;
                     break;
                 }
             }
         }
         if (foundLayer) {
-            const startPosition = this.startUser(foundLayer as ITiledMapTileLayer, defaultLayerName);
+            const startPosition = this.startUser(foundLayer as ITiledMapTileLayer, this.DEFAULT_START_NAME);
             this.startPosition = {
                 x: startPosition.x + this.mapFile.tilewidth / 2,
                 y: startPosition.y + this.mapFile.tileheight / 2,
@@ -67,27 +64,16 @@ export class StartPositionCalculator {
         return names;
     }
 
-    private initPositionFromArea(): boolean {
-        const area = this.gameMap.getArea(this.startPositionName);
-        if (!area) {
-            return false;
-        }
-        this.startPosition = {
-            x: area.x,
-            y: area.y,
-        };
-        return true;
-    }
-
     private initStartXAndStartY() {
         // If there is an init position passed
-        if (this.initPosition !== null) {
+        if (this.initPosition) {
             this.startPosition = this.initPosition;
         } else {
             // try to get starting position from Area object
             if (!this.initPositionFromArea()) {
+                console.log("no start area. Move to layer");
                 // if cannot, look for Layers
-                this.initPositionFromLayerName(this.startPositionName, defaultStartPositionName);
+                this.initPositionFromLayerName(this.startPositionName);
             }
         }
         // Still no start position? Something is wrong with the map, we need a "start" layer.
@@ -101,6 +87,18 @@ export class StartPositionCalculator {
                 y: this.mapFile.height * 16,
             };
         }
+    }
+
+    private initPositionFromArea(): boolean {
+        const area = this.gameMap.getArea(this.startPositionName) || this.gameMap.getArea(this.DEFAULT_START_NAME);
+        if (!area) {
+            return false;
+        }
+        this.startPosition = {
+            x: area.x,
+            y: area.y,
+        };
+        return true;
     }
 
     private isStartLayer(layer: ITiledMapLayer): boolean {

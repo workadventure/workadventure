@@ -108,8 +108,8 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
-    initPosition: PointInterface | null;
     reconnecting: boolean;
+    initPosition?: PointInterface;
 }
 
 interface InitUserPositionEventInterface {
@@ -168,7 +168,7 @@ export class GameScene extends DirtyScene {
         | DeleteGroupEventInterface
         | PlayerDetailsUpdatedInterface
     >();
-    private initPosition: PositionInterface | null = null;
+    private initPosition?: PositionInterface;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
@@ -1641,7 +1641,7 @@ ${escapedMessage}
             this.scene.remove(this.scene.key);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
+            this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             setTimeout(() => (this.mapTransitioning = false), 500);
