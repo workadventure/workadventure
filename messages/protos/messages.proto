@@ -616,6 +616,27 @@ message EmptyMessage {
 
 }
 
+
+
+/**
+ * Start Chat Messages
+ */
+message IframeToPusherMessage{
+  oneof message {
+    EmptyMessage emptyMessage = 1;
+  }
+}
+/**
+ * End Chat Messages
+ **/
+
+
+
+
+
+
+
+
 /**
  * Service handled by the "back". Pusher servers connect to this service.
  */

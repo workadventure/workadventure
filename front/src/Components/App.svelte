@@ -44,9 +44,6 @@
         <EnableCameraScene {game} />
     </div>
 {:else}
+    <Chat />
     <MainLayout />
-
-    {#if $chatVisibilityStore}
-        <Chat />
-    {/if}
 {/if}

@@ -901,7 +901,7 @@ export class GameScene extends DirtyScene {
                 // });
 
                 // Connect to XMPP
-                this.xmppClient = new XmppClient(this.connection);
+                //this.xmppClient = new XmppClient(this.connection);
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();

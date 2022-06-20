@@ -173,6 +173,9 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("modifyArea"),
         data: isAreaEvent,
     }),
+    z.object({
+        type: z.literal("closeChat")
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

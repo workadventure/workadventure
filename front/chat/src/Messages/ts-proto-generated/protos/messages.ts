@@ -1,7 +1,7 @@
 /* eslint-disable */
 import Long from "long";
 import _m0 from "protobufjs/minimal";
-import { Observable } from "rxjs";
+import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import { UInt32Value, BoolValue, StringValue, Int32Value } from "../google/protobuf/wrappers";
 
@@ -227,7 +227,9 @@ export interface ClientToServerMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage };
+        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage }
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
 }
 
 export interface ItemEventMessage {
@@ -240,6 +242,10 @@ export interface ItemEventMessage {
 export interface VariableMessage {
     name: string;
     value: string;
+}
+
+export interface XmppMessage {
+    stanza: string;
 }
 
 /** A variable, along the tag describing who it is targeted at */
@@ -264,6 +270,10 @@ export interface UserMovedMessage {
     position: PositionMessage | undefined;
 }
 
+export interface MoveToPositionMessage {
+    position: PositionMessage | undefined;
+}
+
 export interface SubMessage {
     message?:
         | { $case: "userMovedMessage"; userMovedMessage: UserMovedMessage }
@@ -275,7 +285,8 @@ export interface SubMessage {
         | { $case: "emoteEventMessage"; emoteEventMessage: EmoteEventMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
-        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage };
+        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage };
 }
 
 export interface BatchMessage {
@@ -421,6 +432,60 @@ export interface BanUserMessage {
     message: string;
 }
 
+export interface MucRoomDefinitionMessage {
+    url: string;
+    name: string;
+}
+
+export interface XmppSettingsMessage {
+    jid: string;
+    conferenceDomain: string;
+    rooms: MucRoomDefinitionMessage[];
+}
+
+export interface AskPositionMessage {
+    userIdentifier: string;
+    playUri: string;
+}
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+export interface XmppConnectionStatusChangeMessage {
+    status: XmppConnectionStatusChangeMessage_Status;
+}
+
+export enum XmppConnectionStatusChangeMessage_Status {
+    DISCONNECTED = 0,
+    UNRECOGNIZED = -1,
+}
+
+export function xmppConnectionStatusChangeMessage_StatusFromJSON(
+    object: any
+): XmppConnectionStatusChangeMessage_Status {
+    switch (object) {
+        case 0:
+        case "DISCONNECTED":
+            return XmppConnectionStatusChangeMessage_Status.DISCONNECTED;
+        case -1:
+        case "UNRECOGNIZED":
+        default:
+            return XmppConnectionStatusChangeMessage_Status.UNRECOGNIZED;
+    }
+}
+
+export function xmppConnectionStatusChangeMessage_StatusToJSON(
+    object: XmppConnectionStatusChangeMessage_Status
+): string {
+    switch (object) {
+        case XmppConnectionStatusChangeMessage_Status.DISCONNECTED:
+            return "DISCONNECTED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 /** Messages going from back and pusher to the front */
 export interface ServerToClientMessage {
     message?:
@@ -449,7 +514,13 @@ export interface ServerToClientMessage {
         | { $case: "invalidTextureMessage"; invalidTextureMessage: InvalidTextureMessage }
         | { $case: "groupUsersUpdateMessage"; groupUsersUpdateMessage: GroupUsersUpdateMessage }
         | { $case: "errorScreenMessage"; errorScreenMessage: ErrorScreenMessage }
-        | { $case: "bbbMeetingClientURLMessage"; bbbMeetingClientURLMessage: BBBMeetingClientURLMessage };
+        | { $case: "bbbMeetingClientURLMessage"; bbbMeetingClientURLMessage: BBBMeetingClientURLMessage }
+        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage }
+        | {
+              $case: "xmppConnectionStatusChangeMessage";
+              xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
+          }
+        | { $case: "moveToPositionMessage"; moveToPositionMessage: MoveToPositionMessage };
 }
 
 export interface JoinRoomMessage {
@@ -539,7 +610,8 @@ export interface PusherToBackMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage };
+        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
 }
 
 export interface BatchToPusherMessage {
@@ -628,6 +700,11 @@ export interface RoomsList {
 }
 
 export interface EmptyMessage {}
+
+/** Start Chat Messages */
+export interface IframeToPusherMessage {
+    message?: { $case: "emptyMessage"; emptyMessage: EmptyMessage };
+}
 
 const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
 
@@ -1736,6 +1813,12 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "joinBBBMeetingMessage") {
             JoinBBBMeetingMessage.encode(message.message.joinBBBMeetingMessage, writer.uint32(154).fork()).ldelim();
         }
+        if (message.message?.$case === "xmppMessage") {
+            XmppMessage.encode(message.message.xmppMessage, writer.uint32(162).fork()).ldelim();
+        }
+        if (message.message?.$case === "askPositionMessage") {
+            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(170).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -1849,6 +1932,18 @@ export const ClientToServerMessage = {
                     message.message = {
                         $case: "joinBBBMeetingMessage",
                         joinBBBMeetingMessage: JoinBBBMeetingMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 20:
+                    message.message = {
+                        $case: "xmppMessage",
+                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 21:
+                    message.message = {
+                        $case: "askPositionMessage",
+                        askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -1968,6 +2063,15 @@ export const ClientToServerMessage = {
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromJSON(object.joinBBBMeetingMessage),
             };
         }
+        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
+            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
+        }
+        if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
+            message.message = {
+                $case: "askPositionMessage",
+                askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
+            };
+        }
         return message;
     },
 
@@ -2040,6 +2144,14 @@ export const ClientToServerMessage = {
         message.message?.$case === "joinBBBMeetingMessage" &&
             (obj.joinBBBMeetingMessage = message.message?.joinBBBMeetingMessage
                 ? JoinBBBMeetingMessage.toJSON(message.message?.joinBBBMeetingMessage)
+                : undefined);
+        message.message?.$case === "xmppMessage" &&
+            (obj.xmppMessage = message.message?.xmppMessage
+                ? XmppMessage.toJSON(message.message?.xmppMessage)
+                : undefined);
+        message.message?.$case === "askPositionMessage" &&
+            (obj.askPositionMessage = message.message?.askPositionMessage
+                ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
                 : undefined);
         return obj;
     },
@@ -2222,6 +2334,26 @@ export const ClientToServerMessage = {
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromPartial(object.message.joinBBBMeetingMessage),
             };
         }
+        if (
+            object.message?.$case === "xmppMessage" &&
+            object.message?.xmppMessage !== undefined &&
+            object.message?.xmppMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppMessage",
+                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
+            };
+        }
+        if (
+            object.message?.$case === "askPositionMessage" &&
+            object.message?.askPositionMessage !== undefined &&
+            object.message?.askPositionMessage !== null
+        ) {
+            message.message = {
+                $case: "askPositionMessage",
+                askPositionMessage: AskPositionMessage.fromPartial(object.message.askPositionMessage),
+            };
+        }
         return message;
     },
 };
@@ -2353,6 +2485,53 @@ export const VariableMessage = {
         const message = { ...baseVariableMessage } as VariableMessage;
         message.name = object.name ?? "";
         message.value = object.value ?? "";
+        return message;
+    },
+};
+
+const baseXmppMessage: object = { stanza: "" };
+
+export const XmppMessage = {
+    encode(message: XmppMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.stanza !== "") {
+            writer.uint32(10).string(message.stanza);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): XmppMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseXmppMessage } as XmppMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.stanza = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): XmppMessage {
+        const message = { ...baseXmppMessage } as XmppMessage;
+        message.stanza = object.stanza !== undefined && object.stanza !== null ? String(object.stanza) : "";
+        return message;
+    },
+
+    toJSON(message: XmppMessage): unknown {
+        const obj: any = {};
+        message.stanza !== undefined && (obj.stanza = message.stanza);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<XmppMessage>, I>>(object: I): XmppMessage {
+        const message = { ...baseXmppMessage } as XmppMessage;
+        message.stanza = object.stanza ?? "";
         return message;
     },
 };
@@ -2601,6 +2780,60 @@ export const UserMovedMessage = {
     },
 };
 
+const baseMoveToPositionMessage: object = {};
+
+export const MoveToPositionMessage = {
+    encode(message: MoveToPositionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.position !== undefined) {
+            PositionMessage.encode(message.position, writer.uint32(10).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): MoveToPositionMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.position = PositionMessage.decode(reader, reader.uint32());
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): MoveToPositionMessage {
+        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
+        message.position =
+            object.position !== undefined && object.position !== null
+                ? PositionMessage.fromJSON(object.position)
+                : undefined;
+        return message;
+    },
+
+    toJSON(message: MoveToPositionMessage): unknown {
+        const obj: any = {};
+        message.position !== undefined &&
+            (obj.position = message.position ? PositionMessage.toJSON(message.position) : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<MoveToPositionMessage>, I>>(object: I): MoveToPositionMessage {
+        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
+        message.position =
+            object.position !== undefined && object.position !== null
+                ? PositionMessage.fromPartial(object.position)
+                : undefined;
+        return message;
+    },
+};
+
 const baseSubMessage: object = {};
 
 export const SubMessage = {
@@ -2637,6 +2870,9 @@ export const SubMessage = {
                 message.message.playerDetailsUpdatedMessage,
                 writer.uint32(82).fork()
             ).ldelim();
+        }
+        if (message.message?.$case === "xmppMessage") {
+            XmppMessage.encode(message.message.xmppMessage, writer.uint32(90).fork()).ldelim();
         }
         return writer;
     },
@@ -2708,6 +2944,12 @@ export const SubMessage = {
                         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.decode(reader, reader.uint32()),
                     };
                     break;
+                case 11:
+                    message.message = {
+                        $case: "xmppMessage",
+                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -2775,6 +3017,9 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(object.playerDetailsUpdatedMessage),
             };
         }
+        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
+            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
+        }
         return message;
     },
 
@@ -2819,6 +3064,10 @@ export const SubMessage = {
         message.message?.$case === "playerDetailsUpdatedMessage" &&
             (obj.playerDetailsUpdatedMessage = message.message?.playerDetailsUpdatedMessage
                 ? PlayerDetailsUpdatedMessage.toJSON(message.message?.playerDetailsUpdatedMessage)
+                : undefined);
+        message.message?.$case === "xmppMessage" &&
+            (obj.xmppMessage = message.message?.xmppMessage
+                ? XmppMessage.toJSON(message.message?.xmppMessage)
                 : undefined);
         return obj;
     },
@@ -2925,6 +3174,16 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromPartial(
                     object.message.playerDetailsUpdatedMessage
                 ),
+            };
+        }
+        if (
+            object.message?.$case === "xmppMessage" &&
+            object.message?.xmppMessage !== undefined &&
+            object.message?.xmppMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppMessage",
+                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
             };
         }
         return message;
@@ -4577,6 +4836,244 @@ export const BanUserMessage = {
     },
 };
 
+const baseMucRoomDefinitionMessage: object = { url: "", name: "" };
+
+export const MucRoomDefinitionMessage = {
+    encode(message: MucRoomDefinitionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.url !== "") {
+            writer.uint32(10).string(message.url);
+        }
+        if (message.name !== "") {
+            writer.uint32(18).string(message.name);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): MucRoomDefinitionMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.url = reader.string();
+                    break;
+                case 2:
+                    message.name = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): MucRoomDefinitionMessage {
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
+        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
+        return message;
+    },
+
+    toJSON(message: MucRoomDefinitionMessage): unknown {
+        const obj: any = {};
+        message.url !== undefined && (obj.url = message.url);
+        message.name !== undefined && (obj.name = message.name);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<MucRoomDefinitionMessage>, I>>(object: I): MucRoomDefinitionMessage {
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        message.url = object.url ?? "";
+        message.name = object.name ?? "";
+        return message;
+    },
+};
+
+const baseXmppSettingsMessage: object = { jid: "", conferenceDomain: "" };
+
+export const XmppSettingsMessage = {
+    encode(message: XmppSettingsMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.jid !== "") {
+            writer.uint32(10).string(message.jid);
+        }
+        if (message.conferenceDomain !== "") {
+            writer.uint32(18).string(message.conferenceDomain);
+        }
+        for (const v of message.rooms) {
+            MucRoomDefinitionMessage.encode(v!, writer.uint32(26).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): XmppSettingsMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.rooms = [];
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.jid = reader.string();
+                    break;
+                case 2:
+                    message.conferenceDomain = reader.string();
+                    break;
+                case 3:
+                    message.rooms.push(MucRoomDefinitionMessage.decode(reader, reader.uint32()));
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): XmppSettingsMessage {
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.jid = object.jid !== undefined && object.jid !== null ? String(object.jid) : "";
+        message.conferenceDomain =
+            object.conferenceDomain !== undefined && object.conferenceDomain !== null
+                ? String(object.conferenceDomain)
+                : "";
+        message.rooms = (object.rooms ?? []).map((e: any) => MucRoomDefinitionMessage.fromJSON(e));
+        return message;
+    },
+
+    toJSON(message: XmppSettingsMessage): unknown {
+        const obj: any = {};
+        message.jid !== undefined && (obj.jid = message.jid);
+        message.conferenceDomain !== undefined && (obj.conferenceDomain = message.conferenceDomain);
+        if (message.rooms) {
+            obj.rooms = message.rooms.map((e) => (e ? MucRoomDefinitionMessage.toJSON(e) : undefined));
+        } else {
+            obj.rooms = [];
+        }
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<XmppSettingsMessage>, I>>(object: I): XmppSettingsMessage {
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.jid = object.jid ?? "";
+        message.conferenceDomain = object.conferenceDomain ?? "";
+        message.rooms = object.rooms?.map((e) => MucRoomDefinitionMessage.fromPartial(e)) || [];
+        return message;
+    },
+};
+
+const baseAskPositionMessage: object = { userIdentifier: "", playUri: "" };
+
+export const AskPositionMessage = {
+    encode(message: AskPositionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.userIdentifier !== "") {
+            writer.uint32(10).string(message.userIdentifier);
+        }
+        if (message.playUri !== "") {
+            writer.uint32(18).string(message.playUri);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): AskPositionMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseAskPositionMessage } as AskPositionMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.userIdentifier = reader.string();
+                    break;
+                case 2:
+                    message.playUri = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): AskPositionMessage {
+        const message = { ...baseAskPositionMessage } as AskPositionMessage;
+        message.userIdentifier =
+            object.userIdentifier !== undefined && object.userIdentifier !== null ? String(object.userIdentifier) : "";
+        message.playUri = object.playUri !== undefined && object.playUri !== null ? String(object.playUri) : "";
+        return message;
+    },
+
+    toJSON(message: AskPositionMessage): unknown {
+        const obj: any = {};
+        message.userIdentifier !== undefined && (obj.userIdentifier = message.userIdentifier);
+        message.playUri !== undefined && (obj.playUri = message.playUri);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<AskPositionMessage>, I>>(object: I): AskPositionMessage {
+        const message = { ...baseAskPositionMessage } as AskPositionMessage;
+        message.userIdentifier = object.userIdentifier ?? "";
+        message.playUri = object.playUri ?? "";
+        return message;
+    },
+};
+
+const baseXmppConnectionStatusChangeMessage: object = { status: 0 };
+
+export const XmppConnectionStatusChangeMessage = {
+    encode(message: XmppConnectionStatusChangeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.status !== 0) {
+            writer.uint32(8).int32(message.status);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): XmppConnectionStatusChangeMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.status = reader.int32() as any;
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): XmppConnectionStatusChangeMessage {
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        message.status =
+            object.status !== undefined && object.status !== null
+                ? xmppConnectionStatusChangeMessage_StatusFromJSON(object.status)
+                : 0;
+        return message;
+    },
+
+    toJSON(message: XmppConnectionStatusChangeMessage): unknown {
+        const obj: any = {};
+        message.status !== undefined && (obj.status = xmppConnectionStatusChangeMessage_StatusToJSON(message.status));
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<XmppConnectionStatusChangeMessage>, I>>(
+        object: I
+    ): XmppConnectionStatusChangeMessage {
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        message.status = object.status ?? 0;
+        return message;
+    },
+};
+
 const baseServerToClientMessage: object = {};
 
 export const ServerToClientMessage = {
@@ -4661,6 +5158,18 @@ export const ServerToClientMessage = {
                 message.message.bbbMeetingClientURLMessage,
                 writer.uint32(218).fork()
             ).ldelim();
+        }
+        if (message.message?.$case === "xmppSettingsMessage") {
+            XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(226).fork()).ldelim();
+        }
+        if (message.message?.$case === "xmppConnectionStatusChangeMessage") {
+            XmppConnectionStatusChangeMessage.encode(
+                message.message.xmppConnectionStatusChangeMessage,
+                writer.uint32(234).fork()
+            ).ldelim();
+        }
+        if (message.message?.$case === "moveToPositionMessage") {
+            MoveToPositionMessage.encode(message.message.moveToPositionMessage, writer.uint32(242).fork()).ldelim();
         }
         return writer;
     },
@@ -4813,6 +5322,27 @@ export const ServerToClientMessage = {
                         bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.decode(reader, reader.uint32()),
                     };
                     break;
+                case 28:
+                    message.message = {
+                        $case: "xmppSettingsMessage",
+                        xmppSettingsMessage: XmppSettingsMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 29:
+                    message.message = {
+                        $case: "xmppConnectionStatusChangeMessage",
+                        xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.decode(
+                            reader,
+                            reader.uint32()
+                        ),
+                    };
+                    break;
+                case 30:
+                    message.message = {
+                        $case: "moveToPositionMessage",
+                        moveToPositionMessage: MoveToPositionMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4960,6 +5490,29 @@ export const ServerToClientMessage = {
                 bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromJSON(object.bbbMeetingClientURLMessage),
             };
         }
+        if (object.xmppSettingsMessage !== undefined && object.xmppSettingsMessage !== null) {
+            message.message = {
+                $case: "xmppSettingsMessage",
+                xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
+            };
+        }
+        if (
+            object.xmppConnectionStatusChangeMessage !== undefined &&
+            object.xmppConnectionStatusChangeMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppConnectionStatusChangeMessage",
+                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromJSON(
+                    object.xmppConnectionStatusChangeMessage
+                ),
+            };
+        }
+        if (object.moveToPositionMessage !== undefined && object.moveToPositionMessage !== null) {
+            message.message = {
+                $case: "moveToPositionMessage",
+                moveToPositionMessage: MoveToPositionMessage.fromJSON(object.moveToPositionMessage),
+            };
+        }
         return message;
     },
 
@@ -5056,6 +5609,18 @@ export const ServerToClientMessage = {
         message.message?.$case === "bbbMeetingClientURLMessage" &&
             (obj.bbbMeetingClientURLMessage = message.message?.bbbMeetingClientURLMessage
                 ? BBBMeetingClientURLMessage.toJSON(message.message?.bbbMeetingClientURLMessage)
+                : undefined);
+        message.message?.$case === "xmppSettingsMessage" &&
+            (obj.xmppSettingsMessage = message.message?.xmppSettingsMessage
+                ? XmppSettingsMessage.toJSON(message.message?.xmppSettingsMessage)
+                : undefined);
+        message.message?.$case === "xmppConnectionStatusChangeMessage" &&
+            (obj.xmppConnectionStatusChangeMessage = message.message?.xmppConnectionStatusChangeMessage
+                ? XmppConnectionStatusChangeMessage.toJSON(message.message?.xmppConnectionStatusChangeMessage)
+                : undefined);
+        message.message?.$case === "moveToPositionMessage" &&
+            (obj.moveToPositionMessage = message.message?.moveToPositionMessage
+                ? MoveToPositionMessage.toJSON(message.message?.moveToPositionMessage)
                 : undefined);
         return obj;
     },
@@ -5298,6 +5863,38 @@ export const ServerToClientMessage = {
                 bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromPartial(
                     object.message.bbbMeetingClientURLMessage
                 ),
+            };
+        }
+        if (
+            object.message?.$case === "xmppSettingsMessage" &&
+            object.message?.xmppSettingsMessage !== undefined &&
+            object.message?.xmppSettingsMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppSettingsMessage",
+                xmppSettingsMessage: XmppSettingsMessage.fromPartial(object.message.xmppSettingsMessage),
+            };
+        }
+        if (
+            object.message?.$case === "xmppConnectionStatusChangeMessage" &&
+            object.message?.xmppConnectionStatusChangeMessage !== undefined &&
+            object.message?.xmppConnectionStatusChangeMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppConnectionStatusChangeMessage",
+                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromPartial(
+                    object.message.xmppConnectionStatusChangeMessage
+                ),
+            };
+        }
+        if (
+            object.message?.$case === "moveToPositionMessage" &&
+            object.message?.moveToPositionMessage !== undefined &&
+            object.message?.moveToPositionMessage !== null
+        ) {
+            message.message = {
+                $case: "moveToPositionMessage",
+                moveToPositionMessage: MoveToPositionMessage.fromPartial(object.message.moveToPositionMessage),
             };
         }
         return message;
@@ -6158,6 +6755,9 @@ export const PusherToBackMessage = {
         if (message.message?.$case === "joinBBBMeetingMessage") {
             JoinBBBMeetingMessage.encode(message.message.joinBBBMeetingMessage, writer.uint32(162).fork()).ldelim();
         }
+        if (message.message?.$case === "askPositionMessage") {
+            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(170).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -6271,6 +6871,12 @@ export const PusherToBackMessage = {
                     message.message = {
                         $case: "joinBBBMeetingMessage",
                         joinBBBMeetingMessage: JoinBBBMeetingMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 21:
+                    message.message = {
+                        $case: "askPositionMessage",
+                        askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -6390,6 +6996,12 @@ export const PusherToBackMessage = {
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromJSON(object.joinBBBMeetingMessage),
             };
         }
+        if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
+            message.message = {
+                $case: "askPositionMessage",
+                askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
+            };
+        }
         return message;
     },
 
@@ -6462,6 +7074,10 @@ export const PusherToBackMessage = {
         message.message?.$case === "joinBBBMeetingMessage" &&
             (obj.joinBBBMeetingMessage = message.message?.joinBBBMeetingMessage
                 ? JoinBBBMeetingMessage.toJSON(message.message?.joinBBBMeetingMessage)
+                : undefined);
+        message.message?.$case === "askPositionMessage" &&
+            (obj.askPositionMessage = message.message?.askPositionMessage
+                ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
                 : undefined);
         return obj;
     },
@@ -6642,6 +7258,16 @@ export const PusherToBackMessage = {
             message.message = {
                 $case: "joinBBBMeetingMessage",
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromPartial(object.message.joinBBBMeetingMessage),
+            };
+        }
+        if (
+            object.message?.$case === "askPositionMessage" &&
+            object.message?.askPositionMessage !== undefined &&
+            object.message?.askPositionMessage !== null
+        ) {
+            message.message = {
+                $case: "askPositionMessage",
+                askPositionMessage: AskPositionMessage.fromPartial(object.message.askPositionMessage),
             };
         }
         return message;
@@ -7875,6 +8501,70 @@ export const EmptyMessage = {
     },
 };
 
+const baseIframeToPusherMessage: object = {};
+
+export const IframeToPusherMessage = {
+    encode(message: IframeToPusherMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.message?.$case === "emptyMessage") {
+            EmptyMessage.encode(message.message.emptyMessage, writer.uint32(10).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): IframeToPusherMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.message = {
+                        $case: "emptyMessage",
+                        emptyMessage: EmptyMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): IframeToPusherMessage {
+        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        if (object.emptyMessage !== undefined && object.emptyMessage !== null) {
+            message.message = { $case: "emptyMessage", emptyMessage: EmptyMessage.fromJSON(object.emptyMessage) };
+        }
+        return message;
+    },
+
+    toJSON(message: IframeToPusherMessage): unknown {
+        const obj: any = {};
+        message.message?.$case === "emptyMessage" &&
+            (obj.emptyMessage = message.message?.emptyMessage
+                ? EmptyMessage.toJSON(message.message?.emptyMessage)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<IframeToPusherMessage>, I>>(object: I): IframeToPusherMessage {
+        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        if (
+            object.message?.$case === "emptyMessage" &&
+            object.message?.emptyMessage !== undefined &&
+            object.message?.emptyMessage !== null
+        ) {
+            message.message = {
+                $case: "emptyMessage",
+                emptyMessage: EmptyMessage.fromPartial(object.message.emptyMessage),
+            };
+        }
+        return message;
+    },
+};
+
 /** Service handled by the "back". Pusher servers connect to this service. */
 export interface RoomManager {
     /** Holds a connection between one given client and the back */
@@ -7891,6 +8581,7 @@ export interface RoomManager {
     sendWorldFullWarningToRoom(request: WorldFullWarningToRoomMessage): Promise<EmptyMessage>;
     sendRefreshRoomPrompt(request: RefreshRoomPromptMessage): Promise<EmptyMessage>;
     getRooms(request: EmptyMessage): Promise<RoomsList>;
+    ping(request: PingMessage): Promise<PingMessage>;
 }
 
 export class RoomManagerClientImpl implements RoomManager {
@@ -7908,6 +8599,7 @@ export class RoomManagerClientImpl implements RoomManager {
         this.sendWorldFullWarningToRoom = this.sendWorldFullWarningToRoom.bind(this);
         this.sendRefreshRoomPrompt = this.sendRefreshRoomPrompt.bind(this);
         this.getRooms = this.getRooms.bind(this);
+        this.ping = this.ping.bind(this);
     }
     joinRoom(request: Observable<PusherToBackMessage>): Observable<ServerToClientMessage> {
         const data = request.pipe(map((request) => PusherToBackMessage.encode(request).finish()));
@@ -7973,6 +8665,12 @@ export class RoomManagerClientImpl implements RoomManager {
         const data = EmptyMessage.encode(request).finish();
         const promise = this.rpc.request("RoomManager", "getRooms", data);
         return promise.then((data) => RoomsList.decode(new _m0.Reader(data)));
+    }
+
+    ping(request: PingMessage): Promise<PingMessage> {
+        const data = PingMessage.encode(request).finish();
+        const promise = this.rpc.request("RoomManager", "ping", data);
+        return promise.then((data) => PingMessage.decode(new _m0.Reader(data)));
     }
 }
 

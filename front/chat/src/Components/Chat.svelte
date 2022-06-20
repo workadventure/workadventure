@@ -233,7 +233,8 @@
     }
 
     function closeChat() {
-        //TODO send post message API to close iframe
+        window.parent.postMessage({type: "closeChat"}, '*');
+        document.activeElement?.blur();
     }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -249,6 +250,8 @@
         }
         return nextMsg.type !== "event" && nextMsg.user_id === userID;
     }
+
+    console.info('Chat fully loaded');
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
@@ -509,7 +512,7 @@
         position: absolute;
         top: 0;
         left: 0;
-        height: 100vh;
+        min-height: 100vh;
         width: 30vw;
         min-width: 350px;
         background: rgba(#1b1b29, 0.9);

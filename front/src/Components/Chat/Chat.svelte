@@ -1,60 +1,71 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
-    import ChatMessageForm from "./ChatMessageForm.svelte";
-    import ChatElement from "./ChatElement.svelte";
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import LL from "../../i18n/i18n-svelte";
-    import {
-        mucRoomsStore,
-        numberPresenceUserStore,
-        xmppServerConnectionStatusStore,
-    } from "../../Stores/MucRoomsStore";
-    import UsersList from "./UsersList.svelte";
-    import Spinner from "./Spinner.svelte";
-    import Search from "../Util/Search.svelte";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import {onDestroy, onMount} from "svelte";
+    import {iframeListener} from "../../Api/IframeListener";
+    import {localUserStore} from "../../Connexion/LocalUserStore";
+    import {urlManager} from "../../Url/UrlManager";
+    import {gameManager} from "../../Phaser/Game/GameManager";
 
-    let listDom: HTMLElement;
-    let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
-
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
-
+    let chatIframe: HTMLIFrameElement;
     onMount(() => {
-        listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    function onClick(event: MouseEvent) {
-        if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
-            handleFormBlur.blur();
-        }
-    }
+        iframeListener.registerIframe(chatIframe);
+        chatIframe.addEventListener('load', () => {
+            if ("postMessage" in chatIframe.contentWindow) {
+                chatIframe.contentWindow.postMessage({type: 'userData', data: {...localUserStore.getLocalUser(), playUri: document.location.toString()}}, '*');
+            }
+		});
+    })
+	onDestroy(() => {
+        iframeListener.unregisterIframe(chatIframe);
+	})
 
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            closeChat();
-        }
+    function openChat() {
+        chatVisibilityStore.set(true);
     }
-    console.info($xmppServerConnectionStatusStore, $mucRoomsStore);
+    function onKeyDown(e: KeyboardEvent) {
+        if (e.key === "Escape" && $chatVisibilityStore) {
+            closeChat();
+            chatIframe.blur();
+        } else if (e.key === 'c' && !$chatVisibilityStore){
+            openChat();
+		}
+    }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClick} />
+<svelte:window on:keydown={onKeyDown}/>
+<iframe
+		id="chatWindow"
+		class:show={$chatVisibilityStore}
+		bind:this={chatIframe}
+		sandbox="allow-scripts"
+		src="http://chat.workadventure.localhost"
+></iframe>
 
+<style lang="scss">
+  #chatWindow {
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+    left: -30vw;
+    height: 100vh;
+    width: 30vw;
+    min-width: 350px;
+    transition: all .1s ease-in-out;
+    pointer-events: none;
+    &.show{
+      left:0;
+      pointer-events: auto;
+    }
+  }
+</style>
+<!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
 
-    <!-- LIST USER SECTION -->
+    < LIST USER SECTION >
     <section class="roomsList">
         <p class="system-text chat-rooms">{$LL.muc.title()}</p>
         {#if $numberPresenceUserStore > 0}
@@ -62,7 +73,7 @@
         {/if}
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
-                <!--<p class="room-name">{mucRoom.name}</p> -->
+                <p class="room-name">{mucRoom.name}</p>
                 <UsersList
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}
@@ -75,7 +86,7 @@
         {/if}
     </section>
 
-    <!-- MESSAGE LIST SECTION -->
+    <MESSAGE LIST SECTION>
     <section class="messagesList" bind:this={listDom}>
         <p class="system-text">{$LL.chat.intro()}</p>
         <ul>
@@ -178,3 +189,4 @@
         margin-top: 3rem;
     }
 </style>
+-->
