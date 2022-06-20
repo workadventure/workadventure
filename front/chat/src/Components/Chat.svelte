@@ -233,7 +233,7 @@
     }
 
     function closeChat() {
-        window.parent.postMessage({type: "closeChat"}, '*');
+        window.parent.postMessage({ type: "closeChat" }, "*");
         document.activeElement?.blur();
     }
     function onKeyDown(e: KeyboardEvent) {
@@ -251,7 +251,7 @@
         return nextMsg.type !== "event" && nextMsg.user_id === userID;
     }
 
-    console.info('Chat fully loaded');
+    console.info("Chat fully loaded");
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
@@ -490,7 +490,7 @@
                 {#if showForums}
                     <div class="tw-mt-3">
                         {#each forums as forum}
-                            <ChatForum {forum} {openForum}/>
+                            <ChatForum {forum} {openForum} />
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">

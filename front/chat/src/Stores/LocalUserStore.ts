@@ -1,10 +1,9 @@
-import {UserData} from "../Messages/JsonMessages/ChatData";
-import {writable} from "svelte/store";
+import { UserData } from "../Messages/JsonMessages/ChatData";
+import { writable } from "svelte/store";
 
 const uuidKey = "uuid";
 const emailKey = "email";
 const playUriKey = "playUri";
-
 
 function createUserStore() {
     const { subscribe, update, set } = writable<UserData>();
@@ -12,17 +11,16 @@ function createUserStore() {
     return {
         subscribe,
         update,
-        set
+        set,
     };
 }
 
 export const userStore = createUserStore();
 
-
 class LocalUserStore {
     setUserData(data: UserData): void {
         localStorage.setItem(uuidKey, data.uuid);
-        if(data.email) localStorage.setItem(emailKey, data.email);
+        if (data.email) localStorage.setItem(emailKey, data.email);
         localStorage.setItem(playUriKey, data.playUri);
     }
 
@@ -30,7 +28,7 @@ class LocalUserStore {
         return {
             uuid: localStorage.getItem(uuidKey) || "",
             email: localStorage.getItem(emailKey) || undefined,
-            playUri: localStorage.getItem(playUriKey) || ""
+            playUri: localStorage.getItem(playUriKey) || "",
         };
     }
 }

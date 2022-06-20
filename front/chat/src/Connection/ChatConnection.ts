@@ -1,10 +1,10 @@
 import {
     IframeToPusherMessage as IframeToPusherMessageTsProto,
-    PingMessage as PingMessageTsProto
+    PingMessage as PingMessageTsProto,
 } from "../Messages/ts-proto-generated/protos/messages";
-import {PUSHER_URL} from "../Enum/EnvironmentVariable";
-import {apiVersionHash} from "../Messages/JsonMessages/ApiVersion";
-import {Subject} from "rxjs";
+import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { Subject } from "rxjs";
 
 const manualPingDelay = 20000;
 
@@ -17,11 +17,7 @@ export class ChatConnection implements ChatConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
-    public constructor(
-        token: string | null,
-        roomUrl: string,
-        name: string,
-    ) {
+    public constructor(token: string | null, roomUrl: string, name: string) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
@@ -32,7 +28,6 @@ export class ChatConnection implements ChatConnection {
         url += "&token=" + (token ? encodeURIComponent(token) : "");
         url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;
-
 
         this.socket = new WebSocket(url);
 
@@ -70,11 +65,11 @@ export class ChatConnection implements ChatConnection {
 
             switch (message.$case) {
                 case "emptyMessage":
-                    console.log('test', message.emptyMessage);
+                    console.log("test", message.emptyMessage);
                     break;
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    const _exhaustiveCheck: never = message;
+                    const _exhaustiveCheck: { $case: "emptyMessage"; emptyMessage: EmptyMessage; } = message;
                 }
             }
         };

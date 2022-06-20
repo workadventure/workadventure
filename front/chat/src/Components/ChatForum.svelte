@@ -12,10 +12,8 @@
     import { MoreHorizontalIcon } from "svelte-feather-icons";
 </script>
 
-<div class={`wa-chat-item`}
-     on:mouseleave={closeChatUserMenu}
->
-    <div class="tw-relative"  on:click|stopPropagation={() => openForum(forum)}>
+<div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
+    <div class="tw-relative" on:click|stopPropagation={() => openForum(forum)}>
         <img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="42" />
         {#if forum.active}
             <span
@@ -23,7 +21,7 @@
             />
         {/if}
     </div>
-    <div class="tw-flex-auto tw-ml-2"  on:click|stopPropagation={() => openForum(forum)}>
+    <div class="tw-flex-auto tw-ml-2" on:click|stopPropagation={() => openForum(forum)}>
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {forum.name}
         </h1>
@@ -50,9 +48,7 @@
         </button>
 
         <!-- menu -->
-        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`}
-             on:mouseleave={closeChatUserMenu}
-        >
+        <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
             <span class="wa-dropdown-item" on:click|stopPropagation={() => openForum(forum)}> Open forum </span>
             <div class="wa-dropdown-item">Delete forum</div>
         </div>
