@@ -395,6 +395,10 @@ export class GameMap {
         return this.areas.get(name);
     }
 
+    public getAreas(): ITiledMapObject[] {
+        return Array.from(this.areas.values());
+    }
+
     public setArea(name: string, area: ITiledMapObject): void {
         this.areas.set(name, area);
         if (this.isPlayerInsideArea(name)) {

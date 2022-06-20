@@ -1,6 +1,6 @@
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
-import type { ITiledMap, ITiledMapLayer } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
@@ -53,13 +53,13 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const layer of this.gameMap.flatLayers) {
-            if (layer.name === "start") {
-                names.push(layer.name);
+        for (const obj of [...this.gameMap.flatLayers, ...this.gameMap.getAreas()]) {
+            if (obj.name === "start") {
+                names.push(obj.name);
                 continue;
             }
-            if (this.isStartLayer(layer)) {
-                names.push(layer.name);
+            if (this.isStartObject(obj)) {
+                names.push(obj.name);
             }
         }
         return names;
@@ -104,7 +104,11 @@ export class StartPositionCalculator {
         return false;
     }
 
-    private isStartLayer(layer: ITiledMapLayer): boolean {
-        return this.gameMap.getObjectProperty(layer, GameMapProperties.START_LAYER) == true;
+    private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
+        if (this.gameMap.getObjectProperty(obj, GameMapProperties.START) == true) {
+            return true;
+        }
+        // legacy reasons
+        return this.gameMap.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
     }
 }
