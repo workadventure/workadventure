@@ -102,6 +102,18 @@
             cursor: pointer;
         }
     }
+
+    .wa-dropdown{
+        @apply tw-relative;
+
+        &-menu{
+            @apply tw-absolute tw-right-0 tw-z-20 tw-min-w-[150px] tw-shadow-lg tw-border tw-rounded tw-flex tw-flex-col tw-border-solid tw-font-medium tw-text-white tw-border-light-purple tw-text-xs;
+        }
+
+        &-item{
+            @apply tw-cursor-pointer tw-px-3 tw-py-2 hover:tw-bg-light-purple;
+        }
+    }
 }
 
 @layer utilities {

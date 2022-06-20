@@ -224,6 +224,14 @@
         }
     }
 
+    function openChat(user: any) {
+        activeThread = user;
+    }
+
+    function openForum() {
+        // should open chat like for users
+    }
+
     function closeChat() {
         //TODO send post message API to close iframe
     }
@@ -442,7 +450,7 @@
                                     activeThread = user;
                                 }}
                             >
-                                <ChatUser {user} />
+                                <ChatUser {openChat} {user} />
                             </div>
                         {/each}
                     </div>
@@ -479,7 +487,7 @@
                 {#if showForums}
                     <div class="tw-mt-3">
                         {#each forums as forum}
-                            <ChatForum {forum} />
+                            <ChatForum {forum} {openForum}/>
                         {/each}
                     </div>
                     <div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
