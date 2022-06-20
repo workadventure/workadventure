@@ -13,6 +13,7 @@ import report from "./report";
 import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
+import muc from "./muc";
 
 const de_DE: Translation = {
     ...(en_US as Translation),
@@ -29,6 +30,7 @@ const de_DE: Translation = {
     warning,
     emoji,
     trigger,
+    muc,
 };
 
 export default de_DE;

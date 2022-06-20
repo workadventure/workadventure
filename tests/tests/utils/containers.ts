@@ -64,6 +64,18 @@ export async function rebootPusher(): Promise<void> {
     dockerCompose('up --force-recreate -d pusher');
 }
 
+export async function stopPusher(): Promise<void> {
+    dockerCompose('stop pusher');
+}
+
+export async function stopEjabberd(): Promise<void> {
+    dockerCompose('stop ejabberd');
+}
+
+export async function rebootEjabberd(): Promise<void> {
+    dockerCompose('up --force-recreate -d ejabberd');
+}
+
 export async function resetRedis(): Promise<void> {
     dockerCompose('stop redis');
     dockerCompose('rm -f redis');

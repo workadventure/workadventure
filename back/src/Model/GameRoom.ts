@@ -582,6 +582,7 @@ export class GameRoom {
                 mapUrl,
                 authenticationMandatory: null,
                 group: null,
+                mucRooms: null,
                 showPoweredBy: true,
             };
         }

@@ -95,6 +95,8 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
+import { XmppClient } from "../../Xmpp/XmppClient";
+import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 import { JitsiCoWebsite } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
@@ -232,6 +234,7 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
+    private xmppClient!: XmppClient;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -770,10 +773,12 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.onServerDisconnected(() => {
+                    showConnectionIssueMessage();
                     console.log("Player disconnected from server. Reloading scene.");
                     this.cleanupClosingScene();
                     this.createSuccessorGameScene(true, true);
                 });
+                hideConnectionIssueMessage();
 
                 this.connection.itemEventMessageStream.subscribe((message) => {
                     const item = this.actionableItems.get(message.itemId);
@@ -894,6 +899,12 @@ export class GameScene extends DirtyScene {
                 //         iframeListener.sendLeaveLayerEvent(layer.name);
                 //     });
                 // });
+
+                // Connect to XMPP
+                this.xmppClient = new XmppClient(this.connection);
+
+                // Get position from UUID only after the connection to the pusher is established
+                this.tryMovePlayerWithMoveToUserParameter();
             })
             .catch((e) => console.error(e));
     }
@@ -1669,6 +1680,7 @@ ${escapedMessage}
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
+        this.xmppClient?.close();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1741,20 +1753,33 @@ ${escapedMessage}
                         endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
                     }
                 }
-                this.pathfindingManager
-                    .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), endPos)
-                    .then((path) => {
-                        if (path && path.length > 0) {
-                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                        }
-                    })
-                    .catch((reason) => console.warn(reason));
+
+                this.moveTo(endPos);
 
                 urlManager.clearHashParameter();
             } catch (err) {
                 console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
         }
+    }
+
+    private tryMovePlayerWithMoveToUserParameter(): void {
+        const uuidParam = urlManager.getHashParameter("moveToUser");
+        if (uuidParam) {
+            this.connection?.emitAskPosition(uuidParam, this.roomUrl);
+            urlManager.clearHashParameter();
+        }
+    }
+
+    public moveTo(position: { x: number; y: number }) {
+        this.pathfindingManager
+            .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .then((path) => {
+                if (path && path.length > 0) {
+                    this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                }
+            })
+            .catch((reason) => console.warn(reason));
     }
 
     private getExitUrl(layer: ITiledMapLayer): string | undefined {

@@ -10,18 +10,36 @@ import { adminService } from "../Services/AdminService";
 import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
-export interface TokenInterface {
-    userUuid: string;
-}
-
 export class AuthenticateController extends BaseHttpController {
     routes() {
+        this.roomAccess();
         this.openIDLogin();
         this.openIDCallback();
         this.register();
         this.anonymLogin();
         this.profileCallback();
         this.me();
+    }
+
+    roomAccess() {
+        this.app.get("/room/access", (req, res) => {
+            (async () => {
+                try {
+                    const { uuid, playUri } = parse(req.path_query);
+                    if (!uuid || !playUri) {
+                        throw new Error("Missing uuid and playUri parameters.");
+                    }
+                    return res.json(
+                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    );
+                } catch (e) {
+                    console.warn(e);
+                }
+                res.status(500);
+                res.send("User cannot be identified.");
+                return;
+            })().catch((e) => console.error(e));
+        });
     }
 
     openIDLogin() {
@@ -526,6 +544,9 @@ export class AuthenticateController extends BaseHttpController {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
+            jabberId: null,
+            jabberPassword: null,
+            mucRooms: [],
         };
         try {
             data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
