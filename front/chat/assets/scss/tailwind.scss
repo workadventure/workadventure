@@ -104,10 +104,10 @@
     }
 
     .wa-dropdown{
-        @apply tw-relative;
+        @apply tw-relative tw-bg-dark-purple/95;
 
         &-menu{
-            @apply tw-absolute tw-right-0 tw-z-20 tw-min-w-[150px] tw-shadow-lg tw-border tw-rounded tw-flex tw-flex-col tw-border-solid tw-font-medium tw-text-white tw-border-light-purple tw-text-xs;
+            @apply tw-bg-dark-purple/95 tw-absolute tw-right-0 tw-z-20 tw-min-w-[150px] tw-shadow-lg tw-border tw-rounded tw-flex tw-flex-col tw-border-solid tw-font-medium tw-text-white tw-border-light-purple tw-text-xs;
         }
 
         &-item{
