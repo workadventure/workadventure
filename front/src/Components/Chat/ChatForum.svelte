@@ -1,5 +1,5 @@
 <script>
-    export let forum
+    export let forum;
 </script>
 
 <div class={`wa-chat-item`}>

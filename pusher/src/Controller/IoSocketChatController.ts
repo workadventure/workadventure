@@ -34,7 +34,6 @@ interface UpgradeData {
     userUuid: string;
     IPAddress: string;
     playUri: string;
-    name: string;
     tags: string[];
     userRoomToken: string | undefined;
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
@@ -97,7 +96,6 @@ export class IoSocketChatController {
                         }
 
                         const token = query.token;
-                        const name = query.name;
                         const version = query.version;
 
                         if (version !== apiVersionHash) {
@@ -123,13 +121,6 @@ export class IoSocketChatController {
                                 websocketExtensions,
                                 context
                             );
-                        }
-
-                        if (typeof name !== "string") {
-                            throw new Error("Expecting name");
-                        }
-                        if (name === "") {
-                            throw new Error("No empty name");
                         }
 
                         const tokenData =
@@ -243,7 +234,6 @@ export class IoSocketChatController {
                                 IPAddress,
                                 userIdentifier,
                                 playUri,
-                                name,
                                 tags: memberTags,
                                 userRoomToken: memberUserRoomToken,
                                 jabberId: userData.jabberId,
@@ -256,6 +246,7 @@ export class IoSocketChatController {
                             websocketExtensions,
                             context
                         );
+
                     } catch (e) {
                         if (e instanceof Error) {
                             if (!(e instanceof InvalidTokenError)) {
@@ -348,7 +339,6 @@ export class IoSocketChatController {
         client.disconnecting = false;
 
         client.messages = ws.messages;
-        client.name = ws.name;
         client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.playUri = ws.roomId;

@@ -1,5 +1,6 @@
-import { isLookingLikeIframeEventWrapper, isIframeEventWrapper } from "./Event/IframeEvent";
-import { userStore } from "./Stores/LocalUserStore";
+import {isLookingLikeIframeEventWrapper, isIframeEventWrapper} from "./Event/IframeEvent";
+import {userStore} from "./Stores/LocalUserStore";
+import {ChatConnection} from "./Connection/ChatConnection";
 
 class IframeListener {
     init() {
@@ -11,14 +12,19 @@ class IframeListener {
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
 
-                    if (iframeEvent.type === "userData") {
-                        userStore.set(iframeEvent.data);
-                        //localUserStore.setUserData(iframeEvent.data);
+                        if (iframeEvent.type === "userData") {
+                            userStore.set(iframeEvent.data);
+                            const connection = new ChatConnection(
+                                iframeEvent.data.authToken ?? '',
+                                iframeEvent.data.playUri
+                            );
+                            //localUserStore.setUserData(iframeEvent.data);
+                        }
                     }
                 }
             }
-        });
-    }
+        );
+    };
 }
 
 export const iframeListener = new IframeListener();

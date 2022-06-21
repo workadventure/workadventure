@@ -174,7 +174,7 @@ export const isIframeEventWrapper = z.union([
         data: isAreaEvent,
     }),
     z.object({
-        type: z.literal("closeChat")
+        type: z.literal("closeChat"),
     }),
 ]);
 

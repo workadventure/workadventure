@@ -1,23 +1,33 @@
 <script lang="ts">
     import { chatVisibilityStore } from "../../Stores/ChatStore";
-    import {onDestroy, onMount} from "svelte";
-    import {iframeListener} from "../../Api/IframeListener";
-    import {localUserStore} from "../../Connexion/LocalUserStore";
-    import {urlManager} from "../../Url/UrlManager";
-    import {gameManager} from "../../Phaser/Game/GameManager";
+    import { onDestroy, onMount } from "svelte";
+    import { iframeListener } from "../../Api/IframeListener";
+    import { localUserStore } from "../../Connexion/LocalUserStore";
+    import { urlManager } from "../../Url/UrlManager";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let chatIframe: HTMLIFrameElement;
     onMount(() => {
         iframeListener.registerIframe(chatIframe);
-        chatIframe.addEventListener('load', () => {
+        chatIframe.addEventListener("load", () => {
             if ("postMessage" in chatIframe.contentWindow) {
-                chatIframe.contentWindow.postMessage({type: 'userData', data: {...localUserStore.getLocalUser(), playUri: document.location.toString()}}, '*');
+                chatIframe.contentWindow.postMessage(
+                    {
+                        type: "userData",
+                        data: {
+                            ...localUserStore.getLocalUser(),
+                            playUri: document.location.toString(),
+                            authToken: localUserStore.getAuthToken(),
+                        },
+                    },
+                    "*"
+                );
             }
-		});
-    })
-	onDestroy(() => {
+        });
+    });
+    onDestroy(() => {
         iframeListener.unregisterIframe(chatIframe);
-	})
+    });
 
     function closeChat() {
         chatVisibilityStore.set(false);
@@ -29,38 +39,20 @@
         if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
             chatIframe.blur();
-        } else if (e.key === 'c' && !$chatVisibilityStore){
+        } else if (e.key === "c" && !$chatVisibilityStore) {
             openChat();
-		}
+        }
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown}/>
+<svelte:window on:keydown={onKeyDown} />
 <iframe
-		id="chatWindow"
-		class:show={$chatVisibilityStore}
-		bind:this={chatIframe}
-		sandbox="allow-scripts"
-		src="http://chat.workadventure.localhost"
-></iframe>
-
-<style lang="scss">
-  #chatWindow {
-    z-index: 1000;
-    position: absolute;
-    top: 0;
-    left: -30vw;
-    height: 100vh;
-    width: 30vw;
-    min-width: 350px;
-    transition: all .1s ease-in-out;
-    pointer-events: none;
-    &.show{
-      left:0;
-      pointer-events: auto;
-    }
-  }
-</style>
+    id="chatWindow"
+    class:show={$chatVisibilityStore}
+    bind:this={chatIframe}
+    sandbox="allow-scripts"
+    src="http://chat.workadventure.localhost"
+/>
 <!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
@@ -190,3 +182,21 @@
     }
 </style>
 -->
+
+<style lang="scss">
+    #chatWindow {
+        z-index: 1000;
+        position: absolute;
+        top: 0;
+        left: -30vw;
+        height: 100vh;
+        width: 30vw;
+        min-width: 350px;
+        transition: all 0.1s ease-in-out;
+        pointer-events: none;
+        &.show {
+            left: 0;
+            pointer-events: auto;
+        }
+    }
+</style>

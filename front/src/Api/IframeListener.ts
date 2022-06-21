@@ -37,7 +37,7 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import {chatVisibilityStore} from "../Stores/ChatStore";
+import { chatVisibilityStore } from "../Stores/ChatStore";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -320,7 +320,7 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
-                    } else if(iframeEvent.type == "closeChat"){
+                    } else if (iframeEvent.type == "closeChat") {
                         chatVisibilityStore.set(false);
                         window.focus();
                     } else {

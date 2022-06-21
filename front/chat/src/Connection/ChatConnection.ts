@@ -17,16 +17,18 @@ export class ChatConnection implements ChatConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
-    public constructor(token: string | null, roomUrl: string, name: string) {
+    public constructor(
+        token: string | null,
+        roomUrl: string,
+    ) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {
             url += "/";
         }
         url += "chat";
-        url += "?roomId=" + encodeURIComponent(roomUrl);
+        url += "?playUri=" + encodeURIComponent(roomUrl);
         url += "&token=" + (token ? encodeURIComponent(token) : "");
-        url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;
 
         this.socket = new WebSocket(url);
