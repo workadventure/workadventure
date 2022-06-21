@@ -8,7 +8,8 @@ const report: BaseTranslation = {
         block: "Bloqueie esse usuário",
     },
     title: "Relatório",
-    content: "Envie uma mensagem de relatório aos administradores desta sala. Eles podem banir este usuário mais tarde.",
+    content:
+        "Envie uma mensagem de relatório aos administradores desta sala. Eles podem banir este usuário mais tarde.",
     message: {
         title: "Sua mensagem: ",
         empty: "A mensagem de relatório não pode ficar vazia.",
