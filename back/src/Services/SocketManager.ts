@@ -39,9 +39,10 @@ import {
     PlayerDetailsUpdatedMessage,
     GroupUsersUpdateMessage,
     LockGroupPromptMessage,
-    ErrorMessage,
     RoomsList,
     RoomDescription,
+    AskPositionMessage,
+    MoveToPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -59,6 +60,7 @@ import { Zone } from "../Model/Zone";
 import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
+import { emitError } from "./MessageHelpers";
 
 const debug = Debug("sockermanager");
 
@@ -247,12 +249,7 @@ export class SocketManager {
         try {
             //user leave previous world
             room.leave(user);
-            if (room.isEmpty()) {
-                this.roomsPromises.delete(room.roomUrl);
-                this.resolvedRooms.delete(room.roomUrl);
-                gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomUrl);
-            }
+            this.cleanupRoomIfEmpty(room);
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
@@ -642,12 +639,7 @@ export class SocketManager {
 
             console.error(errorStr);
 
-            const errorMessage = new ErrorMessage();
-            errorMessage.setMessage(errorStr);
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setErrormessage(errorMessage);
-            user.socket.write(serverToClientMessage);
+            emitError(user.socket, errorStr);
 
             return;
         }
@@ -781,10 +773,12 @@ export class SocketManager {
     async removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            throw new Error("In removeZoneListener, could not find room with id '" + roomId + "'");
+            console.warn("In removeZoneListener, could not find room with id '" + roomId + "'");
+            return;
         }
 
         room.removeZoneListener(call, x, y);
+        this.cleanupRoomIfEmpty(room);
     }
 
     async addRoomListener(call: RoomSocket, roomId: string) {
@@ -819,6 +813,10 @@ export class SocketManager {
 
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
+        this.cleanupRoomIfEmpty(room);
+    }
+
+    private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
             this.resolvedRooms.delete(room.roomUrl);
@@ -1024,6 +1022,26 @@ export class SocketManager {
         }
 
         return roomsList;
+    }
+
+    handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
+        const moveToPositionMessage = new MoveToPositionMessage();
+
+        if (room) {
+            const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
+            const position = userToJoin?.getPosition();
+            if (position) {
+                moveToPositionMessage.setPosition(ProtobufUtils.toPositionMessage(position));
+
+                const clientMessage = new ServerToClientMessage();
+                clientMessage.setMovetopositionmessage(moveToPositionMessage);
+                user.socket.write(clientMessage);
+            }
+
+            if (room.isEmpty()) {
+                // TODO delete room;
+            }
+        }
     }
 }
 

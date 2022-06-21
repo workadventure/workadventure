@@ -134,6 +134,8 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
+    XmppMessage xmppMessage = 20;
+    AskPositionMessage askPositionMessage = 21;
   }
 }
 
@@ -150,6 +152,10 @@ message ItemEventMessage {
 message VariableMessage {
   string name = 1;
   string value = 2;
+}
+
+message XmppMessage {
+  string stanza = 1;
 }
 
 /**
@@ -178,6 +184,10 @@ message UserMovedMessage {
   PositionMessage position = 2;
 }
 
+message MoveToPositionMessage{
+  PositionMessage position = 1;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -190,6 +200,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
+    XmppMessage xmppMessage = 11;
   }
 }
 
@@ -337,6 +348,35 @@ message BanUserMessage{
   string message = 2;
 }
 
+message MucRoomDefinitionMessage {
+  string url = 1;
+  string name = 2;
+}
+
+message XmppSettingsMessage{
+  string jid = 1;
+  string conferenceDomain = 2;
+  repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+message AskPositionMessage{
+  string userIdentifier = 1;
+  string playUri = 2;
+}
+
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+message XmppConnectionStatusChangeMessage{
+  enum Status {
+    DISCONNECTED = 0;
+  }
+
+  Status status = 1;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -367,6 +407,9 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     BBBMeetingClientURLMessage bbbMeetingClientURLMessage = 27;
+    XmppSettingsMessage xmppSettingsMessage = 28;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 29;
+    MoveToPositionMessage moveToPositionMessage = 30;
   }
 }
 
@@ -458,6 +501,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
+    AskPositionMessage askPositionMessage = 21;
   }
 }
 
@@ -587,4 +631,5 @@ service RoomManager {
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
 }

@@ -77,7 +77,8 @@
 
         &.action {
             position: absolute;
-            bottom: 2vh;
+            margin-top: 70vh;
+            top: 0;
             width: 100%;
             text-align: center;
         }

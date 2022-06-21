@@ -64,6 +64,9 @@ services:
       - FRONT_URL=https://${FRONT_HOST}
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
+      - EJABBERD_DOMAIN=ejabberd
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      - EJABBERD_JWT_SECRET
     labels:
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"

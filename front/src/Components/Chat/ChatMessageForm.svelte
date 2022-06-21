@@ -24,16 +24,17 @@
     }
 </script>
 
-<form on:submit|preventDefault={saveMessage}>
+<form on:submit|preventDefault={saveMessage} class="tw-h-10">
     <input
         type="text"
+        class="tw-h-full tw-rounded-none"
         bind:value={newMessageText}
         placeholder={$LL.chat.enter()}
         on:focus={onFocus}
         on:blur={onBlur}
         bind:this={inputElement}
     />
-    <button type="submit">
+    <button type="submit" class="tw-h-full tw-m-0 tw-rounded-l-none">
         <img src="/static/images/send.png" alt="Send" width="20" />
     </button>
 </form>
@@ -48,8 +49,10 @@
             flex: auto;
             background-color: #254560;
             color: white;
-            border-bottom-left-radius: 4px;
-            border-top-left-radius: 4px;
+            //border-bottom-left-radius: 4px;
+            //border-top-left-radius: 4px;
+            border-bottom-right-radius: 0;
+            border-top-right-radius: 0;
             border: none;
             font-size: 22px;
             font-family: Lato;

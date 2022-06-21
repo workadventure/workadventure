@@ -142,6 +142,8 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
+export const activeSubMenuStore = writable<number>(0);
+
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
 export function checkSubMenuToShow() {
