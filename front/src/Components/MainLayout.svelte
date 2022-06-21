@@ -41,6 +41,8 @@
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
+    import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
+    import AreaDetailsWindow from "./MapEditor/AreaDetailsWindow.svelte";
 
     let mainLayout: HTMLDivElement;
 
@@ -123,6 +125,12 @@
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
+        {/if}
+
+        {#if $mapEditorModeStore}
+            {#if $mapEditorSelectedAreaPreviewStore}
+                <AreaDetailsWindow />
+            {/if}
         {/if}
 
         <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />

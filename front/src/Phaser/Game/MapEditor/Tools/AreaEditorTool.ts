@@ -1,4 +1,6 @@
+import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
+import { ITiledMapObject } from "../../../Map/ITiledMap";
 import { AreaType } from "../../GameMap";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -22,11 +24,13 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public clear(): void {
+        mapEditorSelectedAreaPreviewStore.set(undefined);
         this.setAreaPreviewsVisibility(false);
     }
 
     public activate(): void {
         this.setAreaPreviewsVisibility(true);
+        this.scene.markDirty();
     }
 
     private createAreaPreviews(): Map<string, AreaPreview> {
@@ -46,8 +50,14 @@ export class AreaEditorTool extends MapEditorTool {
 
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
-            console.log(areaPreview.getName());
-            console.log(this.scene.getGameMap().getArea(areaPreview.getName(), AreaType.Static));
+            mapEditorSelectedAreaPreviewStore.set(areaPreview);
+            console.log(areaPreview.getConfig());
+            // console.log(areaPreview.getName());
+            // console.log(this.scene.getGameMap().getArea(areaPreview.getName(), AreaType.Static));
+        });
+        areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapObject) => {
+            this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
+            this.scene.markDirty();
         });
     }
 
