@@ -48,6 +48,10 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     private playStatusChangeAnimation(): void {
+        if (!this.scene) {
+            this.redraw();
+            return;
+        }
         this.scale = 1;
         this.animationTween?.stop();
         this.animationTween = this.scene.tweens.add({
