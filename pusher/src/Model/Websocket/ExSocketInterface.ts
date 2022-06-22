@@ -15,7 +15,7 @@ import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
-import {MucRoomDefinitionInterface} from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
+import { MucRoomDefinitionInterface } from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 

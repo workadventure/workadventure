@@ -55,12 +55,13 @@ export class MucRoom {
     public goTo(type: string, playUri: string, uuid: string) {
         this.teleportStore.set({ state: true, to: uuid });
         if (type === "room") {
+            window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
+            /*
             Axios.get(`${PUSHER_URL}/room/access`, { params: { token: get(userStore).authToken, playUri, uuid: get(userStore).uuid } })
                 .then((_) => {
                     window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
                 })
                 .catch((error) => {
-                    // TODO transmit to front can't teleport
                     console.log("Cant teleport", error);
                     /*
                     layoutManagerActionStore.addAction({
@@ -72,9 +73,9 @@ export class MucRoom {
                         },
                         userInputManager: undefined,
                     });
-                     */
                     this.resetTeleportStore();
                 });
+            */
         } else if (type === "user") {
             window.parent.postMessage({type: 'askPosition', data: {uuid, playUri}}, '*');
         }
@@ -115,7 +116,7 @@ export class MucRoom {
             }),
             //add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
-                id: get(userStore).playUri.split("#")[0].toString(),
+                id: get(userStore).playUri,
             }),
             //add uuid of the user to identify and target them on teleport
             xml("user", {
@@ -123,7 +124,7 @@ export class MucRoom {
             })
         );
         this.connection.emitXmlMessage(messagePresence);
-        if(_VERBOSE) console.warn("[XMPP]", "Presence sent");
+        if(_VERBOSE) console.warn("[XMPP]", "Presence sent", get(userStore).uuid);
     }
 
     private sendSubscribe() {
@@ -207,7 +208,7 @@ export class MucRoom {
                 subscriptions.forEach((subscription) => {
                     const jid = subscription.getAttr("jid");
                     const nick = subscription.getAttr("nick");
-                    this.updateUser(jid, nick, roomId, "");
+                    this.updateUser(jid, nick, roomId);
                 });
                 handledMessage = true;
             } else {
@@ -215,7 +216,7 @@ export class MucRoom {
                 if (subscription) {
                     const jid = subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
                     const nick = subscription.getAttr("nick");
-                    this.updateUser(jid, nick, roomId, "");
+                    this.updateUser(jid, nick, roomId);
                     if (nick === this.getPlayerName()) {
                         this.sendPresence();
                         this.requestAllSubscribers();

@@ -40,7 +40,7 @@ import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
-import {isAskPositionEvent} from "./AskPositionEvent";
+import { isAskPositionEvent } from "./AskPositionEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;

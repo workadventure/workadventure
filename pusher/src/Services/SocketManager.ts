@@ -42,8 +42,6 @@ import {
     ErrorScreenMessage,
     XmppMessage,
     AskPositionMessage,
-    XmppSettingsMessage,
-    PusherToIframeMessage, MucRoomDefinitionMessage
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -57,7 +55,6 @@ import { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
-import {EJABBERD_DOMAIN} from "../Enum/EnvironmentVariable";
 
 const debug = Debug("socket");
 

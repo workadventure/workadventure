@@ -12,7 +12,7 @@ import HyperExpress from "hyper-express";
 import { cors } from "./Middleware/Cors";
 import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
-import {IoSocketChatController} from "./Controller/IoSocketChatController";
+import { IoSocketChatController } from "./Controller/IoSocketChatController";
 
 class App {
     public app: HyperExpress.compressors.TemplatedApp;

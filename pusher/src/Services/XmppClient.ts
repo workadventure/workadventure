@@ -1,7 +1,8 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { v4 } from "uuid";
 import {
-    MucRoomDefinitionMessage, PusherToIframeMessage,
+    MucRoomDefinitionMessage,
+    PusherToIframeMessage,
     ServerToClientMessage,
     SubMessage,
     XmppConnectionStatusChangeMessage,
@@ -113,7 +114,7 @@ export class XmppClient {
                 this.address = address;
                 const xmppSettings = new XmppSettingsMessage();
                 xmppSettings.setJid(address.toString());
-                xmppSettings.setConferencedomain('conference.ejabberd');
+                xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();

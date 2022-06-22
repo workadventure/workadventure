@@ -9,8 +9,6 @@ import type { Formatters, Locales, Translations, TranslationFunctions } from './
 export const baseLocale: Locales = 'en-US'
 
 export const locales: Locales[] = [
-	'de',
-	'de-DE',
 	'en-US',
 	'fr-FR'
 ]

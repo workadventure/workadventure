@@ -1,10 +1,5 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import {
-    SubMessage,
-    BatchMessage,
-    XmppMessage,
-    IframeToPusherMessage,
-} from "../Messages/generated/messages_pb";
+import { SubMessage, BatchMessage, XmppMessage, IframeToPusherMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
@@ -46,10 +41,9 @@ interface UpgradeFailedInvalidData {
     playUri: string;
 }
 
-
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import {XmppClient} from "../Services/XmppClient";
+import { XmppClient } from "../Services/XmppClient";
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
@@ -134,7 +128,7 @@ export class IoSocketChatController {
                             throw new Error("Expecting token");
                         }
 
-                        const userIdentifier = tokenData ? tokenData.identifier : uuid ?? '';
+                        const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
@@ -199,7 +193,10 @@ export class IoSocketChatController {
                             memberUserRoomToken = userData.userRoomToken;
                         } catch (e) {
                             console.log(
-                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + playUri
+                                "access not granted for user " +
+                                    (userIdentifier || "anonymous") +
+                                    " and room " +
+                                    playUri
                             );
                             console.error(e);
                             throw new Error("User cannot access this world");
@@ -250,7 +247,6 @@ export class IoSocketChatController {
                             websocketExtensions,
                             context
                         );
-
                     } catch (e) {
                         if (e instanceof Error) {
                             if (!(e instanceof InvalidTokenError)) {
@@ -289,7 +285,6 @@ export class IoSocketChatController {
             open: (_ws: WebSocket) => {
                 const ws = _ws as WebSocket & (UpgradeData | UpgradeFailedData);
                 if (ws.rejected === true) {
-
                     if (ws.reason === "error") {
                         socketManager.emitErrorScreenMessage(ws, ws.error);
                     } else {
@@ -300,7 +295,7 @@ export class IoSocketChatController {
                 }
 
                 // Let's join the room
-                const client = this.initClient(ws);
+                this.initClient(ws); // const client =
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;

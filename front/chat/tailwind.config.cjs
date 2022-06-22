@@ -27,6 +27,8 @@ module.exports = {
             dark: "#0F1F2D",
             green: "#94ff60",
 
+            gray: "#7b7b7b",
+
             //Useful adds
             white: "#FFFFFF",
             black: "#000000",

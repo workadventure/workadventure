@@ -7,7 +7,7 @@
     let chatIframe: HTMLIFrameElement;
     onMount(() => {
         iframeListener.registerIframe(chatIframe);
-        const playUri = document.location.toString();
+        const playUri = document.location.toString().split("#")[0].toString();
         chatIframe.addEventListener("load", () => {
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 chatIframe.contentWindow.postMessage(
@@ -15,7 +15,7 @@
                         type: "userData",
                         data: {
                             ...localUserStore.getLocalUser(),
-							name: localUserStore.getName(),
+                            name: localUserStore.getName(),
                             playUri,
                             authToken: localUserStore.getAuthToken(),
                         },
@@ -51,8 +51,10 @@
     class:show={$chatVisibilityStore}
     bind:this={chatIframe}
     sandbox="allow-scripts"
-	title="WorkAdventureChat"
-    src="http://chat.workadventure.localhost"></iframe>
+    title="WorkAdventureChat"
+    src="http://chat.workadventure.localhost"
+/>
+
 <!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
@@ -182,7 +184,6 @@
     }
 </style>
 -->
-
 <style lang="scss">
     #chatWindow {
         z-index: 1000;

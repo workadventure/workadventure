@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const isAskPositionEvent = z.object({
     uuid: z.string(),
-    playUri: z.string()
+    playUri: z.string(),
 });
 
 /**

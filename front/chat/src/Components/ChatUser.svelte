@@ -30,7 +30,7 @@
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
             {#if user.name.match(/\[\d*]/)}
                 <span>{user.name.substring(0, user.name.search(/\[\d*]/))}</span>
-                <span class="tw-font-light tw-text-xs tw-text-gray-500">
+                <span class="tw-font-light tw-text-xs tw-text-gray">
                     #{user.name
                         .match(/\[\d*]/)
                         ?.join()
@@ -47,9 +47,6 @@
             {:else}
                 {$LL.userList.disconnected()}
             {/if}
-        </p>
-        <p class="tw-text-xs tw-mb-0 tw-font-condensed">
-            {user.uuid}
         </p>
     </div>
 

@@ -11,19 +11,15 @@ class IframeListener {
             const payload = message.data;
             const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
             if (lookingLikeEvent.success) {
-                console.info("Data received from WorkAdventure !");
                 const iframeEventGuarded = isIframeEventWrapper.safeParse(lookingLikeEvent.data);
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
-
                         if (iframeEvent.type === "userData") {
-                            console.info("UserData received from WorkAdventure !");
+                            console.info("UserData received from WorkAdventure !", iframeEvent.data);
                             userStore.set(iframeEvent.data);
                             connectionStore.set(new ChatConnection(iframeEvent.data.authToken ?? '', iframeEvent.data.playUri, iframeEvent.data.uuid));
                             //localUserStore.setUserData(iframeEvent.data);
                         }
-                    } else {
-                        console.log('Error data :', iframeEventGuarded.error);
                     }
                 }
             }
