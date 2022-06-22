@@ -5,7 +5,7 @@ export const isUserData = z.object({
     email: z.optional(z.nullable(z.string())),
     name: z.string(),
     playUri: z.string(),
-    authToken: z.optional(z.string())
+    authToken: z.optional(z.string()),
 });
 
 export type UserData = z.infer<typeof isUserData>;
