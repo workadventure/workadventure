@@ -10,8 +10,6 @@
     export let usersListStore: UsersStore;
     export let showUsers: boolean;
 
-    console.log($usersListStore);
-
     function openChat(user) {
         dispatch('activeThread', user);
     }

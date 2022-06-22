@@ -48,7 +48,7 @@ import {
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { Subject, BehaviorSubject } from "rxjs";
+import {Subject, BehaviorSubject, Subscription} from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -57,6 +57,8 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import {iframeListener} from "../Api/IframeListener";
+import {AskPositionEvent} from "../Api/Events/AskPositionEvent";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -195,6 +197,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
     public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
 
+    private askPositionStream: Subscription;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
         RoomConnection.websocketFactory = websocketFactory;
@@ -253,6 +257,10 @@ export class RoomConnection implements RoomConnection {
             this.socket = new WebSocket(url);
         }
 
+        this.askPositionStream = iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
+            this.emitAskPosition(event.uuid, event.playUri);
+        });
+
         this.socket.binaryType = "arraybuffer";
 
         let interval: ReturnType<typeof setInterval> | undefined = undefined;
@@ -267,6 +275,8 @@ export class RoomConnection implements RoomConnection {
             if (interval) {
                 clearInterval(interval);
             }
+
+            this.askPositionStream.unsubscribe();
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
             if (this.userId === null && !this.closed) {

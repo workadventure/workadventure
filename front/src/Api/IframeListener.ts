@@ -39,6 +39,7 @@ import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { chatVisibilityStore } from "../Stores/ChatStore";
 import { gameManager } from "../Phaser/Game/GameManager";
+import {AskPositionEvent} from "./Events/AskPositionEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -130,6 +131,9 @@ class IframeListener {
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
+
+    private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
+    public readonly askPositionStream = this._askPositionStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -325,9 +329,7 @@ class IframeListener {
                         chatVisibilityStore.set(false);
                         window.focus();
                     } else if (iframeEvent.type == "askPosition") {
-                        gameManager
-                            .getCurrentGameScene()
-                            .connection?.emitAskPosition(iframeEvent.data.uuid, iframeEvent.data.playUri);
+                        this._askPositionStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

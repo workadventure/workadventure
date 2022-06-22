@@ -15,7 +15,7 @@ class IframeListener {
                 if (iframeEventGuarded.success) {
                     const iframeEvent = iframeEventGuarded.data;
                         if (iframeEvent.type === "userData") {
-                            console.info("UserData received from WorkAdventure !", iframeEvent.data);
+                            console.info("UserData received from WorkAdventure !");
                             userStore.set(iframeEvent.data);
                             connectionStore.set(new ChatConnection(iframeEvent.data.authToken ?? '', iframeEvent.data.playUri, iframeEvent.data.uuid));
                             //localUserStore.setUserData(iframeEvent.data);
