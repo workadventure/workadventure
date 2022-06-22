@@ -2,8 +2,8 @@ import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
     SubMessage,
     BatchMessage,
-    ClientToServerMessage,
     XmppMessage,
+    IframeToPusherMessage,
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
@@ -17,7 +17,7 @@ import {
     SOCKET_IDLE_TIMER,
 } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
-import { InvalidTokenError } from "../Controller/InvalidTokenError";
+import { InvalidTokenError } from "./InvalidTokenError";
 import HyperExpress from "hyper-express";
 import { WebSocket } from "uWebSockets.js";
 import { adminService } from "../Services/AdminService";
@@ -45,8 +45,11 @@ interface UpgradeFailedInvalidData {
     message: string;
     playUri: string;
 }
+
+
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+import {XmppClient} from "../Services/XmppClient";
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
@@ -97,6 +100,7 @@ export class IoSocketChatController {
 
                         const token = query.token;
                         const version = query.version;
+                        const uuid = query.uuid as string;
 
                         if (version !== apiVersionHash) {
                             return res.upgrade(
@@ -130,7 +134,7 @@ export class IoSocketChatController {
                             throw new Error("Expecting token");
                         }
 
-                        const userIdentifier = tokenData ? tokenData.identifier : "";
+                        const userIdentifier = tokenData ? tokenData.identifier : uuid ?? '';
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
@@ -300,7 +304,7 @@ export class IoSocketChatController {
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
-                const message = ClientToServerMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+                const message = IframeToPusherMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 if (message.hasXmppmessage()) {
                     socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
@@ -345,6 +349,7 @@ export class IoSocketChatController {
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
+        client.xmppClient = new XmppClient(client, client.mucRooms);
         return client;
     }
 }

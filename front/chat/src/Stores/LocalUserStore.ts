@@ -2,6 +2,7 @@ import { UserData } from "../Messages/JsonMessages/ChatData";
 import { writable } from "svelte/store";
 
 const uuidKey = "uuid";
+const nameKey = "name";
 const emailKey = "email";
 const playUriKey = "playUri";
 
@@ -27,9 +28,14 @@ class LocalUserStore {
     getUserData(): UserData | null {
         return {
             uuid: localStorage.getItem(uuidKey) || "",
+            name: localStorage.getItem(nameKey) || "",
             email: localStorage.getItem(emailKey) || undefined,
             playUri: localStorage.getItem(playUriKey) || "",
         };
+    }
+
+    getPlayerName(): string {
+        return "test";
     }
 }
 

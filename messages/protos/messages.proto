@@ -134,7 +134,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
-    XmppMessage xmppMessage = 20;
+    //XmppMessage xmppMessage = 20;
     AskPositionMessage askPositionMessage = 21;
   }
 }
@@ -623,7 +623,14 @@ message EmptyMessage {
  */
 message IframeToPusherMessage{
   oneof message {
-    EmptyMessage emptyMessage = 1;
+    XmppMessage xmppMessage = 1;
+    EmptyMessage emptyMessage = 2;
+  }
+}
+message PusherToIframeMessage{
+  oneof message {
+    BatchMessage batchMessage = 1;
+    XmppSettingsMessage xmppSettingsMessage = 2;
   }
 }
 /**

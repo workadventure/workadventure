@@ -15,6 +15,7 @@ import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
+import {MucRoomDefinitionInterface} from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -48,5 +49,5 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
-    mucRooms: Array<Array<string>>;
+    mucRooms: Array<MucRoomDefinitionInterface>;
 }

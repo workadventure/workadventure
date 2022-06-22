@@ -40,6 +40,7 @@ import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
+import {isAskPositionEvent} from "./AskPositionEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -175,6 +176,10 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("closeChat"),
+    }),
+    z.object({
+        type: z.literal("askPosition"),
+        data: isAskPositionEvent,
     }),
 ]);
 

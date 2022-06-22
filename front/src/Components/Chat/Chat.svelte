@@ -3,20 +3,20 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { urlManager } from "../../Url/UrlManager";
-    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let chatIframe: HTMLIFrameElement;
     onMount(() => {
         iframeListener.registerIframe(chatIframe);
+        const playUri = document.location.toString();
         chatIframe.addEventListener("load", () => {
-            if ("postMessage" in chatIframe.contentWindow) {
+            if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 chatIframe.contentWindow.postMessage(
                     {
                         type: "userData",
                         data: {
                             ...localUserStore.getLocalUser(),
-                            playUri: document.location.toString(),
+							name: localUserStore.getName(),
+                            playUri,
                             authToken: localUserStore.getAuthToken(),
                         },
                     },
@@ -51,8 +51,8 @@
     class:show={$chatVisibilityStore}
     bind:this={chatIframe}
     sandbox="allow-scripts"
-    src="http://chat.workadventure.localhost"
-/>
+	title="WorkAdventureChat"
+    src="http://chat.workadventure.localhost"></iframe>
 <!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>

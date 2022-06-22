@@ -42,6 +42,8 @@ import {
     ErrorScreenMessage,
     XmppMessage,
     AskPositionMessage,
+    XmppSettingsMessage,
+    PusherToIframeMessage, MucRoomDefinitionMessage
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -55,6 +57,7 @@ import { compressors } from "hyper-express";
 import { adminService } from "./AdminService";
 import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
+import {EJABBERD_DOMAIN} from "../Enum/EnvironmentVariable";
 
 const debug = Debug("socket");
 
@@ -699,11 +702,13 @@ export class SocketManager implements ZoneEventListener {
 
     handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
         if (client.xmppClient === undefined) {
+            return;
             throw new Error(
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );
         }
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+        console.log("XMPP Message sent");
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {

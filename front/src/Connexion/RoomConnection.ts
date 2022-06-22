@@ -1035,19 +1035,6 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitXmlMessage(xml: ElementExt): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "xmppMessage",
-                xmppMessage: {
-                    stanza: xml.toString(),
-                },
-            },
-        }).finish();
-
-        this.socket.send(bytes);
-    }
-
     public emitAskPosition(uuid: string, playUri: string) {
         const bytes = ClientToServerMessageTsProto.encode({
             message: {

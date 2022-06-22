@@ -1,7 +1,7 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { v4 } from "uuid";
 import {
-    MucRoomDefinitionMessage,
+    MucRoomDefinitionMessage, PusherToIframeMessage,
     ServerToClientMessage,
     SubMessage,
     XmppConnectionStatusChangeMessage,
@@ -113,25 +113,24 @@ export class XmppClient {
                 this.address = address;
                 const xmppSettings = new XmppSettingsMessage();
                 xmppSettings.setJid(address.toString());
-                xmppSettings.setConferencedomain("conference.ejabberd");
+                xmppSettings.setConferencedomain('conference.ejabberd');
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
-                        console.log(definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
-                        if (!definition.name || !definition.uri) {
-                            throw new Error("Name and Uri cannot be empty!");
+                        if (!definition.name || !definition.url) {
+                            throw new Error("Name and Url cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
-                        mucRoomDefinitionMessage.setUrl(definition.uri);
+                        mucRoomDefinitionMessage.setUrl(definition.url);
                         return mucRoomDefinitionMessage;
                     })
                 );
 
-                const serverToClientMessage = new ServerToClientMessage();
-                serverToClientMessage.setXmppsettingsmessage(xmppSettings);
+                const pusherToIframeMessage = new PusherToIframeMessage();
+                pusherToIframeMessage.setXmppsettingsmessage(xmppSettings);
 
                 if (!this.clientSocket.disconnecting) {
-                    this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
+                    this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                 }
 
                 res(xmpp);

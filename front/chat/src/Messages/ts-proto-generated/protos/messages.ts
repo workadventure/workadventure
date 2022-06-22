@@ -228,7 +228,6 @@ export interface ClientToServerMessage {
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
         | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
-        | { $case: "xmppMessage"; xmppMessage: XmppMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
 }
 
@@ -703,7 +702,15 @@ export interface EmptyMessage {}
 
 /** Start Chat Messages */
 export interface IframeToPusherMessage {
-    message?: { $case: "emptyMessage"; emptyMessage: EmptyMessage };
+    message?:
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage }
+        | { $case: "emptyMessage"; emptyMessage: EmptyMessage };
+}
+
+export interface PusherToIframeMessage {
+    message?:
+        | { $case: "batchMessage"; batchMessage: BatchMessage }
+        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage };
 }
 
 const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
@@ -1813,9 +1820,6 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "joinBBBMeetingMessage") {
             JoinBBBMeetingMessage.encode(message.message.joinBBBMeetingMessage, writer.uint32(154).fork()).ldelim();
         }
-        if (message.message?.$case === "xmppMessage") {
-            XmppMessage.encode(message.message.xmppMessage, writer.uint32(162).fork()).ldelim();
-        }
         if (message.message?.$case === "askPositionMessage") {
             AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(170).fork()).ldelim();
         }
@@ -1932,12 +1936,6 @@ export const ClientToServerMessage = {
                     message.message = {
                         $case: "joinBBBMeetingMessage",
                         joinBBBMeetingMessage: JoinBBBMeetingMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 20:
-                    message.message = {
-                        $case: "xmppMessage",
-                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 case 21:
@@ -2063,9 +2061,6 @@ export const ClientToServerMessage = {
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromJSON(object.joinBBBMeetingMessage),
             };
         }
-        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
-            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
-        }
         if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
             message.message = {
                 $case: "askPositionMessage",
@@ -2144,10 +2139,6 @@ export const ClientToServerMessage = {
         message.message?.$case === "joinBBBMeetingMessage" &&
             (obj.joinBBBMeetingMessage = message.message?.joinBBBMeetingMessage
                 ? JoinBBBMeetingMessage.toJSON(message.message?.joinBBBMeetingMessage)
-                : undefined);
-        message.message?.$case === "xmppMessage" &&
-            (obj.xmppMessage = message.message?.xmppMessage
-                ? XmppMessage.toJSON(message.message?.xmppMessage)
                 : undefined);
         message.message?.$case === "askPositionMessage" &&
             (obj.askPositionMessage = message.message?.askPositionMessage
@@ -2332,16 +2323,6 @@ export const ClientToServerMessage = {
             message.message = {
                 $case: "joinBBBMeetingMessage",
                 joinBBBMeetingMessage: JoinBBBMeetingMessage.fromPartial(object.message.joinBBBMeetingMessage),
-            };
-        }
-        if (
-            object.message?.$case === "xmppMessage" &&
-            object.message?.xmppMessage !== undefined &&
-            object.message?.xmppMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppMessage",
-                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
             };
         }
         if (
@@ -8505,8 +8486,11 @@ const baseIframeToPusherMessage: object = {};
 
 export const IframeToPusherMessage = {
     encode(message: IframeToPusherMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.message?.$case === "xmppMessage") {
+            XmppMessage.encode(message.message.xmppMessage, writer.uint32(10).fork()).ldelim();
+        }
         if (message.message?.$case === "emptyMessage") {
-            EmptyMessage.encode(message.message.emptyMessage, writer.uint32(10).fork()).ldelim();
+            EmptyMessage.encode(message.message.emptyMessage, writer.uint32(18).fork()).ldelim();
         }
         return writer;
     },
@@ -8519,6 +8503,12 @@ export const IframeToPusherMessage = {
             const tag = reader.uint32();
             switch (tag >>> 3) {
                 case 1:
+                    message.message = {
+                        $case: "xmppMessage",
+                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 2:
                     message.message = {
                         $case: "emptyMessage",
                         emptyMessage: EmptyMessage.decode(reader, reader.uint32()),
@@ -8534,6 +8524,9 @@ export const IframeToPusherMessage = {
 
     fromJSON(object: any): IframeToPusherMessage {
         const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
+            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
+        }
         if (object.emptyMessage !== undefined && object.emptyMessage !== null) {
             message.message = { $case: "emptyMessage", emptyMessage: EmptyMessage.fromJSON(object.emptyMessage) };
         }
@@ -8542,6 +8535,10 @@ export const IframeToPusherMessage = {
 
     toJSON(message: IframeToPusherMessage): unknown {
         const obj: any = {};
+        message.message?.$case === "xmppMessage" &&
+            (obj.xmppMessage = message.message?.xmppMessage
+                ? XmppMessage.toJSON(message.message?.xmppMessage)
+                : undefined);
         message.message?.$case === "emptyMessage" &&
             (obj.emptyMessage = message.message?.emptyMessage
                 ? EmptyMessage.toJSON(message.message?.emptyMessage)
@@ -8552,6 +8549,16 @@ export const IframeToPusherMessage = {
     fromPartial<I extends Exact<DeepPartial<IframeToPusherMessage>, I>>(object: I): IframeToPusherMessage {
         const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
         if (
+            object.message?.$case === "xmppMessage" &&
+            object.message?.xmppMessage !== undefined &&
+            object.message?.xmppMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppMessage",
+                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
+            };
+        }
+        if (
             object.message?.$case === "emptyMessage" &&
             object.message?.emptyMessage !== undefined &&
             object.message?.emptyMessage !== null
@@ -8559,6 +8566,99 @@ export const IframeToPusherMessage = {
             message.message = {
                 $case: "emptyMessage",
                 emptyMessage: EmptyMessage.fromPartial(object.message.emptyMessage),
+            };
+        }
+        return message;
+    },
+};
+
+const basePusherToIframeMessage: object = {};
+
+export const PusherToIframeMessage = {
+    encode(message: PusherToIframeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.message?.$case === "batchMessage") {
+            BatchMessage.encode(message.message.batchMessage, writer.uint32(10).fork()).ldelim();
+        }
+        if (message.message?.$case === "xmppSettingsMessage") {
+            XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(18).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): PusherToIframeMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.message = {
+                        $case: "batchMessage",
+                        batchMessage: BatchMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 2:
+                    message.message = {
+                        $case: "xmppSettingsMessage",
+                        xmppSettingsMessage: XmppSettingsMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): PusherToIframeMessage {
+        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
+        if (object.batchMessage !== undefined && object.batchMessage !== null) {
+            message.message = { $case: "batchMessage", batchMessage: BatchMessage.fromJSON(object.batchMessage) };
+        }
+        if (object.xmppSettingsMessage !== undefined && object.xmppSettingsMessage !== null) {
+            message.message = {
+                $case: "xmppSettingsMessage",
+                xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
+            };
+        }
+        return message;
+    },
+
+    toJSON(message: PusherToIframeMessage): unknown {
+        const obj: any = {};
+        message.message?.$case === "batchMessage" &&
+            (obj.batchMessage = message.message?.batchMessage
+                ? BatchMessage.toJSON(message.message?.batchMessage)
+                : undefined);
+        message.message?.$case === "xmppSettingsMessage" &&
+            (obj.xmppSettingsMessage = message.message?.xmppSettingsMessage
+                ? XmppSettingsMessage.toJSON(message.message?.xmppSettingsMessage)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<PusherToIframeMessage>, I>>(object: I): PusherToIframeMessage {
+        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
+        if (
+            object.message?.$case === "batchMessage" &&
+            object.message?.batchMessage !== undefined &&
+            object.message?.batchMessage !== null
+        ) {
+            message.message = {
+                $case: "batchMessage",
+                batchMessage: BatchMessage.fromPartial(object.message.batchMessage),
+            };
+        }
+        if (
+            object.message?.$case === "xmppSettingsMessage" &&
+            object.message?.xmppSettingsMessage !== undefined &&
+            object.message?.xmppSettingsMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppSettingsMessage",
+                xmppSettingsMessage: XmppSettingsMessage.fromPartial(object.message.xmppSettingsMessage),
             };
         }
         return message;

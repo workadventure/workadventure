@@ -38,6 +38,7 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { chatVisibilityStore } from "../Stores/ChatStore";
+import {gameManager} from "../Phaser/Game/GameManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -323,6 +324,8 @@ class IframeListener {
                     } else if (iframeEvent.type == "closeChat") {
                         chatVisibilityStore.set(false);
                         window.focus();
+                    } else if (iframeEvent.type == "askPosition") {
+                        gameManager.getCurrentGameScene().connection?.emitAskPosition(iframeEvent.data.uuid, iframeEvent.data.playUri);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
