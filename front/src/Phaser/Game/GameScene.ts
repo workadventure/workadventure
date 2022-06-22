@@ -1655,6 +1655,10 @@ ${escapedMessage}
             this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            this.CurrentPlayer.finishFollowingPath(true);
+            // clear properties in case we are moved on the same layer / area in order to trigger them
+            this.gameMap.clearCurrentProperties();
+            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
