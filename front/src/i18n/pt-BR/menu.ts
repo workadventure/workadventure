@@ -58,6 +58,13 @@ const menu: BaseTranslation = {
         language: {
             title: "Linguagem",
         },
+        privacySettings: {
+            title: "Modo ausente",
+            explanation:
+                'Enquanto a guia WorkAdventure em seu navegador não estiver visível. WorkAdventure muda para "modo ausente"',
+            cameraToggle: 'Mantenha a câmera ativa no "modo ausente"',
+            microphoneToggle: 'Mantenha o microfone ativo no "modo ausente"',
+        },
         save: {
             warning: "(Salvar essas configurações reiniciará o jogo)",
             button: "Salvar",
@@ -72,6 +79,7 @@ const menu: BaseTranslation = {
         copy: "Copiar",
         share: "Compartilhar",
         walk_automatically_to_position: "Caminhe automaticamente para a minha posição",
+        selectEntryPoint: "Selecione um ponto de entrada",
     },
     globalMessage: {
         text: "Texto",

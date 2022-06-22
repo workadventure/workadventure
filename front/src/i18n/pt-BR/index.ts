@@ -12,6 +12,7 @@ import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
+import muc from "./muc";
 
 const pt_BR: BaseTranslation = {
     language: "Português Brasileiro",
@@ -29,6 +30,7 @@ const pt_BR: BaseTranslation = {
     warning,
     emoji,
     trigger,
+    muc,
 };
 
 export default pt_BR;
