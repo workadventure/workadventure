@@ -101,7 +101,9 @@ export class GameMapPropertiesListener {
                             domain = `${location.protocol}//${domain}`;
                         }
 
-                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
+                        const closable =
+                            (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
+                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
                         coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
                         this.scene.initialiseJitsi(coWebsite, roomName, undefined);
@@ -259,6 +261,7 @@ export class GameMapPropertiesListener {
         let websitePositionProperty: number | undefined;
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
+        let websiteClosableProperty: boolean | undefined;
 
         place.properties.forEach((property) => {
             switch (property.name) {
@@ -282,6 +285,9 @@ export class GameMapPropertiesListener {
                     break;
                 case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
                     websiteTriggerMessageProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_CLOSABLE:
+                    websiteClosableProperty = property.value as boolean | undefined;
                     break;
             }
         });
@@ -316,7 +322,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                false
+                websiteClosableProperty ?? true
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
