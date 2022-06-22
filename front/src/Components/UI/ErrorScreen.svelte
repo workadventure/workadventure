@@ -35,8 +35,8 @@
 {#if $errorScreenStore}
     <main class="errorScreen" transition:fly={{ y: -200, duration: 500 }}>
         <div style="width: 90%;">
-            <img src={logo} alt="WorkAdventure" class="logo" />
-            <div><img src={errorLogo} alt="Error logo" class="icon" /></div>
+            <div class="logo"><img src={logo} alt="WorkAdventure" /></div>
+            <div class="icon"><img src={errorLogo} alt="Error logo" /></div>
             {#if $errorScreenStore.type !== "retry"}<h2>{$errorScreenStore.title}</h2>{/if}
             {#if $errorScreenStore.subtitle}<p>{$errorScreenStore.subtitle}</p>{/if}
             {#if $errorScreenStore.type !== "retry"}<p class="code">Code : {$errorScreenStore.code}</p>{/if}
@@ -80,15 +80,19 @@
         padding: 20px 0;
         .logo {
             width: 50%;
-            margin-bottom: 50px;
             max-height: 25vh;
             max-width: 50vw;
+            margin: 0 auto 50px auto ;
         }
         .icon {
             height: 125px;
-            margin-bottom: 25px;
             max-height: 25vh;
             max-width: 50vw;
+            margin: 0 auto 25px auto ;
+        }
+        .logo img, .icon img{
+            max-width: 100%;
+            max-height: 100%;
         }
         h2 {
             font-family: "Press Start 2P";
@@ -148,6 +152,19 @@
             .reload {
                 margin-top: -4px;
                 width: 22px;
+            }
+        }
+    }
+
+    @media all and (max-device-width: 480px)
+    {
+        main.errorScreen {
+            .logo {
+                width: 90%;
+                max-width: 90vw;
+            }
+            .icon {
+                height: 60px;
             }
         }
     }
