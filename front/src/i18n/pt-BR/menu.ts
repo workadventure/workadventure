@@ -78,7 +78,7 @@ const menu: BaseTranslation = {
         description: "Compartilhe o link da sala!",
         copy: "Copiar",
         share: "Compartilhar",
-        walk_automatically_to_position: "Caminhe automaticamente para a minha posição",
+        walkAutomaticallyToPosition: "Caminhe automaticamente para a minha posição",
         selectEntryPoint: "Selecione um ponto de entrada",
     },
     globalMessage: {
