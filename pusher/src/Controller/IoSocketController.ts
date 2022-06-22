@@ -22,6 +22,7 @@ import {
     VariableMessage,
     LockGroupPromptMessage,
     AvailabilityStatus,
+    MapEditorModifyAreaMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -608,6 +609,11 @@ export class IoSocketController {
                     socketManager.handleLockGroup(
                         client,
                         message.getLockgrouppromptmessage() as LockGroupPromptMessage
+                    );
+                } else if (message.hasMapeditormodifyareamessage()) {
+                    socketManager.handleMapEditorModifyAreaMessage(
+                        client,
+                        message.getMapeditormodifyareamessage() as MapEditorModifyAreaMessage
                     );
                 }
 

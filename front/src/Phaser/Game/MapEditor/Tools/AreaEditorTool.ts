@@ -58,6 +58,8 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapObject) => {
             this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
             this.scene.markDirty();
+
+            this.scene.connection?.emitMapEditorModifyArea(config.name);
         });
     }
 

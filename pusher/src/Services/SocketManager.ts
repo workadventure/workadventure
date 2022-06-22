@@ -40,6 +40,7 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
+    MapEditorModifyAreaMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -323,6 +324,12 @@ export class SocketManager implements ZoneEventListener {
     handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setLockgrouppromptmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleMapEditorModifyAreaMessage(client: ExSocketInterface, message: MapEditorModifyAreaMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setMapeditormodifyareamessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 

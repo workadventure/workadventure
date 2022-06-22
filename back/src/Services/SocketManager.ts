@@ -42,6 +42,7 @@ import {
     ErrorMessage,
     RoomsList,
     RoomDescription,
+    MapEditorModifyAreaMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1010,6 +1011,10 @@ export class SocketManager {
         }
         group.lock(message.getLock());
         room.emitLockGroupEvent(user, group.getId());
+    }
+
+    handleMapEditorModifyAreaMessage(room: GameRoom, user: User, message: MapEditorModifyAreaMessage) {
+        room.getMapEditorMessagesHandler().handleModifyAreaMessage(message);
     }
 
     getAllRooms(): RoomsList {

@@ -922,6 +922,17 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorModifyArea(name: string): void {
+        this.send({
+            message: {
+                $case: "mapEditorModifyAreaMessage",
+                mapEditorModifyAreaMessage: {
+                    name,
+                },
+            },
+        });
+    }
+
     public getAllTags(): string[] {
         return this.tags;
     }

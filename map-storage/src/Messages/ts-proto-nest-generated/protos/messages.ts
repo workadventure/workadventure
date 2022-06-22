@@ -118,6 +118,10 @@ export interface LockGroupPromptMessage {
     lock: boolean;
 }
 
+export interface MapEditorModifyAreaMessage {
+    name: string;
+}
+
 export interface ClientToServerMessage {
     message?:
         | { $case: "userMovesMessage"; userMovesMessage: UserMovesMessage }
@@ -139,7 +143,8 @@ export interface ClientToServerMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage };
+        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
 export interface ItemEventMessage {
@@ -451,7 +456,8 @@ export interface PusherToBackMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage };
+        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
 export interface BatchToPusherMessage {
@@ -480,7 +486,8 @@ export interface BatchToPusherRoomMessage {
 export interface SubToPusherRoomMessage {
     message?:
         | { $case: "variableMessage"; variableMessage: VariableWithTagMessage }
-        | { $case: "errorMessage"; errorMessage: ErrorMessage };
+        | { $case: "errorMessage"; errorMessage: ErrorMessage }
+        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
 export interface UserJoinedRoomMessage {

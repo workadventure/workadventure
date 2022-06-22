@@ -44,6 +44,7 @@ import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
 import { mapStorageClient } from "../Services/MapStorageClient";
+import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -62,6 +63,7 @@ export class GameRoom {
     private nextUserId: number = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
+    private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
 
     private constructor(
         public readonly roomUrl: string,
@@ -734,5 +736,9 @@ export class GameRoom {
             };
         }
         return undefined;
+    }
+
+    public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
+        return this.mapEditorMessagesHandler;
     }
 }

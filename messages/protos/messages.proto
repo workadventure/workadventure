@@ -117,6 +117,10 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message MapEditorModifyAreaMessage {
+  string name = 1;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -136,6 +140,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
+    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 20;
   }
 }
 
@@ -460,6 +465,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
+    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 21;
   }
 }
 
@@ -491,6 +497,7 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
+    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 3;
   }
 }
 
