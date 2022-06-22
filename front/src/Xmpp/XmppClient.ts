@@ -92,7 +92,7 @@ export class XmppClient {
             });
         }
 
-        this.connection.emitXmlMessage(message);
+        //this.connection.emitXmlMessage(message);
 
         // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
         // FIXME: SUBSCRIBE IS ACTUALLY NOT ALWAYS BASED ON ID!
