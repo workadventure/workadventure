@@ -494,6 +494,17 @@ export class GameScene extends DirtyScene {
 
         //add layer on map
         this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+
+        // Now, let's load the script, if any
+        const scripts = this.getScriptUrls(this.mapFile);
+        const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
+            | boolean
+            | undefined;
+        const scriptPromises = [];
+        for (const script of scripts) {
+            scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
+        }
+
         for (const layer of this.gameMap.flatLayers) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -648,15 +659,6 @@ export class GameScene extends DirtyScene {
         }
 
         this.createPromiseDeferred.resolve();
-        // Now, let's load the script, if any
-        const scripts = this.getScriptUrls(this.mapFile);
-        const disableModuleMode = this.getProperty(this.mapFile, GameMapProperties.SCRIPT_DISABLE_MODULE_SUPPORT) as
-            | boolean
-            | undefined;
-        const scriptPromises = [];
-        for (const script of scripts) {
-            scriptPromises.push(iframeListener.registerScript(script, !disableModuleMode));
-        }
 
         this.reposition();
 
