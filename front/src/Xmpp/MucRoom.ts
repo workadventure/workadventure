@@ -93,7 +93,7 @@ export class MucRoom {
                 xmlns: "urn:xmpp:mucsub:0",
             })
         );
-        this.connection.emitXmlMessage(messageMucListAllUsers);
+        //this.connection.emitXmlMessage(messageMucListAllUsers);
     }
 
     private sendPresence() {
@@ -117,7 +117,7 @@ export class MucRoom {
                 uuid: localUserStore.getLocalUser()?.uuid,
             })
         );
-        this.connection.emitXmlMessage(messagePresence);
+        //this.connection.emitXmlMessage(messagePresence);
         console.warn("[XMPP]", "Presence sent");
     }
 
@@ -140,13 +140,13 @@ export class MucRoom {
                 xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
             )
         );
-        this.connection.emitXmlMessage(messageMucSubscribe);
+        //this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
     public disconnect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
         const messageMucSubscribe = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
-        this.connection.emitXmlMessage(messageMucSubscribe);
+        //this.connection.emitXmlMessage(messageMucSubscribe);
         return messageMucSubscribe;
     }
 

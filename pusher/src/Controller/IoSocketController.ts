@@ -21,7 +21,6 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    XmppMessage,
     AskPositionMessage,
     AvailabilityStatus,
 } from "../Messages/generated/messages_pb";
