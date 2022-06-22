@@ -21,6 +21,8 @@ export type User = {
     status: string;
     active: boolean;
     isInSameMap: boolean;
+    color: string;
+    woka: string;
 };
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
@@ -121,6 +123,8 @@ export class MucRoom {
             //add uuid of the user to identify and target them on teleport
             xml("user", {
                 uuid: get(userStore).uuid,
+                color: get(userStore).color,
+                woka: get(userStore).woka
             })
         );
         this.connection.emitXmlMessage(messagePresence);
@@ -189,12 +193,16 @@ export class MucRoom {
                 const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
                 const roomId = xml.getChild("room")?.getAttr("id");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
+                const color = xml.getChild("user")?.getAttr("color");
+                const woka = xml.getChild("user")?.getAttr("woka");
                 this.updateUser(
                     jid,
                     from.resource,
                     roomId,
                     uuid,
-                    type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE
+                    type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
+                    color,
+                    woka
                 );
 
                 handledMessage = true;
@@ -244,7 +252,15 @@ export class MucRoom {
         return get(this.presenceStore).get(jid)?.uuid ?? '';
     }
 
-    private updateUser(jid: string, nick: string, roomId: string|null = null, uuid: string|null = null, status: string|null = null) {
+    private getCurrentColor(jid: string) {
+        return get(this.presenceStore).get(jid)?.color ?? '#626262';
+    }
+
+    private getCurrentWoka(jid: string) {
+        return get(this.presenceStore).get(jid)?.woka ?? ' data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==';
+    }
+
+    private updateUser(jid: string, nick: string, roomId: string|null = null, uuid: string|null = null, status: string|null = null, color: string|null = null, woka: string|null = null) {
         const user = get(userStore);
         if (
             (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid &&
@@ -257,7 +273,9 @@ export class MucRoom {
                     uuid: uuid ?? this.getCurrentUuid(jid),
                     status: status ?? this.getCurrentStatus(jid),
                     isInSameMap: (roomId ?? this.getCurrentRoomId(jid)) === user.playUri,
-                    active: (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE
+                    active: (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
+                    color: color ?? this.getCurrentColor(jid),
+                    woka: woka ?? this.getCurrentWoka(jid)
                 });
                 numberPresenceUserStore.set(list.size);
                 return list;

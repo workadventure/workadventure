@@ -20,8 +20,10 @@
 </script>
 
 <div class={`wa-chat-item`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
-    <div class={`tw-relative ${user.active ? "" : "tw-opacity-50"}`} on:click|stopPropagation={() => openChat(user)}>
-        <img class="" src="/static/images/yoda-avatar.png" alt="Send" width="42" />
+    <div class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`} style={`background-color: ${user.color}`} on:click|stopPropagation={() => openChat(user)}>
+        <div class="tw-overflow-hidden tw-w-full tw-h-full">
+            <img class="tw-w-full" src={user.woka} alt="Avatar"/>
+        </div>
         {#if user.active}
             <span class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple"></span>
         {/if}

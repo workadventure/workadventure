@@ -94,6 +94,12 @@
     .wa-chat-item{
         @apply tw-flex tw-px-6 tw-py-3 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
 
+        .wa-avatar{
+            @apply tw-w-10 tw-h-10 tw-rounded-xl tw-border-2 tw-border-lighter-purple tw-border-solid;
+            img {
+                margin-top: 8px;
+            }
+        }
         &:hover{
             background-color: rgba(#4D4B67, .24);
         }

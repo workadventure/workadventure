@@ -6,6 +6,8 @@ export const isUserData = z.object({
     name: z.string(),
     playUri: z.string(),
     authToken: z.optional(z.string()),
+    color: z.string(),
+    woka: z.string()
 });
 
 export type UserData = z.infer<typeof isUserData>;

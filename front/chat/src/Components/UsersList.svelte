@@ -35,7 +35,7 @@
 					<p>This room is empty, copy this link to invite colleague or friend!</p>
 					<button type="button" class="nes-btn is-primary" on:click={null}>test</button>
 				{:else}
-					{#each [...$usersListStore] as [jid, user]}
+					{#each [...$usersListStore].sort((b,a) => Number(a.active) - Number(b.active)) as [jid, user]}
 						<ChatUser {openChat} {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
 					{/each}
 				{/if}
