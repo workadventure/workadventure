@@ -10,6 +10,8 @@ import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import { availabilityStatusToJSON } from "../../Messages/ts-proto-generated/protos/messages";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -146,5 +148,22 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                 this.emit(RemotePlayerEvent.Clicked);
             }
         });
+    }
+
+    /**
+     * Generates an event dispatched by iframe to inform users of the new remote player.
+     */
+    public toIframeAddPlayerEvent(): AddPlayerEvent {
+        return {
+            userId: this.userId,
+            userUuid: this.userUuid,
+            name: this.playerName,
+            position: {
+                x: this.x,
+                y: this.y,
+            },
+            outlineColor: get(this.outlineColorStore),
+            availabilityStatus: availabilityStatusToJSON(this.statusDot.availabilityStatus),
+        };
     }
 }

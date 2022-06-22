@@ -25,6 +25,13 @@ Start the tests with:
 npm run test
 ```
 
+In development, if you want to run a specific test in "headed" mode (visible mode), with only Chromium, run:
+
+```bash
+npm run headed-test -- tests/[your_test_file.ts]
+```
+
+
 ## Run on production like environment
 
 Build message types:

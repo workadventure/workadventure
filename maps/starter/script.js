@@ -8,15 +8,6 @@ WA.room.onEnterZone('clock', () => {
     currentPopup =  WA.ui.openPopup("clockPopup","It's " + time,[]);
 })
 
-WA.onInit().then(() => {
-    WA.player.sharedState.arrivalTime = Date.now()
-    console.log("arrivalTime: " + WA.player.sharedState.arrivalTime)
-
-    WA.players.onVariableChange('arrivalTime', (user, value) => {
-        console.log('arrivalTime updated for user ', user, 'new value', value);
-    });
-});
-
 WA.room.onLeaveZone('clock', closePopUp)
 
 function closePopUp(){

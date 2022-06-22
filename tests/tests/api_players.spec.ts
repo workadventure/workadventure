@@ -22,9 +22,19 @@ test.describe('API WA.players', () => {
     const events = getCoWebsiteIframe(page).locator('#events');
     await expect(events).toContainText('New user: Bob');
 
+    await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
+    const list = getCoWebsiteIframe(page).locator('#list');
+    await expect(list).toContainText('Bob');
+
+    await getCoWebsiteIframe(page2).locator('#listCurrentPlayers').click();
+    const list2 = getCoWebsiteIframe(page2).locator('#list');
+    await expect(list2).toContainText('Alice');
+
     await page2.close();
 
     await expect(events).toContainText('User left: Bob');
+    await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
+    await expect(list).not.toContainText('Bob');
   });
 
   test('exception if we forget to call WA.players.enableTracking', async ({ page }) => {

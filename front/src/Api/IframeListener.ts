@@ -37,10 +37,9 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import {SetSharedPlayerVariableEvent} from "./Events/SetSharedPlayerVariableEvent";
-import {EnablePlayersTrackingEvent} from "./Events/EnablePlayersTrackingEvent";
-import {AddPlayerInterface} from "../Phaser/Game/AddPlayerInterface";
-import {AddPlayerEvent, isAddPlayerEvent} from "./Events/AddPlayerEvent";
+import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
+import { EnablePlayersTrackingEvent } from "./Events/EnablePlayersTrackingEvent";
+import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -132,6 +131,9 @@ class IframeListener {
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
+
+    private readonly _enablePlayersTrackingStream: Subject<EnablePlayersTrackingEvent> = new Subject();
+    public readonly enablePlayersTrackingStream = this._enablePlayersTrackingStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframesTrackingPlayers = new Set<HTMLIFrameElement>();
@@ -633,6 +635,7 @@ class IframeListener {
             this.iframesTrackingPlayers.delete(iframe);
             this.iframesTrackingPlayersMovement.delete(iframe);
         }
+        this._enablePlayersTrackingStream.next(options);
     }
 
     public dispatchAddPlayerEvent(event: AddPlayerEvent) {

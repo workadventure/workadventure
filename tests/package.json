@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "dotenv -e ../.env -- playwright test",
+    "headed-test": "dotenv -e ../.env -- playwright test --project=chromium --headed",
     "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test"
   }
 }

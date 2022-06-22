@@ -107,7 +107,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
-    PlayerDetailsUpdatedMessage
+    PlayerDetailsUpdatedMessage,
 } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
@@ -1420,6 +1420,15 @@ ${escapedMessage}
                 this.markDirty();
             })
         );
+        this.iframeSubscriptionList.push(
+            iframeListener.enablePlayersTrackingStream.subscribe((event) => {
+                if (event.trackPlayers) {
+                    for (const player of this.MapPlayersByKey.values()) {
+                        iframeListener.dispatchAddPlayerEvent(player.toIframeAddPlayerEvent());
+                    }
+                }
+            })
+        );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
             return this.connectionAnswerPromiseDeferred.promise.then(() => {
                 const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
@@ -1509,12 +1518,12 @@ ${escapedMessage}
                     localUserStore.setUserProperty(event.key, event.value);
                     break;
                 }
-                case "sharedPlayer":{
-                    this.connection?.emitPlayerSetVariable(event.key, event.value)
+                case "sharedPlayer": {
+                    this.connection?.emitPlayerSetVariable(event.key, event.value);
                     // const clientToServerMessage = new ClientToServerMessage();
                     // clientToServerMessage.setSetplayerdetailsmessage(message);
                     // this.socket.send(clientToServerMessage.serializeBinary().buffer);
-                   break;
+                    break;
                 }
                 default: {
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -1966,18 +1975,9 @@ ${escapedMessage}
                     break;
                 case "AddPlayerEvent":
                     this.doAddPlayer(event.event);
-                    iframeListener.dispatchAddPlayerEvent({
-                        userId: event.event.userId,
-                        name: event.event.name,
-                        userUuid: event.event.userUuid,
-                        outlineColor: event.event.outlineColor,
-                        availabilityStatus: availabilityStatusToJSON(event.event.availabilityStatus),
-                        position: event.event.position,
-                    });
                     break;
                 case "RemovePlayerEvent":
                     this.doRemovePlayer(event.userId);
-                    iframeListener.dispatchRemovePlayerEvent(event.userId);
                     break;
                 case "UserMovedEvent": {
                     this.doUpdatePlayerPosition(event.event);
@@ -2049,6 +2049,14 @@ ${escapedMessage}
             type: "AddPlayerEvent",
             event: addPlayerData,
         });
+        iframeListener.dispatchAddPlayerEvent({
+            userId: addPlayerData.userId,
+            name: addPlayerData.name,
+            userUuid: addPlayerData.userUuid,
+            outlineColor: addPlayerData.outlineColor,
+            availabilityStatus: availabilityStatusToJSON(addPlayerData.availabilityStatus),
+            position: addPlayerData.position,
+        });
     }
 
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
@@ -2113,6 +2121,7 @@ ${escapedMessage}
             type: "RemovePlayerEvent",
             userId,
         });
+        iframeListener.dispatchRemovePlayerEvent(userId);
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -2244,7 +2253,7 @@ ${escapedMessage}
                 value: message.details.setVariable.value,
                 playerId: message.userId,
             });
-            console.log('doUpdatePlayerDetails', message.details.setVariable)
+            console.log("doUpdatePlayerDetails", message.details.setVariable);
         }
     }
 

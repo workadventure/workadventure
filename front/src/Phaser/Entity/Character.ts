@@ -40,7 +40,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emoteTween: Phaser.Tweens.Tween | null = null;
     scene: GameScene;
     private readonly _pictureStore: Writable<string | undefined>;
-    private readonly outlineColorStore = createColorStore();
+    protected readonly outlineColorStore = createColorStore();
     private readonly outlineColorStoreUnsubscribe: Unsubscriber;
     private texturePromise: CancelablePromise<string[] | void> | undefined;
 

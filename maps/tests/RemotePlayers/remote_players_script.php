@@ -18,20 +18,18 @@
 
 
                 WA.players.onPlayerEnters().subscribe((remotePlayer) => {
-                    document.getElementById("text").value += "New user: " + remotePlayer.name + "\n";
                     document.getElementById("events").innerText += "New user: " + remotePlayer.name + "\n";
                 });
 
                 WA.players.onPlayerLeaves().subscribe((remotePlayer) => {
-                    document.getElementById("text").value += "User left: " + remotePlayer.name + "\n";
                     document.getElementById("events").innerText += "User left: " + remotePlayer.name + "\n";
                 });
 
 
                 document.getElementById('listCurrentPlayers').addEventListener('click', () => {
-                    document.getElementById("text").value = "Players list: \n\n";
+                    document.getElementById('list').innerHTML = '';
                     for (const player of WA.players.list()) {
-                        document.getElementById("text").value += "User " + player.id + ": " + player.name + "\n";
+                        document.getElementById('list').innerHTML += "<li>User " + player.id + ": " + player.name + "</li>";
                     }
                 });
             });
@@ -39,6 +37,10 @@
     </script>
 </head>
 <body>
+<p>Players list (updated when button is clicked)</p>
+<ul id="list">
+
+</ul>
 <textarea id="text" rows="30" cols="80">
 
 </textarea>
