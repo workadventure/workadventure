@@ -19,7 +19,7 @@
     }
 </script>
 
-<div class={`wa-chat-item`} on:click|stopPropagation={() => openChat(user)}>
+<div class={`wa-chat-item`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
     <div class={`tw-relative ${user.active ? "" : "tw-opacity-50"}`} on:click|stopPropagation={() => openChat(user)}>
         <img class="" src="/static/images/yoda-avatar.png" alt="Send" width="42" />
         {#if user.active}
@@ -28,7 +28,18 @@
     </div>
     <div class={`tw-flex-auto tw-ml-2 ${user.active ? "" : "tw-opacity-50"}`} on:click|stopPropagation={() => openChat(user)}>
         <h1 class="tw-text-sm tw-font-bold tw-mb-0">
-            {user.name}
+            {#if user.name.match(/\[\d*]/)}
+                <span>{user.name.substring(0, user.name.search(/\[\d*]/))}</span>
+                <span class="tw-font-light tw-text-xs tw-text-gray-500">
+                    #{user.name
+                        .match(/\[\d*]/)
+                        ?.join()
+                        ?.replace("[", "")
+                        ?.replace("]", "")}
+                </span>
+            {:else}
+                <span>{user.name}</span>
+            {/if}
         </h1>
         <p class="tw-text-xs tw-mb-0 tw-font-condensed">
             {#if user.active}
