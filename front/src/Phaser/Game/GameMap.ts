@@ -190,6 +190,10 @@ export class GameMap {
         return this.lastProperties;
     }
 
+    public clearCurrentProperties(): void {
+        return this.lastProperties.clear();
+    }
+
     public getMap(): ITiledMap {
         return this.map;
     }

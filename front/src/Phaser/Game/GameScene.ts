@@ -233,6 +233,7 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
+    private cleanupDone: boolean = false;
     public readonly superLoad: SuperLoaderPlugin;
     private xmppClient!: XmppClient;
 
@@ -455,6 +456,10 @@ export class GameScene extends DirtyScene {
     //hook create scene
     create(): void {
         this.preloading = false;
+        this.cleanupDone = false;
+
+        this.bindSceneEventHandlers();
+
         this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
@@ -1655,6 +1660,10 @@ ${escapedMessage}
             this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            this.CurrentPlayer.finishFollowingPath(true);
+            // clear properties in case we are moved on the same layer / area in order to trigger them
+            this.gameMap.clearCurrentProperties();
+            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
@@ -1722,6 +1731,7 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
+        this.cleanupDone = true;
     }
 
     private removeAllRemotePlayers(): void {
@@ -2352,6 +2362,14 @@ ${escapedMessage}
                     "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
             });
         }
+    }
+
+    private bindSceneEventHandlers(): void {
+        this.events.once("shutdown", () => {
+            if (!this.cleanupDone) {
+                throw new Error("Scene destroyed without cleanup!");
+            }
+        });
     }
 
     zoomByFactor(zoomFactor: number) {
