@@ -82,15 +82,16 @@
             width: 50%;
             max-height: 25vh;
             max-width: 50vw;
-            margin: 0 auto 50px auto ;
+            margin: 0 auto 50px auto;
         }
         .icon {
             height: 125px;
             max-height: 25vh;
             max-width: 50vw;
-            margin: 0 auto 25px auto ;
+            margin: 0 auto 25px auto;
         }
-        .logo img, .icon img{
+        .logo img,
+        .icon img {
             max-width: 100%;
             max-height: 100%;
         }
@@ -156,8 +157,7 @@
         }
     }
 
-    @media all and (max-device-width: 480px)
-    {
+    @media all and (max-device-width: 480px) {
         main.errorScreen {
             .logo {
                 width: 90%;
