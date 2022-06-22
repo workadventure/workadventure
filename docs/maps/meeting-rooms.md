@@ -35,6 +35,10 @@ If you set `jitsiTrigger: onaction`, when the user walks on the area, an alert m
 
 If you set `jitsiTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to enter in jitsi meet room'.
 
+## Prevent Jitsi meet from being closable
+
+If you wish your meeting to not be closable by a close button, you can make use of `openWebsiteClosable` property and set it to `false`.
+
 ## Customizing your "Jitsi meet"
 
 Your Jitsi meet experience can be customized using Jitsi specific config options. The `jitsiConfig` and `jitsiInterfaceConfig` properties can be used on the Jitsi object to change the way Jitsi looks and behaves. Those 2 properties are accepting a JSON string.
