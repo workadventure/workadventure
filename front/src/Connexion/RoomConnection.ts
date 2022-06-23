@@ -48,7 +48,7 @@ import {
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
 } from "../Messages/ts-proto-generated/protos/messages";
-import {Subject, BehaviorSubject} from "rxjs";
+import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";

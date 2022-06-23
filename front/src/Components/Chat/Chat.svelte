@@ -3,10 +3,10 @@
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import {getColorByString} from "../Video/utils";
-    import {currentPlayerWokaStore} from "../../Stores/CurrentPlayerWokaStore";
-    import {derived, Unsubscriber, writable} from "svelte/store";
-    import {gameManager} from "../../Phaser/Game/GameManager";
+    import { getColorByString } from "../Video/utils";
+    import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+    import { derived, Unsubscriber, writable } from "svelte/store";
+    import { gameManager } from "../../Phaser/Game/GameManager";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -15,11 +15,14 @@
     const wokaDefinedStore = writable<boolean>(false);
     const iframeLoadedStore = writable<boolean>(false);
 
+    export const canSendInitMessageStore = derived(
+        [wokaDefinedStore, iframeLoadedStore],
+        ([$wokaDefinedStore, $iframeLoadedStore]) => $wokaDefinedStore && $iframeLoadedStore
+    );
 
-    export const canSendInitMessageStore = derived([wokaDefinedStore, iframeLoadedStore], ([$wokaDefinedStore, $iframeLoadedStore]) => $wokaDefinedStore && $iframeLoadedStore);
-
-	// Phantom woka
-    let wokaSrc = ' data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==';
+    // Phantom woka
+    let wokaSrc =
+        " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
     const playUri = document.location.toString().split("#")[0].toString();
     const name = localUserStore.getName();
 
@@ -30,39 +33,45 @@
                 iframeLoadedStore.set(true);
             }
         });
-        subscribeListeners.push(currentPlayerWokaStore.subscribe(value => {
-            if (value !== undefined){
-                wokaSrc = value;
-                wokaDefinedStore.set(true);
-            }
-        }));
-        subscribeListeners.push(canSendInitMessageStore.subscribe((value) => {
-            if(value){
-                chatIframe?.contentWindow?.postMessage(
-                    {
-                        type: "userData",
-                        data: {
-                            ...localUserStore.getLocalUser(),
-                            name,
-                            playUri,
-                            authToken: localUserStore.getAuthToken(),
-                            color: getColorByString(name ?? ''),
-                            woka: wokaSrc
+        subscribeListeners.push(
+            currentPlayerWokaStore.subscribe((value) => {
+                if (value !== undefined) {
+                    wokaSrc = value;
+                    wokaDefinedStore.set(true);
+                }
+            })
+        );
+        subscribeListeners.push(
+            canSendInitMessageStore.subscribe((value) => {
+                if (value) {
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "userData",
+                            data: {
+                                ...localUserStore.getLocalUser(),
+                                name,
+                                playUri,
+                                authToken: localUserStore.getAuthToken(),
+                                color: getColorByString(name ?? ""),
+                                woka: wokaSrc,
+                            },
                         },
-                    },
-                    "*"
-                );
-			}
-		}));
-        subscribeListeners.push(chatVisibilityStore.subscribe(() => {
-            gameManager.getCurrentGameScene()?.onResize();
-		}));
+                        "*"
+                    );
+                }
+            })
+        );
+        subscribeListeners.push(
+            chatVisibilityStore.subscribe(() => {
+                gameManager.getCurrentGameScene()?.onResize();
+            })
+        );
     });
     onDestroy(() => {
         iframeListener.unregisterIframe(chatIframe);
-        subscribeListeners.forEach(listener => {
+        subscribeListeners.forEach((listener) => {
             listener();
-		})
+        });
     });
 
     function closeChat() {
@@ -83,14 +92,14 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
-	{#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
-	<iframe
-		bind:this={chatIframe}
-		sandbox="allow-scripts"
-		title="WorkAdventureChat"
-		src="http://chat.workadventure.localhost"
-		class="tw-border-0"
-	></iframe>
+    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
+    <iframe
+        bind:this={chatIframe}
+        sandbox="allow-scripts"
+        title="WorkAdventureChat"
+        src="http://chat.workadventure.localhost"
+        class="tw-border-0"
+    />
 </div>
 
 <!--
@@ -226,7 +235,7 @@
     #chatWindow {
         z-index: 1000;
         position: absolute;
-	  	background-color: transparent;
+        background-color: transparent;
         top: 0;
         left: -30vw;
         height: 100vh;
@@ -238,21 +247,21 @@
             left: 0;
             pointer-events: auto;
         }
-	  iframe{
-		width: 100%;
-		height: 100%;
-	  }
-	  .hide{
-		top: 1%;
-		padding: 0 7px 2px 6px;
-		min-height: fit-content;
-		position: absolute;
-		right: -20px;
-		z-index: -1;
-		font-size: 20px;
-		border-bottom-left-radius: 0;
-		border-top-left-radius: 0;
-		background: #181824;
-	  }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        .hide {
+            top: 1%;
+            padding: 0 7px 2px 6px;
+            min-height: fit-content;
+            position: absolute;
+            right: -20px;
+            z-index: -1;
+            font-size: 20px;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            background: #181824;
+        }
     }
 </style>
