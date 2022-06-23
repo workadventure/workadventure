@@ -7,7 +7,7 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
-import { v4 as uuidv4 } from "uuid";
+//import { v4 as uuidv4 } from "uuid";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import Axios from "axios";
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
