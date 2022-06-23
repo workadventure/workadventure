@@ -102,7 +102,7 @@
       <button
         class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-l-l tw-rounded-r-none hover:tw-bg-medium-purple/95 tw-m-0"
         class:border-top-light={$followStateStore === "active"}>
-        <img class="noselect tw-w-6 tw-h-6" src={followImg} style="padding: 2px" alt="Switch to mosaic mode" />
+        <img class="noselect tw-w-6 tw-h-6" src={followImg} style="padding: 2px" alt="Toggle follow" />
       </button>
     </div>
 
@@ -129,9 +129,9 @@
       <button class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-none hover:tw-bg-medium-purple/95 tw-m-0"
               class:border-top-light={$currentPlayerGroupLockStateStore}>
         {#if $currentPlayerGroupLockStateStore}
-          <img class="noselect tw-w-6 tw-h-6" src={lockCloseImg} style="padding: 2px" alt="Switch to mosaic mode" />
+          <img class="noselect tw-w-6 tw-h-6" src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
         {:else}
-          <img class="noselect tw-w-6 tw-h-6" src={lockOpenImg} style="padding: 2px" alt="Switch to mosaic mode" />
+          <img class="noselect tw-w-6 tw-h-6" src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
         {/if}
       </button>
     </div>
@@ -145,9 +145,9 @@
         class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-r-l tw-rounded-l-none hover:tw-bg-medium-purple/95 tw-m-0"
         class:border-top-light={$requestedScreenSharingState}>
         {#if $requestedScreenSharingState && !$silentStore}
-          <img class="noselect tw-w-6 tw-h-6" src={screenshareOn} alt="Start screen sharing" />
+          <img class="noselect tw-w-6 tw-h-6" src={screenshareOn} alt="Stop screen sharing" />
         {:else}
-          <img class="noselect tw-w-6 tw-h-6" src={screenshareOff} alt="Stop screen sharing" />
+          <img class="noselect tw-w-6 tw-h-6" src={screenshareOff} alt="Start screen sharing" />
         {/if}
       </button>
     </div>
@@ -161,9 +161,9 @@
         class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-l-l tw-rounded-r-none hover:tw-bg-medium-purple/95 tw-m-0"
         class:border-top-light={$requestedCameraState}>
         {#if $requestedCameraState && !$silentStore}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraImg} alt="Turn on webcam" />
+          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraImg} alt="Turn off webcam" />
         {:else}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraOffImg} alt="Turn off webcam" />
+          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraOffImg} alt="Turn on webcam" />
         {/if}
       </button>
     </div>
@@ -175,9 +175,9 @@
       <button class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-none hover:tw-bg-medium-purple/95 tw-m-0"
               class:border-top-light={$requestedMicrophoneState}>
         {#if $requestedMicrophoneState && !$silentStore}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneImg} alt="Turn on microphone" />
+          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneImg} alt="Turn off microphone" />
         {:else}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneOffImg} alt="Turn off microphone" />
+          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneOffImg} alt="Turn on microphone" />
         {/if}
       </button>
     </div>
@@ -189,7 +189,7 @@
         class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-r-l tw-rounded-l-none hover:tw-bg-medium-purple/95 tw-m-0"
         class:border-top-light={$chatVisibilityStore}
       >
-        <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={bubbleImg} style="padding: 2px" alt="Switch to mosaic mode" />
+        <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
       </button>
     </div>
   </div>
