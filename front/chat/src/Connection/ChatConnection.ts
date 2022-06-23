@@ -96,6 +96,12 @@ export class ChatConnection implements ChatConnection {
                     this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                     break;
                 }
+                case "xmppConnectionStatusChangeMessage": {
+                    this._xmppConnectionStatusChangeMessageStream.next(
+                        message.xmppConnectionStatusChangeMessage.status
+                    );
+                    break;
+                }
                 case "batchMessage": {
                     for (const subMessageWrapper of message.batchMessage.payload) {
                         const subMessage = subMessageWrapper.message;

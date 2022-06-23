@@ -55,6 +55,7 @@ export class XmppClient {
         connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
             switch (status) {
                 case Status.DISCONNECTED: {
+                    console.log('XmppServerDisconnected');
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
                     break;
@@ -63,6 +64,7 @@ export class XmppClient {
                     throw new Error("Unexpected status received");
                 }
                 default: {
+                    console.log('XmppServerConnected');
                     //const _exhaustiveCheck: never = status;
                 }
             }

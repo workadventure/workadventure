@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../../chat/src/Stores/ChatStore";
+    import { chatMessagesStore } from "../../../chat/src/Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
@@ -31,7 +31,7 @@
     }
 
     function closeChat() {
-        chatVisibilityStore.set(false);
+        //chatVisibilityStore.set(false);
     }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {

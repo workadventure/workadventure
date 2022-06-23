@@ -97,11 +97,11 @@ export class XmppClient {
                     const xmppConnectionStatusChangeMessage = new XmppConnectionStatusChangeMessage();
                     xmppConnectionStatusChangeMessage.setStatus(XmppConnectionStatusChangeMessage.Status.DISCONNECTED);
 
-                    const serverToClientMessage = new ServerToClientMessage();
-                    serverToClientMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
+                    const pusherToIframeMessage = new PusherToIframeMessage();
+                    pusherToIframeMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
 
                     if (!this.clientSocket.disconnecting) {
-                        this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
+                        this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                     }
                 }
             });

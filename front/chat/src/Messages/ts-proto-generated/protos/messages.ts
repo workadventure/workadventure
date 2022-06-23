@@ -710,7 +710,11 @@ export interface IframeToPusherMessage {
 export interface PusherToIframeMessage {
     message?:
         | { $case: "batchMessage"; batchMessage: BatchMessage }
-        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage };
+        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage }
+        | {
+              $case: "xmppConnectionStatusChangeMessage";
+              xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
+          };
 }
 
 const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
@@ -8582,6 +8586,12 @@ export const PusherToIframeMessage = {
         if (message.message?.$case === "xmppSettingsMessage") {
             XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(18).fork()).ldelim();
         }
+        if (message.message?.$case === "xmppConnectionStatusChangeMessage") {
+            XmppConnectionStatusChangeMessage.encode(
+                message.message.xmppConnectionStatusChangeMessage,
+                writer.uint32(26).fork()
+            ).ldelim();
+        }
         return writer;
     },
 
@@ -8604,6 +8614,15 @@ export const PusherToIframeMessage = {
                         xmppSettingsMessage: XmppSettingsMessage.decode(reader, reader.uint32()),
                     };
                     break;
+                case 3:
+                    message.message = {
+                        $case: "xmppConnectionStatusChangeMessage",
+                        xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.decode(
+                            reader,
+                            reader.uint32()
+                        ),
+                    };
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -8623,6 +8642,17 @@ export const PusherToIframeMessage = {
                 xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
             };
         }
+        if (
+            object.xmppConnectionStatusChangeMessage !== undefined &&
+            object.xmppConnectionStatusChangeMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppConnectionStatusChangeMessage",
+                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromJSON(
+                    object.xmppConnectionStatusChangeMessage
+                ),
+            };
+        }
         return message;
     },
 
@@ -8635,6 +8665,10 @@ export const PusherToIframeMessage = {
         message.message?.$case === "xmppSettingsMessage" &&
             (obj.xmppSettingsMessage = message.message?.xmppSettingsMessage
                 ? XmppSettingsMessage.toJSON(message.message?.xmppSettingsMessage)
+                : undefined);
+        message.message?.$case === "xmppConnectionStatusChangeMessage" &&
+            (obj.xmppConnectionStatusChangeMessage = message.message?.xmppConnectionStatusChangeMessage
+                ? XmppConnectionStatusChangeMessage.toJSON(message.message?.xmppConnectionStatusChangeMessage)
                 : undefined);
         return obj;
     },
@@ -8659,6 +8693,18 @@ export const PusherToIframeMessage = {
             message.message = {
                 $case: "xmppSettingsMessage",
                 xmppSettingsMessage: XmppSettingsMessage.fromPartial(object.message.xmppSettingsMessage),
+            };
+        }
+        if (
+            object.message?.$case === "xmppConnectionStatusChangeMessage" &&
+            object.message?.xmppConnectionStatusChangeMessage !== undefined &&
+            object.message?.xmppConnectionStatusChangeMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppConnectionStatusChangeMessage",
+                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromPartial(
+                    object.message.xmppConnectionStatusChangeMessage
+                ),
             };
         }
         return message;

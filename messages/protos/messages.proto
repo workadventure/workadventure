@@ -631,6 +631,7 @@ message PusherToIframeMessage{
   oneof message {
     BatchMessage batchMessage = 1;
     XmppSettingsMessage xmppSettingsMessage = 2;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 3;
   }
 }
 /**

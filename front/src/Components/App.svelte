@@ -1,6 +1,5 @@
 <script lang="ts">
     import type { Game } from "../Phaser/Game/Game";
-    import { chatVisibilityStore } from "../Stores/ChatStore";
     import { errorStore } from "../Stores/ErrorStore";
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
