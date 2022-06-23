@@ -86,6 +86,12 @@ export class PusherRoom {
                             listener.emitInBatch(subMessage);
                         }
                     }
+                } else if (message.hasMapeditormodifyareamessage()) {
+                    for (const listener of this.listeners) {
+                        const subMessage = new SubMessage();
+                        subMessage.setMapeditormodifyareamessage(message.getMapeditormodifyareamessage());
+                        listener.emitInBatch(subMessage);
+                    }
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
 

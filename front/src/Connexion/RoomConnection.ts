@@ -139,6 +139,9 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
+    private readonly _mapEditorModifyAreaMessageStream = new Subject<{ name: string }>();
+    public readonly mapEditorModifyAreaMessageStream = this._mapEditorModifyAreaMessageStream.asObservable();
+
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
@@ -310,6 +313,11 @@ export class RoomConnection implements RoomConnection {
                                 }
 
                                 this._variableMessageStream.next({ name, value });
+                                break;
+                            }
+                            case "mapEditorModifyAreaMessage": {
+                                const message = subMessage.mapEditorModifyAreaMessage;
+                                this._mapEditorModifyAreaMessageStream.next(message);
                                 break;
                             }
                             default: {

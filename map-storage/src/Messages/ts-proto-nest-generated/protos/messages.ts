@@ -192,7 +192,8 @@ export interface SubMessage {
         | { $case: "emoteEventMessage"; emoteEventMessage: EmoteEventMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
-        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage };
+        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
+        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
 export interface BatchMessage {

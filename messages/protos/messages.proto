@@ -197,6 +197,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
+    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 11;
   }
 }
 

@@ -1,4 +1,5 @@
 import { Unsubscriber } from "svelte/store";
+import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { GameScene } from "../GameScene";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
@@ -73,6 +74,13 @@ export class MapEditorModeManager {
                 break;
             }
         }
+    }
+
+    public subscribeToStreams(connection: RoomConnection): void {
+        connection.mapEditorModifyAreaMessageStream.subscribe((message) => {
+            console.log("MESSAGE RECEIVED IN MAP EDITOR MANAGER");
+            console.log(message);
+        });
     }
 
     private equipTool(tool?: EditorTool): void {
