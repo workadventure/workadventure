@@ -13,6 +13,8 @@
   import lockCloseImg from "./images/lock-closed.png";
   import screenshareOn from "./images/screenshare-on.png";
   import screenshareOff from "./images/screenshare-off.png";
+  import emojiPickOn from "./images/emoji-on.png";
+  import emojiPickOff from "./images/emoji-off.png";
   import { LayoutMode } from "../WebRtc/LayoutManager";
   import { peerStore } from "../Stores/PeerStore";
   import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
@@ -22,6 +24,7 @@
   import { analyticsClient } from "../Administration/AnalyticsClient";
   import { chatVisibilityStore } from "../Stores/ChatStore";
   import { activeSubMenuStore, menuVisiblilityStore } from "../Stores/MenuStore";
+  import { emoteMenuStore } from "../Stores/EmoteStore";
 
   const gameScene = gameManager.getCurrentGameScene();
 
@@ -87,6 +90,10 @@
   function toggleInviteMenu() {
     activeSubMenuStore.set(2);
     menuVisiblilityStore.set(!$menuVisiblilityStore);
+  }
+
+  function toggleEmojiPicker() {
+    $emoteMenuStore == true ? emoteMenuStore.closeEmoteMenu() : emoteMenuStore.openEmoteMenu();
   }
 </script>
 
@@ -194,15 +201,30 @@
         <img src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
       </button>
     </div>
+    <div
+      on:click={toggleEmojiPicker}
+      class="bottom-action-button"
+    >
+      <button
+
+        class:border-top-light={$emoteMenuStore}
+      >
+        {#if $emoteMenuStore}
+          <img src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+        {:else}
+          <img src={emojiPickOff} style="padding: 2px" alt="Toggle emoji picker" />
+        {/if}
+      </button>
+    </div>
   </div>
 
-  <div class="btn-action-bar-invite w-flex tw-flex-row tw-mx-2"
+  <div class="bottom-action-section"
        on:click={toggleInviteMenu}
   >
-    <button class="btn light tw-h-10 tw-m-0 tw-font-bold"
+    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
             class:border-top-light={$menuVisiblilityStore}
     >
-      Invite !
+      Einladen&nbsp;!
     </button>
   </div>
 </div>
