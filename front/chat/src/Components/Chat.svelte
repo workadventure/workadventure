@@ -266,7 +266,7 @@
     }
 
     const defaultRoom = () => {
-        return [...$mucRoomsStore].find(mucRoom => mucRoom.name === 'Default');
+        return [...$mucRoomsStore].find(mucRoom => mucRoom.name.toLocaleLowerCase() === 'default');
     }
 
     console.info("Chat fully loaded");
