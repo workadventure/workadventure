@@ -81,65 +81,65 @@ export class MucRoom {
     }
 
     private requestAllSubscribers() {
-        const messageMucListAllUsers = xml(
-            "iq",
-            {
-                type: "get",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml("subscriptions", {
-                xmlns: "urn:xmpp:mucsub:0",
-            })
-        );
+        // const messageMucListAllUsers = xml(
+        //     "iq",
+        //     {
+        //         type: "get",
+        //         to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        //         from: this.jid,
+        //         id: uuidv4(),
+        //     },
+        //     xml("subscriptions", {
+        //         xmlns: "urn:xmpp:mucsub:0",
+        //     })
+        // );
         //this.connection.emitXmlMessage(messageMucListAllUsers);
     }
 
     private sendPresence() {
-        const messagePresence = xml(
-            "presence",
-            {
-                to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
-                from: this.jid,
-                //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
-                //persistent: true
-            },
-            xml("x", {
-                xmlns: "http://jabber.org/protocol/muc",
-            }),
-            //add window location and have possibility to teleport on the user and remove all hash from the url
-            xml("room", {
-                id: window.location.href.split("#")[0].toString(),
-            }),
-            //add uuid of the user to identify and target them on teleport
-            xml("user", {
-                uuid: localUserStore.getLocalUser()?.uuid,
-            })
-        );
+        // const messagePresence = xml(
+        //     "presence",
+        //     {
+        //         to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
+        //         from: this.jid,
+        //         //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
+        //         //persistent: true
+        //     },
+        //     xml("x", {
+        //         xmlns: "http://jabber.org/protocol/muc",
+        //     }),
+        //     //add window location and have possibility to teleport on the user and remove all hash from the url
+        //     xml("room", {
+        //         id: window.location.href.split("#")[0].toString(),
+        //     }),
+        //     //add uuid of the user to identify and target them on teleport
+        //     xml("user", {
+        //         uuid: localUserStore.getLocalUser()?.uuid,
+        //     })
+        // );
         //this.connection.emitXmlMessage(messagePresence);
         console.warn("[XMPP]", "Presence sent");
     }
 
     private sendSubscribe() {
-        const messageMucSubscribe = xml(
-            "iq",
-            {
-                type: "set",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml(
-                "subscribe",
-                {
-                    xmlns: "urn:xmpp:mucsub:0",
-                    nick: this.getPlayerName(),
-                },
-                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
-            )
-        );
+        // const messageMucSubscribe = xml(
+        //     "iq",
+        //     {
+        //         type: "set",
+        //         to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        //         from: this.jid,
+        //         id: uuidv4(),
+        //     },
+        //     xml(
+        //         "subscribe",
+        //         {
+        //             xmlns: "urn:xmpp:mucsub:0",
+        //             nick: this.getPlayerName(),
+        //         },
+        //         xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+        //         xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+        //     )
+        // );
         //this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
@@ -247,17 +247,17 @@ export class MucRoom {
         }
     }
 
-    public getPresenceStore(): UsersStore {
-        return {
-            subscribe: this.presenceStore.subscribe,
-        };
-    }
-
-    public getTeleportStore(): TeleportStore {
-        return {
-            subscribe: this.teleportStore.subscribe,
-        };
-    }
+    // public getPresenceStore(): UsersStore {
+    //     return {
+    //         subscribe: this.presenceStore.subscribe,
+    //     };
+    // }
+    //
+    // public getTeleportStore(): TeleportStore {
+    //     return {
+    //         subscribe: this.teleportStore.subscribe,
+    //     };
+    // }
 
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });
