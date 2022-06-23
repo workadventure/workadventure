@@ -5,13 +5,12 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import {getColorByString} from "../Video/utils";
     import {currentPlayerWokaStore} from "../../Stores/CurrentPlayerWokaStore";
-    import {derived, writable} from "svelte/store";
+    import {derived, Unsubscriber, writable} from "svelte/store";
     import {gameManager} from "../../Phaser/Game/GameManager";
-    import {Subscription} from "rxjs";
 
     let chatIframe: HTMLIFrameElement;
 
-    let subscribeListeners: Array<Subscription> = [];
+    let subscribeListeners: Array<Unsubscriber> = [];
 
     const wokaDefinedStore = writable<boolean>(false);
     const iframeLoadedStore = writable<boolean>(false);
@@ -41,7 +40,7 @@
         }));
         subscribeListeners.push(canSendInitMessageStore.subscribe((value) => {
             if(value){
-                chatIframe.contentWindow.postMessage(
+                chatIframe?.contentWindow?.postMessage(
                     {
                         type: "userData",
                         data: {
@@ -57,7 +56,7 @@
                 );
 			}
 		}));
-        subscribeListeners.push(chatVisibilityStore.subscribe((value) => {
+        subscribeListeners.push(chatVisibilityStore.subscribe(() => {
             gameManager.getCurrentGameScene()?.onResize();
 		}));
     });

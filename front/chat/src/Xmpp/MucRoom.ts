@@ -23,6 +23,7 @@ export type User = {
     isInSameMap: boolean;
     color: string;
     woka: string;
+    unreads: Array<object>;
 };
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
@@ -275,7 +276,8 @@ export class MucRoom {
                     isInSameMap: (roomId ?? this.getCurrentRoomId(jid)) === user.playUri,
                     active: (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
                     color: color ?? this.getCurrentColor(jid),
-                    woka: woka ?? this.getCurrentWoka(jid)
+                    woka: woka ?? this.getCurrentWoka(jid),
+                    unreads: []
                 });
                 numberPresenceUserStore.set(list.size);
                 return list;

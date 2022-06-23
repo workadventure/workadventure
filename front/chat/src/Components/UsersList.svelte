@@ -15,6 +15,7 @@
     const maxUsersMinimized = 7;
 
     function openChat(user) {
+        console.log(user);
         return null;
         //dispatch('activeThread', user);
     }
@@ -42,8 +43,8 @@
 				{:else}
 					{#each [...$usersListStore]
 						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
-						.sort((b,a) => Number(a.active) - Number(b.active))
-						.filter(([jid, user]) => user.name.toLocaleLowerCase().includes(searchValue))
+						.sort(([, a],[, b]) => Number(a.active) - Number(b.active))
+						.filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue))
 							as [jid, user]}
 						<ChatUser {openChat} {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
 					{/each}

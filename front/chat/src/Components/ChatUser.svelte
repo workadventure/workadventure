@@ -2,10 +2,10 @@
     import { MoreHorizontalIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import {createEventDispatcher} from "svelte";
-    import {UserData} from "../Messages/JsonMessages/ChatData";
+    import {User} from "../Xmpp/MucRoom";
     const dispatch = createEventDispatcher();
 
-    export let user: UserData;
+    export let user: User;
     export let openChat: Function;
 
     let chatMenuActive = false;
