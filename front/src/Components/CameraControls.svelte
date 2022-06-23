@@ -91,105 +91,107 @@
 </script>
 
 <div
-  class="tw-flex tw-flew-row tw-pointer-events-auto tw-left-0 tw-right-0 tw-justify-center tw-m-auto tw-bottom-1 tw-absolute tw-z-[251] hover:-tw-translate-y-4 tw-transition-transform tw-duration-300">
-  <div class="btn-action-bar-base tw-flex tw-flex-row tw-mx-2">
-    <div class="tw-transition-all test-transition"
+  class="bottom-action-bar">
+  <div class="bottom-action-section">
+    <div class="tw-transition-all bottom-action-button"
          class:tw-opacity-0={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
          class:tw-invisible={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
          class:disabled={$followStateStore !== "off"}
          on:click={() => analyticsClient.follow()}
          on:click={followClick}>
       <button
-        class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-l-l tw-rounded-r-none hover:tw-bg-medium-purple/95 tw-m-0"
+
         class:border-top-light={$followStateStore === "active"}>
-        <img class="noselect tw-w-6 tw-h-6" src={followImg} style="padding: 2px" alt="Toggle follow" />
+        <img src={followImg} style="padding: 2px" alt="Toggle follow" />
       </button>
     </div>
 
 
-    <div class="tw-transition-all test-transition"
+    <div class="tw-transition-all bottom-action-button"
          on:click={switchLayoutMode}
          class:tw-opacity-0={$peerStore.size === 0}>
-      <button class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-none hover:tw-bg-medium-purple/95 tw-m-0">
+      <button>
         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-          <img class="noselect tw-w-6 tw-h-6" src={layoutPresentationImg} style="padding: 2px"
+          <img src={layoutPresentationImg} style="padding: 2px"
                alt="Switch to mosaic mode" />
         {:else}
-          <img class="noselect tw-w-6 tw-h-6" src={layoutChatImg} style="padding: 2px"
+          <img src={layoutChatImg} style="padding: 2px"
                alt="Switch to presentation mode" />
         {/if}
       </button>
     </div>
 
-    <div class="tw-transition-all test-transition"
+    <div class="tw-transition-all bottom-action-button"
          class:tw-opacity-0={$peerStore.size === 0 || $silentStore}
          class:disabled={$currentPlayerGroupLockStateStore}
          on:click={() => analyticsClient.lockDiscussion()}
          on:click={lockClick}>
-      <button class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-none hover:tw-bg-medium-purple/95 tw-m-0"
+      <button class=" "
               class:border-top-light={$currentPlayerGroupLockStateStore}>
         {#if $currentPlayerGroupLockStateStore}
-          <img class="noselect tw-w-6 tw-h-6" src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
+          <img src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
         {:else}
-          <img class="noselect tw-w-6 tw-h-6" src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
+          <img src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
         {/if}
       </button>
     </div>
 
-    <div class="tw-transition-all test-transition"
+    <div class="tw-transition-all bottom-action-button"
          on:click={() => analyticsClient.screenSharing()}
          on:click={screenSharingClick}
          class:tw-opacity-0={!$screenSharingAvailableStore || $silentStore}
          class:enabled={$requestedScreenSharingState}>
       <button
-        class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-r-l tw-rounded-l-none hover:tw-bg-medium-purple/95 tw-m-0"
+
         class:border-top-light={$requestedScreenSharingState}>
         {#if $requestedScreenSharingState && !$silentStore}
-          <img class="noselect tw-w-6 tw-h-6" src={screenshareOn} alt="Stop screen sharing" />
+          <img src={screenshareOn} alt="Stop screen sharing" />
         {:else}
-          <img class="noselect tw-w-6 tw-h-6" src={screenshareOff} alt="Start screen sharing" />
+          <img src={screenshareOff} alt="Start screen sharing" />
         {/if}
       </button>
     </div>
   </div>
 
-  <div class="btn-action-bar-base tw-flex tw-flex-row tw-mx-2 ">
-    <div on:click={() => analyticsClient.camera()}
+  <div class="bottom-action-section">
+    <div class="bottom-action-button"
+         on:click={() => analyticsClient.camera()}
          on:click={cameraClick}
          class:disabled={!$requestedCameraState || $silentStore}>
       <button
-        class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-l-l tw-rounded-r-none hover:tw-bg-medium-purple/95 tw-m-0"
+
         class:border-top-light={$requestedCameraState}>
         {#if $requestedCameraState && !$silentStore}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraImg} alt="Turn off webcam" />
+          <img src={cameraImg} alt="Turn off webcam" />
         {:else}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={cameraOffImg} alt="Turn on webcam" />
+          <img src={cameraOffImg} alt="Turn on webcam" />
         {/if}
       </button>
     </div>
 
-    <div
-      on:click={() => analyticsClient.microphone()}
-      on:click={microphoneClick}
-      class:disabled={!$requestedMicrophoneState || $silentStore}>
-      <button class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-none hover:tw-bg-medium-purple/95 tw-m-0"
-              class:border-top-light={$requestedMicrophoneState}>
+    <div class="bottom-action-button"
+         on:click={() => analyticsClient.microphone()}
+         on:click={microphoneClick}
+         class:disabled={!$requestedMicrophoneState || $silentStore}>
+      <button
+        class:border-top-light={$requestedMicrophoneState}>
         {#if $requestedMicrophoneState && !$silentStore}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneImg} alt="Turn off microphone" />
+          <img src={microphoneImg} alt="Turn off microphone" />
         {:else}
-          <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={microphoneOffImg} alt="Turn on microphone" />
+          <img src={microphoneOffImg} alt="Turn on microphone" />
         {/if}
       </button>
     </div>
 
     <div on:click={() => analyticsClient.openedChat()}
          on:click={toggleChat}
+         class="bottom-action-button"
     >
       <button
-        class="tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-p-2 tw-rounded-r-l tw-rounded-l-none hover:tw-bg-medium-purple/95 tw-m-0"
+
         class:border-top-light={$chatVisibilityStore}
       >
-        <img class="noselect tw-w-5 tw-h-5 tw-bottom-1" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+        <img src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
       </button>
     </div>
   </div>
@@ -207,9 +209,4 @@
 
 <style lang="scss">
   @import "../../style/breakpoints.scss";
-
-  .border-top-light {
-    border-top: 4px solid theme("colors.light-blue");
-    padding-top: 0.25rem;
-  }
 </style>
