@@ -7,10 +7,11 @@
     import {currentPlayerWokaStore} from "../../Stores/CurrentPlayerWokaStore";
     import {derived, writable} from "svelte/store";
     import {gameManager} from "../../Phaser/Game/GameManager";
+    import {Subscription} from "rxjs";
 
     let chatIframe: HTMLIFrameElement;
 
-    let subscribeListeners = [];
+    let subscribeListeners: Array<Subscription> = [];
 
     const wokaDefinedStore = writable<boolean>(false);
     const iframeLoadedStore = writable<boolean>(false);

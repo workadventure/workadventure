@@ -7,7 +7,7 @@
 
     export let user: UserData;
     export let openChat: Function;
-    
+
     let chatMenuActive = false;
     let openChatUserMenu = () => {
         chatMenuActive = true;
