@@ -109,6 +109,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import {AskPositionEvent} from "../../Api/Events/AskPositionEvent";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -1222,6 +1223,10 @@ ${escapedMessage}
                 soundManager.stopSound(this.sound, url.toString());
             })
         );
+
+        this.iframeSubscriptionList.push( iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
+            this.connection?.emitAskPosition(event.uuid, event.playUri);
+        }));
 
         this.iframeSubscriptionList.push(
             iframeListener.addActionsMenuKeyToRemotePlayerStream.subscribe((data) => {

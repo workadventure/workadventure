@@ -16,6 +16,8 @@
     let handleFormBlur: { blur(): void };
     let autoscroll: boolean;
 
+    let searchValue = '';
+
     let users = [
         {
             name: "Grégoire",
@@ -444,6 +446,7 @@
                                 <input
                                         class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-p-3 tw-pl-6 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                                         placeholder="Search for user, message, channel, etc."
+                                        bind:value={searchValue}
                                 />
                             </div>
                         </div>
@@ -451,54 +454,13 @@
                         <UsersList
                                 usersListStore={defaultRoom().getPresenceStore()}
                                 showUsers={showUsers}
+                                searchValue={searchValue.toLocaleLowerCase()}
                                 on:activeThread={handleActiveThread}
                                 on:showUsers={handleShowUsers}
                                 on:goTo={(event) => defaultRoom().goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
                         />
-                        <!--
-                        <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple tw-overflow-auto">
-                            <div class="tw-p-3 tw-flex tw-items-center">
-                                {#if usersListUnreads()}
-                            <span
-                                    class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-                            >
-                                {usersListUnreads()}
-                            </span>
-                                {/if}
-                                <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Users</p>
-                                <button
-                                        class="tw-text-lighter-purple"
-                                        on:click={() => {
-                                showUsers = !showUsers;
-                            }}
-                                >
-                                    <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
-                                </button>
-                            </div>
-                            {#if showUsers}
-                                <div class="tw-mt-3">
-                                    <UsersList usersListStore={defaultRoom().getPresenceStore()} on:activeThread={handleActiveThread}/>
-                                    {#each users as user}
-										<div
-											on:click={() => {
-												activeThread = user;
-											}}
-										>
-											<ChatUser {openChat} {user} />
-										</div>
-									{/each}
-                                </div>
-                                    <div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-                                        <button
-                                                class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-                                        >
-                                            See more…
-                                        </button>
-                                    </div>
-                            {/if}
-                        </div> -->
 
-                        <!-- forum list -->
+                        <!-- forum list
 
                         <div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
                             <div class="tw-p-3 tw-flex tw-items-center">
@@ -533,6 +495,7 @@
                                 </div>
                             {/if}
                         </div>
+                        -->
                     </div>
                 {/if}
             {/if}
@@ -548,7 +511,7 @@
         top: 0;
         left: 0;
         min-height: 100vh;
-        width: 30vw;
+        width: 100%;
         min-width: 350px;
         background: rgba(#1b1b29, 0.9);
         color: whitesmoke;

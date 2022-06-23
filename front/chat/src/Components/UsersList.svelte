@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {UsersStore} from "../Xmpp/MucRoom";
+    import {UsersStore} from "../Xmpp/MucRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from 'svelte';
     import {ChevronUpIcon} from "svelte-feather-icons";
@@ -9,9 +9,14 @@
 
     export let usersListStore: UsersStore;
     export let showUsers: boolean;
+    export let searchValue: string;
+
+    let minimizeUser = true;
+    const maxUsersMinimized = 7;
 
     function openChat(user) {
-        dispatch('activeThread', user);
+        return null;
+        //dispatch('activeThread', user);
     }
 </script>
 <div>
@@ -35,20 +40,24 @@
 					<p>This room is empty, copy this link to invite colleague or friend!</p>
 					<button type="button" class="nes-btn is-primary" on:click={null}>test</button>
 				{:else}
-					{#each [...$usersListStore].sort((b,a) => Number(a.active) - Number(b.active)) as [jid, user]}
+					{#each [...$usersListStore]
+						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
+						.sort((b,a) => Number(a.active) - Number(b.active))
+						.filter(([jid, user]) => user.name.toLocaleLowerCase().includes(searchValue))
+							as [jid, user]}
 						<ChatUser {openChat} {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
 					{/each}
 				{/if}
+				{#if [...$usersListStore].length > maxUsersMinimized}
+					<div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end" on:click={() => minimizeUser = !minimizeUser}>
+						<button
+								class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
+						>
+							See {minimizeUser?'more':'less'}…
+						</button>
+					</div>
+				{/if}
 			</div>
-			{#if [...$usersListStore].length > 10}
-				<div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end">
-					<button
-							class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-					>
-						See more…
-					</button>
-				</div>
-			{/if}
 		{/if}
 	</div>
 </div>

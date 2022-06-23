@@ -60,21 +60,21 @@
         </span>
     {/if}
 
-    <div class="wa-dropdown">
-        <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
-            <MoreHorizontalIcon />
-        </button>
-        <!-- on:mouseleave={closeChatUserMenu} -->
-        <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
-            {#if user.active}
+    {#if user.active}
+        <div class="wa-dropdown">
+            <button class="tw-text-light-purple focus:outline-none tw-m-0" on:click|stopPropagation={openChatUserMenu}>
+                <MoreHorizontalIcon />
+            </button>
+            <!-- on:mouseleave={closeChatUserMenu} -->
+            <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
                 {#if user.isInSameMap}
                     <span class="wa-dropdown-item" on:click|stopPropagation={() => goTo("user", user.roomId, user.uuid)}>{$LL.userList.walkTo()}</span>
                 {:else}
                     <span class="wa-dropdown-item" on:click|stopPropagation={() => goTo("room", user.roomId, user.uuid)}>{$LL.userList.teleport()}</span>
                 {/if}
-            {/if}
-            <span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
-            <div class="wa-dropdown-item">Delete chat</div>
+                <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
+                <div class="wa-dropdown-item">Delete chat</div>-->
+            </div>
         </div>
-    </div>
+    {/if}
 </div>

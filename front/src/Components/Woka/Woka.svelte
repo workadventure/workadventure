@@ -2,6 +2,7 @@
     import { onDestroy } from "svelte";
 
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import {currentPlayerWokaStore} from "../../Stores/CurrentPlayerWokaStore";
 
     export let userId: number;
     export let placeholderSrc: string;
