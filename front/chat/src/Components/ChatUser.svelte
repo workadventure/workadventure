@@ -2,11 +2,12 @@
     import { MoreHorizontalIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import {createEventDispatcher} from "svelte";
-    import {userStore} from "../Stores/LocalUserStore";
+    import {UserData} from "../Messages/JsonMessages/ChatData";
     const dispatch = createEventDispatcher();
 
-    export let user;
-    export let openChat;
+    export let user: UserData;
+    export let openChat: Function;
+    
     let chatMenuActive = false;
     let openChatUserMenu = () => {
         chatMenuActive = true;
