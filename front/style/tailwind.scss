@@ -1,8 +1,7 @@
-@import "wa-theme/action-menu-bar.scss";
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@import "wa-theme/action-menu-bar.scss";
 
 @layer base {
     * {
