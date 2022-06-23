@@ -40,9 +40,9 @@ import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
-import {isSetSharedPlayerVariableEvent} from "./SetSharedPlayerVariableEvent";
-import {isEnablePlayersTrackingEvent} from "./EnablePlayersTrackingEvent";
-import {isAddPlayerEvent} from "./AddPlayerEvent";
+import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
+import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
+import { isAddPlayerEvent } from "./AddPlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -175,10 +175,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("modifyArea"),
         data: isAreaEvent,
-    }),
-    z.object({
-        type: z.literal("enablePlayersTracking"),
-        data: isEnablePlayersTrackingEvent,
     }),
 ]);
 
@@ -365,6 +361,10 @@ export const iframeQueryMapTypeGuards = {
     getUIWebsites: {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
+    },
+    enablePlayersTracking: {
+        query: isEnablePlayersTrackingEvent,
+        answer: z.array(isAddPlayerEvent),
     },
 };
 

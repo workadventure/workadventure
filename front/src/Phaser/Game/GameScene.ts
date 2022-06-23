@@ -111,6 +111,8 @@ import {
 } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import { IframeEventDispatcher } from "./IframeEventDispatcher";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -236,6 +238,8 @@ export class GameScene extends DirtyScene {
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
     public readonly superLoad: SuperLoaderPlugin;
+    private playersEventDispatcher = new IframeEventDispatcher();
+    private playersMovementEventDispatcher = new IframeEventDispatcher();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1420,15 +1424,35 @@ ${escapedMessage}
                 this.markDirty();
             })
         );
-        this.iframeSubscriptionList.push(
-            iframeListener.enablePlayersTrackingStream.subscribe((event) => {
-                if (event.trackPlayers) {
-                    for (const player of this.MapPlayersByKey.values()) {
-                        iframeListener.dispatchAddPlayerEvent(player.toIframeAddPlayerEvent());
-                    }
+        iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
+            // TODO: we need to keep track of the iframes we send tracking to (IframeListener responsibility!)
+            // But we also need to respond once with the complete players list, only to the iframe currently listening!
+            // And we need to stop doing that if there are no iframes listening
+            // Should we put that in another class? => TODO: class PlayersIframeDispatcher => class in charge of dispatching players data to the iframe that request it.
+
+            if (source === null) {
+                throw new Error('Missing source in "enablePlayersTracking" query. This should never happen.');
+            }
+
+            if (enablePlayersTrackingEvent.trackPlayers) {
+                this.playersEventDispatcher.addIframe(source);
+            } else {
+                this.playersEventDispatcher.removeIframe(source);
+            }
+            if (enablePlayersTrackingEvent.trackMovement) {
+                this.playersMovementEventDispatcher.addIframe(source);
+            } else {
+                this.playersMovementEventDispatcher.removeIframe(source);
+            }
+
+            const addPlayerEvents: AddPlayerEvent[] = [];
+            if (enablePlayersTrackingEvent.trackPlayers) {
+                for (const player of this.MapPlayersByKey.values()) {
+                    addPlayerEvents.push(player.toIframeAddPlayerEvent());
                 }
-            })
-        );
+            }
+            return addPlayerEvents;
+        });
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
             return this.connectionAnswerPromiseDeferred.promise.then(() => {
                 const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
@@ -1718,9 +1742,12 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("openUIWebsite");
         iframeListener.unregisterAnswerer("getUIWebsites");
         iframeListener.unregisterAnswerer("closeUIWebsite");
+        iframeListener.unregisterAnswerer("enablePlayersTracking");
         this.sharedVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
         this.areaManager?.close();
+        this.playersEventDispatcher.cleanup();
+        this.playersMovementEventDispatcher.cleanup();
 
         //When we leave game, the camera is stop to be reopen after.
         // I think that we could keep camera status and the scene can manage camera setup
@@ -2049,13 +2076,16 @@ ${escapedMessage}
             type: "AddPlayerEvent",
             event: addPlayerData,
         });
-        iframeListener.dispatchAddPlayerEvent({
-            userId: addPlayerData.userId,
-            name: addPlayerData.name,
-            userUuid: addPlayerData.userUuid,
-            outlineColor: addPlayerData.outlineColor,
-            availabilityStatus: availabilityStatusToJSON(addPlayerData.availabilityStatus),
-            position: addPlayerData.position,
+        this.playersEventDispatcher.postMessage({
+            type: "addRemotePlayer",
+            data: {
+                userId: addPlayerData.userId,
+                name: addPlayerData.name,
+                userUuid: addPlayerData.userUuid,
+                outlineColor: addPlayerData.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(addPlayerData.availabilityStatus),
+                position: addPlayerData.position,
+            },
         });
     }
 
@@ -2121,7 +2151,10 @@ ${escapedMessage}
             type: "RemovePlayerEvent",
             userId,
         });
-        iframeListener.dispatchRemovePlayerEvent(userId);
+        this.playersEventDispatcher.postMessage({
+            type: "removeRemotePlayer",
+            data: userId,
+        });
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {

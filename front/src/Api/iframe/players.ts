@@ -1,10 +1,9 @@
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
-import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
-import {Observable, Subject} from "rxjs";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
+import { Observable, Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
-import { createState } from "./state";
-import {SetSharedPlayerVariableEvent} from "../Events/SetSharedPlayerVariableEvent";
-import {RemotePlayer, remotePlayers} from "./Players/RemotePlayer";
+import { SetSharedPlayerVariableEvent } from "../Events/SetSharedPlayerVariableEvent";
+import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
+import { AddPlayerEvent } from "../Events/AddPlayerEvent";
 
 const sharedPlayersVariableStream = new Map<string, Subject<SetSharedPlayerVariableEvent>>();
 const _newRemotePlayersStream = new Subject<RemotePlayer>();
@@ -13,7 +12,6 @@ const _removeRemotePlayersStream = new Subject<RemotePlayer>();
 const removeRemotePlayersStream = _removeRemotePlayersStream.asObservable();
 
 export class WorkadventurePlayersCommands extends IframeApiContribution<WorkadventurePlayersCommands> {
-
     private trackingPlayers = false;
     private trackingMovement = false;
 
@@ -32,9 +30,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         apiCallback({
             type: "addRemotePlayer",
             callback: (payloadData) => {
-                const remotePlayer = new RemotePlayer(payloadData);
-                remotePlayers.set(payloadData.userId, remotePlayer);
-                _newRemotePlayersStream.next(remotePlayer);
+                this.registerRemotePlayer(payloadData);
             },
         }),
         apiCallback({
@@ -51,19 +47,26 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         }),
     ];
 
-    public enableTracking(options?: {
-        trackPlayers?: boolean,
-        trackMovement?: boolean,
-                          }): void {
+    private registerRemotePlayer(event: AddPlayerEvent): void {
+        const remotePlayer = new RemotePlayer(event);
+        remotePlayers.set(event.userId, remotePlayer);
+        _newRemotePlayersStream.next(remotePlayer);
+    }
+
+    public async enableTracking(options?: { trackPlayers?: boolean; trackMovement?: boolean }): Promise<void> {
         this.trackingPlayers = options?.trackPlayers ?? true;
         this.trackingMovement = options?.trackMovement ?? true;
-        sendToWorkadventure({
+        const remotePlayersData = await queryWorkadventure({
             type: "enablePlayersTracking",
             data: {
                 trackPlayers: this.trackingPlayers,
                 trackMovement: this.trackingMovement,
-            }
+            },
         });
+
+        for (const remotePlayerEvent of remotePlayersData) {
+            this.registerRemotePlayer(remotePlayerEvent);
+        }
     }
 
     public onVariableChange(variableName: string, callback: (userId: number, value: unknown) => void) {
@@ -75,7 +78,6 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         stream.subscribe((payload) => {
             callback(payload.playerId, payload.value);
         });
-
     }
 
     /**
@@ -92,7 +94,9 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      */
     public onPlayerEnters(): Observable<RemotePlayer> {
         if (!this.trackingPlayers) {
-            throw new Error("Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.enableTracking() first.");
+            throw new Error(
+                "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.enableTracking() first."
+            );
         }
         return newRemotePlayersStream;
     }
@@ -111,7 +115,9 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      */
     public onPlayerLeaves(): Observable<RemotePlayer> {
         if (!this.trackingPlayers) {
-            throw new Error("Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.enableTracking() first.");
+            throw new Error(
+                "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.enableTracking() first."
+            );
         }
         return removeRemotePlayersStream;
     }
@@ -121,7 +127,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      *
      * Note: if the same user is connected twice, it will be considered as 2 different players with 2 different IDs.
      */
-    public get(id: number): RemotePlayer|undefined {
+    public get(id: number): RemotePlayer | undefined {
         return remotePlayers.get(id);
     }
 

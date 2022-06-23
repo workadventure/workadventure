@@ -38,8 +38,6 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
-import { EnablePlayersTrackingEvent } from "./Events/EnablePlayersTrackingEvent";
-import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -132,13 +130,8 @@ class IframeListener {
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
-    private readonly _enablePlayersTrackingStream: Subject<EnablePlayersTrackingEvent> = new Subject();
-    public readonly enablePlayersTrackingStream = this._enablePlayersTrackingStream.asObservable();
-
     private readonly iframes = new Set<HTMLIFrameElement>();
-    private readonly iframesTrackingPlayers = new Set<HTMLIFrameElement>();
-    private readonly iframesTrackingPlayersMovement = new Set<HTMLIFrameElement>();
-    private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
+    private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
     private sendPlayerMove: boolean = false;
 
@@ -313,7 +306,10 @@ class IframeListener {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
                         const dataName = iframeEvent.data.name;
-                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
+                        if (!message.source) {
+                            throw new Error("Message is missing a source");
+                        }
+                        this.iframeCloseCallbacks.get(message.source)?.add(() => {
                             handleMenuUnregisterEvent(dataName);
                         });
 
@@ -327,8 +323,6 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
-                    } else if (iframeEvent.type == "enablePlayersTracking") {
-                        this.enablePlayersTracking(iframeEvent.data, iframe);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -344,14 +338,29 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
-        this.iframeCloseCallbacks.set(iframe, []);
+        if (iframe.contentWindow) {
+            this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+        }
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
-        this.iframeCloseCallbacks.get(iframe)?.forEach((callback) => {
-            callback();
-        });
+        if (iframe.contentWindow) {
+            this.iframeCloseCallbacks.get(iframe.contentWindow)?.forEach((callback) => {
+                callback();
+            });
+            this.iframeCloseCallbacks.delete(iframe.contentWindow);
+        }
         this.iframes.delete(iframe);
+    }
+
+    /**
+     * Registers an event listener to know when iframes are closed and returns an "unsubscriber" function.
+     */
+    onIframeCloseEvent(source: MessageEventSource, callback: () => void): () => void {
+        this.iframeCloseCallbacks.get(source)?.add(callback);
+        return () => {
+            this.iframeCloseCallbacks.get(source)?.delete(callback);
+        };
     }
 
     registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
@@ -582,15 +591,6 @@ class IframeListener {
     }
 
     /**
-     * Sends the message... to all iframes listening for users.
-     */
-    public postMessageToPlayerListeners(message: IframeResponseEvent) {
-        for (const iframe of this.iframesTrackingPlayers) {
-            iframe.contentWindow?.postMessage(message, "*");
-        }
-    }
-
-    /**
      * Registers a callback that can be used to respond to some query (as defined in the IframeQueryMap type).
      *
      * Important! There can be only one "answerer" so registering a new one will unregister the old one.
@@ -622,34 +622,6 @@ class IframeListener {
                 );
             }
         }
-    }
-
-    private enablePlayersTracking(options: EnablePlayersTrackingEvent, iframe: HTMLIFrameElement) {
-        if (options.trackMovement) {
-            this.iframesTrackingPlayers.add(iframe);
-            this.iframesTrackingPlayersMovement.add(iframe);
-        } else if (options.trackPlayers) {
-            this.iframesTrackingPlayers.add(iframe);
-            this.iframesTrackingPlayersMovement.delete(iframe);
-        } else {
-            this.iframesTrackingPlayers.delete(iframe);
-            this.iframesTrackingPlayersMovement.delete(iframe);
-        }
-        this._enablePlayersTrackingStream.next(options);
-    }
-
-    public dispatchAddPlayerEvent(event: AddPlayerEvent) {
-        this.postMessageToPlayerListeners({
-            type: "addRemotePlayer",
-            data: event,
-        });
-    }
-
-    public dispatchRemovePlayerEvent(userId: number) {
-        this.postMessageToPlayerListeners({
-            type: "removeRemotePlayer",
-            data: userId,
-        });
     }
 }
 
