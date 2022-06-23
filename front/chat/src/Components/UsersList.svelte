@@ -45,7 +45,7 @@
 						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
 						.sort(([, a],[, b]) => Number(a.active) - Number(b.active))
 						.filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue))
-							as [jid, user]}
+							as [, user]}
 						<ChatUser {openChat} {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
 					{/each}
 				{/if}

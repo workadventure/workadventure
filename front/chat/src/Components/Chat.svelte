@@ -10,6 +10,7 @@
     import Loader from "./Loader.svelte";
     import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
+    import {MucRoom} from "../Xmpp/MucRoom";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -18,6 +19,7 @@
 
     let searchValue = '';
 
+    /*
     let users = [
         {
             name: "Grégoire",
@@ -50,6 +52,7 @@
             active: false,
         },
     ];
+     */
 
     let showUsers = true;
     /*
@@ -64,6 +67,7 @@
 
     let activeThread: unknown = null;
 
+    /*
     let forums = [
         {
             name: "Inside Workadventu.re",
@@ -81,6 +85,7 @@
             unreads: 5,
         },
     ];
+     */
 
     let threadList = [
         // newest first
@@ -246,7 +251,7 @@
 
     function closeChat() {
         window.parent.postMessage({ type: "closeChat" }, "*");
-        document.activeElement?.blur();
+        //document.activeElement?.blur();
     }
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
@@ -263,8 +268,12 @@
         return nextMsg.type !== "event" && nextMsg.user_id === userID;
     }
 
-    const defaultRoom = () => {
-        return [...$mucRoomsStore].find(mucRoom => mucRoom.name.toLocaleLowerCase() === 'default');
+    const defaultRoom = (): MucRoom => {
+        const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.name.toLocaleLowerCase() === 'default');
+        if(!defaultMucRoom){
+            throw new Error('No default MucRoom');
+        }
+        return defaultMucRoom;
     }
 
     console.info("Chat fully loaded");
