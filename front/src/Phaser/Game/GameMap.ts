@@ -374,12 +374,33 @@ export class GameMap {
         throw new Error("No possible position found");
     }
 
+    public getObjectProperty(
+        object: { properties?: ITiledMapProperty[] },
+        propertyName: string
+    ): string | boolean | number | undefined {
+        const properties: ITiledMapProperty[] | undefined = object.properties;
+        if (!properties) {
+            return undefined;
+        }
+        const obj = properties.find(
+            (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase()
+        );
+        if (obj === undefined) {
+            return undefined;
+        }
+        return obj.value;
+    }
+
     public getObjectWithName(name: string): ITiledMapObject | undefined {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
     public getArea(name: string): ITiledMapObject | undefined {
         return this.areas.get(name);
+    }
+
+    public getAreas(): ITiledMapObject[] {
+        return Array.from(this.areas.values());
     }
 
     public setArea(name: string, area: ITiledMapObject): void {
