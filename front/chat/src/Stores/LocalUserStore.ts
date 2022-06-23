@@ -5,6 +5,8 @@ const uuidKey = "uuid";
 const nameKey = "name";
 const emailKey = "email";
 const playUriKey = "playUri";
+const wokaKey = "woka";
+const colorKey = "color";
 
 function createUserStore() {
     const { subscribe, update, set } = writable<UserData>();
@@ -31,6 +33,9 @@ class LocalUserStore {
             name: localStorage.getItem(nameKey) || "",
             email: localStorage.getItem(emailKey) || undefined,
             playUri: localStorage.getItem(playUriKey) || "",
+            woka: localStorage.getItem(wokaKey) || "",
+            color: localStorage.getItem(colorKey) || "",
+
         };
     }
 
