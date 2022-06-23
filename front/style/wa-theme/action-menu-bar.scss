@@ -1,0 +1,34 @@
+.bottom-action-bar {
+  @apply tw-flex tw-flex-row tw-pointer-events-auto tw-left-0 tw-right-0 tw-justify-center tw-m-auto tw-bottom-1 tw-absolute tw-z-[251] hover:-tw-translate-y-4 tw-transition-transform tw-duration-300;
+
+  .bottom-action-section {
+    @apply tw-flex tw-flex-row tw-mx-2;
+
+    .bottom-action-button {
+      button {
+        @apply tw-rounded-none tw-bg-dark-purple/95 tw-w-10 tw-h-10 tw-px-2 hover:tw-bg-medium-purple/95 tw-m-0;
+
+        img{
+          @apply tw-select-none tw-w-6 tw-h-6;
+        }
+      }
+    }
+
+    .bottom-action-button:first-child {
+      button {
+        @apply tw-rounded-l-lg tw-rounded-r-none;
+      }
+    }
+
+    .bottom-action-button:last-child {
+      button {
+        @apply tw-rounded-r-lg tw-rounded-l-none;
+      }
+    }
+
+    .border-top-light{
+      border-top: 4px solid theme("colors.light-blue");
+      @apply tw-pt-0
+    }
+  }
+}
