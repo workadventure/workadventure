@@ -22,7 +22,7 @@ import { AreaManager } from "./AreaManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
@@ -231,6 +231,7 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
+    private jitsiClosable: boolean = true;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -804,25 +805,6 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
-                });
-
-                /**
-                 * Triggered when we receive the JWT token to connect to Jitsi
-                 */
-                this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
-                    if (!JITSI_URL) {
-                        throw new Error("Missing JITSI_URL environment variable.");
-                    }
-
-                    let domain = JITSI_URL;
-
-                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                        domain = `${location.protocol}//${domain}`;
-                    }
-
-                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
-                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                    this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });
 
                 /**
@@ -2372,5 +2354,9 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public setJitsiClosable(value: boolean): void {
+        this.jitsiClosable = value;
     }
 }

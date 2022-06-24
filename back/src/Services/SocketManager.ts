@@ -1,46 +1,49 @@
 import { GameRoom } from "../Model/GameRoom";
 import {
+    AnswerMessage,
+    BanUserMessage,
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    BBBMeetingClientURLMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
+    ErrorMessage,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
+    FollowRequestMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
+    GroupUsersUpdateMessage,
     ItemEventMessage,
     ItemStateMessage,
+    JitsiJwtAnswer,
+    JitsiJwtQuery,
+    JoinBBBMeetingMessage,
+    JoinRoomMessage,
+    LockGroupPromptMessage,
+    PlayerDetailsUpdatedMessage,
     PointMessage,
+    QueryMessage,
+    RefreshRoomMessage,
+    RoomDescription,
     RoomJoinedMessage,
+    RoomsList,
+    SendUserMessage,
     ServerToClientMessage,
+    SetPlayerDetailsMessage,
     SubMessage,
+    SubToPusherMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
     UserMovedMessage,
     UserMovesMessage,
+    VariableMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    JoinBBBMeetingMessage,
-    BBBMeetingClientURLMessage,
-    SendUserMessage,
-    JoinRoomMessage,
-    Zone as ProtoZone,
-    BatchToPusherMessage,
-    SubToPusherMessage,
-    UserJoinedZoneMessage,
-    GroupUpdateZoneMessage,
-    GroupLeftZoneMessage,
     WorldFullWarningMessage,
-    UserLeftZoneMessage,
-    EmoteEventMessage,
-    BanUserMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
-    VariableMessage,
-    BatchToPusherRoomMessage,
-    SetPlayerDetailsMessage,
-    PlayerDetailsUpdatedMessage,
-    GroupUsersUpdateMessage,
-    LockGroupPromptMessage,
-    RoomsList,
-    RoomDescription,
+    Zone as ProtoZone,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -59,6 +62,7 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import { emitError } from "./MessageHelpers";
+import QueryCase = QueryMessage.QueryCase;
 
 const debug = Debug("sockermanager");
 
@@ -569,10 +573,47 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
+    public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
+        const queryCase = queryMessage.getQueryCase();
+        const answerMessage = new AnswerMessage();
+        answerMessage.setId(queryMessage.getId());
+
+        try {
+            switch (queryCase) {
+                case QueryCase.QUERY_NOT_SET:
+                    throw new Error("Query case not set");
+                case QueryMessage.QueryCase.JITSIJWTQUERY:
+                    await this.handleQueryJitsiJwtMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJitsijwtquery() as JitsiJwtQuery,
+                        answerMessage
+                    );
+                    break;
+                default: {
+                    const _exhaustiveCheck: never = queryCase;
+                }
+            }
+        } catch (e) {
+            console.error("An error happened while answering a query:", e);
+            const errorMessage = new ErrorMessage();
+            errorMessage.setMessage(
+                e !== null && typeof e === "object" ? e.toString() : typeof e === "string" ? e : "Unknown error"
+            );
+            answerMessage.setError(errorMessage);
+        }
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setAnswermessage(answerMessage);
+
+        user.socket.write(serverToClientMessage);
+    }
+
     public async handleQueryJitsiJwtMessage(
         gameRoom: GameRoom,
         user: User,
-        queryJitsiJwtMessage: QueryJitsiJwtMessage
+        queryJitsiJwtMessage: JitsiJwtQuery,
+        answerMessage: AnswerMessage
     ) {
         const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
         const jitsiSettings = gameRoom.getJitsiSettings();
@@ -611,14 +652,9 @@ export class SocketManager {
             }
         );
 
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(jitsiRoom);
-        sendJitsiJwtMessage.setJwt(jwt);
-
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-        user.socket.write(serverToClientMessage);
+        const jitsiJwtAnswer = new JitsiJwtAnswer();
+        jitsiJwtAnswer.setJwt(jwt);
+        answerMessage.setJitsijwtanswer(jitsiJwtAnswer);
     }
 
     public async handleJoinBBBMeetingMessage(

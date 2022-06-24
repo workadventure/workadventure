@@ -10,7 +10,6 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage,
     JoinBBBMeetingMessage,
     SendUserMessage,
     ServerToClientMessage,
@@ -22,6 +21,7 @@ import {
     VariableMessage,
     LockGroupPromptMessage,
     AvailabilityStatus,
+    QueryMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -577,11 +577,8 @@ export class IoSocketController {
                     socketManager.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
                 } else if (message.hasReportplayermessage()) {
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
-                } else if (message.hasQueryjitsijwtmessage()) {
-                    socketManager.handleQueryJitsiJwtMessage(
-                        client,
-                        message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
-                    );
+                } else if (message.hasQuerymessage()) {
+                    socketManager.handleQueryMessage(client, message.getQuerymessage() as QueryMessage);
                 } else if (message.hasJoinbbbmeetingmessage()) {
                     socketManager.handleJoinBBBMeetingMessage(
                         client,

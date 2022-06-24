@@ -81,7 +81,7 @@ export class GameMapPropertiesListener {
                 });
                 inJitsiStore.set(false);
             } else {
-                const openJitsiRoomFunction = () => {
+                const openJitsiRoomFunction = async () => {
                     let addPrefix = true;
                     if (allProps.get(GameMapProperties.JITSI_NO_PREFIX)) {
                         addPrefix = false;
@@ -89,25 +89,32 @@ export class GameMapPropertiesListener {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
+                    const closable =
+                        (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
+
+                    console.log("closable: " + closable);
+
+                    this.scene.setJitsiClosable(closable);
+
+                    let jwt: string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
-                    } else {
-                        let domain = jitsiUrl || JITSI_URL;
-                        if (domain === undefined) {
-                            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
-                        }
-
-                        if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                            domain = `${location.protocol}//${domain}`;
-                        }
-
-                        const closable =
-                            (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
-                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
-
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                        this.scene.initialiseJitsi(coWebsite, roomName, undefined);
+                        jwt = await this.scene.connection?.queryJitsiJwtToken(roomName);
                     }
+
+                    let domain = jitsiUrl || JITSI_URL;
+                    if (domain === undefined) {
+                        throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                    }
+
+                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                        domain = `${location.protocol}//${domain}`;
+                    }
+
+                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+
+                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                    this.scene.initialiseJitsi(coWebsite, roomName, jwt);
+
                     layoutManagerActionStore.removeAction("jitsi");
                 };
 
@@ -123,14 +130,12 @@ export class GameMapPropertiesListener {
                         type: "message",
                         message: message,
                         callback: () => {
-                            openJitsiRoomFunction();
-                            inJitsiStore.set(true);
+                            openJitsiRoomFunction().catch((e) => console.error(e));
                         },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
-                    openJitsiRoomFunction();
-                    inJitsiStore.set(true);
+                    openJitsiRoomFunction().catch((e) => console.error(e));
                 }
             }
         });
