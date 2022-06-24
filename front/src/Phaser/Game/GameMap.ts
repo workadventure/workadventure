@@ -64,7 +64,7 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    private readonly areas: ITiledMapObject[] = [];
     private readonly areasPositionOffsetY: number = 16;
     private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
     private unnamedAreasCounter = 0;
@@ -89,10 +89,7 @@ export class GameMap {
                     name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
                     this.unnamedAreasCounter++;
                 }
-                if (this.areas.get(name)) {
-                    console.warn(`Area name "${name}" is already being used! Please use unique names`);
-                }
-                this.areas.set(name, area);
+                this.areas.push(area);
             });
 
         let depth = -2;
@@ -396,16 +393,16 @@ export class GameMap {
     }
 
     public getArea(name: string): ITiledMapObject | undefined {
-        return this.areas.get(name);
+        return this.areas.find((area) => (area.name = name));
     }
 
     public getAreas(): ITiledMapObject[] {
         return Array.from(this.areas.values());
     }
 
-    public setArea(name: string, area: ITiledMapObject): void {
-        this.areas.set(name, area);
-        if (this.isPlayerInsideArea(name)) {
+    public addArea(area: ITiledMapObject): void {
+        this.areas.push(area);
+        if (this.isPlayerInsideArea(area.name)) {
             this.triggerSpecificAreaOnEnter(area);
         }
     }
@@ -437,7 +434,10 @@ export class GameMap {
         if (area) {
             this.triggerSpecificAreaOnLeave(area);
         }
-        this.areas.delete(name);
+        const index = this.areas.findIndex((area) => area.name === name);
+        if (index !== -1) {
+            this.areas.splice(index, 1);
+        }
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
