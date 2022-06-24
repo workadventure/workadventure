@@ -73,7 +73,12 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
+import {
+    jitsiClosableStore,
+    jitsiParticipantsCountStore,
+    userIsAdminStore,
+    userIsJitsiDominantSpeakerStore,
+} from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -820,7 +825,15 @@ export class GameScene extends DirtyScene {
                         domain = `${location.protocol}//${domain}`;
                     }
 
-                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
+                    console.log("D1");
+
+                    const coWebsite = new JitsiCoWebsite(
+                        new URL(domain),
+                        false,
+                        undefined,
+                        undefined,
+                        get(jitsiClosableStore) ?? true
+                    );
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
                     this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });

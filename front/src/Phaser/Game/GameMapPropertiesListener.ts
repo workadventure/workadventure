@@ -19,6 +19,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
+import { jitsiClosableStore } from "../../Stores/GameStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -89,6 +90,10 @@ export class GameMapPropertiesListener {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
+                    const closable =
+                        (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
+                    jitsiClosableStore.set(closable);
+
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
                     } else {
@@ -101,8 +106,6 @@ export class GameMapPropertiesListener {
                             domain = `${location.protocol}//${domain}`;
                         }
 
-                        const closable =
-                            (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
                         const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
                         coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);

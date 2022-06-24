@@ -10,4 +10,6 @@ export const userIsJitsiDominantSpeakerStore = writable(false);
 
 export const jitsiParticipantsCountStore = writable(0);
 
+export const jitsiClosableStore = writable(true);
+
 export const limitMapStore = writable(false);
