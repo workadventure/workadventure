@@ -149,9 +149,18 @@ export class GameMapPropertiesListener {
             } else {
                 inBbbStore.set(true);
                 bbbFactory.setStopped(false);
-                void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
-                    this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
-                });
+                bbbFactory
+                    .parametrizeMeetingId(newValue as string)
+                    .then((hashedMeetingId) => {
+                        if (this.scene.connection === undefined) {
+                            throw new Error("No more connection to open BBB");
+                        }
+                        return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
+                    })
+                    .then((bbbAnswer) => {
+                        bbbFactory.start(bbbAnswer.clientURL);
+                    })
+                    .catch((e) => console.error(e));
             }
         });
 

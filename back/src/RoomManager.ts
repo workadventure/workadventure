@@ -14,7 +14,6 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PusherToBackMessage,
     RefreshRoomPromptMessage,
@@ -111,12 +110,6 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 message.getQuerymessage() as QueryMessage
-                            );
-                        } else if (message.hasJoinbbbmeetingmessage()) {
-                            await socketManager.handleJoinBBBMeetingMessage(
-                                room,
-                                user,
-                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
