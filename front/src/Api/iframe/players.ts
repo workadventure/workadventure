@@ -2,14 +2,16 @@ import { IframeApiContribution, queryWorkadventure } from "./IframeApiContributi
 import { Observable, Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { SetSharedPlayerVariableEvent } from "../Events/SetSharedPlayerVariableEvent";
-import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
-import { AddPlayerEvent } from "../Events/AddPlayerEvent";
+import {RemotePlayer, RemotePlayerInterface, RemotePlayerMoved, remotePlayers} from "./Players/RemotePlayer";
+import {AddPlayerEvent, RemotePlayerChangedEvent} from "../Events/AddPlayerEvent";
 
 const sharedPlayersVariableStream = new Map<string, Subject<SetSharedPlayerVariableEvent>>();
 const _newRemotePlayersStream = new Subject<RemotePlayer>();
 const newRemotePlayersStream = _newRemotePlayersStream.asObservable();
 const _removeRemotePlayersStream = new Subject<RemotePlayer>();
 const removeRemotePlayersStream = _removeRemotePlayersStream.asObservable();
+const _playersMovedStream = new Subject<RemotePlayerMoved>();
+const playersMovedStream = _playersMovedStream.asObservable();
 
 export class WorkadventurePlayersCommands extends IframeApiContribution<WorkadventurePlayersCommands> {
     private trackingPlayers = false;
@@ -42,7 +44,30 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
                 } else {
                     remotePlayers.delete(userId);
                     _removeRemotePlayersStream.next(remotePlayer);
+                    remotePlayer.destroy();
                 }
+            },
+        }),
+        apiCallback({
+            type: "remotePlayerChanged",
+            callback: (event) => {
+                const remotePlayer = remotePlayers.get(event.userId);
+                if (remotePlayer === undefined) {
+                    console.warn("Could not find remote player with ID : ", event.userId);
+                    return;
+                }
+
+                if (event.position) {
+                    const oldPosition = remotePlayer.position;
+                    remotePlayer.position = event.position;
+
+                    _playersMovedStream.next({
+                        player: remotePlayer,
+                        newPosition: event.position,
+                        oldPosition
+                    });
+                }
+                // TODO: listen to other status changes (like outlineColor, availability, etc...)
             },
         }),
     ];
@@ -65,6 +90,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         });
 
         for (const remotePlayerEvent of remotePlayersData) {
+            console.log('PLAYER WAS ALREADY ON THE ROOM WHEN WE STARTED TRACKING ', remotePlayerEvent);
             this.registerRemotePlayer(remotePlayerEvent);
         }
     }
@@ -92,7 +118,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * WA.players.onPlayerEnters.subscribe((remotePlayer) => { doStuff(); });
      * ```
      */
-    public onPlayerEnters(): Observable<RemotePlayer> {
+    public onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.enableTracking() first."
@@ -113,7 +139,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * WA.players.onPlayerLeaves.subscribe((remotePlayer) => { doCleanupStuff(); });
      * ```
      */
-    public onPlayerLeaves(): Observable<RemotePlayer> {
+    public onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
                 "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.enableTracking() first."
@@ -123,11 +149,30 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     }
 
     /**
+     * Listens to movement from all players who are in our zone (zone ~= viewport)
+     * This means this may NOT be triggered when a remote player moves but is far away from us.
+     *
+     * Usage:
+     *
+     * ```
+     * WA.players.onPlayersMove.subscribe(({ player, newPosition, oldPosition }) => { doStuff(); });
+     * ```
+     */
+    public onPlayersMove(): Observable<RemotePlayerMoved> {
+        if (!this.trackingMovement) {
+            throw new Error(
+                "Cannot call WA.players.onPlayersMove(). You forgot to call WA.players.enableTracking() first."
+            );
+        }
+        return playersMovedStream;
+    }
+
+    /**
      * Returns a RemotePlayer by its id.
      *
      * Note: if the same user is connected twice, it will be considered as 2 different players with 2 different IDs.
      */
-    public get(id: number): RemotePlayer | undefined {
+    public get(id: number): RemotePlayerInterface | undefined {
         return remotePlayers.get(id);
     }
 
@@ -135,7 +180,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * Returns the list of all nearby remote players.
      * The list only contains the players in the same zone as the current player (where zone ~= viewport)
      */
-    public list(): IterableIterator<RemotePlayer> {
+    public list(): IterableIterator<RemotePlayerInterface> {
         return remotePlayers.values();
     }
 }

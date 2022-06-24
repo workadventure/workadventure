@@ -23,7 +23,6 @@ import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoading
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
 import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
-import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
 import { bbbFactory } from "../../WebRtc/BBBFactory";
@@ -34,7 +33,6 @@ import { SimplePeer } from "../../WebRtc/SimplePeer";
 import { Loader } from "../Components/Loader";
 import { RemotePlayer, RemotePlayerEvent } from "../Entity/RemotePlayer";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Login/SelectCharacterScene";
-import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
@@ -54,42 +52,30 @@ import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
     MessageUserMovedInterface,
-    MessageUserPositionInterface,
     OnConnectInterface,
-    PointInterface,
     PositionInterface,
     RoomJoinedMessageInterface,
 } from "../../Connexion/ConnexionModels";
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
+import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
-import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
+import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedEvent";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
-import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
+import { emoteMenuStore, emoteStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
 import { errorScreenStore } from "../../Stores/ErrorScreenStore";
-
-import EVENT_TYPE = Phaser.Scenes.Events;
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
-import DOMElement = Phaser.GameObjects.DOMElement;
-import Tileset = Phaser.Tilemaps.Tileset;
-import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
 import { deepCopy } from "deep-copy-ts";
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
@@ -107,35 +93,26 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import {
     availabilityStatusToJSON,
     ErrorScreenMessage,
-    PlayerDetailsUpdatedMessage,
+    PositionMessage_Direction,
 } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
+import { PlayerDetailsUpdate, RemotePlayersRepository } from "./RemotePlayersRepository";
+import EVENT_TYPE = Phaser.Scenes.Events;
+import Texture = Phaser.Textures.Texture;
+import Sprite = Phaser.GameObjects.Sprite;
+import CanvasTexture = Phaser.Textures.CanvasTexture;
+import GameObject = Phaser.GameObjects.GameObject;
+import DOMElement = Phaser.GameObjects.DOMElement;
+import Tileset = Phaser.Tilemaps.Tileset;
+import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
+import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
+
 export interface GameSceneInitInterface {
-    initPosition: PointInterface | null;
+    initPosition: PositionInterface | null;
     reconnecting: boolean;
-}
-
-interface InitUserPositionEventInterface {
-    type: "InitUserPositionEvent";
-    event: MessageUserPositionInterface[];
-}
-
-interface AddPlayerEventInterface {
-    type: "AddPlayerEvent";
-    event: AddPlayerInterface;
-}
-
-interface RemovePlayerEventInterface {
-    type: "RemovePlayerEvent";
-    userId: number;
-}
-
-interface UserMovedEventInterface {
-    type: "UserMovedEvent";
-    event: MessageUserMovedInterface;
 }
 
 interface GroupCreatedUpdatedEventInterface {
@@ -146,11 +123,6 @@ interface GroupCreatedUpdatedEventInterface {
 interface DeleteGroupEventInterface {
     type: "DeleteGroupEvent";
     groupId: number;
-}
-
-interface PlayerDetailsUpdatedInterface {
-    type: "PlayerDetailsUpdated";
-    details: PlayerDetailsUpdatedMessage;
 }
 
 export class GameScene extends DirtyScene {
@@ -165,15 +137,7 @@ export class GameScene extends DirtyScene {
     groups: Map<number, Sprite>;
     circleTexture!: CanvasTexture;
     circleRedTexture!: CanvasTexture;
-    pendingEvents = new Queue<
-        | InitUserPositionEventInterface
-        | AddPlayerEventInterface
-        | RemovePlayerEventInterface
-        | UserMovedEventInterface
-        | GroupCreatedUpdatedEventInterface
-        | DeleteGroupEventInterface
-        | PlayerDetailsUpdatedInterface
-    >();
+    pendingEvents = new Queue<GroupCreatedUpdatedEventInterface | DeleteGroupEventInterface>();
     private initPosition: PositionInterface | null = null;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
@@ -199,8 +163,8 @@ export class GameScene extends DirtyScene {
 
     currentTick!: number;
     lastSentTick!: number; // The last tick at which a position was sent.
-    lastMoveEventSent: HasPlayerMovedEvent = {
-        direction: "down",
+    lastMoveEventSent: HasPlayerMovedInterface = {
+        direction: PositionMessage_Direction.DOWN,
         moving: false,
         x: -1000,
         y: -1000,
@@ -240,6 +204,7 @@ export class GameScene extends DirtyScene {
     public readonly superLoad: SuperLoaderPlugin;
     private playersEventDispatcher = new IframeEventDispatcher();
     private playersMovementEventDispatcher = new IframeEventDispatcher();
+    private remotePlayersRepository = new RemotePlayersRepository();
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -731,21 +696,23 @@ export class GameScene extends DirtyScene {
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
                 this.connection.userJoinedMessageStream.subscribe((message) => {
-                    const userMessage: AddPlayerInterface = {
-                        userId: message.userId,
-                        characterLayers: message.characterLayers,
-                        name: message.name,
-                        position: message.position,
-                        availabilityStatus: message.availabilityStatus,
-                        visitCardUrl: message.visitCardUrl,
-                        companion: message.companion,
-                        userUuid: message.userUuid,
-                        outlineColor: message.outlineColor,
-                    };
-                    this.addPlayer(userMessage);
+                    this.remotePlayersRepository.addPlayer(message);
+
+                    this.playersEventDispatcher.postMessage({
+                        type: "addRemotePlayer",
+                        data: {
+                            userId: message.userId,
+                            name: message.name,
+                            userUuid: message.userUuid,
+                            outlineColor: message.outlineColor,
+                            availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
+                            position: message.position,
+                        },
+                    });
                 });
 
                 this.connection.userMovedMessageStream.subscribe((message) => {
+                    this.remotePlayersRepository.movePlayer(message);
                     const position = message.position;
                     if (position === undefined) {
                         throw new Error("Position missing from UserMovedMessage");
@@ -753,14 +720,22 @@ export class GameScene extends DirtyScene {
 
                     const messageUserMoved: MessageUserMovedInterface = {
                         userId: message.userId,
-                        position: ProtobufClientUtils.toPointInterface(position),
+                        position: position,
                     };
 
                     this.updatePlayerPosition(messageUserMoved);
                 });
 
                 this.connection.userLeftMessageStream.subscribe((message) => {
-                    this.removePlayer(message.userId);
+                    this.remotePlayersRepository.removePlayer(message.userId);
+                    this.playersEventDispatcher.postMessage({
+                        type: "removeRemotePlayer",
+                        data: message.userId,
+                    });
+                });
+
+                this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
+                    this.remotePlayersRepository.updatePlayer(message);
                 });
 
                 this.connection.groupUpdateMessageStream.subscribe(
@@ -794,16 +769,6 @@ export class GameScene extends DirtyScene {
                         return;
                     }
                     item.fire(message.event, message.state, message.parameters);
-                });
-
-                this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
-                    if (message.details === undefined) {
-                        throw new Error("Malformed message. Missing details in PlayerDetailsUpdatedMessage");
-                    }
-                    this.pendingEvents.enqueue({
-                        type: "PlayerDetailsUpdated",
-                        details: message,
-                    });
                 });
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
@@ -848,7 +813,7 @@ export class GameScene extends DirtyScene {
                 this.simplePeer = new SimplePeer(this.connection);
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
-                this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
+                this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
                     this.handleCurrentPlayerHasMovedEvent(event);
                 });
 
@@ -859,7 +824,6 @@ export class GameScene extends DirtyScene {
                     onConnect.room.variables
                 );
 
-                //this.initUsersPosition(roomJoinedMessage.users);
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
 
@@ -1425,11 +1389,6 @@ ${escapedMessage}
             })
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
-            // TODO: we need to keep track of the iframes we send tracking to (IframeListener responsibility!)
-            // But we also need to respond once with the complete players list, only to the iframe currently listening!
-            // And we need to stop doing that if there are no iframes listening
-            // Should we put that in another class? => TODO: class PlayersIframeDispatcher => class in charge of dispatching players data to the iframe that request it.
-
             if (source === null) {
                 throw new Error('Missing source in "enablePlayersTracking" query. This should never happen.');
             }
@@ -1447,8 +1406,8 @@ ${escapedMessage}
 
             const addPlayerEvents: AddPlayerEvent[] = [];
             if (enablePlayersTrackingEvent.trackPlayers) {
-                for (const player of this.MapPlayersByKey.values()) {
-                    addPlayerEvents.push(player.toIframeAddPlayerEvent());
+                for (const player of this.remotePlayersRepository.getPlayers()) {
+                    addPlayerEvents.push(RemotePlayersRepository.toIframeAddPlayerEvent(player));
                 }
             }
             return addPlayerEvents;
@@ -1859,7 +1818,7 @@ ${escapedMessage}
         }
     }
 
-    private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
+    private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedInterface): void {
         //listen event to share position of user
         this.pushPlayerPosition(event);
         this.gameMap.setPosition(event.x, event.y);
@@ -1906,7 +1865,7 @@ ${escapedMessage}
                 this.startPositionCalculator.startPosition.y,
                 this.playerName,
                 this.currentPlayerTexturesPromise,
-                PlayerAnimationDirections.Down,
+                PositionMessage_Direction.DOWN,
                 false,
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
@@ -1944,7 +1903,7 @@ ${escapedMessage}
         this.createCollisionWithPlayer();
     }
 
-    private pushPlayerPosition(event: HasPlayerMovedEvent) {
+    private pushPlayerPosition(event: HasPlayerMovedInterface) {
         if (this.lastMoveEventSent === event) {
             return;
         }
@@ -1970,7 +1929,7 @@ ${escapedMessage}
         // Otherwise, do nothing.
     }
 
-    private doPushPlayerPosition(event: HasPlayerMovedEvent): void {
+    private doPushPlayerPosition(event: HasPlayerMovedInterface): void {
         this.lastMoveEventSent = event;
         this.lastSentTick = this.currentTick;
         const camera = this.cameras.main;
@@ -1992,15 +1951,27 @@ ${escapedMessage}
         this.currentTick = time;
         this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
 
+        for (const addedPlayer of this.remotePlayersRepository.getAddedPlayers()) {
+            this.doAddPlayer(addedPlayer);
+        }
+        for (const movedPlayer of this.remotePlayersRepository.getMovedPlayers()) {
+            this.doUpdatePlayerPosition(movedPlayer);
+        }
+        for (const updatedPlayer of this.remotePlayersRepository.getUpdatedPlayers()) {
+            this.doUpdatePlayerDetails(updatedPlayer);
+        }
+        for (const removedPlayerId of this.remotePlayersRepository.getRemovedPlayers()) {
+            this.doRemovePlayer(removedPlayerId);
+        }
+
+        this.remotePlayersRepository.reset();
+
         // Let's handle all events
         while (this.pendingEvents.length !== 0) {
             this.dirty = true;
             const event = this.pendingEvents.dequeue();
             switch (event.type) {
-                case "InitUserPositionEvent":
-                    this.doInitUsersPosition(event.event);
-                    break;
-                case "AddPlayerEvent":
+                /*case "AddPlayerEvent":
                     this.doAddPlayer(event.event);
                     break;
                 case "RemovePlayerEvent":
@@ -2014,26 +1985,26 @@ ${escapedMessage}
                         this.activatablesManager.deduceSelectedActivatableObjectByDistance();
                     }
                     break;
-                }
+                }*/
                 case "GroupCreatedUpdatedEvent":
                     this.doShareGroupPosition(event.event);
                     break;
-                case "PlayerDetailsUpdated":
+                /*case "PlayerDetailsUpdated":
                     this.doUpdatePlayerDetails(event.details);
-                    break;
+                    break;*/
                 case "DeleteGroupEvent": {
                     this.doDeleteGroup(event.groupId);
                     currentPlayerGroupLockStateStore.set(undefined);
                     break;
                 }
-                default: {
+                /*default: {
                     const _exhaustiveCheck: never = event;
-                }
+                }*/
             }
         }
         // Let's move all users
         const updatedPlayersPositions = this.playersPositionInterpolator.getUpdatedPositions(time);
-        updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedEvent, userId: number) => {
+        updatedPlayersPositions.forEach((moveEvent: HasPlayerMovedInterface, userId: number) => {
             this.dirty = true;
             const player: RemotePlayer | undefined = this.MapPlayersByKey.get(userId);
             if (player === undefined) {
@@ -2043,59 +2014,15 @@ ${escapedMessage}
         });
     }
 
-    /**
-     * Called by the connexion when the full list of user position is received.
-     */
-    private initUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        this.pendingEvents.enqueue({
-            type: "InitUserPositionEvent",
-            event: usersPosition,
-        });
-    }
-
-    /**
-     * Put all the players on the map on map load.
-     */
-    private doInitUsersPosition(usersPosition: MessageUserPositionInterface[]): void {
-        const currentPlayerId = this.connection?.getUserId();
-        this.removeAllRemotePlayers();
-        // load map
-        usersPosition.forEach((userPosition: MessageUserPositionInterface) => {
-            if (userPosition.userId === currentPlayerId) {
-                return;
-            }
-            this.addPlayer(userPosition);
-        });
-    }
-
-    /**
-     * Called by the connexion when a new player arrives on a map
-     */
-    public addPlayer(addPlayerData: AddPlayerInterface): void {
-        this.pendingEvents.enqueue({
-            type: "AddPlayerEvent",
-            event: addPlayerData,
-        });
-        this.playersEventDispatcher.postMessage({
-            type: "addRemotePlayer",
-            data: {
-                userId: addPlayerData.userId,
-                name: addPlayerData.name,
-                userUuid: addPlayerData.userUuid,
-                outlineColor: addPlayerData.outlineColor,
-                availabilityStatus: availabilityStatusToJSON(addPlayerData.availabilityStatus),
-                position: addPlayerData.position,
-            },
-        });
-    }
-
     private doAddPlayer(addPlayerData: AddPlayerInterface): void {
         //check if exist player, if exist, move position
+        // Can this really happen?
         if (this.MapPlayersByKey.has(addPlayerData.userId)) {
-            this.updatePlayerPosition({
+            console.warn("Got instructed to add a player that already exists: ", addPlayerData.userId);
+            /*this.updatePlayerPosition({
                 userId: addPlayerData.userId,
                 position: addPlayerData.position,
-            });
+            });*/
             return;
         }
 
@@ -2108,7 +2035,7 @@ ${escapedMessage}
             addPlayerData.position.y,
             addPlayerData.name,
             texturesPromise,
-            addPlayerData.position.direction as PlayerAnimationDirections,
+            addPlayerData.position.direction,
             addPlayerData.position.moving,
             addPlayerData.visitCardUrl,
             addPlayerData.companion,
@@ -2143,20 +2070,6 @@ ${escapedMessage}
         });
     }
 
-    /**
-     * Called by the connexion when a player is removed from the map
-     */
-    public removePlayer(userId: number) {
-        this.pendingEvents.enqueue({
-            type: "RemovePlayerEvent",
-            userId,
-        });
-        this.playersEventDispatcher.postMessage({
-            type: "removeRemotePlayer",
-            data: userId,
-        });
-    }
-
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
         this.CurrentPlayer.showTalkIcon(show);
         if (this.showVoiceIndicatorChangeMessageSent && !show) {
@@ -2186,9 +2099,16 @@ ${escapedMessage}
     }
 
     private updatePlayerPosition(message: MessageUserMovedInterface): void {
-        this.pendingEvents.enqueue({
-            type: "UserMovedEvent",
-            event: message,
+        this.playersMovementEventDispatcher.postMessage({
+            type: "remotePlayerChanged",
+            data: {
+                userId: message.userId,
+                position: {
+                    x: message.position.x,
+                    y: message.position.y,
+                    // TODO: make sure we can also have the "running" and "position" info
+                },
+            },
         });
     }
 
@@ -2259,34 +2179,29 @@ ${escapedMessage}
         this.groups.delete(groupId);
     }
 
-    doUpdatePlayerDetails(message: PlayerDetailsUpdatedMessage): void {
-        const character = this.MapPlayersByKey.get(message.userId);
+    doUpdatePlayerDetails(update: PlayerDetailsUpdate): void {
+        const character = this.MapPlayersByKey.get(update.player.userId);
         if (character === undefined) {
             console.log(
                 "Could not set new details to character with ID ",
-                message.userId,
+                update.player.userId,
                 ". Did he/she left before te message was received?"
             );
             return;
         }
-        if (message.details?.removeOutlineColor) {
-            character.removeApiOutlineColor();
-        } else if (message.details?.outlineColor !== undefined) {
-            character.setApiOutlineColor(message.details?.outlineColor);
+
+        if (update.updated.availabilityStatus) {
+            character.setAvailabilityStatus(update.player.availabilityStatus);
         }
-        if (message.details?.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.details?.showVoiceIndicator);
+        if (update.updated.outlineColor) {
+            if (update.player.outlineColor === undefined) {
+                character.removeApiOutlineColor();
+            } else {
+                character.setApiOutlineColor(update.player.outlineColor);
+            }
         }
-        if (message.details?.availabilityStatus !== undefined) {
-            character.setAvailabilityStatus(message.details?.availabilityStatus);
-        }
-        if (message.details?.setVariable !== undefined) {
-            iframeListener.setSharedPlayerVariable({
-                key: message.details.setVariable.name,
-                value: message.details.setVariable.value,
-                playerId: message.userId,
-            });
-            console.log("doUpdatePlayerDetails", message.details.setVariable);
+        if (update.updated.showVoiceIndicator) {
+            character.showTalkIcon(update.player.showVoiceIndicator);
         }
     }
 

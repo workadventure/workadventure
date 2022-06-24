@@ -1,25 +1,26 @@
-import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../Player/Animation";
-import { SpeechBubble } from "./SpeechBubble";
+import {getPlayerAnimations, PlayerAnimationTypes} from "../Player/Animation";
+import {SpeechBubble} from "./SpeechBubble";
+import {TextureError} from "../../Exception/TextureError";
+import {Companion} from "../Companion/Companion";
+import type {GameScene} from "../Game/GameScene";
+import {DEPTH_INGAME_TEXT_INDEX} from "../Game/DepthIndexes";
+import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import {lazyLoadPlayerCharacterTextures} from "./PlayerTexturesLoadingManager";
+import {TexturesHelper} from "../Helpers/TexturesHelper";
+import type {PictureStore} from "../../Stores/PictureStore";
+import {Unsubscriber, Writable, writable} from "svelte/store";
+import {createColorStore} from "../../Stores/OutlineColorStore";
+import type {OutlineableInterface} from "../Game/OutlineableInterface";
+import type CancelablePromise from "cancelable-promise";
+import {TalkIcon} from "../Components/TalkIcon";
+import {Deferred} from "ts-deferred";
+import {PlayerStatusDot} from "../Components/PlayerStatusDot";
+import {AvailabilityStatus, PositionMessage_Direction} from "../../Messages/ts-proto-generated/protos/messages";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
 import Sprite = Phaser.GameObjects.Sprite;
 import DOMElement = Phaser.GameObjects.DOMElement;
-import { TextureError } from "../../Exception/TextureError";
-import { Companion } from "../Companion/Companion";
-import type { GameScene } from "../Game/GameScene";
-import { DEPTH_INGAME_TEXT_INDEX } from "../Game/DepthIndexes";
-import type OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
-import { lazyLoadPlayerCharacterTextures } from "./PlayerTexturesLoadingManager";
-import { TexturesHelper } from "../Helpers/TexturesHelper";
-import type { PictureStore } from "../../Stores/PictureStore";
-import { Unsubscriber, Writable, writable } from "svelte/store";
-import { createColorStore } from "../../Stores/OutlineColorStore";
-import type { OutlineableInterface } from "../Game/OutlineableInterface";
-import type CancelablePromise from "cancelable-promise";
-import { TalkIcon } from "../Components/TalkIcon";
-import { Deferred } from "ts-deferred";
-import { PlayerStatusDot } from "../Components/PlayerStatusDot";
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import {ProtobufClientUtils} from "../../Network/ProtobufClientUtils";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -31,7 +32,7 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected readonly statusDot: PlayerStatusDot;
     public playerName: string;
     public sprites: Map<string, Sprite>;
-    protected lastDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
+    protected lastDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
     //private teleportation: Sprite;
     private invisible: boolean;
     private clickable: boolean;
@@ -55,7 +56,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         y: number,
         texturesPromise: CancelablePromise<string[]>,
         name: string,
-        direction: PlayerAnimationDirections,
+        direction: PositionMessage_Direction,
         moving: boolean,
         frame: string | number,
         isClickable: boolean,
@@ -197,17 +198,20 @@ export abstract class Character extends Container implements OutlineableInterfac
      */
     public getDirectionalActivationPosition(shift: number): { x: number; y: number } {
         switch (this.lastDirection) {
-            case PlayerAnimationDirections.Down: {
+            case PositionMessage_Direction.DOWN: {
                 return { x: this.x, y: this.y + shift };
             }
-            case PlayerAnimationDirections.Left: {
+            case PositionMessage_Direction.LEFT: {
                 return { x: this.x - shift, y: this.y };
             }
-            case PlayerAnimationDirections.Right: {
+            case PositionMessage_Direction.RIGHT: {
                 return { x: this.x + shift, y: this.y };
             }
-            case PlayerAnimationDirections.Up: {
+            case PositionMessage_Direction.UP: {
                 return { x: this.x, y: this.y - shift };
+            }
+            case PositionMessage_Direction.UNRECOGNIZED: {
+                return { x: this.x, y: this.y };
             }
         }
     }
@@ -277,17 +281,18 @@ export abstract class Character extends Container implements OutlineableInterfac
         return this.scene.plugins.get("rexOutlinePipeline") as unknown as OutlinePipelinePlugin | undefined;
     }
 
-    protected playAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
+    protected playAnimation(direction: PositionMessage_Direction, moving: boolean): void {
         if (this.invisible) return;
         for (const [texture, sprite] of this.sprites.entries()) {
             if (!sprite.anims) {
                 console.error("ANIMS IS NOT DEFINED!!!");
                 return;
             }
-            if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== direction)) {
-                sprite.play(texture + "-" + direction + "-" + PlayerAnimationTypes.Walk, true);
+            const directionStr = ProtobufClientUtils.toDirectionString(direction);
+            if (moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== directionStr)) {
+                sprite.play(texture + "-" + directionStr + "-" + PlayerAnimationTypes.Walk, true);
             } else if (!moving) {
-                sprite.anims.play(texture + "-" + direction + "-" + PlayerAnimationTypes.Idle, true);
+                sprite.anims.play(texture + "-" + directionStr + "-" + PlayerAnimationTypes.Idle, true);
             }
         }
     }
@@ -307,15 +312,15 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         if (Math.abs(body.velocity.x) > Math.abs(body.velocity.y)) {
             if (body.velocity.x < 0) {
-                this.lastDirection = PlayerAnimationDirections.Left;
+                this.lastDirection = PositionMessage_Direction.LEFT;
             } else if (body.velocity.x > 0) {
-                this.lastDirection = PlayerAnimationDirections.Right;
+                this.lastDirection = PositionMessage_Direction.RIGHT;
             }
         } else {
             if (body.velocity.y < 0) {
-                this.lastDirection = PlayerAnimationDirections.Up;
+                this.lastDirection = PositionMessage_Direction.UP;
             } else if (body.velocity.y > 0) {
-                this.lastDirection = PlayerAnimationDirections.Down;
+                this.lastDirection = PositionMessage_Direction.DOWN;
             }
         }
         this.playAnimation(this.lastDirection, true);

@@ -51,7 +51,6 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { Console } from "console";
 
 const manualPingDelay = 20000;
 
@@ -294,23 +293,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "variableMessage": {
                                 const name = subMessage.variableMessage.name;
-                                const serializedValue = subMessage.variableMessage.value;
-                                let value: unknown = undefined;
-                                if (serializedValue) {
-                                    try {
-                                        value = JSON.parse(serializedValue);
-                                    } catch (e) {
-                                        console.error(
-                                            'Unable to unserialize value received from server for variable "' +
-                                                name +
-                                                '". Value received: "' +
-                                                serializedValue +
-                                                '". Error: ',
-                                            e
-                                        );
-                                    }
-                                }
-
+                                const value = RoomConnection.unserializeVariable(subMessage.variableMessage.value);
                                 this._variableMessageStream.next({ name, value });
                                 break;
                             }
@@ -332,18 +315,7 @@ export class RoomConnection implements RoomConnection {
 
                     const variables = new Map<string, unknown>();
                     for (const variable of roomJoinedMessage.variable) {
-                        try {
-                            variables.set(variable.name, JSON.parse(variable.value));
-                        } catch (e) {
-                            console.error(
-                                'Unable to unserialize value received from server for variable "' +
-                                    variable.name +
-                                    '". Value received: "' +
-                                    variable.value +
-                                    '". Error: ',
-                                e
-                            );
-                        }
+                        variables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
                     this.userId = roomJoinedMessage.currentUserId;
@@ -588,25 +560,12 @@ export class RoomConnection implements RoomConnection {
         this.closed = true;
     }
 
-    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessageTsProto {
+    private toPositionMessage(x: number, y: number, direction: PositionMessage_Direction, moving: boolean): PositionMessageTsProto {
         return {
             x: Math.floor(x),
             y: Math.floor(y),
             moving,
-            direction: (() => {
-                switch (direction) {
-                    case "up":
-                        return PositionMessage_Direction.UP;
-                    case "down":
-                        return PositionMessage_Direction.DOWN;
-                    case "left":
-                        return PositionMessage_Direction.LEFT;
-                    case "right":
-                        return PositionMessage_Direction.RIGHT;
-                    default:
-                        throw new Error("Unexpected direction");
-                }
-            })(),
+            direction,
         };
     }
 
@@ -619,7 +578,7 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    public sharePosition(x: number, y: number, direction: string, moving: boolean, viewport: ViewportInterface): void {
+    public sharePosition(x: number, y: number, direction: PositionMessage_Direction, moving: boolean, viewport: ViewportInterface): void {
         if (!this.socket) {
             return;
         }
@@ -679,7 +638,7 @@ export class RoomConnection implements RoomConnection {
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
-            position: ProtobufClientUtils.toPointInterface(position),
+            position: position,
             availabilityStatus: message.availabilityStatus,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
@@ -965,5 +924,28 @@ export class RoomConnection implements RoomConnection {
             },
         });
 
+    }
+
+    /**
+     * Unserializes a string received from the server.
+     * If the value cannot be unserialized, returns undefined and outputs a console error.
+     */
+    public static unserializeVariable(serializedValue: string): unknown {
+        let value: unknown = undefined;
+        if (serializedValue) {
+            try {
+                value = JSON.parse(serializedValue);
+            } catch (e) {
+                console.error(
+                    'Unable to unserialize value received from server for variable "' +
+                    name +
+                    '". Value received: "' +
+                    serializedValue +
+                    '". Error: ',
+                    e
+                );
+            }
+        }
+        return value;
     }
 }

@@ -25,6 +25,10 @@
                     document.getElementById("events").innerText += "User left: " + remotePlayer.name + "\n";
                 });
 
+                WA.players.onPlayersMove().subscribe(({ player, newPosition, oldPosition }) => {
+                    document.getElementById("events").innerText += `User : ${player.name} moved from (${oldPosition.x}, ${oldPosition.y}) to (${newPosition.x}, ${newPosition.y})\n`;
+                });
+
 
                 document.getElementById('listCurrentPlayers').addEventListener('click', () => {
                     document.getElementById('list').innerHTML = '';
@@ -41,9 +45,6 @@
 <ul id="list">
 
 </ul>
-<textarea id="text" rows="30" cols="80">
-
-</textarea>
 <br/>
 <button id="listCurrentPlayers">List current connected players</button>
 

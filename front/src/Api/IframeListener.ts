@@ -20,7 +20,7 @@ import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
-import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
+import type {HasPlayerMovedEvent, HasPlayerMovedInterface} from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
@@ -38,6 +38,7 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
+import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -515,11 +516,18 @@ class IframeListener {
         });
     }
 
-    hasPlayerMoved(event: HasPlayerMovedEvent) {
+    hasPlayerMoved(event: HasPlayerMovedInterface) {
         if (this.sendPlayerMove) {
             this.postMessage({
                 type: "hasPlayerMoved",
-                data: event,
+                data: {
+                    x: event.x,
+                    y: event.y,
+                    oldX: event.oldX,
+                    oldY: event.oldY,
+                    direction: ProtobufClientUtils.toDirectionString(event.direction),
+                    moving: event.moving,
+                },
             });
         }
     }

@@ -42,7 +42,7 @@ import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
 import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
-import { isAddPlayerEvent } from "./AddPlayerEvent";
+import {isAddPlayerEvent, isRemotePlayerChangedEvent} from "./AddPlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -252,6 +252,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("removeRemotePlayer"),
         data: z.number(),
+    }),
+    z.object({
+        type: z.literal("remotePlayerChanged"),
+        data: isRemotePlayerChangedEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;

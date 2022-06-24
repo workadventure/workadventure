@@ -1,9 +1,23 @@
 import {AddPlayerEvent} from "../../Events/AddPlayerEvent";
 import {PositionInterface} from "../../../Connexion/ConnexionModels";
+import {Observable, Subject} from "rxjs";
 
 export const remotePlayers = new Map<number, RemotePlayer>();
 
-export class RemotePlayer {
+export interface RemotePlayerInterface {
+    readonly id: number;
+    readonly name: string;
+    readonly uuid: string;
+    /*get availabilityStatus();*/
+    readonly outlineColor: number|undefined;
+    readonly position: PositionInterface;
+    /**
+     * A stream updated with the position of this current player.
+     */
+    readonly position$: Observable<PositionInterface>;
+}
+
+export class RemotePlayer implements RemotePlayerInterface {
     private _userId: number;
     private _name: string;
     private _userUuid: string;
@@ -44,4 +58,22 @@ export class RemotePlayer {
     get position(): PositionInterface {
         return this._position;
     }
+
+    set position(_position: PositionInterface) {
+        this._position = _position;
+        this._position$.next(_position);
+    }
+
+    public readonly _position$ = new Subject<PositionInterface>;
+    public readonly position$ = this._position$.asObservable();
+
+    public destroy() {
+        this._position$.complete();
+    }
+}
+
+export interface RemotePlayerMoved {
+    player: RemotePlayerInterface,
+    newPosition: PositionInterface,
+    oldPosition: PositionInterface,
 }
