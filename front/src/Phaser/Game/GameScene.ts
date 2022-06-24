@@ -825,8 +825,6 @@ export class GameScene extends DirtyScene {
                         domain = `${location.protocol}//${domain}`;
                     }
 
-                    console.log("D1");
-
                     const coWebsite = new JitsiCoWebsite(
                         new URL(domain),
                         false,
