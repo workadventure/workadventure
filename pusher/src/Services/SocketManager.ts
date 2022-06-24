@@ -17,7 +17,6 @@ import {
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
@@ -40,6 +39,7 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
+    QueryMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -461,9 +461,9 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
+    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
+        pusherToBackMessage.setQuerymessage(queryMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }

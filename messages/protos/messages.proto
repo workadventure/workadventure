@@ -86,10 +86,6 @@ message EmoteEventMessage {
   string emote = 2;
 }
 
-message QueryJitsiJwtMessage {
-  string jitsiRoom = 1;
-}
-
 message JoinBBBMeetingMessage {
   string meetingId = 1;
   string meetingName = 2;
@@ -126,7 +122,6 @@ message ClientToServerMessage {
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
-    QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
     FollowRequestMessage followRequestMessage = 15;
@@ -134,6 +129,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 19;
+    QueryMessage queryMessage = 20;
   }
 }
 
@@ -169,6 +165,31 @@ message PlayGlobalMessage {
 
 message StopGlobalMessage {
   string id = 1;
+}
+
+/************ Queries and answers ****************/
+
+message QueryMessage {
+  int32 id = 1;
+  oneof query {
+    JitsiJwtQuery jitsiJwtQuery = 2;
+  }
+}
+
+message JitsiJwtQuery {
+  string jitsiRoom = 1;
+}
+
+message AnswerMessage {
+  int32 id = 1;
+  oneof answer {
+    JitsiJwtAnswer jitsiJwtAnswer = 2;
+    ErrorMessage error = 3;
+  }
+}
+
+message JitsiJwtAnswer {
+  string jwt = 1;
 }
 
 /*********** SERVER TO CLIENT MESSAGES *************/
@@ -293,11 +314,6 @@ message TeleportMessageMessage{
   string map = 1;
 }
 
-message SendJitsiJwtMessage {
-  string jitsiRoom = 1;
-  string jwt = 2;
-}
-
 message BBBMeetingClientURLMessage {
   string meetingId = 1;
   string clientURL = 2;
@@ -350,7 +366,6 @@ message ServerToClientMessage {
     WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
-    SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     //AdminRoomMessage adminRoomMessage = 14;
@@ -367,6 +382,7 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     BBBMeetingClientURLMessage bbbMeetingClientURLMessage = 27;
+    AnswerMessage answerMessage = 28;
   }
 }
 
@@ -448,7 +464,6 @@ message PusherToBackMessage {
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
     ReportPlayerMessage reportPlayerMessage = 10;
-    QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -458,6 +473,7 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     JoinBBBMeetingMessage joinBBBMeetingMessage = 20;
+    QueryMessage queryMessage = 21;
   }
 }
 
