@@ -73,12 +73,7 @@ import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStor
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
-import {
-    jitsiClosableStore,
-    jitsiParticipantsCountStore,
-    userIsAdminStore,
-    userIsJitsiDominantSpeakerStore,
-} from "../../Stores/GameStore";
+import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -236,6 +231,7 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
+    private jitsiClosable: boolean = true;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -830,8 +826,9 @@ export class GameScene extends DirtyScene {
                         false,
                         undefined,
                         undefined,
-                        get(jitsiClosableStore) ?? true
+                        this.jitsiClosable
                     );
+                    console.log(this.jitsiClosable);
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
                     this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
                 });
@@ -2383,5 +2380,9 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public setJitsiClosable(value: boolean): void {
+        this.jitsiClosable = value;
     }
 }

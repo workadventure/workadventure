@@ -19,7 +19,6 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
-import { jitsiClosableStore } from "../../Stores/GameStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -92,7 +91,10 @@ export class GameMapPropertiesListener {
 
                     const closable =
                         (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
-                    jitsiClosableStore.set(closable);
+
+                    console.log("closable: " + closable);
+
+                    this.scene.setJitsiClosable(closable);
 
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
