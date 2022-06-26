@@ -2,7 +2,7 @@ import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import { get, Readable, Writable, writable } from "svelte/store";
+import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
@@ -48,6 +48,10 @@ class CoWebsiteManager {
     private cowebsiteAsideHolderDom: HTMLDivElement;
     private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
+
+    private buttonCloseCoWebsite: HTMLElement;
+
+    private mainCoWebsiteUnsubscriber: Unsubscriber;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
@@ -115,10 +119,16 @@ class CoWebsiteManager {
         this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
         this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
 
+        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+
         this.loaderAnimationInterval = {
             interval: undefined,
             trails: undefined,
         };
+
+        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
+        });
 
         this.holderListeners();
         this.transitionListeners();
@@ -126,8 +136,7 @@ class CoWebsiteManager {
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.gameOverlayDom);
 
-        const buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        buttonCloseCoWebsite.addEventListener("click", () => {
+        this.buttonCloseCoWebsite.addEventListener("click", () => {
             analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
@@ -177,6 +186,11 @@ class CoWebsiteManager {
                 }
             }
         });
+    }
+
+    public cleanup(): void {
+        this.closeCoWebsites();
+        this.mainCoWebsiteUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
