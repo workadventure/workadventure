@@ -10,7 +10,6 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    JoinBBBMeetingMessage,
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
@@ -579,11 +578,6 @@ export class IoSocketController {
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
                 } else if (message.hasQuerymessage()) {
                     socketManager.handleQueryMessage(client, message.getQuerymessage() as QueryMessage);
-                } else if (message.hasJoinbbbmeetingmessage()) {
-                    socketManager.handleJoinBBBMeetingMessage(
-                        client,
-                        message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
-                    );
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,

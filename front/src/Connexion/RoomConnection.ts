@@ -34,7 +34,6 @@ import {
     EmoteEventMessage as EmoteEventMessageTsProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
@@ -45,6 +44,7 @@ import {
     AvailabilityStatus,
     QueryMessage,
     AnswerMessage,
+    JoinBBBMeetingAnswer,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -92,9 +92,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
-
-    private readonly _bbbMeetingClientURLMessageStream = new Subject<BBBMeetingClientURLMessageTsProto>();
-    public readonly bbbMeetingClientURLMessageStream = this._bbbMeetingClientURLMessageStream.asObservable();
 
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
@@ -441,10 +438,6 @@ export class RoomConnection implements RoomConnection {
                 case "teleportMessageMessage": {
                     // FIXME: WHY IS THIS UNUSED? CAN WE REMOVE THIS???
                     this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
-                    break;
-                }
-                case "bbbMeetingClientURLMessage": {
-                    this._bbbMeetingClientURLMessageStream.next(message.bbbMeetingClientURLMessage);
                     break;
                 }
                 case "groupUsersUpdateMessage": {
@@ -837,19 +830,6 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitJoinBBBMeeting(meetingId: string, props: Map<string, string | number | boolean>): void {
-        const meetingName = props.get("meetingName") as string;
-        this.send({
-            message: {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: {
-                    meetingId,
-                    meetingName,
-                },
-            },
-        });
-    }
-
     public hasTag(tag: string): boolean {
         return this.tags.includes(tag);
     }
@@ -1002,5 +982,24 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.jitsiJwtAnswer.jwt;
+    }
+
+    public async queryBBBMeetingUrl(
+        meetingId: string,
+        props: Map<string, string | number | boolean>
+    ): Promise<JoinBBBMeetingAnswer> {
+        const meetingName = props.get("meetingName") as string;
+
+        const answer = await this.query({
+            $case: "joinBBBMeetingQuery",
+            joinBBBMeetingQuery: {
+                meetingId,
+                meetingName,
+            },
+        });
+        if (answer.$case !== "joinBBBMeetingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.joinBBBMeetingAnswer;
     }
 }

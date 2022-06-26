@@ -4,7 +4,6 @@ import {
     BanUserMessage,
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    BBBMeetingClientURLMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     ErrorMessage,
@@ -18,7 +17,8 @@ import {
     ItemStateMessage,
     JitsiJwtAnswer,
     JitsiJwtQuery,
-    JoinBBBMeetingMessage,
+    JoinBBBMeetingAnswer,
+    JoinBBBMeetingQuery,
     JoinRoomMessage,
     LockGroupPromptMessage,
     PlayerDetailsUpdatedMessage,
@@ -61,7 +61,6 @@ import { Zone } from "../Model/Zone";
 import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
-import { emitError } from "./MessageHelpers";
 import QueryCase = QueryMessage.QueryCase;
 
 const debug = Debug("sockermanager");
@@ -582,14 +581,24 @@ export class SocketManager {
             switch (queryCase) {
                 case QueryCase.QUERY_NOT_SET:
                     throw new Error("Query case not set");
-                case QueryMessage.QueryCase.JITSIJWTQUERY:
-                    await this.handleQueryJitsiJwtMessage(
+                case QueryMessage.QueryCase.JITSIJWTQUERY: {
+                    const answer = await this.handleQueryJitsiJwtMessage(
                         gameRoom,
                         user,
-                        queryMessage.getJitsijwtquery() as JitsiJwtQuery,
-                        answerMessage
+                        queryMessage.getJitsijwtquery() as JitsiJwtQuery
                     );
+                    answerMessage.setJitsijwtanswer(answer);
                     break;
+                }
+                case QueryMessage.QueryCase.JOINBBBMEETINGQUERY: {
+                    const answer = await this.handleJoinBBBMeetingMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJoinbbbmeetingquery() as JoinBBBMeetingQuery
+                    );
+                    answerMessage.setJoinbbbmeetinganswer(answer);
+                    break;
+                }
                 default: {
                     const _exhaustiveCheck: never = queryCase;
                 }
@@ -612,9 +621,8 @@ export class SocketManager {
     public async handleQueryJitsiJwtMessage(
         gameRoom: GameRoom,
         user: User,
-        queryJitsiJwtMessage: JitsiJwtQuery,
-        answerMessage: AnswerMessage
-    ) {
+        queryJitsiJwtMessage: JitsiJwtQuery
+    ): Promise<JitsiJwtAnswer> {
         const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
         const jitsiSettings = gameRoom.getJitsiSettings();
 
@@ -654,28 +662,24 @@ export class SocketManager {
 
         const jitsiJwtAnswer = new JitsiJwtAnswer();
         jitsiJwtAnswer.setJwt(jwt);
-        answerMessage.setJitsijwtanswer(jitsiJwtAnswer);
+
+        return jitsiJwtAnswer;
     }
 
     public async handleJoinBBBMeetingMessage(
         gameRoom: GameRoom,
         user: User,
-        joinBBBMeetingMessage: JoinBBBMeetingMessage
-    ) {
-        const meetingId = joinBBBMeetingMessage.getMeetingid();
-        const meetingName = joinBBBMeetingMessage.getMeetingname();
+        joinBBBMeetingQuery: JoinBBBMeetingQuery
+    ): Promise<JoinBBBMeetingAnswer> {
+        const meetingId = joinBBBMeetingQuery.getMeetingid();
+        const meetingName = joinBBBMeetingQuery.getMeetingname();
         const bbbSettings = gameRoom.getBbbSettings();
 
         if (bbbSettings === undefined) {
-            const errorStr =
+            throw new Error(
                 "Unable to join the conference because either " +
-                "the BBB_URL or BBB_SECRET environment variables are not set.";
-
-            console.error(errorStr);
-
-            emitError(user.socket, errorStr);
-
-            return;
+                    "the BBB_URL or BBB_SECRET environment variables are not set."
+            );
         }
 
         // Let's see if the current client has moderator rights
@@ -721,14 +725,11 @@ export class SocketManager {
             joinViaHtml5: true,
         });
 
-        const bbbMeetingClientURLMessage = new BBBMeetingClientURLMessage();
-        bbbMeetingClientURLMessage.setMeetingid(meetingId);
-        bbbMeetingClientURLMessage.setClienturl(clientURL);
+        const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
+        bbbMeetingAnswer.setMeetingid(meetingId);
+        bbbMeetingAnswer.setClienturl(clientURL);
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setBbbmeetingclienturlmessage(bbbMeetingClientURLMessage);
-
-        user.socket.write(serverToClientMessage);
+        return bbbMeetingAnswer;
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {

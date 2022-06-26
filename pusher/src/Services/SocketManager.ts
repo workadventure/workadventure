@@ -13,7 +13,6 @@ import {
     FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
@@ -464,13 +463,6 @@ export class SocketManager implements ZoneEventListener {
     public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setQuerymessage(queryMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    public handleJoinBBBMeetingMessage(client: ExSocketInterface, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setJoinbbbmeetingmessage(joinBBBMeetingMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }

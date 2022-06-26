@@ -26,7 +26,6 @@ import { DEBUG_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/Environmen
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -805,13 +804,6 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
-                });
-
-                /**
-                 * Triggered when we receive the URL to join a meeting on BBB
-                 */
-                this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
-                    bbbFactory.start(message.clientURL);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
