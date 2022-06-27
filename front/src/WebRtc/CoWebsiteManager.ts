@@ -58,6 +58,12 @@ class CoWebsiteManager {
 
     private resizeObserver = new ResizeObserver(() => {
         this.resizeAllIframes();
+
+        if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
+            this.toggleFullScreenIcon(true);
+            this.resetStyleMain();
+            this.fire();
+        }
     });
 
     public getMainState() {
@@ -155,7 +161,7 @@ class CoWebsiteManager {
         buttonFullScreenFrame.addEventListener("click", () => {
             analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
-            this.fullscreen();
+            this.toggleFullscreen();
         });
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
@@ -756,7 +762,7 @@ class CoWebsiteManager {
         waScaleManager.refreshFocusOnTarget();
     }
 
-    private fullscreen(): void {
+    private toggleFullscreen(): void {
         if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
             this.resetStyleMain();
