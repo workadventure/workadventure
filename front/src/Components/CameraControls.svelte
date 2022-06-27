@@ -25,6 +25,7 @@
   import { chatVisibilityStore } from "../Stores/ChatStore";
   import { activeSubMenuStore, menuVisiblilityStore } from "../Stores/MenuStore";
   import { emoteMenuStore } from "../Stores/EmoteStore";
+  import LL from "../i18n/i18n-svelte";
 
   const gameScene = gameManager.getCurrentGameScene();
 
@@ -224,7 +225,7 @@
     <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
             class:border-top-light={$menuVisiblilityStore}
     >
-      Einladen&nbsp;!
+      {$LL.menu.sub.invite()}
     </button>
   </div>
 </div>
