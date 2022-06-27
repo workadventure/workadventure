@@ -92,8 +92,6 @@ export class GameMapPropertiesListener {
                     const closable =
                         (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
 
-                    console.log("closable: " + closable);
-
                     this.scene.setJitsiClosable(closable);
 
                     let jwt: string | undefined;
@@ -109,7 +107,6 @@ export class GameMapPropertiesListener {
                     if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
                         domain = `${location.protocol}//${domain}`;
                     }
-
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);

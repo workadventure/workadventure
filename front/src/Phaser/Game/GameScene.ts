@@ -106,6 +106,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { mainCoWebsite } from "../../Stores/CoWebsiteStore";
 export interface GameSceneInitInterface {
     initPosition: PointInterface | null;
     reconnecting: boolean;
@@ -186,6 +187,7 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+    private mainCoWebsiteUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -880,7 +882,8 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined
+            this.peerStoreUnsubscriber != undefined ||
+            this.mainCoWebsiteUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -890,7 +893,8 @@ export class GameScene extends DirtyScene {
                 this.emoteUnsubscriber,
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber
+                this.peerStoreUnsubscriber,
+                this.mainCoWebsiteUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -949,6 +953,10 @@ export class GameScene extends DirtyScene {
             this.time.delayedCall(0, () => {
                 this.reposition();
             });
+        });
+
+        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
+            coWebsiteManager.hideButtonCloseCoWebsite(!coWebsite?.isClosable());
         });
 
         const talkIconVolumeTreshold = 10;

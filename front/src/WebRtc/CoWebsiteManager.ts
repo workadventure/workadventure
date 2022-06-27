@@ -2,7 +2,7 @@ import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
@@ -50,8 +50,6 @@ class CoWebsiteManager {
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
 
     private buttonCloseCoWebsite: HTMLElement;
-
-    private mainCoWebsiteUnsubscriber: Unsubscriber;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
@@ -126,10 +124,6 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
-        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
-            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
-        });
-
         this.holderListeners();
         this.transitionListeners();
 
@@ -190,7 +184,6 @@ class CoWebsiteManager {
 
     public cleanup(): void {
         this.closeCoWebsites();
-        this.mainCoWebsiteUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
@@ -359,6 +352,10 @@ class CoWebsiteManager {
         this.cowebsiteDom.classList.remove("opened");
         this.openedMain.set(iframeStates.closed);
         this.fire();
+    }
+
+    public hideButtonCloseCoWebsite(hide: boolean = true): void {
+        this.buttonCloseCoWebsite.hidden = hide;
     }
 
     private closeMain(): void {
