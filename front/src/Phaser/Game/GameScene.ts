@@ -1665,6 +1665,7 @@ ${escapedMessage}
         this.followUsersColorStoreUnsubscriber?.();
         this.highlightedEmbedScreenUnsubscriber?.();
         this.embedScreenLayoutStoreUnsubscriber?.();
+        this.mainCoWebsiteUnsubscriber?.();
         this.userIsJitsiDominantSpeakerStoreUnsubscriber?.();
         this.jitsiParticipantsCountStoreUnsubscriber?.();
         this.availabilityStatusStoreUnsubscriber?.();
