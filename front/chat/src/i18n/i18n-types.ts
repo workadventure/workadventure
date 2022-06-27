@@ -58,6 +58,14 @@ type RootTranslation = {
 	 */
 	reconnecting: string
 	/**
+	 * Waiting user data ...
+	 */
+	waitingData: string
+	/**
+	 * Search for user, message, channel, etc.
+	 */
+	search: string
+	/**
 	 * test
 	 */
 	CONNECTING: string
@@ -106,6 +114,14 @@ export type TranslationFunctions = {
 	 * Connection to presence server ...
 	 */
 	reconnecting: () => LocalizedString
+	/**
+	 * Waiting user data ...
+	 */
+	waitingData: () => LocalizedString
+	/**
+	 * Search for user, message, channel, etc.
+	 */
+	search: () => LocalizedString
 	/**
 	 * test
 	 */

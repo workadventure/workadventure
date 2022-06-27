@@ -240,6 +240,7 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
                     if (client.xmppClient) {
+                        console.log('Trying disconnecting from xmppClient');
                         client.xmppClient.close();
                     }
                 })
@@ -699,7 +700,6 @@ export class SocketManager implements ZoneEventListener {
 
     handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
         if (client.xmppClient === undefined) {
-            return;
             throw new Error(
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );

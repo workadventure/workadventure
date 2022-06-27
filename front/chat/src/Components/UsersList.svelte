@@ -15,8 +15,7 @@
     const maxUsersMinimized = 7;
 
     function openChat(user: any) {
-        console.log(user);
-        return null;
+        return user;
         //dispatch('activeThread', user);
     }
 </script>

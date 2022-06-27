@@ -14,6 +14,8 @@ const fr_FR: Translation = {
         teleporting: "Téléportation ...",
     },
     reconnecting: "Connexion au serveur ...",
+    waitingData: "En attentes des informations de l'utilisateur ...",
+    search: "Rechercher un utilisateur, un message, un canal ...",
     CONNECTING: "test"
 };
 

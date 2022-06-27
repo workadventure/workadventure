@@ -14,6 +14,8 @@ const en_US: BaseTranslation = {
         teleporting: "Teleporting ...",
     },
     reconnecting: "Connection to presence server ...",
+    waitingData: "Waiting user data ...",
+    search: "Search for user, message, channel, etc.",
     CONNECTING: "test"
 };
 

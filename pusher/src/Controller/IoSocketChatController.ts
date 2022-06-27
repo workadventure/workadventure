@@ -285,11 +285,6 @@ export class IoSocketChatController {
             open: (_ws: WebSocket) => {
                 const ws = _ws as WebSocket & (UpgradeData | UpgradeFailedData);
                 if (ws.rejected === true) {
-                    if (ws.reason === "error") {
-                        socketManager.emitErrorScreenMessage(ws, ws.error);
-                    } else {
-                        socketManager.emitConnexionErrorMessage(ws, ws.message);
-                    }
                     setTimeout(() => ws.close(), 0);
                     return;
                 }
@@ -311,9 +306,13 @@ export class IoSocketChatController {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
-                const Client = ws as ExSocketInterface;
+                const client = ws as ExSocketInterface;
                 try {
-                    Client.disconnecting = true;
+                    client.disconnecting = true;
+                    if(client.xmppClient) {
+                        client.xmppClient.close();
+                        console.log('Disconnecting from xmppClient');
+                    }
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);

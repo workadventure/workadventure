@@ -200,7 +200,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
-    XmppMessage xmppMessage = 11;
+    //XmppMessage xmppMessage = 11;
   }
 }
 
@@ -407,8 +407,8 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     BBBMeetingClientURLMessage bbbMeetingClientURLMessage = 27;
-    XmppSettingsMessage xmppSettingsMessage = 28;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 29;
+    //XmppSettingsMessage xmppSettingsMessage = 28;
+    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 29;
     MoveToPositionMessage moveToPositionMessage = 30;
   }
 }
@@ -629,9 +629,9 @@ message IframeToPusherMessage{
 }
 message PusherToIframeMessage{
   oneof message {
-    BatchMessage batchMessage = 1;
-    XmppSettingsMessage xmppSettingsMessage = 2;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 3;
+    XmppSettingsMessage xmppSettingsMessage = 1;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
+    XmppMessage xmppMessage = 3;
   }
 }
 /**

@@ -11,6 +11,7 @@ import {
 } from "../Messages/ts-proto-generated/protos/messages";
 import {XmppClient} from "../Xmpp/XmppClient";
 import {Parser} from "@xmpp/xml";
+import {connectionStore} from "../Stores/ConnectionStore";
 
 const manualPingDelay = 20000;
 
@@ -53,82 +54,78 @@ export class ChatConnection implements ChatConnection {
         //url += "&name=" + encodeURIComponent(name);
         url += "&version=" + apiVersionHash;
 
-        this.socket = new WebSocket(url);
+        try{
+            this.socket = new WebSocket(url);
 
-        this.socket.binaryType = "arraybuffer";
+            this.socket.binaryType = "arraybuffer";
 
-        let interval: ReturnType<typeof setInterval> | undefined = undefined;
+            let interval: ReturnType<typeof setInterval> | undefined = undefined;
 
-        this.socket.onopen = () => {
-            //we manually ping every 20s to not be logged out by the server, even when the game is in background.
-            const pingMessage = PingMessageTsProto.encode({}).finish();
-            interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
-        };
+            this.socket.onopen = () => {
+                //we manually ping every 20s to not be logged out by the server, even when the game is in background.
+                const pingMessage = PingMessageTsProto.encode({}).finish();
+                interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
+            };
 
-        this.socket.addEventListener("open", (event) => {
-            this.xmppClient = new XmppClient(this);
-        });
+            this.socket.addEventListener("open", (event) => {
+                console.info('WebSocket iFrame <> Pusher opened.');
+                this.xmppClient = new XmppClient(this);
+            });
 
-        this.socket.addEventListener("close", (event) => {
-            if (interval) {
-                clearInterval(interval);
-            }
-
-            // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
-            if (this.userId === null && !this.closed) {
-                this._connectionErrorStream.next(event);
-            }
-        });
-
-        this.socket.onmessage = (messageEvent) => {
-            const arrayBuffer: ArrayBuffer = messageEvent.data;
-
-            const pusherToIframeMessage = PusherToIframeMessage.decode(new Uint8Array(arrayBuffer));
-            //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
-
-            const message = pusherToIframeMessage.message;
-            if (message === undefined) {
-                return;
-            }
-
-            switch (message.$case) {
-                case "xmppSettingsMessage": {
-                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
-                    break;
+            this.socket.addEventListener("close", (event) => {
+                if (interval) {
+                    clearInterval(interval);
                 }
-                case "xmppConnectionStatusChangeMessage": {
-                    this._xmppConnectionStatusChangeMessageStream.next(
-                        message.xmppConnectionStatusChangeMessage.status
-                    );
-                    break;
-                }
-                case "batchMessage": {
-                    for (const subMessageWrapper of message.batchMessage.payload) {
-                        const subMessage = subMessageWrapper.message;
-                        if (subMessage === undefined) {
-                            return;
-                        }
-                        switch (subMessage.$case) {
-                            case "xmppMessage": {
-                                const elementExtParsed = parse(subMessage.xmppMessage.stanza);
 
-                                if (elementExtParsed == undefined) {
-                                    console.error("xmppMessage  => data is undefined => ", elementExtParsed);
-                                    break;
-                                }
-                                this._xmppMessageStream.next(elementExtParsed);
-                                break;
-                            }
-                        }
+                // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
+                if (this.userId === null && !this.closed) {
+                    this._connectionErrorStream.next(event);
+                }
+            });
+
+            this.socket.onmessage = (messageEvent) => {
+                const arrayBuffer: ArrayBuffer = messageEvent.data;
+
+                const pusherToIframeMessage = PusherToIframeMessage.decode(new Uint8Array(arrayBuffer));
+                //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
+
+                const message = pusherToIframeMessage.message;
+                if (message === undefined) {
+                    return;
+                }
+
+                switch (message.$case) {
+                    case "xmppSettingsMessage": {
+                        console.warn('xmppSettingsMessage received');
+                        this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
+                        break;
                     }
-                    break;
-                }
-                default: {
-                    // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                    const _exhaustiveCheck: any = message;
+                    case "xmppConnectionStatusChangeMessage": {
+                        this._xmppConnectionStatusChangeMessageStream.next(
+                            message.xmppConnectionStatusChangeMessage.status
+                        );
+                        break;
+                    }
+                    case "xmppMessage": {
+                        const elementExtParsed = parse(message.xmppMessage.stanza);
+
+                        if (elementExtParsed == undefined) {
+                            console.error("xmppMessage  => data is undefined => ", elementExtParsed);
+                            break;
+                        }
+                        this._xmppMessageStream.next(elementExtParsed);
+                        break;
+                    }
+                    default: {
+                        // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                        const _exhaustiveCheck: any = message;
+                    }
                 }
             }
-        };
+        } catch (e){
+            console.log('Error');
+            throw new Error('Error');
+        }
     }
 
     public emitXmlMessage(xml: ElementExt): void {

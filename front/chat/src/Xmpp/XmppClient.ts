@@ -53,6 +53,7 @@ export class XmppClient {
         });
 
         connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
+            console.log('xmppConnectionStatusChangeMessageStream change');
             switch (status) {
                 case Status.DISCONNECTED: {
                     console.log('XmppServerDisconnected');

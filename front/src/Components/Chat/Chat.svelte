@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, Unsubscriber, writable } from "svelte/store";
+    import {derived, get, Unsubscriber, writable} from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     let chatIframe: HTMLIFrameElement;
@@ -63,7 +63,9 @@
         );
         subscribeListeners.push(
             chatVisibilityStore.subscribe(() => {
-                gameManager.getCurrentGameScene()?.onResize();
+                if(get(gameManager.getInitStore())) {
+                    //gameManager.getCurrentGameScene()?.onResize();
+                }
             })
         );
     });
@@ -237,7 +239,7 @@
         position: absolute;
         background-color: transparent;
         top: 0;
-        left: -30vw;
+        left: -100%;
         height: 100vh;
         width: 30vw;
         min-width: 350px;

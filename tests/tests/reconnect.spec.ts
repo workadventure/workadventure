@@ -16,7 +16,8 @@ test.describe('Connection', () => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
     );
-    await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+    //await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+    await expect(page.locator('p.code')).toContainText('HTTP_ERROR');
 
     await startContainer(container);
 

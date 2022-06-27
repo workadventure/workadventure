@@ -11,6 +11,8 @@
     import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import {MucRoom} from "../Xmpp/MucRoom";
+    import {userStore} from "../Stores/LocalUserStore";
+    import LL from "../i18n/i18n-svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -284,7 +286,7 @@
 <aside class="chatWindow" bind:this={chatWindowElement}>
     <section class="tw-p-0 tw-m-0" bind:this={listDom}>
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
-            <Loader />
+            <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
             {#if activeThread !== null}
                 <div transition:fly={{ x: 500, duration: 500 }}>
@@ -451,7 +453,7 @@
                         <div class="tw-p-3">
                             <input
                                     class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-p-3 tw-pl-6 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
-                                    placeholder="Search for user, message, channel, etc."
+                                    placeholder={$LL.search()}
                                     bind:value={searchValue}
                             />
                         </div>

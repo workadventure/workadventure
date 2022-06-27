@@ -284,8 +284,7 @@ export interface SubMessage {
         | { $case: "emoteEventMessage"; emoteEventMessage: EmoteEventMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
-        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
-        | { $case: "xmppMessage"; xmppMessage: XmppMessage };
+        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage };
 }
 
 export interface BatchMessage {
@@ -514,11 +513,6 @@ export interface ServerToClientMessage {
         | { $case: "groupUsersUpdateMessage"; groupUsersUpdateMessage: GroupUsersUpdateMessage }
         | { $case: "errorScreenMessage"; errorScreenMessage: ErrorScreenMessage }
         | { $case: "bbbMeetingClientURLMessage"; bbbMeetingClientURLMessage: BBBMeetingClientURLMessage }
-        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage }
-        | {
-              $case: "xmppConnectionStatusChangeMessage";
-              xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
-          }
         | { $case: "moveToPositionMessage"; moveToPositionMessage: MoveToPositionMessage };
 }
 
@@ -709,12 +703,12 @@ export interface IframeToPusherMessage {
 
 export interface PusherToIframeMessage {
     message?:
-        | { $case: "batchMessage"; batchMessage: BatchMessage }
         | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage }
         | {
               $case: "xmppConnectionStatusChangeMessage";
               xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
-          };
+          }
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage };
 }
 
 const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
@@ -2856,9 +2850,6 @@ export const SubMessage = {
                 writer.uint32(82).fork()
             ).ldelim();
         }
-        if (message.message?.$case === "xmppMessage") {
-            XmppMessage.encode(message.message.xmppMessage, writer.uint32(90).fork()).ldelim();
-        }
         return writer;
     },
 
@@ -2929,12 +2920,6 @@ export const SubMessage = {
                         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 11:
-                    message.message = {
-                        $case: "xmppMessage",
-                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3002,9 +2987,6 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(object.playerDetailsUpdatedMessage),
             };
         }
-        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
-            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
-        }
         return message;
     },
 
@@ -3049,10 +3031,6 @@ export const SubMessage = {
         message.message?.$case === "playerDetailsUpdatedMessage" &&
             (obj.playerDetailsUpdatedMessage = message.message?.playerDetailsUpdatedMessage
                 ? PlayerDetailsUpdatedMessage.toJSON(message.message?.playerDetailsUpdatedMessage)
-                : undefined);
-        message.message?.$case === "xmppMessage" &&
-            (obj.xmppMessage = message.message?.xmppMessage
-                ? XmppMessage.toJSON(message.message?.xmppMessage)
                 : undefined);
         return obj;
     },
@@ -3159,16 +3137,6 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromPartial(
                     object.message.playerDetailsUpdatedMessage
                 ),
-            };
-        }
-        if (
-            object.message?.$case === "xmppMessage" &&
-            object.message?.xmppMessage !== undefined &&
-            object.message?.xmppMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppMessage",
-                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
             };
         }
         return message;
@@ -5144,15 +5112,6 @@ export const ServerToClientMessage = {
                 writer.uint32(218).fork()
             ).ldelim();
         }
-        if (message.message?.$case === "xmppSettingsMessage") {
-            XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(226).fork()).ldelim();
-        }
-        if (message.message?.$case === "xmppConnectionStatusChangeMessage") {
-            XmppConnectionStatusChangeMessage.encode(
-                message.message.xmppConnectionStatusChangeMessage,
-                writer.uint32(234).fork()
-            ).ldelim();
-        }
         if (message.message?.$case === "moveToPositionMessage") {
             MoveToPositionMessage.encode(message.message.moveToPositionMessage, writer.uint32(242).fork()).ldelim();
         }
@@ -5305,21 +5264,6 @@ export const ServerToClientMessage = {
                     message.message = {
                         $case: "bbbMeetingClientURLMessage",
                         bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 28:
-                    message.message = {
-                        $case: "xmppSettingsMessage",
-                        xmppSettingsMessage: XmppSettingsMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 29:
-                    message.message = {
-                        $case: "xmppConnectionStatusChangeMessage",
-                        xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.decode(
-                            reader,
-                            reader.uint32()
-                        ),
                     };
                     break;
                 case 30:
@@ -5475,23 +5419,6 @@ export const ServerToClientMessage = {
                 bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromJSON(object.bbbMeetingClientURLMessage),
             };
         }
-        if (object.xmppSettingsMessage !== undefined && object.xmppSettingsMessage !== null) {
-            message.message = {
-                $case: "xmppSettingsMessage",
-                xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
-            };
-        }
-        if (
-            object.xmppConnectionStatusChangeMessage !== undefined &&
-            object.xmppConnectionStatusChangeMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppConnectionStatusChangeMessage",
-                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromJSON(
-                    object.xmppConnectionStatusChangeMessage
-                ),
-            };
-        }
         if (object.moveToPositionMessage !== undefined && object.moveToPositionMessage !== null) {
             message.message = {
                 $case: "moveToPositionMessage",
@@ -5594,14 +5521,6 @@ export const ServerToClientMessage = {
         message.message?.$case === "bbbMeetingClientURLMessage" &&
             (obj.bbbMeetingClientURLMessage = message.message?.bbbMeetingClientURLMessage
                 ? BBBMeetingClientURLMessage.toJSON(message.message?.bbbMeetingClientURLMessage)
-                : undefined);
-        message.message?.$case === "xmppSettingsMessage" &&
-            (obj.xmppSettingsMessage = message.message?.xmppSettingsMessage
-                ? XmppSettingsMessage.toJSON(message.message?.xmppSettingsMessage)
-                : undefined);
-        message.message?.$case === "xmppConnectionStatusChangeMessage" &&
-            (obj.xmppConnectionStatusChangeMessage = message.message?.xmppConnectionStatusChangeMessage
-                ? XmppConnectionStatusChangeMessage.toJSON(message.message?.xmppConnectionStatusChangeMessage)
                 : undefined);
         message.message?.$case === "moveToPositionMessage" &&
             (obj.moveToPositionMessage = message.message?.moveToPositionMessage
@@ -5847,28 +5766,6 @@ export const ServerToClientMessage = {
                 $case: "bbbMeetingClientURLMessage",
                 bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromPartial(
                     object.message.bbbMeetingClientURLMessage
-                ),
-            };
-        }
-        if (
-            object.message?.$case === "xmppSettingsMessage" &&
-            object.message?.xmppSettingsMessage !== undefined &&
-            object.message?.xmppSettingsMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppSettingsMessage",
-                xmppSettingsMessage: XmppSettingsMessage.fromPartial(object.message.xmppSettingsMessage),
-            };
-        }
-        if (
-            object.message?.$case === "xmppConnectionStatusChangeMessage" &&
-            object.message?.xmppConnectionStatusChangeMessage !== undefined &&
-            object.message?.xmppConnectionStatusChangeMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppConnectionStatusChangeMessage",
-                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromPartial(
-                    object.message.xmppConnectionStatusChangeMessage
                 ),
             };
         }
@@ -8580,17 +8477,17 @@ const basePusherToIframeMessage: object = {};
 
 export const PusherToIframeMessage = {
     encode(message: PusherToIframeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.message?.$case === "batchMessage") {
-            BatchMessage.encode(message.message.batchMessage, writer.uint32(10).fork()).ldelim();
-        }
         if (message.message?.$case === "xmppSettingsMessage") {
-            XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(18).fork()).ldelim();
+            XmppSettingsMessage.encode(message.message.xmppSettingsMessage, writer.uint32(10).fork()).ldelim();
         }
         if (message.message?.$case === "xmppConnectionStatusChangeMessage") {
             XmppConnectionStatusChangeMessage.encode(
                 message.message.xmppConnectionStatusChangeMessage,
-                writer.uint32(26).fork()
+                writer.uint32(18).fork()
             ).ldelim();
+        }
+        if (message.message?.$case === "xmppMessage") {
+            XmppMessage.encode(message.message.xmppMessage, writer.uint32(26).fork()).ldelim();
         }
         return writer;
     },
@@ -8604,23 +8501,23 @@ export const PusherToIframeMessage = {
             switch (tag >>> 3) {
                 case 1:
                     message.message = {
-                        $case: "batchMessage",
-                        batchMessage: BatchMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 2:
-                    message.message = {
                         $case: "xmppSettingsMessage",
                         xmppSettingsMessage: XmppSettingsMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 3:
+                case 2:
                     message.message = {
                         $case: "xmppConnectionStatusChangeMessage",
                         xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.decode(
                             reader,
                             reader.uint32()
                         ),
+                    };
+                    break;
+                case 3:
+                    message.message = {
+                        $case: "xmppMessage",
+                        xmppMessage: XmppMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -8633,9 +8530,6 @@ export const PusherToIframeMessage = {
 
     fromJSON(object: any): PusherToIframeMessage {
         const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
-        if (object.batchMessage !== undefined && object.batchMessage !== null) {
-            message.message = { $case: "batchMessage", batchMessage: BatchMessage.fromJSON(object.batchMessage) };
-        }
         if (object.xmppSettingsMessage !== undefined && object.xmppSettingsMessage !== null) {
             message.message = {
                 $case: "xmppSettingsMessage",
@@ -8653,15 +8547,14 @@ export const PusherToIframeMessage = {
                 ),
             };
         }
+        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
+            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
+        }
         return message;
     },
 
     toJSON(message: PusherToIframeMessage): unknown {
         const obj: any = {};
-        message.message?.$case === "batchMessage" &&
-            (obj.batchMessage = message.message?.batchMessage
-                ? BatchMessage.toJSON(message.message?.batchMessage)
-                : undefined);
         message.message?.$case === "xmppSettingsMessage" &&
             (obj.xmppSettingsMessage = message.message?.xmppSettingsMessage
                 ? XmppSettingsMessage.toJSON(message.message?.xmppSettingsMessage)
@@ -8670,21 +8563,15 @@ export const PusherToIframeMessage = {
             (obj.xmppConnectionStatusChangeMessage = message.message?.xmppConnectionStatusChangeMessage
                 ? XmppConnectionStatusChangeMessage.toJSON(message.message?.xmppConnectionStatusChangeMessage)
                 : undefined);
+        message.message?.$case === "xmppMessage" &&
+            (obj.xmppMessage = message.message?.xmppMessage
+                ? XmppMessage.toJSON(message.message?.xmppMessage)
+                : undefined);
         return obj;
     },
 
     fromPartial<I extends Exact<DeepPartial<PusherToIframeMessage>, I>>(object: I): PusherToIframeMessage {
         const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
-        if (
-            object.message?.$case === "batchMessage" &&
-            object.message?.batchMessage !== undefined &&
-            object.message?.batchMessage !== null
-        ) {
-            message.message = {
-                $case: "batchMessage",
-                batchMessage: BatchMessage.fromPartial(object.message.batchMessage),
-            };
-        }
         if (
             object.message?.$case === "xmppSettingsMessage" &&
             object.message?.xmppSettingsMessage !== undefined &&
@@ -8705,6 +8592,16 @@ export const PusherToIframeMessage = {
                 xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromPartial(
                     object.message.xmppConnectionStatusChangeMessage
                 ),
+            };
+        }
+        if (
+            object.message?.$case === "xmppMessage" &&
+            object.message?.xmppMessage !== undefined &&
+            object.message?.xmppMessage !== null
+        ) {
+            message.message = {
+                $case: "xmppMessage",
+                xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
             };
         }
         return message;
