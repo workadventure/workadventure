@@ -124,6 +124,10 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
+        mainCoWebsite.subscribe((coWebsite) => {
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
+        });
+
         this.holderListeners();
         this.transitionListeners();
 
@@ -352,10 +356,6 @@ class CoWebsiteManager {
         this.cowebsiteDom.classList.remove("opened");
         this.openedMain.set(iframeStates.closed);
         this.fire();
-    }
-
-    public hideButtonCloseCoWebsite(hide: boolean = true): void {
-        this.buttonCloseCoWebsite.hidden = hide;
     }
 
     private closeMain(): void {
