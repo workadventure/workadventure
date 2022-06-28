@@ -139,6 +139,8 @@ export class GameMap {
     }
 
     public getCollisionGrid(): number[][] {
+        console.log("START getCollisionGrid()");
+        const start = new Date().getTime();
         const grid: number[][] = [];
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
@@ -147,6 +149,7 @@ export class GameMap {
             }
             grid.push(row);
         }
+        console.log(`getCollisionGrid() elapsed time: ${new Date().getTime() - start}ms`);
         return grid;
     }
 

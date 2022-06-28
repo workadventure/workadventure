@@ -480,7 +480,9 @@ export class GameScene extends DirtyScene {
         this.companion = gameManager.getCompanion();
 
         //initialise map
-        this.Map = this.add.tilemap(this.MapUrlFile);
+        const start = new Date().getTime();
+        this.Map = this.add.tilemap(this.MapUrlFile); // this is lagging too!
+        console.log(`this.add.tilemap(...) elapsed time: ${new Date().getTime() - start}ms`);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
             this.Terrains.push(
