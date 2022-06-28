@@ -1560,9 +1560,11 @@ ${escapedMessage}
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+        let collisionGrid: number[][] = [];
         if (phaserLayer != undefined) {
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
+            collisionGrid = this.gameMap.getCollisionGrid(phaserLayer);
         } else {
             const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
             if (phaserLayers.length === 0) {
@@ -1577,8 +1579,9 @@ ${escapedMessage}
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
+            collisionGrid = this.gameMap.getCollisionGrid(undefined, false);
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
+        this.pathfindingManager.setCollisionGrid(collisionGrid);
         this.markDirty();
     }
 

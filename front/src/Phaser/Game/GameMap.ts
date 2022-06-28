@@ -140,7 +140,7 @@ export class GameMap {
         return [];
     }
 
-    public getCollisionGrid(modifiedLayer?: TilemapLayer): number[][] {
+    public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache: boolean = true): number[][] {
         // initialize collision grid to write on
         const grid: number[][] = Array.from(Array(this.map.height), (_) => Array(this.map.width).fill(0));
         if (modifiedLayer) {
@@ -151,6 +151,9 @@ export class GameMap {
         for (const layer of this.phaserLayers) {
             if (!layer.visible) {
                 continue;
+            }
+            if (!useCache) {
+                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
             }
             const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
             if (!cachedLayer) {
