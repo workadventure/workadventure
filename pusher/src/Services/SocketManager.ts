@@ -239,7 +239,7 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
                     if (client.xmppClient) {
-                        console.log('Trying disconnecting from xmppClient');
+                        console.log("Trying disconnecting from xmppClient");
                         client.xmppClient.close();
                     }
                 })

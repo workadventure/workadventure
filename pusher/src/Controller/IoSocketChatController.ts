@@ -309,9 +309,9 @@ export class IoSocketChatController {
                 const client = ws as ExSocketInterface;
                 try {
                     client.disconnecting = true;
-                    if(client.xmppClient) {
+                    if (client.xmppClient) {
                         client.xmppClient.close();
-                        console.log('Disconnecting from xmppClient');
+                        console.log("Disconnecting from xmppClient");
                     }
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');

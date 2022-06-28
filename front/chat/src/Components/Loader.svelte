@@ -1,6 +1,4 @@
 <script lang="ts">
-    import LL from "../i18n/i18n-svelte";
-
     export let text: string;
 </script>
 <div class="tw-grid tw-place-items-center tw-h-screen loader">

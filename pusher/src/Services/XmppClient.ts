@@ -105,7 +105,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                console.log('WebSocket Pusher <> Xmpp established');
+                console.log("WebSocket Pusher <> Xmpp established");
                 status = "connected";
                 //TODO
                 // define if MUC must persistent or not
@@ -160,7 +160,7 @@ export class XmppClient {
                 const pusherToIframeMessage = new PusherToIframeMessage();
                 pusherToIframeMessage.setXmppmessage(xmppMessage);
 
-                if(!this.clientSocket.disconnecting) {
+                if (!this.clientSocket.disconnecting) {
                     this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                 }
             });
@@ -189,15 +189,15 @@ export class XmppClient {
     }*/
 
     close() {
-        console.log('> Disconnecting from xmppClient');
+        console.log("> Disconnecting from xmppClient");
         this.clientPromise
             .then(async (xmpp) => {
-                console.log('>> Disconnecting from xmppClient');
+                console.log(">> Disconnecting from xmppClient");
                 //cancel promise
                 this.clientPromise.cancel();
                 //send presence unavailable to notify server
                 await xmpp.send(xml("presence", { type: "unavailable" }));
-                console.log('Send presence unavailable to xmppClient');
+                console.log("Send presence unavailable to xmppClient");
                 await xmpp.stop();
 
                 return xmpp;
@@ -210,7 +210,7 @@ export class XmppClient {
 
     async send(stanza: string): Promise<void> {
         const xmppSocket = await this.clientPromise;
-        if(xmppSocket) {
+        if (xmppSocket) {
             const ctx = parse(stanza);
             xmppSocket.send(ctx);
         }
