@@ -103,8 +103,8 @@ export class GameMapPropertiesListener {
                         domain = `${location.protocol}//${domain}`;
                     }
 
-                    const closable =
-                        (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
+                    const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
+
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
                     coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
@@ -331,7 +331,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty ?? true
+                websiteClosableProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;

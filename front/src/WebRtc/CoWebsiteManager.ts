@@ -131,7 +131,7 @@ class CoWebsiteManager {
         };
 
         mainCoWebsite.subscribe((coWebsite) => {
-            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
         });
 
         this.holderListeners();
