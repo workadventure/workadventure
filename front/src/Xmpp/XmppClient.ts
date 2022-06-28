@@ -12,8 +12,7 @@ export class XmppClient {
     private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
 
-    constructor(private connection: RoomConnection) {
-    }
+    constructor(private connection: RoomConnection) {}
 
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
         xmppServerConnectionStatusStore.set(true);

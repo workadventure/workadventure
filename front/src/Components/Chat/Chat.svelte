@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import {derived, get, Unsubscriber, writable} from "svelte/store";
+    import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
     let chatIframe: HTMLIFrameElement;
@@ -63,7 +63,7 @@
         );
         subscribeListeners.push(
             chatVisibilityStore.subscribe(() => {
-                if(get(gameManager.getInitStore())) {
+                if (get(gameManager.getInitStore())) {
                     //gameManager.getCurrentGameScene()?.onResize();
                 }
             })

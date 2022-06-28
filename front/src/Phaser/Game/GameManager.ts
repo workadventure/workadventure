@@ -1,4 +1,4 @@
-import {get, Writable, writable} from "svelte/store";
+import { get, Writable, writable } from "svelte/store";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { Room } from "../../Connexion/Room";
@@ -24,7 +24,6 @@ export class GameManager {
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
     private isInitStore: Writable<boolean>;
-
 
     constructor() {
         this.playerName = localUserStore.getName();
@@ -163,7 +162,7 @@ export class GameManager {
         return this.startRoom;
     }
 
-    public getInitStore(){
+    public getInitStore() {
         return this.isInitStore;
     }
 }
