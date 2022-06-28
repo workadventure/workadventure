@@ -1,46 +1,49 @@
 import { GameRoom } from "../Model/GameRoom";
 import {
+    AnswerMessage,
+    BanUserMessage,
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
+    ErrorMessage,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
+    FollowRequestMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
+    GroupUsersUpdateMessage,
     ItemEventMessage,
     ItemStateMessage,
+    JitsiJwtAnswer,
+    JitsiJwtQuery,
+    JoinBBBMeetingAnswer,
+    JoinBBBMeetingQuery,
+    JoinRoomMessage,
+    LockGroupPromptMessage,
+    PlayerDetailsUpdatedMessage,
     PointMessage,
+    QueryMessage,
+    RefreshRoomMessage,
+    RoomDescription,
     RoomJoinedMessage,
+    RoomsList,
+    SendUserMessage,
     ServerToClientMessage,
+    SetPlayerDetailsMessage,
     SubMessage,
+    SubToPusherMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
     UserMovedMessage,
     UserMovesMessage,
+    VariableMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    JoinBBBMeetingMessage,
-    BBBMeetingClientURLMessage,
-    SendUserMessage,
-    JoinRoomMessage,
-    Zone as ProtoZone,
-    BatchToPusherMessage,
-    SubToPusherMessage,
-    UserJoinedZoneMessage,
-    GroupUpdateZoneMessage,
-    GroupLeftZoneMessage,
     WorldFullWarningMessage,
-    UserLeftZoneMessage,
-    EmoteEventMessage,
-    BanUserMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
-    VariableMessage,
-    BatchToPusherRoomMessage,
-    SetPlayerDetailsMessage,
-    PlayerDetailsUpdatedMessage,
-    GroupUsersUpdateMessage,
-    LockGroupPromptMessage,
-    RoomsList,
-    RoomDescription,
+    Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
 } from "../Messages/generated/messages_pb";
@@ -60,7 +63,7 @@ import { Zone } from "../Model/Zone";
 import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
-import { emitError } from "./MessageHelpers";
+import QueryCase = QueryMessage.QueryCase;
 
 const debug = Debug("sockermanager");
 
@@ -571,11 +574,57 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
+    public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
+        const queryCase = queryMessage.getQueryCase();
+        const answerMessage = new AnswerMessage();
+        answerMessage.setId(queryMessage.getId());
+
+        try {
+            switch (queryCase) {
+                case QueryCase.QUERY_NOT_SET:
+                    throw new Error("Query case not set");
+                case QueryMessage.QueryCase.JITSIJWTQUERY: {
+                    const answer = await this.handleQueryJitsiJwtMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJitsijwtquery() as JitsiJwtQuery
+                    );
+                    answerMessage.setJitsijwtanswer(answer);
+                    break;
+                }
+                case QueryMessage.QueryCase.JOINBBBMEETINGQUERY: {
+                    const answer = await this.handleJoinBBBMeetingMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJoinbbbmeetingquery() as JoinBBBMeetingQuery
+                    );
+                    answerMessage.setJoinbbbmeetinganswer(answer);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = queryCase;
+                }
+            }
+        } catch (e) {
+            console.error("An error happened while answering a query:", e);
+            const errorMessage = new ErrorMessage();
+            errorMessage.setMessage(
+                e !== null && typeof e === "object" ? e.toString() : typeof e === "string" ? e : "Unknown error"
+            );
+            answerMessage.setError(errorMessage);
+        }
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setAnswermessage(answerMessage);
+
+        user.socket.write(serverToClientMessage);
+    }
+
     public async handleQueryJitsiJwtMessage(
         gameRoom: GameRoom,
         user: User,
-        queryJitsiJwtMessage: QueryJitsiJwtMessage
-    ) {
+        queryJitsiJwtMessage: JitsiJwtQuery
+    ): Promise<JitsiJwtAnswer> {
         const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
         const jitsiSettings = gameRoom.getJitsiSettings();
 
@@ -613,35 +662,26 @@ export class SocketManager {
             }
         );
 
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(jitsiRoom);
-        sendJitsiJwtMessage.setJwt(jwt);
+        const jitsiJwtAnswer = new JitsiJwtAnswer();
+        jitsiJwtAnswer.setJwt(jwt);
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-        user.socket.write(serverToClientMessage);
+        return jitsiJwtAnswer;
     }
 
     public async handleJoinBBBMeetingMessage(
         gameRoom: GameRoom,
         user: User,
-        joinBBBMeetingMessage: JoinBBBMeetingMessage
-    ) {
-        const meetingId = joinBBBMeetingMessage.getMeetingid();
-        const meetingName = joinBBBMeetingMessage.getMeetingname();
+        joinBBBMeetingQuery: JoinBBBMeetingQuery
+    ): Promise<JoinBBBMeetingAnswer> {
+        const meetingId = joinBBBMeetingQuery.getMeetingid();
+        const meetingName = joinBBBMeetingQuery.getMeetingname();
         const bbbSettings = gameRoom.getBbbSettings();
 
         if (bbbSettings === undefined) {
-            const errorStr =
+            throw new Error(
                 "Unable to join the conference because either " +
-                "the BBB_URL or BBB_SECRET environment variables are not set.";
-
-            console.error(errorStr);
-
-            emitError(user.socket, errorStr);
-
-            return;
+                    "the BBB_URL or BBB_SECRET environment variables are not set."
+            );
         }
 
         // Let's see if the current client has moderator rights
@@ -687,14 +727,11 @@ export class SocketManager {
             joinViaHtml5: true,
         });
 
-        const bbbMeetingClientURLMessage = new BBBMeetingClientURLMessage();
-        bbbMeetingClientURLMessage.setMeetingid(meetingId);
-        bbbMeetingClientURLMessage.setClienturl(clientURL);
+        const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
+        bbbMeetingAnswer.setMeetingid(meetingId);
+        bbbMeetingAnswer.setClienturl(clientURL);
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setBbbmeetingclienturlmessage(bbbMeetingClientURLMessage);
-
-        user.socket.write(serverToClientMessage);
+        return bbbMeetingAnswer;
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
