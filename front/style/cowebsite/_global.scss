@@ -47,6 +47,10 @@
       flex: 1;
       justify-content: start;
 
+      img {
+        min-width: 1rem;
+      }
+
       #cowebsite-swipe {
         display: none;
         img {
