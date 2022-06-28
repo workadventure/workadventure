@@ -9,21 +9,23 @@ test.describe('Connection', () => {
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
     );
 
+    await login(page);
+
     // Let's stop the pusher
     const container = await findContainer('pusher');
     await stopContainer(container);
 
-    await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_LOST');
+    await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_PENDING');
+    //await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
 
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
     );
-    //await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
-    await expect(page.locator('.errorScreen p.code')).toContainText('HTTP_ERROR');
+    await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+    //await expect(page.locator('.errorScreen p.code')).toContainText('HTTP_ERROR');
 
     await startContainer(container);
 
     await page.waitForResponse(response => response.status() === 200, { timeout: 90000 });
-    await login(page);
   });
 });
