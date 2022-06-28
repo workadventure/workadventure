@@ -141,13 +141,31 @@ export class GameMap {
     public getCollisionGrid(): number[][] {
         console.log("START getCollisionGrid()");
         const start = new Date().getTime();
-        const grid: number[][] = [];
-        for (let y = 0; y < this.map.height; y += 1) {
-            const row: number[] = [];
-            for (let x = 0; x < this.map.width; x += 1) {
-                row.push(this.isCollidingAt(x, y) ? 1 : this.isExitTile(x, y) ? 2 : 0);
+        const grid: number[][] = Array.from(Array(this.map.height), (_) => Array(this.map.width).fill(0));
+        for (const layer of this.phaserLayers) {
+            if (!layer.visible) {
+                continue;
             }
-            grid.push(row);
+            let isExitLayer = false;
+            for (const property of layer.layer.properties) {
+                //@ts-ignore
+                if (property.name && property.name === "exitUrl") {
+                    isExitLayer = true;
+                    break;
+                }
+            }
+            for (let y = 0; y < this.map.height; y += 1) {
+                for (let x = 0; x < this.map.width; x += 1) {
+                    if (grid[y][x] !== 0) {
+                        continue;
+                    }
+                    grid[y][x] = this.isCollidingAt(layer, x, y)
+                        ? 1
+                        : this.isExitTile(layer, x, y, isExitLayer)
+                        ? 2
+                        : 0;
+                }
+            }
         }
         console.log(`getCollisionGrid() elapsed time: ${new Date().getTime() - start}ms`);
         return grid;
@@ -447,42 +465,64 @@ export class GameMap {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
-    private isCollidingAt(x: number, y: number): boolean {
-        for (const layer of this.phaserLayers) {
-            if (!layer.visible) {
-                continue;
-            }
-            if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
-                return true;
-            }
+    private isCollidingAt(layer: TilemapLayer, x: number, y: number): boolean {
+        if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
+            return true;
         }
         return false;
     }
 
-    private isExitTile(x: number, y: number): boolean {
-        for (const layer of this.phaserLayers) {
-            if (!layer.visible) {
-                continue;
-            }
-            const tile = layer.getTileAt(x, y);
-            if (!tile) {
-                continue;
-            }
-            if (
-                tile &&
-                (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL])
-            ) {
-                return true;
-            }
-            for (const property of layer.layer.properties) {
-                //@ts-ignore
-                if (property.name && property.name === "exitUrl") {
-                    return true;
-                }
-            }
+    private isExitTile(layer: TilemapLayer, x: number, y: number, isExitLayer: boolean): boolean {
+        const tile = layer.getTileAt(x, y);
+        if (!tile) {
+            return false;
         }
+        if (isExitLayer) {
+            return true;
+        }
+        if (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL]) {
+            return true;
+        }
+
         return false;
     }
+
+    // private isCollidingAt(x: number, y: number): boolean {
+    //     for (const layer of this.phaserLayers) {
+    //         if (!layer.visible) {
+    //             continue;
+    //         }
+    //         if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    // private isExitTile(x: number, y: number): boolean {
+    //     for (const layer of this.phaserLayers) {
+    //         if (!layer.visible) {
+    //             continue;
+    //         }
+    //         const tile = layer.getTileAt(x, y);
+    //         if (!tile) {
+    //             continue;
+    //         }
+    //         if (
+    //             tile &&
+    //             (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL])
+    //         ) {
+    //             return true;
+    //         }
+    //         for (const property of layer.layer.properties) {
+    //             //@ts-ignore
+    //             if (property.name && property.name === "exitUrl") {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     private triggerAllProperties(): void {
         const newProps = this.getProperties(this.key ?? 0);
