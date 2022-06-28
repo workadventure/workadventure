@@ -12,7 +12,6 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { XmppClient } from "../Services/XmppClient";
 
 const debug = Debug("room");
 

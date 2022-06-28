@@ -5,7 +5,6 @@ import type { RoomConnection } from "../Connexion/RoomConnection";
 import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
 import type { MucRoomDefinitionInterface } from "../Network/ProtobufClientUtils";
 import ElementExt from "./Lib/ElementExt";
-import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -14,59 +13,6 @@ export class XmppClient {
     private rooms = new Map<string, MucRoom>();
 
     constructor(private connection: RoomConnection) {
-        connection.xmppSettingsMessageStream.subscribe((settings) => {
-            if (settings === undefined) {
-                return;
-            }
-            this.jid = settings.jid;
-            this.conferenceDomain = settings.conferenceDomain;
-
-            console.info("Settings room :", settings.rooms);
-
-            this.onConnect(settings.rooms);
-        });
-
-        connection.xmppMessageStream.subscribe((xml) => {
-            let handledMessage = false;
-            const id = xml.getAttr("id");
-
-            if (id) {
-                this.subscriptions.get(id)?.next(xml);
-                handledMessage = true;
-            }
-
-            const from = xml.getAttr("from");
-
-            if (from) {
-                const fromJid = jid(from);
-                const roomJid = jid(fromJid.local, fromJid.domain);
-
-                const room = this.rooms.get(roomJid.toString());
-                if (room) {
-                    room.onMessage(xml);
-                    handledMessage = true;
-                }
-            }
-            if (!handledMessage) {
-                console.warn("Unhandled XMPP message: ", xml.toString());
-            }
-        });
-
-        connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
-            switch (status) {
-                case Status.DISCONNECTED: {
-                    xmppServerConnectionStatusStore.set(false);
-                    mucRoomsStore.reset();
-                    break;
-                }
-                case Status.UNRECOGNIZED: {
-                    throw new Error("Unexpected status received");
-                }
-                default: {
-                    //const _exhaustiveCheck: never = status;
-                }
-            }
-        });
     }
 
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {

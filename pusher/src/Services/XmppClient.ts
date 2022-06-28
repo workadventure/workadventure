@@ -3,7 +3,6 @@ import { v4 } from "uuid";
 import {
     MucRoomDefinitionMessage,
     PusherToIframeMessage,
-    SubMessage,
     XmppConnectionStatusChangeMessage,
     XmppMessage,
     XmppSettingsMessage,
