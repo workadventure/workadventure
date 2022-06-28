@@ -45,8 +45,6 @@ import {
     QueryMessage,
     AnswerMessage,
     JoinBBBMeetingAnswer,
-    XmppSettingsMessage,
-    XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";

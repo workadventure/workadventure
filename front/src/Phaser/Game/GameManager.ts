@@ -10,7 +10,6 @@ import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
-import {User, UserList} from "../../../chat/src/Xmpp/MucRoom";
 
 /**
  * This class should be responsible for any scene starting/stopping

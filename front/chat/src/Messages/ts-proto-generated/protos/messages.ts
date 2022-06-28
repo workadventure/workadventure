@@ -175,19 +175,6 @@ export interface EmoteEventMessage {
     emote: string;
 }
 
-export interface QueryJitsiJwtMessage {
-    jitsiRoom: string;
-}
-
-export interface JoinBBBMeetingMessage {
-    meetingId: string;
-    /**
-     * Fix me Pusher linter fails because eslint-plugin version < 3.0
-     * map<string, string> userdata = 3;
-     */
-    meetingName: string;
-}
-
 export interface FollowRequestMessage {
     leader: number;
 }
@@ -220,14 +207,13 @@ export interface ClientToServerMessage {
         | { $case: "playGlobalMessage"; playGlobalMessage: PlayGlobalMessage }
         | { $case: "stopGlobalMessage"; stopGlobalMessage: StopGlobalMessage }
         | { $case: "reportPlayerMessage"; reportPlayerMessage: ReportPlayerMessage }
-        | { $case: "queryJitsiJwtMessage"; queryJitsiJwtMessage: QueryJitsiJwtMessage }
         | { $case: "emotePromptMessage"; emotePromptMessage: EmotePromptMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "followRequestMessage"; followRequestMessage: FollowRequestMessage }
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
 }
 
@@ -262,6 +248,43 @@ export interface PlayGlobalMessage {
 
 export interface StopGlobalMessage {
     id: string;
+}
+
+export interface QueryMessage {
+    id: number;
+    query?:
+        | { $case: "jitsiJwtQuery"; jitsiJwtQuery: JitsiJwtQuery }
+        | { $case: "joinBBBMeetingQuery"; joinBBBMeetingQuery: JoinBBBMeetingQuery };
+}
+
+export interface JitsiJwtQuery {
+    jitsiRoom: string;
+}
+
+export interface JoinBBBMeetingQuery {
+    meetingId: string;
+    /**
+     * Fix me Pusher linter fails because eslint-plugin version < 3.0
+     * map<string, string> userdata = 3;
+     */
+    meetingName: string;
+}
+
+export interface AnswerMessage {
+    id: number;
+    answer?:
+        | { $case: "error"; error: ErrorMessage }
+        | { $case: "jitsiJwtAnswer"; jitsiJwtAnswer: JitsiJwtAnswer }
+        | { $case: "joinBBBMeetingAnswer"; joinBBBMeetingAnswer: JoinBBBMeetingAnswer };
+}
+
+export interface JitsiJwtAnswer {
+    jwt: string;
+}
+
+export interface JoinBBBMeetingAnswer {
+    meetingId: string;
+    clientURL: string;
 }
 
 export interface UserMovedMessage {
@@ -385,16 +408,6 @@ export interface TeleportMessageMessage {
     map: string;
 }
 
-export interface SendJitsiJwtMessage {
-    jitsiRoom: string;
-    jwt: string;
-}
-
-export interface BBBMeetingClientURLMessage {
-    meetingId: string;
-    clientURL: string;
-}
-
 export interface SendUserMessage {
     type: string;
     message: string;
@@ -498,7 +511,6 @@ export interface ServerToClientMessage {
           }
         | { $case: "webRtcDisconnectMessage"; webRtcDisconnectMessage: WebRtcDisconnectMessage }
         | { $case: "teleportMessageMessage"; teleportMessageMessage: TeleportMessageMessage }
-        | { $case: "sendJitsiJwtMessage"; sendJitsiJwtMessage: SendJitsiJwtMessage }
         | { $case: "sendUserMessage"; sendUserMessage: SendUserMessage }
         | { $case: "banUserMessage"; banUserMessage: BanUserMessage }
         | { $case: "worldFullWarningMessage"; worldFullWarningMessage: WorldFullWarningMessage }
@@ -512,7 +524,7 @@ export interface ServerToClientMessage {
         | { $case: "invalidTextureMessage"; invalidTextureMessage: InvalidTextureMessage }
         | { $case: "groupUsersUpdateMessage"; groupUsersUpdateMessage: GroupUsersUpdateMessage }
         | { $case: "errorScreenMessage"; errorScreenMessage: ErrorScreenMessage }
-        | { $case: "bbbMeetingClientURLMessage"; bbbMeetingClientURLMessage: BBBMeetingClientURLMessage }
+        | { $case: "answerMessage"; answerMessage: AnswerMessage }
         | { $case: "moveToPositionMessage"; moveToPositionMessage: MoveToPositionMessage };
 }
 
@@ -594,7 +606,6 @@ export interface PusherToBackMessage {
               webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage;
           }
         | { $case: "reportPlayerMessage"; reportPlayerMessage: ReportPlayerMessage }
-        | { $case: "queryJitsiJwtMessage"; queryJitsiJwtMessage: QueryJitsiJwtMessage }
         | { $case: "sendUserMessage"; sendUserMessage: SendUserMessage }
         | { $case: "banUserMessage"; banUserMessage: BanUserMessage }
         | { $case: "emotePromptMessage"; emotePromptMessage: EmotePromptMessage }
@@ -603,7 +614,7 @@ export interface PusherToBackMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
 }
 
@@ -1444,110 +1455,6 @@ export const EmoteEventMessage = {
     },
 };
 
-const baseQueryJitsiJwtMessage: object = { jitsiRoom: "" };
-
-export const QueryJitsiJwtMessage = {
-    encode(message: QueryJitsiJwtMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.jitsiRoom !== "") {
-            writer.uint32(10).string(message.jitsiRoom);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): QueryJitsiJwtMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseQueryJitsiJwtMessage } as QueryJitsiJwtMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.jitsiRoom = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): QueryJitsiJwtMessage {
-        const message = { ...baseQueryJitsiJwtMessage } as QueryJitsiJwtMessage;
-        message.jitsiRoom = object.jitsiRoom !== undefined && object.jitsiRoom !== null ? String(object.jitsiRoom) : "";
-        return message;
-    },
-
-    toJSON(message: QueryJitsiJwtMessage): unknown {
-        const obj: any = {};
-        message.jitsiRoom !== undefined && (obj.jitsiRoom = message.jitsiRoom);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<QueryJitsiJwtMessage>, I>>(object: I): QueryJitsiJwtMessage {
-        const message = { ...baseQueryJitsiJwtMessage } as QueryJitsiJwtMessage;
-        message.jitsiRoom = object.jitsiRoom ?? "";
-        return message;
-    },
-};
-
-const baseJoinBBBMeetingMessage: object = { meetingId: "", meetingName: "" };
-
-export const JoinBBBMeetingMessage = {
-    encode(message: JoinBBBMeetingMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.meetingId !== "") {
-            writer.uint32(10).string(message.meetingId);
-        }
-        if (message.meetingName !== "") {
-            writer.uint32(18).string(message.meetingName);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): JoinBBBMeetingMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJoinBBBMeetingMessage } as JoinBBBMeetingMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.meetingId = reader.string();
-                    break;
-                case 2:
-                    message.meetingName = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): JoinBBBMeetingMessage {
-        const message = { ...baseJoinBBBMeetingMessage } as JoinBBBMeetingMessage;
-        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
-        message.meetingName =
-            object.meetingName !== undefined && object.meetingName !== null ? String(object.meetingName) : "";
-        return message;
-    },
-
-    toJSON(message: JoinBBBMeetingMessage): unknown {
-        const obj: any = {};
-        message.meetingId !== undefined && (obj.meetingId = message.meetingId);
-        message.meetingName !== undefined && (obj.meetingName = message.meetingName);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<JoinBBBMeetingMessage>, I>>(object: I): JoinBBBMeetingMessage {
-        const message = { ...baseJoinBBBMeetingMessage } as JoinBBBMeetingMessage;
-        message.meetingId = object.meetingId ?? "";
-        message.meetingName = object.meetingName ?? "";
-        return message;
-    },
-};
-
 const baseFollowRequestMessage: object = { leader: 0 };
 
 export const FollowRequestMessage = {
@@ -1791,9 +1698,6 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "reportPlayerMessage") {
             ReportPlayerMessage.encode(message.message.reportPlayerMessage, writer.uint32(90).fork()).ldelim();
         }
-        if (message.message?.$case === "queryJitsiJwtMessage") {
-            QueryJitsiJwtMessage.encode(message.message.queryJitsiJwtMessage, writer.uint32(98).fork()).ldelim();
-        }
         if (message.message?.$case === "emotePromptMessage") {
             EmotePromptMessage.encode(message.message.emotePromptMessage, writer.uint32(106).fork()).ldelim();
         }
@@ -1815,11 +1719,11 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "lockGroupPromptMessage") {
             LockGroupPromptMessage.encode(message.message.lockGroupPromptMessage, writer.uint32(146).fork()).ldelim();
         }
-        if (message.message?.$case === "joinBBBMeetingMessage") {
-            JoinBBBMeetingMessage.encode(message.message.joinBBBMeetingMessage, writer.uint32(154).fork()).ldelim();
+        if (message.message?.$case === "queryMessage") {
+            QueryMessage.encode(message.message.queryMessage, writer.uint32(162).fork()).ldelim();
         }
         if (message.message?.$case === "askPositionMessage") {
-            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(170).fork()).ldelim();
+            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(178).fork()).ldelim();
         }
         return writer;
     },
@@ -1888,12 +1792,6 @@ export const ClientToServerMessage = {
                         reportPlayerMessage: ReportPlayerMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 12:
-                    message.message = {
-                        $case: "queryJitsiJwtMessage",
-                        queryJitsiJwtMessage: QueryJitsiJwtMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
                 case 13:
                     message.message = {
                         $case: "emotePromptMessage",
@@ -1930,13 +1828,13 @@ export const ClientToServerMessage = {
                         lockGroupPromptMessage: LockGroupPromptMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 19:
+                case 20:
                     message.message = {
-                        $case: "joinBBBMeetingMessage",
-                        joinBBBMeetingMessage: JoinBBBMeetingMessage.decode(reader, reader.uint32()),
+                        $case: "queryMessage",
+                        queryMessage: QueryMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 21:
+                case 22:
                     message.message = {
                         $case: "askPositionMessage",
                         askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
@@ -2011,12 +1909,6 @@ export const ClientToServerMessage = {
                 reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
             };
         }
-        if (object.queryJitsiJwtMessage !== undefined && object.queryJitsiJwtMessage !== null) {
-            message.message = {
-                $case: "queryJitsiJwtMessage",
-                queryJitsiJwtMessage: QueryJitsiJwtMessage.fromJSON(object.queryJitsiJwtMessage),
-            };
-        }
         if (object.emotePromptMessage !== undefined && object.emotePromptMessage !== null) {
             message.message = {
                 $case: "emotePromptMessage",
@@ -2053,11 +1945,8 @@ export const ClientToServerMessage = {
                 lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
             };
         }
-        if (object.joinBBBMeetingMessage !== undefined && object.joinBBBMeetingMessage !== null) {
-            message.message = {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: JoinBBBMeetingMessage.fromJSON(object.joinBBBMeetingMessage),
-            };
+        if (object.queryMessage !== undefined && object.queryMessage !== null) {
+            message.message = { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) };
         }
         if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
             message.message = {
@@ -2106,10 +1995,6 @@ export const ClientToServerMessage = {
             (obj.reportPlayerMessage = message.message?.reportPlayerMessage
                 ? ReportPlayerMessage.toJSON(message.message?.reportPlayerMessage)
                 : undefined);
-        message.message?.$case === "queryJitsiJwtMessage" &&
-            (obj.queryJitsiJwtMessage = message.message?.queryJitsiJwtMessage
-                ? QueryJitsiJwtMessage.toJSON(message.message?.queryJitsiJwtMessage)
-                : undefined);
         message.message?.$case === "emotePromptMessage" &&
             (obj.emotePromptMessage = message.message?.emotePromptMessage
                 ? EmotePromptMessage.toJSON(message.message?.emotePromptMessage)
@@ -2134,9 +2019,9 @@ export const ClientToServerMessage = {
             (obj.lockGroupPromptMessage = message.message?.lockGroupPromptMessage
                 ? LockGroupPromptMessage.toJSON(message.message?.lockGroupPromptMessage)
                 : undefined);
-        message.message?.$case === "joinBBBMeetingMessage" &&
-            (obj.joinBBBMeetingMessage = message.message?.joinBBBMeetingMessage
-                ? JoinBBBMeetingMessage.toJSON(message.message?.joinBBBMeetingMessage)
+        message.message?.$case === "queryMessage" &&
+            (obj.queryMessage = message.message?.queryMessage
+                ? QueryMessage.toJSON(message.message?.queryMessage)
                 : undefined);
         message.message?.$case === "askPositionMessage" &&
             (obj.askPositionMessage = message.message?.askPositionMessage
@@ -2242,16 +2127,6 @@ export const ClientToServerMessage = {
             };
         }
         if (
-            object.message?.$case === "queryJitsiJwtMessage" &&
-            object.message?.queryJitsiJwtMessage !== undefined &&
-            object.message?.queryJitsiJwtMessage !== null
-        ) {
-            message.message = {
-                $case: "queryJitsiJwtMessage",
-                queryJitsiJwtMessage: QueryJitsiJwtMessage.fromPartial(object.message.queryJitsiJwtMessage),
-            };
-        }
-        if (
             object.message?.$case === "emotePromptMessage" &&
             object.message?.emotePromptMessage !== undefined &&
             object.message?.emotePromptMessage !== null
@@ -2314,13 +2189,13 @@ export const ClientToServerMessage = {
             };
         }
         if (
-            object.message?.$case === "joinBBBMeetingMessage" &&
-            object.message?.joinBBBMeetingMessage !== undefined &&
-            object.message?.joinBBBMeetingMessage !== null
+            object.message?.$case === "queryMessage" &&
+            object.message?.queryMessage !== undefined &&
+            object.message?.queryMessage !== null
         ) {
             message.message = {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: JoinBBBMeetingMessage.fromPartial(object.message.joinBBBMeetingMessage),
+                $case: "queryMessage",
+                queryMessage: QueryMessage.fromPartial(object.message.queryMessage),
             };
         }
         if (
@@ -2692,6 +2567,434 @@ export const StopGlobalMessage = {
     fromPartial<I extends Exact<DeepPartial<StopGlobalMessage>, I>>(object: I): StopGlobalMessage {
         const message = { ...baseStopGlobalMessage } as StopGlobalMessage;
         message.id = object.id ?? "";
+        return message;
+    },
+};
+
+const baseQueryMessage: object = { id: 0 };
+
+export const QueryMessage = {
+    encode(message: QueryMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== 0) {
+            writer.uint32(8).int32(message.id);
+        }
+        if (message.query?.$case === "jitsiJwtQuery") {
+            JitsiJwtQuery.encode(message.query.jitsiJwtQuery, writer.uint32(18).fork()).ldelim();
+        }
+        if (message.query?.$case === "joinBBBMeetingQuery") {
+            JoinBBBMeetingQuery.encode(message.query.joinBBBMeetingQuery, writer.uint32(162).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): QueryMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseQueryMessage } as QueryMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.query = {
+                        $case: "jitsiJwtQuery",
+                        jitsiJwtQuery: JitsiJwtQuery.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 20:
+                    message.query = {
+                        $case: "joinBBBMeetingQuery",
+                        joinBBBMeetingQuery: JoinBBBMeetingQuery.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): QueryMessage {
+        const message = { ...baseQueryMessage } as QueryMessage;
+        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
+        if (object.jitsiJwtQuery !== undefined && object.jitsiJwtQuery !== null) {
+            message.query = { $case: "jitsiJwtQuery", jitsiJwtQuery: JitsiJwtQuery.fromJSON(object.jitsiJwtQuery) };
+        }
+        if (object.joinBBBMeetingQuery !== undefined && object.joinBBBMeetingQuery !== null) {
+            message.query = {
+                $case: "joinBBBMeetingQuery",
+                joinBBBMeetingQuery: JoinBBBMeetingQuery.fromJSON(object.joinBBBMeetingQuery),
+            };
+        }
+        return message;
+    },
+
+    toJSON(message: QueryMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = Math.round(message.id));
+        message.query?.$case === "jitsiJwtQuery" &&
+            (obj.jitsiJwtQuery = message.query?.jitsiJwtQuery
+                ? JitsiJwtQuery.toJSON(message.query?.jitsiJwtQuery)
+                : undefined);
+        message.query?.$case === "joinBBBMeetingQuery" &&
+            (obj.joinBBBMeetingQuery = message.query?.joinBBBMeetingQuery
+                ? JoinBBBMeetingQuery.toJSON(message.query?.joinBBBMeetingQuery)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<QueryMessage>, I>>(object: I): QueryMessage {
+        const message = { ...baseQueryMessage } as QueryMessage;
+        message.id = object.id ?? 0;
+        if (
+            object.query?.$case === "jitsiJwtQuery" &&
+            object.query?.jitsiJwtQuery !== undefined &&
+            object.query?.jitsiJwtQuery !== null
+        ) {
+            message.query = {
+                $case: "jitsiJwtQuery",
+                jitsiJwtQuery: JitsiJwtQuery.fromPartial(object.query.jitsiJwtQuery),
+            };
+        }
+        if (
+            object.query?.$case === "joinBBBMeetingQuery" &&
+            object.query?.joinBBBMeetingQuery !== undefined &&
+            object.query?.joinBBBMeetingQuery !== null
+        ) {
+            message.query = {
+                $case: "joinBBBMeetingQuery",
+                joinBBBMeetingQuery: JoinBBBMeetingQuery.fromPartial(object.query.joinBBBMeetingQuery),
+            };
+        }
+        return message;
+    },
+};
+
+const baseJitsiJwtQuery: object = { jitsiRoom: "" };
+
+export const JitsiJwtQuery = {
+    encode(message: JitsiJwtQuery, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.jitsiRoom !== "") {
+            writer.uint32(10).string(message.jitsiRoom);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): JitsiJwtQuery {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.jitsiRoom = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): JitsiJwtQuery {
+        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
+        message.jitsiRoom = object.jitsiRoom !== undefined && object.jitsiRoom !== null ? String(object.jitsiRoom) : "";
+        return message;
+    },
+
+    toJSON(message: JitsiJwtQuery): unknown {
+        const obj: any = {};
+        message.jitsiRoom !== undefined && (obj.jitsiRoom = message.jitsiRoom);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<JitsiJwtQuery>, I>>(object: I): JitsiJwtQuery {
+        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
+        message.jitsiRoom = object.jitsiRoom ?? "";
+        return message;
+    },
+};
+
+const baseJoinBBBMeetingQuery: object = { meetingId: "", meetingName: "" };
+
+export const JoinBBBMeetingQuery = {
+    encode(message: JoinBBBMeetingQuery, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.meetingId !== "") {
+            writer.uint32(10).string(message.meetingId);
+        }
+        if (message.meetingName !== "") {
+            writer.uint32(18).string(message.meetingName);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): JoinBBBMeetingQuery {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.meetingId = reader.string();
+                    break;
+                case 2:
+                    message.meetingName = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): JoinBBBMeetingQuery {
+        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
+        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
+        message.meetingName =
+            object.meetingName !== undefined && object.meetingName !== null ? String(object.meetingName) : "";
+        return message;
+    },
+
+    toJSON(message: JoinBBBMeetingQuery): unknown {
+        const obj: any = {};
+        message.meetingId !== undefined && (obj.meetingId = message.meetingId);
+        message.meetingName !== undefined && (obj.meetingName = message.meetingName);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<JoinBBBMeetingQuery>, I>>(object: I): JoinBBBMeetingQuery {
+        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
+        message.meetingId = object.meetingId ?? "";
+        message.meetingName = object.meetingName ?? "";
+        return message;
+    },
+};
+
+const baseAnswerMessage: object = { id: 0 };
+
+export const AnswerMessage = {
+    encode(message: AnswerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== 0) {
+            writer.uint32(8).int32(message.id);
+        }
+        if (message.answer?.$case === "error") {
+            ErrorMessage.encode(message.answer.error, writer.uint32(18).fork()).ldelim();
+        }
+        if (message.answer?.$case === "jitsiJwtAnswer") {
+            JitsiJwtAnswer.encode(message.answer.jitsiJwtAnswer, writer.uint32(26).fork()).ldelim();
+        }
+        if (message.answer?.$case === "joinBBBMeetingAnswer") {
+            JoinBBBMeetingAnswer.encode(message.answer.joinBBBMeetingAnswer, writer.uint32(34).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): AnswerMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseAnswerMessage } as AnswerMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.answer = { $case: "error", error: ErrorMessage.decode(reader, reader.uint32()) };
+                    break;
+                case 3:
+                    message.answer = {
+                        $case: "jitsiJwtAnswer",
+                        jitsiJwtAnswer: JitsiJwtAnswer.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 4:
+                    message.answer = {
+                        $case: "joinBBBMeetingAnswer",
+                        joinBBBMeetingAnswer: JoinBBBMeetingAnswer.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): AnswerMessage {
+        const message = { ...baseAnswerMessage } as AnswerMessage;
+        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
+        if (object.error !== undefined && object.error !== null) {
+            message.answer = { $case: "error", error: ErrorMessage.fromJSON(object.error) };
+        }
+        if (object.jitsiJwtAnswer !== undefined && object.jitsiJwtAnswer !== null) {
+            message.answer = {
+                $case: "jitsiJwtAnswer",
+                jitsiJwtAnswer: JitsiJwtAnswer.fromJSON(object.jitsiJwtAnswer),
+            };
+        }
+        if (object.joinBBBMeetingAnswer !== undefined && object.joinBBBMeetingAnswer !== null) {
+            message.answer = {
+                $case: "joinBBBMeetingAnswer",
+                joinBBBMeetingAnswer: JoinBBBMeetingAnswer.fromJSON(object.joinBBBMeetingAnswer),
+            };
+        }
+        return message;
+    },
+
+    toJSON(message: AnswerMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = Math.round(message.id));
+        message.answer?.$case === "error" &&
+            (obj.error = message.answer?.error ? ErrorMessage.toJSON(message.answer?.error) : undefined);
+        message.answer?.$case === "jitsiJwtAnswer" &&
+            (obj.jitsiJwtAnswer = message.answer?.jitsiJwtAnswer
+                ? JitsiJwtAnswer.toJSON(message.answer?.jitsiJwtAnswer)
+                : undefined);
+        message.answer?.$case === "joinBBBMeetingAnswer" &&
+            (obj.joinBBBMeetingAnswer = message.answer?.joinBBBMeetingAnswer
+                ? JoinBBBMeetingAnswer.toJSON(message.answer?.joinBBBMeetingAnswer)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<AnswerMessage>, I>>(object: I): AnswerMessage {
+        const message = { ...baseAnswerMessage } as AnswerMessage;
+        message.id = object.id ?? 0;
+        if (object.answer?.$case === "error" && object.answer?.error !== undefined && object.answer?.error !== null) {
+            message.answer = { $case: "error", error: ErrorMessage.fromPartial(object.answer.error) };
+        }
+        if (
+            object.answer?.$case === "jitsiJwtAnswer" &&
+            object.answer?.jitsiJwtAnswer !== undefined &&
+            object.answer?.jitsiJwtAnswer !== null
+        ) {
+            message.answer = {
+                $case: "jitsiJwtAnswer",
+                jitsiJwtAnswer: JitsiJwtAnswer.fromPartial(object.answer.jitsiJwtAnswer),
+            };
+        }
+        if (
+            object.answer?.$case === "joinBBBMeetingAnswer" &&
+            object.answer?.joinBBBMeetingAnswer !== undefined &&
+            object.answer?.joinBBBMeetingAnswer !== null
+        ) {
+            message.answer = {
+                $case: "joinBBBMeetingAnswer",
+                joinBBBMeetingAnswer: JoinBBBMeetingAnswer.fromPartial(object.answer.joinBBBMeetingAnswer),
+            };
+        }
+        return message;
+    },
+};
+
+const baseJitsiJwtAnswer: object = { jwt: "" };
+
+export const JitsiJwtAnswer = {
+    encode(message: JitsiJwtAnswer, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.jwt !== "") {
+            writer.uint32(10).string(message.jwt);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): JitsiJwtAnswer {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.jwt = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): JitsiJwtAnswer {
+        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
+        message.jwt = object.jwt !== undefined && object.jwt !== null ? String(object.jwt) : "";
+        return message;
+    },
+
+    toJSON(message: JitsiJwtAnswer): unknown {
+        const obj: any = {};
+        message.jwt !== undefined && (obj.jwt = message.jwt);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<JitsiJwtAnswer>, I>>(object: I): JitsiJwtAnswer {
+        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
+        message.jwt = object.jwt ?? "";
+        return message;
+    },
+};
+
+const baseJoinBBBMeetingAnswer: object = { meetingId: "", clientURL: "" };
+
+export const JoinBBBMeetingAnswer = {
+    encode(message: JoinBBBMeetingAnswer, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.meetingId !== "") {
+            writer.uint32(10).string(message.meetingId);
+        }
+        if (message.clientURL !== "") {
+            writer.uint32(18).string(message.clientURL);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): JoinBBBMeetingAnswer {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.meetingId = reader.string();
+                    break;
+                case 2:
+                    message.clientURL = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): JoinBBBMeetingAnswer {
+        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
+        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
+        message.clientURL = object.clientURL !== undefined && object.clientURL !== null ? String(object.clientURL) : "";
+        return message;
+    },
+
+    toJSON(message: JoinBBBMeetingAnswer): unknown {
+        const obj: any = {};
+        message.meetingId !== undefined && (obj.meetingId = message.meetingId);
+        message.clientURL !== undefined && (obj.clientURL = message.clientURL);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<JoinBBBMeetingAnswer>, I>>(object: I): JoinBBBMeetingAnswer {
+        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
+        message.meetingId = object.meetingId ?? "";
+        message.clientURL = object.clientURL ?? "";
         return message;
     },
 };
@@ -4213,118 +4516,6 @@ export const TeleportMessageMessage = {
     },
 };
 
-const baseSendJitsiJwtMessage: object = { jitsiRoom: "", jwt: "" };
-
-export const SendJitsiJwtMessage = {
-    encode(message: SendJitsiJwtMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.jitsiRoom !== "") {
-            writer.uint32(10).string(message.jitsiRoom);
-        }
-        if (message.jwt !== "") {
-            writer.uint32(18).string(message.jwt);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): SendJitsiJwtMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSendJitsiJwtMessage } as SendJitsiJwtMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.jitsiRoom = reader.string();
-                    break;
-                case 2:
-                    message.jwt = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): SendJitsiJwtMessage {
-        const message = { ...baseSendJitsiJwtMessage } as SendJitsiJwtMessage;
-        message.jitsiRoom = object.jitsiRoom !== undefined && object.jitsiRoom !== null ? String(object.jitsiRoom) : "";
-        message.jwt = object.jwt !== undefined && object.jwt !== null ? String(object.jwt) : "";
-        return message;
-    },
-
-    toJSON(message: SendJitsiJwtMessage): unknown {
-        const obj: any = {};
-        message.jitsiRoom !== undefined && (obj.jitsiRoom = message.jitsiRoom);
-        message.jwt !== undefined && (obj.jwt = message.jwt);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<SendJitsiJwtMessage>, I>>(object: I): SendJitsiJwtMessage {
-        const message = { ...baseSendJitsiJwtMessage } as SendJitsiJwtMessage;
-        message.jitsiRoom = object.jitsiRoom ?? "";
-        message.jwt = object.jwt ?? "";
-        return message;
-    },
-};
-
-const baseBBBMeetingClientURLMessage: object = { meetingId: "", clientURL: "" };
-
-export const BBBMeetingClientURLMessage = {
-    encode(message: BBBMeetingClientURLMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.meetingId !== "") {
-            writer.uint32(10).string(message.meetingId);
-        }
-        if (message.clientURL !== "") {
-            writer.uint32(18).string(message.clientURL);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): BBBMeetingClientURLMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBBBMeetingClientURLMessage } as BBBMeetingClientURLMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.meetingId = reader.string();
-                    break;
-                case 2:
-                    message.clientURL = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): BBBMeetingClientURLMessage {
-        const message = { ...baseBBBMeetingClientURLMessage } as BBBMeetingClientURLMessage;
-        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
-        message.clientURL = object.clientURL !== undefined && object.clientURL !== null ? String(object.clientURL) : "";
-        return message;
-    },
-
-    toJSON(message: BBBMeetingClientURLMessage): unknown {
-        const obj: any = {};
-        message.meetingId !== undefined && (obj.meetingId = message.meetingId);
-        message.clientURL !== undefined && (obj.clientURL = message.clientURL);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<BBBMeetingClientURLMessage>, I>>(object: I): BBBMeetingClientURLMessage {
-        const message = { ...baseBBBMeetingClientURLMessage } as BBBMeetingClientURLMessage;
-        message.meetingId = object.meetingId ?? "";
-        message.clientURL = object.clientURL ?? "";
-        return message;
-    },
-};
-
 const baseSendUserMessage: object = { type: "", message: "" };
 
 export const SendUserMessage = {
@@ -5061,9 +5252,6 @@ export const ServerToClientMessage = {
         if (message.message?.$case === "teleportMessageMessage") {
             TeleportMessageMessage.encode(message.message.teleportMessageMessage, writer.uint32(82).fork()).ldelim();
         }
-        if (message.message?.$case === "sendJitsiJwtMessage") {
-            SendJitsiJwtMessage.encode(message.message.sendJitsiJwtMessage, writer.uint32(90).fork()).ldelim();
-        }
         if (message.message?.$case === "sendUserMessage") {
             SendUserMessage.encode(message.message.sendUserMessage, writer.uint32(98).fork()).ldelim();
         }
@@ -5106,14 +5294,11 @@ export const ServerToClientMessage = {
         if (message.message?.$case === "errorScreenMessage") {
             ErrorScreenMessage.encode(message.message.errorScreenMessage, writer.uint32(210).fork()).ldelim();
         }
-        if (message.message?.$case === "bbbMeetingClientURLMessage") {
-            BBBMeetingClientURLMessage.encode(
-                message.message.bbbMeetingClientURLMessage,
-                writer.uint32(218).fork()
-            ).ldelim();
+        if (message.message?.$case === "answerMessage") {
+            AnswerMessage.encode(message.message.answerMessage, writer.uint32(226).fork()).ldelim();
         }
         if (message.message?.$case === "moveToPositionMessage") {
-            MoveToPositionMessage.encode(message.message.moveToPositionMessage, writer.uint32(242).fork()).ldelim();
+            MoveToPositionMessage.encode(message.message.moveToPositionMessage, writer.uint32(250).fork()).ldelim();
         }
         return writer;
     },
@@ -5174,12 +5359,6 @@ export const ServerToClientMessage = {
                     message.message = {
                         $case: "teleportMessageMessage",
                         teleportMessageMessage: TeleportMessageMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
-                case 11:
-                    message.message = {
-                        $case: "sendJitsiJwtMessage",
-                        sendJitsiJwtMessage: SendJitsiJwtMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 case 12:
@@ -5260,13 +5439,13 @@ export const ServerToClientMessage = {
                         errorScreenMessage: ErrorScreenMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 27:
+                case 28:
                     message.message = {
-                        $case: "bbbMeetingClientURLMessage",
-                        bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.decode(reader, reader.uint32()),
+                        $case: "answerMessage",
+                        answerMessage: AnswerMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 30:
+                case 31:
                     message.message = {
                         $case: "moveToPositionMessage",
                         moveToPositionMessage: MoveToPositionMessage.decode(reader, reader.uint32()),
@@ -5327,12 +5506,6 @@ export const ServerToClientMessage = {
             message.message = {
                 $case: "teleportMessageMessage",
                 teleportMessageMessage: TeleportMessageMessage.fromJSON(object.teleportMessageMessage),
-            };
-        }
-        if (object.sendJitsiJwtMessage !== undefined && object.sendJitsiJwtMessage !== null) {
-            message.message = {
-                $case: "sendJitsiJwtMessage",
-                sendJitsiJwtMessage: SendJitsiJwtMessage.fromJSON(object.sendJitsiJwtMessage),
             };
         }
         if (object.sendUserMessage !== undefined && object.sendUserMessage !== null) {
@@ -5413,11 +5586,8 @@ export const ServerToClientMessage = {
                 errorScreenMessage: ErrorScreenMessage.fromJSON(object.errorScreenMessage),
             };
         }
-        if (object.bbbMeetingClientURLMessage !== undefined && object.bbbMeetingClientURLMessage !== null) {
-            message.message = {
-                $case: "bbbMeetingClientURLMessage",
-                bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromJSON(object.bbbMeetingClientURLMessage),
-            };
+        if (object.answerMessage !== undefined && object.answerMessage !== null) {
+            message.message = { $case: "answerMessage", answerMessage: AnswerMessage.fromJSON(object.answerMessage) };
         }
         if (object.moveToPositionMessage !== undefined && object.moveToPositionMessage !== null) {
             message.message = {
@@ -5461,10 +5631,6 @@ export const ServerToClientMessage = {
         message.message?.$case === "teleportMessageMessage" &&
             (obj.teleportMessageMessage = message.message?.teleportMessageMessage
                 ? TeleportMessageMessage.toJSON(message.message?.teleportMessageMessage)
-                : undefined);
-        message.message?.$case === "sendJitsiJwtMessage" &&
-            (obj.sendJitsiJwtMessage = message.message?.sendJitsiJwtMessage
-                ? SendJitsiJwtMessage.toJSON(message.message?.sendJitsiJwtMessage)
                 : undefined);
         message.message?.$case === "sendUserMessage" &&
             (obj.sendUserMessage = message.message?.sendUserMessage
@@ -5518,9 +5684,9 @@ export const ServerToClientMessage = {
             (obj.errorScreenMessage = message.message?.errorScreenMessage
                 ? ErrorScreenMessage.toJSON(message.message?.errorScreenMessage)
                 : undefined);
-        message.message?.$case === "bbbMeetingClientURLMessage" &&
-            (obj.bbbMeetingClientURLMessage = message.message?.bbbMeetingClientURLMessage
-                ? BBBMeetingClientURLMessage.toJSON(message.message?.bbbMeetingClientURLMessage)
+        message.message?.$case === "answerMessage" &&
+            (obj.answerMessage = message.message?.answerMessage
+                ? AnswerMessage.toJSON(message.message?.answerMessage)
                 : undefined);
         message.message?.$case === "moveToPositionMessage" &&
             (obj.moveToPositionMessage = message.message?.moveToPositionMessage
@@ -5613,16 +5779,6 @@ export const ServerToClientMessage = {
             message.message = {
                 $case: "teleportMessageMessage",
                 teleportMessageMessage: TeleportMessageMessage.fromPartial(object.message.teleportMessageMessage),
-            };
-        }
-        if (
-            object.message?.$case === "sendJitsiJwtMessage" &&
-            object.message?.sendJitsiJwtMessage !== undefined &&
-            object.message?.sendJitsiJwtMessage !== null
-        ) {
-            message.message = {
-                $case: "sendJitsiJwtMessage",
-                sendJitsiJwtMessage: SendJitsiJwtMessage.fromPartial(object.message.sendJitsiJwtMessage),
             };
         }
         if (
@@ -5758,15 +5914,13 @@ export const ServerToClientMessage = {
             };
         }
         if (
-            object.message?.$case === "bbbMeetingClientURLMessage" &&
-            object.message?.bbbMeetingClientURLMessage !== undefined &&
-            object.message?.bbbMeetingClientURLMessage !== null
+            object.message?.$case === "answerMessage" &&
+            object.message?.answerMessage !== undefined &&
+            object.message?.answerMessage !== null
         ) {
             message.message = {
-                $case: "bbbMeetingClientURLMessage",
-                bbbMeetingClientURLMessage: BBBMeetingClientURLMessage.fromPartial(
-                    object.message.bbbMeetingClientURLMessage
-                ),
+                $case: "answerMessage",
+                answerMessage: AnswerMessage.fromPartial(object.message.answerMessage),
             };
         }
         if (
@@ -6604,9 +6758,6 @@ export const PusherToBackMessage = {
         if (message.message?.$case === "reportPlayerMessage") {
             ReportPlayerMessage.encode(message.message.reportPlayerMessage, writer.uint32(82).fork()).ldelim();
         }
-        if (message.message?.$case === "queryJitsiJwtMessage") {
-            QueryJitsiJwtMessage.encode(message.message.queryJitsiJwtMessage, writer.uint32(90).fork()).ldelim();
-        }
         if (message.message?.$case === "sendUserMessage") {
             SendUserMessage.encode(message.message.sendUserMessage, writer.uint32(98).fork()).ldelim();
         }
@@ -6634,11 +6785,11 @@ export const PusherToBackMessage = {
         if (message.message?.$case === "lockGroupPromptMessage") {
             LockGroupPromptMessage.encode(message.message.lockGroupPromptMessage, writer.uint32(154).fork()).ldelim();
         }
-        if (message.message?.$case === "joinBBBMeetingMessage") {
-            JoinBBBMeetingMessage.encode(message.message.joinBBBMeetingMessage, writer.uint32(162).fork()).ldelim();
+        if (message.message?.$case === "queryMessage") {
+            QueryMessage.encode(message.message.queryMessage, writer.uint32(170).fork()).ldelim();
         }
         if (message.message?.$case === "askPositionMessage") {
-            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(170).fork()).ldelim();
+            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(178).fork()).ldelim();
         }
         return writer;
     },
@@ -6695,12 +6846,6 @@ export const PusherToBackMessage = {
                         reportPlayerMessage: ReportPlayerMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 11:
-                    message.message = {
-                        $case: "queryJitsiJwtMessage",
-                        queryJitsiJwtMessage: QueryJitsiJwtMessage.decode(reader, reader.uint32()),
-                    };
-                    break;
                 case 12:
                     message.message = {
                         $case: "sendUserMessage",
@@ -6749,13 +6894,13 @@ export const PusherToBackMessage = {
                         lockGroupPromptMessage: LockGroupPromptMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 20:
+                case 21:
                     message.message = {
-                        $case: "joinBBBMeetingMessage",
-                        joinBBBMeetingMessage: JoinBBBMeetingMessage.decode(reader, reader.uint32()),
+                        $case: "queryMessage",
+                        queryMessage: QueryMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 21:
+                case 22:
                     message.message = {
                         $case: "askPositionMessage",
                         askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
@@ -6818,12 +6963,6 @@ export const PusherToBackMessage = {
                 reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
             };
         }
-        if (object.queryJitsiJwtMessage !== undefined && object.queryJitsiJwtMessage !== null) {
-            message.message = {
-                $case: "queryJitsiJwtMessage",
-                queryJitsiJwtMessage: QueryJitsiJwtMessage.fromJSON(object.queryJitsiJwtMessage),
-            };
-        }
         if (object.sendUserMessage !== undefined && object.sendUserMessage !== null) {
             message.message = {
                 $case: "sendUserMessage",
@@ -6872,11 +7011,8 @@ export const PusherToBackMessage = {
                 lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
             };
         }
-        if (object.joinBBBMeetingMessage !== undefined && object.joinBBBMeetingMessage !== null) {
-            message.message = {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: JoinBBBMeetingMessage.fromJSON(object.joinBBBMeetingMessage),
-            };
+        if (object.queryMessage !== undefined && object.queryMessage !== null) {
+            message.message = { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) };
         }
         if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
             message.message = {
@@ -6917,10 +7053,6 @@ export const PusherToBackMessage = {
             (obj.reportPlayerMessage = message.message?.reportPlayerMessage
                 ? ReportPlayerMessage.toJSON(message.message?.reportPlayerMessage)
                 : undefined);
-        message.message?.$case === "queryJitsiJwtMessage" &&
-            (obj.queryJitsiJwtMessage = message.message?.queryJitsiJwtMessage
-                ? QueryJitsiJwtMessage.toJSON(message.message?.queryJitsiJwtMessage)
-                : undefined);
         message.message?.$case === "sendUserMessage" &&
             (obj.sendUserMessage = message.message?.sendUserMessage
                 ? SendUserMessage.toJSON(message.message?.sendUserMessage)
@@ -6953,9 +7085,9 @@ export const PusherToBackMessage = {
             (obj.lockGroupPromptMessage = message.message?.lockGroupPromptMessage
                 ? LockGroupPromptMessage.toJSON(message.message?.lockGroupPromptMessage)
                 : undefined);
-        message.message?.$case === "joinBBBMeetingMessage" &&
-            (obj.joinBBBMeetingMessage = message.message?.joinBBBMeetingMessage
-                ? JoinBBBMeetingMessage.toJSON(message.message?.joinBBBMeetingMessage)
+        message.message?.$case === "queryMessage" &&
+            (obj.queryMessage = message.message?.queryMessage
+                ? QueryMessage.toJSON(message.message?.queryMessage)
                 : undefined);
         message.message?.$case === "askPositionMessage" &&
             (obj.askPositionMessage = message.message?.askPositionMessage
@@ -7041,16 +7173,6 @@ export const PusherToBackMessage = {
             };
         }
         if (
-            object.message?.$case === "queryJitsiJwtMessage" &&
-            object.message?.queryJitsiJwtMessage !== undefined &&
-            object.message?.queryJitsiJwtMessage !== null
-        ) {
-            message.message = {
-                $case: "queryJitsiJwtMessage",
-                queryJitsiJwtMessage: QueryJitsiJwtMessage.fromPartial(object.message.queryJitsiJwtMessage),
-            };
-        }
-        if (
             object.message?.$case === "sendUserMessage" &&
             object.message?.sendUserMessage !== undefined &&
             object.message?.sendUserMessage !== null
@@ -7133,13 +7255,13 @@ export const PusherToBackMessage = {
             };
         }
         if (
-            object.message?.$case === "joinBBBMeetingMessage" &&
-            object.message?.joinBBBMeetingMessage !== undefined &&
-            object.message?.joinBBBMeetingMessage !== null
+            object.message?.$case === "queryMessage" &&
+            object.message?.queryMessage !== undefined &&
+            object.message?.queryMessage !== null
         ) {
             message.message = {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: JoinBBBMeetingMessage.fromPartial(object.message.joinBBBMeetingMessage),
+                $case: "queryMessage",
+                queryMessage: QueryMessage.fromPartial(object.message.queryMessage),
             };
         }
         if (
