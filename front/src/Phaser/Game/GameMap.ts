@@ -64,6 +64,8 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
+    private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
+
     private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
     private readonly areasPositionOffsetY: number = 16;
     private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
@@ -138,32 +140,33 @@ export class GameMap {
         return [];
     }
 
-    public getCollisionGrid(): number[][] {
+    public getCollisionGrid(modifiedLayer?: TilemapLayer): number[][] {
         console.log("START getCollisionGrid()");
         const start = new Date().getTime();
+        // initialize collision grid to write on
         const grid: number[][] = Array.from(Array(this.map.height), (_) => Array(this.map.width).fill(0));
+        if (modifiedLayer) {
+            // recalculate cache for certain layer if needed
+            this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
+        }
+        // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
             if (!layer.visible) {
                 continue;
             }
-            let isExitLayer = false;
-            for (const property of layer.layer.properties) {
-                //@ts-ignore
-                if (property.name && property.name === "exitUrl") {
-                    isExitLayer = true;
-                    break;
-                }
-            }
-            for (let y = 0; y < this.map.height; y += 1) {
-                for (let x = 0; x < this.map.width; x += 1) {
-                    if (grid[y][x] !== 0) {
-                        continue;
+            const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
+            if (!cachedLayer) {
+                // no cache, calculate collision grid for this layer
+                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
+            } else {
+                for (let y = 0; y < this.map.height; y += 1) {
+                    for (let x = 0; x < this.map.width; x += 1) {
+                        // currently no case where we can make tile non-collidable with collidable object beneath, skip position
+                        if (grid[y][x] !== 0) {
+                            continue;
+                        }
+                        grid[y][x] = cachedLayer[y][x];
                     }
-                    grid[y][x] = this.isCollidingAt(layer, x, y)
-                        ? 1
-                        : this.isExitTile(layer, x, y, isExitLayer)
-                        ? 2
-                        : 0;
                 }
             }
         }
@@ -465,65 +468,6 @@ export class GameMap {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
-    private isCollidingAt(layer: TilemapLayer, x: number, y: number): boolean {
-        if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
-            return true;
-        }
-        return false;
-    }
-
-    private isExitTile(layer: TilemapLayer, x: number, y: number, isExitLayer: boolean): boolean {
-        const tile = layer.getTileAt(x, y);
-        if (!tile) {
-            return false;
-        }
-        if (isExitLayer) {
-            return true;
-        }
-        if (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL]) {
-            return true;
-        }
-
-        return false;
-    }
-
-    // private isCollidingAt(x: number, y: number): boolean {
-    //     for (const layer of this.phaserLayers) {
-    //         if (!layer.visible) {
-    //             continue;
-    //         }
-    //         if (layer.getTileAt(x, y)?.properties?.[GameMapProperties.COLLIDES]) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-
-    // private isExitTile(x: number, y: number): boolean {
-    //     for (const layer of this.phaserLayers) {
-    //         if (!layer.visible) {
-    //             continue;
-    //         }
-    //         const tile = layer.getTileAt(x, y);
-    //         if (!tile) {
-    //             continue;
-    //         }
-    //         if (
-    //             tile &&
-    //             (tile.properties[GameMapProperties.EXIT_URL] || tile.properties[GameMapProperties.EXIT_SCENE_URL])
-    //         ) {
-    //             return true;
-    //         }
-    //         for (const property of layer.layer.properties) {
-    //             //@ts-ignore
-    //             if (property.name && property.name === "exitUrl") {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
-
     private triggerAllProperties(): void {
         const newProps = this.getProperties(this.key ?? 0);
         const oldProps = this.lastProperties;
@@ -544,6 +488,28 @@ export class GameMap {
                 this.trigger(oldPropName, oldPropValue, undefined, newProps);
             }
         }
+    }
+
+    private getLayerCollisionGrid(layer: TilemapLayer): (1 | 2 | 0)[][] {
+        let isExitLayer = false;
+        for (const property of layer.layer.properties) {
+            //@ts-ignore
+            if (property.name && property.name === "exitUrl") {
+                isExitLayer = true;
+                break;
+            }
+        }
+        return layer.layer.data.map((row) =>
+            row.map((tile) =>
+                tile.properties?.[GameMapProperties.COLLIDES]
+                    ? 1
+                    : isExitLayer ||
+                      tile.properties[GameMapProperties.EXIT_URL] ||
+                      tile.properties[GameMapProperties.EXIT_SCENE_URL]
+                    ? 2
+                    : 0
+            )
+        );
     }
 
     private triggerLayersChange(): void {
