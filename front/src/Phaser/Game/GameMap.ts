@@ -141,8 +141,6 @@ export class GameMap {
     }
 
     public getCollisionGrid(modifiedLayer?: TilemapLayer): number[][] {
-        console.log("START getCollisionGrid()");
-        const start = new Date().getTime();
         // initialize collision grid to write on
         const grid: number[][] = Array.from(Array(this.map.height), (_) => Array(this.map.width).fill(0));
         if (modifiedLayer) {
@@ -170,7 +168,6 @@ export class GameMap {
                 }
             }
         }
-        console.log(`getCollisionGrid() elapsed time: ${new Date().getTime() - start}ms`);
         return grid;
     }
 
