@@ -14,9 +14,7 @@
   import screenshareOn from "./images/screenshare-on.png";
   import screenshareOff from "./images/screenshare-off.png";
   import emojiPickOn from "./images/emoji-on.png";
-  import emojiPickOff from "./images/emoji-off.png";
   import { LayoutMode } from "../WebRtc/LayoutManager";
-  import { peerStore } from "../Stores/PeerStore";
   import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
   import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
   import { gameManager } from "../Phaser/Game/GameManager";
@@ -26,6 +24,8 @@
   import { activeSubMenuStore, menuVisiblilityStore } from "../Stores/MenuStore";
   import { emoteMenuStore } from "../Stores/EmoteStore";
   import LL from "../i18n/i18n-svelte";
+  import { bottomActionBarVisibilityStore } from "../Stores/BottomActionBarStore";
+  import { fly } from "svelte/transition";
 
   const gameScene = gameManager.getCurrentGameScene();
 
@@ -98,138 +98,160 @@
   }
 </script>
 
-<div
-  class="bottom-action-bar">
-  <div class="bottom-action-section">
-    <div class="tw-transition-all bottom-action-button"
-         class:tw-opacity-0={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
-         class:tw-invisible={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
-         class:disabled={$followStateStore !== "off"}
-         on:click={() => analyticsClient.follow()}
-         on:click={followClick}>
-      <button
-
-        class:border-top-light={$followStateStore === "active"}>
-        <img src={followImg} style="padding: 2px" alt="Toggle follow" />
-      </button>
-    </div>
-
-
-    <div class="tw-transition-all bottom-action-button"
-         on:click={switchLayoutMode}
-         class:tw-opacity-0={$peerStore.size === 0}>
-      <button>
-        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-          <img src={layoutPresentationImg} style="padding: 2px"
-               alt="Switch to mosaic mode" />
-        {:else}
-          <img src={layoutChatImg} style="padding: 2px"
-               alt="Switch to presentation mode" />
-        {/if}
-      </button>
-    </div>
-
-    <div class="tw-transition-all bottom-action-button"
-         class:tw-opacity-0={$peerStore.size === 0 || $silentStore}
-         class:disabled={$currentPlayerGroupLockStateStore}
-         on:click={() => analyticsClient.lockDiscussion()}
-         on:click={lockClick}>
-      <button class=" "
-              class:border-top-light={$currentPlayerGroupLockStateStore}>
-        {#if $currentPlayerGroupLockStateStore}
-          <img src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
-        {:else}
-          <img src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
-        {/if}
-      </button>
-    </div>
-
-    <div class="tw-transition-all bottom-action-button"
-         on:click={() => analyticsClient.screenSharing()}
-         on:click={screenSharingClick}
-         class:tw-opacity-0={!$screenSharingAvailableStore || $silentStore}
-         class:enabled={$requestedScreenSharingState}>
-      <button
-
-        class:border-top-light={$requestedScreenSharingState}>
-        {#if $requestedScreenSharingState && !$silentStore}
-          <img src={screenshareOn} alt="Stop screen sharing" />
-        {:else}
-          <img src={screenshareOff} alt="Start screen sharing" />
-        {/if}
-      </button>
-    </div>
-  </div>
-
-  <div class="bottom-action-section">
-    <div class="bottom-action-button"
-         on:click={() => analyticsClient.camera()}
-         on:click={cameraClick}
-         class:disabled={!$requestedCameraState || $silentStore}>
-      <button
-
-        class:border-top-light={$requestedCameraState}>
-        {#if $requestedCameraState && !$silentStore}
-          <img src={cameraImg} alt="Turn off webcam" />
-        {:else}
-          <img src={cameraOffImg} alt="Turn on webcam" />
-        {/if}
-      </button>
-    </div>
-
-    <div class="bottom-action-button"
-         on:click={() => analyticsClient.microphone()}
-         on:click={microphoneClick}
-         class:disabled={!$requestedMicrophoneState || $silentStore}>
-      <button
-        class:border-top-light={$requestedMicrophoneState}>
-        {#if $requestedMicrophoneState && !$silentStore}
-          <img src={microphoneImg} alt="Turn off microphone" />
-        {:else}
-          <img src={microphoneOffImg} alt="Turn on microphone" />
-        {/if}
-      </button>
-    </div>
-
-    <div on:click={() => analyticsClient.openedChat()}
-         on:click={toggleChat}
-         class="bottom-action-button"
-    >
-      <button
-
-        class:border-top-light={$chatVisibilityStore}
-      >
-        <img src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
-      </button>
-    </div>
-    <div
-      on:click={toggleEmojiPicker}
-      class="bottom-action-button"
-    >
-      <button
-
-        class:border-top-light={$emoteMenuStore}
-      >
-        {#if $emoteMenuStore}
-          <img src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
-        {:else}
-          <img src={emojiPickOff} style="padding: 2px" alt="Toggle emoji picker" />
-        {/if}
-      </button>
-    </div>
-  </div>
-
-  <div class="bottom-action-section"
-       on:click={toggleInviteMenu}
+<div class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+     class:animated={$bottomActionBarVisibilityStore}
+>
+  <div
+    class="bottom-action-bar tw-max-h-10"
   >
-    <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-            class:border-top-light={$menuVisiblilityStore}
+    {#if $bottomActionBarVisibilityStore}
+      <div
+        class="bottom-action-section tw-flex animate" id="bubble-test"
+        in:fly="{{y: 70, duration: 100, delay: 500}}"
+        out:fly="{{y: 70, duration: 100, delay: 0}}"
+        class:tw-translate-x-0={$bottomActionBarVisibilityStore}
+        class:translate-right={!$bottomActionBarVisibilityStore}
+      >
+        <div class="tw-transition-all bottom-action-button"
+             class:disabled={$followStateStore !== "off"}
+             on:click={() => analyticsClient.follow()}
+             on:click={followClick}>
+          <button
+
+            class:border-top-light={$followStateStore === "active"}>
+            <img src={followImg} style="padding: 2px" alt="Toggle follow" />
+          </button>
+        </div>
+
+
+        <div class="tw-transition-all bottom-action-button"
+             on:click={switchLayoutMode}
+        >
+          <button>
+            {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+              <img src={layoutPresentationImg} style="padding: 2px"
+                   alt="Switch to mosaic mode" />
+            {:else}
+              <img src={layoutChatImg} style="padding: 2px"
+                   alt="Switch to presentation mode" />
+            {/if}
+          </button>
+        </div>
+
+        <div class="tw-transition-all bottom-action-button"
+             class:disabled={$currentPlayerGroupLockStateStore}
+             on:click={() => analyticsClient.lockDiscussion()}
+             on:click={lockClick}>
+          <button class=" "
+                  class:border-top-light={$currentPlayerGroupLockStateStore}>
+            {#if $currentPlayerGroupLockStateStore}
+              <img src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
+            {:else}
+              <img src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
+            {/if}
+          </button>
+        </div>
+
+        <div class="tw-transition-all bottom-action-button"
+             on:click={() => analyticsClient.screenSharing()}
+             on:click={screenSharingClick}
+             class:enabled={$requestedScreenSharingState}>
+          <button
+
+            class:border-top-light={$requestedScreenSharingState}>
+            {#if $requestedScreenSharingState && !$silentStore}
+              <img src={screenshareOn} alt="Stop screen sharing" />
+            {:else}
+              <img src={screenshareOff} alt="Start screen sharing" />
+            {/if}
+          </button>
+        </div>
+      </div>
+    {/if}
+
+    <div class="tw-flex tw-flex-row base-section animated"
+         class:translate-left={!$bottomActionBarVisibilityStore}
+         class:tw-translate-x-0={$bottomActionBarVisibilityStore}
     >
-      {$LL.menu.sub.invite()}
-    </button>
+      <div class="bottom-action-section tw-flex tw-flex-initial"
+      >
+        <div class="bottom-action-button"
+             on:click={() => analyticsClient.camera()}
+             on:click={cameraClick}
+             class:disabled={!$requestedCameraState || $silentStore}>
+          <button
+
+            class:border-top-light={$requestedCameraState}>
+            {#if $requestedCameraState && !$silentStore}
+              <img src={cameraImg} alt="Turn off webcam" />
+            {:else}
+              <img src={cameraOffImg} alt="Turn on webcam" />
+            {/if}
+          </button>
+        </div>
+
+        <div class="bottom-action-button"
+             on:click={() => analyticsClient.microphone()}
+             on:click={microphoneClick}
+             class:disabled={!$requestedMicrophoneState || $silentStore}>
+          <button
+            class:border-top-light={$requestedMicrophoneState}>
+            {#if $requestedMicrophoneState && !$silentStore}
+              <img src={microphoneImg} alt="Turn off microphone" />
+            {:else}
+              <img src={microphoneOffImg} alt="Turn on microphone" />
+            {/if}
+          </button>
+        </div>
+
+        <div on:click={() => analyticsClient.openedChat()}
+             on:click={toggleChat}
+             class="bottom-action-button"
+        >
+          <button
+
+            class:border-top-light={$chatVisibilityStore}
+          >
+            <img src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+          </button>
+        </div>
+        <div
+          on:click={toggleEmojiPicker}
+          class="bottom-action-button"
+        >
+          <button
+
+            class:border-top-light={$emoteMenuStore}
+          >
+            <img src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+          </button>
+        </div>
+      </div>
+      <div class="bottom-action-section tw-flex tw-flex-initial"
+           in:fly={{}}
+           on:click={toggleInviteMenu}
+      >
+        <button class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                class:border-top-light={$menuVisiblilityStore}
+        >
+          {$LL.menu.sub.invite()}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
 <style lang="scss">
   @import "../../style/breakpoints.scss";
+  .animated{
+    transition-property: transform;
+    transition-duration: .5s;
+  }
+  .translate-right{
+    transform: translateX(25%);
+  }
+
+  .translate-left{
+    transform: translateX(-25%);
+  }
 </style>

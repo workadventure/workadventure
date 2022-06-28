@@ -1,11 +1,11 @@
 @layer components {
 
 .bottom-action-bar {
-  @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-left-0 tw-right-0 tw-justify-center tw-m-auto tw-bottom-1 tw-absolute tw-z-[251] hover:-tw-translate-y-4 tw-transition-transform tw-duration-300;
+  @apply tw-flex tw-flex-col tw-items-center tw-pointer-events-auto tw-justify-center tw-m-auto tw-bottom-1 tw-z-[251] tw-transition-transform tw-duration-300;
   @apply sm:tw-flex-row;
 
   .bottom-action-section {
-    @apply tw-flex tw-flex-row tw-mx-1 tw-my-1;
+    @apply tw-flex-row tw-mx-1 tw-my-1;
     @apply md:tw-mx-2 md:tw-my-0;
 
     .bottom-action-button {
