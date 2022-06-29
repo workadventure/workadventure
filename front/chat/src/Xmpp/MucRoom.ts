@@ -34,11 +34,18 @@ export type Teleport = {
 };
 export type TeleportStore = Readable<Teleport>;
 
+export type Message = {
+    text: string;
+    author: string;
+};
+export type MessageStore = Readable<[Message]>;
+
 const _VERBOSE = true;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
+    private messageStore: Writable<[Message]>;
     private nickCount: number = 0;
 
     constructor(
@@ -49,6 +56,7 @@ export class MucRoom {
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
+        this.messageStore = writable<[Message]>();
         this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
@@ -295,6 +303,12 @@ export class MucRoom {
     public getTeleportStore(): TeleportStore {
         return {
             subscribe: this.teleportStore.subscribe,
+        };
+    }
+
+    public getMessageStore(): MessageStore {
+        return {
+            subscribe: this.messageStore.subscribe,
         };
     }
 

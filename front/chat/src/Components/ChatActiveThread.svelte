@@ -1,12 +1,17 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
+    import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
+    import ChatUser from "./ChatUser.svelte";
+    import {createEventDispatcher} from "svelte";
+
+    const dispatch = createEventDispatcher();
 
     export let activeThread;
     export let usersListStore;
+    export let settingsView = false;
 
     let handleFormBlur: { blur(): void };
 
@@ -142,40 +147,42 @@
     }
 </script>
 
-<div transition:fly={{ x: 500, duration: 500 }}>
-	<!-- thread -->
-	<div class="tw-flex tw-flex-col tw-h-full tw-over tw-fixed">
-		<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
-			<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2">
-				<button class="tw-text-light-purple tw-m-0" on:click={() => {activeThreadStore.reset()}}>
-					<ArrowLeftIcon />
-				</button>
-			</div>
-			<div class="tw-text-center">
-				<b>{activeThread.name}</b>
-				<div class="tw-text-xs tw-text-green tw-mt-0">{[...$usersListStore].length} {[...$usersListStore].length > 1 ?$LL.usersOnline() : $LL.userOnline()}</div>
-			</div>
-			<div class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2">
-				<button class="tw-text-light-purple tw-m-0">
-					<SettingsIcon />
-				</button>
-			</div>
-		</div>
-		<!--
-		<div class="tw-p-5">
-			<button
-					on:click={() => {
-				activeThread = null;
-			}}
-					type="button"
-					class="tw-font-condensed tw-inline-flex tw-h-auto tw-text-sm tw-items-center tw-bg-transparent tw-border tw-border-solid tw-border-light-blue tw-text-light-blue tw-rounded tw-space-x-1 tw-py-1 tw-px-1"
-			>
-				<img src="/static/images/arrow-left-blue.png" height="9" alt="" />
-				<span> Back to chat menu </span>
+<!-- thread -->
+<div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-fixed tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
+	<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
+		<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2">
+			<button class="tw-text-light-purple tw-m-0" on:click={() => {activeThreadStore.reset()}}>
+				<ArrowLeftIcon />
 			</button>
 		</div>
-		-->
-
+		<div class="tw-text-center">
+			<b>{activeThread.name}</b>
+			<div class="tw-text-xs tw-text-green tw-mt-0">{[...$usersListStore].length} {[...$usersListStore].length > 1 ?$LL.usersOnline() : $LL.userOnline()}</div>
+		</div>
+		<div class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2" on:click={() => settingsView = !settingsView}>
+			<button class="tw-text-light-purple tw-m-0">
+				{#if settingsView}
+					<MessageCircleIcon />
+				{:else}
+					<SettingsIcon />
+				{/if}
+			</button>
+		</div>
+	</div>
+	{#if settingsView}
+		<div transition:fly={{ y: -100, duration: 100 }} class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
+			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
+				<p class="tw-py-5 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Description</p>
+				<p>Test</p>
+			</div>
+			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+				<p class="tw-px-5 tw-py-5 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">{$LL.users()}</p>
+				{#each [...$usersListStore] as [, user]}
+					<ChatUser {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
+				{/each}
+			</div>
+		</div>
+	{:else}
 		<div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
 			<!-- if there is a user typing -->
 
@@ -315,5 +322,5 @@
 		<div class="messageForm">
 			<ChatMessageForm bind:handleForm={handleFormBlur} />
 		</div>
-	</div>
+	{/if}
 </div>

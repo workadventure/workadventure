@@ -238,6 +238,7 @@
                 <ChatActiveThread
                         usersListStore={$activeThreadStore.getPresenceStore()}
                         activeThread={$activeThreadStore}
+                        on:goTo={(event) => $activeThreadStore.goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
                 />
             {:else}
                 <div>
