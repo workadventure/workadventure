@@ -66,6 +66,18 @@ type RootTranslation = {
 	 */
 	search: string
 	/**
+	 * user online
+	 */
+	userOnline: string
+	/**
+	 * users online
+	 */
+	usersOnline: string
+	/**
+	 * Open
+	 */
+	open: string
+	/**
 	 * test
 	 */
 	CONNECTING: string
@@ -122,6 +134,18 @@ export type TranslationFunctions = {
 	 * Search for user, message, channel, etc.
 	 */
 	search: () => LocalizedString
+	/**
+	 * user online
+	 */
+	userOnline: () => LocalizedString
+	/**
+	 * users online
+	 */
+	usersOnline: () => LocalizedString
+	/**
+	 * Open
+	 */
+	open: () => LocalizedString
 	/**
 	 * test
 	 */

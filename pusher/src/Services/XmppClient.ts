@@ -118,11 +118,12 @@ export class XmppClient {
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
-                        if (!definition.name || !definition.url) {
-                            throw new Error("Name and Url cannot be empty!");
+                        if (!definition.name || !definition.url || !definition.type) {
+                            throw new Error("Name URL and type cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
                         mucRoomDefinitionMessage.setUrl(definition.url);
+                        mucRoomDefinitionMessage.setType(definition.type);
                         return mucRoomDefinitionMessage;
                     })
                 );

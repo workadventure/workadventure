@@ -16,6 +16,9 @@ const en_US: BaseTranslation = {
     reconnecting: "Connection to presence server ...",
     waitingData: "Waiting user data ...",
     search: "Search for user, message, channel, etc.",
+    userOnline: "user online",
+    usersOnline: "users online",
+    open: "Open",
     CONNECTING: "test"
 };
 

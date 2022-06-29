@@ -607,6 +607,26 @@ class IframeListener {
             }
         }
     }
+
+    sendLeaveMucEvent(url: string) {
+        this.postMessage({
+            type: "leaveMuc",
+            data: {
+                url,
+            },
+        });
+    }
+
+    sendJoinMucEvent(url: string, name: string, type: string) {
+        this.postMessage({
+            type: "joinMuc",
+            data: {
+                url,
+                name,
+                type
+            },
+        });
+    }
 }
 
 export const iframeListener = new IframeListener();

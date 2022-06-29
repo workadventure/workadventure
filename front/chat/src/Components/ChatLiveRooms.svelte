@@ -1,0 +1,41 @@
+<script>
+    import { fly } from "svelte/transition";
+    import {ChevronUpIcon} from "svelte-feather-icons";
+    import ChatLiveRoom from "./ChatLiveRoom.svelte";
+    import {createEventDispatcher} from "svelte";
+    import {MucRoom} from "../Xmpp/MucRoom";
+    const dispatch = createEventDispatcher();
+
+    export let liveRooms;
+    export let showLives;
+
+    function open(liveRoom){
+        dispatch("activeThread", liveRoom);
+	}
+</script>
+
+{#if liveRooms.length > 0}
+	<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple" transition:fly={{ y: -30, duration: 100 }}>
+		<div class="tw-p-3 tw-flex tw-items-center">
+			<span class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded">
+				{liveRooms.length}
+			</span>
+			<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+				Live zones
+			</p>
+			<button
+					class="tw-text-lighter-purple"
+					on:click={() => dispatch('showLives')}
+			>
+				<ChevronUpIcon class={`tw-transform tw-transition ${showLives ? "" : "tw-rotate-180"}`} />
+			</button>
+		</div>
+		{#if showLives}
+			<div transition:fly={{ y: -30, duration: 100 }}>
+				{#each liveRooms as liveRoom}
+					<ChatLiveRoom {liveRoom} usersListStore={liveRoom.getPresenceStore()} {open}/>
+				{/each}
+			</div>
+		{/if}
+	</div>
+{/if}

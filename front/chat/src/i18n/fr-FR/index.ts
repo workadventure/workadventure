@@ -16,6 +16,9 @@ const fr_FR: Translation = {
     reconnecting: "Connexion au serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
     search: "Rechercher un utilisateur, un message, un canal ...",
+    userOnline: "utilisateur en ligne",
+    usersOnline: "utilisateurs en ligne",
+    open: "Ouvrir",
     CONNECTING: "test"
 };
 

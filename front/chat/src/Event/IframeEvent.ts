@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { isNotification } from "./Notification";
 import { isUserData } from "../Messages/JsonMessages/ChatData";
+import { isLeaveMucEvent } from "./LeaveMucEvent";
+import {isJoinMucEvent} from "./JoinMucEvent";
 
 export const isIframeEventWrapper = z.union([
     z.object({
@@ -10,6 +12,14 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("userData"),
         data: isUserData,
+    }),
+    z.object({
+        type: z.literal("leaveMuc"),
+        data: isLeaveMucEvent,
+    }),
+    z.object({
+        type: z.literal("joinMuc"),
+        data: isJoinMucEvent,
     }),
 ]);
 

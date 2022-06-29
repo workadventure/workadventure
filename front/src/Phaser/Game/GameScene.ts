@@ -94,7 +94,6 @@ import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStor
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
 import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
-import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -236,7 +235,6 @@ export class GameScene extends DirtyScene {
     private jitsiClosable: boolean = true;
     private cleanupDone: boolean = false;
     public readonly superLoad: SuperLoaderPlugin;
-    private xmppClient!: XmppClient;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1670,7 +1668,6 @@ ${escapedMessage}
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.xmppClient?.close();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();

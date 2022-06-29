@@ -6,6 +6,8 @@ import type { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoo
 import ElementExt from "./Lib/ElementExt";
 import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/ts-proto-generated/protos/messages";
 import {ChatConnection} from "../Connection/ChatConnection";
+import {activeThreadStore} from "../Stores/ActiveThreadStore";
+import {get} from "svelte/store";
 
 export class XmppClient {
     private jid: string | undefined;
@@ -53,10 +55,8 @@ export class XmppClient {
         });
 
         connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
-            console.log('xmppConnectionStatusChangeMessageStream change');
             switch (status) {
                 case Status.DISCONNECTED: {
-                    console.log('XmppServerDisconnected');
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
                     break;
@@ -75,9 +75,9 @@ export class XmppClient {
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
         xmppServerConnectionStatusStore.set(true);
 
-        for (const { name, url } of initialRoomDefinitions) {
+        for (const { name, url, type } of initialRoomDefinitions) {
             if(name && url){
-                this.joinMuc(name, url);
+                this.joinMuc(name, url, type);
             }
         }
     }
@@ -119,7 +119,7 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
@@ -127,7 +127,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, this.jid);
+        const room = new MucRoom(this.connection, name, roomUrl, type, this.jid);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 
@@ -153,6 +153,11 @@ export class XmppClient {
         this.rooms.delete(roomUrl.toString());
 
         mucRoomsStore.removeMucRoom(room);
+
+        const activeThread = get(activeThreadStore);
+        if(activeThread && activeThread.getUrl() === roomUrl.toString()){
+            activeThreadStore.reset();
+        }
     }
 
     public close() {

@@ -3,7 +3,7 @@
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    //import { ChevronUpIcon } from "svelte-feather-icons";
+    import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
     //import ChatForum from "./ChatForum.svelte";
     import {connectionStore} from "../Stores/ConnectionStore";
     //import LL from "../i18n/i18n-svelte";
@@ -13,6 +13,10 @@
     import {MucRoom} from "../Xmpp/MucRoom";
     import {userStore} from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
+    import ChatLiveRooms from "./ChatLiveRooms.svelte";
+    import {activeThreadStore} from "../Stores/ActiveThreadStore";
+    import {get} from "svelte/store";
+    import ChatActiveThread from "./ChatActiveThread.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -20,54 +24,8 @@
     let autoscroll: boolean;
 
     let searchValue = '';
-
-    /*
-    let users = [
-        {
-            name: "Grégoire",
-            status: "In meeting room",
-            unreads: 0,
-            active: true,
-        },
-        {
-            name: "Julie",
-            status: "In meeting room",
-            unreads: 0,
-            active: true,
-        },
-        {
-            name: "Gaëlle",
-            status: "Talking with someone",
-            unreads: 2,
-            active: true,
-        },
-        {
-            name: "Hugo",
-            status: "Free",
-            unreads: 0,
-            active: true,
-        },
-        {
-            name: "Bernadette",
-            status: "Offline",
-            unreads: 0,
-            active: false,
-        },
-    ];
-     */
-
     let showUsers = true;
-    /*
-    let usersListUnreads = () => {
-        let n = 0;
-        users.forEach((u) => {
-            n += u.unreads || 0;
-        });
-        return n;
-    };
-     */
-
-    let activeThread: unknown = null;
+    let showLives = true;
 
     /*
     let forums = [
@@ -211,17 +169,6 @@
         user_color: "#04F17A",
     };
 
-    /*
-    let forumListUnreads = () => {
-        let n = 0;
-        forums.forEach((f) => {
-            n += f.unreads || 0;
-        });
-        return n;
-    };
-    let showForums = true;
-     */
-
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
@@ -241,15 +188,14 @@
     }
 
     function handleActiveThread(event: any){
-        activeThread = event.detail;
+        activeThreadStore.set(event.detail);
     }
     function handleShowUsers(){
         showUsers = !showUsers;
     }
-
-    //function openForum() {
-        // should open chat like for users
-    //}
+    function handleShowLives(){
+        showLives = !showLives;
+    }
 
     function closeChat() {
         window.parent.postMessage({ type: "closeChat" }, "*");
@@ -271,7 +217,7 @@
     }
 
     const defaultRoom = (): MucRoom => {
-        const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.name.toLocaleLowerCase() === 'default');
+        const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.type === 'default');
         if(!defaultMucRoom){
             throw new Error('No default MucRoom');
         }
@@ -288,164 +234,11 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if activeThread !== null}
-                <div transition:fly={{ x: 500, duration: 500 }}>
-                    <!-- thread -->
-                    <div class="tw-flex tw-flex-col tw-h-full tw-over">
-                        <div class="tw-p-5">
-                            <button
-                                    on:click={() => {
-                                activeThread = null;
-                            }}
-                                    type="button"
-                                    class="tw-font-condensed tw-inline-flex tw-h-auto tw-text-sm tw-items-center tw-bg-transparent tw-border tw-border-solid tw-border-light-blue tw-text-light-blue tw-rounded tw-space-x-2 tw-py-2 tw-px-3"
-                            >
-                                <img src="/static/images/arrow-left-blue.png" height="9" alt="" />
-                                <span> Back to chat menu </span>
-                            </button>
-                        </div>
-
-                        <div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
-                            <!-- if there is a user typing -->
-
-                            {#if !!threadListUserTyping}
-                                <div class="">
-                                    <div class="tw-flex tw-justify-start">
-                                        <img
-                                                class={`tw-mr-2 ${
-                                            threadList[0].user_id === threadListUserTyping.user_id
-                                                ? "tw-invisible"
-                                                : "tw-mt-4"
-                                        }`}
-                                                src={`/static/images/${
-                                            threadListUserTyping.user_avatar
-                                                ? threadListUserTyping.user_avatar
-                                                : "yoda-avatar.png"
-                                        }`}
-                                                alt="Send"
-                                                width="36"
-                                        />
-                                        <div class="">
-                                            <div
-                                                    style={`border-bottom-color:${threadListUserTyping.user_color}`}
-                                                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}
-                                            >
-                                                <!-- if the typer sent the latest message -->
-                                                {#if threadList[0].user_id !== threadListUserTyping.user_id}
-                                                    <span class=""> {threadListUserTyping.user_name} </span>
-                                                {/if}
-                                            </div>
-
-                                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
-                                                <!-- loading animation -->
-                                                <div class="loading-group">
-                                                    <span class="loading-dot" />
-                                                    <span class="loading-dot" />
-                                                    <span class="loading-dot" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {/if}
-                            {#each threadList as message, i}
-                                <div class={`${lastMessageIsFromSameUser(message.user_id, i) ? "" : "tw-mt-4"}`}>
-                                    <!-- if the message is a text/attachment -->
-
-                                    {#if ["message", "attachment"].includes(message.type)}
-                                        <div class={`tw-flex ${message.me ? "tw-justify-end" : "tw-justify-start"}`}>
-                                            <div
-                                                    class={`tw-w-3/4 tw-flex tw-items-start ${
-                                                message.me ? "tw-flex-row-reverse" : ""
-                                            }`}
-                                            >
-                                                {#if !message.me}
-                                                    <!-- make image invisible and omit vertical margin if last message was by same user -->
-                                                    <img
-                                                            class={`tw-mr-2 ${
-                                                        lastMessageIsFromSameUser(message.user_id, i)
-                                                            ? "tw-invisible "
-                                                            : "tw-mt-4"
-                                                    }`}
-                                                            src={`/static/images/${
-                                                        message.user_avatar ? message.user_avatar : "yoda-avatar.png"
-                                                    }`}
-                                                            alt="Send"
-                                                            width="36"
-                                                    />
-                                                {/if}
-
-                                                <div class={`tw-flex-auto ${message.me ? "" : ""}`}>
-                                                    <!-- message content -->
-
-                                                    {#if message.type === "message"}
-                                                        <div
-                                                                style={`border-bottom-color:${message.user_color}`}
-                                                                class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}
-                                                        >
-                                                            <!-- if last message was by this user, ignore this part -->
-                                                            {#if !lastMessageIsFromSameUser(message.user_id, i)}
-                                                                {#if message.me}
-                                                                    <span> Me </span>
-                                                                {:else}
-                                                                <span>
-                                                                    {message.user_name}
-                                                                </span>
-                                                                {/if}
-                                                                <span>
-                                                                {message.time}
-                                                            </span>
-                                                            {/if}
-                                                        </div>
-
-                                                        <div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3`}>
-                                                            <p class="tw-mb-0">{message.text}</p>
-                                                        </div>
-                                                    {:else if message.type === "attachment"}
-                                                        <!-- attachment content -->
-
-                                                        <div class="tw-flex tw-mt-1">
-                                                            <div
-                                                                    class="tw-rounded tw-border tw-border-solid tw-border-[#979797] tw-p-3"
-                                                            >
-                                                                <div class="tw-text-xs tw-italic tw-mb-2">
-                                                                <span
-                                                                        class="tw-font-bold"
-                                                                        style={`color:${message.user_color}`}>Grégoire</span
-                                                                >
-                                                                    <span> a envoyer un fichier </span>
-                                                                </div>
-                                                                <img src="/static/images/attach.svg" alt="attachment" />
-                                                            </div>
-                                                        </div>
-                                                    {/if}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- if the message is an event, like someone joining the conversation -->
-                                    {:else if message.type === "event"}
-                                        <div class="tw-flex tw-justify-center">
-                                            <div
-                                                    class="tw-rounded-[13px] tw-justify-center tw-px-2 tw-py-1 tw-text-xs tw-italic tw-border tw-border-solid tw-border-light-purple"
-                                            >
-                                            <span class="tw-font-bold" style={`color:${message.user_color}`}>
-                                                {message.user_name}
-                                            </span>
-
-                                                {message.info}
-                                            </div>
-                                        </div>
-                                    {/if}
-                                </div>
-                            {/each}
-                        </div>
-
-                        <div class="messageForm">
-                            <ChatMessageForm bind:handleForm={handleFormBlur} />
-                        </div>
-                    </div>
-                </div>
+            {#if $activeThreadStore}
+                <ChatActiveThread
+                        usersListStore={$activeThreadStore.getPresenceStore()}
+                        activeThread={$activeThreadStore}
+                />
             {:else}
                 <div>
                     <!-- searchbar -->
@@ -461,11 +254,18 @@
                     <!-- chat users -->
                     <UsersList
                             usersListStore={defaultRoom().getPresenceStore()}
-                            showUsers={showUsers}
+                            {showUsers}
                             searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showUsers={handleShowUsers}
                             on:goTo={(event) => defaultRoom().goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                    />
+
+                    <ChatLiveRooms
+                            {showLives}
+                            on:activeThread={handleActiveThread}
+                            on:showLives={handleShowLives}
+                            liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live')}
                     />
 
                     <!-- forum list

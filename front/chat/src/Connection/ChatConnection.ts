@@ -140,6 +140,10 @@ export class ChatConnection implements ChatConnection {
 
         this.socket.send(bytes);
     }
+
+    public getXmppClient(): XmppClient|null {
+        return this.xmppClient;
+    }
 }
 
 

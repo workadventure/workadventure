@@ -42,6 +42,7 @@ export class MucRoom {
         private connection: RoomConnection,
         public readonly name: string,
         private roomJid: JID,
+        private type: string,
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());

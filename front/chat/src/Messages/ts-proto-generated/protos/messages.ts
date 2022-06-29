@@ -446,6 +446,7 @@ export interface BanUserMessage {
 export interface MucRoomDefinitionMessage {
     url: string;
     name: string;
+    type: string;
 }
 
 export interface XmppSettingsMessage {
@@ -4980,7 +4981,7 @@ export const BanUserMessage = {
     },
 };
 
-const baseMucRoomDefinitionMessage: object = { url: "", name: "" };
+const baseMucRoomDefinitionMessage: object = { url: "", name: "", type: "" };
 
 export const MucRoomDefinitionMessage = {
     encode(message: MucRoomDefinitionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4989,6 +4990,9 @@ export const MucRoomDefinitionMessage = {
         }
         if (message.name !== "") {
             writer.uint32(18).string(message.name);
+        }
+        if (message.type !== "") {
+            writer.uint32(26).string(message.type);
         }
         return writer;
     },
@@ -5006,6 +5010,9 @@ export const MucRoomDefinitionMessage = {
                 case 2:
                     message.name = reader.string();
                     break;
+                case 3:
+                    message.type = reader.string();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5018,6 +5025,7 @@ export const MucRoomDefinitionMessage = {
         const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
         message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
         message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
+        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
         return message;
     },
 
@@ -5025,6 +5033,7 @@ export const MucRoomDefinitionMessage = {
         const obj: any = {};
         message.url !== undefined && (obj.url = message.url);
         message.name !== undefined && (obj.name = message.name);
+        message.type !== undefined && (obj.type = message.type);
         return obj;
     },
 
@@ -5032,6 +5041,7 @@ export const MucRoomDefinitionMessage = {
         const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
         message.url = object.url ?? "";
         message.name = object.name ?? "";
+        message.type = object.type ?? "";
         return message;
     },
 };

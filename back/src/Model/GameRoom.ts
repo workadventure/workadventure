@@ -43,6 +43,7 @@ import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
 import { MapLoadingError } from "../Services/MapLoadingError";
+import {MucManager} from "../Services/MucManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -120,6 +121,9 @@ export class GameRoom {
             onPlayerDetailsUpdated,
             mapDetails.thirdParty ?? undefined
         );
+
+        const mucManager = await gameRoom.getMucManager();
+        await mucManager.init();
 
         return gameRoom;
     }
@@ -605,9 +609,9 @@ export class GameRoom {
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    private getMap(): Promise<ITiledMap> {
+    private getMap(canLoadLocalUrl: boolean = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
-            this.mapPromise = mapFetcher.fetchMap(this.mapUrl);
+            this.mapPromise = mapFetcher.fetchMap(this.mapUrl, canLoadLocalUrl);
         }
 
         return this.mapPromise;
@@ -804,5 +808,54 @@ export class GameRoom {
             };
         }
         return undefined;
+    }
+
+    private mucManagerPromise: Promise<MucManager> | undefined;
+    private mucManagerLastLoad: Date | undefined;
+
+    private getMucManager(): Promise<MucManager> {
+        const lastMapUrl = this.mapUrl;
+        if (!this.mucManagerPromise) {
+            // For localhost maps
+            this.mapUrl = this.mapUrl.replace("http://maps.workadventure.localhost", "http://maps:80");
+            this.mucManagerLastLoad = new Date();
+            this.mucManagerPromise = this.getMap(true)
+                .then((map) => {
+                    return new MucManager(this.roomUrl, map);
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "You are loading a local map. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
+                                );
+                            }
+                        }, 1000);
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        // Note: we run this message inside a setTimeout so that the room listeners can have time to connect.
+                        setTimeout(() => {
+                            for (const roomListener of this.roomListeners) {
+                                emitErrorOnRoomSocket(
+                                    roomListener,
+                                    "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. If you use the scripting API in this map, please be aware that server-side checks and muc persistence is disabled."
+                                );
+                            }
+                        }, 1000);
+                    }
+                    return new MucManager(this.roomUrl, null);
+                });
+        }
+        this.mapUrl = lastMapUrl;
+        return this.mucManagerPromise;
     }
 }
