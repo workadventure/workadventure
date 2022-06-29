@@ -1,6 +1,6 @@
-import type { ITiledMapObject } from "../Map/ITiledMap";
 import type { GameScene } from "../Game/GameScene";
 import { GameMapProperties } from "../Game/GameMapProperties";
+import { ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {

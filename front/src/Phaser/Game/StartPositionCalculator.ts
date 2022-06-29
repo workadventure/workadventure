@@ -1,6 +1,11 @@
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapTileLayer,
+} from "@workadventure/tiled-map-type-guard/dist";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
@@ -64,8 +69,8 @@ export class StartPositionCalculator {
             );
             // Let's start in the middle of the map
             this.startPosition = {
-                x: this.mapFile.width * 16,
-                y: this.mapFile.height * 16,
+                x: (this.mapFile.width ?? 0) * 16,
+                y: (this.mapFile.height ?? 0) * 16,
             };
         }
     }

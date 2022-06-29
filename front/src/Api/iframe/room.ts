@@ -6,11 +6,11 @@ import { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
-import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
 import area from "./area";
 import { WorkadventureAreaCommands } from "./area";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();

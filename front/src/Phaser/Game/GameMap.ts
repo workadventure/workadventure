@@ -1,16 +1,16 @@
-import type {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapProperty,
-    ITiledMapTileLayer,
-} from "../Map/ITiledMap";
 import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
 import { MathUtils } from "../../Utils/MathUtils";
-import { upgradeMapToNewest } from "@workadventure/tiled-map-type-guard/dist";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapProperty,
+    ITiledMapTileLayer,
+    upgradeMapToNewest,
+} from "@workadventure/tiled-map-type-guard/dist";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,

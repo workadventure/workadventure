@@ -1,9 +1,9 @@
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
-import type { ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
+import { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
 
 interface Variable {
     defaultValue: unknown;

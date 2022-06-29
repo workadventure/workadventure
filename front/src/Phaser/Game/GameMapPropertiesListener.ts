@@ -6,7 +6,6 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { ITiledMapProperty } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -19,6 +18,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
+import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard/dist";
 
 interface OpenCoWebsite {
     actionId: string;
