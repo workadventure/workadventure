@@ -107,6 +107,16 @@
         "CHAT_URL": "//chat-"+url
       }
     },
+    "chat": {
+      "image": "thecodingmachine/workadventure-chat:"+tag,
+      "host": {
+        "url": "chat-"+url,
+      },
+      "ports": [80],
+      "env": {
+        "PUSHER_URL": "//pusher-"+url
+      }
+    },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
            "host": {

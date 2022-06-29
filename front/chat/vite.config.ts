@@ -22,7 +22,6 @@ export default defineConfig({
         envConfig({
             variables: [
                 "PUSHER_URL",
-                "FALLBACK_LOCALE",
             ],
         }),
         pluginRewriteAll(),
