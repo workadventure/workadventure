@@ -7,6 +7,7 @@
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import {CHAT_URL} from "../../Enum/EnvironmentVariable";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -99,7 +100,7 @@
         bind:this={chatIframe}
         sandbox="allow-scripts"
         title="WorkAdventureChat"
-        src="http://chat.workadventure.localhost"
+        src={CHAT_URL}
         class="tw-border-0"
     />
 </div>
