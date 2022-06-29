@@ -2,6 +2,8 @@
     import { SendIcon } from "svelte-feather-icons";
     import { chatMessagesStore, chatInputFocusStore } from "../Stores/ChatStore";
 
+    export let mucRoom;
+
     export const handleForm = {
         blur() {
             inputElement.blur();
@@ -19,7 +21,8 @@
 
     function saveMessage() {
         if (!newMessageText) return;
-        chatMessagesStore.addPersonnalMessage(newMessageText);
+        mucRoom.sendMessage(newMessageText);
+        //chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
     }
 </script>
@@ -42,6 +45,7 @@
             <button
                 type="submit"
                 class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                on:click={saveMessage}
             >
                 <SendIcon size="17" />
             </button>

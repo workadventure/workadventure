@@ -11,6 +11,7 @@
 
     export let activeThread;
     export let usersListStore;
+    export let messagesStore;
     export let settingsView = false;
 
     let handleFormBlur: { blur(): void };
@@ -183,8 +184,20 @@
 			</div>
 		</div>
 	{:else}
-		<div class="tw-flex tw-flex-col-reverse tw-flex-auto tw-px-5 tw-overflow-auto">
-			<!-- if there is a user typing -->
+		<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto">
+			{#each $messagesStore as message, i}
+				<div class={`tw-mt-4`}>
+					<div class={`tw-flex-auto`}>
+						<div style={`border-bottom-color:${message.user_color}`} class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}>
+							<span>{message.name}</span>
+							<span>{message.time.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric', hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+						</div>
+						<div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3`}>
+							<p class="tw-mb-0">{message.body}</p>
+						</div>
+					</div>
+				</div>
+			{/each}
 
 			{#if !!threadListUserTyping}
 				<div class="">
@@ -226,9 +239,9 @@
 					</div>
 				</div>
 			{/if}
-			{#each threadList as message, i}
+			<!--{#each threadList as message, i}
 				<div class={`${lastMessageIsFromSameUser(message.user_id, i) ? "" : "tw-mt-4"}`}>
-					<!-- if the message is a text/attachment -->
+					<-- if the message is a text/attachment ->
 
 					{#if ["message", "attachment"].includes(message.type)}
 						<div class={`tw-flex ${message.me ? "tw-justify-end" : "tw-justify-start"}`}>
@@ -238,7 +251,7 @@
                                             }`}
 							>
 								{#if !message.me}
-									<!-- make image invisible and omit vertical margin if last message was by same user -->
+									<-- make image invisible and omit vertical margin if last message was by same user ->
 									<img
 											class={`tw-mr-2 ${
                                                         lastMessageIsFromSameUser(message.user_id, i)
@@ -254,14 +267,14 @@
 								{/if}
 
 								<div class={`tw-flex-auto ${message.me ? "" : ""}`}>
-									<!-- message content -->
+									<-- message content ->
 
 									{#if message.type === "message"}
 										<div
 												style={`border-bottom-color:${message.user_color}`}
 												class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xs tw-pb-1`}
 										>
-											<!-- if last message was by this user, ignore this part -->
+											<-- if last message was by this user, ignore this part ->
 											{#if !lastMessageIsFromSameUser(message.user_id, i)}
 												{#if message.me}
 													<span> Me </span>
@@ -280,7 +293,7 @@
 											<p class="tw-mb-0">{message.text}</p>
 										</div>
 									{:else if message.type === "attachment"}
-										<!-- attachment content -->
+										<-- attachment content ->
 
 										<div class="tw-flex tw-mt-1">
 											<div
@@ -301,7 +314,7 @@
 							</div>
 						</div>
 
-						<!-- if the message is an event, like someone joining the conversation -->
+						<-- if the message is an event, like someone joining the conversation ->
 					{:else if message.type === "event"}
 						<div class="tw-flex tw-justify-center">
 							<div
@@ -317,10 +330,11 @@
 					{/if}
 				</div>
 			{/each}
+			-->
 		</div>
 
 		<div class="messageForm">
-			<ChatMessageForm bind:handleForm={handleFormBlur} />
+			<ChatMessageForm bind:handleForm={handleFormBlur} mucRoom={activeThread}/>
 		</div>
 	{/if}
 </div>

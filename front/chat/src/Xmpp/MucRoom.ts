@@ -35,17 +35,18 @@ export type Teleport = {
 export type TeleportStore = Readable<Teleport>;
 
 export type Message = {
-    text: string;
-    author: string;
+    body: string;
+    name: string;
+    time: Date;
 };
-export type MessageStore = Readable<[Message]>;
+export type MessageStore = Readable<Message[]>;
 
 const _VERBOSE = true;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
-    private messageStore: Writable<[Message]>;
+    private messageStore: Writable<Message[]>;
     private nickCount: number = 0;
 
     constructor(
@@ -56,7 +57,7 @@ export class MucRoom {
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
-        this.messageStore = writable<[Message]>();
+        this.messageStore = writable<Message[]>(new Array(0));
         this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
@@ -242,6 +243,25 @@ export class MucRoom {
                     handledMessage = true;
                 }
             }
+        } if (xml.getName() === "message" && xml.getAttr("type") === "groupchat" && !xml.getChild('subject')) {
+            const from = jid(xml.getAttr("from"));
+            const name = from.resource;
+            let delay = xml.getChild('delay')?.getAttr('stamp');
+            if(delay){
+                delay = new Date(delay);
+            } else {
+                delay = new Date();
+            }
+            const body = xml.getChildText('body') ?? '';
+            this.messageStore.update(messages => {
+                messages.push({
+                    name,
+                    body,
+                    time: delay
+                });
+                return messages;
+            })
+            handledMessage = true;
         }
 
         if (!handledMessage) {
@@ -306,10 +326,25 @@ export class MucRoom {
         };
     }
 
-    public getMessageStore(): MessageStore {
+    public getMessagesStore(): MessageStore {
         return {
             subscribe: this.messageStore.subscribe,
         };
+    }
+
+    public sendMessage(text: string){
+        const message = xml(
+            "message",
+            {
+                type: "groupchat",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml("body", {}, text)
+        );
+        this.connection.emitXmlMessage(message);
+        if(_VERBOSE) console.warn("[XMPP]", "Message sent");
     }
 
     public getUrl(): string {
