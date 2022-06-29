@@ -42,7 +42,7 @@ export class TextUtils {
             color = object.text.color;
         }
         options.color = color;
-        if (object.text.wrap === true) {
+        if (object.text.wrap === true && object.width) {
             options.wordWrap = {
                 width: object.width,
                 //useAdvancedWrap: true

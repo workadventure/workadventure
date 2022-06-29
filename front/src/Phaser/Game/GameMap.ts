@@ -69,6 +69,7 @@ export class GameMap {
     private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
     private readonly areasPositionOffsetY: number = 16;
     private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
+    private readonly defaultTileSize = 32;
     private unnamedAreasCounter = 0;
 
     public exitUrls: Array<string> = [];
@@ -81,7 +82,7 @@ export class GameMap {
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
         this.tiledObjects
-            .filter((object) => ["zone", "area"].includes(object.type))
+            .filter((object) => ["zone", "area"].includes(object.type ?? ""))
             .forEach((area) => {
                 let name = area.name;
                 if (!name) {
@@ -113,10 +114,14 @@ export class GameMap {
         }
         for (const tileset of this.map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
-                if (tile.properties) {
+                if (tile.properties && tileset.firstgid !== undefined) {
                     this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;
                     tile.properties.forEach((prop) => {
-                        if (prop.name == GameMapProperties.NAME && typeof prop.value == "string") {
+                        if (
+                            prop.name == GameMapProperties.NAME &&
+                            typeof prop.value == "string" &&
+                            tileset.firstgid !== undefined
+                        ) {
                             this.tileNameMap.set(prop.value, tileset.firstgid + tile.id);
                         }
                         if (prop.name == GameMapProperties.EXIT_URL && typeof prop.value == "string") {
@@ -138,6 +143,9 @@ export class GameMap {
     }
 
     public getCollisionGrid(): number[][] {
+        if (this.map.height === undefined || this.map.width === undefined) {
+            return [];
+        }
         const grid: number[][] = [];
         for (let y = 0; y < this.map.height; y += 1) {
             const row: number[] = [];
@@ -150,11 +158,17 @@ export class GameMap {
     }
 
     public getTileDimensions(): { width: number; height: number } {
-        return { width: this.map.tilewidth, height: this.map.tileheight };
+        return {
+            width: this.map.tilewidth ?? this.defaultTileSize,
+            height: this.map.tileheight ?? this.defaultTileSize,
+        };
     }
 
     public getTileIndexAt(x: number, y: number): { x: number; y: number } {
-        return { x: Math.floor(x / this.map.tilewidth), y: Math.floor(y / this.map.tileheight) };
+        return {
+            x: Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize)),
+            y: Math.floor(y / (this.map.tileheight ?? this.defaultTileSize)),
+        };
     }
 
     /**
@@ -162,6 +176,9 @@ export class GameMap {
      * This will trigger events if properties are changing.
      */
     public setPosition(x: number, y: number) {
+        if (!this.map.width || !this.map.height) {
+            return;
+        }
         this.oldPosition = this.position;
         this.position = { x, y };
         const areasChanged = this.triggerAreasChange();
@@ -171,8 +188,8 @@ export class GameMap {
 
         this.oldKey = this.key;
 
-        const xMap = Math.floor(x / this.map.tilewidth);
-        const yMap = Math.floor(y / this.map.tileheight);
+        const xMap = Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize));
+        const yMap = Math.floor(y / (this.map.tileheight ?? this.defaultTileSize));
         const key = xMap + yMap * this.map.width;
 
         if (key === this.key) {
@@ -387,7 +404,7 @@ export class GameMap {
         if (obj === undefined) {
             return undefined;
         }
-        return obj.value;
+        return obj.value as string | boolean | number | undefined;
     }
 
     public getObjectWithName(name: string): ITiledMapObject | undefined {
@@ -578,7 +595,7 @@ export class GameMap {
                     if (property.value === undefined) {
                         continue;
                     }
-                    properties.set(property.name, property.value);
+                    properties.set(property.name, property.value as string | number | boolean);
                 }
             }
         }
@@ -603,14 +620,14 @@ export class GameMap {
                     if (layerProperty.value === undefined) {
                         continue;
                     }
-                    properties.set(layerProperty.name, layerProperty.value);
+                    properties.set(layerProperty.name, layerProperty.value as string | number | boolean);
                 }
             }
 
             if (tileIndex) {
                 this.tileSetPropertyMap[tileIndex]?.forEach((property) => {
                     if (property.value) {
-                        properties.set(property.name, property.value);
+                        properties.set(property.name, property.value as string | number | boolean);
                     } else if (properties.has(property.name)) {
                         properties.delete(property.name);
                     }

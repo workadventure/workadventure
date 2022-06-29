@@ -116,8 +116,8 @@ export class StartPositionCalculator {
         if (foundLayer) {
             const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
             this.startPosition = {
-                x: startPosition.x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
-                y: startPosition.y * this.mapFile.tileheight + this.mapFile.tileheight / 2,
+                x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
             };
             return true;
         }
@@ -153,8 +153,8 @@ export class StartPositionCalculator {
                 return;
             }
             possibleStartPositions.push({
-                x: x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
-                y: y * this.mapFile.tilewidth + this.mapFile.tileheight / 2,
+                x: x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                y: y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
             });
         });
         // Get a value at random amongst allowed values
