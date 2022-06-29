@@ -10,6 +10,7 @@ import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
 import { MathUtils } from "../../Utils/MathUtils";
+import { upgradeMapToNewest } from "@workadventure/tiled-map-type-guard/dist";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -57,6 +58,7 @@ export class GameMap {
     private enterAreaCallbacks = Array<areaChangeCallback>();
     private leaveAreaCallbacks = Array<areaChangeCallback>();
 
+    private map: ITiledMap;
     private tileNameMap = new Map<string, number>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapProperty> } = {};
@@ -73,12 +75,9 @@ export class GameMap {
 
     public hasStartTile = false;
 
-    public constructor(
-        private map: ITiledMap,
-        phaserMap: Phaser.Tilemaps.Tilemap,
-        terrains: Array<Phaser.Tilemaps.Tileset>
-    ) {
-        this.flatLayers = flattenGroupLayersMap(map);
+    public constructor(map: ITiledMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
+        this.map = upgradeMapToNewest(map);
+        this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
         this.tiledObjects
@@ -112,7 +111,7 @@ export class GameMap {
                 depth = DEPTH_OVERLAY_INDEX;
             }
         }
-        for (const tileset of map.tilesets) {
+        for (const tileset of this.map.tilesets) {
             tileset?.tiles?.forEach((tile) => {
                 if (tile.properties) {
                     this.tileSetPropertyMap[tileset.firstgid + tile.id] = tile.properties;

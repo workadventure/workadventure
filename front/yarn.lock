@@ -664,6 +664,13 @@
     "@typescript-eslint/types" "5.16.0"
     eslint-visitor-keys "^3.0.0"
 
+"@workadventure/tiled-map-type-guard@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-2.0.0.tgz#c3b948ef9ef508e0a68fec2af4c24b59edb04425"
+  integrity sha512-llgmb3ueWc3g40ln53MFERRd8V/LJVyErd9Bs0V6gvac37O4KW3fegR0OMd2MKfBoVMoQO1WJqmf9LH+FyobFg==
+  dependencies:
+    zod "^3.17.3"
+
 "@xmpp/component-core@^0.13.1":
   version "0.13.1"
   resolved "https://registry.yarnpkg.com/@xmpp/component-core/-/component-core-0.13.1.tgz#76c5bcface84477f21dbf6693b98be728923c45f"
@@ -3801,3 +3808,8 @@ zod@^3.14.3:
   version "3.14.3"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.14.3.tgz#60e86341c05883c281fe96a0e79acea48a09f123"
   integrity sha512-OzwRCSXB1+/8F6w6HkYHdbuWysYWnAF4fkRgKDcSFc54CE+Sv0rHXKfeNUReGCrHukm1LNpi6AYeXotznhYJbQ==
+
+zod@^3.17.3:
+  version "3.17.3"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.17.3.tgz#86abbc670ff0063a4588d85a4dcc917d6e4af2ba"
+  integrity sha512-4oKP5zvG6GGbMlqBkI5FESOAweldEhSOZ6LI6cG+JzUT7ofj1ZOC0PJudpQOpT1iqOFpYYtX5Pw0+o403y4bcg==

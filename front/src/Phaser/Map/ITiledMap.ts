@@ -11,17 +11,18 @@ export interface ITiledMap {
     height: number;
     layers: ITiledMapLayer[];
     nextobjectid: number;
+    type: "map";
 
     /**
      * Map orientation (orthogonal)
      */
-    orientation: string;
+    orientation: "orthogonal" | "isometric" | "staggered" | "hexagonal" | undefined;
     properties?: ITiledMapProperty[];
 
     /**
      * Render order (right-down)
      */
-    renderorder: string;
+    renderorder: "right-down" | "right-up" | "left-down" | "left-up" | undefined;
     tileheight: number;
     tilewidth: number;
     tilesets: ITiledTileSet[];
@@ -30,7 +31,6 @@ export interface ITiledMap {
     infinite?: boolean;
     nextlayerid?: number;
     tiledversion?: string;
-    type?: string;
 }
 
 export interface ITiledMapProperty {
