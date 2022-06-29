@@ -3,6 +3,7 @@
     import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import LL from "../i18n/i18n-svelte";
+    import {activeThreadStore} from "../Stores/ActiveThreadStore";
 
     export let activeThread;
     export let usersListStore;
@@ -146,13 +147,13 @@
 	<div class="tw-flex tw-flex-col tw-h-full tw-over tw-fixed">
 		<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
 			<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2">
-				<button class="tw-text-light-purple tw-m-0" on:click={() => {activeThread = undefined;}}>
+				<button class="tw-text-light-purple tw-m-0" on:click={() => {activeThreadStore.reset()}}>
 					<ArrowLeftIcon />
 				</button>
 			</div>
 			<div class="tw-text-center">
-				{activeThread.name}
-				<span>{[...$usersListStore].length > 1 ?$LL.usersOnline() : $LL.userOnline()}</span>
+				<b>{activeThread.name}</b>
+				<div class="tw-text-xs tw-text-green tw-mt-0">{[...$usersListStore].length} {[...$usersListStore].length > 1 ?$LL.usersOnline() : $LL.userOnline()}</div>
 			</div>
 			<div class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2">
 				<button class="tw-text-light-purple tw-m-0">
