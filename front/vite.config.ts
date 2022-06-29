@@ -47,6 +47,7 @@ export default defineConfig({
                 "DISABLE_ANONYMOUS",
                 "OPID_LOGIN_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
+                "CHAT_URL"
             ],
         }),
         pluginRewriteAll(),
