@@ -27,9 +27,7 @@ COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
-RUN ls -la
-COPY ./dist /usr/share/nginx/html
-COPY ./server.template.json /usr/share/nginx/html/server.template.json
+COPY . /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && envsubst < /usr/share/nginx/html/server.template.json > /usr/share/nginx/html/server.json && exec nginx -g 'daemon off;'"]
