@@ -7,7 +7,7 @@
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import {CHAT_URL} from "../../Enum/EnvironmentVariable";
+    import { CHAT_URL } from "../../Enum/EnvironmentVariable";
 
     let chatIframe: HTMLIFrameElement;
 

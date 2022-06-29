@@ -29,7 +29,6 @@ export const OPID_LOGIN_SCREEN_PROVIDER = getEnvConfig("OPID_LOGIN_SCREEN_PROVID
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
 
-
 export {
     DEBUG_MODE,
     SKIP_RENDER_OPTIMIZATIONS,
