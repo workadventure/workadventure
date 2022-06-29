@@ -8,6 +8,7 @@ const menu: BaseTranslation = {
             invite: "Show invite",
             register: "Register",
             chat: "Open chat",
+            userlist: "User list",
         },
     },
     visitCard: {

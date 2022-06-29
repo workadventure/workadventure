@@ -204,6 +204,10 @@ export class GameMap {
         return this.lastProperties;
     }
 
+    public clearCurrentProperties(): void {
+        return this.lastProperties.clear();
+    }
+
     public getMap(): ITiledMap {
         return this.map;
     }
@@ -389,6 +393,23 @@ export class GameMap {
         throw new Error("No possible position found");
     }
 
+    public getObjectProperty(
+        object: { properties?: ITiledMapProperty[] },
+        propertyName: string
+    ): string | boolean | number | undefined {
+        const properties: ITiledMapProperty[] | undefined = object.properties;
+        if (!properties) {
+            return undefined;
+        }
+        const obj = properties.find(
+            (property: ITiledMapProperty) => property.name.toLowerCase() === propertyName.toLowerCase()
+        );
+        if (obj === undefined) {
+            return undefined;
+        }
+        return obj.value;
+    }
+
     public getObjectWithName(name: string): ITiledMapObject | undefined {
         return this.tiledObjects.find((object) => object.name === name);
     }
@@ -399,7 +420,7 @@ export class GameMap {
 
     public setArea(name: string, type: AreaType, area: ITiledMapObject): void {
         this.getAreas(type).set(name, area);
-        if (this.isPlayerInsideArea(name)) {
+        if (this.isPlayerInsideArea(name, type)) {
             this.triggerSpecificAreaOnEnter(area);
         }
     }

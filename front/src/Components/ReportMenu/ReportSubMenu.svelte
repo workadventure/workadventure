@@ -22,35 +22,19 @@
     }
 </script>
 
-<div class="report-container-main">
-    <h3>{$LL.report.title()}</h3>
+<div class="tw-flex tw-flex-col tw-text-left tw-p-3">
+    <h3 class="blue-title">{$LL.report.title()}</h3>
     <p>{$LL.report.content()}</p>
     <form>
         <section>
-            <label>
+            <label class="tw-w-full">
                 <span>{$LL.report.message.title()}</span>
-                <textarea type="text" class="nes-textarea" bind:value={reportMessage} />
+                <textarea type="text" class="tw-w-full" bind:value={reportMessage} />
             </label>
             <p hidden={hiddenError}>{$LL.report.message.empty()}</p>
         </section>
         <section>
-            <button type="submit" class="nes-btn is-error" on:click={submitReport}>{$LL.report.submit()}</button>
+            <button type="submit" class="btn danger" on:click={submitReport}>{$LL.report.submit()}</button>
         </section>
     </form>
 </div>
-
-<style lang="scss">
-    div.report-container-main {
-        text-align: center;
-
-        textarea {
-            height: clamp(100px, 15vh, 300px);
-        }
-    }
-
-    @media only screen and (max-height: 630px) {
-        div.report-container-main textarea {
-            height: 50px;
-        }
-    }
-</style>

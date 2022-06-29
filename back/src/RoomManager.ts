@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AskPositionMessage,
     BanMessage,
     BanUserMessage,
     BatchToPusherMessage,
@@ -14,10 +15,8 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
     SendUserMessage,
@@ -31,6 +30,8 @@ import {
     LockGroupPromptMessage,
     RoomsList,
     MapEditorModifyAreaMessage,
+    PingMessage,
+    QueryMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -106,17 +107,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasQueryjitsijwtmessage()) {
-                            await socketManager.handleQueryJitsiJwtMessage(
+                        } else if (message.hasQuerymessage()) {
+                            await socketManager.handleQueryMessage(
                                 room,
                                 user,
-                                message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
-                            );
-                        } else if (message.hasJoinbbbmeetingmessage()) {
-                            await socketManager.handleJoinBBBMeetingMessage(
-                                room,
-                                user,
-                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
+                                message.getQuerymessage() as QueryMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
@@ -167,12 +162,22 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
                             );
+                        } else if (message.hasAskpositionmessage()) {
+                            socketManager.handleAskPositionMessage(
+                                room,
+                                user,
+                                message.getAskpositionmessage() as AskPositionMessage
+                            );
                         } else {
                             throw new Error("Unhandled message type");
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error(
+                        "An error occurred while managing a message of type PusherToBackMessage:" +
+                            message.getMessageCase().toString(),
+                        e
+                    );
                     emitError(call, e);
                     call.end();
                 }
@@ -340,6 +345,9 @@ const roomManager: IRoomManagerServer = {
     },
     getRooms(call: ServerUnaryCall<EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
         callback(null, socketManager.getAllRooms());
+    },
+    ping(call: ServerUnaryCall<PingMessage>, callback: sendUnaryData<PingMessage>): void {
+        callback(null, call.request);
     },
 };
 

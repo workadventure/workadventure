@@ -29,16 +29,12 @@
     }
 </script>
 
-<div class="block-container">
-    <h3>{$LL.report.block.title()}</h3>
-    <p>{$LL.report.block.content({ userName })}</p>
-    <button type="button" class="nes-btn is-error" on:click|preventDefault={blockUser}>
-        {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
-    </button>
+<div class="tw-flex tw-flex-col tw-text-left tw-p-3">
+    <section class="tw-w-full">
+        <h3 class="blue-title tw-justify-start">{$LL.report.block.title()}</h3>
+        <p>{$LL.report.block.content({ userName })}</p>
+        <button type="button" class="btn danger" on:click|preventDefault={blockUser}>
+            {userIsBlocked ? $LL.report.block.unblock() : $LL.report.block.block()}
+        </button>
+    </section>
 </div>
-
-<style lang="scss">
-    div.block-container {
-        text-align: center;
-    }
-</style>

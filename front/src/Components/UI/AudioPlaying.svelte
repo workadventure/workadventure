@@ -17,8 +17,8 @@
     });
 </script>
 
-<div class="audio-playing" transition:fly={{ x: 210, duration: 500 }}>
-    <img src={megaphoneImg} alt="Audio playing" />
+<div class="audio-playing tw-bg-dark-blue/95" transition:fly={{ x: 210, duration: 500 }}>
+    <img src={megaphoneImg} alt="Audio playing" class="tw-bg-medium-purple tw-rounded-full" />
     <p>{$LL.audio.message()}</p>
     <audio bind:this={audio} src={url} on:ended={soundEnded}>
         <track kind="captions" />
@@ -34,14 +34,13 @@
         right: 0;
         top: 40px;
         transition: all 0.1s ease-out;
-        background-color: black;
+        //background-color: black;
         border-radius: 30px 0 0 30px;
         display: inline-flex;
         z-index: 750;
 
         img {
-            border-radius: 50%;
-            background-color: #ffda01;
+            //border-radius: 50%;
             padding: 10px;
         }
 

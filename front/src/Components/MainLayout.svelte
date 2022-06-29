@@ -43,6 +43,7 @@
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
     import AreaDetailsWindow from "./MapEditor/AreaDetailsWindow.svelte";
+    import "../../style/tailwind.scss";
 
     let mainLayout: HTMLDivElement;
 

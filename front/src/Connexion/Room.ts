@@ -27,6 +27,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    private _mucRooms: Array<Object> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
@@ -126,6 +127,9 @@ export class Room {
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+
+                this._mucRooms = data.mucRooms ?? undefined;
+
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -226,6 +230,10 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get mucRooms(): Array<Object> | undefined {
+        return this._mucRooms;
     }
 
     get showPoweredBy(): boolean | undefined {

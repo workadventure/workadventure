@@ -216,7 +216,7 @@ export class SwaggerController extends BaseHttpController {
         // @ts-ignore
         const LiveDirectory = require("live-directory");
         const LiveAssets = new LiveDirectory({
-            path: __dirname + "/../../node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
+            path: process.cwd() + "/node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
             keep: {
                 extensions: [".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".html"], // We only want to serve files with these extensions
             },
@@ -227,7 +227,7 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
-            fs.readFile(__dirname + "/../../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
+            fs.readFile(process.cwd() + "/node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
                     return response.status(500).send(err.message);
                 }

@@ -87,19 +87,6 @@ export interface EmoteEventMessage {
     emote: string;
 }
 
-export interface QueryJitsiJwtMessage {
-    jitsiRoom: string;
-}
-
-export interface JoinBBBMeetingMessage {
-    meetingId: string;
-    /**
-     * Fix me Pusher linter fails because eslint-plugin version < 3.0
-     * map<string, string> userdata = 3;
-     */
-    meetingName: string;
-}
-
 export interface FollowRequestMessage {
     leader: number;
 }
@@ -136,14 +123,15 @@ export interface ClientToServerMessage {
         | { $case: "playGlobalMessage"; playGlobalMessage: PlayGlobalMessage }
         | { $case: "stopGlobalMessage"; stopGlobalMessage: StopGlobalMessage }
         | { $case: "reportPlayerMessage"; reportPlayerMessage: ReportPlayerMessage }
-        | { $case: "queryJitsiJwtMessage"; queryJitsiJwtMessage: QueryJitsiJwtMessage }
         | { $case: "emotePromptMessage"; emotePromptMessage: EmotePromptMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "followRequestMessage"; followRequestMessage: FollowRequestMessage }
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "queryMessage"; queryMessage: QueryMessage }
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage }
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
         | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
@@ -157,6 +145,10 @@ export interface ItemEventMessage {
 export interface VariableMessage {
     name: string;
     value: string;
+}
+
+export interface XmppMessage {
+    stanza: string;
 }
 
 /** A variable, along the tag describing who it is targeted at */
@@ -176,8 +168,49 @@ export interface StopGlobalMessage {
     id: string;
 }
 
+export interface QueryMessage {
+    id: number;
+    query?:
+        | { $case: "jitsiJwtQuery"; jitsiJwtQuery: JitsiJwtQuery }
+        | { $case: "joinBBBMeetingQuery"; joinBBBMeetingQuery: JoinBBBMeetingQuery };
+}
+
+export interface JitsiJwtQuery {
+    jitsiRoom: string;
+}
+
+export interface JoinBBBMeetingQuery {
+    meetingId: string;
+    /**
+     * Fix me Pusher linter fails because eslint-plugin version < 3.0
+     * map<string, string> userdata = 3;
+     */
+    meetingName: string;
+}
+
+export interface AnswerMessage {
+    id: number;
+    answer?:
+        | { $case: "error"; error: ErrorMessage }
+        | { $case: "jitsiJwtAnswer"; jitsiJwtAnswer: JitsiJwtAnswer }
+        | { $case: "joinBBBMeetingAnswer"; joinBBBMeetingAnswer: JoinBBBMeetingAnswer };
+}
+
+export interface JitsiJwtAnswer {
+    jwt: string;
+}
+
+export interface JoinBBBMeetingAnswer {
+    meetingId: string;
+    clientURL: string;
+}
+
 export interface UserMovedMessage {
     userId: number;
+    position: PositionMessage | undefined;
+}
+
+export interface MoveToPositionMessage {
     position: PositionMessage | undefined;
 }
 
@@ -193,6 +226,7 @@ export interface SubMessage {
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
         | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
+        | { $case: "xmppMessage"; xmppMessage: XmppMessage }
         | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
@@ -294,16 +328,6 @@ export interface TeleportMessageMessage {
     map: string;
 }
 
-export interface SendJitsiJwtMessage {
-    jitsiRoom: string;
-    jwt: string;
-}
-
-export interface BBBMeetingClientURLMessage {
-    meetingId: string;
-    clientURL: string;
-}
-
 export interface SendUserMessage {
     type: string;
     message: string;
@@ -339,6 +363,35 @@ export interface BanUserMessage {
     message: string;
 }
 
+export interface MucRoomDefinitionMessage {
+    url: string;
+    name: string;
+}
+
+export interface XmppSettingsMessage {
+    jid: string;
+    conferenceDomain: string;
+    rooms: MucRoomDefinitionMessage[];
+}
+
+export interface AskPositionMessage {
+    userIdentifier: string;
+    playUri: string;
+}
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+export interface XmppConnectionStatusChangeMessage {
+    status: XmppConnectionStatusChangeMessage_Status;
+}
+
+export enum XmppConnectionStatusChangeMessage_Status {
+    DISCONNECTED = 0,
+    UNRECOGNIZED = -1,
+}
+
 /** Messages going from back and pusher to the front */
 export interface ServerToClientMessage {
     message?:
@@ -353,7 +406,6 @@ export interface ServerToClientMessage {
           }
         | { $case: "webRtcDisconnectMessage"; webRtcDisconnectMessage: WebRtcDisconnectMessage }
         | { $case: "teleportMessageMessage"; teleportMessageMessage: TeleportMessageMessage }
-        | { $case: "sendJitsiJwtMessage"; sendJitsiJwtMessage: SendJitsiJwtMessage }
         | { $case: "sendUserMessage"; sendUserMessage: SendUserMessage }
         | { $case: "banUserMessage"; banUserMessage: BanUserMessage }
         | { $case: "worldFullWarningMessage"; worldFullWarningMessage: WorldFullWarningMessage }
@@ -367,7 +419,13 @@ export interface ServerToClientMessage {
         | { $case: "invalidTextureMessage"; invalidTextureMessage: InvalidTextureMessage }
         | { $case: "groupUsersUpdateMessage"; groupUsersUpdateMessage: GroupUsersUpdateMessage }
         | { $case: "errorScreenMessage"; errorScreenMessage: ErrorScreenMessage }
-        | { $case: "bbbMeetingClientURLMessage"; bbbMeetingClientURLMessage: BBBMeetingClientURLMessage };
+        | { $case: "answerMessage"; answerMessage: AnswerMessage }
+        | { $case: "xmppSettingsMessage"; xmppSettingsMessage: XmppSettingsMessage }
+        | {
+              $case: "xmppConnectionStatusChangeMessage";
+              xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
+          }
+        | { $case: "moveToPositionMessage"; moveToPositionMessage: MoveToPositionMessage };
 }
 
 export interface JoinRoomMessage {
@@ -448,7 +506,6 @@ export interface PusherToBackMessage {
               webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage;
           }
         | { $case: "reportPlayerMessage"; reportPlayerMessage: ReportPlayerMessage }
-        | { $case: "queryJitsiJwtMessage"; queryJitsiJwtMessage: QueryJitsiJwtMessage }
         | { $case: "sendUserMessage"; sendUserMessage: SendUserMessage }
         | { $case: "banUserMessage"; banUserMessage: BanUserMessage }
         | { $case: "emotePromptMessage"; emotePromptMessage: EmotePromptMessage }
@@ -457,7 +514,8 @@ export interface PusherToBackMessage {
         | { $case: "followConfirmationMessage"; followConfirmationMessage: FollowConfirmationMessage }
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
-        | { $case: "joinBBBMeetingMessage"; joinBBBMeetingMessage: JoinBBBMeetingMessage }
+        | { $case: "queryMessage"; queryMessage: QueryMessage }
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
         | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
 }
 
@@ -581,6 +639,8 @@ export interface RoomManagerClient {
     sendRefreshRoomPrompt(request: RefreshRoomPromptMessage): Observable<EmptyMessage>;
 
     getRooms(request: EmptyMessage): Observable<RoomsList>;
+
+    ping(request: PingMessage): Observable<PingMessage>;
 }
 
 /** Service handled by the "back". Pusher servers connect to this service. */
@@ -619,6 +679,8 @@ export interface RoomManagerController {
     ): Promise<EmptyMessage> | Observable<EmptyMessage> | EmptyMessage;
 
     getRooms(request: EmptyMessage): Promise<RoomsList> | Observable<RoomsList> | RoomsList;
+
+    ping(request: PingMessage): Promise<PingMessage> | Observable<PingMessage> | PingMessage;
 }
 
 export function RoomManagerControllerMethods() {
@@ -633,6 +695,7 @@ export function RoomManagerControllerMethods() {
             "sendWorldFullWarningToRoom",
             "sendRefreshRoomPrompt",
             "getRooms",
+            "ping",
         ];
         for (const method of grpcMethods) {
             const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
