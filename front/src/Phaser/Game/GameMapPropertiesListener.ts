@@ -89,13 +89,6 @@ export class GameMapPropertiesListener {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
-                    const closable =
-                        (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
-
-                    console.log("closable: " + closable);
-
-                    this.scene.setJitsiClosable(closable);
-
                     let jwt: string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         jwt = await this.scene.connection?.queryJitsiJwtToken(roomName);
@@ -109,6 +102,10 @@ export class GameMapPropertiesListener {
                     if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
                         domain = `${location.protocol}//${domain}`;
                     }
+
+                    inJitsiStore.set(true);
+
+                    const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
 
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
@@ -336,7 +333,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty ?? true
+                websiteClosableProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
