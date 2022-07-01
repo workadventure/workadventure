@@ -19,6 +19,14 @@ const fr_FR: Translation = {
     userOnline: "utilisateur en ligne",
     usersOnline: "utilisateurs en ligne",
     open: "Ouvrir",
+    me: "Moi",
+    ban: {
+        title: "Bannir",
+        content: "Bannir l'utilisateur {userName} du monde courrant. Cela peut être annulé depuis l'administration.",
+        ban: "Bannir cet utilisateur",
+    },
+    rankUp: "Promouvoir",
+    rankDown: "Rétrograder",
     CONNECTING: "test"
 };
 

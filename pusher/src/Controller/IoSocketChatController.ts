@@ -1,5 +1,11 @@
 import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
-import { SubMessage, BatchMessage, XmppMessage, IframeToPusherMessage } from "../Messages/generated/messages_pb";
+import {
+    SubMessage,
+    BatchMessage,
+    XmppMessage,
+    IframeToPusherMessage,
+    BanUserByUuidMessage
+} from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
@@ -298,6 +304,12 @@ export class IoSocketChatController {
 
                 if (message.hasXmppmessage()) {
                     socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
+                } else if (message.hasBanuserbyuuidmessage()) {
+                    socketManager.handleBanUserByUuidMessage(
+                        client,
+                        message.getBanuserbyuuidmessage() as BanUserByUuidMessage
+                    );
+                    //socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 }
                 /* Ok is false if backpressure was built up, wait for drain */
                 //let ok = ws.send(message, isBinary);

@@ -30,7 +30,7 @@ export class MucManager {
                 chatZone.mucCreated = false;
             });
 
-            const auth = Buffer.from(EJABBERD_USER + ":" + EJABBERD_PASSWORD).toString(
+            const auth = Buffer.from(EJABBERD_USER + "@" + EJABBERD_DOMAIN + ":" + EJABBERD_PASSWORD).toString(
                 "base64"
             );
             this.axios = Axios.create({
@@ -142,14 +142,14 @@ export class MucManager {
 
     private async getAllMucRooms(): Promise<Array<string> | Error> {
         return (await this.axios
-            ?.post("muc_online_rooms", { service: `conference.ejabberd` })
+            ?.post("muc_online_rooms", { service: `conference.${EJABBERD_DOMAIN}` })
             .then((response) => response.data as Array<string>)
             .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
     private async destroyMucRoom(name: string) {
         await this.axios
-            ?.post("destroy_room", { name: MucManager.encode(name), service: `conference.ejabberd` })
+            ?.post("destroy_room", { name: MucManager.encode(name), service: `conference.${EJABBERD_DOMAIN}` })
             .catch((error) => console.error(error));
     }
 
@@ -158,7 +158,7 @@ export class MucManager {
             ?.post("create_room", {
                 name: `${MucManager.encode(chatZone.mucUrl ?? "")}`,
                 host: EJABBERD_DOMAIN,
-                service: `conference.ejabberd`,
+                service: `conference.${EJABBERD_DOMAIN}`,
             })
             .catch((error) => console.error(error));
     }

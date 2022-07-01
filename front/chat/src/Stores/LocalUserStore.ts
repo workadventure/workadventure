@@ -1,5 +1,5 @@
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { writable } from "svelte/store";
+import {get, writable} from "svelte/store";
 
 const uuidKey = "uuid";
 const nameKey = "name";
@@ -15,6 +15,7 @@ function createUserStore() {
         subscribe,
         update,
         set,
+        get: () => get(userStore),
     };
 }
 

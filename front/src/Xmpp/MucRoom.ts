@@ -49,7 +49,7 @@ export class MucRoom {
         this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
-    private getPlayerName() {
+    public getPlayerName() {
         return (gameManager.getPlayerName() ?? "unknown") + (this.nickCount > 0 ? `[${this.nickCount}]` : "");
     }
 

@@ -78,6 +78,33 @@ type RootTranslation = {
 	 */
 	open: string
 	/**
+	 * Me
+	 */
+	me: string
+	ban: {
+		/**
+		 * Banish
+		 */
+		title: string
+		/**
+		 * Ban user {userName} from the running world. This can be cancelled from the administration.
+		 * @param {unknown} userName
+		 */
+		content: RequiredParams<'userName'>
+		/**
+		 * Ban this user
+		 */
+		ban: string
+	}
+	/**
+	 * Promote
+	 */
+	rankUp: string
+	/**
+	 * Retrograde
+	 */
+	rankDown: string
+	/**
 	 * test
 	 */
 	CONNECTING: string
@@ -146,6 +173,32 @@ export type TranslationFunctions = {
 	 * Open
 	 */
 	open: () => LocalizedString
+	/**
+	 * Me
+	 */
+	me: () => LocalizedString
+	ban: {
+		/**
+		 * Banish
+		 */
+		title: () => LocalizedString
+		/**
+		 * Ban user {userName} from the running world. This can be cancelled from the administration.
+		 */
+		content: (arg: { userName: unknown }) => LocalizedString
+		/**
+		 * Ban this user
+		 */
+		ban: () => LocalizedString
+	}
+	/**
+	 * Promote
+	 */
+	rankUp: () => LocalizedString
+	/**
+	 * Retrograde
+	 */
+	rankDown: () => LocalizedString
 	/**
 	 * test
 	 */

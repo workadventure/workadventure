@@ -240,6 +240,9 @@
                         usersListStore={$activeThreadStore.getPresenceStore()}
                         activeThread={$activeThreadStore}
                         on:goTo={(event) => $activeThreadStore.goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                        on:rankUp={(event) => $activeThreadStore.rankUp(event.detail.jid)}
+                        on:rankDown={(event) => $activeThreadStore.rankDown(event.detail.jid)}
+                        on:ban={(event) => $activeThreadStore.ban(event.detail.user, event.detail.name, event.detail.playUri)}
                 />
             {:else}
                 <div>
@@ -247,7 +250,7 @@
                     <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                         <div class="tw-p-3">
                             <input
-                                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-p-3 tw-pl-6 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
+                                    class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                                     placeholder={$LL.search()}
                                     bind:value={searchValue}
                             />
@@ -256,11 +259,15 @@
                     <!-- chat users -->
                     <UsersList
                             usersListStore={defaultRoom().getPresenceStore()}
+                            meStore={defaultRoom().getMeStore()}
                             {showUsers}
                             searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showUsers={handleShowUsers}
                             on:goTo={(event) => defaultRoom().goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                            on:rankUp={(event) => defaultRoom().rankUp(event.detail.jid)}
+                            on:rankDown={(event) => defaultRoom().rankDown(event.detail.jid)}
+                            on:ban={(event) => defaultRoom().ban(event.detail.user, event.detail.name, event.detail.playUri)}
                     />
 
                     <ChatLiveRooms

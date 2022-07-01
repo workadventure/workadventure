@@ -12,11 +12,12 @@
     };
 
     import { MoreHorizontalIcon } from "svelte-feather-icons";
+    import OnlineUsers from "./OnlineUsers.svelte";
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
 	<div class="tw-relative" on:click|stopPropagation={() => open(liveRoom)}>
-		<img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="42" />
+		<img class={``} src="/static/images/logo-wa-2.png" alt="Send" width="35" />
 		<div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
 			<div class="tw-block tw-relative">
 				<span class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"></span>
@@ -29,12 +30,7 @@
 		<h1 class="tw-text-sm tw-font-bold tw-mb-0">
 			{liveRoom.name}
 		</h1>
-		<p class="tw-text-xs tw-font-condensed tw-mb-0 tw-text-green">
-			<b>
-				{[...$usersListStore].length}
-			</b>
-			<span>{[...$usersListStore].length > 1 ?$LL.usersOnline() : $LL.userOnline()}</span>
-		</p>
+		<OnlineUsers {usersListStore} />
 	</div>
 
 	{#if liveRoom.unreads}

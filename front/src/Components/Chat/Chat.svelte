@@ -29,6 +29,7 @@
     onMount(() => {
         iframeListener.registerIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
+            iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 iframeLoadedStore.set(true);
             }

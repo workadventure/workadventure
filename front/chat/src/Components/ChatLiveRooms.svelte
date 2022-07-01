@@ -15,8 +15,8 @@
 </script>
 
 {#if liveRooms.length > 0}
-	<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple" transition:fly={{ y: -30, duration: 100 }}>
-		<div class="tw-p-3 tw-flex tw-items-center">
+	<div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple" transition:fly={{ y: -30, duration: 100 }}>
+		<div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
 			<span class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded">
 				{liveRooms.length}
 			</span>

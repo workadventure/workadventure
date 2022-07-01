@@ -51,7 +51,7 @@
     //Buttons - basic buttons appearance
     button,
     .btn {
-        @apply tw-border-none tw-rounded tw-min-h-10 tw-px-2 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex tw-no-underline tw-transition-colors tw-duration-300 tw-break-words;
+        @apply tw-border-none tw-rounded tw-min-h-['8px'] tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex tw-no-underline tw-transition-colors tw-duration-300 tw-break-words;
         @apply md:tw-px-4;
         * {
             @apply clickable;
@@ -92,20 +92,33 @@
     }
 
     .wa-chat-item{
-        @apply tw-flex tw-px-6 tw-py-3 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
-
-        .wa-avatar{
-            @apply tw-w-10 tw-h-10 tw-rounded-xl tw-border-2 tw-border-lighter-purple tw-border-solid;
-            img {
-                margin-top: 8px;
-            }
-        }
+        @apply tw-flex tw-px-6 tw-py-2 tw-items-center tw-cursor-pointer tw-text-white hover:tw-no-underline hover:tw-text-white;
         &:hover{
             background-color: rgba(#4D4B67, .24);
         }
 
         *{
             cursor: pointer;
+        }
+    }
+
+    .wa-avatar{
+        @apply tw-w-9 tw-h-9 tw-rounded-xl tw-border-2 tw-border-lighter-purple tw-border-solid;
+        .wa-container{
+            @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full;
+            img {
+                margin-top: 6px;
+            }
+        }
+    }
+
+    .wa-avatar-mini{
+        @apply tw-w-8 tw-h-8 tw-rounded-xl tw-border tw-border-lighter-purple tw-border-solid;
+        .wa-container{
+            @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full;
+            img {
+                margin-top: 4px;
+            }
         }
     }
 
@@ -117,8 +130,12 @@
         }
 
         &-item{
-            @apply tw-cursor-pointer tw-px-3 tw-py-2 hover:tw-bg-light-purple;
+            @apply tw-cursor-pointer tw-px-2 tw-py-2 hover:tw-bg-light-purple;
         }
+    }
+
+    .wa-separator{
+        @apply before:tw-content-[''] before:tw-absolute before:tw-left-0 before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-right-0 after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative;
     }
 }
 

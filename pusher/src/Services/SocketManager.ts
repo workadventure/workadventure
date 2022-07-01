@@ -40,7 +40,7 @@ import {
     ErrorScreenMessage,
     QueryMessage,
     XmppMessage,
-    AskPositionMessage,
+    AskPositionMessage, BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -705,6 +705,28 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setAskpositionmessage(askPositionMessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleBanUserByUuidMessage(client: ExSocketInterface, banUserByUuidMessage: BanUserByUuidMessage) {
+        try {
+            adminService.banUserByUuid(
+                banUserByUuidMessage.getUuidtoban(),
+                banUserByUuidMessage.getPlayuri(),
+                banUserByUuidMessage.getName(),
+                banUserByUuidMessage.getMessage(),
+                banUserByUuidMessage.getByuseremail()
+            ).then(() => {
+                this.emitBan(
+                    banUserByUuidMessage.getUuidtoban(),
+                    banUserByUuidMessage.getMessage(),
+                    "banned",
+                    banUserByUuidMessage.getPlayuri()
+                );
+            });
+        } catch (e) {
+            console.error('An error occurred on "handleBanUserByUuidMessage"');
+            console.error(e);
+        }
     }
 }
 

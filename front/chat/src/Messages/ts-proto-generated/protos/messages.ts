@@ -443,59 +443,9 @@ export interface BanUserMessage {
     message: string;
 }
 
-export interface MucRoomDefinitionMessage {
-    url: string;
-    name: string;
-    type: string;
-}
-
-export interface XmppSettingsMessage {
-    jid: string;
-    conferenceDomain: string;
-    rooms: MucRoomDefinitionMessage[];
-}
-
 export interface AskPositionMessage {
     userIdentifier: string;
     playUri: string;
-}
-
-/**
- * Status of the connection to the XMPP server.
- * In case something goes wrong with the XMPP server, we are notified here.
- */
-export interface XmppConnectionStatusChangeMessage {
-    status: XmppConnectionStatusChangeMessage_Status;
-}
-
-export enum XmppConnectionStatusChangeMessage_Status {
-    DISCONNECTED = 0,
-    UNRECOGNIZED = -1,
-}
-
-export function xmppConnectionStatusChangeMessage_StatusFromJSON(
-    object: any
-): XmppConnectionStatusChangeMessage_Status {
-    switch (object) {
-        case 0:
-        case "DISCONNECTED":
-            return XmppConnectionStatusChangeMessage_Status.DISCONNECTED;
-        case -1:
-        case "UNRECOGNIZED":
-        default:
-            return XmppConnectionStatusChangeMessage_Status.UNRECOGNIZED;
-    }
-}
-
-export function xmppConnectionStatusChangeMessage_StatusToJSON(
-    object: XmppConnectionStatusChangeMessage_Status
-): string {
-    switch (object) {
-        case XmppConnectionStatusChangeMessage_Status.DISCONNECTED:
-            return "DISCONNECTED";
-        default:
-            return "UNKNOWN";
-    }
 }
 
 /** Messages going from back and pusher to the front */
@@ -706,11 +656,15 @@ export interface RoomsList {
 
 export interface EmptyMessage {}
 
-/** Start Chat Messages */
+/**
+ * *****************************************************µ************************
+ * Start Chat Messages
+ * ******************************************************************************
+ */
 export interface IframeToPusherMessage {
     message?:
         | { $case: "xmppMessage"; xmppMessage: XmppMessage }
-        | { $case: "emptyMessage"; emptyMessage: EmptyMessage };
+        | { $case: "banUserByUuidMessage"; banUserByUuidMessage: BanUserByUuidMessage };
 }
 
 export interface PusherToIframeMessage {
@@ -721,6 +675,64 @@ export interface PusherToIframeMessage {
               xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage;
           }
         | { $case: "xmppMessage"; xmppMessage: XmppMessage };
+}
+
+export interface MucRoomDefinitionMessage {
+    url: string;
+    name: string;
+    type: string;
+}
+
+export interface XmppSettingsMessage {
+    jid: string;
+    conferenceDomain: string;
+    rooms: MucRoomDefinitionMessage[];
+}
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+export interface XmppConnectionStatusChangeMessage {
+    status: XmppConnectionStatusChangeMessage_Status;
+}
+
+export enum XmppConnectionStatusChangeMessage_Status {
+    DISCONNECTED = 0,
+    UNRECOGNIZED = -1,
+}
+
+export function xmppConnectionStatusChangeMessage_StatusFromJSON(
+    object: any
+): XmppConnectionStatusChangeMessage_Status {
+    switch (object) {
+        case 0:
+        case "DISCONNECTED":
+            return XmppConnectionStatusChangeMessage_Status.DISCONNECTED;
+        case -1:
+        case "UNRECOGNIZED":
+        default:
+            return XmppConnectionStatusChangeMessage_Status.UNRECOGNIZED;
+    }
+}
+
+export function xmppConnectionStatusChangeMessage_StatusToJSON(
+    object: XmppConnectionStatusChangeMessage_Status
+): string {
+    switch (object) {
+        case XmppConnectionStatusChangeMessage_Status.DISCONNECTED:
+            return "DISCONNECTED";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+export interface BanUserByUuidMessage {
+    playUri: string;
+    uuidToBan: string;
+    name: string;
+    message: string;
+    byUserEmail: string;
 }
 
 const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
@@ -4981,144 +4993,6 @@ export const BanUserMessage = {
     },
 };
 
-const baseMucRoomDefinitionMessage: object = { url: "", name: "", type: "" };
-
-export const MucRoomDefinitionMessage = {
-    encode(message: MucRoomDefinitionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.url !== "") {
-            writer.uint32(10).string(message.url);
-        }
-        if (message.name !== "") {
-            writer.uint32(18).string(message.name);
-        }
-        if (message.type !== "") {
-            writer.uint32(26).string(message.type);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): MucRoomDefinitionMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.url = reader.string();
-                    break;
-                case 2:
-                    message.name = reader.string();
-                    break;
-                case 3:
-                    message.type = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): MucRoomDefinitionMessage {
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
-        message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        return message;
-    },
-
-    toJSON(message: MucRoomDefinitionMessage): unknown {
-        const obj: any = {};
-        message.url !== undefined && (obj.url = message.url);
-        message.name !== undefined && (obj.name = message.name);
-        message.type !== undefined && (obj.type = message.type);
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<MucRoomDefinitionMessage>, I>>(object: I): MucRoomDefinitionMessage {
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
-        message.url = object.url ?? "";
-        message.name = object.name ?? "";
-        message.type = object.type ?? "";
-        return message;
-    },
-};
-
-const baseXmppSettingsMessage: object = { jid: "", conferenceDomain: "" };
-
-export const XmppSettingsMessage = {
-    encode(message: XmppSettingsMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.jid !== "") {
-            writer.uint32(10).string(message.jid);
-        }
-        if (message.conferenceDomain !== "") {
-            writer.uint32(18).string(message.conferenceDomain);
-        }
-        for (const v of message.rooms) {
-            MucRoomDefinitionMessage.encode(v!, writer.uint32(26).fork()).ldelim();
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): XmppSettingsMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
-        message.rooms = [];
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.jid = reader.string();
-                    break;
-                case 2:
-                    message.conferenceDomain = reader.string();
-                    break;
-                case 3:
-                    message.rooms.push(MucRoomDefinitionMessage.decode(reader, reader.uint32()));
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): XmppSettingsMessage {
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
-        message.jid = object.jid !== undefined && object.jid !== null ? String(object.jid) : "";
-        message.conferenceDomain =
-            object.conferenceDomain !== undefined && object.conferenceDomain !== null
-                ? String(object.conferenceDomain)
-                : "";
-        message.rooms = (object.rooms ?? []).map((e: any) => MucRoomDefinitionMessage.fromJSON(e));
-        return message;
-    },
-
-    toJSON(message: XmppSettingsMessage): unknown {
-        const obj: any = {};
-        message.jid !== undefined && (obj.jid = message.jid);
-        message.conferenceDomain !== undefined && (obj.conferenceDomain = message.conferenceDomain);
-        if (message.rooms) {
-            obj.rooms = message.rooms.map((e) => (e ? MucRoomDefinitionMessage.toJSON(e) : undefined));
-        } else {
-            obj.rooms = [];
-        }
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<XmppSettingsMessage>, I>>(object: I): XmppSettingsMessage {
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
-        message.jid = object.jid ?? "";
-        message.conferenceDomain = object.conferenceDomain ?? "";
-        message.rooms = object.rooms?.map((e) => MucRoomDefinitionMessage.fromPartial(e)) || [];
-        return message;
-    },
-};
-
 const baseAskPositionMessage: object = { userIdentifier: "", playUri: "" };
 
 export const AskPositionMessage = {
@@ -5172,58 +5046,6 @@ export const AskPositionMessage = {
         const message = { ...baseAskPositionMessage } as AskPositionMessage;
         message.userIdentifier = object.userIdentifier ?? "";
         message.playUri = object.playUri ?? "";
-        return message;
-    },
-};
-
-const baseXmppConnectionStatusChangeMessage: object = { status: 0 };
-
-export const XmppConnectionStatusChangeMessage = {
-    encode(message: XmppConnectionStatusChangeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-        if (message.status !== 0) {
-            writer.uint32(8).int32(message.status);
-        }
-        return writer;
-    },
-
-    decode(input: _m0.Reader | Uint8Array, length?: number): XmppConnectionStatusChangeMessage {
-        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-        let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
-        while (reader.pos < end) {
-            const tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.status = reader.int32() as any;
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        return message;
-    },
-
-    fromJSON(object: any): XmppConnectionStatusChangeMessage {
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
-        message.status =
-            object.status !== undefined && object.status !== null
-                ? xmppConnectionStatusChangeMessage_StatusFromJSON(object.status)
-                : 0;
-        return message;
-    },
-
-    toJSON(message: XmppConnectionStatusChangeMessage): unknown {
-        const obj: any = {};
-        message.status !== undefined && (obj.status = xmppConnectionStatusChangeMessage_StatusToJSON(message.status));
-        return obj;
-    },
-
-    fromPartial<I extends Exact<DeepPartial<XmppConnectionStatusChangeMessage>, I>>(
-        object: I
-    ): XmppConnectionStatusChangeMessage {
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
-        message.status = object.status ?? 0;
         return message;
     },
 };
@@ -8522,8 +8344,8 @@ export const IframeToPusherMessage = {
         if (message.message?.$case === "xmppMessage") {
             XmppMessage.encode(message.message.xmppMessage, writer.uint32(10).fork()).ldelim();
         }
-        if (message.message?.$case === "emptyMessage") {
-            EmptyMessage.encode(message.message.emptyMessage, writer.uint32(18).fork()).ldelim();
+        if (message.message?.$case === "banUserByUuidMessage") {
+            BanUserByUuidMessage.encode(message.message.banUserByUuidMessage, writer.uint32(18).fork()).ldelim();
         }
         return writer;
     },
@@ -8543,8 +8365,8 @@ export const IframeToPusherMessage = {
                     break;
                 case 2:
                     message.message = {
-                        $case: "emptyMessage",
-                        emptyMessage: EmptyMessage.decode(reader, reader.uint32()),
+                        $case: "banUserByUuidMessage",
+                        banUserByUuidMessage: BanUserByUuidMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -8560,8 +8382,11 @@ export const IframeToPusherMessage = {
         if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
             message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
         }
-        if (object.emptyMessage !== undefined && object.emptyMessage !== null) {
-            message.message = { $case: "emptyMessage", emptyMessage: EmptyMessage.fromJSON(object.emptyMessage) };
+        if (object.banUserByUuidMessage !== undefined && object.banUserByUuidMessage !== null) {
+            message.message = {
+                $case: "banUserByUuidMessage",
+                banUserByUuidMessage: BanUserByUuidMessage.fromJSON(object.banUserByUuidMessage),
+            };
         }
         return message;
     },
@@ -8572,9 +8397,9 @@ export const IframeToPusherMessage = {
             (obj.xmppMessage = message.message?.xmppMessage
                 ? XmppMessage.toJSON(message.message?.xmppMessage)
                 : undefined);
-        message.message?.$case === "emptyMessage" &&
-            (obj.emptyMessage = message.message?.emptyMessage
-                ? EmptyMessage.toJSON(message.message?.emptyMessage)
+        message.message?.$case === "banUserByUuidMessage" &&
+            (obj.banUserByUuidMessage = message.message?.banUserByUuidMessage
+                ? BanUserByUuidMessage.toJSON(message.message?.banUserByUuidMessage)
                 : undefined);
         return obj;
     },
@@ -8592,13 +8417,13 @@ export const IframeToPusherMessage = {
             };
         }
         if (
-            object.message?.$case === "emptyMessage" &&
-            object.message?.emptyMessage !== undefined &&
-            object.message?.emptyMessage !== null
+            object.message?.$case === "banUserByUuidMessage" &&
+            object.message?.banUserByUuidMessage !== undefined &&
+            object.message?.banUserByUuidMessage !== null
         ) {
             message.message = {
-                $case: "emptyMessage",
-                emptyMessage: EmptyMessage.fromPartial(object.message.emptyMessage),
+                $case: "banUserByUuidMessage",
+                banUserByUuidMessage: BanUserByUuidMessage.fromPartial(object.message.banUserByUuidMessage),
             };
         }
         return message;
@@ -8736,6 +8561,280 @@ export const PusherToIframeMessage = {
                 xmppMessage: XmppMessage.fromPartial(object.message.xmppMessage),
             };
         }
+        return message;
+    },
+};
+
+const baseMucRoomDefinitionMessage: object = { url: "", name: "", type: "" };
+
+export const MucRoomDefinitionMessage = {
+    encode(message: MucRoomDefinitionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.url !== "") {
+            writer.uint32(10).string(message.url);
+        }
+        if (message.name !== "") {
+            writer.uint32(18).string(message.name);
+        }
+        if (message.type !== "") {
+            writer.uint32(26).string(message.type);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): MucRoomDefinitionMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.url = reader.string();
+                    break;
+                case 2:
+                    message.name = reader.string();
+                    break;
+                case 3:
+                    message.type = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): MucRoomDefinitionMessage {
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
+        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
+        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
+        return message;
+    },
+
+    toJSON(message: MucRoomDefinitionMessage): unknown {
+        const obj: any = {};
+        message.url !== undefined && (obj.url = message.url);
+        message.name !== undefined && (obj.name = message.name);
+        message.type !== undefined && (obj.type = message.type);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<MucRoomDefinitionMessage>, I>>(object: I): MucRoomDefinitionMessage {
+        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        message.url = object.url ?? "";
+        message.name = object.name ?? "";
+        message.type = object.type ?? "";
+        return message;
+    },
+};
+
+const baseXmppSettingsMessage: object = { jid: "", conferenceDomain: "" };
+
+export const XmppSettingsMessage = {
+    encode(message: XmppSettingsMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.jid !== "") {
+            writer.uint32(10).string(message.jid);
+        }
+        if (message.conferenceDomain !== "") {
+            writer.uint32(18).string(message.conferenceDomain);
+        }
+        for (const v of message.rooms) {
+            MucRoomDefinitionMessage.encode(v!, writer.uint32(26).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): XmppSettingsMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.rooms = [];
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.jid = reader.string();
+                    break;
+                case 2:
+                    message.conferenceDomain = reader.string();
+                    break;
+                case 3:
+                    message.rooms.push(MucRoomDefinitionMessage.decode(reader, reader.uint32()));
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): XmppSettingsMessage {
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.jid = object.jid !== undefined && object.jid !== null ? String(object.jid) : "";
+        message.conferenceDomain =
+            object.conferenceDomain !== undefined && object.conferenceDomain !== null
+                ? String(object.conferenceDomain)
+                : "";
+        message.rooms = (object.rooms ?? []).map((e: any) => MucRoomDefinitionMessage.fromJSON(e));
+        return message;
+    },
+
+    toJSON(message: XmppSettingsMessage): unknown {
+        const obj: any = {};
+        message.jid !== undefined && (obj.jid = message.jid);
+        message.conferenceDomain !== undefined && (obj.conferenceDomain = message.conferenceDomain);
+        if (message.rooms) {
+            obj.rooms = message.rooms.map((e) => (e ? MucRoomDefinitionMessage.toJSON(e) : undefined));
+        } else {
+            obj.rooms = [];
+        }
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<XmppSettingsMessage>, I>>(object: I): XmppSettingsMessage {
+        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        message.jid = object.jid ?? "";
+        message.conferenceDomain = object.conferenceDomain ?? "";
+        message.rooms = object.rooms?.map((e) => MucRoomDefinitionMessage.fromPartial(e)) || [];
+        return message;
+    },
+};
+
+const baseXmppConnectionStatusChangeMessage: object = { status: 0 };
+
+export const XmppConnectionStatusChangeMessage = {
+    encode(message: XmppConnectionStatusChangeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.status !== 0) {
+            writer.uint32(8).int32(message.status);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): XmppConnectionStatusChangeMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.status = reader.int32() as any;
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): XmppConnectionStatusChangeMessage {
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        message.status =
+            object.status !== undefined && object.status !== null
+                ? xmppConnectionStatusChangeMessage_StatusFromJSON(object.status)
+                : 0;
+        return message;
+    },
+
+    toJSON(message: XmppConnectionStatusChangeMessage): unknown {
+        const obj: any = {};
+        message.status !== undefined && (obj.status = xmppConnectionStatusChangeMessage_StatusToJSON(message.status));
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<XmppConnectionStatusChangeMessage>, I>>(
+        object: I
+    ): XmppConnectionStatusChangeMessage {
+        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        message.status = object.status ?? 0;
+        return message;
+    },
+};
+
+const baseBanUserByUuidMessage: object = { playUri: "", uuidToBan: "", name: "", message: "", byUserEmail: "" };
+
+export const BanUserByUuidMessage = {
+    encode(message: BanUserByUuidMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.playUri !== "") {
+            writer.uint32(10).string(message.playUri);
+        }
+        if (message.uuidToBan !== "") {
+            writer.uint32(18).string(message.uuidToBan);
+        }
+        if (message.name !== "") {
+            writer.uint32(26).string(message.name);
+        }
+        if (message.message !== "") {
+            writer.uint32(34).string(message.message);
+        }
+        if (message.byUserEmail !== "") {
+            writer.uint32(42).string(message.byUserEmail);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): BanUserByUuidMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.playUri = reader.string();
+                    break;
+                case 2:
+                    message.uuidToBan = reader.string();
+                    break;
+                case 3:
+                    message.name = reader.string();
+                    break;
+                case 4:
+                    message.message = reader.string();
+                    break;
+                case 5:
+                    message.byUserEmail = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): BanUserByUuidMessage {
+        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
+        message.playUri = object.playUri !== undefined && object.playUri !== null ? String(object.playUri) : "";
+        message.uuidToBan = object.uuidToBan !== undefined && object.uuidToBan !== null ? String(object.uuidToBan) : "";
+        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
+        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
+        message.byUserEmail =
+            object.byUserEmail !== undefined && object.byUserEmail !== null ? String(object.byUserEmail) : "";
+        return message;
+    },
+
+    toJSON(message: BanUserByUuidMessage): unknown {
+        const obj: any = {};
+        message.playUri !== undefined && (obj.playUri = message.playUri);
+        message.uuidToBan !== undefined && (obj.uuidToBan = message.uuidToBan);
+        message.name !== undefined && (obj.name = message.name);
+        message.message !== undefined && (obj.message = message.message);
+        message.byUserEmail !== undefined && (obj.byUserEmail = message.byUserEmail);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<BanUserByUuidMessage>, I>>(object: I): BanUserByUuidMessage {
+        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
+        message.playUri = object.playUri ?? "";
+        message.uuidToBan = object.uuidToBan ?? "";
+        message.name = object.name ?? "";
+        message.message = object.message ?? "";
+        message.byUserEmail = object.byUserEmail ?? "";
         return message;
     },
 };

@@ -19,6 +19,14 @@ const en_US: BaseTranslation = {
     userOnline: "user online",
     usersOnline: "users online",
     open: "Open",
+    me: "Me",
+    ban: {
+        title: "Banish",
+        content: "Ban user {userName} from the running world. This can be cancelled from the administration.",
+        ban: "Ban this user",
+    },
+    rankUp: "Promote",
+    rankDown: "Retrograde",
     CONNECTING: "test"
 };
 

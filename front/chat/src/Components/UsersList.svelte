@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {UsersStore} from "../Xmpp/MucRoom";
+    import {MeStore, UsersStore} from "../Xmpp/MucRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from 'svelte';
     import {ChevronUpIcon} from "svelte-feather-icons";
@@ -8,6 +8,7 @@
     const dispatch = createEventDispatcher();
 
     export let usersListStore: UsersStore;
+    export let meStore: MeStore;
     export let showUsers: boolean;
     export let searchValue: string;
 
@@ -20,8 +21,8 @@
     }
 </script>
 <div>
-	<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
-		<div class="tw-p-3 tw-flex tw-items-center">
+	<div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+		<div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
 			<!--{#if usersListUnreads()}
                             <span
 									class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
@@ -41,11 +42,20 @@
 					<button type="button" class="nes-btn is-primary" on:click={null}>test</button>
 				{:else}
 					{#each [...$usersListStore]
+                        .sort(([, a],[, b]) => Number(b.active) - Number(a.active))
 						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
-						.sort(([, a],[, b]) => Number(a.active) - Number(b.active))
 						.filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue))
-							as [, user]}
-						<ChatUser {openChat} {user} on:goTo={(event) => dispatch('goTo', event.detail)}/>
+							as [jid, user]}
+						<ChatUser
+								{openChat}
+								{user}
+								{jid}
+								on:goTo={(event) => dispatch('goTo', event.detail)}
+								on:rankUp={(event) => dispatch('rankUp', event.detail)}
+								on:rankDown={(event) => dispatch('rankDown', event.detail)}
+								on:ban={(event) => dispatch('ban', event.detail)}
+								{searchValue}
+								{meStore}/>
 					{/each}
 				{/if}
 				{#if [...$usersListStore].length > maxUsersMinimized}
