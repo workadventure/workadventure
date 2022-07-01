@@ -60,7 +60,7 @@
         />
     {:else}
         <img
-            src="{miniLogo}"
+            src={miniLogo}
             alt={$LL.menu.icon.open.menu()}
             class="nes-pointer"
             draggable="false"

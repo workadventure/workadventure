@@ -5,8 +5,8 @@ import { screenSharingAvailableStore } from "./ScreenSharingStore";
 import { derived } from "svelte/store";
 
 export const bottomActionBarVisibilityStore = derived(
-  [peerStore, followStateStore, silentStore, screenSharingAvailableStore],
-  ([$peerStore, $followStateStore, $silentStore, $screenSharingAvailableStore]) => {
-    return $peerStore.size != 0 //|| $silentStore || ($followStateStore === "off" && !$screenSharingAvailableStore);
-  }
+    [peerStore, followStateStore, silentStore, screenSharingAvailableStore],
+    ([$peerStore, $followStateStore, $silentStore, $screenSharingAvailableStore]) => {
+        return $peerStore.size != 0; //|| $silentStore || ($followStateStore === "off" && !$screenSharingAvailableStore);
+    }
 );
