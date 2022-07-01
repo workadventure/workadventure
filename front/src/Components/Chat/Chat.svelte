@@ -124,17 +124,10 @@
         }
     }
 
-    @include media-breakpoint-up(lg) {
-        aside.chatWindow {
-            height: 100%;
-            width: 55%;
-        }
-    }
-
     @include media-breakpoint-up(sm) {
         aside.chatWindow {
-            height: 95%;
-            width: 95%;
+            height: calc(99vh - 50px);
+            width: 95vw;
         }
     }
 </style>
