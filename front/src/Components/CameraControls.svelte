@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
+    import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
     import { requestedCameraState, requestedMicrophoneState, silentStore } from "../Stores/MediaStore";
     import cameraImg from "./images/camera.png";
     import cameraOffImg from "./images/camera-off.png";
