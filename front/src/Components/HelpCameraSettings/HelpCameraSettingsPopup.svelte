@@ -18,7 +18,7 @@
 </script>
 
 <form
-    class="helpCameraSettings tw-z-[600] tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 tw-text-sm md:tw-text-base"
+    class="helpCameraSettings tw-z-[600] tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-p-3 tw-pointer-events-auto tw-flex tw-flex-col tw-m-auto tw-w-full md:tw-w-2/3 2xl:tw-w-1/4 tw-text-sm md:tw-text-base"
     on:submit|preventDefault={close}
     transition:fly={{ y: -50, duration: 500 }}
 >
@@ -26,7 +26,7 @@
         <h2 class="tw-mb-0">{$LL.camera.help.title()}</h2>
         <p class="err blue-title">{$LL.camera.help.permissionDenied()}</p>
         <p>{$LL.camera.help.content()}</p>
-        <p class="tw-mb-0 tw-flex tw-justify-center">
+        <p class="tw-mb-0 tw-flex tw-justify-center tw-flex-col">
             {#if isFirefox}
                 <p class="err">
                     {$LL.camera.help.firefoxContent()}
@@ -34,13 +34,13 @@
                 <img
                     src={$LL.camera.help.screen.firefox()}
                     alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80"
+                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
                 />
             {:else if isChrome && !isAndroid}
                 <img
                     src={$LL.camera.help.screen.chrome()}
                     alt="help camera setup"
-                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80"
+                    class="tw-rounded-lg tw-w-5/6 md:tw-w-80 tw-m-auto"
                 />
             {/if}
         </p>

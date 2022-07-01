@@ -13,11 +13,9 @@ import {
     FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
@@ -40,6 +38,7 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
+    QueryMessage,
     XmppMessage,
     AskPositionMessage,
 } from "../Messages/generated/messages_pb";
@@ -471,16 +470,9 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
+    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    public handleJoinBBBMeetingMessage(client: ExSocketInterface, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setJoinbbbmeetingmessage(joinBBBMeetingMessage);
+        pusherToBackMessage.setQuerymessage(queryMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }

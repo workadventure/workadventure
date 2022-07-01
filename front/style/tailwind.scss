@@ -73,7 +73,7 @@
 
     //Dialog boxes used to notify user about something (follow feature, jitsi room, etc...)
     .blue-dialog-box {
-        @apply tw-bg-dark-purple/95 tw-rounded tw-text-light-blue tw-self-center tw-m-1 tw-p-1 tw-align-middle tw-align-middle;
+        @apply tw-bg-dark-purple/95 tw-rounded tw-text-light-blue tw-self-center tw-m-1 tw-p-1 tw-align-middle tw-align-middle tw-pointer-events-auto;
     }
 
     .outline-light {

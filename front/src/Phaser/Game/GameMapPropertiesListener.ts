@@ -81,7 +81,7 @@ export class GameMapPropertiesListener {
                 });
                 inJitsiStore.set(false);
             } else {
-                const openJitsiRoomFunction = () => {
+                const openJitsiRoomFunction = async () => {
                     let addPrefix = true;
                     if (allProps.get(GameMapProperties.JITSI_NO_PREFIX)) {
                         addPrefix = false;
@@ -89,23 +89,29 @@ export class GameMapPropertiesListener {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
+                    let jwt: string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
-                        this.scene.connection?.emitQueryJitsiJwtMessage(roomName);
-                    } else {
-                        let domain = jitsiUrl || JITSI_URL;
-                        if (domain === undefined) {
-                            throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
-                        }
-
-                        if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                            domain = `${location.protocol}//${domain}`;
-                        }
-
-                        const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
-
-                        coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                        this.scene.initialiseJitsi(coWebsite, roomName, undefined);
+                        jwt = await this.scene.connection?.queryJitsiJwtToken(roomName);
                     }
+
+                    let domain = jitsiUrl || JITSI_URL;
+                    if (domain === undefined) {
+                        throw new Error("Missing JITSI_URL environment variable or jitsiUrl parameter in the map.");
+                    }
+
+                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
+                        domain = `${location.protocol}//${domain}`;
+                    }
+
+                    inJitsiStore.set(true);
+
+                    const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
+
+                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
+
+                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
+                    this.scene.initialiseJitsi(coWebsite, roomName, jwt);
+
                     layoutManagerActionStore.removeAction("jitsi");
                 };
 
@@ -121,14 +127,12 @@ export class GameMapPropertiesListener {
                         type: "message",
                         message: message,
                         callback: () => {
-                            openJitsiRoomFunction();
-                            inJitsiStore.set(true);
+                            openJitsiRoomFunction().catch((e) => console.error(e));
                         },
                         userInputManager: this.scene.userInputManager,
                     });
                 } else {
-                    openJitsiRoomFunction();
-                    inJitsiStore.set(true);
+                    openJitsiRoomFunction().catch((e) => console.error(e));
                 }
             }
         });
@@ -142,9 +146,18 @@ export class GameMapPropertiesListener {
             } else {
                 inBbbStore.set(true);
                 bbbFactory.setStopped(false);
-                void bbbFactory.parametrizeMeetingId(newValue as string).then((hashedMeetingId) => {
-                    this.scene.connection?.emitJoinBBBMeeting(hashedMeetingId, allProps);
-                });
+                bbbFactory
+                    .parametrizeMeetingId(newValue as string)
+                    .then((hashedMeetingId) => {
+                        if (this.scene.connection === undefined) {
+                            throw new Error("No more connection to open BBB");
+                        }
+                        return this.scene.connection.queryBBBMeetingUrl(hashedMeetingId, allProps);
+                    })
+                    .then((bbbAnswer) => {
+                        bbbFactory.start(bbbAnswer.clientURL);
+                    })
+                    .catch((e) => console.error(e));
             }
         });
 
@@ -259,6 +272,7 @@ export class GameMapPropertiesListener {
         let websitePositionProperty: number | undefined;
         let websiteTriggerProperty: string | undefined;
         let websiteTriggerMessageProperty: string | undefined;
+        let websiteClosableProperty: boolean | undefined;
 
         place.properties.forEach((property) => {
             switch (property.name) {
@@ -282,6 +296,9 @@ export class GameMapPropertiesListener {
                     break;
                 case GameMapProperties.OPEN_WEBSITE_TRIGGER_MESSAGE:
                     websiteTriggerMessageProperty = property.value as string | undefined;
+                    break;
+                case GameMapProperties.OPEN_WEBSITE_CLOSABLE:
+                    websiteClosableProperty = property.value as boolean | undefined;
                     break;
             }
         });
@@ -316,7 +333,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                false
+                websiteClosableProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;

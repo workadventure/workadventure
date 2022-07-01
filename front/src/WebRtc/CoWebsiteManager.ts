@@ -49,6 +49,8 @@ class CoWebsiteManager {
     private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
 
+    private buttonCloseCoWebsite: HTMLElement;
+
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
         trails: number[] | undefined;
@@ -56,6 +58,12 @@ class CoWebsiteManager {
 
     private resizeObserver = new ResizeObserver(() => {
         this.resizeAllIframes();
+
+        if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
+            this.toggleFullScreenIcon(true);
+            this.resetStyleMain();
+            this.fire();
+        }
     });
 
     public getMainState() {
@@ -115,10 +123,16 @@ class CoWebsiteManager {
         this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
         this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
 
+        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+
         this.loaderAnimationInterval = {
             interval: undefined,
             trails: undefined,
         };
+
+        mainCoWebsite.subscribe((coWebsite) => {
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
+        });
 
         this.holderListeners();
         this.transitionListeners();
@@ -126,8 +140,7 @@ class CoWebsiteManager {
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.gameOverlayDom);
 
-        const buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        buttonCloseCoWebsite.addEventListener("click", () => {
+        this.buttonCloseCoWebsite.addEventListener("click", () => {
             analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
@@ -148,7 +161,7 @@ class CoWebsiteManager {
         buttonFullScreenFrame.addEventListener("click", () => {
             analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
-            this.fullscreen();
+            this.toggleFullscreen();
         });
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
@@ -177,6 +190,10 @@ class CoWebsiteManager {
                 }
             }
         });
+    }
+
+    public cleanup(): void {
+        this.closeCoWebsites();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
@@ -637,7 +654,7 @@ class CoWebsiteManager {
             this.displayMain();
         }
 
-        const coWebsiteLloading = coWebsite
+        const coWebsiteLoading = coWebsite
             .load()
             .then(() => {
                 const mainCoWebsite = this.getMainCoWebsite();
@@ -668,7 +685,7 @@ class CoWebsiteManager {
                 this.removeCoWebsiteFromStack(coWebsite);
             });
 
-        return coWebsiteLloading;
+        return coWebsiteLoading;
     }
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
@@ -745,7 +762,7 @@ class CoWebsiteManager {
         waScaleManager.refreshFocusOnTarget();
     }
 
-    private fullscreen(): void {
+    private toggleFullscreen(): void {
         if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
             this.resetStyleMain();

@@ -13,7 +13,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    let miniLogo = gameManager.currentStartedRoom.miniLogo ?? logoWA;
+    let miniLogo = gameManager.currentStartedRoom?.miniLogo ?? logoWA;
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));

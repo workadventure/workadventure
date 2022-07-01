@@ -15,10 +15,8 @@ import {
     FollowAbortMessage,
     EmptyMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
     SendUserMessage,
@@ -32,6 +30,7 @@ import {
     LockGroupPromptMessage,
     RoomsList,
     PingMessage,
+    QueryMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -107,17 +106,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasQueryjitsijwtmessage()) {
-                            await socketManager.handleQueryJitsiJwtMessage(
+                        } else if (message.hasQuerymessage()) {
+                            await socketManager.handleQueryMessage(
                                 room,
                                 user,
-                                message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
-                            );
-                        } else if (message.hasJoinbbbmeetingmessage()) {
-                            await socketManager.handleJoinBBBMeetingMessage(
-                                room,
-                                user,
-                                message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
+                                message.getQuerymessage() as QueryMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(

@@ -23,6 +23,8 @@
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
          "REDIS_HOST": "redis",
          "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+         "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+         "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -43,6 +45,8 @@
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
               "REDIS_HOST": "redis",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+              "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+              "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -62,6 +66,7 @@
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
+              "ENABLE_OPENAPI_ENDPOINT": "true",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
               # Admin

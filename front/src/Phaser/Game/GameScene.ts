@@ -22,11 +22,10 @@ import { AreaManager } from "./AreaManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, JITSI_URL, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
-import { bbbFactory } from "../../WebRtc/BBBFactory";
 import { TextureError } from "../../Exception/TextureError";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -110,8 +109,8 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
-    initPosition: PointInterface | null;
     reconnecting: boolean;
+    initPosition?: PointInterface;
 }
 
 interface InitUserPositionEventInterface {
@@ -170,7 +169,7 @@ export class GameScene extends DirtyScene {
         | DeleteGroupEventInterface
         | PlayerDetailsUpdatedInterface
     >();
-    private initPosition: PositionInterface | null = null;
+    private initPosition?: PositionInterface;
     private playersPositionInterpolator = new PlayersPositionInterpolator();
     public connection: RoomConnection | undefined;
     private simplePeer!: SimplePeer;
@@ -233,6 +232,7 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
+    private cleanupDone: boolean = false;
     public readonly superLoad: SuperLoaderPlugin;
     private xmppClient!: XmppClient;
 
@@ -455,6 +455,10 @@ export class GameScene extends DirtyScene {
     //hook create scene
     create(): void {
         this.preloading = false;
+        this.cleanupDone = false;
+
+        this.bindSceneEventHandlers();
+
         this.trackDirtyAnims();
 
         gameManager.gameSceneIsCreated(this);
@@ -556,7 +560,7 @@ export class GameScene extends DirtyScene {
             this.gameMap,
             this.mapFile,
             this.initPosition,
-            urlManager.getStartLayerNameFromUrl()
+            urlManager.getStartPositionNameFromUrl()
         );
 
         startLayerNamesStore.set(this.startPositionCalculator.getStartPositionNames());
@@ -809,32 +813,6 @@ export class GameScene extends DirtyScene {
 
                 this.connection.groupUsersUpdateMessageStream.subscribe((message) => {
                     this.currentPlayerGroupId = message.groupId;
-                });
-
-                /**
-                 * Triggered when we receive the JWT token to connect to Jitsi
-                 */
-                this.connection.sendJitsiJwtMessageStream.subscribe((message) => {
-                    if (!JITSI_URL) {
-                        throw new Error("Missing JITSI_URL environment variable.");
-                    }
-
-                    let domain = JITSI_URL;
-
-                    if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
-                        domain = `${location.protocol}//${domain}`;
-                    }
-
-                    const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, false);
-                    coWebsiteManager.addCoWebsiteToStore(coWebsite, 0);
-                    this.initialiseJitsi(coWebsite, message.jitsiRoom, message.jwt);
-                });
-
-                /**
-                 * Triggered when we receive the URL to join a meeting on BBB
-                 */
-                this.connection.bbbMeetingClientURLMessageStream.subscribe((message) => {
-                    bbbFactory.start(message.clientURL);
                 });
 
                 this.messageSubscription = this.connection.worldFullMessageStream.subscribe((message) => {
@@ -1408,7 +1386,7 @@ ${escapedMessage}
             await this.connectionAnswerPromiseDeferred.promise;
             return {
                 mapUrl: this.MapUrlFile,
-                startLayerName: this.startPositionCalculator.startLayerName ?? undefined,
+                startLayerName: this.startPositionCalculator.getStartPositionName() ?? undefined,
                 uuid: localUserStore.getLocalUser()?.uuid,
                 nickname: this.playerName,
                 language: get(locale),
@@ -1652,9 +1630,13 @@ ${escapedMessage}
             this.scene.remove(this.scene.key);
         } else {
             //if the exit points to the current map, we simply teleport the user back to the startLayer
-            this.startPositionCalculator.initPositionFromLayerName(roomUrl.hash, roomUrl.hash);
+            this.startPositionCalculator.initStartXAndStartY(roomUrl.hash);
             this.CurrentPlayer.x = this.startPositionCalculator.startPosition.x;
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
+            this.CurrentPlayer.finishFollowingPath(true);
+            // clear properties in case we are moved on the same layer / area in order to trigger them
+            this.gameMap.clearCurrentProperties();
+            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
@@ -1668,8 +1650,8 @@ ${escapedMessage}
     public cleanupClosingScene(): void {
         // make sure we restart CameraControls
         this.disableMediaBehaviors();
-        // stop playing audio, close any open website, stop any open Jitsi
-        coWebsiteManager.closeCoWebsites();
+        // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
+        coWebsiteManager.cleanup();
         // Stop the script, if any
         const scripts = this.getScriptUrls(this.mapFile);
         for (const script of scripts) {
@@ -1722,6 +1704,7 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
+        this.cleanupDone = true;
     }
 
     private removeAllRemotePlayers(): void {
@@ -1890,6 +1873,9 @@ ${escapedMessage}
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+                if ((pointer.event.target as Element)?.localName !== "canvas") {
+                    return;
+                }
                 if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
                     return; //we don't want the menu to open when pinching on a touch screen.
                 }
@@ -2352,6 +2338,14 @@ ${escapedMessage}
                     "If you want more information, you may contact administrator or contact us at: hello@workadventu.re",
             });
         }
+    }
+
+    private bindSceneEventHandlers(): void {
+        this.events.once("shutdown", () => {
+            if (!this.cleanupDone) {
+                throw new Error("Scene destroyed without cleanup!");
+            }
+        });
     }
 
     zoomByFactor(zoomFactor: number) {
