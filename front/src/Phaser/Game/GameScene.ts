@@ -71,7 +71,7 @@ import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
-import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
+import { emoteStore, emoteMenuStore, emoteMenuSubStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
 import { contactPageStore } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
@@ -1881,10 +1881,10 @@ ${escapedMessage}
                 }
 
                 // toggle EmoteMenu
-                if (get(emoteMenuStore)) {
-                    emoteMenuStore.closeEmoteMenu();
+                if (get(emoteMenuSubStore)) {
+                    emoteMenuSubStore.closeEmoteMenu();
                 } else {
-                    emoteMenuStore.openEmoteMenu();
+                    emoteMenuSubStore.openEmoteMenu();
                 }
             });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
