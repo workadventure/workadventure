@@ -6,19 +6,10 @@ import { baseLocale, locales } from "./i18n-util";
 import { loadLocaleAsync } from "./i18n-util.async";
 
 const fallbackLocale = (FALLBACK_LOCALE || baseLocale) as Locales;
-const localStorageProperty = "language";
 
 export const localeDetector = async () => {
-    const exist = localStorage.getItem(localStorageProperty);
     let detectedLocale: Locales = fallbackLocale;
-
-    if (exist) {
-        const localStorageDetector = initLocalStorageDetector(localStorageProperty);
-        detectedLocale = detectLocale(fallbackLocale, locales, localStorageDetector);
-    } else {
-        detectedLocale = detectLocale(fallbackLocale, locales, navigatorDetector);
-    }
-
+    detectedLocale = detectLocale(fallbackLocale, locales, navigatorDetector);
     await setCurrentLocale(detectedLocale);
 };
 

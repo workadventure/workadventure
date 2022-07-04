@@ -13,6 +13,8 @@
     import {MucRoom} from "../Xmpp/MucRoom";
     import {userStore} from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
+    import {localeDetector} from "../i18n/locales";
+    import {locale} from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
     import {get} from "svelte/store";
@@ -174,6 +176,9 @@
     });
 
     onMount(() => {
+        if(!$locale){
+            localeDetector();
+        }
         listDom.scrollTo(0, listDom.scrollHeight);
     });
 

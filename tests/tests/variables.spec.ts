@@ -168,7 +168,10 @@ test.describe('Variables', () => {
 
     // Let's check the pusher getRooms endpoint returns 2 users on the map
     let rooms = await getPusherRooms();
-    if (rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] !== 2) {
+    for (let i = 0; i < 5; i++) {
+      if (rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] === 2) {
+        break;
+      }
       // If we don't have the result right away, let's wait 3 seconds, just in case pusher is slow.
       await timeout(15000);
       rooms = await getPusherRooms();

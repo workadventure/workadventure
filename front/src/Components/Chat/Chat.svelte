@@ -7,6 +7,8 @@
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
     import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { CHAT_URL } from "../../Enum/EnvironmentVariable";
+    import { locale } from "../../i18n/i18n-svelte";
     import {AdminMessageEventTypes, adminMessagesService} from "../../Connexion/AdminMessagesService";
     import {menuIconVisiblilityStore} from "../../Stores/MenuStore";
 
@@ -39,6 +41,19 @@
             }
         });
         subscribeListeners.push(
+            locale.subscribe((value) => {
+                chatIframe?.contentWindow?.postMessage(
+                    {
+                        type: "setLocale",
+                        data: {
+                            locale: value,
+                        },
+                    },
+                    "*"
+                );
+            })
+        );
+        subscribeListeners.push(
             currentPlayerWokaStore.subscribe((value) => {
                 if (value !== undefined) {
                     wokaSrc = value;
@@ -59,6 +74,15 @@
                                 authToken: localUserStore.getAuthToken(),
                                 color: getColorByString(name ?? ""),
                                 woka: wokaSrc,
+                            },
+                        },
+                        "*"
+                    );
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "setLocale",
+                            data: {
+                                locale: $locale,
                             },
                         },
                         "*"
@@ -112,7 +136,7 @@
         bind:this={chatIframe}
         sandbox="allow-scripts"
         title="WorkAdventureChat"
-        src="http://chat.workadventure.localhost"
+        src={CHAT_URL}
         class="tw-border-0"
     />
 </div>

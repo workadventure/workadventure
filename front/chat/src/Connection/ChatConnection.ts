@@ -95,7 +95,6 @@ export class ChatConnection implements ChatConnection {
 
                 switch (message.$case) {
                     case "xmppSettingsMessage": {
-                        console.warn('xmppSettingsMessage received');
                         this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                         break;
                     }

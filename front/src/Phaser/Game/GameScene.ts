@@ -232,7 +232,6 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent: boolean = false;
     private jitsiDominantSpeaker: boolean = false;
     private jitsiParticipantsCount: number = 0;
-    private jitsiClosable: boolean = true;
     private cleanupDone: boolean = false;
     public readonly superLoad: SuperLoaderPlugin;
 
@@ -2403,9 +2402,5 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
-    }
-
-    public setJitsiClosable(value: boolean): void {
-        this.jitsiClosable = value;
     }
 }

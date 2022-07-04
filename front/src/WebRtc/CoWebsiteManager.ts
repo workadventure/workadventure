@@ -2,7 +2,7 @@ import { HtmlUtils } from "./HtmlUtils";
 import { Subject } from "rxjs";
 import { waScaleManager } from "../Phaser/Services/WaScaleManager";
 import { coWebsites, coWebsitesNotAsleep, mainCoWebsite } from "../Stores/CoWebsiteStore";
-import { get, Readable, Unsubscriber, Writable, writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../Stores/EmbedScreensStore";
 import { isMediaBreakpointDown } from "../Utils/BreakpointsUtils";
 import { LayoutMode } from "./LayoutManager";
@@ -51,8 +51,6 @@ class CoWebsiteManager {
 
     private buttonCloseCoWebsite: HTMLElement;
 
-    private mainCoWebsiteUnsubscriber: Unsubscriber;
-
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
         trails: number[] | undefined;
@@ -60,6 +58,12 @@ class CoWebsiteManager {
 
     private resizeObserver = new ResizeObserver(() => {
         this.resizeAllIframes();
+
+        if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
+            this.toggleFullScreenIcon(true);
+            this.resetStyleMain();
+            this.fire();
+        }
     });
 
     public getMainState() {
@@ -126,8 +130,8 @@ class CoWebsiteManager {
             trails: undefined,
         };
 
-        this.mainCoWebsiteUnsubscriber = mainCoWebsite.subscribe((coWebsite) => {
-            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable();
+        mainCoWebsite.subscribe((coWebsite) => {
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
         });
 
         this.holderListeners();
@@ -157,7 +161,7 @@ class CoWebsiteManager {
         buttonFullScreenFrame.addEventListener("click", () => {
             analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
-            this.fullscreen();
+            this.toggleFullscreen();
         });
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
@@ -190,7 +194,6 @@ class CoWebsiteManager {
 
     public cleanup(): void {
         this.closeCoWebsites();
-        this.mainCoWebsiteUnsubscriber();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
@@ -651,7 +654,7 @@ class CoWebsiteManager {
             this.displayMain();
         }
 
-        const coWebsiteLloading = coWebsite
+        const coWebsiteLoading = coWebsite
             .load()
             .then(() => {
                 const mainCoWebsite = this.getMainCoWebsite();
@@ -682,7 +685,7 @@ class CoWebsiteManager {
                 this.removeCoWebsiteFromStack(coWebsite);
             });
 
-        return coWebsiteLloading;
+        return coWebsiteLoading;
     }
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
@@ -759,7 +762,7 @@ class CoWebsiteManager {
         waScaleManager.refreshFocusOnTarget();
     }
 
-    private fullscreen(): void {
+    private toggleFullscreen(): void {
         if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
             this.resetStyleMain();

@@ -316,7 +316,7 @@ export class MucRoom {
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
-                const jid = x.getChild("item")?.getAttr("jid").split("/")[0];
+                const jid = x.getChild("item")?.getAttr("jid")?.split("/")[0];
                 const playUri = xml.getChild("room")?.getAttr("playUri");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 const color = xml.getChild("user")?.getAttr("color");
