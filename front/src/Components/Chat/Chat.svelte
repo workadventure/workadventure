@@ -28,7 +28,7 @@
     const playUri = document.location.toString().split("#")[0].toString();
     const name = localUserStore.getName();
 
-    onMount(async () => {
+    onMount(() => {
         iframeListener.registerIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
             iframeLoadedStore.set(false);
