@@ -37,17 +37,17 @@
             }
         });
         subscribeListeners.push(
-                locale.subscribe((value) => {
-                    chatIframe?.contentWindow?.postMessage(
-                            {
-                                type: "setLocale",
-                                data: {
-                                    locale: value,
-                                },
-                            },
-                            "*"
-                    );
-                })
+            locale.subscribe((value) => {
+                chatIframe?.contentWindow?.postMessage(
+                    {
+                        type: "setLocale",
+                        data: {
+                            locale: value,
+                        },
+                    },
+                    "*"
+                );
+            })
         );
         subscribeListeners.push(
             currentPlayerWokaStore.subscribe((value) => {
