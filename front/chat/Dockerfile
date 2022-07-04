@@ -22,7 +22,7 @@ RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from
 COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 
 # upgrade RAM available to 6G
-RUN yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
+RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
 # final production image
 FROM nginx:1.21.6-alpine

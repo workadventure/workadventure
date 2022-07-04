@@ -127,7 +127,6 @@
             height: 100% !important;
             width: 100% !important;
             position: relative;
-            z-index: 150;
 
             &-container {
                 height: 100% !important;
@@ -139,7 +138,8 @@
                     z-index: 151;
                     position: absolute;
                     width: 100%;
-                    top: 0;
+                    top: 5px;
+                    right: 5px;
                     display: flex;
                     flex-direction: row;
                     justify-content: end;
