@@ -955,15 +955,11 @@ export class GameScene extends DirtyScene {
         });
 
         this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            this.time.delayedCall(0, () => {
-                this.reposition();
-            });
+            this.reposition();
         });
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            this.time.delayedCall(0, () => {
-                this.reposition();
-            });
+            this.reposition();
         });
 
         const talkIconVolumeTreshold = 10;
@@ -984,6 +980,7 @@ export class GameScene extends DirtyScene {
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
+                this.reposition();
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
@@ -993,6 +990,7 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
+                this.reposition();
             }
             oldPeersNumber = peers.size;
         });
@@ -2269,8 +2267,10 @@ ${escapedMessage}
 
     private reposition(instant: boolean = false): void {
         // Recompute camera offset if needed
-        biggestAvailableAreaStore.recompute();
-        this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+        this.time.delayedCall(0, () => {
+            biggestAvailableAreaStore.recompute();
+            this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+        });
     }
 
     public enableMediaBehaviors() {
