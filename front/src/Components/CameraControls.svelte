@@ -40,6 +40,7 @@
     import { limitMapStore } from "../Stores/GameStore";
 
     const gameScene = gameManager.getCurrentGameScene();
+    let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -129,25 +130,50 @@
         emoteMenuSubStore.closeEmoteMenu();
     }
 
+    function focusElement(key: number){
+        if(!$emoteMenuSubStore){
+            return;
+        }
+        const name: string|undefined = $emoteDataStore.get(key)?.name;
+        console.log('name', name);
+        console.log('key', key);
+        if(name == undefined){
+            return;
+        }
+        const element: HTMLElement|null = document.getElementById(`button-${name}`);
+        console.log('element', element);
+        if(element == undefined){
+            return;
+        }
+        element.classList.add('focus');
+        setTimeout(() => element.classList.remove('focus'), 2000);
+    }
+
     function onKeyDown(e: KeyboardEvent) {
+        let key = null;
         if (e.key === "1" || e.key === "F1") {
-            clickEmoji(1);
+            key = 1;
         }
         if (e.key === "2" || e.key === "F2") {
-            clickEmoji(2);
+            key = 2;
         }
         if (e.key === "3" || e.key === "F3") {
-            clickEmoji(3);
+            key = 3;
         }
         if (e.key === "4" || e.key === "F4") {
-            clickEmoji(4);
+            key = 4;
         }
         if (e.key === "5" || e.key === "F5") {
-            clickEmoji(5);
+            key = 5;
         }
         if (e.key === "6" || e.key === "F6") {
-            clickEmoji(6);
+            key = 6;
         }
+        if(!key){
+            return;
+        }
+        focusElement(key);
+        clickEmoji(key);
     }
 
     function showInvite() {
@@ -301,8 +327,8 @@
                     on:click={showMenu}
                     class="bottom-action-button"
                 >
-                    <button class:border-top-light={$menuVisiblilityStore}>
-                        <img src={WorkAdventureImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
+                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <img src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
             </div>
@@ -358,6 +384,7 @@
                                 clickEmoji(key);
                             }}
                             id={`button-${$emoteDataStore.get(key)?.name}`}
+                            class="emoji"
                             class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
                         >
                             <img
@@ -368,18 +395,19 @@
                                 id={`icon-${$emoteDataStore.get(key)?.name}`}
                                 src={$emoteDataStore.get(key)?.url}
                             />
+                            <span class="tw-text-white">{key}</span>
                         </button>
                     </div>
                 {/each}
 
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click|preventDefault={edit}>
-                        <img src={penImg} style="padding: 2px" alt="Edit emoji selected" />
+                        <img src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click|preventDefault={close}>
-                        <img src={closeImg} style="padding: 4px" alt="Close emoji" />
+                        <img src={closeImg} style="padding: 4px" alt={$LL.menu.icon.open.closeEmoji()} />
                     </button>
                 </div>
             </div>

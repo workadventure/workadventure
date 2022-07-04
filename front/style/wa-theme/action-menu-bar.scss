@@ -26,6 +26,11 @@
                         @apply tw-select-none tw-w-7 tw-h-7;
                         @apply sm:tw-w-8 sm:tw-h-8;
                     }
+
+                    &.emoji{
+                        @apply tw-w-11 tw-h-10;
+                        @apply sm:tw-w-14 sm:tw-h-12;
+                    }
                 }
             }
 
