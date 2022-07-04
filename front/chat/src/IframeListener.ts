@@ -2,14 +2,12 @@ import {isLookingLikeIframeEventWrapper, isIframeEventWrapper} from "./Event/Ifr
 import {userStore} from "./Stores/LocalUserStore";
 import {ChatConnection} from "./Connection/ChatConnection";
 import {connectionStore} from "./Stores/ConnectionStore";
-import {XmppClient} from "./Xmpp/XmppClient";
-import {get} from "svelte/store";
 import {setCurrentLocale} from "./i18n/locales";
 import {Locales} from "./i18n/i18n-types";
 
 class IframeListener {
     init() {
-        window.addEventListener("message", async (message: MessageEvent<unknown>) => {
+        window.addEventListener("message", async (message: MessageEvent) => {
                 const payload = message.data;
                 const lookingLikeEvent = isLookingLikeIframeEventWrapper.safeParse(payload);
                 if (lookingLikeEvent.success) {
