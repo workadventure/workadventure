@@ -130,23 +130,20 @@
         emoteMenuSubStore.closeEmoteMenu();
     }
 
-    function focusElement(key: number){
-        if(!$emoteMenuSubStore){
+    function focusElement(key: number) {
+        if (!$emoteMenuSubStore) {
             return;
         }
-        const name: string|undefined = $emoteDataStore.get(key)?.name;
-        console.log('name', name);
-        console.log('key', key);
-        if(name == undefined){
+        const name: string | undefined = $emoteDataStore.get(key)?.name;
+        if (name == undefined) {
             return;
         }
-        const element: HTMLElement|null = document.getElementById(`button-${name}`);
-        console.log('element', element);
-        if(element == undefined){
+        const element: HTMLElement | null = document.getElementById(`button-${name}`);
+        if (element == undefined) {
             return;
         }
-        element.classList.add('focus');
-        setTimeout(() => element.classList.remove('focus'), 2000);
+        element.classList.add("focus");
+        setTimeout(() => element.classList.remove("focus"), 2000);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -169,7 +166,7 @@
         if (e.key === "6" || e.key === "F6") {
             key = 6;
         }
-        if(!key){
+        if (!key) {
             return;
         }
         focusElement(key);

@@ -10,7 +10,7 @@ const menu: BaseTranslation = {
             chat: "Abrir bate-papo",
             userlist: "Lista de usuários",
             openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu"
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {

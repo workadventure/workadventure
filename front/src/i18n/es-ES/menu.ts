@@ -10,7 +10,7 @@ const menu: NonNullable<Translation["menu"]> = {
             chat: "Abrir chat",
             userlist: "Lista de usuarios",
             openEmoji: "Open emoji selected popup",
-            closeEmoji: "Close emoji menu"
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {
