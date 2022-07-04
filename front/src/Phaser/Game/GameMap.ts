@@ -10,6 +10,7 @@ import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
 import { MathUtils } from "../../Utils/MathUtils";
+import { PathTileType } from "../../Utils/PathfindingManager";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -142,7 +143,9 @@ export class GameMap {
 
     public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache: boolean = true): number[][] {
         // initialize collision grid to write on
-        const grid: number[][] = Array.from(Array(this.map.height), (_) => Array(this.map.width).fill(0));
+        const grid: number[][] = Array.from(Array(this.map.height), (_) =>
+            Array(this.map.width).fill(PathTileType.Walkable)
+        );
         if (modifiedLayer) {
             // recalculate cache for certain layer if needed
             this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
@@ -163,7 +166,11 @@ export class GameMap {
                 for (let y = 0; y < this.map.height; y += 1) {
                     for (let x = 0; x < this.map.width; x += 1) {
                         // currently no case where we can make tile non-collidable with collidable object beneath, skip position
-                        if (grid[y][x] !== 0) {
+                        if (grid[y][x] === PathTileType.Exit && cachedLayer[y][x] === PathTileType.Collider) {
+                            grid[y][x] = cachedLayer[y][x];
+                            continue;
+                        }
+                        if (grid[y][x] !== PathTileType.Walkable) {
                             continue;
                         }
                         grid[y][x] = cachedLayer[y][x];
@@ -492,8 +499,7 @@ export class GameMap {
 
     private getLayerCollisionGrid(layer: TilemapLayer): (1 | 2 | 0)[][] {
         let isExitLayer = false;
-        for (const property of layer.layer.properties) {
-            //@ts-ignore
+        for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
             if (property.name && property.name === "exitUrl") {
                 isExitLayer = true;
                 break;

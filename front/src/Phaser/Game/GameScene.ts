@@ -584,7 +584,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMap.getCollisionGrid(),
+            this.gameMap.getCollisionGrid(undefined, false),
             this.gameMap.getTileDimensions()
         );
 
