@@ -8,6 +8,7 @@
     import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
+    import { locale } from "../../i18n/i18n-svelte";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -27,9 +28,10 @@
     const playUri = document.location.toString().split("#")[0].toString();
     const name = localUserStore.getName();
 
-    onMount(() => {
+    onMount(async () => {
         iframeListener.registerIframe(chatIframe);
         chatIframe.addEventListener("load", () => {
+            iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 iframeLoadedStore.set(true);
             }
@@ -55,6 +57,15 @@
                                 authToken: localUserStore.getAuthToken(),
                                 color: getColorByString(name ?? ""),
                                 woka: wokaSrc,
+                            },
+                        },
+                        "*"
+                    );
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "setLocale",
+                            data: {
+                                locale: $locale,
                             },
                         },
                         "*"

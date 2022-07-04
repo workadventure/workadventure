@@ -13,6 +13,8 @@
     import {MucRoom} from "../Xmpp/MucRoom";
     import {userStore} from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
+    import {localeDetector} from "../i18n/locales";
+    import {locale} from "../i18n/i18n-svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -226,7 +228,8 @@
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
 
-    onMount(() => {
+    onMount(async () => {
+        if(!$locale) await localeDetector();
         listDom.scrollTo(0, listDom.scrollHeight);
     });
 

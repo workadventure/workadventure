@@ -68,7 +68,6 @@ export class ChatConnection implements ChatConnection {
             };
 
             this.socket.addEventListener("open", (event) => {
-                console.info('WebSocket iFrame <> Pusher opened.');
                 this.xmppClient = new XmppClient(this);
             });
 
@@ -96,7 +95,6 @@ export class ChatConnection implements ChatConnection {
 
                 switch (message.$case) {
                     case "xmppSettingsMessage": {
-                        console.warn('xmppSettingsMessage received');
                         this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
                         break;
                     }
