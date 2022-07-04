@@ -228,8 +228,10 @@
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
 
-    onMount(async () => {
-        if(!$locale) await localeDetector();
+    onMount(() => {
+        if(!$locale){
+            localeDetector();
+        }
         listDom.scrollTo(0, listDom.scrollHeight);
     });
 
