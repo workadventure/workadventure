@@ -131,6 +131,7 @@ export class SocketManager {
         }
 
         roomJoinedMessage.setCurrentuserid(user.id);
+        roomJoinedMessage.setActivatedinviteuser(true);
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);

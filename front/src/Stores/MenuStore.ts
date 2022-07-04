@@ -200,20 +200,18 @@ export const inviteUserActivated = writable(true);
 
 inviteUserActivated.subscribe((value) => {
     //update menu tab
-    const valuesSubMenusStore = get(subMenusStore);
-    console.log("inviteUserActivated.subscribe => subMenusStore", subMenusStore);
-    console.log("inviteUserActivated.subscribe => valuesSubMenusStore", valuesSubMenusStore);
+    let valuesSubMenusStore = get(subMenusStore);
     if (!valuesSubMenusStore) {
         return;
     }
     const indexInviteMenu = valuesSubMenusStore.findIndex(
         (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
     );
-
     if (value && indexInviteMenu === -1) {
         valuesSubMenusStore.push(inviteMenu);
         subMenusStore.set(valuesSubMenusStore);
     } else if (!value && indexInviteMenu !== -1) {
-        valuesSubMenusStore.splice(indexInviteMenu, 1);
+        valuesSubMenusStore = valuesSubMenusStore.splice(indexInviteMenu, 1);
+        subMenusStore.set(valuesSubMenusStore);
     }
 });

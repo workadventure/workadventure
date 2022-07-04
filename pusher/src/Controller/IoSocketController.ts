@@ -352,7 +352,7 @@ export class IoSocketController {
                             jabberId: null,
                             jabberPassword: null,
                             mucRooms: [],
-                            activatedInviteUser: null,
+                            activatedInviteUser: true,
                         };
 
                         let characterLayerObjs: WokaDetail[];

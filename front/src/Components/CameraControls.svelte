@@ -124,7 +124,11 @@
             if (emoji == undefined) {
                 return;
             }
+            analyticsClient.launchEmote(emoji);
             emoteStore.set(emoji);
+
+            //play UX animation
+            focusElement(selected);
         }
     }
 
@@ -150,8 +154,14 @@
         if (element == undefined) {
             return;
         }
+        element.focus();
         element.classList.add("focus");
-        setTimeout(() => element.classList.remove("focus"), 2000);
+
+        //blur element after ends of animation
+        setTimeout(() => {
+            element.blur();
+            element.classList.remove("focus");
+        }, 2000);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -252,7 +262,11 @@
                     </button>
                 </div>
 
-                <div class="tw-transition-all bottom-action-button" on:click={switchLayoutMode}>
+                <div
+                    class="tw-transition-all bottom-action-button"
+                    on:click={() => analyticsClient.layoutPresentChange()}
+                    on:click={switchLayoutMode}
+                >
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
@@ -422,7 +436,7 @@
                 {/each}
 
                 <div class="tw-transition-all bottom-action-button">
-                    <button on:click|preventDefault={edit}>
+                    <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
                         <img src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
                     </button>
                 </div>
