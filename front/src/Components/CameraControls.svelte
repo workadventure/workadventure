@@ -24,7 +24,15 @@
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import { chatVisibilityStore } from "../Stores/ChatStore";
-    import { activeSubMenuStore, menuVisiblilityStore } from "../Stores/MenuStore";
+    import {
+        activeSubMenuStore,
+        menuVisiblilityStore,
+        inviteUserActivated,
+        SubMenusInterface,
+        subMenusStore,
+        MenuItem,
+        TranslatedMenu,
+    } from "../Stores/MenuStore";
     import {
         Emoji,
         emoteDataStore,
@@ -174,22 +182,36 @@
     }
 
     function showInvite() {
-        if ($menuVisiblilityStore && $activeSubMenuStore === 2) {
-            activeSubMenuStore.set(2);
-            menuVisiblilityStore.set(false);
+        const indexInviteMenu = $subMenusStore.findIndex(
+            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+        );
+        if (indexInviteMenu === -1) {
+            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
             return;
         }
-        activeSubMenuStore.set(2);
+        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+            return;
+        }
+        activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
     }
 
     function showMenu() {
-        if ($menuVisiblilityStore && $activeSubMenuStore === 0) {
-            activeSubMenuStore.set(0);
-            menuVisiblilityStore.set(false);
+        const indexInviteMenu = $subMenusStore.findIndex(
+            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
+        );
+        if (indexInviteMenu === -1) {
+            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
             return;
         }
-        activeSubMenuStore.set(0);
+        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+            return;
+        }
+        activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
     }
 
@@ -348,21 +370,23 @@
                 </div>
             {/if}
 
-            <div
-                class="bottom-action-section tw-flex tw-flex-initial"
-                in:fly={{}}
-                on:dragstart|preventDefault={noDrag}
-                on:click={() => analyticsClient.openInvite()}
-                on:click={showInvite}
-            >
-                <button
-                    class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
-                    id="invite-btn"
-                    class:border-top-light={$menuVisiblilityStore}
+            {#if $inviteUserActivated}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openInvite()}
+                    on:click={showInvite}
                 >
-                    {$LL.menu.sub.invite()}
-                </button>
-            </div>
+                    <button
+                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        id="invite-btn"
+                        class:border-top-light={$menuVisiblilityStore}
+                    >
+                        {$LL.menu.sub.invite()}
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 </div>

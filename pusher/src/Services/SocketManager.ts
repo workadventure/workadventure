@@ -185,6 +185,9 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.setVisitcardurl(client.visitCardUrl);
             }
             joinRoomMessage.setCompanion(client.companion);
+            if (client.activatedInviteUser != undefined) {
+                joinRoomMessage.setActivatedinviteuser(client.activatedInviteUser);
+            }
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();

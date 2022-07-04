@@ -307,6 +307,7 @@ message RoomJoinedMessage {
   string userRoomToken = 7;
   // We send the current skin of the current player.
   repeated CharacterLayerMessage characterLayer = 8;
+  bool activatedInviteUser = 9;
 }
 
 message WebRtcStartMessage {
@@ -444,6 +445,7 @@ message JoinRoomMessage {
   string visitCardUrl = 9;
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
+  bool activatedInviteUser = 12;
 }
 
 message UserJoinedZoneMessage {

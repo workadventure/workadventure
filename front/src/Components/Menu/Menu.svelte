@@ -16,6 +16,7 @@
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
+        TranslatedMenu,
     } from "../../Stores/MenuStore";
     import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";
@@ -59,34 +60,36 @@
     async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
+            const indexMenuSearch = $subMenusStore.findIndex(
+                (menuSearch) => (menuSearch as TranslatedMenu).key === menu.key
+            );
+            if (indexMenuSearch === -1) {
+                console.error(`Sub menu was not founded for key: ${menu.key} in the array: `, $activeSubMenuStore);
+                return;
+            }
+            activeSubMenuStore.set(indexMenuSearch);
             switch (menu.key) {
                 case SubMenusInterface.profile:
-                    activeSubMenuStore.set(0);
                     activeComponent = ProfileSubMenu;
                     analyticsClient.menuProfile();
                     break;
                 case SubMenusInterface.settings:
-                    activeSubMenuStore.set(1);
                     activeComponent = SettingsSubMenu;
                     analyticsClient.menuSetting();
                     break;
                 case SubMenusInterface.invite:
-                    activeSubMenuStore.set(2);
                     activeComponent = GuestSubMenu;
                     analyticsClient.menuInvite();
                     break;
                 case SubMenusInterface.aboutRoom:
-                    activeSubMenuStore.set(3);
                     activeComponent = AboutRoomSubMenu;
                     analyticsClient.menuCredit();
                     break;
                 case SubMenusInterface.contact:
-                    activeSubMenuStore.set(4);
                     activeComponent = ContactSubMenu;
                     analyticsClient.menuContact();
                     break;
                 case SubMenusInterface.globalMessages:
-                    activeSubMenuStore.set(5);
                     activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     analyticsClient.globalMessage();
                     break;
