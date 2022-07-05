@@ -14,3 +14,14 @@ $font-condensed: 'Roboto Condensed', sans-serif;
 .nes-btn {
   font-family: "Press Start 2P";
 }
+
+button:focus,
+button:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+input:focus,
+input:focus-visible{
+  outline: none;
+}
