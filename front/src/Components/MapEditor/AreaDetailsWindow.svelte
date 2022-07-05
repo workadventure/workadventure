@@ -71,7 +71,7 @@
 <style lang="scss">
     .area-details-window {
         position: absolute;
-        left: 15%;
+        left: 30%;
         top: 30%;
         transform: translate(-50%, 0);
         width: 400px !important;

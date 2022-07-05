@@ -106,7 +106,7 @@ export interface LockGroupPromptMessage {
 }
 
 export interface MapEditorModifyAreaMessage {
-    name: string;
+    id: number;
     x: number | undefined;
     y: number | undefined;
     width: number | undefined;

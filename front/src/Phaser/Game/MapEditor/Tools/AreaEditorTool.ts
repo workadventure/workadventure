@@ -1,3 +1,4 @@
+import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
 import { ITiledMapObject } from "../../../Map/ITiledMap";
@@ -31,6 +32,15 @@ export class AreaEditorTool extends MapEditorTool {
     public activate(): void {
         this.setAreaPreviewsVisibility(true);
         this.scene.markDirty();
+    }
+
+    public subscribeToStreams(connection: RoomConnection): void {
+        connection.mapEditorModifyAreaMessageStream.subscribe((message) => {
+            console.log(message);
+            // this.areaPreviews
+            this.scene.getGameMap().updateAreaById(message.id, AreaType.Static, message);
+            this.scene.markDirty();
+        });
     }
 
     private createAreaPreviews(): AreaPreview[] {

@@ -317,7 +317,7 @@ export class GameMap {
         propertyName: string,
         propertyValue: string | number | undefined | boolean
     ) {
-        const area = this.getArea(areaName, areaType);
+        const area = this.getAreaByName(areaName, areaType);
         if (area === undefined) {
             console.warn('Could not find area "' + areaName + '" when calling setProperty');
             return;
@@ -411,46 +411,12 @@ export class GameMap {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
-    public getArea(name: string, type: AreaType): ITiledMapObject | undefined {
-        return this.getAreas(type).find((area) => (area.name = name));
-    }
-
-    public updateArea(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
-        const area = this.getArea(name, type);
-        if (!area) {
-            return;
-        }
-        if (config.x !== undefined) {
-            area.x = config.x;
-        }
-        if (config.y !== undefined) {
-            area.y = config.y;
-        }
-        if (config.width !== undefined) {
-            area.width = config.width;
-        }
-        if (config.height !== undefined) {
-            area.height = config.height;
-        }
-
-        if (this.isPlayerInsideArea(name, type)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
-    }
     public addArea(area: ITiledMapObject, type: AreaType): void {
         this.getAreas(type).push(area);
 
-        if (this.isPlayerInsideArea(area.name, type)) {
+        if (this.isPlayerInsideAreaByName(area.name, type)) {
             this.triggerSpecificAreaOnEnter(area);
         }
-    }
-
-    public isPlayerInsideArea(name: string, type: AreaType): boolean {
-        return (
-            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
-                (area) => area.name === name
-            ) !== -1
-        );
     }
 
     public triggerSpecificAreaOnEnter(area: ITiledMapObject): void {
@@ -465,7 +431,54 @@ export class GameMap {
         }
     }
 
-    public deleteArea(name: string, type: AreaType): void {
+    public getAreaByName(name: string, type: AreaType): ITiledMapObject | undefined {
+        return this.getAreas(type).find((area) => (area.name = name));
+    }
+
+    public getArea(id: number, type: AreaType): ITiledMapObject | undefined {
+        return this.getAreas(type).find((area) => (area.id = id));
+    }
+
+    public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
+        const area = this.getAreaByName(name, type);
+        if (!area) {
+            return;
+        }
+        this.updateArea(area, config);
+
+        if (this.isPlayerInsideAreaByName(name, type)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+
+    public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapObject>): void {
+        const area = this.getArea(id, type);
+        if (!area) {
+            return;
+        }
+        this.updateArea(area, config);
+
+        if (this.isPlayerInsideArea(id, type)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+
+    private updateArea(area: ITiledMapObject, config: Partial<ITiledMapObject>): void {
+        if (config.x !== undefined) {
+            area.x = config.x;
+        }
+        if (config.y !== undefined) {
+            area.y = config.y;
+        }
+        if (config.width !== undefined) {
+            area.width = config.width;
+        }
+        if (config.height !== undefined) {
+            area.height = config.height;
+        }
+    }
+
+    public deleteAreaByName(name: string, type: AreaType): void {
         const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).find(
             (area) => area.name === name
         );
@@ -477,6 +490,36 @@ export class GameMap {
         if (index !== -1) {
             areas.splice(index, 1);
         }
+    }
+
+    public deleteAreaById(id: number, type: AreaType): void {
+        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).find(
+            (area) => area.id === id
+        );
+        if (area) {
+            this.triggerSpecificAreaOnLeave(area);
+        }
+        const areas = this.getAreas(type);
+        const index = areas.findIndex((area) => area.id === id);
+        if (index !== -1) {
+            areas.splice(index, 1);
+        }
+    }
+
+    public isPlayerInsideArea(id: number, type: AreaType): boolean {
+        return (
+            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
+                (area) => area.id === id
+            ) !== -1
+        );
+    }
+
+    public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
+        return (
+            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
+                (area) => area.name === name
+            ) !== -1
+        );
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {

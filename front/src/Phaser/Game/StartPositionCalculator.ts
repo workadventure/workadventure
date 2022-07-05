@@ -71,7 +71,7 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromArea(startPositionName: string, needStartProperty: boolean = false): boolean {
-        const area = this.gameMap.getArea(startPositionName);
+        const area = this.gameMap.getAreaByName(startPositionName);
         if (area) {
             if (needStartProperty) {
                 if (!(this.gameMap.getObjectProperty(area, "start") === true)) {

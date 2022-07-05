@@ -35,6 +35,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
 
     public updateArea(config: ITiledMapObject): void {
         this.config = config;
+        console.log(this.config);
         this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
         this.preview.displayWidth = config.width;
         this.preview.displayHeight = config.height;
@@ -57,6 +58,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     public getConfig(): ITiledMapObject {
+        console.log(this.config);
         return this.config;
     }
 
