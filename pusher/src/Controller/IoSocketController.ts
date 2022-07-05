@@ -21,6 +21,7 @@ import {
     LockGroupPromptMessage,
     AvailabilityStatus,
     QueryMessage,
+    PingMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -84,6 +85,10 @@ interface UpgradeFailedErrorData {
 }
 
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
+
+// Maximum time to wait for a pong answer to a ping before closing connection.
+const PONG_TIMEOUT = 12000;
+const PING_INTERVAL = 10000;
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -230,10 +235,6 @@ export class IoSocketController {
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-
-            // A shot in the dark. Let's enable server side pings to see what happens
-            sendPingsAutomatically: 10,
-            //idleTimeout: 10,
             upgrade: (res, req, context) => {
                 (async () => {
                     /* Keep track of abortions */
@@ -547,6 +548,16 @@ export class IoSocketController {
                         }
                     });
                 }
+
+                const pingMessage = new PingMessage();
+                const pingSubMessage = new SubMessage();
+                pingSubMessage.setPingmessage(pingMessage);
+
+                client.pingIntervalId = setInterval(() => {
+                    client.emitInBatch(pingSubMessage);
+                }, PING_INTERVAL);
+
+                client.resetPongTimeout();
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
@@ -603,6 +614,8 @@ export class IoSocketController {
                         client,
                         message.getLockgrouppromptmessage() as LockGroupPromptMessage
                     );
+                } else if (message.hasPingmessage()) {
+                    client.resetPongTimeout();
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */
@@ -620,6 +633,13 @@ export class IoSocketController {
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
+                } finally {
+                    if (Client.pingIntervalId) {
+                        clearInterval(Client.pingIntervalId);
+                    }
+                    if (Client.pongTimeoutId) {
+                        clearTimeout(Client.pongTimeoutId);
+                    }
                 }
             },
         });
@@ -637,6 +657,15 @@ export class IoSocketController {
         client.batchTimeout = null;
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
+        };
+        client.resetPongTimeout = (): void => {
+            if (client.pongTimeoutId) {
+                clearTimeout(client.pongTimeoutId);
+            }
+            client.pongTimeoutId = setTimeout(() => {
+                console.log("Connexion lost with user ", client.userUuid);
+                client.close();
+            }, PONG_TIMEOUT);
         };
         client.disconnecting = false;
 

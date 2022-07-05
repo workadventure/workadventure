@@ -13,7 +13,7 @@ export type WaScaleManagerFocusTarget = { x: number; y: number; width?: number; 
 
 export class WaScaleManager {
     private hdpiManager: HdpiManager;
-    private scaleManager!: ScaleManager;
+    private scaleManager: ScaleManager | undefined;
     private game!: Game;
     private actualZoom: number = 1;
     private _saveZoom: number = 1;
@@ -30,6 +30,9 @@ export class WaScaleManager {
     }
 
     public applyNewSize() {
+        if (this.scaleManager === undefined) {
+            return;
+        }
         const { width, height } = coWebsiteManager.getGameSize();
         const devicePixelRatio = window.devicePixelRatio ?? 1;
         const { game: gameSize, real: realSize } = this.hdpiManager.getOptimalGameSize({
