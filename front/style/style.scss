@@ -940,3 +940,7 @@ div.emoji-picker {
 .nes-container.is-rounded {
     border-image-repeat: stretch;
 }
+
+.emoji-picker__overlay{
+    z-index: 200!important;
+}

@@ -409,7 +409,9 @@ export class RoomConnection implements RoomConnection {
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
                     //define if there is invite user option activated
                     inviteUserActivated.set(
-                        roomJoinedMessage.activatedInviteUser != undefined && roomJoinedMessage.activatedInviteUser
+                        roomJoinedMessage.activatedInviteUser != undefined
+                            ? roomJoinedMessage.activatedInviteUser
+                            : true
                     );
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
