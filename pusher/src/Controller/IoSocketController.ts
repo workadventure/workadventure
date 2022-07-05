@@ -230,6 +230,9 @@ export class IoSocketController {
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
+
+            // A shot in the dark. Let's enable server side pings to see what happens
+            sendPingsAutomatically: 10,
             //idleTimeout: 10,
             upgrade: (res, req, context) => {
                 (async () => {
