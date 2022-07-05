@@ -200,7 +200,7 @@ export const inviteUserActivated = writable(true);
 
 inviteUserActivated.subscribe((value) => {
     //update menu tab
-    let valuesSubMenusStore = get(subMenusStore);
+    const valuesSubMenusStore = get(subMenusStore);
     if (!valuesSubMenusStore) {
         return;
     }
@@ -211,7 +211,7 @@ inviteUserActivated.subscribe((value) => {
         valuesSubMenusStore.push(inviteMenu);
         subMenusStore.set(valuesSubMenusStore);
     } else if (!value && indexInviteMenu !== -1) {
-        valuesSubMenusStore = valuesSubMenusStore.splice(indexInviteMenu, 1);
+        valuesSubMenusStore.splice(indexInviteMenu, 1);
         subMenusStore.set(valuesSubMenusStore);
     }
 });
