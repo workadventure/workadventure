@@ -1010,7 +1010,7 @@ export class RoomConnection implements RoomConnection {
             message: {
                 $case: "mapEditorModifyAreaMessage",
                 mapEditorModifyAreaMessage: {
-                    name: config.name,
+                    id: config.id,
                     x: config.x,
                     y: config.y,
                     width: config.width,

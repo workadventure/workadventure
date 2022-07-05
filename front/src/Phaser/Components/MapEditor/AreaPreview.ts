@@ -33,13 +33,14 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updateArea(config: ITiledMapObject): void {
+    public updateArea(config: ITiledMapObject, sendUpdate: boolean = true): void {
         this.config = config;
-        console.log(this.config);
         this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
         this.preview.displayWidth = config.width;
         this.preview.displayHeight = config.height;
-        this.emit(AreaPreviewEvent.Updated, this.config);
+        if (sendUpdate) {
+            this.emit(AreaPreviewEvent.Updated, this.config);
+        }
     }
 
     private createPreview(config: ITiledMapObject): Phaser.GameObjects.Rectangle {
@@ -58,7 +59,6 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     public getConfig(): ITiledMapObject {
-        console.log(this.config);
         return this.config;
     }
 

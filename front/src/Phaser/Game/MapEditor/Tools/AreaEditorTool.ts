@@ -37,7 +37,9 @@ export class AreaEditorTool extends MapEditorTool {
     public subscribeToStreams(connection: RoomConnection): void {
         connection.mapEditorModifyAreaMessageStream.subscribe((message) => {
             console.log(message);
-            // this.areaPreviews
+            this.areaPreviews
+                .find((area) => area.getConfig().id === message.id)
+                ?.updateArea(message as ITiledMapObject, false);
             this.scene.getGameMap().updateAreaById(message.id, AreaType.Static, message);
             this.scene.markDirty();
         });
@@ -61,9 +63,6 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
-            console.log(areaPreview.getConfig());
-            // console.log(areaPreview.getName());
-            // console.log(this.scene.getGameMap().getArea(areaPreview.getName(), AreaType.Static));
         });
         areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapObject) => {
             // EDIT AFTER MESSAGE FROM BACK FOR NOW. MAKE IT INSTANT IF USER MADE THE CHANGES THOUGH
