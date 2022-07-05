@@ -46,6 +46,7 @@
     import { fly } from "svelte/transition";
     import { ADMIN_URL } from "../Enum/EnvironmentVariable";
     import { limitMapStore } from "../Stores/GameStore";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
     const gameScene = gameManager.getCurrentGameScene();
     let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -232,6 +233,8 @@
     function noDrag() {
         return false;
     }
+
+    const isMobile = isMediaBreakpointUp("md");
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -430,7 +433,9 @@
                                 id={`icon-${$emoteDataStore.get(key)?.name}`}
                                 src={$emoteDataStore.get(key)?.url}
                             />
-                            <span class="tw-text-white">{key}</span>
+                            {#if !isMobile}
+                                <span class="tw-text-white">{key}</span>
+                            {/if}
                         </button>
                     </div>
                 {/each}
