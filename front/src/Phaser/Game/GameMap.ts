@@ -28,6 +28,8 @@ export type areaChangeCallback = (
     allAreasOnNewPosition: Array<ITiledMapObject>
 ) => void;
 
+export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
+
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
  * It is used to handle layer properties.
@@ -58,7 +60,7 @@ export class GameMap {
     private enterAreaCallbacks = Array<areaChangeCallback>();
     private leaveAreaCallbacks = Array<areaChangeCallback>();
 
-    private map: ITiledMap;
+    private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
 
     private tileSetPropertyMap: { [tile_index: number]: Array<ITiledMapProperty> } = {};
@@ -66,7 +68,7 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    private readonly areas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    private readonly areas = new Map<string, ITiledMapRectangleObject>();
     private readonly areasPositionOffsetY: number = 16;
     private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
     private readonly defaultTileSize = 32;
@@ -79,7 +81,7 @@ export class GameMap {
     public constructor(map: ITiledMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
         this.map = upgradeMapToNewest(map);
         this.flatLayers = flattenGroupLayersMap(this.map);
-        this.tiledObjects = this.getObjectsFromLayers(this.flatLayers);
+        this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
         this.tiledObjects
             .filter((object) => ["zone", "area"].includes(object.type ?? ""))
@@ -92,7 +94,11 @@ export class GameMap {
                 if (this.areas.get(name)) {
                     console.warn(`Area name "${name}" is already being used! Please use unique names`);
                 }
-                this.areas.set(name, area);
+                if (area.width === undefined || area.height === undefined) {
+                    console.warn(`Area name "${name}" must be a rectangle`);
+                    return;
+                }
+                this.areas.set(name, area as ITiledMapRectangleObject);
             });
 
         let depth = -2;
@@ -344,7 +350,13 @@ export class GameMap {
             if (propertyValue === undefined) {
                 return;
             }
-            holder.properties.push({ name: propertyName, type: typeof propertyValue, value: propertyValue });
+            if (typeof propertyValue === "string") {
+                holder.properties.push({ name: propertyName, type: "string", value: propertyValue });
+            } else if (typeof propertyValue === "number") {
+                holder.properties.push({ name: propertyName, type: "float", value: propertyValue });
+            } else {
+                holder.properties.push({ name: propertyName, type: "bool", value: propertyValue });
+            }
             return;
         }
         if (propertyValue === undefined) {
@@ -419,7 +431,7 @@ export class GameMap {
         return Array.from(this.areas.values());
     }
 
-    public setArea(name: string, area: ITiledMapObject): void {
+    public setArea(name: string, area: ITiledMapRectangleObject): void {
         this.areas.set(name, area);
         if (this.isPlayerInsideArea(name)) {
             this.triggerSpecificAreaOnEnter(area);
@@ -700,7 +712,7 @@ export class GameMap {
         return this.tileNameMap.get(tile);
     }
 
-    private getObjectsFromLayers(layers: ITiledMapLayer[]): ITiledMapObject[] {
+    private static getObjectsFromLayers(layers: ITiledMapLayer[]): ITiledMapObject[] {
         const objects: ITiledMapObject[] = [];
 
         const objectLayers = layers.filter((layer) => layer.type === "objectgroup");

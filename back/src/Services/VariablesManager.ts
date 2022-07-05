@@ -101,11 +101,11 @@ export class VariablesManager {
                     }
 
                     // We store a copy of the object (to make it immutable)
-                    objects.set(object.name as string, this.iTiledObjectToVariable(object));
+                    objects.set(object.name, this.iTiledObjectToVariable(object));
                 }
             }
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
+            for (const innerLayer of layer.layers) {
                 this.recursiveFindVariablesInLayer(innerLayer, objects);
             }
         }
