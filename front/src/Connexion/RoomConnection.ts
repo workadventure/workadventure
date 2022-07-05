@@ -208,7 +208,12 @@ export class RoomConnection implements RoomConnection {
             interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
         };
 
+        this.socket.addEventListener("error", (event) => {
+            console.warn("DEBUG MESSAGE - WEBSOCKET ERROR", event);
+        });
+
         this.socket.addEventListener("close", (event) => {
+            console.warn("DEBUG MESSAGE - WEBSOCKET CLOSED", event);
             if (interval) {
                 clearInterval(interval);
             }
