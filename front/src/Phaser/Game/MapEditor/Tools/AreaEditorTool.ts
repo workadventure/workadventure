@@ -56,8 +56,10 @@ export class AreaEditorTool extends MapEditorTool {
             // console.log(this.scene.getGameMap().getArea(areaPreview.getName(), AreaType.Static));
         });
         areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapObject) => {
-            this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
-            this.scene.markDirty();
+            // EDIT AFTER MESSAGE FROM BACK FOR NOW. MAKE IT INSTANT IF USER MADE THE CHANGES THOUGH
+
+            // this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
+            // this.scene.markDirty();
 
             this.scene.connection?.emitMapEditorModifyArea(config);
         });

@@ -48,7 +48,10 @@ export class AreaPreview extends Phaser.GameObjects.Container {
     }
 
     private bindEventHandlers(): void {
-        this.preview.on(Phaser.Input.Events.POINTER_DOWN, () => {
+        this.preview.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
+            if ((pointer.event.target as Element)?.localName !== "canvas") {
+                return;
+            }
             this.emit(AreaPreviewEvent.Clicked);
         });
     }

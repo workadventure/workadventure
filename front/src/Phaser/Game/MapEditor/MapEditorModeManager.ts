@@ -1,11 +1,12 @@
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
+import { AreaType } from "../GameMap";
 import { GameScene } from "../GameScene";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import { MapEditorTool } from "./Tools/MapEditorTool";
 
-export enum EditorTool {
+export enum EditorToolName {
     AreaEditor = "AreaEditor",
 }
 
@@ -25,12 +26,12 @@ export class MapEditorModeManager {
     /**
      * Tools that we can work with inside Editor
      */
-    private editorTools: Map<EditorTool, MapEditorTool>;
+    private editorTools: Map<EditorToolName, MapEditorTool>;
 
     /**
      * What tool are we using right now
      */
-    private activeTool?: EditorTool;
+    private activeTool?: EditorToolName;
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
@@ -41,7 +42,9 @@ export class MapEditorModeManager {
         this.active = false;
         this.pointerDown = false;
 
-        this.editorTools = new Map<EditorTool, MapEditorTool>([[EditorTool.AreaEditor, new AreaEditorTool(this)]]);
+        this.editorTools = new Map<EditorToolName, MapEditorTool>([
+            [EditorToolName.AreaEditor, new AreaEditorTool(this)],
+        ]);
         this.activeTool = undefined;
 
         this.subscribeToStores();
@@ -67,7 +70,7 @@ export class MapEditorModeManager {
                 break;
             }
             case "1": {
-                this.equipTool(EditorTool.AreaEditor);
+                this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
             default: {
@@ -80,10 +83,12 @@ export class MapEditorModeManager {
         connection.mapEditorModifyAreaMessageStream.subscribe((message) => {
             console.log("MESSAGE RECEIVED IN MAP EDITOR MANAGER");
             console.log(message);
+            this.scene.getGameMap().updateArea(message.name, AreaType.Static, message);
+            this.scene.markDirty();
         });
     }
 
-    private equipTool(tool?: EditorTool): void {
+    private equipTool(tool?: EditorToolName): void {
         if (this.activeTool === tool) {
             return;
         }

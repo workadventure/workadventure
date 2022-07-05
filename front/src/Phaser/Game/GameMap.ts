@@ -425,6 +425,29 @@ export class GameMap {
         }
     }
 
+    public updateArea(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
+        const area = this.getArea(name, type);
+        if (!area) {
+            return;
+        }
+        if (config.x !== undefined) {
+            area.x = config.x;
+        }
+        if (config.y !== undefined) {
+            area.y = config.y;
+        }
+        if (config.width !== undefined) {
+            area.width = config.width;
+        }
+        if (config.height !== undefined) {
+            area.height = config.height;
+        }
+
+        if (this.isPlayerInsideArea(name, type)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+
     public isPlayerInsideArea(name: string, type: AreaType): boolean {
         return (
             this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
