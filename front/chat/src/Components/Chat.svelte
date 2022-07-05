@@ -152,9 +152,10 @@
 
                     <ChatLiveRooms
                             {showLives}
+                            searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showLives={handleShowLives}
-                            liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live')}
+                            liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
 
                     <!-- forum list

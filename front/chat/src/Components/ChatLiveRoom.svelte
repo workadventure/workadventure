@@ -1,12 +1,15 @@
-<script>
+<script lang="ts">
     import { MoreHorizontalIcon, RefreshCwIcon, EyeIcon } from "svelte-feather-icons";
     import OnlineUsers from "./OnlineUsers.svelte";
     import LL from "../i18n/i18n-svelte";
+    import highlightWords from "highlight-words";
+    import {MeStore, MucRoom, UsersStore} from "../Xmpp/MucRoom";
 
-    export let liveRoom;
-    export let meStore;
-    export let usersListStore;
+    export let liveRoom: MucRoom;
+    export let meStore: MeStore;
+    export let usersListStore: UsersStore;
     export let open;
+    export let searchValue: string;
 
     let forumMenuActive = false;
     let openChatForumMenu = () => {
@@ -15,6 +18,13 @@
     let closeChatUserMenu = () => {
         forumMenuActive = false;
     };
+
+    $: console.log(searchValue);
+
+    $: chunks = highlightWords({
+        text: liveRoom.name,
+        query: searchValue
+    });
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
@@ -30,7 +40,9 @@
 	</div>
 	<div class="tw-flex-auto tw-ml-2" on:click|stopPropagation={() => open(liveRoom)}>
 		<h1 class="tw-text-sm tw-font-bold tw-mb-0">
-			{liveRoom.name}
+			{#each chunks as chunk (chunk.key)}
+				<span class={`${chunk.match?'tw-text-light-blue':''}`}>{chunk.text}</span>
+			{/each}
 		</h1>
 		<OnlineUsers {usersListStore} />
 	</div>
