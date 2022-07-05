@@ -103,7 +103,11 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PlayerDetailsUpdatedMessage,
+} from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 export interface GameSceneInitInterface {
@@ -910,6 +914,9 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+            if (availabilityStatus === AvailabilityStatus.SILENT) {
+                this.CurrentPlayer.showTalkIcon(false, true);
+            }
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -959,6 +966,7 @@ export class GameScene extends DirtyScene {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                         if (volume === undefined) {
+                            this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
@@ -2187,7 +2195,7 @@ ${escapedMessage}
             character.setApiOutlineColor(message.details?.outlineColor);
         }
         if (message.details?.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.details?.showVoiceIndicator);
+            character.showTalkIcon(message.details?.showVoiceIndicator, !message.details?.showVoiceIndicator);
         }
         if (message.details?.availabilityStatus !== undefined) {
             character.setAvailabilityStatus(message.details?.availabilityStatus);
