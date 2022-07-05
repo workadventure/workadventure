@@ -1,4 +1,4 @@
-import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 export class ModeratorTagFinder {
     /**
@@ -22,7 +22,7 @@ export class ModeratorTagFinder {
         } else if (layer.type === "tilelayer") {
             this.registerProperties(layer.properties ?? [], mainProperty, tagProperty);
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
+            for (const innerLayer of layer.layers) {
                 this.findModeratorTagInLayer(innerLayer, mainProperty, tagProperty);
             }
         }
