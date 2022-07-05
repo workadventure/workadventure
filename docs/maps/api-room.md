@@ -83,7 +83,8 @@ WA.room.setProperty("wikiLayer", "openWebsite", "https://www.wikipedia.org/");
 ```
 
 ### Working with area objects
-You can use Tiled objects of special type `area` to hold various properties, instead of layers. They too can be modified with scripting API.
+You can use Tiled objects of special class `area` to hold various properties, instead of layers. They, too, can be modified with scripting API.
+
 ### Detecting when the user enters/leaves an area
 
 ```ts
