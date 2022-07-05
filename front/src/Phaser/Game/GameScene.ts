@@ -375,6 +375,12 @@ export class GameScene extends DirtyScene {
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
         // So we are doing a deep copy
         this.mapFile = deepCopy(data.data);
+
+        const parseResult = ITiledMap.safeParse(this.mapFile);
+        if (!parseResult.success) {
+            console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
+        }
+
         const url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
