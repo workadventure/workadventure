@@ -95,7 +95,7 @@ export class GameMap {
                     console.warn(`Area name "${name}" must be a rectangle`);
                     return;
                 }
-                this.areas.push(area);
+                this.areas.push(area as ITiledMapRectangleObject);
             });
 
         let depth = -2;
