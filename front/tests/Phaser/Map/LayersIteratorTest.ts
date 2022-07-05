@@ -1,4 +1,4 @@
-import { ITiledMapLayer } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMapLayer } from "@workadventure/tiled-map-type-guard";
 import "jasmine";
 import { flattenGroupLayersMap } from "../../../src/Phaser/Map/LayersFlattener";
 

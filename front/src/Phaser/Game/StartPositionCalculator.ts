@@ -1,9 +1,4 @@
-import {
-    ITiledMap,
-    ITiledMapLayer,
-    ITiledMapObject,
-    ITiledMapTileLayer,
-} from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
 import type { GameMap } from "./GameMap";

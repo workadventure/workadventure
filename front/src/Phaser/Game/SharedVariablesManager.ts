@@ -3,7 +3,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
-import { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 
 interface Variable {
     defaultValue: unknown;

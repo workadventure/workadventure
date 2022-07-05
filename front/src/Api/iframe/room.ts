@@ -10,7 +10,7 @@ import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
 import area from "./area";
 import { WorkadventureAreaCommands } from "./area";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();

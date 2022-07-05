@@ -113,7 +113,7 @@ import {
     ITiledMapObject,
     ITiledMapProperty,
     ITiledMapTileset,
-} from "@workadventure/tiled-map-type-guard/dist";
+} from "@workadventure/tiled-map-type-guard";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;

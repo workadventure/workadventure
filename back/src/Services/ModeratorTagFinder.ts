@@ -1,4 +1,4 @@
-import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 export class ModeratorTagFinder {
     /**

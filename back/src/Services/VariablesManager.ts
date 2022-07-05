@@ -1,7 +1,7 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { User } from "../Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";

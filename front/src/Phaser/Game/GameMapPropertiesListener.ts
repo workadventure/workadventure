@@ -18,7 +18,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
-import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 interface OpenCoWebsite {
     actionId: string;

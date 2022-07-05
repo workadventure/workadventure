@@ -4,7 +4,7 @@ import { Resolver } from "dns";
 import { promisify } from "util";
 import { LocalUrlError } from "./LocalUrlError";
 import { ITiledMap } from "@workadventure/tiled-map-type-guard";
-import { isTiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { isTiledMap } from "@workadventure/tiled-map-type-guard";
 import { STORE_VARIABLES_FOR_LOCAL_MAPS } from "../Enum/EnvironmentVariable";
 
 class MapFetcher {

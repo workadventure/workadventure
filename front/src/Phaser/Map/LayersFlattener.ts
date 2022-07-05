@@ -1,4 +1,4 @@
-import { ITiledMap, ITiledMapLayer } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer } from "@workadventure/tiled-map-type-guard";
 
 /**
  * Flatten the grouped layers

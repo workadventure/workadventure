@@ -10,7 +10,7 @@ import {
     ITiledMapProperty,
     ITiledMapTileLayer,
     upgradeMapToNewest,
-} from "@workadventure/tiled-map-type-guard/dist";
+} from "@workadventure/tiled-map-type-guard";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,

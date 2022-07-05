@@ -664,10 +664,10 @@
     "@typescript-eslint/types" "5.16.0"
     eslint-visitor-keys "^3.0.0"
 
-"@workadventure/tiled-map-type-guard@^2.0.0":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-2.0.0.tgz#c3b948ef9ef508e0a68fec2af4c24b59edb04425"
-  integrity sha512-llgmb3ueWc3g40ln53MFERRd8V/LJVyErd9Bs0V6gvac37O4KW3fegR0OMd2MKfBoVMoQO1WJqmf9LH+FyobFg==
+"@workadventure/tiled-map-type-guard@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-2.0.1.tgz#7e904caa2bdfb0d0d3eb662cd0350ac927b02737"
+  integrity sha512-2UMAvC4KKZAO0rBre5SC5t3mMkdzBwTd5JobaZOmMoWROj18YhfJhY4xOm2AZUWQKy3x4YVkJ7OYiBQZZL+Kzg==
   dependencies:
     zod "^3.17.3"
 
