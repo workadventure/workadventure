@@ -59,7 +59,7 @@ export class AreaEditorTool extends MapEditorTool {
             this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
             this.scene.markDirty();
 
-            this.scene.connection?.emitMapEditorModifyArea(config.name);
+            this.scene.connection?.emitMapEditorModifyArea(config);
         });
     }
 

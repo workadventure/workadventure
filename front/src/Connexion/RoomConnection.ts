@@ -48,6 +48,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    MapEditorModifyAreaMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -58,6 +59,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import { ITiledMapObject } from "../Phaser/Map/ITiledMap";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -169,7 +171,7 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
-    private readonly _mapEditorModifyAreaMessageStream = new Subject<{ name: string }>();
+    private readonly _mapEditorModifyAreaMessageStream = new Subject<MapEditorModifyAreaMessage>();
     public readonly mapEditorModifyAreaMessageStream = this._mapEditorModifyAreaMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
@@ -1003,12 +1005,16 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(name: string): void {
+    public emitMapEditorModifyArea(config: ITiledMapObject): void {
         this.send({
             message: {
                 $case: "mapEditorModifyAreaMessage",
                 mapEditorModifyAreaMessage: {
-                    name,
+                    name: config.name,
+                    x: config.x,
+                    y: config.y,
+                    width: config.width,
+                    height: config.height,
                 },
             },
         });

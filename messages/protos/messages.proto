@@ -108,6 +108,10 @@ message LockGroupPromptMessage {
 
 message MapEditorModifyAreaMessage {
   string name = 1;
+  google.protobuf.UInt32Value x = 2;
+  google.protobuf.UInt32Value y = 3;
+  google.protobuf.UInt32Value width = 4;
+  google.protobuf.UInt32Value height = 5;
 }
 
 message ClientToServerMessage {
