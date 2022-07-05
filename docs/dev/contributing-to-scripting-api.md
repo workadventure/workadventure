@@ -58,7 +58,7 @@ When this script is called, the scripting API is dispatching a JSON message to W
 
 In our case, the `sendChatMessage` function looks like this:
 
-**src/Api/iframe/chat.ts**
+**src/Api/Iframe/chat.ts**
 ```typescript
     sendChatMessage(message: string, author: string) {
         sendToWorkadventure({

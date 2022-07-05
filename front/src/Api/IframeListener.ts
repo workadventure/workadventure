@@ -33,7 +33,7 @@ import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKey
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
@@ -42,6 +42,10 @@ import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEv
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
+import { RemotePlayer } from "../Phaser/Entity/RemotePlayer";
+import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
+import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import { RemotePlayerInitializer } from "./Types/Initializers/RemotePlayerInitializer";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -539,6 +543,56 @@ class IframeListener {
             },
             exceptOrigin
         );
+    }
+
+    sendJoinProximityMeetingEvent(users: RemotePlayer[]) {
+        const usersSerialized = users.map((user) => {
+            return {
+                userId: user.userId,
+                userUuid: user.userUuid,
+                name: user.playerName,
+            };
+        });
+
+        this.postMessage({
+            type: "joinProximityMeetingEvent",
+            data: {
+                users: usersSerialized,
+            } as JoinProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantJoinProximityMeetingEvent(user: RemotePlayer) {
+        this.postMessage({
+            type: "participantJoinProximityMeetingEvent",
+            data: {
+                user: {
+                    userId: user.userId,
+                    userUuid: user.userUuid,
+                    name: user.playerName,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantLeaveProximityMeetingEvent(user: RemotePlayer) {
+        this.postMessage({
+            type: "participantLeaveProximityMeetingEvent",
+            data: {
+                user: {
+                    userId: user.userId,
+                    userUuid: user.userUuid,
+                    name: user.playerName,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendLeaveProximityMeetingEvent() {
+        this.postMessage({
+            type: "leaveProximityMeetingEvent",
+            data: undefined,
+        });
     }
 
     sendEnterEvent(name: string) {

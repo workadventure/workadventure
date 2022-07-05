@@ -1,4 +1,4 @@
-import { registeredCallbacks } from "./Api/iframe/registeredCallbacks";
+import { registeredCallbacks } from "./Api/Iframe/registeredCallbacks";
 import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
@@ -6,26 +6,26 @@ import {
     isLookingLikeIframeEventWrapper,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
-import chat from "./Api/iframe/chat";
-import nav, { CoWebsite } from "./Api/iframe/nav";
-import controls from "./Api/iframe/controls";
-import ui from "./Api/iframe/ui";
-import sound from "./Api/iframe/sound";
-import room, { setMapURL, setRoomId } from "./Api/iframe/room";
-import { createState } from "./Api/iframe/state";
-import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
-import players from "./Api/iframe/players";
-import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
-import type { Popup } from "./Api/iframe/Ui/Popup";
-import type { Sound } from "./Api/iframe/Sound/Sound";
-import { answerPromises, queryWorkadventure } from "./Api/iframe/IframeApiContribution";
-import camera from "./Api/iframe/camera";
-export type { UIWebsite } from "./Api/iframe/Ui/UIWebsite";
-export type { Menu } from "./Api/iframe/Ui/Menu";
-export type { ActionMessage } from "./Api/iframe/Ui/ActionMessage";
-export type { EmbeddedWebsite } from "./Api/iframe/Room/EmbeddedWebsite";
-export type { Area } from "./Api/iframe/Area/Area";
-export type { ActionsMenuAction } from "./Api/iframe/ui";
+import chat from "./Api/Iframe/chat";
+import nav, { CoWebsite } from "./Api/Iframe/nav";
+import controls from "./Api/Iframe/controls";
+import ui from "./Api/Iframe/ui";
+import sound from "./Api/Iframe/sound";
+import room, { setMapURL, setRoomId } from "./Api/Iframe/room";
+import { createState } from "./Api/Iframe/state";
+import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/Iframe/player";
+import players from "./Api/Iframe/players";
+import type { ButtonDescriptor } from "./Api/Iframe/Ui/ButtonDescriptor";
+import type { Popup } from "./Api/Iframe/Ui/Popup";
+import type { Sound } from "./Api/Iframe/Sound/Sound";
+import { answerPromises, queryWorkadventure } from "./Api/Iframe/IframeApiContribution";
+import camera from "./Api/Iframe/camera";
+export type { UIWebsite } from "./Api/Iframe/Ui/UIWebsite";
+export type { Menu } from "./Api/Iframe/Ui/Menu";
+export type { ActionMessage } from "./Api/Iframe/Ui/ActionMessage";
+export type { EmbeddedWebsite } from "./Api/Iframe/Room/EmbeddedWebsite";
+export type { Area } from "./Api/Iframe/Area/Area";
+export type { ActionsMenuAction } from "./Api/Iframe/ui";
 
 const globalState = createState();
 

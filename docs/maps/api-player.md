@@ -371,3 +371,45 @@ When you set the outline on your player, other players will see the outline too 
 browsers automatically).
 
 ![](images/outlines.png)
+
+### Detecting when the user enters/leaves a meeting
+
+```ts
+WA.player.proximityMeeting.onJoin(): Subscription
+WA.player.proximityMeeting.onLeave(): Subscription
+```
+
+The event is triggered when the user enters or leaves a proximity meeting.
+
+Example:
+
+```ts
+WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayers) => {
+    WA.chat.sendChatMessage("You joined a proximity chat", "System");
+});
+
+WA.player.proximityMeeting.onLeave().subscribe(async () => {
+    WA.chat.sendChatMessage("You left the proximity chat", "System");
+});
+```
+
+### Detecting when a participant enters/leaves a meeting
+
+```ts
+WA.player.proximityMeeting.onParticipantJoin(): Subscription
+WA.player.proximityMeeting.onParticipantLeave(): Subscription
+```
+
+The event is triggered when a user enters or leaves a proximity meeting.
+
+Example:
+
+```ts
+WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayer) => {
+    WA.chat.sendChatMessage("A participant joined the proximity chat", "System");
+});
+
+WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayer) => {
+    WA.chat.sendChatMessage("A participant left the proximity chat", "System");
+});
+```

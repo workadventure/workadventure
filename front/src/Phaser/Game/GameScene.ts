@@ -1042,8 +1042,47 @@ export class GameScene extends DirtyScene {
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
+        let oldUsers = new Map<number, RemotePlayer>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
+            const newUsers = new Map<number, RemotePlayer>();
+
+            for (const userId of peers.keys()) {
+                const player = this.MapPlayersByKey.get(userId);
+                if (!(player instanceof RemotePlayer)) {
+                    throw new Error("Cannot find a remote player on checking proximity chat updating");
+                }
+                newUsers.set(userId, player);
+            }
+
+            // Join
+            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
+                iframeListener.sendJoinProximityMeetingEvent(Object.values(newUsers));
+            }
+
+            // Left
+            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                iframeListener.sendLeaveProximityMeetingEvent();
+            }
+
+            // Participant Join
+            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
+                const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
+
+                if (newUser) {
+                    iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                }
+            }
+
+            // Participant Left
+            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
+                const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
+
+                if (oldUser) {
+                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
+                }
+            }
+
             if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeersNumber) {
@@ -1071,7 +1110,9 @@ export class GameScene extends DirtyScene {
                 }
                 this.reposition();
             }
-            oldPeersNumber = peers.size;
+
+            oldUsers = newUsers;
+            oldPeersNumber = newPeerNumber;
         });
     }
 
