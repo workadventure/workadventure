@@ -72,7 +72,7 @@
 
                 deleteButton.addEventListener('click', () => {
                     WA.room.area.delete(deleteNameField.value);
-                    if (currentlySelectedArea.name === deleteNameField.value) {
+                    if (currentlySelectedArea?.name === deleteNameField.value) {
                         currentlySelectedArea = undefined;
                     }
                 });

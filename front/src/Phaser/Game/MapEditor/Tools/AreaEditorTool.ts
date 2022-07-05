@@ -13,7 +13,7 @@ export class AreaEditorTool extends MapEditorTool {
     /**
      * Visual representations of map Areas objects
      */
-    private areaPreviews: Map<string, AreaPreview>;
+    private areaPreviews: AreaPreview[];
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -33,14 +33,14 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    private createAreaPreviews(): Map<string, AreaPreview> {
-        this.areaPreviews = new Map<string, AreaPreview>();
-        const areasData = this.scene.getGameMap().getAreas(AreaType.Static);
+    private createAreaPreviews(): AreaPreview[] {
+        this.areaPreviews = [];
+        const areaConfigs = this.scene.getGameMap().getAreas(AreaType.Static);
 
-        for (const [key, val] of areasData) {
-            const areaPreview = new AreaPreview(this.scene, { ...val });
+        for (const config of areaConfigs) {
+            const areaPreview = new AreaPreview(this.scene, { ...config });
             this.bindAreaPreviewEventHandlers(areaPreview);
-            this.areaPreviews.set(key, areaPreview);
+            this.areaPreviews.push(areaPreview);
         }
 
         this.setAreaPreviewsVisibility(false);

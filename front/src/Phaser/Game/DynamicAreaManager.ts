@@ -49,18 +49,21 @@ export class DynamicAreaManager {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
-            this.gameMap.setArea(createAreaEvent.name, AreaType.Dynamic, {
-                ...createAreaEvent,
-                id: -1,
-                gid: -1,
-                visible: true,
-                rotation: 0,
-                type: "area",
-                ellipse: false,
-                polygon: [],
-                polyline: [],
-                properties: [],
-            });
+            this.gameMap.addArea(
+                {
+                    ...createAreaEvent,
+                    id: -1,
+                    gid: -1,
+                    visible: true,
+                    rotation: 0,
+                    type: "area",
+                    ellipse: false,
+                    polygon: [],
+                    polyline: [],
+                    properties: [],
+                },
+                AreaType.Dynamic
+            );
         });
 
         iframeListener.registerAnswerer("getArea", (name: string) => {

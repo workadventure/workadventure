@@ -72,11 +72,11 @@ export class GameMap {
     /**
      * Areas that we can do CRUD operations on via scripting API
      */
-    private readonly dynamicAreas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    private readonly dynamicAreas: ITiledMapObject[] = [];
     /**
      * Areas loaded from Tiled map file
      */
-    private readonly staticAreas: Map<string, ITiledMapObject> = new Map<string, ITiledMapObject>();
+    private readonly staticAreas: ITiledMapObject[] = [];
 
     private readonly areasPositionOffsetY: number = 16;
     private readonly staticAreaNamePrefix = "STATIC_AREA_";
@@ -103,10 +103,7 @@ export class GameMap {
                     area.name = name;
                     this.unnamedStaticAreasCounter++;
                 }
-                if (this.staticAreas.get(name)) {
-                    console.warn(`Area name "${name}" is already being used! Please use unique names`);
-                }
-                this.staticAreas.set(name, area);
+                this.staticAreas.push(area);
             });
 
         let depth = -2;
@@ -330,7 +327,7 @@ export class GameMap {
         this.triggerAreasChange();
     }
 
-    public getAreas(areaType: AreaType): Map<string, ITiledMapObject> {
+    public getAreas(areaType: AreaType): ITiledMapObject[] {
         return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
     }
 
@@ -415,14 +412,7 @@ export class GameMap {
     }
 
     public getArea(name: string, type: AreaType): ITiledMapObject | undefined {
-        return this.getAreas(type).get(name);
-    }
-
-    public setArea(name: string, type: AreaType, area: ITiledMapObject): void {
-        this.getAreas(type).set(name, area);
-        if (this.isPlayerInsideArea(name, type)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
+        return this.getAreas(type).find((area) => (area.name = name));
     }
 
     public updateArea(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
@@ -444,6 +434,13 @@ export class GameMap {
         }
 
         if (this.isPlayerInsideArea(name, type)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+    }
+    public addArea(area: ITiledMapObject, type: AreaType): void {
+        this.getAreas(type).push(area);
+
+        if (this.isPlayerInsideArea(area.name, type)) {
             this.triggerSpecificAreaOnEnter(area);
         }
     }
@@ -475,7 +472,11 @@ export class GameMap {
         if (area) {
             this.triggerSpecificAreaOnLeave(area);
         }
-        this.getAreas(type).delete(name);
+        const areas = this.getAreas(type);
+        const index = areas.findIndex((area) => area.name === name);
+        if (index !== -1) {
+            areas.splice(index, 1);
+        }
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
