@@ -1,18 +1,20 @@
 <script>
+    import { MoreHorizontalIcon, RefreshCwIcon, EyeIcon } from "svelte-feather-icons";
+    import OnlineUsers from "./OnlineUsers.svelte";
     import LL from "../i18n/i18n-svelte";
+
     export let liveRoom;
+    export let meStore;
     export let usersListStore;
-    let forumMenuActive = false;
     export let open;
+
+    let forumMenuActive = false;
     let openChatForumMenu = () => {
         forumMenuActive = true;
     };
     let closeChatUserMenu = () => {
         forumMenuActive = false;
     };
-
-    import { MoreHorizontalIcon } from "svelte-feather-icons";
-    import OnlineUsers from "./OnlineUsers.svelte";
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
@@ -49,7 +51,10 @@
 
 		<!-- menu -->
 		<div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
-			<span class="wa-dropdown-item" on:click|stopPropagation={() => open(liveRoom)}> {$LL.open()} </span>
+			<span class="wa-dropdown-item" on:click|stopPropagation={() => open(liveRoom)}><EyeIcon size="12" class="tw-mr-1" /> {$LL.open()} </span>
+			{#if $meStore.isAdmin}
+				<span class="wa-dropdown-item tw-text-pop-red" on:click|stopPropagation={() => liveRoom.reInitialize()}><RefreshCwIcon size="13" class="tw-mr-1" /> {$LL.reinit()}</span>
+			{/if}
 			<!--<div class="wa-dropdown-item">Delete forum</div>-->
 		</div>
 	</div>

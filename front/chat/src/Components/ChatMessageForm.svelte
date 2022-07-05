@@ -1,14 +1,10 @@
 <script lang="ts">
     import { SendIcon } from "svelte-feather-icons";
-    import { chatMessagesStore, chatInputFocusStore } from "../Stores/ChatStore";
+    import { chatInputFocusStore } from "../Stores/ChatStore";
+    import {MucRoom} from "../Xmpp/MucRoom";
 
-    export let mucRoom;
+    export let mucRoom: MucRoom;
 
-    export const handleForm = {
-        blur() {
-            inputElement.blur();
-        },
-    };
     let inputElement: HTMLElement;
     let newMessageText = "";
 

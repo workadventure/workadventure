@@ -2314,12 +2314,13 @@ ${escapedMessage}
     private bannedUser() {
         errorScreenStore.setError(
             ErrorScreenMessage.fromPartial({
-                type: 'error',
-                code: 'USER_BANNED',
-                title: 'BANNED',
-                subtitle: 'You were banned from WorkAdventure',
-                details: 'If you want more information, you may contact us at: hello@workadventu.re'
-            }));
+                type: "error",
+                code: "USER_BANNED",
+                title: "BANNED",
+                subtitle: "You were banned from WorkAdventure",
+                details: "If you want more information, you may contact us at: hello@workadventu.re",
+            })
+        );
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
         /*this.scene.start(ErrorSceneName, {

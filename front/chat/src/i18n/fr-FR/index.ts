@@ -27,6 +27,7 @@ const fr_FR: Translation = {
     },
     rankUp: "Promouvoir",
     rankDown: "Rétrograder",
+    reinit: "Ré initialiser",
     CONNECTING: "test"
 };
 

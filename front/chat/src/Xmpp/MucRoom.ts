@@ -6,11 +6,8 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import {localUserStore, userStore} from "../Stores/LocalUserStore";
-import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import {userStore} from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
-import LL from "../i18n/i18n-svelte";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -40,6 +37,7 @@ export type Message = {
     name: string;
     time: Date;
 };
+export type MessagesList = Message[];
 export type MessagesStore = Readable<Message[]>;
 
 export type Me = {
@@ -62,7 +60,7 @@ export class MucRoom {
         private connection: ChatConnection,
         public readonly name: string,
         private roomJid: JID,
-        private type: string,
+        public type: string,
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
@@ -344,6 +342,13 @@ export class MucRoom {
                 }
 
                 handledMessage = true;
+            } else {
+                if(this.type === 'live' && type === 'unavailable'){
+                    this.reset();
+
+                    setTimeout(() => this.connect(), 500);
+                    handledMessage = true;
+                }
             }
         }
         // Manage registered subscriptions old and new one
@@ -507,6 +512,12 @@ export class MucRoom {
 
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });
+    }
+
+    public reset(): void {
+        this.presenceStore.set(new Map<string, User>());
+        this.messageStore.set([]);
+        this.meStore.set({isAdmin: false});
     }
 
     private static encode(name: string | null | undefined) {

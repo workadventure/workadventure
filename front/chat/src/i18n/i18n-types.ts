@@ -29,11 +29,11 @@ type RootTranslation = {
 		 */
 		disconnected: string
 		/**
-		 * Is on thi map !
+		 * Is on this map !
 		 */
 		isHere: string
 		/**
-		 * Is on another map !
+		 * Is on an another map !
 		 */
 		isOverThere: string
 		/**
@@ -105,6 +105,10 @@ type RootTranslation = {
 	 */
 	rankDown: string
 	/**
+	 * Re initialize
+	 */
+	reinit: string
+	/**
 	 * test
 	 */
 	CONNECTING: string
@@ -125,11 +129,11 @@ export type TranslationFunctions = {
 		 */
 		disconnected: () => LocalizedString
 		/**
-		 * Is on thi map !
+		 * Is on this map !
 		 */
 		isHere: () => LocalizedString
 		/**
-		 * Is on another map !
+		 * Is on an another map !
 		 */
 		isOverThere: () => LocalizedString
 		/**
@@ -199,6 +203,10 @@ export type TranslationFunctions = {
 	 * Retrograde
 	 */
 	rankDown: () => LocalizedString
+	/**
+	 * Re initialize
+	 */
+	reinit: () => LocalizedString
 	/**
 	 * test
 	 */

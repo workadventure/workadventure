@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { fly } from "svelte/transition";
     import {ChevronUpIcon} from "svelte-feather-icons";
     import ChatLiveRoom from "./ChatLiveRoom.svelte";
@@ -6,10 +6,10 @@
     import {MucRoom} from "../Xmpp/MucRoom";
     const dispatch = createEventDispatcher();
 
-    export let liveRooms;
-    export let showLives;
+    export let liveRooms: MucRoom[];
+    export let showLives: Boolean;
 
-    function open(liveRoom){
+    function open(liveRoom: MucRoom){
         dispatch("activeThread", liveRoom);
 	}
 </script>
@@ -33,7 +33,7 @@
 		{#if showLives}
 			<div transition:fly={{ y: -30, duration: 100 }}>
 				{#each liveRooms as liveRoom}
-					<ChatLiveRoom {liveRoom} usersListStore={liveRoom.getPresenceStore()} {open}/>
+					<ChatLiveRoom {liveRoom} meStore={liveRoom.getMeStore()} usersListStore={liveRoom.getPresenceStore()} {open}/>
 				{/each}
 			</div>
 		{/if}

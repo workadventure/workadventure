@@ -5,7 +5,7 @@
     export let messagesStore: MessagesStore;
     export let mucRoom: MucRoom;
 
-    let lastDate = null;
+    let lastDate: Date;
 
     function needHideHeader(name: string, date: Date, i: number) {
         let previousMsg = $messagesStore[i - 1];
@@ -16,7 +16,7 @@
         return previousMsg.name === name && minutesBetween < 2;
     }
     function showDate(date: Date){
-        if(lastDate === null){
+        if(!lastDate){
             lastDate = date;
             return true;
 		} else {
@@ -31,7 +31,7 @@
 <div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto">
 	{#each $messagesStore as message, i}
 		{#if showDate(message.time)}
-			<div class="wa-separator">{message.time.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+			<div class="wa-separator">{message.time.toLocaleDateString($locale, { year: 'numeric', month: 'short', day: 'numeric' })}</div>
 		{/if}
 		<div class={`${needHideHeader(message.name, message.time, i) ? 'tw-mt-1':'tw-mt-2'}`}>
 			<div class={`tw-flex ${isMe(message.name) ? "tw-justify-end" : "tw-justify-start"}`}>
@@ -43,7 +43,7 @@
 				<div class={`tw-w-3/4`}>
 					<div style={`border-bottom-color:${mucRoom.getUserDataByName(message.name).color}`} class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${needHideHeader(message.name, message.time, i)?'tw-hidden':''}`}>
 						<span class="tw-text-lighter-purple">{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span>
-						<span>{message.time.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+						<span>{message.time.toLocaleTimeString($locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
 					</div>
 					<div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2`}>
 						<p class="tw-mb-0">{message.body}</p>

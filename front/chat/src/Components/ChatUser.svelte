@@ -4,10 +4,11 @@
     import LL from "../i18n/i18n-svelte";
     import {createEventDispatcher} from "svelte";
     import {MeStore, User} from "../Xmpp/MucRoom";
-    const dispatch = createEventDispatcher();
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
+    import {GoTo, RankUp, RankDown, Ban} from "../Type/CustomEvent";
 
+    const dispatch = createEventDispatcher<{ goTo: GoTo, rankUp: RankUp, rankDown: RankDown, ban: Ban }>();
 
     export let user: User;
     export let openChat: Function;
@@ -22,8 +23,8 @@
     let closeChatUserMenu = () => {
         chatMenuActive = false;
     };
-    function goTo(type: string, roomId: string, uuid: string) {
-        dispatch("goTo", { type, roomId, uuid });
+    function goTo(type: string, playUri: string, uuid: string) {
+        dispatch("goTo", {type, playUri, uuid});
     }
     function rankUp(jid: string) {
         dispatch("rankUp", { jid });

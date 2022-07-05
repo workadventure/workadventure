@@ -19,8 +19,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
-import {gameManager} from "./GameManager";
-import {urlManager} from "../../Url/UrlManager";
+import { urlManager } from "../../Url/UrlManager";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -236,7 +235,7 @@ export class GameMapPropertiesListener {
                 iframeListener.sendLeaveMucEvent(playUri + oldValue);
             }
             if (newValue !== undefined) {
-                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(),"live");
+                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live");
             }
         });
 
@@ -481,6 +480,4 @@ export class GameMapPropertiesListener {
             this.scene.getCameraManager().leaveFocusMode(this.scene.CurrentPlayer, 1000);
         }
     }
-
-
 }

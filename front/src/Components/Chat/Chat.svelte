@@ -9,8 +9,9 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
-    import {AdminMessageEventTypes, adminMessagesService} from "../../Connexion/AdminMessagesService";
-    import {menuIconVisiblilityStore} from "../../Stores/MenuStore";
+    import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
+    import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+    import { Subscription } from "rxjs";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -30,7 +31,7 @@
     const playUri = document.location.toString().split("#")[0].toString();
     const name = localUserStore.getName();
 
-    let messageStream = null;
+    let messageStream: Subscription;
 
     onMount(() => {
         iframeListener.registerIframe(chatIframe);
@@ -98,7 +99,7 @@
             })
         );
         messageStream = adminMessagesService.messageStream.subscribe((message) => {
-            if(message.type === AdminMessageEventTypes.banned){
+            if (message.type === AdminMessageEventTypes.banned) {
                 chatIframe.remove();
             }
             chatVisibilityStore.set(false);

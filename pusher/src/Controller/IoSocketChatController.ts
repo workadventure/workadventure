@@ -4,7 +4,7 @@ import {
     BatchMessage,
     XmppMessage,
     IframeToPusherMessage,
-    BanUserByUuidMessage
+    BanUserByUuidMessage, JoinMucRoomMessage
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
@@ -309,7 +309,6 @@ export class IoSocketChatController {
                         client,
                         message.getBanuserbyuuidmessage() as BanUserByUuidMessage
                     );
-                    //socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 }
                 /* Ok is false if backpressure was built up, wait for drain */
                 //let ok = ws.send(message, isBinary);

@@ -623,7 +623,7 @@ class IframeListener {
             data: {
                 url,
                 name,
-                type
+                type,
             },
         });
     }

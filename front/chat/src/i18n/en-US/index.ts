@@ -6,8 +6,8 @@ const en_US: BaseTranslation = {
     users: 'Users',
     userList: {
         disconnected: "Disconnected",
-        isHere: "Is on thi map !",
-        isOverThere: "Is on another map !",
+        isHere: "Is on this map !",
+        isOverThere: "Is on an another map !",
         teleport: "Teleport",
         search: "Just look it up!",
         walkTo: "Walk to",
@@ -27,6 +27,7 @@ const en_US: BaseTranslation = {
     },
     rankUp: "Promote",
     rankDown: "Retrograde",
+    reinit: "Re initialize",
     CONNECTING: "test"
 };
 

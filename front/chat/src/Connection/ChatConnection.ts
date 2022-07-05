@@ -7,7 +7,7 @@ import {
     PusherToIframeMessage,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    ClientToServerMessage as ClientToServerMessageTsProto, IframeToPusherMessage
+    IframeToPusherMessage, MucRoomDefinitionMessage
 } from "../Messages/ts-proto-generated/protos/messages";
 import {XmppClient} from "../Xmpp/XmppClient";
 import {Parser} from "@xmpp/xml";

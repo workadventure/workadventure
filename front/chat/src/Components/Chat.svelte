@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import ChatMessageForm from "./ChatMessageForm.svelte";
+    //import { fly } from "svelte/transition";
+    //import ChatMessageForm from "./ChatMessageForm.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
+    //import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
     //import ChatForum from "./ChatForum.svelte";
     import {connectionStore} from "../Stores/ConnectionStore";
     //import LL from "../i18n/i18n-svelte";
@@ -17,8 +17,9 @@
     import {locale} from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
-    import {get} from "svelte/store";
+    //import {get} from "svelte/store";
     import ChatActiveThread from "./ChatActiveThread.svelte";
+    import {GoTo} from "../Type/CustomEvent";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -48,128 +49,6 @@
         },
     ];
      */
-
-    let threadList = [
-        // newest first
-        {
-            type: "message",
-            user_id: 3,
-            user_color: "#04F17A",
-            user_name: "Grégoire",
-            user_avatar: "yoda2-avatar.png",
-            time: "2 min ago",
-            text: "Check that",
-        },
-        {
-            type: "attachment",
-            user_id: 3,
-            user_color: "#04F17A",
-            user_name: "Grégoire",
-            user_avatar: "yoda2-avatar.png",
-            info: "a rejoint conversation",
-        },
-
-        {
-            type: "message",
-            user_id: 3,
-            user_color: "#04F17A",
-            user_name: "Grégoire",
-            user_avatar: "yoda2-avatar.png",
-            time: "2 min ago",
-            text: "Etiam rutrum, velit et auctor iaculis, massa leo luctus tellus, sit amet bibendum arcu augue in odio. ",
-        },
-        {
-            type: "event",
-            user_id: 3,
-            user_color: "#04F17A",
-            user_name: "Grégoire",
-            info: "a rejoint conversation",
-        },
-        {
-            type: "message",
-            user_name: "Me",
-            user_id: 1,
-            user_color: "#FF475a",
-            time: "2 min ago",
-            me: true,
-            text: "My last message",
-        },
-        {
-            type: "message",
-            user_name: "Me",
-            user_id: 1,
-            user_color: "#FF475a",
-            time: "2 min ago",
-            me: true,
-            text: "Donec varius lacus sit amet finibus pharetra.",
-        },
-        {
-            type: "message",
-            user_id: 2,
-            user_name: "Bernadette",
-            user_avatar: "yoda-avatar.png",
-            user_color: "#365DFF",
-            time: "2 min ago",
-            text: "Another message",
-        },
-        {
-            type: "message",
-            user_id: 2,
-            user_name: "Bernadette",
-            user_avatar: "yoda-avatar.png",
-            user_color: "#365DFF",
-            time: "2 min ago",
-            text: "Aliquam sollicitudin massa non massa gravida, id bibendum nulla feugiat. Etiam rutrum, velit et auctor iaculis, massa leo luctus tellus, sit amet bibendum arcu",
-        },
-        {
-            type: "message",
-            user_id: 2,
-            user_name: "Bernadette",
-            user_avatar: "yoda-avatar.png",
-            user_color: "#365DFF",
-            time: "2 min ago",
-            text: "Nam tempus turpis et nulla luctus posuere. Nam lobortis, libero sed varius pellentesque, tellus mauris mollis eros, eget pretium quam nulla sit amet quam",
-        },
-        {
-            type: "message",
-            user_name: "Me",
-            user_id: 1,
-            user_color: "#FF475a",
-            time: "4 min ago",
-            me: true,
-            text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam convallis, dolor vitae tempor porta, dui nisl volutpat ligula",
-        },
-        {
-            type: "message",
-            user_id: 2,
-            user_color: "#365DFF",
-            user_name: "Bernadette",
-            user_avatar: "yoda-avatar.png",
-            time: "9 min ago",
-            text: "Nam lacinia, leo eleifend aliquet varius, lorem massa gravida nunc, vel tempus dui diam eu nisl.  ",
-        },
-        {
-            type: "message",
-            user_name: "Bernadette",
-            user_avatar: "yoda-avatar.png",
-            user_color: "#365DFF",
-            user_id: 2,
-            time: "10 min ago",
-            text: "Nunc eget congue arcu. ",
-        },
-    ];
-
-    let threadListUserTyping: {
-        user_id: number;
-        user_name: string;
-        user_avatar: string;
-        user_color: string;
-    } = {
-        user_id: 3,
-        user_name: "Grégoire",
-        user_avatar: "yoda2-avatar.png",
-        user_color: "#04F17A",
-    };
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -212,21 +91,16 @@
         }
     }
 
-    function lastMessageIsFromSameUser(userID: number, i: number) {
-        // since thread displays in reverse
-        let nextMsg = threadList[i + 1];
-        if (!nextMsg) {
-            return false;
-        }
-        return nextMsg.type !== "event" && nextMsg.user_id === userID;
-    }
-
     const defaultRoom = (): MucRoom => {
         const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.type === 'default');
         if(!defaultMucRoom){
             throw new Error('No default MucRoom');
         }
         return defaultMucRoom;
+    }
+
+    function handleGoTo(mucRoom: MucRoom, event: GoTo){
+        mucRoom.goTo(event.type, event.playUri, event.type);
     }
 
     console.info("Chat fully loaded");
@@ -239,12 +113,13 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if $activeThreadStore}
+            {#if $activeThreadStore !== undefined}
                 <ChatActiveThread
                         messagesStore={$activeThreadStore.getMessagesStore()}
                         usersListStore={$activeThreadStore.getPresenceStore()}
+                        meStore={$activeThreadStore.getMeStore()}
                         activeThread={$activeThreadStore}
-                        on:goTo={(event) => $activeThreadStore.goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                        on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
                         on:rankUp={(event) => $activeThreadStore.rankUp(event.detail.jid)}
                         on:rankDown={(event) => $activeThreadStore.rankDown(event.detail.jid)}
                         on:ban={(event) => $activeThreadStore.ban(event.detail.user, event.detail.name, event.detail.playUri)}

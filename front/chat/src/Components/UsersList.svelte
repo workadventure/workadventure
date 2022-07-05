@@ -1,11 +1,13 @@
 <script lang="ts">
-    import {MeStore, UsersStore} from "../Xmpp/MucRoom";
+    import {MeStore, User, UsersStore} from "../Xmpp/MucRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from 'svelte';
     import {ChevronUpIcon} from "svelte-feather-icons";
     import { fly } from "svelte/transition";
     import LL from "../i18n/i18n-svelte";
-    const dispatch = createEventDispatcher();
+    import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
+    const dispatch = createEventDispatcher<{ goTo: GoTo, rankUp: RankUp, rankDown: RankDown, ban: Ban, showUsers: undefined }>();
+
 
     export let usersListStore: UsersStore;
     export let meStore: MeStore;
@@ -15,7 +17,7 @@
     let minimizeUser = true;
     const maxUsersMinimized = 7;
 
-    function openChat(user: any) {
+    function openChat(user: User) {
         return user;
         //dispatch('activeThread', user);
     }
@@ -55,7 +57,8 @@
 								on:rankDown={(event) => dispatch('rankDown', event.detail)}
 								on:ban={(event) => dispatch('ban', event.detail)}
 								{searchValue}
-								{meStore}/>
+								{meStore}
+						/>
 					{/each}
 				{/if}
 				{#if [...$usersListStore].length > maxUsersMinimized}

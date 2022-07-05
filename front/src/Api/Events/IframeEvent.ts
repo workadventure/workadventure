@@ -41,8 +41,8 @@ import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isAskPositionEvent } from "./AskPositionEvent";
-import {isLeaveMucEvent} from "./LeaveMucEvent";
-import {isJoinMucEvent} from "./JoinMucEvent";
+import { isLeaveMucEvent } from "./LeaveMucEvent";
+import { isJoinMucEvent } from "./JoinMucEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -250,12 +250,12 @@ export const isIframeResponseEvent = z.union([
     }),
     z.object({
         type: z.literal("leaveMuc"),
-        data: isLeaveMucEvent
+        data: isLeaveMucEvent,
     }),
     z.object({
         type: z.literal("joinMuc"),
-        data: isJoinMucEvent
-    })
+        data: isJoinMucEvent,
+    }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 
