@@ -2262,7 +2262,6 @@ ${escapedMessage}
             character.setApiOutlineColor(message.details?.outlineColor);
         }
         if (message.details?.showVoiceIndicator !== undefined) {
-            console.log(`${message.userId}: ${message.details?.showVoiceIndicator}`);
             character.showTalkIcon(message.details?.showVoiceIndicator, !message.details?.showVoiceIndicator);
         }
         if (message.details?.availabilityStatus !== undefined) {
