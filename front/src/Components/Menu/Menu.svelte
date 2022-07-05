@@ -16,6 +16,7 @@
         menuVisiblilityStore,
         SubMenusInterface,
         subMenusStore,
+        TranslatedMenu,
     } from "../../Stores/MenuStore";
     import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";
@@ -28,8 +29,14 @@
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
+    let unsubscriberActiveSubMenuStore: Unsubscriber;
 
     onMount(async () => {
+        unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
+            if ($subMenusStore.length >= value - 1) {
+                void switchMenu($subMenusStore[value]);
+            }
+        });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
                 void switchMenu($subMenusStore[$activeSubMenuStore]);
@@ -45,41 +52,46 @@
         if (unsubscriberSubMenuStore) {
             unsubscriberSubMenuStore();
         }
+        if (unsubscriberActiveSubMenuStore) {
+            unsubscriberActiveSubMenuStore();
+        }
     });
 
     async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
+            const indexMenuSearch = $subMenusStore.findIndex(
+                (menuSearch) => (menuSearch as TranslatedMenu).key === menu.key
+            );
+            if (indexMenuSearch === -1) {
+                console.error(`Sub menu was not founded for key: ${menu.key} in the array: `, $activeSubMenuStore);
+                return;
+            }
+            activeSubMenuStore.set(indexMenuSearch);
             switch (menu.key) {
-                case SubMenusInterface.settings:
-                    activeSubMenuStore.set(0);
-                    analyticsClient.menuSetting();
-                    activeComponent = SettingsSubMenu;
-                    break;
                 case SubMenusInterface.profile:
-                    activeSubMenuStore.set(1);
-                    analyticsClient.menuProfile();
                     activeComponent = ProfileSubMenu;
+                    analyticsClient.menuProfile();
+                    break;
+                case SubMenusInterface.settings:
+                    activeComponent = SettingsSubMenu;
+                    analyticsClient.menuSetting();
                     break;
                 case SubMenusInterface.invite:
-                    activeSubMenuStore.set(2);
-                    analyticsClient.menuInvite();
                     activeComponent = GuestSubMenu;
+                    analyticsClient.menuInvite();
                     break;
                 case SubMenusInterface.aboutRoom:
-                    activeSubMenuStore.set(3);
-                    analyticsClient.menuCredit();
                     activeComponent = AboutRoomSubMenu;
-                    break;
-                case SubMenusInterface.globalMessages:
-                    activeSubMenuStore.set(4);
-                    analyticsClient.globalMessage();
-                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
+                    analyticsClient.menuCredit();
                     break;
                 case SubMenusInterface.contact:
-                    activeSubMenuStore.set(5);
-                    analyticsClient.menuContact();
                     activeComponent = ContactSubMenu;
+                    analyticsClient.menuContact();
+                    break;
+                case SubMenusInterface.globalMessages:
+                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
+                    analyticsClient.globalMessage();
                     break;
             }
         } else {

@@ -7,7 +7,7 @@
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
-    import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+    import {  menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import CameraControls from "./CameraControls.svelte";
@@ -15,7 +15,6 @@
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
-    import MenuIcon from "./Menu/MenuIcon.svelte";
     import MyCamera from "./MyCamera.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
@@ -62,10 +61,6 @@
 <!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
     <aside id="main-layout-left-aside">
-        {#if $menuIconVisiblilityStore}
-            <MenuIcon />
-        {/if}
-
         {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
         {/if}
@@ -134,8 +129,6 @@
             />
         {/if}
 
-        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
-
         {#if hasEmbedScreen}
             <EmbedScreensContainer />
         {/if}
@@ -161,6 +154,8 @@
 
         <!-- audio when user have a message TODO delete it with new chat -->
         <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
+
+        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
     </section>
 </div>
 

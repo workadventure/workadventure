@@ -18,7 +18,12 @@ import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+import {
+    inviteUserActivated,
+    menuIconVisiblilityStore,
+    menuVisiblilityStore,
+    warningContainerStore,
+} from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -412,6 +417,12 @@ export class RoomConnection implements RoomConnection {
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
+                    //define if there is invite user option activated
+                    inviteUserActivated.set(
+                        roomJoinedMessage.activatedInviteUser != undefined
+                            ? roomJoinedMessage.activatedInviteUser
+                            : true
+                    );
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
                     if (

@@ -9,6 +9,8 @@ const menu: BaseTranslation = {
             register: "Registro",
             chat: "Abrir bate-papo",
             userlist: "Lista de usuários",
+            openEmoji: "Open emoji selected popup",
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {
