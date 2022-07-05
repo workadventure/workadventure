@@ -421,7 +421,7 @@ export class GameMap {
     }
 
     public getArea(name: string): ITiledMapRectangleObject | undefined {
-        return this.areas.find((area) => (area.name === name));
+        return this.areas.find((area) => area.name === name);
     }
 
     public getAreas(): ITiledMapObject[] {
