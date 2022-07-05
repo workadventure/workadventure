@@ -92,7 +92,12 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
+import {
+    availabilityStatusStore,
+    denyProximityMeetingStore,
+    localVolumeStore,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
@@ -104,7 +109,11 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PlayerDetailsUpdatedMessage,
+} from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import {
@@ -194,6 +203,7 @@ export class GameScene extends DirtyScene {
     private highlightedEmbedScreenUnsubscriber!: Unsubscriber;
     private embedScreenLayoutStoreUnsubscriber!: Unsubscriber;
     private availabilityStatusStoreUnsubscriber!: Unsubscriber;
+    private requestedMicrophoneStateUnsubscriber!: Unsubscriber;
 
     MapUrlFile: string;
     roomUrl: string;
@@ -909,7 +919,8 @@ export class GameScene extends DirtyScene {
             this.emoteUnsubscriber != undefined ||
             this.emoteMenuUnsubscriber != undefined ||
             this.followUsersColorStoreUnsubscriber != undefined ||
-            this.peerStoreUnsubscriber != undefined
+            this.peerStoreUnsubscriber != undefined ||
+            this.requestedMicrophoneStateUnsubscriber != undefined
         ) {
             console.error(
                 "subscribeToStores => Check all subscriber undefined ",
@@ -919,7 +930,8 @@ export class GameScene extends DirtyScene {
                 this.emoteUnsubscriber,
                 this.emoteMenuUnsubscriber,
                 this.followUsersColorStoreUnsubscriber,
-                this.peerStoreUnsubscriber
+                this.peerStoreUnsubscriber,
+                this.requestedMicrophoneStateUnsubscriber
             );
 
             throw new Error("One store is already subscribed.");
@@ -940,6 +952,9 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+            if (availabilityStatus === AvailabilityStatus.SILENT) {
+                this.CurrentPlayer.showTalkIcon(false, true);
+            }
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -955,6 +970,12 @@ export class GameScene extends DirtyScene {
                 this.userInputManager.disableControls();
             } else {
                 this.userInputManager.restoreControls();
+            }
+        });
+
+        this.requestedMicrophoneStateUnsubscriber = requestedMicrophoneState.subscribe((microphoneOn: boolean) => {
+            if (!microphoneOn) {
+                this.CurrentPlayer.showTalkIcon(false, true);
             }
         });
 
@@ -1686,6 +1707,7 @@ ${escapedMessage}
         this.peerStoreUnsubscriber?.();
         this.emoteUnsubscriber?.();
         this.emoteMenuUnsubscriber?.();
+        this.requestedMicrophoneStateUnsubscriber?.();
         this.followUsersColorStoreUnsubscriber?.();
         this.highlightedEmbedScreenUnsubscriber?.();
         this.embedScreenLayoutStoreUnsubscriber?.();
@@ -2121,7 +2143,9 @@ ${escapedMessage}
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
-        this.CurrentPlayer.showTalkIcon(show);
+        if (get(requestedMicrophoneState)) {
+            this.CurrentPlayer.showTalkIcon(show);
+        }
         if (this.showVoiceIndicatorChangeMessageSent && !show) {
             this.connection?.emitPlayerShowVoiceIndicator(false);
             this.showVoiceIndicatorChangeMessageSent = false;
@@ -2238,7 +2262,8 @@ ${escapedMessage}
             character.setApiOutlineColor(message.details?.outlineColor);
         }
         if (message.details?.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.details?.showVoiceIndicator);
+            console.log(`${message.userId}: ${message.details?.showVoiceIndicator}`);
+            character.showTalkIcon(message.details?.showVoiceIndicator, !message.details?.showVoiceIndicator);
         }
         if (message.details?.availabilityStatus !== undefined) {
             character.setAvailabilityStatus(message.details?.availabilityStatus);
