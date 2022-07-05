@@ -163,7 +163,10 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
-            joinRoomMessage.getCompanion()
+            joinRoomMessage.getCompanion(),
+            undefined,
+            undefined,
+            joinRoomMessage.getActivatedinviteuser()
         );
         this.nextUserId++;
         this.users.set(user.id, user);

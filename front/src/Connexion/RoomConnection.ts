@@ -103,7 +103,6 @@ export class RoomConnection implements RoomConnection {
     private closed: boolean = false;
     private tags: string[] = [];
     private _userRoomToken: string | undefined;
-    private activatedInviteUser: string | undefined;
 
     private readonly _errorMessageStream = new Subject<ErrorMessageTsProto>();
     public readonly errorMessageStream = this._errorMessageStream.asObservable();
