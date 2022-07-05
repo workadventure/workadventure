@@ -82,7 +82,7 @@
             alt="Muted"
         />
     {/if}
-    <button class="report" on:click={() => openReport(peer)}>
+    <button class="report" on:click|stopPropagation={() => openReport(peer)}>
         <img alt="Report this user" draggable="false" on:dragstart|preventDefault={noDrag} src={reportImg} />
         <span class="noselect">Report/Block</span>
     </button>

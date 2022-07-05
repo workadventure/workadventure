@@ -21,7 +21,7 @@ Each object will represent a variable.
 </div>
 
 The name of the variable is the name of the object.
-The object **type** MUST be **variable**.
+The object **class** MUST be **variable**.
 
 You can set a default value for the object in the `default` property.
 

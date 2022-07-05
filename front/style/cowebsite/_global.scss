@@ -47,6 +47,10 @@
       flex: 1;
       justify-content: start;
 
+      img {
+        min-width: 1rem;
+      }
+
       #cowebsite-swipe {
         display: none;
         img {
@@ -117,6 +121,7 @@
     .highlighted {
       pointer-events: all !important;
       padding: 4px;
+      z-index: 149 !important;
     }
 
     .thumbnail {

@@ -6,7 +6,6 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import type { ITiledMapProperty } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
@@ -19,6 +18,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
+import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -89,13 +89,6 @@ export class GameMapPropertiesListener {
                     const roomName = jitsiFactory.getRoomName(newValue.toString(), this.scene.roomUrl, addPrefix);
                     const jitsiUrl = allProps.get(GameMapProperties.JITSI_URL) as string | undefined;
 
-                    const closable =
-                        (allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined) ?? true;
-
-                    console.log("closable: " + closable);
-
-                    this.scene.setJitsiClosable(closable);
-
                     let jwt: string | undefined;
                     if (JITSI_PRIVATE_MODE && !jitsiUrl) {
                         jwt = await this.scene.connection?.queryJitsiJwtToken(roomName);
@@ -109,6 +102,10 @@ export class GameMapPropertiesListener {
                     if (domain.substring(0, 7) !== "http://" && domain.substring(0, 8) !== "https://") {
                         domain = `${location.protocol}//${domain}`;
                     }
+
+                    inJitsiStore.set(true);
+
+                    const closable = allProps.get(GameMapProperties.OPEN_WEBSITE_CLOSABLE) as boolean | undefined;
 
                     const coWebsite = new JitsiCoWebsite(new URL(domain), false, undefined, undefined, closable);
 
@@ -336,7 +333,7 @@ export class GameMapPropertiesListener {
                 allowApiProperty,
                 websitePolicyProperty,
                 websiteWidthProperty,
-                websiteClosableProperty ?? true
+                websiteClosableProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;
