@@ -423,7 +423,7 @@ export class GameMap {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
-    public getArea(name: string): ITiledMapObject | undefined {
+    public getArea(name: string): ITiledMapRectangleObject | undefined {
         return this.areas.get(name);
     }
 
