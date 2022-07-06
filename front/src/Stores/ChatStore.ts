@@ -136,7 +136,7 @@ function createChatMessagesStore() {
 
                 //create message sound and text notification
                 mediaManager.playNewMessageNotification();
-                mediaManager.createNotification(author.name, NotificationType.discussion);
+                mediaManager.createNotification(author.name, NotificationType.message);
                 //end of writing message
                 writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
 
