@@ -52,10 +52,10 @@ export class AreaManager {
             this.gameMap.setArea(createAreaEvent.name, {
                 ...createAreaEvent,
                 id: -1,
-                gid: -1,
                 visible: true,
                 rotation: 0,
                 type: "area",
+                class: "area",
                 ellipse: false,
                 polygon: [],
                 polyline: [],
