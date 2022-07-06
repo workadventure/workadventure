@@ -150,6 +150,9 @@
             <MyCamera />
             <CameraControls />
         {/if}
+
+        <!-- audio when user have a message TODO delete it with new chat -->
+        <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
     </section>
 </div>
 

@@ -41,12 +41,12 @@
     function closeChat() {
         chatVisibilityStore.set(false);
     }
+
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
             closeChat();
         }
     }
-    console.info($xmppServerConnectionStatusStore, $mucRoomsStore);
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
@@ -164,8 +164,11 @@
 
             &.messageForm {
                 position: fixed;
-                bottom: 10px;
+                bottom: 0;
+                margin-top: 35px;
+                overflow-y: auto;
                 height: auto;
+                width: calc(30vw - 20px);
             }
         }
     }
