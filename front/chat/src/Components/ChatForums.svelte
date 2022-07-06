@@ -6,8 +6,8 @@
   import { MucRoom } from "../Xmpp/MucRoom";
   const dispatch = createEventDispatcher();
 
-  export let liveRooms: MucRoom[];
-  export let showLives: Boolean;
+  export let forums: MucRoom[];
+  export let showForums: Boolean;
   export let searchValue: string;
 
   function open(liveRoom: MucRoom) {
@@ -15,7 +15,7 @@
   }
 </script>
 
-{#if liveRooms.length > 0}
+{#if forums.length > 0}
   <div
     class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
     transition:fly={{ y: -30, duration: 100 }}
@@ -24,30 +24,28 @@
       <span
         class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
       >
-        {liveRooms.length}
+        {forums.length}
       </span>
-      <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-        Live zones
-      </p>
+      <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
       <button
         class="tw-text-lighter-purple"
-        on:click={() => dispatch("showLives")}
+        on:click={() => dispatch("showForums")}
       >
         <ChevronUpIcon
           class={`tw-transform tw-transition ${
-            showLives ? "" : "tw-rotate-180"
+            showForums ? "" : "tw-rotate-180"
           }`}
         />
       </button>
     </div>
-    {#if showLives}
+    {#if showForums}
       <div transition:fly={{ y: -30, duration: 100 }}>
-        {#each liveRooms as liveRoom}
+        {#each forums as forum}
           <ChatLineRoom
-            mucRoom={liveRoom}
+            mucRoom={forum}
             {searchValue}
-            meStore={liveRoom.getMeStore()}
-            usersListStore={liveRoom.getPresenceStore()}
+            meStore={forum.getMeStore()}
+            usersListStore={forum.getPresenceStore()}
             {open}
           />
         {/each}

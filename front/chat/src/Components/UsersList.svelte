@@ -1,76 +1,102 @@
 <script lang="ts">
-    import {MeStore, User, UsersStore} from "../Xmpp/MucRoom";
-    import ChatUser from "./ChatUser.svelte";
-    import { createEventDispatcher } from 'svelte';
-    import {ChevronUpIcon} from "svelte-feather-icons";
-    import { fly } from "svelte/transition";
-    import LL from "../i18n/i18n-svelte";
-    import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
-    const dispatch = createEventDispatcher<{ goTo: GoTo, rankUp: RankUp, rankDown: RankDown, ban: Ban, showUsers: undefined }>();
+  import { MeStore, User, UsersStore } from "../Xmpp/MucRoom";
+  import ChatUser from "./ChatUser.svelte";
+  import { createEventDispatcher } from "svelte";
+  import { ChevronUpIcon } from "svelte-feather-icons";
+  import { fly } from "svelte/transition";
+  import LL from "../i18n/i18n-svelte";
+  import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
+  const dispatch =
+    createEventDispatcher<{
+      goTo: GoTo;
+      rankUp: RankUp;
+      rankDown: RankDown;
+      ban: Ban;
+      showUsers: undefined;
+    }>();
 
+  export let usersListStore: UsersStore;
+  export let meStore: MeStore;
+  export let showUsers: boolean;
+  export let searchValue: string;
 
-    export let usersListStore: UsersStore;
-    export let meStore: MeStore;
-    export let showUsers: boolean;
-    export let searchValue: string;
+  let minimizeUser = true;
+  const maxUsersMinimized = 7;
 
-    let minimizeUser = true;
-    const maxUsersMinimized = 7;
-
-    function openChat(user: User) {
-        return user;
-        //dispatch('activeThread', user);
-    }
+  function openChat(user: User) {
+    return user;
+    //dispatch('activeThread', user);
+  }
 </script>
+
 <div>
-	<div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-		<div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-			<!--{#if usersListUnreads()}
+  <div
+    class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
+  >
+    <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+      <!--{#if usersListUnreads()}
                             <span
 									class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
 							>
                                 {usersListUnreads()}
                             </span>
 			{/if}-->
-			<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">{$LL.users()}</p>
-			<button class="tw-text-lighter-purple" on:click={() => dispatch('showUsers')}>
-				<ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
-			</button>
-		</div>
-		{#if showUsers}
-			<div transition:fly={{ y: -30, duration: 100 }}>
-				{#if [...$usersListStore].length === 0}
-					<p>This room is empty, copy this link to invite colleague or friend!</p>
-					<button type="button" class="nes-btn is-primary" on:click={null}>test</button>
-				{:else}
-					{#each [...$usersListStore]
-                        .sort(([, a],[, b]) => Number(b.active) - Number(a.active))
-						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
-						.filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue))
-							as [jid, user]}
-						<ChatUser
-								{openChat}
-								{user}
-								{jid}
-								on:goTo={(event) => dispatch('goTo', event.detail)}
-								on:rankUp={(event) => dispatch('rankUp', event.detail)}
-								on:rankDown={(event) => dispatch('rankDown', event.detail)}
-								on:ban={(event) => dispatch('ban', event.detail)}
-								{searchValue}
-								{meStore}
-						/>
-					{/each}
-				{/if}
-				{#if [...$usersListStore].length > maxUsersMinimized}
-					<div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end" on:click={() => minimizeUser = !minimizeUser}>
-						<button
-								class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-						>
-							See {minimizeUser?'more':'less'}…
-						</button>
-					</div>
-				{/if}
-			</div>
-		{/if}
-	</div>
+      <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+        {$LL.users()}
+      </p>
+      <button
+        class="tw-text-lighter-purple"
+        on:click={() => dispatch("showUsers")}
+      >
+        <ChevronUpIcon
+          class={`tw-transform tw-transition ${
+            showUsers ? "" : "tw-rotate-180"
+          }`}
+        />
+      </button>
+    </div>
+    {#if showUsers}
+      <div transition:fly={{ y: -30, duration: 100 }}>
+        {#if [...$usersListStore].length === 0}
+          <p>
+            This room is empty, copy this link to invite colleague or friend!
+          </p>
+          <button type="button" class="nes-btn is-primary" on:click={null}
+            >test</button
+          >
+        {:else}
+          {#each [...$usersListStore]
+            .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
+            .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
+            .filter(([, user]) => user.name
+                .toLocaleLowerCase()
+                .includes(searchValue)) as [jid, user]}
+            <ChatUser
+              {openChat}
+              {user}
+              {jid}
+              on:goTo={(event) => dispatch("goTo", event.detail)}
+              on:rankUp={(event) => dispatch("rankUp", event.detail)}
+              on:rankDown={(event) => dispatch("rankDown", event.detail)}
+              on:ban={(event) => dispatch("ban", event.detail)}
+              {searchValue}
+              {meStore}
+            />
+          {/each}
+        {/if}
+        {#if [...$usersListStore].length > maxUsersMinimized}
+          <div
+            class="tw-px-4 tw-mb-6  tw-flex tw-justify-end"
+            on:click={() => (minimizeUser = !minimizeUser)}
+          >
+            <button
+              class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
+            >
+              See {minimizeUser ? "more" : "less"}…
+            </button>
+          </div>
+        {/if}
+      </div>
+    {/if}
+  </div>
 </div>
