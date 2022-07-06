@@ -15,11 +15,22 @@ import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../i18n/locales";
 
+export enum NotificationType {
+    discussion = 1,
+    message,
+}
+
+//TODO add parameter to manage time to send notification
+const TIME_NOTIFYING_MILLISECOND = 10000;
+
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
 
     private userInputManager?: UserInputManager;
+
+    private canSendNotification = true;
+    private canPlayNotificationMessage = true;
 
     constructor() {
         localeDetector()
@@ -157,7 +168,7 @@ export class MediaManager {
     }
 
     public hasNotification(): boolean {
-        if (Notification.permission === "granted") {
+        if (this.canSendNotification && Notification.permission === "granted") {
             return localUserStore.getNotification() === "granted";
         } else {
             return false;
@@ -172,19 +183,43 @@ export class MediaManager {
         }
     }
 
-    public createNotification(userName: string) {
+    public createNotification(userName: string, notificationType: NotificationType) {
         if (document.hasFocus()) {
             return;
         }
 
         if (this.hasNotification()) {
-            const title = `${userName} wants to discuss with you`;
             const options = {
                 icon: "/resources/logos/logo-WA-min.png",
                 image: "/resources/logos/logo-WA-min.png",
                 badge: "/resources/logos/logo-WA-min.png",
             };
-            new Notification(title, options);
+            switch (notificationType) {
+                case NotificationType.discussion:
+                    new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
+                    break;
+                case NotificationType.message:
+                    new Notification(`${userName} ${get(LL).notification.message()}`, options);
+                    break;
+            }
+            this.canSendNotification = false;
+            setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
+        }
+    }
+
+    public playNewMessageNotification() {
+        //play notification message
+        const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
+        if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {
+            (elementAudioNewMessageNotification as HTMLAudioElement).volume = 0.5;
+            (elementAudioNewMessageNotification as HTMLAudioElement)
+                .play()
+                .then(() => {
+                    console.log("elementAudioNewMessageNotification => played");
+                    this.canPlayNotificationMessage = false;
+                    return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
+                })
+                .catch((err) => console.error("Trying to play notification message error: ", err));
         }
     }
 }

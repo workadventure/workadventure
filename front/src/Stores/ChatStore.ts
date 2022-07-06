@@ -3,6 +3,7 @@ import { playersStore } from "./PlayersStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { Subject } from "rxjs";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 
 export const chatVisibilityStore = writable(false);
 export const chatInputFocusStore = writable(false);
@@ -39,10 +40,10 @@ function getAuthor(authorId: number): PlayerInterface {
 }
 
 function createWritingStatusMessageStore() {
-    const { subscribe, update } = writable<Set<PlayerInterface>>();
+    const { subscribe, update } = writable<Set<PlayerInterface>>(new Set<PlayerInterface>());
     return {
         subscribe,
-        addWritingStatus(authorId: number, status: number) {
+        addWritingStatus(authorId: number, status: 5 | 6) {
             update((list) => {
                 if (status === ChatMessageTypes.userWriting) {
                     list.add(getAuthor(authorId));
@@ -51,7 +52,7 @@ function createWritingStatusMessageStore() {
                 }
                 return list;
             });
-        }
+        },
     };
 }
 export const writingStatusMessageStore = createWritingStatusMessageStore();
@@ -115,6 +116,7 @@ function createChatMessagesStore() {
          */
         addExternalMessage(authorId: number, text: string, origin?: Window) {
             update((list) => {
+                const author = getAuthor(authorId);
                 const lastMessage = list[list.length - 1];
                 if (
                     lastMessage &&
@@ -127,10 +129,16 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.text,
                         text: [text],
-                        author: getAuthor(authorId),
+                        author: author,
                         date: new Date(),
                     });
                 }
+
+                //create message sound and text notification
+                mediaManager.playNewMessageNotification();
+                mediaManager.createNotification(author.name, NotificationType.discussion);
+                //end of writing message
+                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
 
                 iframeListener.sendUserInputChat(text, origin);
                 return list;

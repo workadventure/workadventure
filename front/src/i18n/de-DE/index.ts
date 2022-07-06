@@ -14,6 +14,7 @@ import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
 import muc from "./muc";
+import notification from "./notification";
 
 const de_DE: Translation = {
     ...(en_US as Translation),
@@ -31,6 +32,7 @@ const de_DE: Translation = {
     emoji,
     trigger,
     muc,
+    notification,
 };
 
 export default de_DE;

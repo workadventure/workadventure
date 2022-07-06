@@ -4,7 +4,8 @@
         chatMessagesStore,
         chatInputFocusStore,
         writingStatusMessageStore,
-        ChatMessageTypes, _newChatMessageWritingStatusSubject
+        ChatMessageTypes,
+        _newChatMessageWritingStatusSubject,
     } from "../../Stores/ChatStore";
 
     export const handleForm = {
@@ -24,8 +25,13 @@
 
     function saveMessage() {
         if (!newMessageText) return;
+
+        //send message into the input
         chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
+
+        //send message to stop writing
+        _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
     }
     function writing() {
         if (newMessageText != undefined && newMessageText !== "") {
@@ -36,10 +42,10 @@
     }
 </script>
 
-{#if $writingStatusMessageStore.length > 0}
+{#if $writingStatusMessageStore.size > 0}
     <div class="writings">
-        {#each $writingStatusMessageStore as message}
-            <span class="writing">{message.author.name} {$LL.chat.typing()} </span>
+        {#each [...$writingStatusMessageStore] as author}
+            <span class="writing">{author.name} {$LL.chat.typing()} </span>
         {/each}
     </div>
 {/if}

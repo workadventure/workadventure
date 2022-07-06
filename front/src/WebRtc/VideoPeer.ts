@@ -217,7 +217,6 @@ export class VideoPeer extends Peer {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
                 }
             } else if (message.type === MESSAGE_TYPE_MESSAGE_STATUS) {
-                console.log('this.on("data") => MESSAGE_TYPE_MESSAGE_STATUS => message', message);
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     writingStatusMessageStore.addWritingStatus(this.userId, message.message);
                 }
