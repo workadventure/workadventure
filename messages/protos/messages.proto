@@ -122,6 +122,7 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
+    PingMessage pingMessage = 21;
   }
 }
 
@@ -217,6 +218,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
+    PingMessage pingMessage = 11;
   }
 }
 

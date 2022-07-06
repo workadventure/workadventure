@@ -39,7 +39,6 @@ import {
     ViewportMessage as ViewportMessageTsProto,
     PositionMessage_Direction,
     SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
     AvailabilityStatus,
     QueryMessage,
@@ -53,7 +52,8 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 
-const manualPingDelay = 20000;
+// Number of milliseconds after which we consider the server has timed out (if we did not receive a ping)
+const pingTimeout = 20000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -140,6 +140,9 @@ export class RoomConnection implements RoomConnection {
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
 
+    // If this timeout triggers, we consider the connection is lost (no ping received)
+    private timeout: ReturnType<typeof setInterval> | undefined = undefined;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
         RoomConnection.websocketFactory = websocketFactory;
@@ -200,17 +203,13 @@ export class RoomConnection implements RoomConnection {
 
         this.socket.binaryType = "arraybuffer";
 
-        let interval: ReturnType<typeof setInterval> | undefined = undefined;
-
         this.socket.onopen = () => {
-            //we manually ping every 20s to not be logged out by the server, even when the game is in background.
-            const pingMessage = PingMessageTsProto.encode({}).finish();
-            interval = setInterval(() => this.socket.send(pingMessage), manualPingDelay);
+            this.resetPingTimeout();
         };
 
         this.socket.addEventListener("close", (event) => {
-            if (interval) {
-                clearInterval(interval);
+            if (this.timeout) {
+                clearTimeout(this.timeout);
             }
 
             // If we are not connected yet (if a JoinRoomMessage was not sent), we need to retry.
@@ -305,6 +304,11 @@ export class RoomConnection implements RoomConnection {
                                 }
 
                                 this._variableMessageStream.next({ name, value });
+                                break;
+                            }
+                            case "pingMessage": {
+                                this.resetPingTimeout();
+                                this.sendPong();
                                 break;
                             }
                             default: {
@@ -529,6 +533,26 @@ export class RoomConnection implements RoomConnection {
         for (const listener of listeners) {
             listener(payload);
         }
+    }
+
+    private resetPingTimeout(): void {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+        this.timeout = setTimeout(() => {
+            console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
+            this.socket.close();
+        }, pingTimeout);
+    }
+
+    private sendPong(): void {
+        this.send({
+            message: {
+                $case: "pingMessage",
+                pingMessage: {},
+            },
+        });
     }
 
     /*public emitPlayerDetailsMessage(userName: string, characterLayersSelected: BodyResourceDescriptionInterface[]) {
