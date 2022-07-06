@@ -87,7 +87,7 @@ export class GameMap {
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
         this.tiledObjects
-            .filter((object) => ["zone", "area"].includes(object.type ?? ""))
+            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
             .forEach((area) => {
                 let name = area.name;
                 if (!name) {
@@ -292,9 +292,9 @@ export class GameMap {
         return this.flatLayers.find((layer) => layer.name === layerName);
     }
 
-    public findObject(objectName: string, objectType?: string): ITiledMapObject | undefined {
+    public findObject(objectName: string, objectClass?: string): ITiledMapObject | undefined {
         const object = this.getObjectWithName(objectName);
-        return !objectType ? object : objectType === object?.type ? object : undefined;
+        return !objectClass ? object : objectClass === object?.class ? object : undefined;
     }
 
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
