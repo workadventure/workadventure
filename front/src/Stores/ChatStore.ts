@@ -89,6 +89,9 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                //end of writing message
+                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
                 return list;
             });
         },

@@ -100,13 +100,16 @@
     div.writings {
         overflow: hidden;
         max-width: 100%;
-        padding-left: 10px;
+        padding: 5px;
 
         .writing {
             font-style: italic;
             font-size: 10px;
             opacity: 0.8;
             margin-left: 2px;
+            padding: 5px;
+            background-color: #254560;
+            border-radius: 4px;
         }
     }
 </style>
