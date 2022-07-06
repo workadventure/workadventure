@@ -114,7 +114,7 @@ export class MucManager {
                 }
             }
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
+            for (const innerLayer of layer.layers) {
                 this.recursiveFindChatZonesInLayer(innerLayer, objects);
             }
         }

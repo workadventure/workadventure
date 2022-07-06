@@ -43,7 +43,7 @@ import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
 import { MapLoadingError } from "../Services/MapLoadingError";
-import {MucManager} from "../Services/MucManager";
+import { MucManager } from "../Services/MucManager";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;

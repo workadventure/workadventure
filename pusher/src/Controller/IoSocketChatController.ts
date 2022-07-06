@@ -4,7 +4,7 @@ import {
     BatchMessage,
     XmppMessage,
     IframeToPusherMessage,
-    BanUserByUuidMessage
+    BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
 import { jwtTokenManager, tokenInvalidException } from "../Services/JWTTokenManager";
