@@ -399,17 +399,17 @@ export class GameScene extends DirtyScene {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (object.type) {
-                        if (!this.objectsByType.has(object.type)) {
+                    if (object.class) {
+                        if (!this.objectsByType.has(object.class)) {
                             objectsOfType = new Array<ITiledMapObject>();
                         } else {
-                            objectsOfType = this.objectsByType.get(object.type);
+                            objectsOfType = this.objectsByType.get(object.class);
                             if (objectsOfType === undefined) {
                                 throw new Error("Unexpected object type not found");
                             }
                         }
                         objectsOfType.push(object);
-                        this.objectsByType.set(object.type, objectsOfType);
+                        this.objectsByType.set(object.class, objectsOfType);
                     }
                 }
             }
@@ -534,7 +534,7 @@ export class GameScene extends DirtyScene {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
                     }
-                    if (object.type === "website") {
+                    if (object.class === "website") {
                         // Let's load iframes in the map
                         const url = PropertyUtils.mustFindStringProperty(
                             GameMapProperties.URL,
