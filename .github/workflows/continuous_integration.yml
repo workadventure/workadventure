@@ -39,7 +39,7 @@ jobs:
 
       - name: "Install chat dependencies"
         run: yarn install
-        working-directory: "chat"
+        working-directory: "front/chat"
 
       - name: "Build proto messages"
         run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
