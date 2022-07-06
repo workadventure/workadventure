@@ -6,7 +6,12 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
 import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
+import {
+    chatMessagesStore,
+    newChatMessageSubject,
+    newChatMessageWritingStatusSubject,
+    writingStatusMessageStore,
+} from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
@@ -17,6 +22,7 @@ export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 export const MESSAGE_TYPE_CONSTRAINT = "constraint";
 export const MESSAGE_TYPE_MESSAGE = "message";
+export const MESSAGE_TYPE_MESSAGE_STATUS = "message_status";
 export const MESSAGE_TYPE_BLOCKED = "blocked";
 export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 /**
@@ -37,6 +43,7 @@ export class VideoPeer extends Peer {
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
+    private newWritingStatusMessageSubscribtion: Subscription | undefined;
     private closing: Boolean = false; //this is used to prevent destroy() from being called twice
     private localStreamStoreSubscribe: Unsubscriber;
     private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
@@ -177,6 +184,18 @@ export class VideoPeer extends Peer {
                     )
                 );
             });
+
+            this.newWritingStatusMessageSubscribtion = newChatMessageWritingStatusSubject.subscribe((status) => {
+                if (status == undefined) return;
+                this.write(
+                    new Buffer(
+                        JSON.stringify({
+                            type: MESSAGE_TYPE_MESSAGE_STATUS,
+                            message: status,
+                        })
+                    )
+                );
+            });
         });
 
         this.on("data", (chunk: Buffer) => {
@@ -196,6 +215,11 @@ export class VideoPeer extends Peer {
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
+                }
+            } else if (message.type === MESSAGE_TYPE_MESSAGE_STATUS) {
+                console.log('this.on("data") => MESSAGE_TYPE_MESSAGE_STATUS => message', message);
+                if (!blackListManager.isBlackListed(this.userUuid)) {
+                    writingStatusMessageStore.addWritingStatus(this.userId, message.message);
                 }
             } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
@@ -299,6 +323,7 @@ export class VideoPeer extends Peer {
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscribtion?.unsubscribe();
+            this.newWritingStatusMessageSubscribtion?.unsubscribe();
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();

@@ -10,11 +10,16 @@ export const chatInputFocusStore = writable(false);
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
+const _newChatMessageWritingStatusSubject = new Subject<number>();
+export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
+
 export enum ChatMessageTypes {
     text = 1,
     me,
     userIncoming,
     userOutcoming,
+    userWriting,
+    userStopWriting,
 }
 
 export interface ChatMessage {
@@ -25,6 +30,11 @@ export interface ChatMessage {
     text?: string[];
 }
 
+export interface WritingMessage {
+    type: ChatMessageTypes;
+    author: PlayerInterface;
+}
+
 function getAuthor(authorId: number): PlayerInterface {
     const author = playersStore.getPlayerById(authorId);
     if (!author) {
@@ -32,6 +42,42 @@ function getAuthor(authorId: number): PlayerInterface {
     }
     return author;
 }
+
+function createWritingStatusMessageStore() {
+    const { subscribe, update } = writable<WritingMessage[]>([]);
+    return {
+        subscribe,
+        addWritingStatus(authorId: number, status: number) {
+            update((list) => {
+                if (status === ChatMessageTypes.userWriting) {
+                    const index = list.findIndex((message) => message.author.userId === authorId);
+                    if (index !== -1) {
+                        return list;
+                    }
+                    list.push({
+                        type: ChatMessageTypes.text,
+                        author: getAuthor(authorId),
+                    });
+                } else if (status === ChatMessageTypes.userStopWriting) {
+                    const index = list.findIndex((message) => message.author.userId === authorId);
+                    if (index === -1) {
+                        return list;
+                    }
+                    list.splice(index, 1);
+                }
+                return list;
+            });
+        },
+        sendWritingStatus(text: string | undefined | null) {
+            if (text != undefined && text !== "") {
+                _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
+            } else {
+                _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+            }
+        },
+    };
+}
+export const writingStatusMessageStore = createWritingStatusMessageStore();
 
 function createChatMessagesStore() {
     const { subscribe, update } = writable<ChatMessage[]>([]);
