@@ -25,7 +25,7 @@
     }
 
     function toggleMapEditorMode() {
-        mapEditorModeStore.set(!$mapEditorModeStore);
+        mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
 
     function register() {
@@ -88,6 +88,7 @@
         alt={$LL.menu.icon.open.chat()}
         class="nes-pointer"
         draggable="false"
+        hidden={!gameManager.getCurrentGameScene().isMapEditorEnabled()}
         on:dragstart|preventDefault={noDrag}
         on:click={toggleMapEditorMode}
     />

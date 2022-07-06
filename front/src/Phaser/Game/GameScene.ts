@@ -22,7 +22,7 @@ import { DynamicAreaManager } from "./DynamicAreaManager";
 import { lazyLoadPlayerCharacterTextures } from "../Entity/PlayerTexturesLoadingManager";
 import { lazyLoadCompanionResource } from "../Companion/CompanionTexturesLoadingManager";
 import { iframeListener } from "../../Api/IframeListener";
-import { DEBUG_MODE, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
+import { DEBUG_MODE, ENABLE_FEATURE_MAP_EDITOR, MAX_PER_GROUP, POSITION_DELAY } from "../../Enum/EnvironmentVariable";
 import { ProtobufClientUtils } from "../../Network/ProtobufClientUtils";
 import { Room } from "../../Connexion/Room";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
@@ -621,7 +621,9 @@ export class GameScene extends DirtyScene {
 
         biggestAvailableAreaStore.recompute();
         this.cameraManager.startFollowPlayer(this.CurrentPlayer);
-        this.mapEditorModeManager = new MapEditorModeManager(this);
+        if (ENABLE_FEATURE_MAP_EDITOR) {
+            this.mapEditorModeManager = new MapEditorModeManager(this);
+        }
 
         this.animatedTiles.init(this.Map);
         this.events.on("tileanimationupdate", () => (this.dirty = true));
@@ -747,7 +749,7 @@ export class GameScene extends DirtyScene {
                 playersStore.connectToRoomConnection(this.connection);
                 userIsAdminStore.set(this.connection.hasTag("admin"));
 
-                this.mapEditorModeManager.subscribeToStreams(this.connection);
+                this.mapEditorModeManager?.subscribeToStreams(this.connection);
 
                 this.connection.userJoinedMessageStream.subscribe((message) => {
                     const userMessage: AddPlayerInterface = {
@@ -1982,7 +1984,7 @@ ${escapedMessage}
     public update(time: number, delta: number): void {
         this.dirty = false;
         this.currentTick = time;
-        if (!this.mapEditorModeManager.isActive()) {
+        if (!this.mapEditorModeManager?.isActive()) {
             this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
         } else {
             this.cameraManager.move(this.userInputManager.getEventListForGameTick());
@@ -2431,5 +2433,9 @@ ${escapedMessage}
 
     public getActivatablesManager(): ActivatablesManager {
         return this.activatablesManager;
+    }
+
+    public isMapEditorEnabled() {
+        return ENABLE_FEATURE_MAP_EDITOR;
     }
 }

@@ -26,7 +26,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getMapEditorModeManager().isActive()) {
+        if (this.gameScene.getMapEditorModeManager()?.isActive()) {
             mapEditorModeDragCameraPointerDownStore.set(false);
             this.lastPointerDownPosition = undefined;
         }
@@ -64,15 +64,15 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerDownEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
-        if (this.gameScene.getMapEditorModeManager().isActive()) {
+        if (this.gameScene.getMapEditorModeManager()?.isActive()) {
             mapEditorModeDragCameraPointerDownStore.set(true);
         }
     }
 
     public handlePointerMoveEvent(pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]): void {
         if (
-            this.gameScene.getMapEditorModeManager().isActive() &&
-            this.gameScene.getMapEditorModeManager().isPointerDown()
+            this.gameScene.getMapEditorModeManager()?.isActive() &&
+            this.gameScene.getMapEditorModeManager()?.isPointerDown()
         ) {
             if (pointer.rightButtonDown() || pointer.wasTouch) {
                 if (this.lastPointerDownPosition) {
@@ -90,11 +90,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handleKeyDownEvent(event: KeyboardEvent): KeyboardEvent {
         if (get(mapEditorModeStore)) {
-            this.gameScene.getMapEditorModeManager().handleKeyDownEvent(event);
+            this.gameScene.getMapEditorModeManager()?.handleKeyDownEvent(event);
         }
         switch (event.code) {
             case "KeyE": {
-                mapEditorModeStore.set(!get(mapEditorModeStore));
+                mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
             default: {

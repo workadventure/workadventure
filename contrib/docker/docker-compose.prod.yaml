@@ -32,6 +32,7 @@ services:
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE
+      - ENABLE_FEATURE_MAP_EDITOR
       - PUSHER_URL=//${PUSHER_HOST}
       - ICON_URL=//${ICON_HOST}
       - TURN_SERVER
