@@ -62,7 +62,6 @@ import type {
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
-import type { ITiledMap, ITiledMapLayer, ITiledMapProperty, ITiledMapObject, ITiledTileSet } from "../Map/ITiledMap";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
 import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
@@ -87,7 +86,6 @@ import GameObject = Phaser.GameObjects.GameObject;
 import DOMElement = Phaser.GameObjects.DOMElement;
 import Tileset = Phaser.Tilemaps.Tileset;
 import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import { deepCopy } from "deep-copy-ts";
 import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
@@ -109,6 +107,14 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import structuredClone from "@ungap/structured-clone";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapProperty,
+    ITiledMapTileset,
+} from "@workadventure/tiled-map-type-guard";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -369,7 +375,15 @@ export class GameScene extends DirtyScene {
 
         // The map file can be modified by the scripting API and we don't want to tamper the Phaser cache (in case we come back on the map after visiting other maps)
         // So we are doing a deep copy
-        this.mapFile = deepCopy(data.data);
+        this.mapFile = structuredClone(data.data);
+
+        // Safe parse can take up to 600ms on a 17MB map.
+        // TODO: move safeParse to a "map" page and display details of what is going wrong there.
+        /*const parseResult = ITiledMap.safeParse(this.mapFile);
+        if (!parseResult.success) {
+            console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
+        }*/
+
         const url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
@@ -387,16 +401,18 @@ export class GameScene extends DirtyScene {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (!this.objectsByType.has(object.type)) {
-                        objectsOfType = new Array<ITiledMapObject>();
-                    } else {
-                        objectsOfType = this.objectsByType.get(object.type);
-                        if (objectsOfType === undefined) {
-                            throw new Error("Unexpected object type not found");
+                    if (object.type) {
+                        if (!this.objectsByType.has(object.type)) {
+                            objectsOfType = new Array<ITiledMapObject>();
+                        } else {
+                            objectsOfType = this.objectsByType.get(object.type);
+                            if (objectsOfType === undefined) {
+                                throw new Error("Unexpected object type not found");
+                            }
                         }
+                        objectsOfType.push(object);
+                        this.objectsByType.set(object.type, objectsOfType);
                     }
-                    objectsOfType.push(object);
-                    this.objectsByType.set(object.type, objectsOfType);
                 }
             }
         }
@@ -480,10 +496,9 @@ export class GameScene extends DirtyScene {
         this.characterLayers = gameManager.getCharacterLayers();
         this.companion = gameManager.getCompanion();
 
-        //initialise map
         this.Map = this.add.tilemap(this.MapUrlFile);
         const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
-        this.mapFile.tilesets.forEach((tileset: ITiledTileSet) => {
+        this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             this.Terrains.push(
                 this.Map.addTilesetImage(
                     tileset.name,
@@ -539,8 +554,8 @@ export class GameScene extends DirtyScene {
                             url,
                             object.x,
                             object.y,
-                            object.width,
-                            object.height,
+                            object.width ?? 0,
+                            object.height ?? 0,
                             object.visible,
                             allowApi ?? false,
                             policy ?? "",
@@ -586,7 +601,7 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMap.getCollisionGrid(),
+            this.gameMap.getCollisionGrid(undefined, false),
             this.gameMap.getTileDimensions()
         );
 
@@ -1419,7 +1434,7 @@ ${escapedMessage}
                 //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
                 let newFirstgid = 1;
                 const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
-                if (lastTileset) {
+                if (lastTileset && lastTileset.firstgid !== undefined && lastTileset.tilecount !== undefined) {
                     //If there is at least one tileset in the tilemap then calculate the firstgid of the new tileset
                     newFirstgid = lastTileset.firstgid + lastTileset.tilecount;
                 }
@@ -1569,9 +1584,11 @@ ${escapedMessage}
 
     private setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.gameMap.findPhaserLayer(layerName);
+        let collisionGrid: number[][] = [];
         if (phaserLayer != undefined) {
             phaserLayer.setVisible(visible);
             phaserLayer.setCollisionByProperty({ collides: true }, visible);
+            collisionGrid = this.gameMap.getCollisionGrid(phaserLayer);
         } else {
             const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
             if (phaserLayers.length === 0) {
@@ -1586,8 +1603,9 @@ ${escapedMessage}
                 phaserLayers[i].setVisible(visible);
                 phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
             }
+            collisionGrid = this.gameMap.getCollisionGrid(undefined, false);
         }
-        this.pathfindingManager.setCollisionGrid(this.gameMap.getCollisionGrid());
+        this.pathfindingManager.setCollisionGrid(collisionGrid);
         this.markDirty();
     }
 
@@ -1803,7 +1821,7 @@ ${escapedMessage}
         if (obj === undefined) {
             return undefined;
         }
-        return obj.value;
+        return obj.value as string | number | boolean | undefined;
     }
 
     private getProperties(layer: ITiledMapLayer | ITiledMap, name: string): (string | number | boolean | undefined)[] {
@@ -1813,7 +1831,7 @@ ${escapedMessage}
         }
         return properties
             .filter((property: ITiledMapProperty) => property.name.toLowerCase() === name.toLowerCase())
-            .map((property) => property.value);
+            .map((property) => property.value) as (string | number | boolean | undefined)[];
     }
 
     private loadNextGameFromExitUrl(exitUrl: string): Promise<void> {

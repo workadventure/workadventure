@@ -1,12 +1,12 @@
 <script lang="ts">
     import { mapEditorSelectedAreaPreviewStore } from "../../Stores/MapEditorStore";
     import { onDestroy } from "svelte";
-    import { ITiledMapObject } from "../../Phaser/Map/ITiledMap";
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
+    import { ITiledMapRectangleObject } from "../../Phaser/Game/GameMap";
 
     let areaPreview: AreaPreview | undefined;
-    let areaData: ITiledMapObject | undefined;
+    let areaData: ITiledMapRectangleObject | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {

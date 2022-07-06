@@ -1,6 +1,6 @@
+import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
-import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "../Map/ITiledMap";
 import type { GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
@@ -64,8 +64,8 @@ export class StartPositionCalculator {
             );
             // Let's start in the middle of the map
             this.startPosition = {
-                x: this.mapFile.width * 16,
-                y: this.mapFile.height * 16,
+                x: (this.mapFile.width ?? 0) * 16,
+                y: (this.mapFile.height ?? 0) * 16,
             };
         }
     }
@@ -111,8 +111,8 @@ export class StartPositionCalculator {
         if (foundLayer) {
             const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
             this.startPosition = {
-                x: startPosition.x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
-                y: startPosition.y * this.mapFile.tileheight + this.mapFile.tileheight / 2,
+                x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
             };
             return true;
         }
@@ -148,8 +148,8 @@ export class StartPositionCalculator {
                 return;
             }
             possibleStartPositions.push({
-                x: x * this.mapFile.tilewidth + this.mapFile.tilewidth / 2,
-                y: y * this.mapFile.tilewidth + this.mapFile.tileheight / 2,
+                x: x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
+                y: y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
             });
         });
         // Get a value at random amongst allowed values

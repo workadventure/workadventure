@@ -57,6 +57,7 @@ export class DynamicAreaManager {
                     visible: true,
                     rotation: 0,
                     type: "area",
+                    class: "area",
                     ellipse: false,
                     polygon: [],
                     polyline: [],

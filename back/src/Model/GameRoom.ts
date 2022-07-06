@@ -27,7 +27,7 @@ import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "../Messages/JsonMessages/MapDetailsData";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import {

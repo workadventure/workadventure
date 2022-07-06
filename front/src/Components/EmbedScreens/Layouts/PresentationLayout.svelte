@@ -142,7 +142,7 @@
                     right: 5px;
                     display: flex;
                     flex-direction: row;
-                    justify-content: end;
+                    justify-content: flex-end;
                     gap: 2%;
 
                     button {
