@@ -1,6 +1,11 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
-    import { chatMessagesStore, chatInputFocusStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import {
+        chatMessagesStore,
+        chatInputFocusStore,
+        writingStatusMessageStore,
+        ChatMessageTypes, _newChatMessageWritingStatusSubject
+    } from "../../Stores/ChatStore";
 
     export const handleForm = {
         blur() {
@@ -23,14 +28,18 @@
         newMessageText = "";
     }
     function writing() {
-        writingStatusMessageStore.sendWritingStatus(newMessageText);
+        if (newMessageText != undefined && newMessageText !== "") {
+            _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
+        } else {
+            _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+        }
     }
 </script>
 
 {#if $writingStatusMessageStore.length > 0}
     <div class="writings">
         {#each $writingStatusMessageStore as message}
-            <span class="writing">{message.author.name} writing... </span>
+            <span class="writing">{message.author.name} {$LL.chat.typing()} </span>
         {/each}
     </div>
 {/if}
