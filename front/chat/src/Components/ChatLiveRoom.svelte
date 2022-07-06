@@ -8,7 +8,7 @@
     export let liveRoom: MucRoom;
     export let meStore: MeStore;
     export let usersListStore: UsersStore;
-    export let open;
+    export let open: Function;
     export let searchValue: string;
 
     let forumMenuActive = false;
@@ -47,6 +47,7 @@
 		<OnlineUsers {usersListStore} />
 	</div>
 
+	<!--
 	{#if liveRoom.unreads}
         <span
 				class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
@@ -54,6 +55,7 @@
             {liveRoom.unreads}
         </span>
 	{/if}
+	-->
 
 	<div class="wa-dropdown">
 		<!-- toggle -->

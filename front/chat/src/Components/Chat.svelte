@@ -113,7 +113,7 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if $activeThreadStore !== undefined}
+            {#if $activeThreadStore !== undefined || $activeThreadStore !== null}
                 <ChatActiveThread
                         messagesStore={$activeThreadStore.getMessagesStore()}
                         usersListStore={$activeThreadStore.getPresenceStore()}
@@ -144,7 +144,7 @@
                             searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showUsers={handleShowUsers}
-                            on:goTo={(event) => defaultRoom().goTo(event.detail.type, event.detail.roomId, event.detail.uuid)}
+                            on:goTo={(event) => defaultRoom().goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
                             on:rankUp={(event) => defaultRoom().rankUp(event.detail.jid)}
                             on:rankDown={(event) => defaultRoom().rankDown(event.detail.jid)}
                             on:ban={(event) => defaultRoom().ban(event.detail.user, event.detail.name, event.detail.playUri)}

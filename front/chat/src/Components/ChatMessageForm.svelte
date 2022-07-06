@@ -5,7 +5,6 @@
 
     export let mucRoom: MucRoom;
 
-    let inputElement: HTMLElement;
     let newMessageText = "";
 
     function onFocus() {
@@ -36,7 +35,6 @@
                 on:focus={onFocus}
                 on:blur={onBlur}
                 rows="1"
-                bind:this={inputElement}
             />
             <button
                 type="submit"
