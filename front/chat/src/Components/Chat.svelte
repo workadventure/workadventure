@@ -19,7 +19,7 @@
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
     //import {get} from "svelte/store";
     import ChatActiveThread from "./ChatActiveThread.svelte";
-    import {GoTo} from "../Type/CustomEvent";
+    import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -99,8 +99,25 @@
         return defaultMucRoom;
     }
 
-    function handleGoTo(mucRoom: MucRoom, event: GoTo){
-        mucRoom.goTo(event.type, event.playUri, event.type);
+    function handleGoTo(mucRoom: MucRoom|undefined, event: GoTo){
+        if(mucRoom){
+            mucRoom.goTo(event.type, event.playUri, event.type);
+        }
+    }
+    function handleRankUp(mucRoom: MucRoom|undefined, event: RankUp){
+        if(mucRoom){
+            mucRoom.rankUp(event.jid);
+        }
+    }
+    function handleRankDown(mucRoom: MucRoom|undefined, event: RankDown){
+        if(mucRoom){
+            mucRoom.rankDown(event.jid);
+        }
+    }
+    function handleBan(mucRoom: MucRoom|undefined, event: Ban) {
+        if(mucRoom){
+            mucRoom.ban(event.user, event.name, event.playUri);
+        }
     }
 
     console.info("Chat fully loaded");
@@ -113,16 +130,16 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if $activeThreadStore !== undefined || $activeThreadStore !== null}
+            {#if $activeThreadStore}
                 <ChatActiveThread
                         messagesStore={$activeThreadStore.getMessagesStore()}
                         usersListStore={$activeThreadStore.getPresenceStore()}
                         meStore={$activeThreadStore.getMeStore()}
                         activeThread={$activeThreadStore}
                         on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
-                        on:rankUp={(event) => $activeThreadStore.rankUp(event.detail.jid)}
-                        on:rankDown={(event) => $activeThreadStore.rankDown(event.detail.jid)}
-                        on:ban={(event) => $activeThreadStore.ban(event.detail.user, event.detail.name, event.detail.playUri)}
+                        on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
+                        on:rankDown={(event) => handleRankDown($activeThreadStore, event.detail)}
+                        on:ban={(event) => handleBan($activeThreadStore, event.detail)}
                 />
             {:else}
                 <div>
