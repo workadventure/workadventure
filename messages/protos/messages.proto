@@ -121,8 +121,8 @@ message ClientToServerMessage {
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
+    //XmppMessage xmppMessage = 20;
     QueryMessage queryMessage = 20;
-    XmppMessage xmppMessage = 21;
     AskPositionMessage askPositionMessage = 22;
   }
 }
@@ -227,7 +227,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
-    XmppMessage xmppMessage = 11;
+    //XmppMessage xmppMessage = 11;
   }
 }
 
@@ -423,8 +423,8 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    XmppSettingsMessage xmppSettingsMessage = 29;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    //XmppSettingsMessage xmppSettingsMessage = 29;
+    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
     MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
@@ -630,6 +630,35 @@ message RoomsList {
 message EmptyMessage {
 
 }
+
+
+
+/**
+ * Start Chat Messages
+ */
+message IframeToPusherMessage{
+  oneof message {
+    XmppMessage xmppMessage = 1;
+    EmptyMessage emptyMessage = 2;
+  }
+}
+message PusherToIframeMessage{
+  oneof message {
+    XmppSettingsMessage xmppSettingsMessage = 1;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
+    XmppMessage xmppMessage = 3;
+  }
+}
+/**
+ * End Chat Messages
+ **/
+
+
+
+
+
+
+
 
 /**
  * Service handled by the "back". Pusher servers connect to this service.

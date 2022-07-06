@@ -1,60 +1,139 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
-    import ChatMessageForm from "./ChatMessageForm.svelte";
-    import ChatElement from "./ChatElement.svelte";
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import LL from "../../i18n/i18n-svelte";
-    import {
-        mucRoomsStore,
-        numberPresenceUserStore,
-        xmppServerConnectionStatusStore,
-    } from "../../Stores/MucRoomsStore";
-    import UsersList from "./UsersList.svelte";
-    import Spinner from "./Spinner.svelte";
-    import Search from "../Util/Search.svelte";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { onDestroy, onMount } from "svelte";
+    import { iframeListener } from "../../Api/IframeListener";
+    import { localUserStore } from "../../Connexion/LocalUserStore";
+    import { getColorByString } from "../Video/utils";
+    import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+    import { derived, get, Unsubscriber, writable } from "svelte/store";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { CHAT_URL } from "../../Enum/EnvironmentVariable";
+    import { locale } from "../../i18n/i18n-svelte";
 
-    let listDom: HTMLElement;
-    let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
+    let chatIframe: HTMLIFrameElement;
 
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
+    let subscribeListeners: Array<Unsubscriber> = [];
+
+    const wokaDefinedStore = writable<boolean>(false);
+    const iframeLoadedStore = writable<boolean>(false);
+
+    export const canSendInitMessageStore = derived(
+        [wokaDefinedStore, iframeLoadedStore],
+        ([$wokaDefinedStore, $iframeLoadedStore]) => $wokaDefinedStore && $iframeLoadedStore
+    );
+
+    // Phantom woka
+    let wokaSrc =
+        " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
+    const playUri = document.location.toString().split("#")[0].toString();
+    const name = localUserStore.getName();
 
     onMount(() => {
-        listDom.scrollTo(0, listDom.scrollHeight);
+        iframeListener.registerIframe(chatIframe);
+        chatIframe.addEventListener("load", () => {
+            iframeLoadedStore.set(false);
+            if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
+                iframeLoadedStore.set(true);
+            }
+        });
+        subscribeListeners.push(
+            locale.subscribe((value) => {
+                chatIframe?.contentWindow?.postMessage(
+                    {
+                        type: "setLocale",
+                        data: {
+                            locale: value,
+                        },
+                    },
+                    "*"
+                );
+            })
+        );
+        subscribeListeners.push(
+            currentPlayerWokaStore.subscribe((value) => {
+                if (value !== undefined) {
+                    wokaSrc = value;
+                    wokaDefinedStore.set(true);
+                }
+            })
+        );
+        subscribeListeners.push(
+            canSendInitMessageStore.subscribe((value) => {
+                if (value) {
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "userData",
+                            data: {
+                                ...localUserStore.getLocalUser(),
+                                name,
+                                playUri,
+                                authToken: localUserStore.getAuthToken(),
+                                color: getColorByString(name ?? ""),
+                                woka: wokaSrc,
+                            },
+                        },
+                        "*"
+                    );
+                    chatIframe?.contentWindow?.postMessage(
+                        {
+                            type: "setLocale",
+                            data: {
+                                locale: $locale,
+                            },
+                        },
+                        "*"
+                    );
+                }
+            })
+        );
+        subscribeListeners.push(
+            chatVisibilityStore.subscribe(() => {
+                if (get(gameManager.getInitStore())) {
+                    //gameManager.getCurrentGameScene()?.onResize();
+                }
+            })
+        );
     });
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
+    onDestroy(() => {
+        iframeListener.unregisterIframe(chatIframe);
+        subscribeListeners.forEach((listener) => {
+            listener();
+        });
     });
-
-    function onClick(event: MouseEvent) {
-        if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
-            handleFormBlur.blur();
-        }
-    }
 
     function closeChat() {
         chatVisibilityStore.set(false);
     }
+    function openChat() {
+        chatVisibilityStore.set(true);
+    }
     function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
+        if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
+            chatIframe.blur();
+        } else if (e.key === "c" && !$chatVisibilityStore) {
+            openChat();
         }
     }
-    console.info($xmppServerConnectionStatusStore, $mucRoomsStore);
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClick} />
+<svelte:window on:keydown={onKeyDown} />
+<div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
+    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
+    <iframe
+        bind:this={chatIframe}
+        sandbox="allow-scripts"
+        title="WorkAdventureChat"
+        src={CHAT_URL}
+        class="tw-border-0"
+    />
+</div>
 
+<!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
 
-    <!-- LIST USER SECTION -->
+    < LIST USER SECTION >
     <section class="roomsList">
         <p class="system-text chat-rooms">{$LL.muc.title()}</p>
         {#if $numberPresenceUserStore > 0}
@@ -62,7 +141,7 @@
         {/if}
         {#if $xmppServerConnectionStatusStore}
             {#each [...$mucRoomsStore] as mucRoom}
-                <!--<p class="room-name">{mucRoom.name}</p> -->
+                <p class="room-name">{mucRoom.name}</p>
                 <UsersList
                     usersListStore={mucRoom.getPresenceStore()}
                     teleportStore={mucRoom.getTeleportStore()}
@@ -75,7 +154,7 @@
         {/if}
     </section>
 
-    <!-- MESSAGE LIST SECTION -->
+    <MESSAGE LIST SECTION>
     <section class="messagesList" bind:this={listDom}>
         <p class="system-text">{$LL.chat.intro()}</p>
         <ul>
@@ -176,5 +255,40 @@
 
     div.reconnecting {
         margin-top: 3rem;
+    }
+</style>
+-->
+<style lang="scss">
+    #chatWindow {
+        z-index: 1000;
+        position: absolute;
+        background-color: transparent;
+        top: 0;
+        left: -100%;
+        height: 100vh;
+        width: 25vw;
+        min-width: 250px;
+        transition: all 0.1s ease-in-out;
+        pointer-events: none;
+        &.show {
+            left: 0;
+            pointer-events: auto;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        .hide {
+            top: 1%;
+            padding: 0 7px 2px 6px;
+            min-height: fit-content;
+            position: absolute;
+            right: -20px;
+            z-index: -1;
+            font-size: 20px;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            background: #181824;
+        }
     }
 </style>

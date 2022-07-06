@@ -7,7 +7,7 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { getRoomId } from "../Stores/GuestMenuStore";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
-import { v4 as uuidv4 } from "uuid";
+//import { v4 as uuidv4 } from "uuid";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import Axios from "axios";
 import { PUSHER_URL } from "../Enum/EnvironmentVariable";
@@ -81,72 +81,72 @@ export class MucRoom {
     }
 
     private requestAllSubscribers() {
-        const messageMucListAllUsers = xml(
-            "iq",
-            {
-                type: "get",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml("subscriptions", {
-                xmlns: "urn:xmpp:mucsub:0",
-            })
-        );
-        this.connection.emitXmlMessage(messageMucListAllUsers);
+        // const messageMucListAllUsers = xml(
+        //     "iq",
+        //     {
+        //         type: "get",
+        //         to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        //         from: this.jid,
+        //         id: uuidv4(),
+        //     },
+        //     xml("subscriptions", {
+        //         xmlns: "urn:xmpp:mucsub:0",
+        //     })
+        // );
+        //this.connection.emitXmlMessage(messageMucListAllUsers);
     }
 
     private sendPresence() {
-        const messagePresence = xml(
-            "presence",
-            {
-                to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
-                from: this.jid,
-                //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
-                //persistent: true
-            },
-            xml("x", {
-                xmlns: "http://jabber.org/protocol/muc",
-            }),
-            //add window location and have possibility to teleport on the user and remove all hash from the url
-            xml("room", {
-                id: window.location.href.split("#")[0].toString(),
-            }),
-            //add uuid of the user to identify and target them on teleport
-            xml("user", {
-                uuid: localUserStore.getLocalUser()?.uuid,
-            })
-        );
-        this.connection.emitXmlMessage(messagePresence);
+        // const messagePresence = xml(
+        //     "presence",
+        //     {
+        //         to: jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName()).toString(),
+        //         from: this.jid,
+        //         //type:'subscribe', //check presence documentation https://www.ietf.org/archive/id/draft-ietf-xmpp-3921bis-01.html#sub
+        //         //persistent: true
+        //     },
+        //     xml("x", {
+        //         xmlns: "http://jabber.org/protocol/muc",
+        //     }),
+        //     //add window location and have possibility to teleport on the user and remove all hash from the url
+        //     xml("room", {
+        //         id: window.location.href.split("#")[0].toString(),
+        //     }),
+        //     //add uuid of the user to identify and target them on teleport
+        //     xml("user", {
+        //         uuid: localUserStore.getLocalUser()?.uuid,
+        //     })
+        // );
+        //this.connection.emitXmlMessage(messagePresence);
         console.warn("[XMPP]", "Presence sent");
     }
 
     private sendSubscribe() {
-        const messageMucSubscribe = xml(
-            "iq",
-            {
-                type: "set",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml(
-                "subscribe",
-                {
-                    xmlns: "urn:xmpp:mucsub:0",
-                    nick: this.getPlayerName(),
-                },
-                xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
-                xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
-            )
-        );
-        this.connection.emitXmlMessage(messageMucSubscribe);
+        // const messageMucSubscribe = xml(
+        //     "iq",
+        //     {
+        //         type: "set",
+        //         to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        //         from: this.jid,
+        //         id: uuidv4(),
+        //     },
+        //     xml(
+        //         "subscribe",
+        //         {
+        //             xmlns: "urn:xmpp:mucsub:0",
+        //             nick: this.getPlayerName(),
+        //         },
+        //         xml("event", { node: "urn:xmpp:mucsub:nodes:messages" }),
+        //         xml("event", { node: "urn:xmpp:mucsub:nodes:presence" })
+        //     )
+        // );
+        //this.connection.emitXmlMessage(messageMucSubscribe);
     }
 
     public disconnect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
         const messageMucSubscribe = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
-        this.connection.emitXmlMessage(messageMucSubscribe);
+        //this.connection.emitXmlMessage(messageMucSubscribe);
         return messageMucSubscribe;
     }
 
@@ -247,17 +247,17 @@ export class MucRoom {
         }
     }
 
-    public getPresenceStore(): UsersStore {
-        return {
-            subscribe: this.presenceStore.subscribe,
-        };
-    }
-
-    public getTeleportStore(): TeleportStore {
-        return {
-            subscribe: this.teleportStore.subscribe,
-        };
-    }
+    // public getPresenceStore(): UsersStore {
+    //     return {
+    //         subscribe: this.presenceStore.subscribe,
+    //     };
+    // }
+    //
+    // public getTeleportStore(): TeleportStore {
+    //     return {
+    //         subscribe: this.teleportStore.subscribe,
+    //     };
+    // }
 
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });

@@ -19,7 +19,6 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    XmppMessage,
     AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
@@ -610,8 +609,6 @@ export class IoSocketController {
                         client,
                         message.getLockgrouppromptmessage() as LockGroupPromptMessage
                     );
-                } else if (message.hasXmppmessage()) {
-                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,

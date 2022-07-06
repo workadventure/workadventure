@@ -9,18 +9,23 @@ test.describe('Connection', () => {
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
     );
 
+    await login(page);
+
     // Let's stop the pusher
     const container = await findContainer('pusher');
     await stopContainer(container);
 
-    await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json'
-    );
-    await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+    await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
+    //await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+
+    //await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
+    //await expect(page.locator('.error-div')).toContainText('Unable to connect to WorkAdventure');
+    //await expect(page.locator('.errorScreen p.code')).toContainText('HTTP_ERROR');
 
     await startContainer(container);
 
-    await page.waitForResponse(response => response.status() === 200, { timeout: 60000 }),
-    await login(page);
+    //await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
+
+    await page.waitForResponse(response => response.status() === 200, { timeout: 90000 });
   });
 });

@@ -106,6 +106,7 @@ import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -894,7 +895,7 @@ export class GameScene extends DirtyScene {
                 // });
 
                 // Connect to XMPP
-                this.xmppClient = new XmppClient(this.connection);
+                //this.xmppClient = new XmppClient(this.connection);
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
@@ -1211,6 +1212,12 @@ ${escapedMessage}
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.MapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
+                this.connection?.emitAskPosition(event.uuid, event.playUri);
             })
         );
 

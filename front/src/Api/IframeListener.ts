@@ -37,6 +37,8 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import { chatVisibilityStore } from "../Stores/ChatStore";
+import { AskPositionEvent } from "./Events/AskPositionEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -128,6 +130,9 @@ class IframeListener {
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
+
+    private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
+    public readonly askPositionStream = this._askPositionStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -319,6 +324,11 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
+                    } else if (iframeEvent.type == "closeChat") {
+                        chatVisibilityStore.set(false);
+                        window.focus();
+                    } else if (iframeEvent.type == "askPosition") {
+                        this._askPositionStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

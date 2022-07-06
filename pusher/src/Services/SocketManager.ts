@@ -239,6 +239,7 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
                     if (client.xmppClient) {
+                        console.log("Trying disconnecting from xmppClient");
                         client.xmppClient.close();
                     }
                 })
@@ -696,6 +697,7 @@ export class SocketManager implements ZoneEventListener {
             );
         }
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+        console.log("XMPP Message sent");
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {

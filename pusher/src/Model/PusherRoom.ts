@@ -12,7 +12,6 @@ import {
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { XmppClient } from "../Services/XmppClient";
 
 const debug = Debug("room");
 
@@ -49,7 +48,7 @@ export class PusherRoom {
             return;
         }
 
-        socket.xmppClient = new XmppClient(socket, this.mucRooms);
+        //socket.xmppClient = new XmppClient(socket, this.mucRooms);
         socket.pusherRoom = this;
     }
 

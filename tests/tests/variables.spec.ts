@@ -145,7 +145,7 @@ test.describe('Variables', () => {
     await login(page, 'Alice', 2);
 
     // Wait for page to load before copying file (it seems the await above does not 100% fills its role otherwise).
-    await timeout(3000);
+    await timeout(5000);
 
     // Let's REPLACE the map by a map that has a new variable
     // At this point, the back server contains a cache of the old map (with no variables)
@@ -161,7 +161,7 @@ test.describe('Variables', () => {
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
 
-    await login(page2, 'Alice', 2);
+    await login(page2, 'Chapelier', 3);
 
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');
@@ -173,7 +173,7 @@ test.describe('Variables', () => {
         break;
       }
       // If we don't have the result right away, let's wait 3 seconds, just in case pusher is slow.
-      await timeout(3000);
+      await timeout(15000);
       rooms = await getPusherRooms();
     }
     expect(

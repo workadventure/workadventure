@@ -27,6 +27,7 @@ export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
 export const OPID_LOGIN_SCREEN_PROVIDER = getEnvConfig("OPID_LOGIN_SCREEN_PROVIDER");
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
+export const CHAT_URL = getEnvConfig("CHAT_URL") || "//chat.workadventure.localhost";
 
 export {
     DEBUG_MODE,

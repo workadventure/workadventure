@@ -53,6 +53,7 @@ services:
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
       OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
+      CHAT_URL: //chat.workadventure.localhost
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
@@ -65,6 +66,27 @@ services:
       - "traefik.http.routers.front-ssl.entryPoints=websecure"
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
+
+  chat:
+    image: thecodingmachine/nodejs:16
+    container_name: chat
+    command: yarn run start
+    environment:
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_3: yarn typesafe-i18n
+      PUSHER_URL: //pusher.workadventure.localhost
+    volumes:
+      - ./front/chat:/usr/src/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=8080"
+      - "traefik.http.routers.chat-ssl.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
     image: thecodingmachine/nodejs:16

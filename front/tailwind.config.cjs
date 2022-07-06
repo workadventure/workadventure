@@ -1,3 +1,5 @@
+const defaultTheme = require("tailwindcss/defaultTheme");
+
 module.exports = {
     content: ["./src/**/*.{html,js,svelte,ts}"],
     corePlugins: {
@@ -11,6 +13,7 @@ module.exports = {
             "medium-purple": "#38384A",
             "light-purple": "#4D4B67",
             "lighter-purple": "#928EBB",
+            "light-purple-alt": '#7D7B9E',
             "dark-blue": "#1B1B29",
             "light-blue": "#56EAFF",
 
@@ -21,6 +24,8 @@ module.exports = {
             "pop-yellow": "#F9E81E",
             "pop-red": "#FF475a",
             grey: "#f6f6f6",
+            dark: "#0F1F2D",
+            green: "#94ff60",
 
             //Useful adds
             white: "#FFFFFF",
@@ -30,6 +35,10 @@ module.exports = {
         extend: {
             minHeight: {
                 10: "2.5rem",
+            },
+            fontFamily: {
+                sans: ["Roboto", defaultTheme.fontFamily.sans],
+                condensed: ["Roboto Condensed", defaultTheme.fontFamily.sans],
             },
         },
     },
