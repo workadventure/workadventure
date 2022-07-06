@@ -1,7 +1,7 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
-import type { GameMap } from "./GameMap";
+import { AreaType, GameMap } from "./GameMap";
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
@@ -22,7 +22,7 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const obj of [...this.gameMap.flatLayers, ...this.gameMap.getAreas()]) {
+        for (const obj of [...this.gameMap.flatLayers, ...this.gameMap.getAreas(AreaType.Static)]) {
             if (obj.name === "start") {
                 names.push(obj.name);
                 continue;
@@ -71,7 +71,7 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromArea(startPositionName: string, needStartProperty: boolean = false): boolean {
-        const area = this.gameMap.getAreaByName(startPositionName);
+        const area = this.gameMap.getAreaByName(startPositionName, AreaType.Static);
         if (area) {
             if (needStartProperty) {
                 if (!(this.gameMap.getObjectProperty(area, "start") === true)) {

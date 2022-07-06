@@ -98,11 +98,9 @@ export class GameMap {
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
         // NOTE: We leave "zone" for legacy reasons
-        console.log(this.tiledObjects);
         this.tiledObjects
             .filter((object) => ["zone", "area"].includes(object.type ?? object.class ?? ""))
             .forEach((area) => {
-                console.log(area);
                 let name = area.name;
                 if (!name) {
                     name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
@@ -492,11 +490,11 @@ export class GameMap {
     }
 
     public getAreaByName(name: string, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.getAreas(type).find((area) => (area.name = name));
+        return this.getAreas(type).find((area) => area.name === name);
     }
 
     public getArea(id: number, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.getAreas(type).find((area) => (area.id = id));
+        return this.getAreas(type).find((area) => area.id === id);
     }
 
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
