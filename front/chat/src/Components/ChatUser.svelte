@@ -4,8 +4,8 @@
     import LL from "../i18n/i18n-svelte";
     import {createEventDispatcher} from "svelte";
     import {MeStore, User} from "../Xmpp/MucRoom";
-    import walk from "../../public/static/images/walk.svg";
-    import teleport from "../../public/static/images/teleport.svg";
+    const walk = require("../../public/static/images/walk.svg");
+    const teleport = require("../../public/static/images/teleport.svg");
     import {GoTo, RankUp, RankDown, Ban} from "../Type/CustomEvent";
 
     const dispatch = createEventDispatcher<{ goTo: GoTo, rankUp: RankUp, rankDown: RankDown, ban: Ban }>();
