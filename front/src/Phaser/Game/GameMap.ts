@@ -71,7 +71,7 @@ export class GameMap {
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
-    private readonly areas = new Map<string, ITiledMapRectangleObject>();
+    private readonly areas: ITiledMapRectangleObject[] = [];
     private readonly areasPositionOffsetY: number = 16;
     private readonly areaNamePrefix = "DEFAULT_AREA_NAME:";
     private readonly defaultTileSize = 32;
@@ -94,14 +94,11 @@ export class GameMap {
                     name = `${this.areaNamePrefix}${this.unnamedAreasCounter}`;
                     this.unnamedAreasCounter++;
                 }
-                if (this.areas.get(name)) {
-                    console.warn(`Area name "${name}" is already being used! Please use unique names`);
-                }
                 if (area.width === undefined || area.height === undefined) {
                     console.warn(`Area name "${name}" must be a rectangle`);
                     return;
                 }
-                this.areas.set(name, area as ITiledMapRectangleObject);
+                this.areas.push(area as ITiledMapRectangleObject);
             });
 
         let depth = -2;
@@ -455,16 +452,16 @@ export class GameMap {
     }
 
     public getArea(name: string): ITiledMapRectangleObject | undefined {
-        return this.areas.get(name);
+        return this.areas.find((area) => area.name === name);
     }
 
     public getAreas(): ITiledMapObject[] {
         return Array.from(this.areas.values());
     }
 
-    public setArea(name: string, area: ITiledMapRectangleObject): void {
-        this.areas.set(name, area);
-        if (this.isPlayerInsideArea(name)) {
+    public addArea(area: ITiledMapRectangleObject): void {
+        this.areas.push(area);
+        if (this.isPlayerInsideArea(area.name)) {
             this.triggerSpecificAreaOnEnter(area);
         }
     }
@@ -496,7 +493,10 @@ export class GameMap {
         if (area) {
             this.triggerSpecificAreaOnLeave(area);
         }
-        this.areas.delete(name);
+        const index = this.areas.findIndex((area) => area.name === name);
+        if (index !== -1) {
+            this.areas.splice(index, 1);
+        }
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
