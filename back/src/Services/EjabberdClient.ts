@@ -1,6 +1,6 @@
-import Axios, {AxiosError, AxiosInstance} from "axios";
-import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
-import {ChatZone} from "./MucManager";
+import Axios, { AxiosError, AxiosInstance } from "axios";
+import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
+import { ChatZone } from "./MucManager";
 
 export class EjabberdClient {
     private axios: AxiosInstance | undefined;

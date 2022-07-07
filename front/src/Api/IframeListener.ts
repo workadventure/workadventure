@@ -334,9 +334,6 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
-                    } else if (iframeEvent.type == "closeChat") {
-                        chatVisibilityStore.set(false);
-                        window.focus();
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
                     } else {
