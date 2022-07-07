@@ -107,7 +107,7 @@ export class SharedVariablesManager {
     private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "variable") {
+                if (object.class === "variable") {
                     if (object.template) {
                         console.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
