@@ -87,8 +87,9 @@ interface UpgradeFailedErrorData {
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 // Maximum time to wait for a pong answer to a ping before closing connection.
-const PONG_TIMEOUT = 12000;
-const PING_INTERVAL = 10000;
+// Note: PONG_TIMEOUT must be less than PING_INTERVAL
+const PONG_TIMEOUT = 10000;
+const PING_INTERVAL = 15000;
 
 export class IoSocketController {
     private nextUserId: number = 1;
@@ -555,6 +556,16 @@ export class IoSocketController {
 
                 client.pingIntervalId = setInterval(() => {
                     client.emitInBatch(pingSubMessage);
+
+                    if (client.pongTimeoutId) {
+                        console.warn("Warning, emitting a new ping message before previous pong message was received.");
+                        client.resetPongTimeout();
+                    }
+
+                    client.pongTimeoutId = setTimeout(() => {
+                        console.log("Connexion lost with user ", client.userUuid);
+                        client.close();
+                    }, PONG_TIMEOUT);
                 }, PING_INTERVAL);
 
                 client.resetPongTimeout();
@@ -661,11 +672,8 @@ export class IoSocketController {
         client.resetPongTimeout = (): void => {
             if (client.pongTimeoutId) {
                 clearTimeout(client.pongTimeoutId);
+                client.pongTimeoutId = undefined;
             }
-            client.pongTimeoutId = setTimeout(() => {
-                console.log("Connexion lost with user ", client.userUuid);
-                client.close();
-            }, PONG_TIMEOUT);
         };
         client.disconnecting = false;
 
