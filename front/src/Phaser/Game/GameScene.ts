@@ -107,6 +107,7 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -1161,6 +1162,18 @@ ${escapedMessage}
                         this.popUpElements.delete(closePopupEvent.popupId);
                     },
                 });
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.openChatStream.subscribe(() => {
+                chatVisibilityStore.set(true);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.closeChatStream.subscribe(() => {
+                chatVisibilityStore.set(false);
             })
         );
 
