@@ -14,6 +14,12 @@ export class CoWebsite {
 export class WorkadventureNavigationCommands extends IframeApiContribution<WorkadventureNavigationCommands> {
     callbacks = [];
 
+    /**
+     * Opens the webpage at "url" in your browser, in a new tab.
+     * {@link https://workadventu.re/map-building/api-nav.md#opening-a-web-page-in-a-new-tab | Website documentation}
+     *
+     * @param {string} url Url of the web page
+     */
     openTab(url: string): void {
         sendToWorkadventure({
             type: "openTab",
@@ -23,6 +29,12 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
+    /**
+     * Opens the webpage at "url" in your browser in place of WorkAdventure. WorkAdventure will be completely unloaded.
+     * {@link https://workadventu.re/map-building/api-nav.md#opening-a-web-page-in-the-current-tab | Website documentation}
+     *
+     * @param {string} url Url of the web page
+     */
     goToPage(url: string): void {
         sendToWorkadventure({
             type: "goToPage",
@@ -32,6 +44,13 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
+    /**
+     * Load the map at url without unloading workadventure.
+     * relative urls: "../subFolder/map.json[#start-layer-name]" global urls: "/_/global/domain/path/map.json[#start-layer-name]"
+     * {@link https://workadventu.re/map-building/api-nav.md#going-to-a-different-map-from-the-script | Website documentation}
+     *
+     * @param {string} url Url of the web page
+     */
     goToRoom(url: string): void {
         sendToWorkadventure({
             type: "loadPage",
@@ -41,6 +60,19 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         });
     }
 
+    /**
+     * Opens the webpage at "url" in an iFrame (on the right side of the screen) or close that iFrame.
+     * {@link https://workadventu.re/map-building/api-nav.md#openingclosing-web-page-in-co-websites | Website documentation}
+     *
+     * @param {string} url Url of the web page
+     * @param {boolean|undefined} allowApi  Allows the webpage to use the "IFrame API" and execute script (it is equivalent to putting the openWebsiteAllowApi property in the map)
+     * @param {string|undefined} allowPolicy Grants additional access rights to the iFrame
+     * @param {number|undefined} widthPercent Define the width of the main cowebsite beetween the min size and the max size (70% of the viewport)
+     * @param {number|undefined} position Define in whitch slot the web page will be open
+     * @param {boolean|undefined} closable Allow to close the webpage also you need to close it by the api
+     * @param {boolean|undefined} lazy Add the cowebsite but don't load it
+     * @returns {CoWebsite} The CoWebsite created
+     */
     async openCoWebSite(
         url: string,
         allowApi?: boolean,
@@ -65,6 +97,12 @@ export class WorkadventureNavigationCommands extends IframeApiContribution<Worka
         return new CoWebsite(result.id);
     }
 
+    /**
+     * Get all opened co-websites with their ids and positions.
+     * {@link https://workadventu.re/map-building/api-nav.md#get-all-co-websites | Website documentation}
+     *
+     * @returns {CoWebsite[]} All Cowebsites
+     */
     async getCoWebSites(): Promise<CoWebsite[]> {
         const result = await queryWorkadventure({
             type: "getCoWebsites",
