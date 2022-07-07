@@ -42,7 +42,6 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
-    import AreaDetailsWindow from "./MapEditor/AreaDetailsWindow.svelte";
     import "../../style/tailwind.scss";
 
     let mainLayout: HTMLDivElement;
@@ -129,9 +128,10 @@
         {/if}
 
         {#if $mapEditorModeStore}
-            {#if $mapEditorSelectedAreaPreviewStore}
-                <AreaDetailsWindow />
-            {/if}
+            <Lazy
+                when={$mapEditorSelectedAreaPreviewStore !== undefined}
+                component={() => import("./MapEditor/AreaDetailsWindow.svelte")}
+            />
         {/if}
 
         <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
