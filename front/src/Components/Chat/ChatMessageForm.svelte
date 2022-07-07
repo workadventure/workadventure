@@ -1,6 +1,12 @@
 <script lang="ts">
     import LL from "../../i18n/i18n-svelte";
-    import { chatMessagesStore, chatInputFocusStore } from "../../Stores/ChatStore";
+    import {
+        chatMessagesStore,
+        chatInputFocusStore,
+        writingStatusMessageStore,
+        ChatMessageTypes,
+        _newChatMessageWritingStatusSubject,
+    } from "../../Stores/ChatStore";
 
     export const handleForm = {
         blur() {
@@ -19,10 +25,30 @@
 
     function saveMessage() {
         if (!newMessageText) return;
+
+        //send message into the input
         chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
+
+        //send message to stop writing
+        _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+    }
+    function writing() {
+        if (newMessageText != undefined && newMessageText !== "") {
+            _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userWriting);
+        } else {
+            _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
+        }
     }
 </script>
+
+{#if $writingStatusMessageStore.size > 0}
+    <div class="writings">
+        {#each [...$writingStatusMessageStore] as author}
+            <span class="writing">{author.name} {$LL.chat.typing()} </span>
+        {/each}
+    </div>
+{/if}
 
 <form on:submit|preventDefault={saveMessage} class="tw-h-10">
     <input
@@ -30,6 +56,7 @@
         class="tw-h-full tw-rounded-none"
         bind:value={newMessageText}
         placeholder={$LL.chat.enter()}
+        on:input={writing}
         on:focus={onFocus}
         on:blur={onBlur}
         bind:this={inputElement}
@@ -68,6 +95,21 @@
             border: none;
             border-left: solid white 1px;
             font-size: 16px;
+        }
+    }
+    div.writings {
+        overflow: hidden;
+        max-width: 100%;
+        padding: 5px;
+
+        .writing {
+            font-style: italic;
+            font-size: 10px;
+            opacity: 0.8;
+            margin-left: 2px;
+            padding: 5px;
+            background-color: #254560;
+            border-radius: 4px;
         }
     }
 </style>

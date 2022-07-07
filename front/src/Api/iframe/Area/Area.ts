@@ -23,8 +23,6 @@ export class Area implements IArea {
         this._y = config.y;
         this._width = config.width;
         this._height = config.height;
-
-        this.type;
     }
 
     public setProperty(propertyName: string, propertyValue: string | number | boolean | undefined): void {

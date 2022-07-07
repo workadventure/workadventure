@@ -13,6 +13,8 @@ import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
+import muc from "./muc";
+import notification from "./notification";
 
 const es_ES: Translation = {
     ...(en_US as Translation),
@@ -29,6 +31,8 @@ const es_ES: Translation = {
     warning,
     emoji,
     trigger,
+    muc,
+    notification,
 };
 
 export default es_ES;
