@@ -59,7 +59,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
-import { ITiledMapObject } from "../Phaser/Map/ITiledMap";
+import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -1005,7 +1005,7 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMapEditorModifyArea(config: ITiledMapObject): void {
+    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
         this.send({
             message: {
                 $case: "mapEditorModifyAreaMessage",

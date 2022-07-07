@@ -1,4 +1,4 @@
-import { ITiledMapObject } from "../../Map/ITiledMap";
+import { ITiledMapRectangleObject } from "../../Game/GameMap";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",
@@ -7,11 +7,11 @@ export enum AreaPreviewEvent {
 }
 
 export class AreaPreview extends Phaser.GameObjects.Container {
-    private config: ITiledMapObject;
+    private config: ITiledMapRectangleObject;
 
     private preview: Phaser.GameObjects.Rectangle;
 
-    constructor(scene: Phaser.Scene, config: ITiledMapObject) {
+    constructor(scene: Phaser.Scene, config: ITiledMapRectangleObject) {
         super(scene, config.x + config.width * 0.5, config.y + config.height * 0.5);
 
         this.config = config;
@@ -33,7 +33,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updateArea(config: ITiledMapObject, sendUpdate: boolean = true): void {
+    public updateArea(config: ITiledMapRectangleObject, sendUpdate: boolean = true): void {
         this.config = config;
         this.setPosition(config.x + config.width * 0.5, config.y + config.height * 0.5);
         this.preview.displayWidth = config.width;
@@ -43,7 +43,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         }
     }
 
-    private createPreview(config: ITiledMapObject): Phaser.GameObjects.Rectangle {
+    private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {
         return this.scene.add
             .rectangle(0, 0, config.width, config.height, 0x0000ff, 0.5)
             .setInteractive({ cursor: "pointer" });
@@ -58,7 +58,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         });
     }
 
-    public getConfig(): ITiledMapObject {
+    public getConfig(): ITiledMapRectangleObject {
         return this.config;
     }
 

@@ -1,8 +1,7 @@
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { ITiledMapObject } from "../../../Map/ITiledMap";
-import { AreaType } from "../../GameMap";
+import { AreaType, ITiledMapRectangleObject } from "../../GameMap";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
@@ -39,7 +38,7 @@ export class AreaEditorTool extends MapEditorTool {
             console.log(message);
             this.areaPreviews
                 .find((area) => area.getConfig().id === message.id)
-                ?.updateArea(message as ITiledMapObject, false);
+                ?.updateArea(message as ITiledMapRectangleObject, false);
             this.scene.getGameMap().updateAreaById(message.id, AreaType.Static, message);
             this.scene.markDirty();
         });
@@ -64,7 +63,7 @@ export class AreaEditorTool extends MapEditorTool {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
         });
-        areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapObject) => {
+        areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapRectangleObject) => {
             // EDIT AFTER MESSAGE FROM BACK FOR NOW. MAKE IT INSTANT IF USER MADE THE CHANGES THOUGH
 
             // this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
