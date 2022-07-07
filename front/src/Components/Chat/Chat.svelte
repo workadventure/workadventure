@@ -279,7 +279,7 @@
         top: 0;
         left: -100%;
         height: 100vh;
-        width: 25vw;
+        width: 30vw;
         min-width: 250px;
         transition: all 0.1s ease-in-out;
         pointer-events: none;
