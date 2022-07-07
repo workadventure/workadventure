@@ -4,6 +4,7 @@
   import ChatLineRoom from "./ChatLineRoom.svelte";
   import { createEventDispatcher } from "svelte";
   import { MucRoom } from "../Xmpp/MucRoom";
+  import {derived} from "svelte/store";
   const dispatch = createEventDispatcher();
 
   export let forums: MucRoom[];
@@ -13,7 +14,11 @@
   function open(liveRoom: MucRoom) {
     dispatch("activeThread", liveRoom);
   }
-</script>
+  const totals = derived(
+          forums.map(forum => forum.getCountMessagesToSee()),
+          $totals => $totals.reduce((sum, number) => sum + number, 0)
+  );
+  </script>
 
 {#if forums.length > 0}
   <div
@@ -21,11 +26,13 @@
     transition:fly={{ y: -30, duration: 100 }}
   >
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-      <span
-        class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-      >
-        {forums.length}
-      </span>
+      {#if $totals}
+        <span
+          class="tw-animate-pulse tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+        >
+          {$totals}
+        </span>
+      {/if}
       <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
       <button
         class="tw-text-lighter-purple"
@@ -46,6 +53,7 @@
             {searchValue}
             meStore={forum.getMeStore()}
             usersListStore={forum.getPresenceStore()}
+            messagesStore={forum.getMessagesStore()}
             {open}
           />
         {/each}

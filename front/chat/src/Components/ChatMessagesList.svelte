@@ -1,6 +1,13 @@
 <script lang="ts">
+  import { fly } from "svelte/transition";
   import { MessagesStore, MucRoom } from "../Xmpp/MucRoom";
+  import {
+    ArrowDownIcon,
+  } from "svelte-feather-icons";
   import LL, { locale } from "../i18n/i18n-svelte";
+  import {createEventDispatcher, onMount} from "svelte";
+
+  const dispatch = createEventDispatcher();
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
@@ -28,9 +35,22 @@
   function isMe(name: string) {
     return name === mucRoom.getPlayerName();
   }
+
+  let messagesList: HTMLElement;
+  let isScrolledToEnd: boolean = false;
+
+  onMount(() => {
+    messagesList.addEventListener('scroll', () => {
+      isScrolledToEnd = !isScrolledToEnd && messagesList && messagesList.scrollTop === (messagesList.scrollHeight - messagesList.offsetHeight);
+    });
+  });
+
+  $: if(isScrolledToEnd){
+    dispatch('allSeen');
+  }
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto">
+<div class="tw-relative tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto" bind:this={messagesList}>
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
       <div class="wa-separator">
@@ -96,4 +116,17 @@
       </div>
     </div>
   {/each}
+  {#if !isScrolledToEnd}
+    <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-24">
+    <div
+            transition:fly={{ y: 10, duration: 200 }}
+            style="margin: auto"
+            class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+            role="button"
+            on:click={messagesList.scrollTop = messagesList.scrollHeight}>
+      <ArrowDownIcon size="14" />
+      <p class="tw-m-0">Derniers messages</p>
+    </div>
+    </div>
+  {/if}
 </div>

@@ -7,13 +7,14 @@
   import OnlineUsers from "./OnlineUsers.svelte";
   import LL from "../i18n/i18n-svelte";
   import highlightWords from "highlight-words";
-  import { MeStore, MucRoom, UsersStore } from "../Xmpp/MucRoom";
+  import {MessagesStore, MeStore, MucRoom, UsersStore} from "../Xmpp/MucRoom";
 
   export let mucRoom: MucRoom;
   export let meStore: MeStore;
   export let usersListStore: UsersStore;
   export let open: Function;
   export let searchValue: string;
+  export let messagesStore: MessagesStore;
 
   let forumMenuActive = false;
   let openChatForumMenu = () => {
@@ -23,12 +24,12 @@
     forumMenuActive = false;
   };
 
-  $: console.log(searchValue);
-
   $: chunks = highlightWords({
     text: mucRoom.name,
     query: searchValue,
   });
+
+  $: notRead = mucRoom.getCountMessagesToSee();
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
@@ -63,15 +64,13 @@
     <OnlineUsers {usersListStore} />
   </div>
 
-  <!--
-	{#if liveRoom.unreads}
-        <span
-				class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-		>
-            {liveRoom.unreads}
-        </span>
-	{/if}
-	-->
+  {#if $notRead}
+      <span
+              class="tw-animate-pulse tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+      >
+          {$notRead}
+      </span>
+  {/if}
 
   <div class="wa-dropdown">
     <!-- toggle -->

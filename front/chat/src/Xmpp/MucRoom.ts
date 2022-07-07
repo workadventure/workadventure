@@ -1,7 +1,7 @@
 import type { ChatConnection } from "../Connection/ChatConnection";
 import xml from "@xmpp/xml";
 import jid, { JID } from "@xmpp/jid";
-import type { Readable, Writable } from "svelte/store";
+import type {Readable, Subscriber, Writable} from "svelte/store";
 import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
@@ -53,9 +53,11 @@ const defaultWoka =
 export class MucRoom {
   private presenceStore: Writable<UserList>;
   private teleportStore: Writable<Teleport>;
-  private messageStore: Writable<Message[]>;
+  private messagesStore: Writable<Message[]>;
   private meStore: Writable<Me>;
   private nickCount: number = 0;
+  private lastMessageSeen: Date;
+  private countMessagesToSee: Writable<number>;
 
   constructor(
     private connection: ChatConnection,
@@ -65,9 +67,11 @@ export class MucRoom {
     private jid: string
   ) {
     this.presenceStore = writable<UserList>(new Map<string, User>());
-    this.messageStore = writable<Message[]>(new Array(0));
+    this.messagesStore = writable<Message[]>(new Array(0));
     this.teleportStore = writable<Teleport>({ state: false, to: null });
     this.meStore = writable<Me>({ isAdmin: false });
+    this.lastMessageSeen = new Date();
+    this.countMessagesToSee = writable<number>(0);
   }
 
   public getPlayerName() {
@@ -433,8 +437,11 @@ export class MucRoom {
       } else {
         delay = new Date();
       }
+      if(delay > this.lastMessageSeen){
+        this.countMessagesToSee.update(last => last + 1);
+      }
       const body = xml.getChildText("body") ?? "";
-      this.messageStore.update((messages) => {
+      this.messagesStore.update((messages) => {
         messages.push({
           name,
           body,
@@ -543,7 +550,7 @@ export class MucRoom {
 
   public getMessagesStore(): MessagesStore {
     return {
-      subscribe: this.messageStore.subscribe,
+      subscribe: this.messagesStore.subscribe,
     };
   }
 
@@ -551,6 +558,12 @@ export class MucRoom {
     return {
       subscribe: this.meStore.subscribe,
     };
+  }
+
+  public getCountMessagesToSee(){
+    return {
+      subscribe: this.countMessagesToSee.subscribe
+    }
   }
 
   public sendMessage(text: string) {
@@ -578,8 +591,14 @@ export class MucRoom {
 
   public reset(): void {
     this.presenceStore.set(new Map<string, User>());
-    this.messageStore.set([]);
+    this.messagesStore.set([]);
     this.meStore.set({ isAdmin: false });
+    this.lastMessageSeen = new Date();
+  }
+
+  public updateLastMessageSeen(){
+    this.lastMessageSeen = new Date();
+    this.countMessagesToSee.set(0);
   }
 
   private static encode(name: string | null | undefined) {

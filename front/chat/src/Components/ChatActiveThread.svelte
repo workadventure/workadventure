@@ -262,7 +262,7 @@
       </div>
     </div>
   {:else}
-    <ChatMessagesList {messagesStore} mucRoom={activeThread} />
+    <ChatMessagesList {messagesStore} mucRoom={activeThread} on:allSeen={() => activeThread.updateLastMessageSeen()}/>
 
     <div class="messageForm">
       <ChatMessageForm mucRoom={activeThread} />
