@@ -183,9 +183,6 @@ export const isIframeEventWrapper = z.union([
         data: isAreaEvent,
     }),
     z.object({
-        type: z.literal("closeChat"),
-    }),
-    z.object({
         type: z.literal("askPosition"),
         data: isAskPositionEvent,
     }),
