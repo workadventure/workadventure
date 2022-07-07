@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { videoConstraintStore } from "../../Stores/MediaStore";
     import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -7,24 +7,33 @@
     import type { Locales } from "../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../i18n/locales";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
+
+    import infoImg from "../images/info.svg";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification() === "granted";
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
+    let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
     let valueGame: number = localUserStore.getGameQualityValue();
     let valueVideo: number = localUserStore.getVideoQualityValue();
     let valueLocale: string = $locale;
+    let valueCameraPrivacySettings = localUserStore.getCameraPrivacySettings();
+    let valueMicrophonePrivacySettings = localUserStore.getMicrophonePrivacySettings();
+
     let previewValueGame = valueGame;
     let previewValueVideo = valueVideo;
     let previewValueLocale = valueLocale;
+    let previewCameraPrivacySettings = valueCameraPrivacySettings;
+    let previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
 
-    function saveSetting() {
+    async function saveSetting() {
         let change = false;
 
         if (valueLocale !== previewValueLocale) {
             previewValueLocale = valueLocale;
-            setCurrentLocale(valueLocale as Locales);
+            await setCurrentLocale(valueLocale as Locales);
         }
 
         if (valueVideo !== previewValueVideo) {
@@ -37,6 +46,18 @@
             localUserStore.setGameQualityValue(valueGame);
             change = true;
         }
+
+        if (valueCameraPrivacySettings !== previewCameraPrivacySettings) {
+            previewCameraPrivacySettings = valueCameraPrivacySettings;
+            localUserStore.setCameraPrivacySettings(valueCameraPrivacySettings);
+        }
+
+        if (valueMicrophonePrivacySettings !== previewMicrophonePrivacySettings) {
+            previewMicrophonePrivacySettings = valueMicrophonePrivacySettings;
+            localUserStore.setMicrophonePrivacySettings(valueMicrophonePrivacySettings);
+        }
+
+        audioManagerVolumeStore.setDecreaseWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
 
         if (change) {
             window.location.reload();
@@ -82,6 +103,10 @@
         localUserStore.setIgnoreFollowRequests(ignoreFollowRequests);
     }
 
+    function changeDecreaseAudioPlayerVolumeWhileTalking() {
+        localUserStore.setDecreaseAudioPlayerVolumeWhileTalking(decreaseAudioPlayerVolumeWhileTalking);
+    }
+
     function closeMenu() {
         menuVisiblilityStore.set(false);
     }
@@ -89,162 +114,113 @@
     const isMobile = isMediaBreakpointUp("md");
 </script>
 
-<div class="settings-main" on:submit|preventDefault={saveSetting}>
-    <section>
-        <h3>{$LL.menu.settings.gameQuality.title()}</h3>
-        <div class="nes-select is-dark">
-            <select bind:value={valueGame}>
-                <option value={120}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.high()
-                        : $LL.menu.settings.gameQuality.long.high()}</option
-                >
-                <option value={60}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.medium()
-                        : $LL.menu.settings.gameQuality.long.medium()}</option
-                >
-                <option value={40}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.small()
-                        : $LL.menu.settings.gameQuality.long.small()}</option
-                >
-                <option value={20}
-                    >{isMobile
-                        ? $LL.menu.settings.gameQuality.short.minimum()
-                        : $LL.menu.settings.gameQuality.long.minimum()}</option
-                >
-            </select>
+<div on:submit|preventDefault={saveSetting}>
+    <section class="bottom-separator">
+        <h3 class="blue-title">{$LL.menu.settings.gameQuality.title()}</h3>
+        <select bind:value={valueGame} class="tw-w-full">
+            <option value={120}
+                >{isMobile
+                    ? $LL.menu.settings.gameQuality.short.high()
+                    : $LL.menu.settings.gameQuality.long.high()}</option
+            >
+            <option value={60}
+                >{isMobile
+                    ? $LL.menu.settings.gameQuality.short.medium()
+                    : $LL.menu.settings.gameQuality.long.medium()}</option
+            >
+            <option value={40}
+                >{isMobile
+                    ? $LL.menu.settings.gameQuality.short.small()
+                    : $LL.menu.settings.gameQuality.long.small()}</option
+            >
+            <option value={20}
+                >{isMobile
+                    ? $LL.menu.settings.gameQuality.short.minimum()
+                    : $LL.menu.settings.gameQuality.long.minimum()}</option
+            >
+        </select>
+        <h3 class="blue-title">{$LL.menu.settings.videoQuality.title()}</h3>
+        <select bind:value={valueVideo} class="tw-w-full">
+            <option value={30}
+                >{isMobile
+                    ? $LL.menu.settings.videoQuality.short.high()
+                    : $LL.menu.settings.videoQuality.long.high()}</option
+            >
+            <option value={20}
+                >{isMobile
+                    ? $LL.menu.settings.videoQuality.short.medium()
+                    : $LL.menu.settings.videoQuality.long.medium()}</option
+            >
+            <option value={10}
+                >{isMobile
+                    ? $LL.menu.settings.videoQuality.short.small()
+                    : $LL.menu.settings.videoQuality.long.small()}</option
+            >
+            <option value={5}
+                >{isMobile
+                    ? $LL.menu.settings.videoQuality.short.minimum()
+                    : $LL.menu.settings.videoQuality.long.minimum()}</option
+            >
+        </select>
+        <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
+        <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
+            {#each displayableLocales as locale (locale.id)}
+                <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
+            {/each}
+        </select>
+
+        <div class="centered-column">
+            <p>{$LL.menu.settings.save.warning()}</p>
+            <button type="button" class="light" on:click|preventDefault={saveSetting}
+                >{$LL.menu.settings.save.button()}</button
+            >
         </div>
     </section>
-    <section>
-        <h3>{$LL.menu.settings.videoQuality.title()}</h3>
-        <div class="nes-select is-dark">
-            <select bind:value={valueVideo}>
-                <option value={30}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.high()
-                        : $LL.menu.settings.videoQuality.long.high()}</option
-                >
-                <option value={20}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.medium()
-                        : $LL.menu.settings.videoQuality.long.medium()}</option
-                >
-                <option value={10}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.small()
-                        : $LL.menu.settings.videoQuality.long.small()}</option
-                >
-                <option value={5}
-                    >{isMobile
-                        ? $LL.menu.settings.videoQuality.short.minimum()
-                        : $LL.menu.settings.videoQuality.long.minimum()}</option
-                >
-            </select>
+    <section class="bottom-separator tw-flex tw-flex-col">
+        <div class="tooltip tw-w-fit">
+            <h3 class="blue-title tw-underline tw-decoration-light-blue tw-decoration-dotted">
+                {$LL.menu.settings.privacySettings.title()}
+                <img src={infoImg} alt="info icon" width="18px" height="18px" />
+            </h3>
+            <span class="tooltiptext sm:tw-w-56 md:tw-w-96">{$LL.menu.settings.privacySettings.explanation()}</span>
         </div>
-    </section>
-    <section>
-        <h3>{$LL.menu.settings.language.title()}</h3>
-        <div class="nes-select is-dark">
-            <select class="languages-switcher" bind:value={valueLocale}>
-                {#each displayableLocales as locale (locale.id)}
-                    <option value={locale.id}>{`${locale.language} (${locale.country})`}</option>
-                {/each}
-            </select>
-        </div>
-    </section>
-    <section class="settings-section-save">
-        <p>{$LL.menu.settings.save.warning()}</p>
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={saveSetting}
-            >{$LL.menu.settings.save.button()}</button
-        >
-    </section>
-    <section class="settings-section-noSaveOption">
         <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={fullscreen}
-                on:change={changeFullscreen}
-            />
+            <input type="checkbox" bind:checked={valueCameraPrivacySettings} />
+            {$LL.menu.settings.privacySettings.cameraToggle()}
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={valueMicrophonePrivacySettings} />
+            {$LL.menu.settings.privacySettings.microphoneToggle()}
+        </label>
+    </section>
+    <section class="tw-flex tw-flex-col">
+        <label>
+            <input type="checkbox" bind:checked={fullscreen} on:change={changeFullscreen} />
             <span>{$LL.menu.settings.fullscreen()}</span>
         </label>
         <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={notification}
-                on:change={changeNotification}
-            />
+            <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
             <span>{$LL.menu.settings.notifications()}</span>
         </label>
         <label>
-            <input
-                type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={forceCowebsiteTrigger}
-                on:change={changeForceCowebsiteTrigger}
-            />
+            <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />
             <span>{$LL.menu.settings.cowebsiteTrigger()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={ignoreFollowRequests} on:change={changeIgnoreFollowRequests} />
+            <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
         </label>
         <label>
             <input
                 type="checkbox"
-                class="nes-checkbox is-dark"
-                bind:checked={ignoreFollowRequests}
-                on:change={changeIgnoreFollowRequests}
+                bind:checked={decreaseAudioPlayerVolumeWhileTalking}
+                on:change={changeDecreaseAudioPlayerVolumeWhileTalking}
             />
-            <span>{$LL.menu.settings.ignoreFollowRequest()}</span>
+            <span>{$LL.audio.manager.reduce()}</span>
         </label>
     </section>
 </div>
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
-
-    div.settings-main {
-        height: calc(100% - 40px);
-        overflow-y: auto;
-
-        section {
-            width: 100%;
-            padding: 20px 20px 0;
-            margin-bottom: 20px;
-            text-align: center;
-
-            div.nes-select select:focus {
-                outline: none;
-            }
-        }
-        section.settings-section-save {
-            text-align: center;
-            p {
-                margin: 16px 0;
-            }
-        }
-        section.settings-section-noSaveOption {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-
-            label {
-                flex: 1 1 auto;
-                text-align: center;
-                margin: 0 0 15px;
-            }
-        }
-
-        .languages-switcher option {
-            text-transform: capitalize;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        div.settings-main {
-            section {
-                padding: 0;
-            }
-        }
-    }
 </style>

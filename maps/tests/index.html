@@ -34,7 +34,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-animated-tiles"> Success <input type="radio" name="test-animated-tiles"> Failure <input type="radio" name="test-animated-tiles" checked> Pending
+                        <input type="radio" name="test-parallax-effect"> Success <input type="radio" name="test-parallax-effect"> Failure <input type="radio" name="test-parallax-effect" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="parallax.json" target="_blank">Test parallax effect</a>
@@ -46,6 +46,14 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="animated_tiles.json" target="_blank">Test animated tiles</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-pathfinding"> Success <input type="radio" name="test-pathfinding"> Failure <input type="radio" name="test-pathfinding" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/map.json" target="_blank">Test Pathfinding</a>
                     </td>
                 </tr>
                 <tr>
@@ -82,6 +90,14 @@
                 </tr>
                 <tr>
                     <td>
+                        <input type="radio" name="test-pathfinder-avoid-exits"> Success <input type="radio" name="test-pathfinder-avoid-exits"> Failure <input type="radio" name="test-pathfinder-avoid-exits" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="PathfinderAvoidExits/map1.json" target="_blank">Test Pathfinder Avoid Exits</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <input type="radio" name="test-exitSceneUrl"> Success <input type="radio" name="test-exitSceneUrl"> Failure <input type="radio" name="test-exitSceneUrl" checked> Pending
                     </td>
                     <td>
@@ -114,6 +130,14 @@
                 </tr>
                 <tr>
                     <td>
+                        <input type="radio" name="test-allow-audio"> Success <input type="radio" name="test-allow-audio"> Failure <input type="radio" name="test-allow-audio" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="AllowAudio/map.json" target="_blank">Test audio on start zone and mobile</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
                         <input type="radio" name="test-jitsi-silent"> Success <input type="radio" name="test-jitsi-silent"> Failure <input type="radio" name="test-jitsi-silent" checked> Pending
                     </td>
                     <td>
@@ -142,6 +166,22 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="layer-visibility.json" target="_blank">Layer visibility + Layer size and offset</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-silent-start"> Success <input type="radio" name="test-silent-start"> Failure <input type="radio" name="test-silent-start" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Properties/silent_start.json" target="_blank">Test start on silent zone</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-bbb"> Success <input type="radio" name="test-bbb"> Failure <input type="radio" name="test-bbb" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="BBB/bbb.json" target="_blank">BBB layer</a>
                     </td>
                 </tr>
             </table>
@@ -184,7 +224,7 @@
                         <input type="radio" name="test-cowebsite-allowAPI"> Success <input type="radio" name="test-cowebsite-allowAPI"> Failure <input type="radio" name="test-cowebsite-allowAPI" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test a iframe opened by a script can use Iframe API</a>
+                        <a href="#" class="testLink" data-testmap="Metadata/cowebsiteAllowApi.json" target="_blank">Test a iframe opened by a script can use Iframe API <i>(already automated in E2E tests)</i></a>
                     </td>
                 </tr>
                 <tr>
@@ -192,7 +232,7 @@
                         <input type="radio" name="test-custom-menu"> Success <input type="radio" name="test-custom-menu"> Failure <input type="radio" name="test-custom-menu" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="Metadata/customMenu.json" target="_blank">Testing add a custom menu by scripting API</a>
+                        <a href="#" class="testLink" data-testmap="Metadata/customMenu.json" target="_blank">Testing add a custom menu by scripting API <i>(already automated in E2E tests)</i></a>
                     </td>
                 </tr>
                 <tr>
@@ -241,6 +281,14 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="CameraApi/camera_api_test.json" target="_blank">Test camera API</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-alter-action-menu"> Success <input type="radio" name="test-alter-action-menu"> Failure <input type="radio" name="test-alter-action-menu" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="AlterActionMenuApi/map.json" target="_blank">Test Alter ActionMenu API</a>
                     </td>
                 </tr>
                 <tr>
@@ -323,6 +371,30 @@
                         <a href="#" class="testLink" data-testmap="Modules/without_modules.json" target="_blank">Testing scripts with modules mode disabled</a>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-uiwebsite"> Success <input type="radio" name="test-uiwebsite"> Failure <input type="radio" name="test-uiwebsite" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="UIWebsite/uiwebsite.json" target="_blank">Testing UIWebsites</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-disableproximitymeeting"> Success <input type="radio" name="test-disableproximitymeeting"> Failure <input type="radio" name="test-disableproximitymeeting" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="DisableProximityMeeting/disableProximityMeeting.json" target="_blank">Testing disable proximity meeting</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-openclosechat"> Success <input type="radio" name="test-openclosechat"> Failure <input type="radio" name="test-openclosechat" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Chat/chat_open_close_event.json" target="_blank">Testing open and close chat <i>(already automated in E2E tests)</i></a>
+                    </td>
+                </tr>
             </table>
             <h2>CoWebsite</h2>
             <table class="table">
@@ -359,6 +431,41 @@
                     </td>
                 </tr>
             </table>
+            <h2>Areas</h2>
+            <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-areas-from-tiled"> Success <input type="radio" name="test-areas-from-tiled"> Failure <input type="radio" name="test-areas-from-tiled" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/AreaFromTiledMap/areas_from_tiled.json" target="_blank">Test areas created in Tiled</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-start-areas"> Success <input type="radio" name="test-start-areas"> Failure <input type="radio" name="test-start-areas" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/StartAreas/start_areas.json" target="_blank">Test Start Areas</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-change-area-properties"> Success <input type="radio" name="test-change-area-properties"> Failure <input type="radio" name="test-change-area-properties" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/ChangeAreaProperties/edit_area_properties.json" target="_blank">Test change area properties</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-area-crud"> Success <input type="radio" name="test-area-crud"> Failure <input type="radio" name="test-area-crud" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/CRUD/area_crud.json" target="_blank">Test Area CRUD</a>
+                    </td>
+                </tr>
+            </table>
             <h2>Mobile</h2>
             <table class="table">
                 <tr>
@@ -391,6 +498,14 @@
             </table>
             <h2>Others</h2>
             <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-big-map"> Success <input type="radio" name="test-big-map"> Failure <input type="radio" name="test-big-map" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="BigMap/map.json" target="_blank">Test Big Map</a>
+                    </td>
+                </tr>
                 <tr>
                     <td>
                         <input type="radio" name="test-reconnection"> Success <input type="radio" name="test-reconnection"> Failure <input type="radio" name="test-reconnection" checked> Pending
@@ -429,6 +544,22 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="mousewheel.json" target="_blank">Testing zoom via mouse wheel</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-mouse-wheel"> Success <input type="radio" name="test-mouse-wheel"> Failure <input type="radio" name="test-mouse-wheel" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="AwayModeSettings/away_mode_settings.json" target="_blank">Away mode settings</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-status-indicator"> Success <input type="radio" name="test-status-indicator"> Failure <input type="radio" name="test-status-indicator" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="status_indicator.json" target="_blank">Test Status Indicator</a>
                     </td>
                 </tr>
             </table>

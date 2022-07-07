@@ -19,6 +19,8 @@ function createFollowUsersStore() {
             set([leader]);
         },
         addFollower(user: number): void {
+            followStateStore.set("active");
+            followRoleStore.set("leader");
             update((followers) => {
                 followers.push(user);
                 return followers;
@@ -31,10 +33,9 @@ function createFollowUsersStore() {
          */
         removeFollower(user: number): void {
             update((followers) => {
-                const oldFollowerCount = followers.length;
                 followers = followers.filter((id) => id !== user);
 
-                if (followers.length === 0 && oldFollowerCount > 0) {
+                if (followers.length === 0) {
                     followStateStore.set("off");
                     followRoleStore.set("leader");
                 }

@@ -1,13 +1,16 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import SettingsSubMenu from "./SettingsSubMenu.svelte";
     import ProfileSubMenu from "./ProfileSubMenu.svelte";
     import AboutRoomSubMenu from "./AboutRoomSubMenu.svelte";
-    import GlobalMessageSubMenu from "./GlobalMessagesSubMenu.svelte";
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
+    import chevronImg from "../images/chevron.svg";
+    import "../../../style/tailwind.scss";
+
     import {
+        activeSubMenuStore,
         checkSubMenuToShow,
         customMenuIframe,
         menuVisiblilityStore,
@@ -19,22 +22,23 @@
     import type { Unsubscriber } from "svelte/store";
     import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
 
-    let activeSubMenu: MenuItem = $subMenusStore[0];
+    let activeSubMenu: MenuItem = $subMenusStore[$activeSubMenuStore];
     let activeComponent: typeof ProfileSubMenu | typeof CustomSubMenu = ProfileSubMenu;
     let props: { url: string; allowApi: boolean };
     let unsubscriberSubMenuStore: Unsubscriber;
 
-    onMount(() => {
+    onMount(async () => {
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                switchMenu($subMenusStore[0]);
+                void switchMenu($subMenusStore[$activeSubMenuStore]);
             }
         });
 
         checkSubMenuToShow();
 
-        switchMenu($subMenusStore[0]);
+        await switchMenu($subMenusStore[$activeSubMenuStore]);
     });
 
     onDestroy(() => {
@@ -43,26 +47,38 @@
         }
     });
 
-    function switchMenu(menu: MenuItem) {
+    async function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
             switch (menu.key) {
                 case SubMenusInterface.settings:
+                    activeSubMenuStore.set(0);
+                    analyticsClient.menuSetting();
                     activeComponent = SettingsSubMenu;
                     break;
                 case SubMenusInterface.profile:
+                    activeSubMenuStore.set(1);
+                    analyticsClient.menuProfile();
                     activeComponent = ProfileSubMenu;
                     break;
                 case SubMenusInterface.invite:
+                    activeSubMenuStore.set(2);
+                    analyticsClient.menuInvite();
                     activeComponent = GuestSubMenu;
                     break;
                 case SubMenusInterface.aboutRoom:
+                    activeSubMenuStore.set(3);
+                    analyticsClient.menuCredit();
                     activeComponent = AboutRoomSubMenu;
                     break;
                 case SubMenusInterface.globalMessages:
-                    activeComponent = GlobalMessageSubMenu;
+                    activeSubMenuStore.set(4);
+                    analyticsClient.globalMessage();
+                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
                     break;
                 case SubMenusInterface.contact:
+                    activeSubMenuStore.set(5);
+                    analyticsClient.menuContact();
                     activeComponent = ContactSubMenu;
                     break;
             }
@@ -81,6 +97,7 @@
 
     function closeMenu() {
         menuVisiblilityStore.set(false);
+        activeSubMenuStore.set(0);
     }
 
     function onKeyDown(e: KeyboardEvent) {
@@ -89,116 +106,39 @@
         }
     }
 
-    function translateMenuName(menu: MenuItem) {
-        if (menu.type === "scripting") {
-            return menu.label;
-        }
-
-        // Bypass the proxy of typesafe for getting the menu name : https://github.com/ivanhofer/typesafe-i18n/issues/156
-        const getMenuName = $LL.menu.sub[menu.key];
-
-        return getMenuName();
-    }
+    $: subMenuTranslations = $subMenusStore.map((subMenu) =>
+        subMenu.type === "scripting" ? subMenu.label : $LL.menu.sub[subMenu.key]()
+    );
+    $: activeSubMenuTranslation =
+        activeSubMenu.type === "scripting" ? activeSubMenu.label : $LL.menu.sub[activeSubMenu.key]();
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="menu-container-main">
-    <div class="menu-nav-sidebar nes-container is-rounded" transition:fly={{ x: -1000, duration: 500 }}>
-        <h2>{$LL.menu.title()}</h2>
+<div class="menu-container">
+    <div class="menu-nav-sidebar" transition:fly={{ x: -1000, duration: 500 }}>
+        <h2 class="tw-p-5 blue-title">{$LL.menu.title()}</h2>
         <nav>
-            {#each $subMenusStore as submenu}
-                <button
-                    type="button"
-                    class="nes-btn {activeSubMenu === submenu ? 'is-disabled' : ''}"
+            {#each $subMenusStore as submenu, i}
+                <div
+                    class="menu-item-container {activeSubMenu === submenu ? 'active' : ''}"
                     on:click|preventDefault={() => switchMenu(submenu)}
                 >
-                    {translateMenuName(submenu)}
-                </button>
+                    <button type="button" class="tw-flex menu-item">
+                        {subMenuTranslations[i]}
+                    </button>
+                    <img src={chevronImg} class="menu-icon" alt="open submenu" />
+                </div>
             {/each}
         </nav>
     </div>
-    <div class="menu-submenu-container nes-container is-rounded" transition:fly={{ y: -1000, duration: 500 }}>
-        <button type="button" class="nes-btn is-error close" on:click={closeMenu}>&times</button>
-        <h2>{translateMenuName(activeSubMenu)}</h2>
+    <div class="menu-submenu-container tw-bg-dark-purple/95 tw-rounded" transition:fly={{ y: -1000, duration: 500 }}>
+        <button type="button" class="close-window" on:click={closeMenu}>&times</button>
+        <h2>{activeSubMenuTranslation}</h2>
         <svelte:component this={activeComponent} {...props} />
     </div>
 </div>
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
-
-    .nes-container {
-        padding: 5px;
-    }
-
-    div.menu-container-main {
-        --size-first-columns-grid: 200px;
-
-        font-family: "Press Start 2P";
-        pointer-events: auto;
-        height: 80%;
-        width: 75%;
-        top: 4%;
-
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
-
-        position: absolute;
-        z-index: 900;
-
-        display: grid;
-        grid-template-columns: var(--size-first-columns-grid) calc(100% - var(--size-first-columns-grid));
-        grid-template-rows: 100%;
-
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        div.menu-nav-sidebar {
-            background-color: #333333;
-            color: whitesmoke;
-
-            nav button {
-                width: calc(100% - 10px);
-                margin-bottom: 10px;
-            }
-        }
-
-        div.menu-submenu-container {
-            background-color: #333333;
-            color: whitesmoke;
-
-            .nes-btn.is-error.close {
-                position: absolute;
-                top: -20px;
-                right: -20px;
-            }
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        div.menu-container-main {
-            --size-first-columns-grid: 120px;
-            height: 70%;
-            top: 55px;
-            width: 95%;
-            font-size: 0.5em;
-
-            div.menu-nav-sidebar {
-                overflow-y: auto;
-            }
-
-            div.menu-submenu-container {
-                .nes-btn.is-error.close {
-                    position: absolute;
-                    top: -35px;
-                    right: 0;
-                }
-            }
-        }
-    }
 </style>

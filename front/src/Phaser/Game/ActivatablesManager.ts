@@ -13,7 +13,7 @@ export class ActivatablesManager {
 
     private canSelectByDistance: boolean = true;
 
-    private readonly outlineColor = 0xffff00;
+    private readonly outlineColor = 0xf9e81e;
     private readonly directionalActivationPositionShift = 50;
 
     constructor(currentPlayer: Player) {
@@ -76,6 +76,7 @@ export class ActivatablesManager {
         const currentPlayerPos = this.currentPlayer.getDirectionalActivationPosition(
             this.directionalActivationPositionShift
         );
+        this.activatableObjectsDistances.clear();
         for (const object of objects) {
             const distance = MathUtils.distanceBetween(currentPlayerPos, object.getPosition());
             this.activatableObjectsDistances.set(object, distance);

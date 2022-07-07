@@ -1,11 +1,11 @@
-import type { ITiledMapProperty } from "./ITiledMap";
+import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 
 export class PropertyUtils {
     public static findProperty(
         name: string,
         properties: ITiledMapProperty[] | undefined
     ): string | boolean | number | undefined {
-        return properties?.find((property) => property.name === name)?.value;
+        return properties?.find((property) => property.name === name)?.value as string | boolean | number | undefined;
     }
 
     public static findBooleanProperty(
@@ -20,6 +20,23 @@ export class PropertyUtils {
         if (typeof property !== "boolean") {
             throw new Error(
                 'Expected property "' + name + '" to be a boolean. ' + (context ? " (" + context + ")" : "")
+            );
+        }
+        return property;
+    }
+
+    public static findStringProperty(
+        name: string,
+        properties: ITiledMapProperty[] | undefined,
+        context?: string
+    ): string | undefined {
+        const property = PropertyUtils.findProperty(name, properties);
+        if (property === undefined) {
+            return undefined;
+        }
+        if (typeof property !== "string") {
+            throw new Error(
+                'Expected property "' + name + '" to be a string. ' + (context ? " (" + context + ")" : "")
             );
         }
         return property;

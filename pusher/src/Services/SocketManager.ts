@@ -1,5 +1,5 @@
 import { PusherRoom } from "../Model/PusherRoom";
-import { CharacterLayer, ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import {
     AdminMessage,
     AdminPusherToBackMessage,
@@ -16,15 +16,12 @@ import {
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
-    SendJitsiJwtMessage,
     ServerToAdminClientMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
-    SilentMessage,
     SubMessage,
     UserJoinedRoomMessage,
     UserLeftMessage,
@@ -38,21 +35,25 @@ import {
     ErrorMessage,
     WorldFullMessage,
     PlayerDetailsUpdatedMessage,
+    LockGroupPromptMessage,
+    InvalidTextureMessage,
+    ErrorScreenMessage,
+    QueryMessage,
+    XmppMessage,
+    AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { ADMIN_API_URL, JITSI_ISS, JITSI_URL, SECRET_JITSI_KEY } from "../Enum/EnvironmentVariable";
-import { adminApi } from "./AdminApi";
 import { emitInBatch } from "./IoSocketHelpers";
-import Jwt from "jsonwebtoken";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { apiClientRepository } from "./ApiClientRepository";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "../Model/Zone";
 import Debug from "debug";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
-import { WebSocket } from "uWebSockets.js";
-import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { CharacterTexture } from "../Messages/JsonMessages/CharacterTexture";
+import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
+import { compressors } from "hyper-express";
+import { adminService } from "./AdminService";
+import { ErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { BoolValue, Int32Value, StringValue } from "google-protobuf/google/protobuf/wrappers_pb";
 
 const debug = Debug("socket");
 
@@ -120,15 +121,27 @@ export class SocketManager implements ZoneEventListener {
                 }
             })
             .on("end", () => {
-                console.warn("Admin connection lost to back server");
                 // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                 if (!client.disconnecting) {
+                    console.warn(
+                        "Admin connection lost to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            roomId +
+                            "'"
+                    );
                     this.closeWebsocketConnection(client, 1011, "Admin Connection lost to back server");
                 }
-                console.log("A user left");
             })
             .on("error", (err: Error) => {
-                console.error("Error in connection to back server:", err);
+                console.error(
+                    "Error in connection to back server '" +
+                        apiClient.getChannel().getTarget() +
+                        "' for room '" +
+                        roomId +
+                        "':",
+                    err
+                );
                 if (!client.disconnecting) {
                     this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                 }
@@ -160,6 +173,7 @@ export class SocketManager implements ZoneEventListener {
             joinRoomMessage.setIpaddress(client.IPAddress);
             joinRoomMessage.setRoomid(client.roomId);
             joinRoomMessage.setName(client.name);
+            joinRoomMessage.setAvailabilitystatus(client.availabilityStatus);
             joinRoomMessage.setPositionmessage(ProtobufUtils.toPositionMessage(client.position));
             joinRoomMessage.setTagList(client.tags);
 
@@ -174,15 +188,18 @@ export class SocketManager implements ZoneEventListener {
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
-                characterLayerMessage.setName(characterLayer.name);
+                characterLayerMessage.setName(characterLayer.id);
                 if (characterLayer.url !== undefined) {
                     characterLayerMessage.setUrl(characterLayer.url);
+                }
+                if (characterLayer.layer !== undefined) {
+                    characterLayerMessage.setLayer(characterLayer.layer);
                 }
 
                 joinRoomMessage.addCharacterlayer(characterLayerMessage);
             }
 
-            console.log("Calling joinRoom");
+            debug("Calling joinRoom '" + client.roomId + "'");
             const apiClient = await apiClientRepository.getClient(client.roomId);
             const streamToPusher = apiClient.joinRoom();
             clientEventsEmitter.emitClientJoin(client.userUuid, client.roomId);
@@ -210,15 +227,30 @@ export class SocketManager implements ZoneEventListener {
                     }
                 })
                 .on("end", () => {
-                    console.warn("Connection lost to back server");
                     // Let's close the front connection if the back connection is closed. This way, we can retry connecting from the start.
                     if (!client.disconnecting) {
+                        console.warn(
+                            "Connection lost to back server '" +
+                                apiClient.getChannel().getTarget() +
+                                "' for room '" +
+                                client.roomId +
+                                "'"
+                        );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
-                    console.log("A user left");
+                    if (client.xmppClient) {
+                        client.xmppClient.close();
+                    }
                 })
                 .on("error", (err: Error) => {
-                    console.error("Error in connection to back server:", err);
+                    console.error(
+                        "Error in connection to back server '" +
+                            apiClient.getChannel().getTarget() +
+                            "' for room '" +
+                            client.roomId +
+                            "':",
+                        err
+                    );
                     if (!client.disconnecting) {
                         this.closeWebsocketConnection(client, 1011, "Error while connecting to back server");
                     }
@@ -229,6 +261,7 @@ export class SocketManager implements ZoneEventListener {
             streamToPusher.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
@@ -292,6 +325,12 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
+    handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setLockgrouppromptmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
     onEmote(emoteMessage: EmoteEventMessage, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setEmoteeventmessage(emoteMessage);
@@ -324,13 +363,6 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleSilentMessage(client: ExSocketInterface, silentMessage: SilentMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setSilentmessage(silentMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
     handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
@@ -347,7 +379,8 @@ export class SocketManager implements ZoneEventListener {
 
     async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
         try {
-            await adminApi.reportPlayer(
+            await adminService.reportPlayer(
+                "en",
                 reportPlayerMessage.getReporteduseruuid(),
                 reportPlayerMessage.getReportcomment(),
                 client.userUuid,
@@ -391,9 +424,13 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
+                    if (socket.xmppClient) {
+                        console.log("leaveRoom => close");
+                        socket.xmppClient.close();
+                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
-                    console.log("A user left");
+                    debug("User ", socket.name, " left: ", socket.userUuid);
                 }
             }
         } finally {
@@ -423,75 +460,21 @@ export class SocketManager implements ZoneEventListener {
         let room = this.rooms.get(roomUrl);
         if (room === undefined) {
             room = new PusherRoom(roomUrl, this);
-            if (ADMIN_API_URL) {
-                await this.updateRoomWithAdminData(room);
-            }
             await room.init();
             this.rooms.set(roomUrl, room);
         }
         return room;
     }
 
-    public async updateRoomWithAdminData(room: PusherRoom): Promise<void> {
-        const data = await adminApi.fetchMapDetails(room.roomUrl);
-
-        if (isRoomRedirect(data)) {
-            // TODO: if the updated room data is actually a redirect, we need to take everybody on the map
-            // and redirect everybody to the new location (so we need to close the connection for everybody)
-        } else {
-            room.tags = data.tags;
-            room.policyType = Number(data.policy_type);
-        }
-    }
-
     public getWorlds(): Map<string, PusherRoom> {
         return this.rooms;
     }
 
-    public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        try {
-            const room = queryJitsiJwtMessage.getJitsiroom();
-            const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setQuerymessage(queryMessage);
 
-            if (SECRET_JITSI_KEY === "") {
-                throw new Error(
-                    "You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi."
-                );
-            }
-
-            // Let's see if the current client has
-            const isAdmin = client.tags.includes(tag);
-
-            const jwt = Jwt.sign(
-                {
-                    aud: "jitsi",
-                    iss: JITSI_ISS,
-                    sub: JITSI_URL,
-                    room: room,
-                    moderator: isAdmin,
-                },
-                SECRET_JITSI_KEY,
-                {
-                    expiresIn: "1d",
-                    algorithm: "HS256",
-                    header: {
-                        alg: "HS256",
-                        typ: "JWT",
-                    },
-                }
-            );
-
-            const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-            sendJitsiJwtMessage.setJitsiroom(room);
-            sendJitsiJwtMessage.setJwt(jwt);
-
-            const serverToClientMessage = new ServerToClientMessage();
-            serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
-
-            client.send(serverToClientMessage.serializeBinary().buffer, true);
-        } catch (e) {
-            console.error("An error occurred while generating the Jitsi JWT token: ", e);
-        }
+        client.backConnection.write(pusherToBackMessage);
     }
 
     public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
@@ -544,36 +527,6 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    /**
-     * Merges the characterLayers received from the front (as an array of string) with the custom textures from the back.
-     */
-    static mergeCharacterLayersAndCustomTextures(
-        characterLayers: string[],
-        memberTextures: CharacterTexture[]
-    ): CharacterLayer[] {
-        const characterLayerObjs: CharacterLayer[] = [];
-        for (const characterLayer of characterLayers) {
-            if (characterLayer.startsWith("customCharacterTexture")) {
-                const customCharacterLayerId: number = +characterLayer.substr(22);
-                for (const memberTexture of memberTextures) {
-                    if (memberTexture.id == customCharacterLayerId) {
-                        characterLayerObjs.push({
-                            name: characterLayer,
-                            url: memberTexture.url,
-                        });
-                        break;
-                    }
-                }
-            } else {
-                characterLayerObjs.push({
-                    name: characterLayer,
-                    url: undefined,
-                });
-            }
-        }
-        return characterLayerObjs;
-    }
-
     public onUserEnters(user: UserDescriptor, listener: ExSocketInterface): void {
         const subMessage = new SubMessage();
         subMessage.setUserjoinedmessage(user.toUserJoinedMessage());
@@ -619,7 +572,7 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
-    public emitWorldFullMessage(client: WebSocket) {
+    public emitWorldFullMessage(client: compressors.WebSocket) {
         const errorMessage = new WorldFullMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -630,7 +583,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: WebSocket) {
+    public emitTokenExpiredMessage(client: compressors.WebSocket) {
         const errorMessage = new TokenExpiredMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -641,7 +594,18 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: WebSocket, message: string) {
+    public emitInvalidTextureMessage(client: compressors.WebSocket) {
+        const errorMessage = new InvalidTextureMessage();
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setInvalidtexturemessage(errorMessage);
+
+        if (!client.disconnecting) {
+            client.send(serverToClientMessage.serializeBinary().buffer, true);
+        }
+    }
+
+    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string) {
         const errorMessage = new WorldConnexionMessage();
         errorMessage.setMessage(message);
 
@@ -651,12 +615,41 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
+    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
+        const errorMessage = new ErrorScreenMessage();
+        errorMessage.setType(errorApi.type);
+        if (errorApi.type == "retry" || errorApi.type == "error" || errorApi.type == "unauthorized") {
+            errorMessage.setCode(new StringValue().setValue(errorApi.code));
+            errorMessage.setTitle(new StringValue().setValue(errorApi.title));
+            errorMessage.setSubtitle(new StringValue().setValue(errorApi.subtitle));
+            errorMessage.setDetails(new StringValue().setValue(errorApi.details));
+            errorMessage.setImage(new StringValue().setValue(errorApi.image));
+            if (errorApi.type == "unauthorized" && errorApi.buttonTitle)
+                errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
+        }
+        if (errorApi.type == "retry") {
+            if (errorApi.buttonTitle) errorMessage.setButtontitle(new StringValue().setValue(errorApi.buttonTitle));
+            if (errorApi.canRetryManual !== undefined)
+                errorMessage.setCanretrymanual(new BoolValue().setValue(errorApi.canRetryManual));
+            if (errorApi.timeToRetry)
+                errorMessage.setTimetoretry(new Int32Value().setValue(Number(errorApi.timeToRetry)));
+        }
+        if (errorApi.type == "redirect" && errorApi.urlToRedirect)
+            errorMessage.setUrltoredirect(new StringValue().setValue(errorApi.urlToRedirect));
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setErrorscreenmessage(errorMessage);
+
+        //if (!client.disconnecting) {
+        client.send(serverToClientMessage.serializeBinary().buffer, true);
+        //}
+    }
+
     private refreshRoomData(roomId: string, versionNumber: number): void {
         const room = this.rooms.get(roomId);
         //this function is run for every users connected to the room, so we need to make sure the room wasn't already refreshed.
         if (!room || !room.needsUpdate(versionNumber)) return;
-
-        this.updateRoomWithAdminData(room);
+        //TODO check right of user in admin
     }
 
     handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
@@ -678,7 +671,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminApi.getUrlRoomsFromSameWorld(clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
@@ -690,10 +683,26 @@ export class SocketManager implements ZoneEventListener {
         for (const roomUrl of tabUrlRooms) {
             const apiRoom = await apiClientRepository.getClient(roomUrl);
             roomMessage.setRoomid(roomUrl);
-            apiRoom.sendAdminMessageToRoom(roomMessage, (response) => {
+            apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;
             });
         }
+    }
+
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
+        if (client.xmppClient === undefined) {
+            throw new Error(
+                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
+            );
+        }
+        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+    }
+
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setAskpositionmessage(askPositionMessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 

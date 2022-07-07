@@ -4,16 +4,10 @@
     import BanMessage from "./BanMessage.svelte";
 </script>
 
-<div class="main-ban-message-container">
+<div class="tw-z-[800] tw-h-full tw-flex tw-items-center">
     {#each $banMessageStore.slice(0, 1) as message (message.id)}
-        <div animate:flip={{ duration: 250 }}>
+        <div animate:flip={{ duration: 250 }} class="tw-h-2/3 tw-flex">
             <BanMessage {message} />
         </div>
     {/each}
 </div>
-
-<style lang="scss">
-    .main-ban-message-container {
-        z-index: 800;
-    }
-</style>

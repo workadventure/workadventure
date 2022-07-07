@@ -16,15 +16,13 @@ import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
-import { SelectCharacterMobileScene } from "./Phaser/Login/SelectCharacterMobileScene";
+import { desktopApi } from "./Api/desktop/index";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
-import { analyticsClient } from "./Administration/AnalyticsClient";
-import { isMediaBreakpointUp } from "./Utils/BreakpointsUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -91,7 +89,7 @@ const config: GameConfig = {
     scene: [
         EntryScene,
         LoginScene,
-        isMediaBreakpointUp("md") ? SelectCharacterMobileScene : SelectCharacterScene,
+        SelectCharacterScene,
         SelectCompanionScene,
         EnableCameraScene,
         ReconnectingScene,
@@ -103,7 +101,6 @@ const config: GameConfig = {
     dom: {
         createContainer: true,
     },
-    disableContextMenu: true,
     render: {
         pixelArt: true,
         roundPixels: true,
@@ -141,7 +138,15 @@ const game = new Game(config);
 
 waScaleManager.setGame(game);
 
-window.addEventListener("resize", function (event) {
+/*
+TODO: replace with disableContextMenu when Phaser does not disable context menu on document.body
+see https://github.com/photonstorm/phaser/issues/6064
+*/
+HtmlUtils.querySelectorOrFail("#game canvas").addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+});
+
+window.addEventListener("resize", function () {
     coWebsiteManager.resetStyleMain();
 
     waScaleManager.applyNewSize();
@@ -154,6 +159,7 @@ coWebsiteManager.onResize.subscribe(() => {
 });
 
 iframeListener.init();
+desktopApi.init();
 
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),

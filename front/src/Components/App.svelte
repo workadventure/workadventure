@@ -1,25 +1,29 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../Phaser/Game/Game";
     import { chatVisibilityStore } from "../Stores/ChatStore";
-    import { customCharacterSceneVisibleStore } from "../Stores/CustomCharacterStore";
     import { errorStore } from "../Stores/ErrorStore";
+    import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import Chat from "./Chat/Chat.svelte";
-    import CustomCharacterScene from "./CustomCharacterScene/CustomCharacterScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
     import SelectCharacterScene from "./selectCharacter/SelectCharacterScene.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
+    import ErrorScreen from "./UI/ErrorScreen.svelte";
 
     export let game: Game;
 </script>
 
-{#if $errorStore.length > 0}
+{#if $errorScreenStore !== undefined}
+    <div>
+        <ErrorScreen />
+    </div>
+{:else if $errorStore.length > 0}
     <div>
         <ErrorDialog />
     </div>
@@ -30,10 +34,6 @@
 {:else if $selectCharacterSceneVisibleStore}
     <div>
         <SelectCharacterScene {game} />
-    </div>
-{:else if $customCharacterSceneVisibleStore}
-    <div>
-        <CustomCharacterScene {game} />
     </div>
 {:else if $selectCompanionSceneVisibleStore}
     <div>

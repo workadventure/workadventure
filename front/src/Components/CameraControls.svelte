@@ -1,6 +1,6 @@
-<script lang="typescript">
+<script lang="ts">
     import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
-    import { isSilentStore, requestedCameraState, requestedMicrophoneState } from "../Stores/MediaStore";
+    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../Stores/MediaStore";
     import monitorImg from "./images/monitor.svg";
     import monitorCloseImg from "./images/monitor-close.svg";
     import cinemaImg from "./images/cinema.svg";
@@ -10,17 +10,19 @@
     import layoutPresentationImg from "./images/layout-presentation.svg";
     import layoutChatImg from "./images/layout-chat.svg";
     import followImg from "./images/follow.svg";
+    import lockImg from "./images/lock.svg";
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { peerStore } from "../Stores/PeerStore";
-    import { onDestroy } from "svelte";
-    import { embedScreenLayout } from "../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
+    import { analyticsClient } from "../Administration/AnalyticsClient";
 
     const gameScene = gameManager.getCurrentGameScene();
 
     function screenSharingClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedScreenSharingState === true) {
             requestedScreenSharingState.disableScreenSharing();
         } else {
@@ -29,7 +31,7 @@
     }
 
     function cameraClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedCameraState === true) {
             requestedCameraState.disableWebcam();
         } else {
@@ -38,7 +40,7 @@
     }
 
     function microphoneClick(): void {
-        if (isSilent) return;
+        if ($silentStore) return;
         if ($requestedMicrophoneState === true) {
             requestedMicrophoneState.disableMicrophone();
         } else {
@@ -47,10 +49,10 @@
     }
 
     function switchLayoutMode() {
-        if ($embedScreenLayout === LayoutMode.Presentation) {
-            $embedScreenLayout = LayoutMode.VideoChat;
+        if ($embedScreenLayoutStore === LayoutMode.Presentation) {
+            $embedScreenLayoutStore = LayoutMode.VideoChat;
         } else {
-            $embedScreenLayout = LayoutMode.Presentation;
+            $embedScreenLayoutStore = LayoutMode.Presentation;
         }
     }
 
@@ -70,16 +72,14 @@
         }
     }
 
-    let isSilent: boolean;
-    const unsubscribeIsSilent = isSilentStore.subscribe((value) => {
-        isSilent = value;
-    });
-    onDestroy(unsubscribeIsSilent);
+    function lockClick() {
+        gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
+    }
 </script>
 
 <div class="btn-cam-action">
-    <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
-        {#if $embedScreenLayout === LayoutMode.Presentation}
+    <div class="btn-layout action-b-btn" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
+        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
             <img class="noselect" src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
         {:else}
             <img class="noselect" src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode" />
@@ -87,37 +87,59 @@
     </div>
 
     <div
-        class="btn-follow"
-        class:hide={($peerStore.size === 0 && $followStateStore === "off") || isSilent}
+        class="btn-follow action-b-btn"
+        class:hide={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
         class:disabled={$followStateStore !== "off"}
+        on:click={() => analyticsClient.follow()}
         on:click={followClick}
     >
         <img class="noselect" src={followImg} alt="" />
     </div>
 
     <div
-        class="btn-monitor"
+        class="btn-lock action-b-btn"
+        class:hide={$peerStore.size === 0 || $silentStore}
+        class:disabled={$currentPlayerGroupLockStateStore}
+        on:click={() => analyticsClient.lockDiscussion()}
+        on:click={lockClick}
+    >
+        <img class="noselect" src={lockImg} alt="" />
+    </div>
+
+    <div
+        class="btn-monitor action-b-btn"
+        on:click={() => analyticsClient.screenSharing()}
         on:click={screenSharingClick}
-        class:hide={!$screenSharingAvailableStore || isSilent}
+        class:hide={!$screenSharingAvailableStore || $silentStore}
         class:enabled={$requestedScreenSharingState}
     >
-        {#if $requestedScreenSharingState && !isSilent}
+        {#if $requestedScreenSharingState && !$silentStore}
             <img class="noselect" src={monitorImg} alt="Start screen sharing" />
         {:else}
             <img class="noselect" src={monitorCloseImg} alt="Stop screen sharing" />
         {/if}
     </div>
 
-    <div class="btn-video" on:click={cameraClick} class:disabled={!$requestedCameraState || isSilent}>
-        {#if $requestedCameraState && !isSilent}
+    <div
+        class="btn-video action-b-btn"
+        on:click={() => analyticsClient.camera()}
+        on:click={cameraClick}
+        class:disabled={!$requestedCameraState || $silentStore}
+    >
+        {#if $requestedCameraState && !$silentStore}
             <img class="noselect" src={cinemaImg} alt="Turn on webcam" />
         {:else}
             <img class="noselect" src={cinemaCloseImg} alt="Turn off webcam" />
         {/if}
     </div>
 
-    <div class="btn-micro" on:click={microphoneClick} class:disabled={!$requestedMicrophoneState || isSilent}>
-        {#if $requestedMicrophoneState && !isSilent}
+    <div
+        class="btn-micro action-b-btn"
+        on:click={() => analyticsClient.microphone()}
+        on:click={microphoneClick}
+        class:disabled={!$requestedMicrophoneState || $silentStore}
+    >
+        {#if $requestedMicrophoneState && !$silentStore}
             <img class="noselect" src={microphoneImg} alt="Turn on microphone" />
         {:else}
             <img class="noselect" src={microphoneCloseImg} alt="Turn off microphone" />
@@ -127,6 +149,13 @@
 
 <style lang="scss">
     @import "../../style/breakpoints.scss";
+    .action-b-btn {
+        background-color: theme("colors.medium-purple");
+        opacity: 0.95;
+    }
+    .action-b-btn:hover {
+        background-color: theme("colors.light-purple");
+    }
 
     .btn-cam-action {
         pointer-events: all;
@@ -156,13 +185,12 @@
         border: solid 0px black;
         width: 44px;
         height: 44px;
-        background: #666;
         box-shadow: 2px 2px 24px #444;
         border-radius: 48px;
         transform: translateY(15px);
         transition-timing-function: ease-in-out;
         transition: all 0.3s;
-        margin: 0 4%;
+        margin: 0 2%;
 
         &.hide {
             transform: translateY(60px);
@@ -178,7 +206,6 @@
         transform: translateY(0);
     }
     .btn-cam-action div:hover {
-        background: #407cf7;
         box-shadow: 4px 4px 48px #666;
         transition: 120ms;
     }
@@ -204,6 +231,14 @@
     }
 
     .btn-follow {
+        pointer-events: auto;
+
+        img {
+            filter: brightness(0) invert(1);
+        }
+    }
+
+    .btn-lock {
         pointer-events: auto;
 
         img {

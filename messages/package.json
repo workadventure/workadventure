@@ -6,21 +6,24 @@
     "proto": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --grpc_out=generated --js_out=\"import_style=commonjs,binary:generated\" --ts_out=generated -I ./protos protos/*.proto",
     "ts-proto": "grpc_tools_node_protoc --plugin=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=ts-proto-generated --ts_proto_opt=oneof=unions --ts_proto_opt=esModuleInterop=true protos/*.proto",
     "copy-to-back": "rm -rf ../back/src/Messages/generated && cp -rf generated/ ../back/src/Messages/generated",
-    "copy-to-front-ts-proto": "sed 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ts-proto-generated/protos/messages.ts > ../front/src/Messages/ts-proto-generated/messages.ts",
+    "copy-to-front-ts-proto": "cp -rf ts-proto-generated/* ../front/src/Messages/ts-proto-generated/ && sed -i 's/import { Observable } from \"rxjs\";/import type { Observable } from \"rxjs\";/g' ../front/src/Messages/ts-proto-generated/protos/messages.ts",
     "copy-to-pusher": "rm -rf ../pusher/src/Messages/generated && cp -rf generated/ ../pusher/src/Messages/generated",
     "json-copy-to-pusher": "rm -rf ../pusher/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../pusher/src/Messages/JsonMessages/",
+    "json-copy-to-back": "rm -rf ../back/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../back/src/Messages/JsonMessages/",
     "json-copy-to-front": "rm -rf ../front/src/Messages/JsonMessages/* && cp -rf JsonMessages/* ../front/src/Messages/JsonMessages/",
     "precommit": "lint-staged",
-    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-back && yarn run copy-to-front-ts-proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher && yarn run json-copy-to-front",
+    "proto-all": "yarn run proto && yarn run ts-proto && yarn run copy-to-back && yarn run copy-to-front-ts-proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher && yarn run json-copy-to-back && yarn run json-copy-to-front",
     "proto:watch": "yarn run proto-all; inotifywait -q -m -e close_write protos/messages.proto JsonMessages/ | while read -r filename event; do yarn run proto-all; done",
     "pretty": "yarn prettier --write 'JsonMessages/**/*.ts'",
-    "pretty-check": "yarn prettier --check 'JsonMessages/**/*.ts'"
+    "pretty-check": "yarn prettier --check 'JsonMessages/**/*.ts'",
+    "tag-version": "sed -i \"s/apiVersionHash = \\\".*\\\"/apiVersionHash = \\\"$(sha1sum protos/messages.proto JsonMessages/* | sha1sum | cut -c1-8)\\\"/g\" JsonMessages/ApiVersion.ts"
   },
   "dependencies": {
-    "generic-type-guard": "^3.5.0",
+    "@anatine/zod-openapi": "^1.3.0",
     "google-protobuf": "^3.13.0",
-    "grpc": "^1.24.4",
-    "ts-proto": "^1.96.0"
+    "openapi3-ts": "^2.0.2",
+    "ts-proto": "^1.96.0",
+    "zod": "^3.14.3"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.7.4",
@@ -36,7 +39,7 @@
     "grpc_tools_node_protoc_ts": "^5.0.1",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
-    "protobufjs": "^6.10.1",
+    "protobufjs": "^6.11.3",
     "rimraf": "^3.0.2",
     "shelljs": "^0.8.5",
     "typescript": "^4.0.5"

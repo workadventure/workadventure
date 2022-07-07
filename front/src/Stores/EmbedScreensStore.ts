@@ -1,5 +1,5 @@
 import { derived, get, writable } from "svelte/store";
-import type { CoWebsite } from "../WebRtc/CoWebsiteManager";
+import type { CoWebsite } from "../WebRtc/CoWebsite/CoWesbite";
 import { LayoutMode } from "../WebRtc/LayoutManager";
 import { coWebsites } from "./CoWebsiteStore";
 import { Streamable, streamableCollectionStore } from "./StreamableCollectionStore";
@@ -15,7 +15,7 @@ export type EmbedScreen =
       };
 
 function createHighlightedEmbedScreenStore() {
-    const { subscribe, set, update } = writable<EmbedScreen | null>(null);
+    const { subscribe, set, update } = writable<EmbedScreen | undefined>(undefined);
 
     return {
         subscribe,
@@ -23,7 +23,7 @@ function createHighlightedEmbedScreenStore() {
             set(embedScreen);
         },
         removeHighlight: () => {
-            set(null);
+            set(undefined);
         },
         toggleHighlight: (embedScreen: EmbedScreen) => {
             update((currentEmbedScreen) =>
@@ -31,21 +31,18 @@ function createHighlightedEmbedScreenStore() {
                 embedScreen.type !== currentEmbedScreen.type ||
                 (embedScreen.type === "cowebsite" &&
                     currentEmbedScreen.type === "cowebsite" &&
-                    embedScreen.embed.iframe.id !== currentEmbedScreen.embed.iframe.id) ||
+                    embedScreen.embed.getId() !== currentEmbedScreen.embed.getId()) ||
                 (embedScreen.type === "streamable" &&
                     currentEmbedScreen.type === "streamable" &&
                     embedScreen.embed.uniqueId !== currentEmbedScreen.embed.uniqueId)
                     ? embedScreen
-                    : null
+                    : undefined
             );
         },
     };
 }
 
 export const highlightedEmbedScreen = createHighlightedEmbedScreenStore();
-export const embedScreenLayout = writable<LayoutMode>(LayoutMode.Presentation);
+export const embedScreenLayoutStore = writable<LayoutMode>(LayoutMode.Presentation);
 
-export const hasEmbedScreen = derived(
-    [streamableCollectionStore],
-    ($values) => get(streamableCollectionStore).size + get(coWebsites).length > 0
-);
+export const hasEmbedScreen = derived([], () => get(streamableCollectionStore).size + get(coWebsites).length > 0);

@@ -1,41 +1,18 @@
 import { ResizableScene } from "./ResizableScene";
-import { localUserStore } from "../../Connexion/LocalUserStore";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
-import { loadCustomTexture } from "../Entity/PlayerTexturesLoadingManager";
-import type { CharacterTexture } from "../../Connexion/LocalUser";
-import type CancelablePromise from "cancelable-promise";
+import { PlayerTextures } from "../Entity/PlayerTextures";
+import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 
 export abstract class AbstractCharacterScene extends ResizableScene {
-    loadCustomSceneSelectCharacters(): Promise<BodyResourceDescriptionInterface[]> {
-        const textures = this.getTextures();
-        const promises: CancelablePromise<BodyResourceDescriptionInterface>[] = [];
-        if (textures) {
-            for (const texture of textures) {
-                if (texture.level === -1) {
-                    continue;
-                }
-                promises.push(loadCustomTexture(this.load, texture));
-            }
-        }
-        return Promise.all(promises);
+    protected playerTextures: PlayerTextures;
+    protected superLoad: SuperLoaderPlugin;
+
+    constructor(params: { key: string }) {
+        super(params);
+        this.playerTextures = new PlayerTextures();
+        this.superLoad = new SuperLoaderPlugin(this);
     }
 
-    loadSelectSceneCharacters(): Promise<BodyResourceDescriptionInterface[]> {
-        const textures = this.getTextures();
-        const promises: CancelablePromise<BodyResourceDescriptionInterface>[] = [];
-        if (textures) {
-            for (const texture of textures) {
-                if (texture.level !== -1) {
-                    continue;
-                }
-                promises.push(loadCustomTexture(this.load, texture));
-            }
-        }
-        return Promise.all(promises);
-    }
-
-    private getTextures(): CharacterTexture[] | undefined {
-        const localUser = localUserStore.getLocalUser();
-        return localUser?.textures;
+    preload() {
+        this.input.dragDistanceThreshold = 10;
     }
 }

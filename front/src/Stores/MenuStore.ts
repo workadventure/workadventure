@@ -1,17 +1,26 @@
 import { get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL } from "../Enum/EnvironmentVariable";
-import { analyticsClient } from "../Administration/AnalyticsClient";
+import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../i18n/i18n-types";
+import axios from "axios";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { connectionManager } from "../Connexion/ConnectionManager";
 
 export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
-menuVisiblilityStore.subscribe((value) => {
-    if (value) analyticsClient.openedMenu();
-});
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
+export const profileAvailable = writable(true);
+
+menuVisiblilityStore.subscribe((value) => {
+    if (userIsConnected && value && IDENTITY_URL != null) {
+        axios.get(getMeUrl()).catch((err) => {
+            console.error("menuVisiblilityStore => err => ", err);
+            profileAvailable.set(false);
+        });
+    }
+});
 
 let warningContainerTimeout: Timeout | null = null;
 function createWarningContainerStore() {
@@ -133,6 +142,8 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
+export const activeSubMenuStore = writable<number>(0);
+
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
 export function checkSubMenuToShow() {
@@ -172,4 +183,12 @@ export function handleMenuRegistrationEvent(
 export function handleMenuUnregisterEvent(menuName: string) {
     subMenusStore.removeScriptingMenu(menuName);
     customMenuIframe.delete(menuName);
+}
+
+export function getProfileUrl() {
+    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
+}
+
+export function getMeUrl() {
+    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }

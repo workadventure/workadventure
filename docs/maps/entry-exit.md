@@ -82,7 +82,11 @@ We are able to direct a Woka to the desired place immediately after spawn. To ma
 ```
 .../my_map.json#moveTo=meeting-room&start
 ```
+*...or even like this!*
+```
+.../my_map.json#start&moveTo=200,100
+```
 
-For this to work, moveTo must be equal to the layer name of interest. This layer should have at least one tile defined. In case of layer having many tiles, user will go to one of them, randomly selected.
+For this to work, moveTo must be equal to the x and y position, layer name, or object name of interest. Layer should have at least one tile defined. In case of layer having many tiles, user will go to one of them, randomly selected.
 
 ![](images/moveTo-layer-example.png)

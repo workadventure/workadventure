@@ -1,36 +1,83 @@
 import { v4 } from "uuid";
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js";
-import { BaseController } from "./BaseController";
-import { adminApi, FetchMemberDataByUuidResponse } from "../Services/AdminApi";
+import { BaseHttpController } from "./BaseHttpController";
+import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { DISABLE_ANONYMOUS, FRONT_URL } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
+import { adminService } from "../Services/AdminService";
+import Axios from "axios";
+import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
-export interface TokenInterface {
-    userUuid: string;
-}
-
-export class AuthenticateController extends BaseController {
-    constructor(private App: TemplatedApp) {
-        super();
+export class AuthenticateController extends BaseHttpController {
+    routes() {
+        this.roomAccess();
         this.openIDLogin();
         this.openIDCallback();
         this.register();
         this.anonymLogin();
         this.profileCallback();
+        this.me();
+    }
+
+    roomAccess() {
+        this.app.get("/room/access", (req, res) => {
+            (async () => {
+                try {
+                    const { uuid, playUri } = parse(req.path_query);
+                    if (!uuid || !playUri) {
+                        throw new Error("Missing uuid and playUri parameters.");
+                    }
+                    return res.json(
+                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    );
+                } catch (e) {
+                    console.warn(e);
+                }
+                res.status(500);
+                res.send("User cannot be identified.");
+                return;
+            })().catch((e) => console.error(e));
+        });
     }
 
     openIDLogin() {
+        /**
+         * @openapi
+         * /login-screen:
+         *   get:
+         *     description: Redirects the user to the OpenID login screen
+         *     parameters:
+         *      - name: "nonce"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "state"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "redirect"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       302:
+         *         description: Redirects the user to the OpenID login screen
+         *
+         */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/login-screen", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
+        this.app.get("/login-screen", async (req, res) => {
             try {
-                const { nonce, state, playUri, redirect } = parse(req.getQuery());
+                const { nonce, state, playUri, redirect } = parse(req.path_query);
                 if (!state || !nonce) {
                     throw new Error("missing state and nonce URL parameters");
                 }
@@ -41,24 +88,98 @@ export class AuthenticateController extends BaseController {
                     playUri as string | undefined,
                     redirect as string | undefined
                 );
-                res.writeStatus("302");
-                res.writeHeader("Location", loginUri);
-                return res.end();
+                res.status(302);
+                res.setHeader("Location", loginUri);
+                return res.send("");
             } catch (e) {
                 console.error("openIDLogin => e", e);
-                return this.errorToResponse(e, res);
+                this.castErrorToResponse(e, res);
+                return;
             }
         });
     }
 
     openIDCallback() {
+        /**
+         * @openapi
+         * /login-callback:
+         *   get:
+         *     description: TODO
+         *     parameters:
+         *      - name: "code"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "nonce"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "token"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *      - name: "playUri"
+         *        in: "query"
+         *        description: "todo"
+         *        required: true
+         *        type: "string"
+         *     responses:
+         *       200:
+         *         description: NOTE - THERE ARE ADDITIONAL PROPERTIES NOT DISPLAYED HERE. THEY COME FROM THE CALL TO openIDClient.checkTokenAuth
+         *         content:
+         *           application/json:
+         *             schema:
+         *               type: object
+         *               properties:
+         *                 authToken:
+         *                   type: string
+         *                   description: A new JWT token (if no token was passed in parameter), or returns the token that was passed in parameter if one was supplied
+         *                 username:
+         *                   type: string|undefined
+         *                   description: Contains the username stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
+         *                   example: John Doe
+         *                 locale:
+         *                   type: string|undefined
+         *                   description: Contains the locale stored in the JWT token passed in parameter. If no token was passed, contains the data from OpenID.
+         *                   example: fr_FR
+         *                 email:
+         *                   type: string
+         *                   description: TODO
+         *                   example: TODO
+         *                 userUuid:
+         *                   type: string
+         *                   description: TODO
+         *                   example: TODO
+         *                 visitCardUrl:
+         *                   type: string|null
+         *                   description: TODO
+         *                   example: TODO
+         *                 tags:
+         *                   type: array
+         *                   description: The list of tags of the user
+         *                   items:
+         *                     type: string
+         *                     example: speaker
+         *                 textures:
+         *                   type: array
+         *                   description: The list of textures of the user
+         *                   items:
+         *                     type: TODO
+         *                     example: TODO
+         *                 messages:
+         *                   type: array
+         *                   description: The list of messages to be displayed to the user
+         *                   items:
+         *                     type: TODO
+         *                     example: TODO
+         */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/login-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-            const IPAddress = req.getHeader("x-forwarded-for");
-            const { code, nonce, token, playUri } = parse(req.getQuery());
+        this.app.get("/login-callback", async (req, res) => {
+            const IPAddress = req.header("x-forwarded-for");
+            const { code, nonce, token, playUri } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
@@ -67,32 +188,42 @@ export class AuthenticateController extends BaseController {
 
                         //Get user data from Admin Back Office
                         //This is very important to create User Local in LocalStorage in WorkAdventure
-                        const resUserData = await this.getUserByUserIdentifier(
+                        const resUserData = await adminService.fetchMemberDataByUuid(
                             authTokenData.identifier,
                             playUri as string,
-                            IPAddress
+                            IPAddress,
+                            [],
+                            req.header("accept-language")
                         );
 
                         if (authTokenData.accessToken == undefined) {
                             //if not nonce and code, user connected in anonymous
                             //get data with identifier and return token
                             if (!code && !nonce) {
-                                res.writeStatus("200");
-                                this.addCorsHeaders(res);
-                                return res.end(JSON.stringify({ ...resUserData, authToken: token }));
+                                return res.json({ ...resUserData, authToken: token });
                             }
-                            console.error("Token cannot to be check on OpenId provider");
-                            res.writeStatus("500");
-                            res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                            res.end("User cannot to be connected on openid provider");
+                            console.error("Token cannot be checked on OpenId provider");
+                            res.status(500);
+                            res.send("User cannot to be connected on openid provider");
                             return;
                         }
 
                         const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                        res.writeStatus("200");
-                        this.addCorsHeaders(res);
-                        return res.end(JSON.stringify({ ...resCheckTokenAuth, ...resUserData, authToken: token }));
+                        return res.json({
+                            ...resCheckTokenAuth,
+                            ...resUserData,
+                            authToken: token,
+                            username: authTokenData?.username,
+                            locale: authTokenData?.locale,
+                        });
                     } catch (err) {
+                        if (Axios.isAxiosError(err)) {
+                            const errorType = isErrorApiData.safeParse(err?.response?.data);
+                            if (errorType.success) {
+                                res.sendStatus(err?.response?.status ?? 500);
+                                return res.json(errorType.data);
+                            }
+                        }
                         console.info("User was not connected", err);
                     }
                 }
@@ -104,166 +235,289 @@ export class AuthenticateController extends BaseController {
                 } catch (err) {
                     //if no access on openid provider, return error
                     console.error("User cannot to be connected on OpenId provider => ", err);
-                    res.writeStatus("500");
-                    res.writeHeader("Access-Control-Allow-Origin", FRONT_URL);
-                    res.end("User cannot to be connected on openid provider");
+                    res.status(500);
+                    res.send("User cannot to be connected on openid provider");
                     return;
                 }
                 const email = userInfo.email || userInfo.sub;
                 if (!email) {
                     throw new Error("No email in the response");
                 }
-                const authToken = jwtTokenManager.createAuthToken(email, userInfo?.access_token);
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
 
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
-                const data = await this.getUserByUserIdentifier(email, playUri as string, IPAddress);
+                const data = await adminService.fetchMemberDataByUuid(
+                    email,
+                    playUri as string,
+                    IPAddress,
+                    [],
+                    req.header("accept-language")
+                );
 
-                res.writeStatus("200");
-                this.addCorsHeaders(res);
-                return res.end(JSON.stringify({ ...data, authToken }));
+                return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
-                return this.errorToResponse(e, res);
+                return this.castErrorToResponse(e, res);
             }
         });
 
+        /**
+         * @openapi
+         * /logout-callback:
+         *   get:
+         *     description: TODO
+         *     parameters:
+         *      - name: "token"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       200:
+         *         description: TODO
+         *
+         */
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/logout-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-
-            const { token } = parse(req.getQuery());
+        this.app.get("/logout-callback", async (req, res) => {
+            const { token } = parse(req.path_query);
 
             try {
                 const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                 if (authTokenData.accessToken == undefined) {
-                    throw Error("Token cannot to be logout on Hydra");
+                    throw Error("Token cannot be logout on Hydra");
                 }
                 await openIDClient.logoutUser(authTokenData.accessToken);
             } catch (error) {
                 console.error("openIDCallback => logout-callback", error);
-            } finally {
-                res.writeStatus("200");
-                this.addCorsHeaders(res);
-                // eslint-disable-next-line no-unsafe-finally
-                return res.end();
             }
+
+            return res.status(200).send("");
         });
     }
 
-    //Try to login with an admin token
+    /**
+     * @openapi
+     * /register:
+     *   post:
+     *     description: Try to login with an admin token
+     *     parameters:
+     *      - name: "organizationMemberToken"
+     *        in: "body"
+     *        description: "A token allowing a user to connect to a given world"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: The details of the logged user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 authToken:
+     *                   type: string
+     *                   description: A unique identification JWT token
+     *                 userUuid:
+     *                   type: string
+     *                   description: Unique user ID
+     *                 email:
+     *                   type: string|null
+     *                   description: The email of the user
+     *                   example: john.doe@example.com
+     *                 roomUrl:
+     *                   type: string
+     *                   description: The room URL to connect to
+     *                   example: https://play.workadventu.re/@/foo/bar/baz
+     *                 organizationMemberToken:
+     *                   type: string|null
+     *                   description: TODO- unclear. It seems to be sent back from the request?
+     *                   example: ???
+     *                 mapUrlStart:
+     *                   type: string
+     *                   description: TODO- unclear. I cannot find any use of this
+     *                   example: ???
+     *                 messages:
+     *                   type: array
+     *                   description: The list of messages to be displayed when the user logs?
+     *                   example: ???
+     */
     private register() {
-        this.App.options("/register", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-
-            res.end();
+        this.app.options("/register", {}, (req, res) => {
+            res.status(200).send("");
         });
-
-        this.App.post("/register", (res: HttpResponse, req: HttpRequest) => {
+        this.app.post("/register", (req, res) => {
             (async () => {
-                res.onAborted(() => {
-                    console.warn("Login request was aborted");
-                });
-                const param = await res.json();
+                const param = await req.json();
 
                 //todo: what to do if the organizationMemberToken is already used?
                 const organizationMemberToken: string | null = param.organizationMemberToken;
+                const playUri: string | null = param.playUri;
 
                 try {
                     if (typeof organizationMemberToken != "string") throw new Error("No organization token");
-                    const data = await adminApi.fetchMemberDataByToken(organizationMemberToken);
+                    const data = await adminService.fetchMemberDataByToken(
+                        organizationMemberToken,
+                        playUri,
+                        req.header("accept-language")
+                    );
                     const userUuid = data.userUuid;
                     const email = data.email;
                     const roomUrl = data.roomUrl;
                     const mapUrlStart = data.mapUrlStart;
-                    const textures = data.textures;
 
                     const authToken = jwtTokenManager.createAuthToken(email || userUuid);
-                    res.writeStatus("200 OK");
-                    this.addCorsHeaders(res);
-                    res.end(
-                        JSON.stringify({
-                            authToken,
-                            userUuid,
-                            email,
-                            roomUrl,
-                            mapUrlStart,
-                            organizationMemberToken,
-                            textures,
-                        } as RegisterData)
-                    );
+
+                    res.json({
+                        authToken,
+                        userUuid,
+                        email,
+                        roomUrl,
+                        mapUrlStart,
+                        organizationMemberToken,
+                    } as RegisterData);
                 } catch (e) {
                     console.error("register => ERROR", e);
-                    this.errorToResponse(e, res);
+                    this.castErrorToResponse(e, res);
                 }
             })();
         });
     }
 
-    //permit to login on application. Return token to connect on Websocket IO.
+    /**
+     * @openapi
+     * /anonymLogin:
+     *   post:
+     *     description: Generates an "anonymous" JWT token allowing to connect to WorkAdventure anonymously.
+     *     responses:
+     *       200:
+     *         description: The details of the logged user
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 authToken:
+     *                   type: string
+     *                   description: A unique identification JWT token
+     *                 userUuid:
+     *                   type: string
+     *                   description: Unique user ID
+     *       403:
+     *         description: Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)
+     */
     private anonymLogin() {
-        this.App.options("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-            this.addCorsHeaders(res);
-            res.end();
-        });
-
-        this.App.post("/anonymLogin", (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("Login request was aborted");
-            });
-
+        this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
-                res.writeStatus("403 FORBIDDEN");
-                res.end();
+                res.status(403);
+                return res;
             } else {
                 const userUuid = v4();
                 const authToken = jwtTokenManager.createAuthToken(userUuid);
-                res.writeStatus("200 OK");
-                this.addCorsHeaders(res);
-                res.end(
-                    JSON.stringify({
-                        authToken,
-                        userUuid,
-                    })
-                );
+                return res.json({
+                    authToken,
+                    userUuid,
+                });
             }
         });
     }
 
+    /**
+     * @openapi
+     * /profile-callback:
+     *   get:
+     *     description: ???
+     *     parameters:
+     *      - name: "token"
+     *        in: "query"
+     *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       302:
+     *         description: Redirects the user to the profile screen of the admin
+     */
     profileCallback() {
-        //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        // @ts-ignore
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.App.get("/profile-callback", async (res: HttpResponse, req: HttpRequest) => {
-            res.onAborted(() => {
-                console.warn("/message request was aborted");
-            });
-            const { token } = parse(req.getQuery());
+        this.app.get("/profile-callback", async (req, res) => {
+            const { token, playUri } = parse(req.path_query);
             try {
                 //verify connected by token
                 if (token != undefined) {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
                         if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot to be check on Hydra");
+                            throw Error("Token cannot be checked on OpenID connect provider");
                         }
                         await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
                         //get login profile
-                        res.writeStatus("302");
-                        res.writeHeader("Location", adminApi.getProfileUrl(authTokenData.accessToken));
-                        this.addCorsHeaders(res);
-                        // eslint-disable-next-line no-unsafe-finally
-                        return res.end();
+                        res.status(302);
+                        res.setHeader(
+                            "Location",
+                            adminService.getProfileUrl(authTokenData.accessToken, playUri as string)
+                        );
+                        res.send("");
+                        return;
                     } catch (error) {
-                        return this.errorToResponse(error, res);
+                        this.castErrorToResponse(error, res);
+                        return;
                     }
                 }
             } catch (error) {
                 console.error("profileCallback => ERROR", error);
-                this.errorToResponse(error, res);
+                this.castErrorToResponse(error, res);
+            }
+        });
+    }
+
+    /**
+     * @openapi
+     * /me:
+     *   get:
+     *     description: ???
+     *     parameters:
+     *      - name: "token"
+     *        in: "query"
+     *        description: "A JWT authentication token ???"
+     *        required: true
+     *        type: "string"
+     *     responses:
+     *       200:
+     *         description: Data of user connected
+     */
+    me() {
+        // @ts-ignore
+        this.app.get("/me", async (req, res): void => {
+            const { token } = parse(req.path_query);
+            try {
+                //verify connected by token
+                if (token != undefined) {
+                    try {
+                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                        if (authTokenData.accessToken == undefined) {
+                            throw Error("Token cannot to be checked on Hydra");
+                        }
+                        const me = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+
+                        //get login profile
+                        res.status(200);
+                        res.json({ ...me });
+                        return;
+                    } catch (error) {
+                        this.castErrorToResponse(error, res);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("me => ERROR", error);
+                this.castErrorToResponse(error, res);
+                return;
             }
         });
     }
@@ -273,7 +527,8 @@ export class AuthenticateController extends BaseController {
      * @param email
      * @param playUri
      * @param IPAddress
-     * @return FetchMemberDataByUuidResponse|object
+     * @return
+     |object
      * @private
      */
     private async getUserByUserIdentifier(
@@ -289,9 +544,12 @@ export class AuthenticateController extends BaseController {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
+            jabberId: null,
+            jabberPassword: null,
+            mucRooms: [],
         };
         try {
-            data = await adminApi.fetchMemberDataByUuid(email, playUri, IPAddress);
+            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
         } catch (err) {
             console.error("openIDCallback => fetchMemberDataByUuid", err);
         }

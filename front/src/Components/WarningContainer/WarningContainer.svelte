@@ -1,39 +1,36 @@
-<script lang="typescript">
+<script lang="ts">
     import { fly } from "svelte/transition";
     import { userIsAdminStore, limitMapStore } from "../../Stores/GameStore";
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import LL from "../../i18n/i18n-svelte";
 
-    const upgradeLink = ADMIN_URL + "/pricing";
     const registerLink = ADMIN_URL + "/second-step-register";
 </script>
 
 <main class="warningMain" transition:fly={{ y: -200, duration: 500 }}>
     {#if $userIsAdminStore}
         <h2>{$LL.warning.title()}</h2>
-        <p>
-            {$LL.warning.content({ upgradeLink })}
-        </p>
+        <p>{@html $LL.warning.content()}</p>
     {:else if $limitMapStore}
         <p>
             This map is available for 2 days. You can register your domain <a href={registerLink}>here</a>!
         </p>
     {:else}
         <h2>{$LL.warning.title()}</h2>
-        <p>{$LL.warning.limit()}</p>
+        <p>{@html $LL.warning.content()}</p>
     {/if}
 </main>
 
 <style lang="scss">
     main.warningMain {
         pointer-events: auto;
-        width: 80%;
+        width: 100%;
         background-color: #f9e81e;
         color: #14304c;
         text-align: center;
         position: absolute;
 
-        top: 4%;
+        top: 0;
         left: 0;
         right: 0;
         margin-left: auto;

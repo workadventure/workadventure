@@ -4,6 +4,9 @@ import {
     OPID_CLIENT_SECRET,
     OPID_CLIENT_ISSUER,
     OPID_CLIENT_REDIRECT_URL,
+    OPID_USERNAME_CLAIM,
+    OPID_LOCALE_CLAIM,
+    OPID_SCOPE,
 } from "../Enum/EnvironmentVariable";
 
 class OpenIDClient {
@@ -25,8 +28,11 @@ class OpenIDClient {
 
     public authorizationUrl(state: string, nonce: string, playUri?: string, redirect?: string) {
         return this.initClient().then((client) => {
+            if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
+                throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
+            }
             return client.authorizationUrl({
-                scope: "openid email",
+                scope: OPID_SCOPE,
                 prompt: "login",
                 state: state,
                 nonce: nonce,
@@ -36,7 +42,10 @@ class OpenIDClient {
         });
     }
 
-    public getUserInfo(code: string, nonce: string): Promise<{ email: string; sub: string; access_token: string }> {
+    public getUserInfo(
+        code: string,
+        nonce: string
+    ): Promise<{ email: string; sub: string; access_token: string; username: string; locale: string }> {
         return this.initClient().then((client) => {
             return client.callback(OPID_CLIENT_REDIRECT_URL, { code }, { nonce }).then((tokenSet) => {
                 return client.userinfo(tokenSet).then((res) => {
@@ -45,6 +54,8 @@ class OpenIDClient {
                         email: res.email as string,
                         sub: res.sub,
                         access_token: tokenSet.access_token as string,
+                        username: res[OPID_USERNAME_CLAIM] as string,
+                        locale: res[OPID_LOCALE_CLAIM] as string,
                     };
                 });
             });

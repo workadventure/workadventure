@@ -1,11 +1,10 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
 
-export const isChangeLayerEvent = new tg.IsInterface()
-    .withProperties({
-        name: tg.isString,
-    })
-    .get();
+export const isChangeLayerEvent = z.object({
+    name: z.string(),
+});
+
 /**
  * A message sent from the game to the iFrame when a user enters or leaves a layer.
  */
-export type ChangeLayerEvent = tg.GuardedType<typeof isChangeLayerEvent>;
+export type ChangeLayerEvent = z.infer<typeof isChangeLayerEvent>;

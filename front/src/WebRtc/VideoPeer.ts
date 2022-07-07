@@ -1,4 +1,3 @@
-import type * as SimplePeerNamespace from "simple-peer";
 import { mediaManager } from "./MediaManager";
 import type { RoomConnection } from "../Connexion/RoomConnection";
 import { blackListManager } from "./BlackListManager";
@@ -7,16 +6,23 @@ import type { UserSimplePeerInterface } from "./SimplePeer";
 import { readable, Readable, Unsubscriber } from "svelte/store";
 import { localStreamStore, obtainedMediaConstraintStore, ObtainedMediaStreamConstraints } from "../Stores/MediaStore";
 import { playersStore } from "../Stores/PlayersStore";
-import { chatMessagesStore, newChatMessageSubject } from "../Stores/ChatStore";
+import {
+    chatMessagesStore,
+    newChatMessageSubject,
+    newChatMessageWritingStatusSubject,
+    writingStatusMessageStore,
+} from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
 import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-
-const Peer: SimplePeerNamespace.SimplePeer = require("simple-peer");
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import Peer from "simple-peer/simplepeer.min.js";
+import { Buffer } from "buffer";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
 export const MESSAGE_TYPE_CONSTRAINT = "constraint";
 export const MESSAGE_TYPE_MESSAGE = "message";
+export const MESSAGE_TYPE_MESSAGE_STATUS = "message_status";
 export const MESSAGE_TYPE_BLOCKED = "blocked";
 export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 /**
@@ -25,7 +31,7 @@ export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
 export class VideoPeer extends Peer {
     public toClose: boolean = false;
     public _connected: boolean = false;
-    private remoteStream!: MediaStream;
+    public remoteStream!: MediaStream;
     private blocked: boolean = false;
     public readonly userId: number;
     public readonly userUuid: string;
@@ -33,9 +39,11 @@ export class VideoPeer extends Peer {
     private onBlockSubscribe: Subscription;
     private onUnBlockSubscribe: Subscription;
     public readonly streamStore: Readable<MediaStream | null>;
+    public readonly volumeStore: Readable<number | undefined>;
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
+    private newWritingStatusMessageSubscribtion: Subscription | undefined;
     private closing: Boolean = false; //this is used to prevent destroy() from being called twice
     private localStreamStoreSubscribe: Unsubscriber;
     private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
@@ -66,6 +74,42 @@ export class VideoPeer extends Peer {
 
             return () => {
                 this.off("stream", onStream);
+            };
+        });
+
+        this.volumeStore = readable<number | undefined>(undefined, (set) => {
+            let timeout: ReturnType<typeof setTimeout>;
+            let soundMeter: SoundMeter;
+            const unsubscribe = this.streamStore.subscribe((mediaStream) => {
+                clearInterval(timeout);
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
+                if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+                    set(undefined);
+                    return;
+                }
+                soundMeter = new SoundMeter(mediaStream);
+                let error = false;
+
+                timeout = setInterval(() => {
+                    try {
+                        set(soundMeter.getVolume());
+                    } catch (err) {
+                        if (!error) {
+                            console.error(err);
+                            error = true;
+                        }
+                    }
+                }, 100);
+            });
+
+            return () => {
+                unsubscribe();
+                clearInterval(timeout);
+                if (soundMeter) {
+                    soundMeter.stop();
+                }
             };
         });
 
@@ -140,6 +184,18 @@ export class VideoPeer extends Peer {
                     )
                 );
             });
+
+            this.newWritingStatusMessageSubscribtion = newChatMessageWritingStatusSubject.subscribe((status) => {
+                if (status == undefined) return;
+                this.write(
+                    new Buffer(
+                        JSON.stringify({
+                            type: MESSAGE_TYPE_MESSAGE_STATUS,
+                            message: status,
+                        })
+                    )
+                );
+            });
         });
 
         this.on("data", (chunk: Buffer) => {
@@ -159,6 +215,10 @@ export class VideoPeer extends Peer {
             } else if (message.type === MESSAGE_TYPE_MESSAGE) {
                 if (!blackListManager.isBlackListed(this.userUuid)) {
                     chatMessagesStore.addExternalMessage(this.userId, message.message);
+                }
+            } else if (message.type === MESSAGE_TYPE_MESSAGE_STATUS) {
+                if (!blackListManager.isBlackListed(this.userUuid)) {
+                    writingStatusMessageStore.addWritingStatus(this.userId, message.message);
                 }
             } else if (message.type === MESSAGE_TYPE_BLOCKED) {
                 //FIXME when A blacklists B, the output stream from A is muted in B's js client. This is insecure since B can manipulate the code to unmute A stream.
@@ -262,6 +322,7 @@ export class VideoPeer extends Peer {
             this.onBlockSubscribe.unsubscribe();
             this.onUnBlockSubscribe.unsubscribe();
             this.newMessageSubscribtion?.unsubscribe();
+            this.newWritingStatusMessageSubscribtion?.unsubscribe();
             chatMessagesStore.addOutcomingUser(this.userId);
             if (this.localStreamStoreSubscribe) this.localStreamStoreSubscribe();
             if (this.obtainedMediaConstraintStoreSubscribe) this.obtainedMediaConstraintStoreSubscribe();

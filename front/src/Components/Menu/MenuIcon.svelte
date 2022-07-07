@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import logoTalk from "../images/logo-message-pixel.png";
     import logoWA from "../images/logo-WA-pixel.png";
     import logoInvite from "../images/logo-invite-pixel.png";
@@ -10,6 +10,10 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
     import LL from "../../i18n/i18n-svelte";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+
+    let miniLogo = gameManager.currentStartedRoom?.miniLogo ?? logoWA;
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -42,7 +46,8 @@
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showInvite}
+            on:click={() => analyticsClient.openInvite()}
+            on:click={showInvite}
         />
         <img
             src={logoRegister}
@@ -50,26 +55,29 @@
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={register}
+            on:click={() => analyticsClient.openRegister()}
+            on:click={register}
         />
     {:else}
         <img
-            src={logoWA}
+            src={miniLogo}
             alt={$LL.menu.icon.open.menu()}
             class="nes-pointer"
             draggable="false"
             on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showMenu}
-        />
-        <img
-            src={logoTalk}
-            alt={$LL.menu.icon.open.chat()}
-            class="nes-pointer"
-            draggable="false"
-            on:dragstart|preventDefault={noDrag}
-            on:click|preventDefault={showChat}
+            on:click={() => analyticsClient.openedMenu()}
+            on:click={showMenu}
         />
     {/if}
+    <img
+        src={logoTalk}
+        alt={$LL.menu.icon.open.chat()}
+        class="nes-pointer"
+        draggable="false"
+        on:dragstart|preventDefault={noDrag}
+        on:click={() => analyticsClient.openedChat()}
+        on:click={showChat}
+    />
 </main>
 
 <style lang="scss">
@@ -88,6 +96,7 @@
             width: 60px;
             padding-top: 0;
             margin: 5%;
+            image-rendering: pixelated;
         }
     }
 
@@ -102,6 +111,7 @@
                 pointer-events: auto;
                 width: 60px;
                 padding-top: 0;
+                image-rendering: pixelated;
             }
         }
         .menuIcon img:hover {
@@ -113,6 +123,7 @@
         .menuIcon {
             img {
                 width: 50px;
+                image-rendering: pixelated;
             }
         }
     }

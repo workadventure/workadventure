@@ -1,0 +1,31 @@
+appId: re.workadventu.desktop
+
+files:
+    - "dist/**/*"
+    - "assets/**/*"
+    - from: "../local-app/dist/"
+      to: "local-app/dist"
+
+directories:
+    output: ./build
+
+dmg:
+    icon: false
+
+linux:
+    category: "TODO;TODO"
+    packageCategory: "TODO;TODO"
+    icon: "assets/icons/logo.icns"
+    target:
+        - AppImage
+    artifactName: "${productName}-${version}-${arch}.${ext}"
+
+win:
+    icon: "assets/icons/logo.ico"
+    artifactName: "${productName}-${version}-setup.${ext}"
+
+publish:
+    provider: github
+    owner: thecodingmachine
+    repo: workadventure
+    releaseType: release

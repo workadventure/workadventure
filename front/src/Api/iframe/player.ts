@@ -2,7 +2,6 @@ import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
-import { isHasPlayerMovedEvent } from "../Events/HasPlayerMovedEvent";
 import { createState } from "./state";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
@@ -43,7 +42,6 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     callbacks = [
         apiCallback({
             type: "hasPlayerMoved",
-            typeChecker: isHasPlayerMovedEvent,
             callback: (payloadData) => {
                 moveStream.next(payloadData);
             },
@@ -54,7 +52,7 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
         moveStream.subscribe(callback);
         sendToWorkadventure({
             type: "onPlayerMove",
-            data: null,
+            data: undefined,
         });
     }
 

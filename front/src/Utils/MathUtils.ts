@@ -12,6 +12,13 @@ export class MathUtils {
         return this.isBetween(p.x, r.x, r.x + r.width) && this.isBetween(p.y, r.y, r.y + r.height);
     }
 
+    public static doRectanglesOverlap(
+        r1: { x: number; y: number; width: number; height: number },
+        r2: { x: number; y: number; width: number; height: number }
+    ): boolean {
+        return r1.x < r2.x + r2.width && r1.x + r1.width > r2.x && r1.y < r2.y + r2.height && r1.height + r1.y > r2.y;
+    }
+
     /**
      *
      * @param value Value to check
@@ -21,6 +28,16 @@ export class MathUtils {
      */
     public static isBetween(value: number, min: number, max: number): boolean {
         return value >= min && value <= max;
+    }
+
+    public static randomPositionFromRect(
+        rectangle: { x: number; y: number; width: number; height: number },
+        margin: number = 0
+    ): { x: number; y: number } {
+        return {
+            x: this.randomFrom(rectangle.x + margin, rectangle.x + rectangle.width - margin),
+            y: this.randomFrom(rectangle.y + margin, rectangle.y + rectangle.height - margin),
+        };
     }
 
     public static distanceBetween(
@@ -34,5 +51,9 @@ export class MathUtils {
 
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
+    }
+
+    public static randomFrom(min: number, max: number): number {
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
 }

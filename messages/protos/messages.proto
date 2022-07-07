@@ -1,6 +1,18 @@
 syntax = "proto3";
 
+import "google/protobuf/wrappers.proto";
+
 /*********** PARTIAL MESSAGES **************/
+
+enum AvailabilityStatus {
+  UNCHANGED = 0;
+  ONLINE = 1;
+  SILENT = 2;
+  AWAY = 3;
+  JITSI = 4;
+  BBB = 5;
+  DENY_PROXIMITY_MEETING = 6;
+}
 
 message PositionMessage {
   int32 x = 1;
@@ -27,13 +39,10 @@ message ViewportMessage {
   int32 bottom = 4;
 }
 
-message SilentMessage {
-  bool silent = 1;
-}
-
 message CharacterLayerMessage {
   string url = 1;
   string name = 2;
+  string layer = 3;
 }
 
 message CompanionMessage {
@@ -47,12 +56,10 @@ message PingMessage {
 }
 
 message SetPlayerDetailsMessage {
-  //string name = 1;
-  //repeated string characterLayers = 2;
-
-  // TODO: switch to google.protobuf.Int32Value when we migrate to ts-proto
-  uint32 outlineColor = 3;
-  bool removeOutlineColor = 4;
+  google.protobuf.UInt32Value outlineColor = 3;
+  google.protobuf.BoolValue removeOutlineColor = 4;
+  google.protobuf.BoolValue showVoiceIndicator = 5;
+  AvailabilityStatus availabilityStatus = 6;
 }
 
 message UserMovesMessage {
@@ -79,11 +86,6 @@ message EmoteEventMessage {
   string emote = 2;
 }
 
-message QueryJitsiJwtMessage {
-  string jitsiRoom = 1;
-  string tag = 2; // FIXME: rather than reading the tag from the query, we should read it from the current map!
-}
-
 message FollowRequestMessage {
   int32 leader = 1;
 }
@@ -98,10 +100,13 @@ message FollowAbortMessage {
   int32 follower = 2;
 }
 
+message LockGroupPromptMessage {
+  bool lock = 1;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ViewportMessage viewportMessage = 4;
     ItemEventMessage itemEventMessage = 5;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 6;
@@ -110,12 +115,15 @@ message ClientToServerMessage {
     PlayGlobalMessage playGlobalMessage = 9;
     StopGlobalMessage stopGlobalMessage = 10;
     ReportPlayerMessage reportPlayerMessage = 11;
-    QueryJitsiJwtMessage queryJitsiJwtMessage = 12;
     EmotePromptMessage emotePromptMessage = 13;
     VariableMessage variableMessage = 14;
     FollowRequestMessage followRequestMessage = 15;
     FollowConfirmationMessage followConfirmationMessage = 16;
     FollowAbortMessage followAbortMessage = 17;
+    LockGroupPromptMessage lockGroupPromptMessage = 18;
+    QueryMessage queryMessage = 20;
+    XmppMessage xmppMessage = 21;
+    AskPositionMessage askPositionMessage = 22;
   }
 }
 
@@ -132,6 +140,10 @@ message ItemEventMessage {
 message VariableMessage {
   string name = 1;
   string value = 2;
+}
+
+message XmppMessage {
+  string stanza = 1;
 }
 
 /**
@@ -153,11 +165,54 @@ message StopGlobalMessage {
   string id = 1;
 }
 
+/************ Queries and answers ****************/
+
+message QueryMessage {
+  int32 id = 1;
+  oneof query {
+    JitsiJwtQuery jitsiJwtQuery = 2;
+    JoinBBBMeetingQuery joinBBBMeetingQuery = 20;
+  }
+}
+
+message JitsiJwtQuery {
+  string jitsiRoom = 1;
+}
+
+message JoinBBBMeetingQuery {
+  string meetingId = 1;
+  string meetingName = 2;
+  // Fix me Pusher linter fails because eslint-plugin version < 3.0
+  // map<string, string> userdata = 3;
+}
+
+message AnswerMessage {
+  int32 id = 1;
+  oneof answer {
+    ErrorMessage error = 2;
+    JitsiJwtAnswer jitsiJwtAnswer = 3;
+    JoinBBBMeetingAnswer joinBBBMeetingAnswer = 4;
+  }
+}
+
+message JitsiJwtAnswer {
+  string jwt = 1;
+}
+
+message JoinBBBMeetingAnswer {
+  string meetingId = 1;
+  string clientURL = 2;
+}
+
 /*********** SERVER TO CLIENT MESSAGES *************/
 
 message UserMovedMessage {
   int32 userId = 1;
   PositionMessage position = 2;
+}
+
+message MoveToPositionMessage{
+  PositionMessage position = 1;
 }
 
 message SubMessage {
@@ -172,6 +227,7 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
+    XmppMessage xmppMessage = 11;
   }
 }
 
@@ -183,7 +239,8 @@ message BatchMessage {
 message GroupUpdateMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  int32 groupSize = 3;
+  google.protobuf.UInt32Value groupSize = 3;
+  google.protobuf.BoolValue locked = 4;
 }
 
 message GroupDeleteMessage {
@@ -200,19 +257,44 @@ message UserJoinedMessage {
   string userUuid = 7;
   uint32 outlineColor = 8;
   bool hasOutline = 9;
+  AvailabilityStatus availabilityStatus = 10;
 }
 
 message UserLeftMessage {
   int32 userId = 1;
 }
 
+/*
+ * ErrorMessage is only used to console.error the message in the front
+ */
 message ErrorMessage {
   string message = 1;
+}
+
+/*
+ * ErrorScreenMessage is used to show the ErrorScreen in the front
+ */
+message ErrorScreenMessage {
+  string type = 1;
+  google.protobuf.StringValue code = 2;
+  google.protobuf.StringValue title = 3;
+  google.protobuf.StringValue subtitle = 4;
+  google.protobuf.StringValue details = 5;
+  google.protobuf.Int32Value timeToRetry = 6;
+  google.protobuf.BoolValue canRetryManual = 7;
+  google.protobuf.StringValue urlToRedirect = 8;
+  google.protobuf.StringValue buttonTitle = 9;
+  google.protobuf.StringValue image = 10;
 }
 
 message ItemStateMessage {
   int32 itemId = 1;
   string stateJson = 2;
+}
+
+message GroupUsersUpdateMessage {
+  int32 groupId = 1;
+  repeated int32 userIds = 2;
 }
 
 message RoomJoinedMessage {
@@ -223,6 +305,8 @@ message RoomJoinedMessage {
   repeated string tag = 5;
   repeated VariableMessage variable = 6;
   string userRoomToken = 7;
+  // We send the current skin of the current player.
+  repeated CharacterLayerMessage characterLayer = 8;
 }
 
 message WebRtcStartMessage {
@@ -247,11 +331,6 @@ message TeleportMessageMessage{
   string map = 1;
 }
 
-message SendJitsiJwtMessage {
-  string jitsiRoom = 1;
-  string jwt = 2;
-}
-
 message SendUserMessage{
   string type = 1;
   string message = 2;
@@ -274,6 +353,8 @@ message WorldFullMessage{
 }
 message TokenExpiredMessage{
 }
+message InvalidTextureMessage{
+}
 
 message WorldConnexionMessage{
   string message = 2;
@@ -282,6 +363,35 @@ message WorldConnexionMessage{
 message BanUserMessage{
   string type = 1;
   string message = 2;
+}
+
+message MucRoomDefinitionMessage {
+  string url = 1;
+  string name = 2;
+}
+
+message XmppSettingsMessage{
+  string jid = 1;
+  string conferenceDomain = 2;
+  repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+message AskPositionMessage{
+  string userIdentifier = 1;
+  string playUri = 2;
+}
+
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+message XmppConnectionStatusChangeMessage{
+  enum Status {
+    DISCONNECTED = 0;
+  }
+
+  Status status = 1;
 }
 
 /**
@@ -297,7 +407,6 @@ message ServerToClientMessage {
     WebRtcSignalToClientMessage webRtcScreenSharingSignalToClientMessage = 6;
     WebRtcDisconnectMessage webRtcDisconnectMessage = 7;
     TeleportMessageMessage teleportMessageMessage = 10;
-    SendJitsiJwtMessage sendJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     //AdminRoomMessage adminRoomMessage = 14;
@@ -310,6 +419,13 @@ message ServerToClientMessage {
     FollowRequestMessage followRequestMessage = 21;
     FollowConfirmationMessage followConfirmationMessage = 22;
     FollowAbortMessage followAbortMessage = 23;
+    InvalidTextureMessage invalidTextureMessage = 24;
+    GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
+    ErrorScreenMessage errorScreenMessage = 26;
+    AnswerMessage answerMessage = 28;
+    XmppSettingsMessage xmppSettingsMessage = 29;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
 
@@ -327,6 +443,7 @@ message JoinRoomMessage {
   CompanionMessage companion = 8;
   string visitCardUrl = 9;
   string userRoomToken = 10;
+  AvailabilityStatus availabilityStatus = 11;
 }
 
 message UserJoinedZoneMessage {
@@ -340,6 +457,7 @@ message UserJoinedZoneMessage {
   string userUuid = 8;
   uint32 outlineColor = 9;
   bool hasOutline = 10;
+  AvailabilityStatus availabilityStatus = 11;
 }
 
 message UserLeftZoneMessage {
@@ -350,8 +468,9 @@ message UserLeftZoneMessage {
 message GroupUpdateZoneMessage {
   int32 groupId = 1;
   PointMessage position = 2;
-  int32 groupSize = 3;
+  int32  groupSize = 3;
   Zone fromZone = 4;
+  bool locked = 5;
 }
 
 message GroupLeftZoneMessage {
@@ -383,13 +502,11 @@ message PusherToBackMessage {
   oneof message {
     JoinRoomMessage joinRoomMessage = 1;
     UserMovesMessage userMovesMessage = 2;
-    SilentMessage silentMessage = 3;
     ItemEventMessage itemEventMessage = 4;
     SetPlayerDetailsMessage setPlayerDetailsMessage = 5;
     WebRtcSignalToServerMessage webRtcSignalToServerMessage = 6;
     WebRtcSignalToServerMessage webRtcScreenSharingSignalToServerMessage = 7;
     ReportPlayerMessage reportPlayerMessage = 10;
-    QueryJitsiJwtMessage queryJitsiJwtMessage = 11;
     SendUserMessage sendUserMessage = 12;
     BanUserMessage banUserMessage = 13;
     EmotePromptMessage emotePromptMessage = 14;
@@ -397,6 +514,9 @@ message PusherToBackMessage {
     FollowRequestMessage followRequestMessage = 16;
     FollowConfirmationMessage followConfirmationMessage = 17;
     FollowAbortMessage followAbortMessage = 18;
+    LockGroupPromptMessage lockGroupPromptMessage = 19;
+    QueryMessage queryMessage = 21;
+    AskPositionMessage askPositionMessage = 22;
   }
 }
 
@@ -498,6 +618,15 @@ message BanMessage {
   string message = 4;
 }
 
+message RoomDescription {
+  string roomId = 1;
+  int32 nbUsers = 2;
+}
+
+message RoomsList {
+  repeated RoomDescription roomDescription = 1;
+}
+
 message EmptyMessage {
 
 }
@@ -516,4 +645,6 @@ service RoomManager {
   rpc sendAdminMessageToRoom(AdminRoomMessage) returns (EmptyMessage);
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
+  rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
 }

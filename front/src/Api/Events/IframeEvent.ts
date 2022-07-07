@@ -1,41 +1,45 @@
-import * as tg from "generic-type-guard";
-import type { ButtonClickedEvent } from "./ButtonClickedEvent";
-import type { ChatEvent } from "./ChatEvent";
-import type { ClosePopupEvent } from "./ClosePopupEvent";
-import type { EnterLeaveEvent } from "./EnterLeaveEvent";
-import type { GoToPageEvent } from "./GoToPageEvent";
-import type { LoadPageEvent } from "./LoadPageEvent";
+import { z } from "zod";
+import { isChatEvent } from "./ChatEvent";
+import { isClosePopupEvent } from "./ClosePopupEvent";
+import { isGoToPageEvent } from "./GoToPageEvent";
+import { isLoadPageEvent } from "./LoadPageEvent";
 import { isCoWebsite, isOpenCoWebsiteEvent } from "./OpenCoWebsiteEvent";
-import type { OpenPopupEvent } from "./OpenPopupEvent";
-import type { OpenTabEvent } from "./OpenTabEvent";
-import type { UserInputChatEvent } from "./UserInputChatEvent";
-import type { LayerEvent } from "./LayerEvent";
-import type { SetPropertyEvent } from "./setPropertyEvent";
-import type { LoadSoundEvent } from "./LoadSoundEvent";
-import type { PlaySoundEvent } from "./PlaySoundEvent";
-import type { MenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
-import type { HasPlayerMovedEvent } from "./HasPlayerMovedEvent";
-import type { SetTilesEvent } from "./SetTilesEvent";
-import type { SetVariableEvent } from "./SetVariableEvent";
+import { isOpenPopupEvent } from "./OpenPopupEvent";
+import { isOpenTabEvent } from "./OpenTabEvent";
+import { isLayerEvent } from "./LayerEvent";
+import { isSetPropertyEvent } from "./SetPropertyEvent";
+import { isLoadSoundEvent } from "./LoadSoundEvent";
+import { isPlaySoundEvent } from "./PlaySoundEvent";
+import { isStopSoundEvent } from "./StopSoundEvent";
+import { isSetTilesEvent } from "./SetTilesEvent";
 import { isGameStateEvent } from "./GameStateEvent";
 import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
-import type { EmbeddedWebsite } from "../iframe/Room/EmbeddedWebsite";
-import { isCreateEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
-import type { LoadTilesetEvent } from "./LoadTilesetEvent";
+import { isCreateEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
-import type { MessageReferenceEvent } from "./ui/TriggerActionMessageEvent";
 import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
-import type { MenuRegisterEvent, UnregisterMenuEvent } from "./ui/MenuRegisterEvent";
-import type { ChangeLayerEvent } from "./ChangeLayerEvent";
+import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./ui/MenuRegisterEvent";
 import { isPlayerPosition } from "./PlayerPosition";
-import type { WasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
-import type { ChangeZoneEvent } from "./ChangeZoneEvent";
-import type { CameraSetEvent } from "./CameraSetEvent";
-import type { CameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
+import { isCameraSetEvent } from "./CameraSetEvent";
+import { isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
 import { isColorEvent } from "./ColorEvent";
 import { isMovePlayerToEventConfig } from "./MovePlayerToEvent";
 import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
+import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
+import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
+import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./ui/UIWebsite";
+import { isAreaEvent, isCreateAreaEvent } from "./CreateAreaEvent";
+import { isUserInputChatEvent } from "./UserInputChatEvent";
+import { isEnterLeaveEvent } from "./EnterLeaveEvent";
+import { isChangeLayerEvent } from "./ChangeLayerEvent";
+import { isChangeAreaEvent } from "./ChangeAreaEvent";
+import { isButtonClickedEvent } from "./ButtonClickedEvent";
+import { isRemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
+import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
+import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
+import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
+import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -44,67 +48,211 @@ export interface TypedMessageEvent<T> extends MessageEvent {
 /**
  * List event types sent from an iFrame to WorkAdventure
  */
-export type IframeEventMap = {
-    loadPage: LoadPageEvent;
-    chat: ChatEvent;
-    cameraFollowPlayer: CameraFollowPlayerEvent;
-    cameraSet: CameraSetEvent;
-    openPopup: OpenPopupEvent;
-    closePopup: ClosePopupEvent;
-    openTab: OpenTabEvent;
-    goToPage: GoToPageEvent;
-    disablePlayerControls: null;
-    restorePlayerControls: null;
-    displayBubble: null;
-    removeBubble: null;
-    onPlayerMove: undefined;
-    onCameraUpdate: undefined;
-    showLayer: LayerEvent;
-    hideLayer: LayerEvent;
-    setProperty: SetPropertyEvent;
-    loadSound: LoadSoundEvent;
-    playSound: PlaySoundEvent;
-    stopSound: null;
-    getState: undefined;
-    loadTileset: LoadTilesetEvent;
-    registerMenu: MenuRegisterEvent;
-    unregisterMenu: UnregisterMenuEvent;
-    setTiles: SetTilesEvent;
-    modifyEmbeddedWebsite: Partial<EmbeddedWebsite>; // Note: name should be compulsory in fact
-};
-export interface IframeEvent<T extends keyof IframeEventMap> {
-    type: T;
-    data: IframeEventMap[T];
-}
+export const isIframeEventWrapper = z.union([
+    z.object({
+        type: z.literal("addActionsMenuKeyToRemotePlayer"),
+        data: isAddActionsMenuKeyToRemotePlayerEvent,
+    }),
+    z.object({
+        type: z.literal("removeActionsMenuKeyFromRemotePlayer"),
+        data: isRemoveActionsMenuKeyFromRemotePlayerEvent,
+    }),
+    z.object({
+        type: z.literal("loadPage"),
+        data: isLoadPageEvent,
+    }),
+    z.object({
+        type: z.literal("chat"),
+        data: isChatEvent,
+    }),
+    z.object({
+        type: z.literal("openChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("closeChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("cameraFollowPlayer"),
+        data: isCameraFollowPlayerEvent,
+    }),
+    z.object({
+        type: z.literal("cameraSet"),
+        data: isCameraSetEvent,
+    }),
+    z.object({
+        type: z.literal("openPopup"),
+        data: isOpenPopupEvent,
+    }),
+    z.object({
+        type: z.literal("closePopup"),
+        data: isClosePopupEvent,
+    }),
+    z.object({
+        type: z.literal("openTab"),
+        data: isOpenTabEvent,
+    }),
+    z.object({
+        type: z.literal("goToPage"),
+        data: isGoToPageEvent,
+    }),
+    z.object({
+        type: z.literal("disablePlayerControls"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restorePlayerControls"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disablePlayerProximityMeeting"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restorePlayerProximityMeeting"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("displayBubble"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("removeBubble"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("onPlayerMove"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("onCameraUpdate"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("showLayer"),
+        data: isLayerEvent,
+    }),
+    z.object({
+        type: z.literal("hideLayer"),
+        data: isLayerEvent,
+    }),
+    z.object({
+        type: z.literal("setProperty"),
+        data: isSetPropertyEvent,
+    }),
+    z.object({
+        type: z.literal("setAreaProperty"),
+        data: isSetAreaPropertyEvent,
+    }),
+    z.object({
+        type: z.literal("loadSound"),
+        data: isLoadSoundEvent,
+    }),
+    z.object({
+        type: z.literal("playSound"),
+        data: isPlaySoundEvent,
+    }),
+    z.object({
+        type: z.literal("stopSound"),
+        data: isStopSoundEvent,
+    }),
+    z.object({
+        type: z.literal("registerMenu"),
+        data: isMenuRegisterEvent,
+    }),
+    z.object({
+        type: z.literal("unregisterMenu"),
+        data: isUnregisterMenuEvent,
+    }),
+    z.object({
+        type: z.literal("setTiles"),
+        data: isSetTilesEvent,
+    }),
+    z.object({
+        type: z.literal("modifyEmbeddedWebsite"),
+        data: isEmbeddedWebsiteEvent,
+    }),
+    z.object({
+        type: z.literal("modifyUIWebsite"),
+        data: isModifyUIWebsiteEvent,
+    }),
+    z.object({
+        type: z.literal("modifyArea"),
+        data: isAreaEvent,
+    }),
+]);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeEventWrapper = (event: any): event is IframeEvent<keyof IframeEventMap> =>
-    typeof event.type === "string";
+export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
 
-export interface IframeResponseEventMap {
-    userInputChat: UserInputChatEvent;
-    enterEvent: EnterLeaveEvent;
-    leaveEvent: EnterLeaveEvent;
-    enterLayerEvent: ChangeLayerEvent;
-    leaveLayerEvent: ChangeLayerEvent;
-    enterZoneEvent: ChangeZoneEvent;
-    leaveZoneEvent: ChangeZoneEvent;
-    buttonClickedEvent: ButtonClickedEvent;
-    hasPlayerMoved: HasPlayerMovedEvent;
-    wasCameraUpdated: WasCameraUpdatedEvent;
-    menuItemClicked: MenuItemClickedEvent;
-    setVariable: SetVariableEvent;
-    messageTriggered: MessageReferenceEvent;
-}
-export interface IframeResponseEvent<T extends keyof IframeResponseEventMap> {
-    type: T;
-    data: IframeResponseEventMap[T];
-}
+export const isIframeResponseEvent = z.union([
+    z.object({
+        type: z.literal("userInputChat"),
+        data: isUserInputChatEvent,
+    }),
+    z.object({
+        type: z.literal("enterEvent"),
+        data: isEnterLeaveEvent,
+    }),
+    z.object({
+        type: z.literal("leaveEvent"),
+        data: isEnterLeaveEvent,
+    }),
+    z.object({
+        type: z.literal("enterLayerEvent"),
+        data: isChangeLayerEvent,
+    }),
+    z.object({
+        type: z.literal("leaveLayerEvent"),
+        data: isChangeLayerEvent,
+    }),
+    z.object({
+        type: z.literal("enterAreaEvent"),
+        data: isChangeAreaEvent,
+    }),
+    z.object({
+        type: z.literal("leaveAreaEvent"),
+        data: isChangeAreaEvent,
+    }),
+    z.object({
+        type: z.literal("buttonClickedEvent"),
+        data: isButtonClickedEvent,
+    }),
+    z.object({
+        type: z.literal("remotePlayerClickedEvent"),
+        data: isRemotePlayerClickedEvent,
+    }),
+    z.object({
+        type: z.literal("actionsMenuActionClickedEvent"),
+        data: isActionsMenuActionClickedEvent,
+    }),
+    z.object({
+        type: z.literal("hasPlayerMoved"),
+        data: isHasPlayerMovedEvent,
+    }),
+    z.object({
+        type: z.literal("wasCameraUpdated"),
+        data: isWasCameraUpdatedEvent,
+    }),
+    z.object({
+        type: z.literal("menuItemClicked"),
+        data: isMenuItemClickedEvent,
+    }),
+    z.object({
+        type: z.literal("setVariable"),
+        data: isSetVariableEvent,
+    }),
+    z.object({
+        type: z.literal("messageTriggered"),
+        data: isMessageReferenceEvent,
+    }),
+]);
+export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isIframeResponseEventWrapper = (event: {
-    type?: string;
-}): event is IframeResponseEvent<keyof IframeResponseEventMap> => typeof event.type === "string";
+export const isLookingLikeIframeEventWrapper = z.object({
+    type: z.string(),
+    data: z.unknown().optional(),
+});
 
 /**
  * List event types sent from an iFrame to WorkAdventure that expect a unique answer from WorkAdventure along the type for the answer from WorkAdventure to the iFrame.
@@ -112,83 +260,110 @@ export const isIframeResponseEventWrapper = (event: {
  */
 export const iframeQueryMapTypeGuards = {
     getState: {
-        query: tg.isUndefined,
+        query: z.undefined(),
         answer: isGameStateEvent,
     },
     getMapData: {
-        query: tg.isUndefined,
+        query: z.undefined(),
         answer: isMapDataEvent,
     },
     setVariable: {
         query: isSetVariableEvent,
-        answer: tg.isUndefined,
+        answer: z.undefined(),
     },
     loadTileset: {
         query: isLoadTilesetEvent,
-        answer: tg.isNumber,
+        answer: z.number(),
     },
     openCoWebsite: {
         query: isOpenCoWebsiteEvent,
         answer: isCoWebsite,
     },
     getCoWebsites: {
-        query: tg.isUndefined,
-        answer: tg.isArray(isCoWebsite),
+        query: z.undefined(),
+        answer: z.array(isCoWebsite),
     },
     closeCoWebsite: {
-        query: tg.isString,
-        answer: tg.isUndefined,
+        query: z.string(),
+        answer: z.undefined(),
     },
     closeCoWebsites: {
-        query: tg.isUndefined,
-        answer: tg.isUndefined,
+        query: z.undefined(),
+        answer: z.undefined(),
     },
     triggerActionMessage: {
         query: isTriggerActionMessageEvent,
-        answer: tg.isUndefined,
+        answer: z.undefined(),
     },
     removeActionMessage: {
         query: isMessageReferenceEvent,
-        answer: tg.isUndefined,
+        answer: z.undefined(),
     },
     getEmbeddedWebsite: {
-        query: tg.isString,
+        query: z.string(),
         answer: isCreateEmbeddedWebsiteEvent,
     },
     deleteEmbeddedWebsite: {
-        query: tg.isString,
-        answer: tg.isUndefined,
+        query: z.string(),
+        answer: z.undefined(),
     },
     createEmbeddedWebsite: {
         query: isCreateEmbeddedWebsiteEvent,
-        answer: tg.isUndefined,
+        answer: z.undefined(),
+    },
+    createArea: {
+        query: isCreateAreaEvent,
+        answer: z.undefined(),
+    },
+    getArea: {
+        query: z.string(),
+        answer: isCreateAreaEvent,
+    },
+    modifyArea: {
+        query: isAreaEvent,
+        answer: z.undefined(),
+    },
+    deleteArea: {
+        query: z.string(),
+        answer: z.undefined(),
     },
     setPlayerOutline: {
         query: isColorEvent,
-        answer: tg.isUndefined,
+        answer: z.undefined(),
     },
     removePlayerOutline: {
-        query: tg.isUndefined,
-        answer: tg.isUndefined,
+        query: z.undefined(),
+        answer: z.undefined(),
     },
     getPlayerPosition: {
-        query: tg.isUndefined,
+        query: z.undefined(),
         answer: isPlayerPosition,
     },
     movePlayerTo: {
         query: isMovePlayerToEventConfig,
         answer: isMovePlayerToEventAnswer,
     },
+    openUIWebsite: {
+        query: isCreateUIWebsiteEvent,
+        answer: isUIWebsite,
+    },
+    closeUIWebsite: {
+        query: z.string(),
+        answer: z.undefined(),
+    },
+    getUIWebsites: {
+        query: z.undefined(),
+        answer: z.array(isUIWebsite),
+    },
 };
 
-type GuardedType<T> = T extends (x: unknown) => x is infer T ? T : never;
 type IframeQueryMapTypeGuardsType = typeof iframeQueryMapTypeGuards;
 type UnknownToVoid<T> = undefined extends T ? void : T;
 
 export type IframeQueryMap = {
     [key in keyof IframeQueryMapTypeGuardsType]: {
-        query: GuardedType<IframeQueryMapTypeGuardsType[key]["query"]>;
-        answer: UnknownToVoid<GuardedType<IframeQueryMapTypeGuardsType[key]["answer"]>>;
+        query: z.infer<typeof iframeQueryMapTypeGuards[key]["query"]>;
+        answer: UnknownToVoid<z.infer<typeof iframeQueryMapTypeGuards[key]["answer"]>>;
     };
 };
 
@@ -216,11 +391,18 @@ export const isIframeQuery = (event: any): event is IframeQuery<keyof IframeQuer
         return false;
     }
 
-    const result = iframeQueryMapTypeGuards[type].query(event.data);
-    if (!result) {
+    try {
+        iframeQueryMapTypeGuards[type].query.parse(event.data);
+    } catch (err) {
+        if (err instanceof z.ZodError) {
+            console.error(err.issues);
+        }
         console.warn('Received a query with type "' + type + '" but the payload is invalid.');
+
+        return false;
     }
-    return result;
+
+    return true;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -233,12 +415,11 @@ export interface IframeAnswerEvent<T extends keyof IframeQueryMap> {
     data: IframeQueryMap[T]["answer"];
 }
 
-export const isIframeAnswerEvent = (event: {
-    type?: string;
-    id?: number;
-}): event is IframeAnswerEvent<keyof IframeQueryMap> => typeof event.type === "string" && typeof event.id === "number";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isIframeAnswerEvent = (event: any): event is IframeAnswerEvent<keyof IframeQueryMap> =>
+    typeof event.type === "string" && typeof event.id === "number";
 
-export interface IframeErrorAnswerEvent {
+/*export interface IframeErrorAnswerEvent {
     id: number;
     type: keyof IframeQueryMap;
     error: string;
@@ -249,4 +430,15 @@ export const isIframeErrorAnswerEvent = (event: {
     id?: number;
     error?: string;
 }): event is IframeErrorAnswerEvent =>
-    typeof event.type === "string" && typeof event.id === "number" && typeof event.error === "string";
+    typeof event.type === "string" && typeof event.id === "number" && typeof event.error === "string";*/
+
+export const isIframeErrorAnswerEvent = z.object({
+    id: z.number(),
+    type: z.string(),
+    error: z.string(),
+});
+
+/**
+ * A message sent from the game to the iFrame when a user enters or leaves a zone.
+ */
+export type IframeErrorAnswerEvent = z.infer<typeof isIframeErrorAnswerEvent>;

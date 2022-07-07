@@ -11,10 +11,11 @@ import menu from "./menu";
 import report from "./report";
 import warning from "./warning";
 import emoji from "./emoji";
+import trigger from "./trigger";
+import muc from "./muc";
+import notification from "./notification";
 
 const en_US: BaseTranslation = {
-    language: "English",
-    country: "United States",
     audio,
     camera,
     chat,
@@ -27,6 +28,9 @@ const en_US: BaseTranslation = {
     report,
     warning,
     emoji,
+    trigger,
+    muc,
+    notification,
 };
 
 export default en_US;

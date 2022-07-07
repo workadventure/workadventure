@@ -8,6 +8,7 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Afficher l'invitation",
             register: "Enregistrez vous",
             chat: "Ouvrir le chat",
+            userlist: "Liste des utilisateurs",
         },
     },
     visitCard: {
@@ -57,19 +58,28 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Langage",
         },
+        privacySettings: {
+            title: "Mode absent",
+            explanation:
+                "Quand l'onglet WorkAdventure de votre navigateur n'est pas visible, WorkAdventure passe en \"mode absent\"",
+            cameraToggle: 'Garder la caméra activée en "mode absent"',
+            microphoneToggle: 'Garder le microphone activé en "mode absent"',
+        },
         save: {
             warning: "(La sauvegarde de ces paramètres redémarre le jeu)",
             button: "Sauvegarder",
         },
         fullscreen: "Plein écran",
         notifications: "Notifications",
-        cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de réunion Jitsi",
+        cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",
         ignoreFollowRequest: "Ignorer les demandes de suivi des autres utilisateurs",
     },
     invite: {
         description: "Partager le lien de la salle!",
         copy: "Copier",
         share: "Partager",
+        walkAutomaticallyToPosition: "Marcher automatiquement jusqu'à ma position",
+        selectEntryPoint: "Selectionner la zone de départ",
     },
     globalMessage: {
         text: "Texte",
@@ -112,7 +122,7 @@ const menu: NonNullable<Translation["menu"]> = {
         },
     },
     sub: {
-        profile: "Profile",
+        profile: "Profil",
         settings: "Paramètres",
         invite: "Inviter",
         credit: "Crédits",

@@ -1,12 +1,8 @@
 import { Observable, Subject } from "rxjs";
 
-import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-
-import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
+import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { isSetVariableEvent, SetVariableEvent } from "../Events/SetVariableEvent";
-
-import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
+import { SetVariableEvent } from "../Events/SetVariableEvent";
 
 export class WorkadventureStateCommands extends IframeApiContribution<WorkadventureStateCommands> {
     private setVariableResolvers = new Subject<SetVariableEvent>();
@@ -17,7 +13,7 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
         super();
 
         this.setVariableResolvers.subscribe((event) => {
-            const oldValue = this.variables.get(event.key);
+            // const oldValue = this.variables.get(event.key);
             // If we are setting the same value, no need to do anything.
             // No need to do this check since it is already performed in SharedVariablesManager
             /*if (JSON.stringify(oldValue) === JSON.stringify(event.value)) {
@@ -35,7 +31,6 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
     callbacks = [
         apiCallback({
             type: "setVariable",
-            typeChecker: isSetVariableEvent,
             callback: (payloadData) => {
                 if (payloadData.target === this.target) {
                     this.setVariableResolvers.next(payloadData);

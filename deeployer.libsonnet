@@ -4,7 +4,7 @@
   local tag = namespace,
   local url = namespace+".test.workadventu.re",
   // develop branch does not use admin because of issue with SSL certificate of admin as of now.
-  local adminUrl = if std.startsWith(namespace, "admin") then "https://"+url else null,
+  local adminUrl = if std.objectHas(env, 'ADMIN_API_URL') then env.ADMIN_API_URL else null,
   "$schema": "https://raw.githubusercontent.com/thecodingmachine/deeployer/master/deeployer.schema.json",
   "version": "1.0",
   "containers": {
@@ -22,6 +22,9 @@
          "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
          "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
          "REDIS_HOST": "redis",
+         "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+         "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+         "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -41,6 +44,9 @@
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "TURN_STATIC_AUTH_SECRET": env.TURN_STATIC_AUTH_SECRET,
               "REDIS_HOST": "redis",
+              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+              "BBB_URL": "https://test-install.blindsidenetworks.com/bigbluebutton/",
+              "BBB_SECRET": "8cd8ef52e8e101574e400365b55e11a6",
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
@@ -59,11 +65,25 @@
               "JITSI_URL": env.JITSI_URL,
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
-              "FRONT_URL": "https://play-"+url
+              "FRONT_URL": "https://play-"+url,
+              "ENABLE_OPENAPI_ENDPOINT": "true",
+              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
+              # Admin
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+              # Opid client
+              "OPID_CLIENT_ID": "auth-code-client",
+              "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
+              "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
+              "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
+              "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
+              "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+              # Ejabberd
+              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
+              "EJABBERD_URI": "adminxmpp-"+url,
+              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
             } else {})
           },
     "front": {
@@ -83,7 +103,6 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
-        "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
         "ICON_URL": "//icon-"+url,
       }
     },

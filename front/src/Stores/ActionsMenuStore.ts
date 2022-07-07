@@ -1,8 +1,15 @@
 import { writable } from "svelte/store";
 
+export type ActionsMenuAction = {
+    actionName: string;
+    callback: Function;
+    protected?: boolean;
+    priority?: number;
+    style?: "is-success" | "is-error" | "is-primary";
+};
 export interface ActionsMenuData {
     playerName: string;
-    actions: { actionName: string; callback: Function }[];
+    actions: Map<string, ActionsMenuAction>;
 }
 
 function createActionsMenuStore() {
@@ -13,21 +20,18 @@ function createActionsMenuStore() {
         initialize: (playerName: string) => {
             set({
                 playerName,
-                actions: [],
+                actions: new Map<string, ActionsMenuAction>(),
             });
         },
-        addAction: (actionName: string, callback: Function) => {
+        addAction: (action: ActionsMenuAction) => {
             update((data) => {
-                data?.actions.push({ actionName, callback });
+                data?.actions.set(action.actionName, action);
                 return data;
             });
         },
         removeAction: (actionName: string) => {
             update((data) => {
-                const actionIndex = data?.actions.findIndex((action) => action.actionName === actionName);
-                if (actionIndex !== undefined && actionIndex != -1) {
-                    data?.actions.splice(actionIndex, 1);
-                }
+                data?.actions.delete(actionName);
                 return data;
             });
         },

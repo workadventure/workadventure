@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AskPositionMessage,
     BanMessage,
     BanUserMessage,
     BatchToPusherMessage,
@@ -15,20 +16,21 @@ import {
     EmptyMessage,
     ItemEventMessage,
     JoinRoomMessage,
-    PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomPromptMessage,
     RoomMessage,
     SendUserMessage,
     ServerToAdminClientMessage,
     SetPlayerDetailsMessage,
-    SilentMessage,
     UserMovesMessage,
     VariableMessage,
     WebRtcSignalToServerMessage,
     WorldFullWarningToRoomMessage,
     ZoneMessage,
+    LockGroupPromptMessage,
+    RoomsList,
+    PingMessage,
+    QueryMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -80,8 +82,6 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getUsermovesmessage() as UserMovesMessage
                             );
-                        } else if (message.hasSilentmessage()) {
-                            socketManager.handleSilentMessage(room, user, message.getSilentmessage() as SilentMessage);
                         } else if (message.hasItemeventmessage()) {
                             socketManager.handleItemEvent(
                                 room,
@@ -106,10 +106,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getWebrtcscreensharingsignaltoservermessage() as WebRtcSignalToServerMessage
                             );
-                        } else if (message.hasQueryjitsijwtmessage()) {
-                            socketManager.handleQueryJitsiJwtMessage(
+                        } else if (message.hasQuerymessage()) {
+                            await socketManager.handleQueryMessage(
+                                room,
                                 user,
-                                message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
+                                message.getQuerymessage() as QueryMessage
                             );
                         } else if (message.hasEmotepromptmessage()) {
                             socketManager.handleEmoteEventMessage(
@@ -135,6 +136,12 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getFollowabortmessage() as FollowAbortMessage
                             );
+                        } else if (message.hasLockgrouppromptmessage()) {
+                            socketManager.handleLockGroupPromptMessage(
+                                room,
+                                user,
+                                message.getLockgrouppromptmessage() as LockGroupPromptMessage
+                            );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
@@ -148,12 +155,22 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
                             );
+                        } else if (message.hasAskpositionmessage()) {
+                            socketManager.handleAskPositionMessage(
+                                room,
+                                user,
+                                message.getAskpositionmessage() as AskPositionMessage
+                            );
                         } else {
                             throw new Error("Unhandled message type");
                         }
                     }
                 } catch (e) {
-                    console.error(e);
+                    console.error(
+                        "An error occurred while managing a message of type PusherToBackMessage:" +
+                            message.getMessageCase().toString(),
+                        e
+                    );
                     emitError(call, e);
                     call.end();
                 }
@@ -318,6 +335,12 @@ const roomManager: IRoomManagerServer = {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
         socketManager.dispatchRoomRefresh(call.request.getRoomid()).catch((e) => console.error(e));
         callback(null, new EmptyMessage());
+    },
+    getRooms(call: ServerUnaryCall<EmptyMessage>, callback: sendUnaryData<RoomsList>): void {
+        callback(null, socketManager.getAllRooms());
+    },
+    ping(call: ServerUnaryCall<PingMessage>, callback: sendUnaryData<PingMessage>): void {
+        callback(null, call.request);
     },
 };
 

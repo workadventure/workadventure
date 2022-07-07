@@ -1,30 +1,25 @@
-import * as tg from "generic-type-guard";
+import { z } from "zod";
+import { extendApi } from "@anatine/zod-openapi";
 
-export const isBanBannedAdminMessageInterface = new tg.IsInterface()
-    .withProperties({
-        type: tg.isSingletonStringUnion("ban", "banned"),
-        message: tg.isString,
-        userUuid: tg.isString,
-    })
-    .get();
+export const isBanBannedAdminMessageInterface = z.object({
+    type: z.enum(["ban", "banned"]),
+    message: z.string(),
+    userUuid: z.string(),
+});
 
-export const isUserMessageAdminMessageInterface = new tg.IsInterface()
-    .withProperties({
-        event: tg.isSingletonString("user-message"),
-        message: isBanBannedAdminMessageInterface,
-        world: tg.isString,
-        jwt: tg.isString,
-    })
-    .get();
+export const isUserMessageAdminMessageInterface = z.object({
+    event: z.enum(["user-message"]),
+    message: extendApi(isBanBannedAdminMessageInterface, { $ref: "#/definitions/BanBannedAdminMessageInterface" }),
+    world: z.string(),
+    jwt: z.string(),
+});
 
-export const isListenRoomsMessageInterface = new tg.IsInterface()
-    .withProperties({
-        event: tg.isSingletonString("listen"),
-        roomIds: tg.isArray(tg.isString),
-        jwt: tg.isString,
-    })
-    .get();
+export const isListenRoomsMessageInterface = z.object({
+    event: z.enum(["listen"]),
+    roomIds: z.array(z.string()),
+    jwt: z.string(),
+});
 
-export const isAdminMessageInterface = tg.isUnion(isUserMessageAdminMessageInterface, isListenRoomsMessageInterface);
+export const isAdminMessageInterface = z.union([isUserMessageAdminMessageInterface, isListenRoomsMessageInterface]);
 
-export type AdminMessageInterface = tg.GuardedType<typeof isAdminMessageInterface>;
+export type AdminMessageInterface = z.infer<typeof isAdminMessageInterface>;

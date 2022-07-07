@@ -1,6 +1,6 @@
 //import Docker from "dockerode";
 //import * as Dockerode from "dockerode";
-import Dockerode = require( 'dockerode')
+import Dockerode from 'dockerode';
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const { execSync } = require('child_process');
@@ -8,20 +8,14 @@ const path = require("path");
 const fs = require('fs');
 
 /**
- * Execute Docker compose, passing the correct host directory (in case this is run from the TestCafe container)
+ * Execute Docker compose, passing the correct host directory
  */
 export function dockerCompose(command: string): void {
     let param = '';
-    const projectDir = process.env.PROJECT_DIR;
+    const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
-    if (!projectDir && fs.existsSync('/project')) {
-        // We are probably in the docker-image AND we did not pass PROJECT_DIR env variable
-        throw new Error('Incorrect docker-compose command used to fire testcafe tests. You need to add a PROJECT_DIR environment variable. Please refer to the CONTRIBUTING.md guide');
-    }
-
-    if (projectDir) {
-        const dirName = path.basename(projectDir);
-        param = '--project-name '+dirName+' --project-directory '+projectDir;
+    if (overrideDockerCompose) {
+        param += ' -f docker-compose.yaml -f '+overrideDockerCompose;
     }
 
     let stdout = execSync('docker-compose '+param+' '+command, {
@@ -68,6 +62,18 @@ export function rebootTraefik(): void {
 
 export async function rebootPusher(): Promise<void> {
     dockerCompose('up --force-recreate -d pusher');
+}
+
+export async function stopPusher(): Promise<void> {
+    dockerCompose('stop pusher');
+}
+
+export async function stopEjabberd(): Promise<void> {
+    dockerCompose('stop ejabberd');
+}
+
+export async function rebootEjabberd(): Promise<void> {
+    dockerCompose('up --force-recreate -d ejabberd');
 }
 
 export async function resetRedis(): Promise<void> {

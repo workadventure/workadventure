@@ -10,17 +10,27 @@ import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
+import { SoundMeter } from "../Phaser/Components/SoundMeter";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+
+import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedCameraState());
 
     return {
         subscribe,
-        enableWebcam: () => set(true),
-        disableWebcam: () => set(false),
+        enableWebcam: () => {
+            set(true);
+            localUserStore.setRequestedCameraState(true);
+        },
+        disableWebcam: () => {
+            set(false);
+            localUserStore.setRequestedCameraState(false);
+        },
     };
 }
 
@@ -28,12 +38,18 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set, update } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
 
     return {
         subscribe,
-        enableMicrophone: () => set(true),
-        disableMicrophone: () => set(false),
+        enableMicrophone: () => {
+            set(true);
+            localUserStore.setRequestedMicrophoneState(true);
+        },
+        disableMicrophone: () => {
+            set(false);
+            localUserStore.setRequestedMicrophoneState(false);
+        },
     };
 }
 
@@ -41,7 +57,7 @@ function createRequestedMicrophoneState() {
  * A store that contains whether the EnableCameraScene is shown or not.
  */
 function createEnableCameraSceneVisibilityStore() {
-    const { subscribe, set, update } = writable(false);
+    const { subscribe, set } = writable(false);
 
     return {
         subscribe,
@@ -145,7 +161,7 @@ export const cameraEnergySavingStore = derived(
  * A store that contains video constraints.
  */
 function createVideoConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         width: { min: 640, ideal: 1280, max: 1920 },
         height: { min: 400, ideal: 720 },
         frameRate: { ideal: localUserStore.getVideoQualityValue() },
@@ -177,10 +193,23 @@ function createVideoConstraintStore() {
     };
 }
 
-/**
- * A store containing if user is silent, so if he is in silent zone. This permit to show et hide camera of user
- */
-export const isSilentStore = writable(false);
+export const inJitsiStore = writable(false);
+export const inBbbStore = writable(false);
+export const silentStore = writable(false);
+export const denyProximityMeetingStore = writable(false);
+
+export const availabilityStatusStore = derived(
+    [inJitsiStore, inBbbStore, silentStore, privacyShutdownStore, denyProximityMeetingStore],
+    ([$inJitsiStore, $inBbbStore, $silentStore, $privacyShutdownStore, $denyProximityMeetingStore]) => {
+        if ($inJitsiStore) return AvailabilityStatus.JITSI;
+        if ($inBbbStore) return AvailabilityStatus.BBB;
+        if ($denyProximityMeetingStore) return AvailabilityStatus.DENY_PROXIMITY_MEETING;
+        if ($silentStore) return AvailabilityStatus.SILENT;
+        if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
+        return AvailabilityStatus.ONLINE;
+    },
+    AvailabilityStatus.ONLINE
+);
 
 export const videoConstraintStore = createVideoConstraintStore();
 
@@ -188,7 +217,7 @@ export const videoConstraintStore = createVideoConstraintStore();
  * A store that contains video constraints.
  */
 function createAudioConstraintStore() {
-    const { subscribe, set, update } = writable({
+    const { subscribe, update } = writable({
         //TODO: make these values configurable in the game settings menu and store them in localstorage
         autoGainControl: false,
         echoCancellation: true,
@@ -239,7 +268,7 @@ export const mediaStreamConstraintsStore = derived(
         audioConstraintStore,
         privacyShutdownStore,
         cameraEnergySavingStore,
-        isSilentStore,
+        availabilityStatusStore,
     ],
     (
         [
@@ -251,7 +280,7 @@ export const mediaStreamConstraintsStore = derived(
             $audioConstraintStore,
             $privacyShutdownStore,
             $cameraEnergySavingStore,
-            $isSilentStore,
+            $availabilityStatusStore,
         ],
         set
     ) => {
@@ -290,7 +319,14 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable webcam for privacy reasons (the game is not visible and we were talking to no one)
         if ($privacyShutdownStore === true) {
-            currentVideoConstraint = false;
+            const userMicrophonePrivacySetting = localUserStore.getMicrophonePrivacySettings();
+            const userCameraPrivacySetting = localUserStore.getCameraPrivacySettings();
+            if (!userMicrophonePrivacySetting) {
+                currentAudioConstraint = false;
+            }
+            if (!userCameraPrivacySetting) {
+                currentVideoConstraint = false;
+            }
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
@@ -301,15 +337,18 @@ export const mediaStreamConstraintsStore = derived(
             //currentAudioConstraint = false;
         }
 
-        if ($isSilentStore === true) {
+        if (
+            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
+            $availabilityStatusStore === AvailabilityStatus.SILENT
+        ) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
 
-        // Let's make the changes only if the new value is different from the old one.
+        // Let's make the changes only if the new value is different from the old one.tile
         if (
-            previousComputedVideoConstraint != currentVideoConstraint ||
-            previousComputedAudioConstraint != currentAudioConstraint
+            !deepEqual(previousComputedVideoConstraint, currentVideoConstraint) ||
+            !deepEqual(previousComputedAudioConstraint, currentAudioConstraint)
         ) {
             previousComputedVideoConstraint = currentVideoConstraint;
             previousComputedAudioConstraint = currentAudioConstraint;
@@ -395,6 +434,13 @@ async function toggleConstraints(track: MediaStreamTrack, constraints: MediaTrac
     }
 }
 
+// This promise is important to queue the calls to "getUserMedia"
+// Otherwise, this can happen:
+// User requests a start then a stop of the camera quickly
+// The promise to start the cam starts. Before the promise is fulfilled, the camera is stopped.
+// Then, the MediaStream of the camera start resolves (resulting in the LED being turned on instead of off)
+let currentGetUserMediaPromise: Promise<MediaStream | undefined> = Promise.resolve(undefined);
+
 /**
  * A store containing the MediaStream object (or null if nothing requested, or Error if an error occurred)
  */
@@ -403,50 +449,59 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
     ($mediaStreamConstraintsStore, set) => {
         const constraints = { ...$mediaStreamConstraintsStore };
 
-        async function initStream(constraints: MediaStreamConstraints) {
-            try {
-                if (currentStream) {
-                    //we need stop all tracks to make sure the old stream will be garbage collected
-                    //currentStream.getTracks().forEach((t) => t.stop());
-                }
-                currentStream = await navigator.mediaDevices.getUserMedia(constraints);
-                set({
-                    type: "success",
-                    stream: currentStream,
-                });
-                return;
-            } catch (e) {
-                if (constraints.video !== false || constraints.audio !== false) {
-                    console.info(
-                        "Error. Unable to get microphone and/or camera access. Trying audio only.",
-                        constraints,
-                        e
-                    );
-                    // TODO: does it make sense to pop this error when retrying?
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
+        function initStream(constraints: MediaStreamConstraints): Promise<MediaStream | undefined> {
+            currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
+                return navigator.mediaDevices
+                    .getUserMedia(constraints)
+                    .then((stream) => {
+                        // Close old stream
+                        if (currentStream) {
+                            //we need stop all tracks to make sure the old stream will be garbage collected
+                            currentStream.getTracks().forEach((t) => t.stop());
+                        }
+
+                        currentStream = stream;
+                        set({
+                            type: "success",
+                            stream: currentStream,
+                        });
+                        return stream;
+                    })
+                    .catch((e) => {
+                        if (constraints.video !== false || constraints.audio !== false) {
+                            console.info(
+                                "Error. Unable to get microphone and/or camera access. Trying audio only.",
+                                constraints,
+                                e
+                            );
+                            // TODO: does it make sense to pop this error when retrying?
+                            set({
+                                type: "error",
+                                error: e instanceof Error ? e : new Error("An unknown error happened"),
+                            });
+                            // Let's try without video constraints
+                            if (constraints.video !== false) {
+                                requestedCameraState.disableWebcam();
+                            }
+                            if (constraints.audio !== false) {
+                                requestedMicrophoneState.disableMicrophone();
+                            }
+                        } else if (!constraints.video && !constraints.audio) {
+                            set({
+                                type: "error",
+                                error: new MediaStreamConstraintsError(),
+                            });
+                        } else {
+                            console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
+                            set({
+                                type: "error",
+                                error: e instanceof Error ? e : new Error("An unknown error happened"),
+                            });
+                        }
+                        return undefined;
                     });
-                    // Let's try without video constraints
-                    if (constraints.video !== false) {
-                        requestedCameraState.disableWebcam();
-                    }
-                    if (constraints.audio !== false) {
-                        requestedMicrophoneState.disableMicrophone();
-                    }
-                } else if (!constraints.video && !constraints.audio) {
-                    set({
-                        type: "error",
-                        error: new MediaStreamConstraintsError(),
-                    });
-                } else {
-                    console.info("Error. Unable to get microphone and/or camera access.", constraints, e);
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                }
-            }
+            });
+            return currentGetUserMediaPromise;
         }
 
         if (navigator.mediaDevices === undefined) {
@@ -472,46 +527,62 @@ export const localStreamStore = derived<Readable<MediaStreamConstraints>, LocalS
             }
         }
 
-        applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
-        applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
-
-        if (implementCorrectTrackBehavior) {
-            //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
-            if (currentStream === null) {
-                // we need to assign a first value to the stream because getUserMedia is async
-                set({
-                    type: "success",
-                    stream: null,
-                });
-                initStream(constraints).catch((e) => {
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                });
-            }
-        } else {
-            //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
-            if (constraints.audio === false && constraints.video === false) {
-                currentStream = null;
-                set({
-                    type: "success",
-                    stream: null,
-                });
-            } //we reemit the stream if it was muted just to be sure
-            else if (constraints.audio /* && !oldConstraints.audio*/ || (!oldConstraints.video && constraints.video)) {
-                initStream(constraints).catch((e) => {
-                    set({
-                        type: "error",
-                        error: e instanceof Error ? e : new Error("An unknown error happened"),
-                    });
-                });
-            }
-            oldConstraints = {
-                video: !!constraints.video,
-                audio: !!constraints.audio,
-            };
+        if (currentStream === null) {
+            // we need to assign a first value to the stream because getUserMedia is async
+            set({
+                type: "success",
+                stream: null,
+            });
         }
+
+        (async () => {
+            await applyMicrophoneConstraints(currentStream, constraints.audio || false).catch((e) => console.error(e));
+            await applyCameraConstraints(currentStream, constraints.video || false).catch((e) => console.error(e));
+
+            if (implementCorrectTrackBehavior) {
+                //on good navigators like firefox, we can instantiate the stream once and simply disable or enable the tracks as needed
+                if (currentStream === null) {
+                    initStream(constraints).catch((e) => {
+                        set({
+                            type: "error",
+                            error: e instanceof Error ? e : new Error("An unknown error happened"),
+                        });
+                    });
+                }
+            } else {
+                //on bad navigators like chrome, we have to stop the tracks when we mute and reinstantiate the stream when we need to unmute
+                if (constraints.audio === false && constraints.video === false) {
+                    currentGetUserMediaPromise = currentGetUserMediaPromise.then(() => {
+                        if (currentStream) {
+                            //we need stop all tracks to make sure the old stream will be garbage collected
+                            currentStream.getTracks().forEach((t) => t.stop());
+                        }
+
+                        currentStream = null;
+                        set({
+                            type: "success",
+                            stream: null,
+                        });
+                        return undefined;
+                    });
+                } //we reemit the stream if it was muted just to be sure
+                else if (
+                    constraints.audio /* && !oldConstraints.audio*/ ||
+                    (!oldConstraints.video && constraints.video)
+                ) {
+                    initStream(constraints).catch((e) => {
+                        set({
+                            type: "error",
+                            error: e instanceof Error ? e : new Error("An unknown error happened"),
+                        });
+                    });
+                }
+                oldConstraints = {
+                    video: !!constraints.video,
+                    audio: !!constraints.audio,
+                };
+            }
+        })().catch((e) => console.error(e));
     }
 );
 
@@ -540,6 +611,48 @@ export const obtainedMediaConstraintStore = derived<Readable<MediaStreamConstrai
         }
     }
 );
+
+export const localVolumeStore = readable<number | undefined>(undefined, (set) => {
+    let timeout: ReturnType<typeof setTimeout>;
+    let soundMeter: SoundMeter;
+    const unsubscribe = localStreamStore.subscribe((localStreamStoreValue) => {
+        clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
+        if (localStreamStoreValue.type === "error") {
+            set(undefined);
+            return;
+        }
+        const mediaStream = localStreamStoreValue.stream;
+
+        if (mediaStream === null || mediaStream.getAudioTracks().length <= 0) {
+            set(undefined);
+            return;
+        }
+        soundMeter = new SoundMeter(mediaStream);
+        let error = false;
+
+        timeout = setInterval(() => {
+            try {
+                set(soundMeter.getVolume());
+            } catch (err) {
+                if (!error) {
+                    console.error(err);
+                    error = true;
+                }
+            }
+        }, 100);
+    });
+
+    return () => {
+        unsubscribe();
+        clearInterval(timeout);
+        if (soundMeter) {
+            soundMeter.stop();
+        }
+    };
+});
 
 /**
  * Device list

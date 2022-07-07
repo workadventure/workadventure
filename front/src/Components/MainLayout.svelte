@@ -1,7 +1,7 @@
-<script lang="typescript">
+<script lang="ts">
     import { onMount } from "svelte";
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
-    import { embedScreenLayout, hasEmbedScreen } from "../Stores/EmbedScreensStore";
+    import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
     import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
     import { requestVisitCardsStore } from "../Stores/GameStore";
@@ -12,7 +12,6 @@
     import AudioManager from "./AudioManager/AudioManager.svelte";
     import CameraControls from "./CameraControls.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
-    import EmoteMenu from "./EmoteMenu/EmoteMenu.svelte";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
@@ -38,6 +37,11 @@
     import { LayoutMode } from "../WebRtc/LayoutManager";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
+    import Lazy from "./Lazy.svelte";
+    import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
+    import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
+    import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
+    import "../../style/tailwind.scss";
 
     let mainLayout: HTMLDivElement;
 
@@ -54,18 +58,24 @@
     });
 </script>
 
+<!-- Components ordered by z-index -->
 <div id="main-layout" bind:this={mainLayout}>
     <aside id="main-layout-left-aside">
         {#if $menuIconVisiblilityStore}
             <MenuIcon />
         {/if}
 
-        {#if $embedScreenLayout === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
+        {#if $embedScreenLayoutStore === LayoutMode.VideoChat || displayCoWebsiteContainerMd}
             <CoWebsitesContainer vertical={true} />
         {/if}
     </aside>
 
     <section id="main-layout-main">
+        <Lazy
+            when={$showDesktopCapturerSourcePicker}
+            component={() => import("./Video/DesktopCapturerSourcePicker.svelte")}
+        />
+
         {#if $menuVisiblilityStore}
             <Menu />
         {/if}
@@ -104,24 +114,26 @@
             <ShareLinkMapModal />
         {/if}
 
-        {#if $followStateStore !== "off" || $peerStore.size > 0}
-            <FollowMenu />
-        {/if}
-
         {#if $actionsMenuStore}
             <ActionsMenu />
+        {/if}
+
+        {#if $followStateStore !== "off" || $peerStore.size > 0}
+            <FollowMenu />
         {/if}
 
         {#if $requestVisitCardsStore}
             <VisitCard visitCardUrl={$requestVisitCardsStore} />
         {/if}
 
-        {#if $emoteMenuStore}
-            <EmoteMenu />
-        {/if}
+        <Lazy when={$emoteMenuStore} component={() => import("./EmoteMenu/EmoteMenu.svelte")} />
 
         {#if hasEmbedScreen}
             <EmbedScreensContainer />
+        {/if}
+
+        {#if $uiWebsitesStore}
+            <UiWebsiteContainer />
         {/if}
     </section>
 
@@ -138,6 +150,9 @@
             <MyCamera />
             <CameraControls />
         {/if}
+
+        <!-- audio when user have a message TODO delete it with new chat -->
+        <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
     </section>
 </div>
 

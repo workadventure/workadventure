@@ -28,7 +28,6 @@ export class Player extends Character {
         companionTexturePromise?: CancelablePromise<string>
     ) {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
-
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
     }
@@ -76,13 +75,19 @@ export class Player extends Character {
         speed?: number
     ): Promise<{ x: number; y: number; cancelled: boolean }> {
         const isPreviousPathInProgress = this.pathToFollow !== undefined && this.pathToFollow.length > 0;
-        // take collider offset into consideraton
+        // take collider offset into consideration
         this.pathToFollow = this.adjustPathToFollowToColliderBounds(path);
         this.pathWalkingSpeed = speed;
         return new Promise((resolve) => {
             this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
             this.followingPathPromiseResolve = resolve;
         });
+    }
+
+    public finishFollowingPath(cancelled: boolean = false): void {
+        this.pathToFollow = undefined;
+        this.pathWalkingSpeed = undefined;
+        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -180,12 +185,6 @@ export class Player extends Character {
             this.pathToFollow.shift();
         }
         return this.getMovementDirection(xDistance, yDistance, distance);
-    }
-
-    private finishFollowingPath(cancelled: boolean = false): void {
-        this.pathToFollow = undefined;
-        this.pathWalkingSpeed = undefined;
-        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {

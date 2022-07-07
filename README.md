@@ -1,9 +1,9 @@
-![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/YGtngdh9gt)
+![](https://github.com/thecodingmachine/workadventure/workflows/Continuous%20Integration/badge.svg) [![Discord](https://img.shields.io/discord/821338762134290432?label=Discord)](https://discord.gg/G6Xh9ZM9aR)
 
 ![WorkAdventure logo](README-LOGO.svg)
 ![WorkAdventure office image](README-MAP.png)
 
-Live demo [here](https://play.workadventu.re/@/tcm/workadventure/wa-village).
+Live demo [here](https://play.staging.workadventu.re/@/tcm/workadventure/wa-village).
 
 # WorkAdventure
 
@@ -18,7 +18,16 @@ See more features for your virtual office: https://workadventu.re/virtual-office
 
 Check out resources developed by the WorkAdventure community at [awesome-workadventure](https://github.com/workadventure/awesome-workadventure)
 
+## Setting up a production environment
+
+The way you set up your production environment will highly depend on your servers.
+We provide a production ready `docker-compose` file that you can use as a good starting point in the [contrib/docker](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker) directory.
+
 ## Setting up a development environment
+
+> **Note**  
+> These installation instructions are for local development only. They will not work on
+> remote servers as local environments do not have HTTPS certificates.
 
 Install Docker.
 
@@ -26,13 +35,13 @@ Run:
 
 ```
 cp .env.template .env
-docker-compose up -d
+docker-compose up
 ```
 
 The environment will start.
 
 You should now be able to browse to http://play.workadventure.localhost/ and see the application.
-You can view the dashboard at http://workadventure.localhost:8080/
+You can view the Traefik dashboard at http://localhost:8080/
 
 Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
@@ -41,75 +50,38 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 127.0.0.1 workadventure.localhost
 ```
 
-Note: If on the first run you get a page with "network error". Try to ``docker-compose stop`` , then ``docker-compose start``.
-Note 2: If you are still getting "network error". Make sure you are authorizing the self-signed certificate by entering https://pusher.workadventure.localhost and accepting them.
+### Troubleshooting
 
-### MacOS developers, your environment with Vagrant
+#### MacOS users
 
-If you are using MacOS, you can increase Docker performance using Vagrant. If you want more explanations, you can read [this medium article](https://medium.com/better-programming/vagrant-to-increase-docker-performance-with-macos-25b354b0c65c).
+Unlike with Windows and Linux, MacOS developers need to configure an amount of RAM dedicated
+to Docker. If some containers are "Killed", you will need to increase the amount of RAM given
+to Docker. At least 6GB of RAM is needed.
 
-#### Prerequisites
+If the performance is poor, you can also try to [run WorkAdventure inside Vagrant](docs/dev/vagrant.md).
 
-- VirtualBox*	5.x	Latest version	https://www.virtualbox.org/wiki/Downloads
-- Vagrant	2.2.7	Latest version	https://www.vagrantup.com/downloads.html
+#### Windows users
 
-#### First steps
+If you find errors in the docker logs that contain the string "\r", you have an issue with your Git configuration.
+On Windows, Git can be configured to change the carriage return from "\n" to "\r\n" on the fly. Since the code
+is running in Linux containers, you absolutely want to be sure the Git won't do that. For this, you need to
+disable the `core.autocrlf` settings.
 
-Create a config file `Vagrantfile` from `Vagrantfile.template`
+If you run into this issue, please run the command:
 
-```bash
-cp Vagrantfile.template Vagrantfile
+```console
+git config --global core.autocrlf false
 ```
 
-In `Vagrantfile`, update `VM_HOST_PATH` with the local project path of your machine.
+Then, delete the WorkAdventure directory and check it out again.
 
+#### CORS error / HTTP 502 error
+
+If you see a CORS error or an HTTP 502 error when trying to load WorkAdventure, check the logs from the `pusher`
+and from the `back` container. If you see an error, you can simply try to restart them.
+Sometimes, a rare race condition prevents those containers from starting correctly in dev. 
+
+```console
+docker-compose restart pusher
+docker-compose restart back
 ```
-#VM_HOST_PATH# => your local machine path to the project
-
-```
-
-(run `pwd` and copy the path in this variable)
-
-To start your VM Vagrant, run:
-
-```bash
-Vagrant up
-```
-
-To connect to your VM, run:
-
-
-```bash
-Vagrant ssh
-```
-
-To start project environment, run
-
-```bash
-docker-compose up
-```
-
-You environment runs in you VM Vagrant. When you want stop your VM, you can run:
-
-````bash
-Vagrant halt
-````
-
-If you want to destroy, you can run
-
-````bash
-Vagrant destroy
-````
-
-#### Available commands
-
-* `Vagrant up`: start your VM Vagrant.
-* `Vagrant reload`: reload your VM Vagrant when you change Vagrantfile.
-* `Vagrant ssh`: connect on your VM Vagrant.
-* `Vagrant halt`: stop your VM Vagrant.
-* `Vagrant destroy`: delete your VM Vagrant.
-
-## Setting up a production environment
-
-The way you set up your production environment will highly depend on your servers.
-We provide a production ready `docker-compose` file that you can use as a good starting point in the [contrib/docker](https://github.com/thecodingmachine/workadventure/tree/master/contrib/docker) directory.

@@ -1,4 +1,4 @@
-import type { IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "standardized-audio-context";
+import { AudioContext, IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "standardized-audio-context";
 
 /**
  * Class to measure the sound volume of a media stream
@@ -6,41 +6,15 @@ import type { IAnalyserNode, IAudioContext, IMediaStreamAudioSourceNode } from "
 export class SoundMeter {
     private instant: number;
     private clip: number;
-    //private script: ScriptProcessorNode;
     private analyser: IAnalyserNode<IAudioContext> | undefined;
     private dataArray: Uint8Array | undefined;
     private context: IAudioContext | undefined;
     private source: IMediaStreamAudioSourceNode<IAudioContext> | undefined;
 
-    constructor() {
+    constructor(mediaStream: MediaStream) {
         this.instant = 0.0;
         this.clip = 0.0;
-        //this.script = context.createScriptProcessor(2048, 1, 1);
-    }
-
-    private init(context: IAudioContext) {
-        this.context = context;
-        this.analyser = this.context.createAnalyser();
-
-        this.analyser.fftSize = 2048;
-        const bufferLength = this.analyser.fftSize;
-        this.dataArray = new Uint8Array(bufferLength);
-    }
-
-    public connectToSource(stream: MediaStream, context: IAudioContext): void {
-        if (this.source !== undefined) {
-            this.stop();
-        }
-
-        this.init(context);
-
-        this.source = this.context?.createMediaStreamSource(stream);
-        if (this.analyser !== undefined) {
-            this.source?.connect(this.analyser);
-        }
-        //analyser.connect(distortion);
-        //distortion.connect(this.context.destination);
-        //this.analyser.connect(this.context.destination);
+        this.connectToSource(mediaStream, new AudioContext());
     }
 
     public getVolume(): number {
@@ -77,5 +51,30 @@ export class SoundMeter {
         this.analyser = undefined;
         this.dataArray = undefined;
         this.source = undefined;
+    }
+
+    private init(context: IAudioContext) {
+        this.context = context;
+        this.analyser = this.context.createAnalyser();
+
+        this.analyser.fftSize = 256;
+        const bufferLength = this.analyser.frequencyBinCount;
+        this.dataArray = new Uint8Array(bufferLength);
+    }
+
+    private connectToSource(stream: MediaStream, context: IAudioContext): void {
+        if (this.source !== undefined) {
+            this.stop();
+        }
+
+        this.init(context);
+
+        this.source = this.context?.createMediaStreamSource(stream);
+        if (this.analyser !== undefined) {
+            this.source?.connect(this.analyser);
+        }
+        //analyser.connect(distortion);
+        //distortion.connect(this.context.destination);
+        //this.analyser.connect(this.context.destination);
     }
 }

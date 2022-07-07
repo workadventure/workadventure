@@ -1,4 +1,4 @@
-<script lang="typescript">
+<script lang="ts">
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { ScreenSharingLocalMedia } from "../../Stores/ScreenSharingStore";
@@ -20,7 +20,7 @@
     }
 </script>
 
-<div class="video-container {cssClass ? cssClass : ''}" class:hide={!stream}>
+<div class="video-container screen-blocker {cssClass ? cssClass : ''}" class:hide={!stream}>
     {#if stream}
         <video
             use:srcObject={stream}

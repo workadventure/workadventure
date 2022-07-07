@@ -1,12 +1,12 @@
 import type { SignalData } from "simple-peer";
 import type { RoomConnection } from "./RoomConnection";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { PositionMessage_Direction } from "../Messages/ts-proto-generated/messages";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 export interface PointInterface {
     x: number;
     y: number;
-    direction: string; // TODO: modify this to the enum from ts-proto
+    direction: "up" | "down" | "left" | "right"; // TODO: modify this to the enum from ts-proto
     moving: boolean;
 }
 
@@ -15,6 +15,7 @@ export interface MessageUserPositionInterface {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    availabilityStatus: AvailabilityStatus;
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
@@ -30,6 +31,7 @@ export interface MessageUserJoined {
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
     position: PointInterface;
+    availabilityStatus: AvailabilityStatus;
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
@@ -44,7 +46,13 @@ export interface PositionInterface {
 export interface GroupCreatedUpdatedMessageInterface {
     position: PositionInterface;
     groupId: number;
-    groupSize: number;
+    groupSize?: number;
+    locked?: boolean;
+}
+
+export interface GroupUsersUpdateMessageInterface {
+    groupId: number;
+    userIds: number[];
 }
 
 export interface WebRtcDisconnectMessageInterface {
@@ -72,17 +80,12 @@ export interface ItemEventMessageInterface {
     parameters: unknown;
 }
 
-export interface PlayerDetailsUpdatedMessageInterface {
-    userId: number;
-    outlineColor: number;
-    removeOutlineColor: boolean;
-}
-
 export interface RoomJoinedMessageInterface {
     //users: MessageUserPositionInterface[],
     //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
+    characterLayers: BodyResourceDescriptionInterface[];
 }
 
 export interface PlayGlobalMessageInterface {

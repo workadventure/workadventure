@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import "jasmine";
 import { ConnectCallback, DisconnectCallback, GameRoom } from "../src/Model/GameRoom";
 import { Point } from "../src/Model/Websocket/MessageUserPosition";
 import { Group } from "../src/Model/Group";
-import { User, UserSocket } from "_Model/User";
+import { User, UserSocket } from "../src/Model/User";
 import { JoinRoomMessage, PositionMessage } from "../src/Messages/generated/messages_pb";
 import Direction = PositionMessage.Direction;
-import { EmoteCallback } from "_Model/Zone";
+import { EmoteCallback } from "../src/Model/Zone";
 
 function createMockUser(userId: number): User {
     return {
@@ -52,6 +53,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {}
         );
 
@@ -88,6 +90,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {}
         );
 
@@ -128,6 +131,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {}
         );
 

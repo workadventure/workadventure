@@ -1,8 +1,8 @@
 import { ConnectCallback, DisconnectCallback, GameRoom } from "./GameRoom";
 import { User } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
-import { Movable } from "_Model/Movable";
-import { PositionNotifier } from "_Model/PositionNotifier";
+import { PositionInterface } from "../Model/PositionInterface";
+import { Movable } from "../Model/Movable";
+import { PositionNotifier } from "../Model/PositionNotifier";
 import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
 
@@ -14,6 +14,7 @@ export class Group implements Movable {
     private x!: number;
     private y!: number;
     private wasDestroyed: boolean = false;
+    private locked: boolean = false;
     private roomId: string;
     private currentZone: Zone | null = null;
     /**
@@ -127,7 +128,7 @@ export class Group implements Movable {
 
         for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
             //  Todo: Merge two groups with a leader
-            if (user.group || this.isFull()) return; //we ignore users that are already in a group.
+            if (user.silent || user.group || this.isFull()) return; //we ignore users that are already in a group.
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
             if (distance < this.groupRadius) {
                 this.join(user);
@@ -141,15 +142,19 @@ export class Group implements Movable {
         return this.users.size >= MAX_PER_GROUP;
     }
 
+    isLocked(): boolean {
+        return this.locked;
+    }
+
     isEmpty(): boolean {
         return this.users.size <= 1;
     }
 
     join(user: User): void {
         // Broadcast on the right event
-        this.connectCallback(user, this);
         this.users.add(user);
         user.group = this;
+        this.connectCallback(user, this);
     }
 
     leave(user: User): void {
@@ -165,6 +170,10 @@ export class Group implements Movable {
 
         // Broadcast on the right event
         this.disconnectCallback(user, this);
+    }
+
+    lock(lock: boolean = true): void {
+        this.locked = lock;
     }
 
     /**

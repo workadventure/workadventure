@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import "jasmine";
 import { PositionNotifier } from "../src/Model/PositionNotifier";
 import { User, UserSocket } from "../src/Model/User";
-import { Zone } from "_Model/Zone";
-import { Movable } from "_Model/Movable";
-import { PositionInterface } from "_Model/PositionInterface";
+import { Zone } from "../src/Model/Zone";
+import { Movable } from "../src/Model/Movable";
+import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
+import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
 
 describe("PositionNotifier", () => {
     it("should receive notifications when player moves", () => {
@@ -25,6 +27,7 @@ describe("PositionNotifier", () => {
                 leaveTriggered = true;
             },
             () => {},
+            () => {},
             () => {}
         );
 
@@ -38,8 +41,8 @@ describe("PositionNotifier", () => {
                 moving: false,
                 direction: "down",
             },
-            false,
             positionNotifier,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -57,8 +60,8 @@ describe("PositionNotifier", () => {
                 moving: false,
                 direction: "down",
             },
-            false,
             positionNotifier,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -132,6 +135,7 @@ describe("PositionNotifier", () => {
                 leaveTriggered = true;
             },
             () => {},
+            () => {},
             () => {}
         );
 
@@ -145,8 +149,8 @@ describe("PositionNotifier", () => {
                 moving: false,
                 direction: "down",
             },
-            false,
             positionNotifier,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,
@@ -164,8 +168,8 @@ describe("PositionNotifier", () => {
                 moving: false,
                 direction: "down",
             },
-            false,
             positionNotifier,
+            AvailabilityStatus.ONLINE,
             {} as UserSocket,
             [],
             null,

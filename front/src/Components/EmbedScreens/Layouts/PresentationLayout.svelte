@@ -9,13 +9,11 @@
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
-            if ($highlightedEmbedScreen.embed.closable) {
-                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted closing");
-                });
+            if ($highlightedEmbedScreen.embed.isClosable()) {
+                coWebsiteManager.closeCoWebsite($highlightedEmbedScreen.embed);
             } else {
-                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch(() => {
-                    console.error("Error during co-website highlighted unloading");
+                coWebsiteManager.unloadCoWebsite($highlightedEmbedScreen.embed).catch((err) => {
+                    console.error("Cannot unload co-website", err);
                 });
             }
         }
@@ -68,11 +66,12 @@
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
-                        {#key $highlightedEmbedScreen.embed.iframe.id}
-                            <div
-                                id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.iframe.id}
-                                class="highlighted-cowebsite nes-container is-rounded"
-                            >
+                        {#key $highlightedEmbedScreen.embed.getId()}
+                            <div class="highlighted-cowebsite-container nes-container is-rounded screen-blocker">
+                                <div
+                                    id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                                    class="highlighted-cowebsite"
+                                />
                                 <div class="actions">
                                     <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
                                         >&times;</button
@@ -101,6 +100,10 @@
             overflow-y: auto;
             overflow-x: hidden;
         }
+
+        #full-medias {
+            overflow: hidden;
+        }
     }
 
     #embed-left-block {
@@ -122,20 +125,29 @@
 
         .highlighted-cowebsite {
             height: 100% !important;
-            width: 96%;
-            background-color: rgba(#000000, 0.6);
-            margin: 0 !important;
+            width: 100% !important;
+            position: relative;
 
-            .actions {
-                z-index: 200;
-                position: relative;
-                display: flex;
-                flex-direction: row;
-                justify-content: end;
-                gap: 2%;
+            &-container {
+                height: 100% !important;
+                width: 96%;
+                background-color: rgba(#000000, 0.6);
+                margin: 0 !important;
+                padding: 0 !important;
+                .actions {
+                    z-index: 151;
+                    position: absolute;
+                    width: 100%;
+                    top: 5px;
+                    right: 5px;
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: flex-end;
+                    gap: 2%;
 
-                button {
-                    pointer-events: all;
+                    button {
+                        pointer-events: all;
+                    }
                 }
             }
         }

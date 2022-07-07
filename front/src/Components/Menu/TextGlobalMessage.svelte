@@ -3,7 +3,7 @@
     import { onDestroy, onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { AdminMessageEventTypes } from "../../Connexion/AdminMessagesService";
-    import type { Quill } from "quill";
+    import Quill from "quill";
     import type { PlayGlobalMessageInterface } from "../../Connexion/ConnexionModels";
     import LL from "../../i18n/i18n-svelte";
 
@@ -54,10 +54,7 @@
     };
 
     //Quill
-    onMount(async () => {
-        // Import quill
-        const { default: Quill } = await import("quill"); // eslint-disable-line @typescript-eslint/no-explicit-any
-
+    onMount(() => {
         quill = new Quill(QUILL_EDITOR, {
             placeholder: $LL.menu.globalMessage.enter(),
             theme: "snow",
@@ -78,5 +75,47 @@
 </section>
 
 <style lang="scss">
-    @import "https://cdn.quilljs.com/1.3.7/quill.snow.css";
+    @import "../../../style/breakpoints.scss";
+    @import "quill/dist/quill.snow.css";
+
+    section.section-input-send-text {
+        --height-toolbar: 20%;
+        height: 100%;
+
+        :global(.ql-toolbar) {
+            max-height: var(--height-toolbar);
+            background: whitesmoke;
+        }
+
+        div.input-send-text {
+            height: calc(100% - var(--height-toolbar));
+            overflow: auto;
+
+            color: whitesmoke;
+            font-size: 1rem;
+
+            :global(.ql-editor.ql-blank::before) {
+                color: whitesmoke;
+                font-size: 1rem;
+            }
+
+            :global(.ql-tooltip) {
+                top: 40% !important;
+                left: 20% !important;
+
+                color: whitesmoke;
+                background-color: #333333;
+            }
+        }
+    }
+
+    @include media-breakpoint-up(md) {
+        section.section-input-send-text {
+            --height-toolbar: 30%;
+
+            :global(.ql-toolbar) {
+                overflow: auto;
+            }
+        }
+    }
 </style>

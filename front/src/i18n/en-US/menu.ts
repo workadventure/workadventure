@@ -8,6 +8,7 @@ const menu: BaseTranslation = {
             invite: "Show invite",
             register: "Register",
             chat: "Open chat",
+            userlist: "User list",
         },
     },
     visitCard: {
@@ -57,6 +58,13 @@ const menu: BaseTranslation = {
         language: {
             title: "Language",
         },
+        privacySettings: {
+            title: "Away mode",
+            explanation:
+                'While the WorkAdventure tab in your browser is not visible. WorkAdventure switches to "away mode"',
+            cameraToggle: 'Keep camera active in "away mode"',
+            microphoneToggle: 'Keep microphone active in "away mode"',
+        },
         save: {
             warning: "(Saving these settings will restart the game)",
             button: "Save",
@@ -70,6 +78,8 @@ const menu: BaseTranslation = {
         description: "Share the link of the room!",
         copy: "Copy",
         share: "Share",
+        walkAutomaticallyToPosition: "Walk automatically to my position",
+        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",

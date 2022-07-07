@@ -25,6 +25,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if ((!pointer.wasTouch && pointer.leftButtonReleased()) || pointer.getDuration() > 250) {
             return;
         }
+
+        if (!this.gameScene.userInputManager.isControlsEnabled) {
+            return;
+        }
+
         for (const object of gameObjects) {
             if (object instanceof Player || object instanceof RemotePlayer) {
                 return;
@@ -43,7 +48,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .then((path) => {
                 // Remove first step as it is for the tile we are currently standing on
                 path.shift();
-                this.gameScene.CurrentPlayer.setPathToFollow(path).catch((reason) => {});
+                this.gameScene.CurrentPlayer.setPathToFollow(path).catch(() => {});
             })
             .catch((reason) => {
                 console.warn(reason);

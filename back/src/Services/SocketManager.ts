@@ -1,66 +1,69 @@
 import { GameRoom } from "../Model/GameRoom";
 import {
+    AnswerMessage,
+    BanUserMessage,
+    BatchToPusherMessage,
+    BatchToPusherRoomMessage,
+    EmoteEventMessage,
+    EmotePromptMessage,
+    ErrorMessage,
+    FollowAbortMessage,
+    FollowConfirmationMessage,
+    FollowRequestMessage,
+    GroupLeftZoneMessage,
+    GroupUpdateZoneMessage,
+    GroupUsersUpdateMessage,
     ItemEventMessage,
     ItemStateMessage,
-    PlayGlobalMessage,
+    JitsiJwtAnswer,
+    JitsiJwtQuery,
+    JoinBBBMeetingAnswer,
+    JoinBBBMeetingQuery,
+    JoinRoomMessage,
+    LockGroupPromptMessage,
+    PlayerDetailsUpdatedMessage,
     PointMessage,
+    QueryMessage,
+    RefreshRoomMessage,
+    RoomDescription,
     RoomJoinedMessage,
+    RoomsList,
+    SendUserMessage,
     ServerToClientMessage,
-    SilentMessage,
+    SetPlayerDetailsMessage,
     SubMessage,
+    SubToPusherMessage,
+    UserJoinedZoneMessage,
+    UserLeftZoneMessage,
     UserMovedMessage,
     UserMovesMessage,
+    VariableMessage,
     WebRtcDisconnectMessage,
     WebRtcSignalToClientMessage,
     WebRtcSignalToServerMessage,
     WebRtcStartMessage,
-    QueryJitsiJwtMessage,
-    SendJitsiJwtMessage,
-    SendUserMessage,
-    JoinRoomMessage,
-    Zone as ProtoZone,
-    BatchToPusherMessage,
-    SubToPusherMessage,
-    UserJoinedZoneMessage,
-    GroupUpdateZoneMessage,
-    GroupLeftZoneMessage,
     WorldFullWarningMessage,
-    UserLeftZoneMessage,
-    EmoteEventMessage,
-    BanUserMessage,
-    RefreshRoomMessage,
-    EmotePromptMessage,
-    FollowRequestMessage,
-    FollowConfirmationMessage,
-    FollowAbortMessage,
-    VariableMessage,
-    BatchToPusherRoomMessage,
-    SubToPusherRoomMessage,
-    SetPlayerDetailsMessage,
-    PlayerDetailsUpdatedMessage,
+    Zone as ProtoZone,
+    AskPositionMessage,
+    MoveToPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { Group } from "../Model/Group";
 import { cpuTracker } from "./CpuTracker";
-import {
-    GROUP_RADIUS,
-    JITSI_ISS,
-    MINIMUM_DISTANCE,
-    SECRET_JITSI_KEY,
-    TURN_STATIC_AUTH_SECRET,
-} from "../Enum/EnvironmentVariable";
+import { GROUP_RADIUS, MINIMUM_DISTANCE, TURN_STATIC_AUTH_SECRET } from "../Enum/EnvironmentVariable";
 import { Movable } from "../Model/Movable";
 import { PositionInterface } from "../Model/PositionInterface";
 import Jwt from "jsonwebtoken";
-import { JITSI_URL } from "../Enum/EnvironmentVariable";
+import BigbluebuttonJs from "bigbluebutton-js";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
 import { gaugeManager } from "./GaugeManager";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
-import { Zone } from "_Model/Zone";
+import { Zone } from "../Model/Zone";
 import Debug from "debug";
-import { Admin } from "_Model/Admin";
+import { Admin } from "../Model/Admin";
 import crypto from "crypto";
+import QueryCase = QueryMessage.QueryCase;
 
 const debug = Debug("sockermanager");
 
@@ -68,13 +71,17 @@ function emitZoneMessage(subMessage: SubToPusherMessage, socket: ZoneSocket): vo
     // TODO: should we batch those every 100ms?
     const batchMessage = new BatchToPusherMessage();
     batchMessage.addPayload(subMessage);
-
     socket.write(batchMessage);
 }
 
 export class SocketManager {
-    //private rooms = new Map<string, GameRoom>();
-    // List of rooms in process of loading.
+    /**
+     * List of rooms already loaded (note: never use this directly).
+     * It is only here for the very specific getAllRooms case that needs to return all available rooms
+     * without waiting for pending rooms.
+     */
+    private resolvedRooms = new Map<string, GameRoom>();
+    // List of rooms (or rooms in process of loading).
     private roomsPromises = new Map<string, PromiseLike<GameRoom>>();
 
     constructor() {
@@ -103,6 +110,7 @@ export class SocketManager {
         const roomJoinedMessage = new RoomJoinedMessage();
         roomJoinedMessage.setTagList(joinRoomMessage.getTagList());
         roomJoinedMessage.setUserroomtoken(joinRoomMessage.getUserroomtoken());
+        roomJoinedMessage.setCharacterlayerList(joinRoomMessage.getCharacterlayerList());
 
         for (const [itemId, item] of room.getItemsState().entries()) {
             const itemStateMessage = new ItemStateMessage();
@@ -158,10 +166,6 @@ export class SocketManager {
 
     handleSetPlayerDetails(room: GameRoom, user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
         room.updatePlayerDetails(user, playerDetailsMessage);
-    }
-
-    handleSilentMessage(room: GameRoom, user: User, silentMessage: SilentMessage) {
-        room.setSilent(user, silentMessage.getSilent());
     }
 
     handleItemEvent(room: GameRoom, user: User, itemEventMessage: ItemEventMessage) {
@@ -248,11 +252,7 @@ export class SocketManager {
         try {
             //user leave previous world
             room.leave(user);
-            if (room.isEmpty()) {
-                this.roomsPromises.delete(room.roomUrl);
-                gaugeManager.decNbRoomGauge();
-                debug('Room is empty. Deleting room "%s"', room.roomUrl);
-            }
+            this.cleanupRoomIfEmpty(room);
         } finally {
             clientEventsEmitter.emitClientLeave(user.uuid, room.roomUrl);
             console.log("A user left");
@@ -265,23 +265,34 @@ export class SocketManager {
         if (roomPromise === undefined) {
             roomPromise = GameRoom.create(
                 roomId,
-                (user: User, group: Group) => this.joinWebRtcRoom(user, group),
-                (user: User, group: Group) => this.disConnectedUser(user, group),
+                (user: User, group: Group) => {
+                    this.joinWebRtcRoom(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
+                (user: User, group: Group) => {
+                    this.disConnectedUser(user, group);
+                    this.sendGroupUsersUpdateToGroupMembers(group);
+                },
                 MINIMUM_DISTANCE,
                 GROUP_RADIUS,
-                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) =>
-                    this.onZoneEnter(thing, fromZone, listener),
+                (thing: Movable, fromZone: Zone | null, listener: ZoneSocket) => {
+                    this.onZoneEnter(thing, fromZone, listener);
+                },
                 (thing: Movable, position: PositionInterface, listener: ZoneSocket) =>
                     this.onClientMove(thing, position, listener),
                 (thing: Movable, newZone: Zone | null, listener: ZoneSocket) =>
                     this.onClientLeave(thing, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, listener: ZoneSocket) =>
                     this.onEmote(emoteEventMessage, listener),
+                (groupId: number, listener: ZoneSocket) => {
+                    void this.onLockGroup(groupId, listener, roomPromise);
+                },
                 (playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: ZoneSocket) =>
                     this.onPlayerDetailsUpdated(playerDetailsUpdatedMessage, listener)
             )
                 .then((gameRoom) => {
                     gaugeManager.incNbRoomGauge();
+                    this.resolvedRooms.set(roomId, gameRoom);
                     return gameRoom;
                 })
                 .catch((e) => {
@@ -318,6 +329,7 @@ export class SocketManager {
             userJoinedZoneMessage.setUserid(thing.id);
             userJoinedZoneMessage.setUseruuid(thing.uuid);
             userJoinedZoneMessage.setName(thing.name);
+            userJoinedZoneMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
             userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
             userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
             userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
@@ -325,11 +337,12 @@ export class SocketManager {
                 userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
             }
             userJoinedZoneMessage.setCompanion(thing.companion);
-            if (thing.outlineColor === undefined) {
+            const outlineColor = thing.getOutlineColor();
+            if (outlineColor === undefined) {
                 userJoinedZoneMessage.setHasoutline(false);
             } else {
                 userJoinedZoneMessage.setHasoutline(true);
-                userJoinedZoneMessage.setOutlinecolor(thing.outlineColor);
+                userJoinedZoneMessage.setOutlinecolor(outlineColor);
             }
 
             const subMessage = new SubToPusherMessage();
@@ -380,10 +393,24 @@ export class SocketManager {
         emitZoneMessage(subMessage, client);
     }
 
+    private async onLockGroup(
+        groupId: number,
+        client: ZoneSocket,
+        roomPromise: PromiseLike<GameRoom> | undefined
+    ): Promise<void> {
+        if (!roomPromise) {
+            return;
+        }
+        const group = (await roomPromise).getGroupById(groupId);
+        if (!group) {
+            return;
+        }
+        this.emitCreateUpdateGroupEvent(client, null, group);
+    }
+
     private onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, client: ZoneSocket) {
         const subMessage = new SubToPusherMessage();
         subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -397,6 +424,7 @@ export class SocketManager {
         groupUpdateMessage.setPosition(pointMessage);
         groupUpdateMessage.setGroupsize(group.getSize);
         groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
+        groupUpdateMessage.setLocked(group.isLocked());
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -412,7 +440,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupleftzonemessage(groupDeleteMessage);
-
         emitZoneMessage(subMessage, client);
         //user.emitInBatch(subMessage);
     }
@@ -424,7 +451,6 @@ export class SocketManager {
 
         const subMessage = new SubToPusherMessage();
         subMessage.setUserleftzonemessage(userLeftMessage);
-
         emitZoneMessage(subMessage, client);
     }
 
@@ -436,6 +462,19 @@ export class SocketManager {
             return zoneMessage;
         }
         return undefined;
+    }
+
+    private sendGroupUsersUpdateToGroupMembers(group: Group) {
+        const groupUserUpdateMessage = new GroupUsersUpdateMessage();
+        groupUserUpdateMessage.setGroupid(group.getId());
+        groupUserUpdateMessage.setUseridsList(group.getUsers().map((user) => user.id));
+
+        const clientMessage = new ServerToClientMessage();
+        clientMessage.setGroupusersupdatemessage(groupUserUpdateMessage);
+
+        group.getUsers().forEach((currentUser: User) => {
+            currentUser.socket.write(clientMessage);
+        });
     }
 
     private joinWebRtcRoom(user: User, group: Group) {
@@ -535,26 +574,84 @@ export class SocketManager {
         return this.roomsPromises;
     }
 
-    public handleQueryJitsiJwtMessage(user: User, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
-        const room = queryJitsiJwtMessage.getJitsiroom();
-        const tag = queryJitsiJwtMessage.getTag(); // FIXME: this is not secure. We should load the JSON for the current room and check rights associated to room instead.
+    public async handleQueryMessage(gameRoom: GameRoom, user: User, queryMessage: QueryMessage): Promise<void> {
+        const queryCase = queryMessage.getQueryCase();
+        const answerMessage = new AnswerMessage();
+        answerMessage.setId(queryMessage.getId());
 
-        if (SECRET_JITSI_KEY === "") {
+        try {
+            switch (queryCase) {
+                case QueryCase.QUERY_NOT_SET:
+                    throw new Error("Query case not set");
+                case QueryMessage.QueryCase.JITSIJWTQUERY: {
+                    const answer = await this.handleQueryJitsiJwtMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJitsijwtquery() as JitsiJwtQuery
+                    );
+                    answerMessage.setJitsijwtanswer(answer);
+                    break;
+                }
+                case QueryMessage.QueryCase.JOINBBBMEETINGQUERY: {
+                    const answer = await this.handleJoinBBBMeetingMessage(
+                        gameRoom,
+                        user,
+                        queryMessage.getJoinbbbmeetingquery() as JoinBBBMeetingQuery
+                    );
+                    answerMessage.setJoinbbbmeetinganswer(answer);
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = queryCase;
+                }
+            }
+        } catch (e) {
+            console.error("An error happened while answering a query:", e);
+            const errorMessage = new ErrorMessage();
+            errorMessage.setMessage(
+                e !== null && typeof e === "object" ? e.toString() : typeof e === "string" ? e : "Unknown error"
+            );
+            answerMessage.setError(errorMessage);
+        }
+
+        const serverToClientMessage = new ServerToClientMessage();
+        serverToClientMessage.setAnswermessage(answerMessage);
+
+        user.socket.write(serverToClientMessage);
+    }
+
+    public async handleQueryJitsiJwtMessage(
+        gameRoom: GameRoom,
+        user: User,
+        queryJitsiJwtMessage: JitsiJwtQuery
+    ): Promise<JitsiJwtAnswer> {
+        const jitsiRoom = queryJitsiJwtMessage.getJitsiroom();
+        const jitsiSettings = gameRoom.getJitsiSettings();
+
+        if (jitsiSettings === undefined || !jitsiSettings.secret) {
             throw new Error("You must set the SECRET_JITSI_KEY key to the secret to generate JWT tokens for Jitsi.");
         }
 
-        // Let's see if the current client has
-        const isAdmin = user.tags.includes(tag);
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes("admin")) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForJitsiRoom(jitsiRoom);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            }
+        }
 
         const jwt = Jwt.sign(
             {
                 aud: "jitsi",
-                iss: JITSI_ISS,
-                sub: JITSI_URL,
-                room: room,
+                iss: jitsiSettings.iss,
+                sub: jitsiSettings.url,
+                room: jitsiRoom,
                 moderator: isAdmin,
             },
-            SECRET_JITSI_KEY,
+            jitsiSettings.secret,
             {
                 expiresIn: "1d",
                 algorithm: "HS256",
@@ -565,14 +662,76 @@ export class SocketManager {
             }
         );
 
-        const sendJitsiJwtMessage = new SendJitsiJwtMessage();
-        sendJitsiJwtMessage.setJitsiroom(room);
-        sendJitsiJwtMessage.setJwt(jwt);
+        const jitsiJwtAnswer = new JitsiJwtAnswer();
+        jitsiJwtAnswer.setJwt(jwt);
 
-        const serverToClientMessage = new ServerToClientMessage();
-        serverToClientMessage.setSendjitsijwtmessage(sendJitsiJwtMessage);
+        return jitsiJwtAnswer;
+    }
 
-        user.socket.write(serverToClientMessage);
+    public async handleJoinBBBMeetingMessage(
+        gameRoom: GameRoom,
+        user: User,
+        joinBBBMeetingQuery: JoinBBBMeetingQuery
+    ): Promise<JoinBBBMeetingAnswer> {
+        const meetingId = joinBBBMeetingQuery.getMeetingid();
+        const meetingName = joinBBBMeetingQuery.getMeetingname();
+        const bbbSettings = gameRoom.getBbbSettings();
+
+        if (bbbSettings === undefined) {
+            throw new Error(
+                "Unable to join the conference because either " +
+                    "the BBB_URL or BBB_SECRET environment variables are not set."
+            );
+        }
+
+        // Let's see if the current client has moderator rights
+        let isAdmin = false;
+        if (user.tags.includes("admin")) {
+            isAdmin = true;
+        } else {
+            const moderatorTag = await gameRoom.getModeratorTagForBbbMeeting(meetingId);
+            if (moderatorTag && user.tags.includes(moderatorTag)) {
+                isAdmin = true;
+            } else if (moderatorTag === undefined) {
+                // If the bbbMeetingAdminTag is not set, everyone is a moderator.
+                isAdmin = true;
+            }
+        }
+
+        const api = BigbluebuttonJs.api(bbbSettings.url, bbbSettings.secret);
+        // It seems bbb-api is limiting password length to 50 chars
+        const maxPWLen = 50;
+        const attendeePW = crypto
+            .createHmac("sha256", bbbSettings.secret)
+            .update(`attendee-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+        const moderatorPW = crypto
+            .createHmac("sha256", bbbSettings.secret)
+            .update(`moderator-${meetingId}`)
+            .digest("hex")
+            .slice(0, maxPWLen);
+
+        // This is idempotent, so we call it on each join in order to be sure that the meeting exists.
+        const createOptions = { attendeePW, moderatorPW, record: true };
+        const createURL = api.administration.create(meetingName, meetingId, createOptions);
+        await BigbluebuttonJs.http(createURL);
+
+        const joinParams: Record<string, string> = {};
+
+        // XXX: figure out how to know if the user has admin status and use the moderatorPW
+        // in that case
+        const clientURL = api.administration.join(user.name, meetingId, isAdmin ? moderatorPW : attendeePW, {
+            ...joinParams,
+            userID: user.id,
+            joinViaHtml5: true,
+        });
+
+        const bbbMeetingAnswer = new JoinBBBMeetingAnswer();
+        bbbMeetingAnswer.setMeetingid(meetingId);
+        bbbMeetingAnswer.setClienturl(clientURL);
+
+        return bbbMeetingAnswer;
     }
 
     public handleSendUserMessage(user: User, sendUserMessageToSend: SendUserMessage) {
@@ -618,6 +777,7 @@ export class SocketManager {
                 userJoinedMessage.setUserid(thing.id);
                 userJoinedMessage.setUseruuid(thing.uuid);
                 userJoinedMessage.setName(thing.name);
+                userJoinedMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
                 userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
                 userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
                 if (thing.visitCardUrl) {
@@ -633,6 +793,7 @@ export class SocketManager {
                 const groupUpdateMessage = new GroupUpdateZoneMessage();
                 groupUpdateMessage.setGroupid(thing.getId());
                 groupUpdateMessage.setPosition(ProtobufUtils.toPointMessage(thing.getPosition()));
+                groupUpdateMessage.setLocked(thing.isLocked());
 
                 const subMessage = new SubToPusherMessage();
                 subMessage.setGroupupdatezonemessage(groupUpdateMessage);
@@ -649,10 +810,12 @@ export class SocketManager {
     async removeZoneListener(call: ZoneSocket, roomId: string, x: number, y: number): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
-            throw new Error("In removeZoneListener, could not find room with id '" + roomId + "'");
+            console.warn("In removeZoneListener, could not find room with id '" + roomId + "'");
+            return;
         }
 
         room.removeZoneListener(call, x, y);
+        this.cleanupRoomIfEmpty(room);
     }
 
     async addRoomListener(call: RoomSocket, roomId: string) {
@@ -687,8 +850,13 @@ export class SocketManager {
 
     public leaveAdminRoom(room: GameRoom, admin: Admin) {
         room.adminLeave(admin);
+        this.cleanupRoomIfEmpty(room);
+    }
+
+    private cleanupRoomIfEmpty(room: GameRoom): void {
         if (room.isEmpty()) {
             this.roomsPromises.delete(room.roomUrl);
+            this.resolvedRooms.delete(room.roomUrl);
             gaugeManager.decNbRoomGauge();
             debug('Room is empty. Deleting room "%s"', room.roomUrl);
         }
@@ -817,14 +985,14 @@ export class SocketManager {
             return;
         }
 
-        const versionNumber = room.incrementVersion();
+        const versionNumber = await room.incrementVersion();
         room.getUsers().forEach((recipient) => {
-            const worldFullMessage = new RefreshRoomMessage();
-            worldFullMessage.setRoomid(roomId);
-            worldFullMessage.setVersionnumber(versionNumber);
+            const refreshRoomMessage = new RefreshRoomMessage();
+            refreshRoomMessage.setRoomid(roomId);
+            refreshRoomMessage.setVersionnumber(versionNumber);
 
             const clientMessage = new ServerToClientMessage();
-            clientMessage.setRefreshroommessage(worldFullMessage);
+            clientMessage.setRefreshroommessage(refreshRoomMessage);
 
             recipient.socket.write(clientMessage);
         });
@@ -867,6 +1035,49 @@ export class SocketManager {
             // Forward message
             const leader = room.getUserById(message.getLeader());
             leader?.delFollower(user);
+        }
+    }
+
+    handleLockGroupPromptMessage(room: GameRoom, user: User, message: LockGroupPromptMessage) {
+        const group = user.group;
+        if (!group) {
+            return;
+        }
+        group.lock(message.getLock());
+        room.emitLockGroupEvent(user, group.getId());
+    }
+
+    getAllRooms(): RoomsList {
+        const roomsList = new RoomsList();
+
+        for (const room of this.resolvedRooms.values()) {
+            const roomDescription = new RoomDescription();
+            roomDescription.setRoomid(room.roomUrl);
+            roomDescription.setNbusers(room.getUsers().size);
+
+            roomsList.addRoomdescription(roomDescription);
+        }
+
+        return roomsList;
+    }
+
+    handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
+        const moveToPositionMessage = new MoveToPositionMessage();
+
+        if (room) {
+            const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
+            const position = userToJoin?.getPosition();
+            if (position) {
+                moveToPositionMessage.setPosition(ProtobufUtils.toPositionMessage(position));
+
+                const clientMessage = new ServerToClientMessage();
+                clientMessage.setMovetopositionmessage(moveToPositionMessage);
+                user.socket.write(clientMessage);
+            }
+
+            if (room.isEmpty()) {
+                // TODO delete room;
+            }
         }
     }
 }

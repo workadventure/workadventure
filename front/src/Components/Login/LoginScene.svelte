@@ -1,8 +1,9 @@
-<script lang="typescript">
+<script lang="ts">
     import type { Game } from "../../Phaser/Game/Game";
     import { LoginScene, LoginSceneName } from "../../Phaser/Login/LoginScene";
     import { DISPLAY_TERMS_OF_USE, MAX_USERNAME_LENGTH } from "../../Enum/EnvironmentVariable";
     import logoImg from "../images/logo.png";
+    import poweredByWorkAdventureImg from "../images/Powered_By_WorkAdventure_Big.png";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../i18n/i18n-svelte";
 
@@ -12,6 +13,8 @@
 
     let name = gameManager.getPlayerName() || "";
     let startValidating = false;
+
+    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
 
     function submit() {
         startValidating = true;
@@ -25,7 +28,7 @@
 
 <form class="loginScene" on:submit|preventDefault={submit}>
     <section class="text-center">
-        <img src={logoImg} alt="WorkAdventure logo" />
+        <img src={logo} alt="logo" class="main-logo" />
     </section>
     <section class="text-center">
         <h2>{$LL.login.input.name.placeholder()}</h2>
@@ -60,9 +63,16 @@
     <section class="action">
         <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{$LL.login.continue()}</button>
     </section>
+    {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
+        <section class="text-right powered-by">
+            <img src={poweredByWorkAdventureImg} alt="Powered by WorkAdventure" />
+        </section>
+    {/if}
 </form>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     .loginScene {
         pointer-events: auto;
         margin: 20px auto 0;
@@ -81,6 +91,7 @@
 
         .terms-and-conditions {
             max-width: 400px;
+            font-size: 0.875rem;
         }
 
         p.err {
@@ -89,7 +100,7 @@
         }
 
         section {
-            margin: 10px;
+            margin: 5px;
 
             &.error-section {
                 min-height: 2rem;
@@ -102,12 +113,12 @@
 
             &.action {
                 text-align: center;
-                margin-top: 20px;
             }
 
             h2 {
                 font-family: "Press Start 2P";
-                margin: 1px;
+                font-size: 0.75rem;
+                margin: 0.5rem;
             }
 
             &.text-center {
@@ -130,7 +141,54 @@
 
             img {
                 width: 100%;
-                margin: 20px 0;
+            }
+
+            &.powered-by {
+                position: fixed;
+                bottom: 0;
+                right: 10px;
+                max-height: 5rem;
+                img {
+                    height: 2rem;
+                }
+            }
+
+            .main-logo {
+                max-height: 4rem;
+            }
+        }
+    }
+
+    @include media-breakpoint-down(sm) {
+        .loginScene {
+            .terms-and-conditions {
+                font-size: 1rem;
+            }
+            section {
+                margin: 5px;
+
+                img {
+                    margin: 10px 0;
+                }
+
+                h2 {
+                    font-size: 1.5rem;
+                }
+
+                .main-logo {
+                    max-height: 10rem;
+                }
+
+                &.action {
+                    margin-top: 10px;
+                }
+
+                &.powered-by {
+                    max-height: 8rem;
+                    img {
+                        height: 3rem;
+                    }
+                }
             }
         }
     }

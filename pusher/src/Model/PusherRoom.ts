@@ -1,53 +1,41 @@
-import { ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
+import { ExSocketInterface } from "../Model/Websocket/ExSocketInterface";
 import { PositionDispatcher } from "./PositionDispatcher";
-import { ViewportInterface } from "_Model/Websocket/ViewportMessage";
-import { arrayIntersect } from "../Services/ArrayHelper";
-import { GroupDescriptor, UserDescriptor, ZoneEventListener } from "_Model/Zone";
+import { ViewportInterface } from "../Model/Websocket/ViewportMessage";
+import { ZoneEventListener } from "../Model/Zone";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
-    EmoteEventMessage,
     ErrorMessage,
-    GroupLeftZoneMessage,
-    GroupUpdateZoneMessage,
     RoomMessage,
     SubMessage,
-    UserJoinedZoneMessage,
-    UserLeftZoneMessage,
-    UserMovedMessage,
-    VariableMessage,
     VariableWithTagMessage,
-    ZoneMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
 import { ClientReadableStream } from "grpc";
-import { ExAdminSocketInterface } from "_Model/Websocket/ExAdminSocketInterface";
+import { XmppClient } from "../Services/XmppClient";
 
 const debug = Debug("room");
 
-export enum GameRoomPolicyTypes {
-    ANONYMOUS_POLICY = 1,
-    MEMBERS_ONLY_POLICY,
-    USE_TAGS_POLICY,
-}
-
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public tags: string[];
-    public policyType: GameRoomPolicyTypes;
+    public mucRooms: Array<Object> = [];
+
     private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing: boolean = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    //public readonly variables = new Map<string, string>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
-        this.tags = [];
-        this.policyType = GameRoomPolicyTypes.ANONYMOUS_POLICY;
-
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
+
+        // By default, create a MUC room whose name is the name of the room.
+        this.mucRooms = [
+            {
+                name: "Connected users",
+                uri: roomUrl,
+            },
+        ];
     }
 
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
@@ -56,15 +44,22 @@ export class PusherRoom {
 
     public join(socket: ExSocketInterface) {
         this.listeners.add(socket);
+
+        if (!this.mucRooms) {
+            return;
+        }
+
+        socket.xmppClient = new XmppClient(socket, this.mucRooms);
+        socket.pusherRoom = this;
     }
 
     public leave(socket: ExSocketInterface) {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
-    }
-
-    public canAccess(userTags: string[]): boolean {
-        return arrayIntersect(userTags, this.tags);
+        if (socket.xmppClient) {
+            socket.xmppClient.close();
+        }
+        socket.pusherRoom = undefined;
     }
 
     public isEmpty(): boolean {
@@ -121,7 +116,7 @@ export class PusherRoom {
             }
         });
 
-        this.backConnection.on("error", (e) => {
+        this.backConnection.on("error", (err) => {
             if (!this.isClosing) {
                 debug("Error on back connection");
                 this.close();
@@ -129,6 +124,7 @@ export class PusherRoom {
                 for (const listener of this.listeners) {
                     listener.disconnecting = true;
                     listener.end(1011, "Connection error between pusher and back server");
+                    console.error("Connection error between pusher and back server", err);
                 }
             }
         });
@@ -149,5 +145,10 @@ export class PusherRoom {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
+
+        debug("Closing connections to XMPP server for room %s", this.roomUrl);
+        for (const client of this.listeners) {
+            client.xmppClient?.close();
+        }
     }
 }

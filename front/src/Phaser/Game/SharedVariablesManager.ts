@@ -1,9 +1,9 @@
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { GameMap } from "./GameMap";
-import type { ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
 import { GameMapProperties } from "./GameMapProperties";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
+import { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 
 interface Variable {
     defaultValue: unknown;
@@ -107,7 +107,7 @@ export class SharedVariablesManager {
     private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "variable") {
+                if (object.class === "variable") {
                     if (object.template) {
                         console.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'

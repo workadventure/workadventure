@@ -8,6 +8,7 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Einladung anzeigen",
             register: "Registrieren",
             chat: "Chat öffnen",
+            userlist: "Benutzerliste",
         },
     },
     visitCard: {
@@ -57,6 +58,12 @@ const menu: NonNullable<Translation["menu"]> = {
         language: {
             title: "Sprache",
         },
+        privacySettings: {
+            title: "Abwesenheitsmodus",
+            explanation: "Falls der WorkAdventure Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
+            cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
+            microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
+        },
         save: {
             warning: "(Das Spiel wird nach dem Speichern neugestartet)",
             button: "Speichern",
@@ -70,6 +77,8 @@ const menu: NonNullable<Translation["menu"]> = {
         description: "Link zu diesem Raum teilen!",
         copy: "Kopieren",
         share: "Teilen",
+        walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
+        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",

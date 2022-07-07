@@ -142,6 +142,12 @@ return [
                         'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-controls.md',
                     ],
                     [
+                        'title' => 'Camera',
+                        'url' => '/map-building/api-camera.md',
+                        'markdown' => 'maps.api-camera',
+                        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/api-camera.md',
+                    ],
+                    [
                         'title' => 'Deprecated',
                         'url' => '/map-building/api-deprecated.md',
                         'markdown' => 'maps.api-deprecated',
@@ -160,7 +166,8 @@ return [
     ],
     [
         'title' => 'Troubleshooting',
-        'url' => '/map-building/troubleshooting',
-        'view' => 'content.map.troubleshooting'
+        'url' => '/map-building/troubleshooting.md',
+        'markdown' => 'maps.troubleshooting',
+        'editUrl' => 'https://github.com/thecodingmachine/workadventure/edit/develop/docs/maps/troubleshooting.md',
     ],
 ];

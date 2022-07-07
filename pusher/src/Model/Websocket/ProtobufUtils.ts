@@ -5,10 +5,10 @@ import {
     PointMessage,
     PositionMessage,
 } from "../../Messages/generated/messages_pb";
-import { CharacterLayer, ExSocketInterface } from "_Model/Websocket/ExSocketInterface";
 import Direction = PositionMessage.Direction;
-import { ItemEventMessageInterface } from "_Model/Websocket/ItemEventMessage";
-import { PositionInterface } from "_Model/PositionInterface";
+import { ItemEventMessageInterface } from "../../Model/Websocket/ItemEventMessage";
+import { PositionInterface } from "../../Model/PositionInterface";
+import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 
 export class ProtobufUtils {
     public static toPositionMessage(point: PointInterface): PositionMessage {
@@ -94,12 +94,15 @@ export class ProtobufUtils {
         return itemEventMessage;
     }
 
-    public static toCharacterLayerMessages(characterLayers: CharacterLayer[]): CharacterLayerMessage[] {
+    public static toCharacterLayerMessages(characterLayers: WokaDetail[]): CharacterLayerMessage[] {
         return characterLayers.map(function (characterLayer): CharacterLayerMessage {
             const message = new CharacterLayerMessage();
-            message.setName(characterLayer.name);
+            message.setName(characterLayer.id);
             if (characterLayer.url) {
                 message.setUrl(characterLayer.url);
+            }
+            if (characterLayer.layer) {
+                message.setLayer(characterLayer.layer);
             }
             return message;
         });

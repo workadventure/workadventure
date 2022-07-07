@@ -3,10 +3,10 @@ import { localUserStore } from "../Connexion/LocalUserStore";
 
 export enum GameConnexionTypes {
     room = 1,
-    register,
+    register /*@deprecated*/,
     empty,
     unknown,
-    jwt,
+    jwt /*@deprecated*/,
     login,
 }
 
@@ -16,11 +16,15 @@ class UrlManager {
         const url = window.location.pathname.toString();
         if (url === "/login") {
             return GameConnexionTypes.login;
-        } else if (url === "/jwt") {
+        }
+        //@deprecated jwt url will be replace by "?token=<private access token>"
+        else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
         } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
             return GameConnexionTypes.room;
-        } else if (url.includes("register/")) {
+        }
+        //@deprecated register url will be replace by "?token=<private access token>"
+        else if (url.includes("register/")) {
             return GameConnexionTypes.register;
         } else if (url === "/") {
             return GameConnexionTypes.empty;
@@ -29,6 +33,9 @@ class UrlManager {
         }
     }
 
+    /**
+     * @deprecated
+     */
     public getOrganizationToken(): string | null {
         const match = /\/register\/(.+)/.exec(window.location.pathname.toString());
         return match ? match[1] : null;
@@ -44,18 +51,23 @@ class UrlManager {
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);
     }
 
-    public getStartLayerNameFromUrl(): string | null {
+    public getStartPositionNameFromUrl(): string | undefined {
         const parameters = this.getHashParameters();
         for (const key in parameters) {
             if (parameters[key] === undefined) {
                 return key;
             }
         }
-        return null;
+        return undefined;
     }
 
     public getHashParameter(name: string): string | undefined {
         return this.getHashParameters()[name];
+    }
+
+    public clearHashParameter(): void {
+        window.location.hash = "";
+        history.pushState("", document.title, window.location.pathname + window.location.search);
     }
 
     private getHashParameters(): Record<string, string> {

@@ -1,12 +1,10 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene, ErrorSceneName } from "../Reconnecting/ErrorScene";
-import { WAError } from "../Reconnecting/WAError";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
-import LL from "../../i18n/i18n-svelte";
-import { get } from "svelte/store";
 import { localeDetector } from "../../i18n/locales";
+import { errorScreenStore } from "../../Stores/ErrorScreenStore";
+import { isErrorApiData } from "../../Messages/JsonMessages/ErrorApiData";
 
 export const EntrySceneName = "EntryScene";
 
@@ -15,6 +13,8 @@ export const EntrySceneName = "EntryScene";
  * and to route to the next correct scene.
  */
 export class EntryScene extends Scene {
+    private localeLoaded: boolean = false;
+
     constructor() {
         super({
             key: EntrySceneName,
@@ -23,13 +23,16 @@ export class EntryScene extends Scene {
 
     // From the very start, let's preload images used in the ReconnectingScene.
     preload() {
-        this.load.image(ReconnectingTextures.icon, "static/images/favicons/favicon-32x32.png");
         // Note: arcade.png from the Phaser 3 examples at: https://github.com/photonstorm/phaser3-examples/tree/master/public/assets/fonts/bitmap
         this.load.bitmapFont(ReconnectingTextures.mainFont, "resources/fonts/arcade.png", "resources/fonts/arcade.xml");
         this.load.spritesheet("cat", "resources/characters/pipoya/Cat 01-1.png", { frameWidth: 32, frameHeight: 32 });
     }
 
     create() {
+        this.loadLocale();
+    }
+
+    private loadLocale(): void {
         localeDetector()
             .then(() => {
                 gameManager
@@ -41,29 +44,14 @@ export class EntryScene extends Scene {
                         this.scene.start(nextSceneName);
                     })
                     .catch((err) => {
-                        const $LL = get(LL);
-                        if (err.response && err.response.status == 404) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.accessLink.title(),
-                                    $LL.error.accessLink.subTitle(),
-                                    $LL.error.accessLink.details()
-                                ),
-                                this.scene
-                            );
-                        } else if (err.response && err.response.status == 403) {
-                            ErrorScene.showError(
-                                new WAError(
-                                    $LL.error.connectionRejected.title(),
-                                    $LL.error.connectionRejected.subTitle({
-                                        error: err.response.data ? ". \n\r \n\r" + `${err.response.data}` : "",
-                                    }),
-                                    $LL.error.connectionRejected.details()
-                                ),
-                                this.scene
-                            );
+                        const errorType = isErrorApiData.safeParse(err?.response?.data);
+                        if (errorType.success) {
+                            if (errorType.data.type === "redirect") {
+                                window.location.assign(errorType.data.urlToRedirect);
+                            } else errorScreenStore.setError(err?.response?.data);
                         } else {
-                            ErrorScene.showError(err, this.scene);
+                            errorScreenStore.setException(err);
+                            //ErrorScene.showError(err, this.scene);
                         }
                     });
             })

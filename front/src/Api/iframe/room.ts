@@ -1,14 +1,16 @@
 import { Subject } from "rxjs";
 
-import { EnterLeaveEvent, isEnterLeaveEvent } from "../Events/EnterLeaveEvent";
-import { ChangeLayerEvent, isChangeLayerEvent } from "../Events/ChangeLayerEvent";
+import { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
+import { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
 
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 
-import type { ITiledMap } from "../../Phaser/Map/ITiledMap";
 import type { WorkadventureRoomWebsiteCommands } from "./website";
 import website from "./website";
+import area from "./area";
+import { WorkadventureAreaCommands } from "./area";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 
 const enterStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
 const leaveStreams: Map<string, Subject<EnterLeaveEvent>> = new Map<string, Subject<EnterLeaveEvent>>();
@@ -42,25 +44,21 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
                 enterStreams.get(payloadData.name)?.next();
             },
             type: "enterEvent",
-            typeChecker: isEnterLeaveEvent,
         }),
         apiCallback({
             type: "leaveEvent",
-            typeChecker: isEnterLeaveEvent,
             callback: (payloadData) => {
                 leaveStreams.get(payloadData.name)?.next();
             },
         }),
         apiCallback({
             type: "enterLayerEvent",
-            typeChecker: isChangeLayerEvent,
             callback: (payloadData: ChangeLayerEvent) => {
                 enterLayerStreams.get(payloadData.name)?.next();
             },
         }),
         apiCallback({
             type: "leaveLayerEvent",
-            typeChecker: isChangeLayerEvent,
             callback: (payloadData) => {
                 leaveLayerStreams.get(payloadData.name)?.next();
             },
@@ -169,6 +167,10 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
 
     get website(): WorkadventureRoomWebsiteCommands {
         return website;
+    }
+
+    get area(): WorkadventureAreaCommands {
+        return area;
     }
 }
 

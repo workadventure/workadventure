@@ -37,6 +37,11 @@
                  "name":"jitsiRoom",
                  "type":"string",
                  "value":"testJitsiRoomCoWebsite"
+                }, 
+                {
+                 "name":"openWebsiteClosable",
+                 "type":"bool",
+                 "value":false
                 }],
          "type":"tilelayer",
          "visible":true,

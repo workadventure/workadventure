@@ -1,41 +1,48 @@
 import { PointInterface } from "./Websocket/PointInterface";
 import { Group } from "./Group";
 import { User, UserSocket } from "./User";
-import { PositionInterface } from "_Model/PositionInterface";
+import { PositionInterface } from "../Model/PositionInterface";
 import {
     EmoteCallback,
     EntersCallback,
     LeavesCallback,
+    LockGroupCallback,
     MovesCallback,
     PlayerDetailsUpdatedCallback,
-} from "_Model/Zone";
+} from "../Model/Zone";
 import { PositionNotifier } from "./PositionNotifier";
-import { Movable } from "_Model/Movable";
+import { Movable } from "../Model/Movable";
 import {
-    BatchToPusherMessage,
     BatchToPusherRoomMessage,
     EmoteEventMessage,
-    ErrorMessage,
     JoinRoomMessage,
     SetPlayerDetailsMessage,
     SubToPusherRoomMessage,
-    VariableMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
-import { RoomSocket, ZoneSocket } from "src/RoomManager";
+import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
-import { isMapDetailsData, MapDetailsData } from "../Services/AdminApi/MapDetailsData";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "../Messages/JsonMessages/MapDetailsData";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
-import { ADMIN_API_URL } from "../Enum/EnvironmentVariable";
+import {
+    ADMIN_API_URL,
+    BBB_SECRET,
+    BBB_URL,
+    JITSI_ISS,
+    JITSI_URL,
+    SECRET_JITSI_KEY,
+} from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
 import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
-import { isRoomRedirect } from "../Services/AdminApi/RoomRedirect";
+import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
+import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
+import { MapLoadingError } from "../Services/MapLoadingError";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -44,7 +51,7 @@ export class GameRoom {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
     private readonly usersByUuid = new Map<string, User>();
-    private readonly groups = new Set<Group>();
+    private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
     private itemsState = new Map<number, unknown>();
@@ -66,7 +73,9 @@ export class GameRoom {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
-        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
+        onLockGroup: LockGroupCallback,
+        onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
+        private thirdParty: MapThirdPartyData | undefined
     ) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionNotifier(
@@ -76,6 +85,7 @@ export class GameRoom {
             onMoves,
             onLeaves,
             onEmote,
+            onLockGroup,
             onPlayerDetailsUpdated
         );
     }
@@ -90,6 +100,7 @@ export class GameRoom {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
+        onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback
     ): Promise<GameRoom> {
         const mapDetails = await GameRoom.getMapDetails(roomUrl);
@@ -105,7 +116,9 @@ export class GameRoom {
             onMoves,
             onLeaves,
             onEmote,
-            onPlayerDetailsUpdated
+            onLockGroup,
+            onPlayerDetailsUpdated,
+            mapDetails.thirdParty ?? undefined
         );
 
         return gameRoom;
@@ -143,8 +156,8 @@ export class GameRoom {
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
             position,
-            false,
             this.positionNotifier,
+            joinRoomMessage.getAvailabilitystatus(),
             socket,
             joinRoomMessage.getTagList(),
             joinRoomMessage.getVisitcardurl(),
@@ -195,7 +208,7 @@ export class GameRoom {
     }
 
     public isEmpty(): boolean {
-        return this.users.size === 0 && this.admins.size === 0;
+        return this.users.size === 0 && this.admins.size === 0 && this.roomListeners.size === 0;
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
@@ -205,10 +218,9 @@ export class GameRoom {
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
-        if (playerDetailsMessage.getRemoveoutlinecolor()) {
-            user.outlineColor = undefined;
-        } else {
-            user.outlineColor = playerDetailsMessage.getOutlinecolor();
+        user.updateDetails(playerDetailsMessage);
+        if (user.group !== undefined && user.silent) {
+            this.leaveGroup(user);
         }
     }
 
@@ -244,7 +256,7 @@ export class GameRoom {
                         this.disconnectCallback,
                         this.positionNotifier
                     );
-                    this.groups.add(group);
+                    this.groups.set(group.getId(), group);
                 }
             }
         } else {
@@ -328,7 +340,7 @@ export class GameRoom {
                         this.disconnectCallback,
                         this.positionNotifier
                     );
-                    this.groups.add(newGroup);
+                    this.groups.set(newGroup.getId(), newGroup);
                 } else {
                     this.leaveGroup(user);
                 }
@@ -347,21 +359,6 @@ export class GameRoom {
         });
     }
 
-    setSilent(user: User, silent: boolean) {
-        if (user.silent === silent) {
-            return;
-        }
-
-        user.silent = silent;
-        if (silent && user.group !== undefined) {
-            this.leaveGroup(user);
-        }
-        if (!silent) {
-            // If we are back to life, let's trigger a position update to see if we can join some group.
-            this.updatePosition(user, user.getPosition());
-        }
-    }
-
     /**
      * Makes a user leave a group and closes and destroy the group if the group contains only one remaining person.
      *
@@ -375,10 +372,10 @@ export class GameRoom {
         group.leave(user);
         if (group.isEmpty()) {
             group.destroy();
-            if (!this.groups.has(group)) {
+            if (!this.groups.has(group.getId())) {
                 throw new Error(`Could not find group ${group.getId()} referenced by user ${user.id} in World.`);
             }
-            this.groups.delete(group);
+            this.groups.delete(group.getId());
             //todo: is the group garbage collected?
         } else {
             group.updatePosition();
@@ -397,7 +394,7 @@ export class GameRoom {
     private searchClosestAvailableUserOrGroup(user: User): User | Group | null {
         let minimumDistanceFound: number = Math.max(this.minDistance, this.groupRadius);
         let matchingItem: User | Group | null = null;
-        this.users.forEach((currentUser, userId) => {
+        this.users.forEach((currentUser) => {
             // Let's only check users that are not part of a group
             if (typeof currentUser.group !== "undefined") {
                 return;
@@ -418,7 +415,7 @@ export class GameRoom {
         });
 
         this.groups.forEach((group: Group) => {
-            if (group.isFull()) {
+            if (group.isFull() || group.isLocked()) {
                 return;
             }
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
@@ -535,13 +532,26 @@ export class GameRoom {
         this.admins.delete(admin);
     }
 
-    public incrementVersion(): number {
+    public async incrementVersion(): Promise<number> {
+        // Let's check if the mapUrl has changed
+        const mapDetails = await GameRoom.getMapDetails(this.roomUrl);
+        if (this.mapUrl !== mapDetails.mapUrl) {
+            this.mapUrl = mapDetails.mapUrl;
+            this.mapPromise = undefined;
+            // Reset the variable manager
+            this.variableManagerPromise = undefined;
+        }
+
         this.versionNumber++;
         return this.versionNumber;
     }
 
     public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    public emitLockGroupEvent(user: User, groupId: number) {
+        this.positionNotifier.emitLockGroupEvent(user, groupId);
     }
 
     public addRoomListener(socket: RoomSocket) {
@@ -570,18 +580,22 @@ export class GameRoom {
 
             return {
                 mapUrl,
-                policy_type: 1,
-                textures: [],
-                tags: [],
+                authenticationMandatory: null,
+                group: null,
+                mucRooms: null,
+                showPoweredBy: true,
             };
         }
 
-        const result = await adminApi.fetchMapDetails(roomUrl);
-        if (isRoomRedirect(result)) {
-            console.error("Unexpected room redirect received while querying map details", result);
-            throw new Error("Unexpected room redirect received while querying map details");
+        const result = isMapDetailsData.safeParse(await adminApi.fetchMapDetails(roomUrl));
+
+        if (result.success) {
+            return result.data;
         }
-        return result;
+
+        console.error(result.error.issues);
+        console.error("Unexpected room redirect received while querying map details", result);
+        throw new Error("Unexpected room redirect received while querying map details");
     }
 
     private mapPromise: Promise<ITiledMap> | undefined;
@@ -653,5 +667,142 @@ export class GameRoom {
     public async getVariablesForTags(tags: string[]): Promise<Map<string, string>> {
         const variablesManager = await this.getVariableManager();
         return variablesManager.getVariablesForTags(tags);
+    }
+
+    public getGroupById(id: number): Group | undefined {
+        return this.groups.get(id);
+    }
+
+    private jitsiModeratorTagFinderPromise: Promise<ModeratorTagFinder> | undefined;
+
+    /**
+     * Returns the moderator tag associated with jitsiRoom
+     */
+    public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
+        if (this.jitsiModeratorTagFinderPromise === undefined) {
+            this.jitsiModeratorTagFinderPromise = this.getMap()
+                .then((map) => {
+                    return new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "You are loading a local map. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    }
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
+                });
+        }
+
+        try {
+            const jitsiModeratorTagFinder = await this.jitsiModeratorTagFinderPromise;
+            return jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
+        } catch (e) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
+                return undefined;
+            }
+            throw e;
+        }
+    }
+
+    private bbbModeratorTagFinderPromise: Promise<ModeratorTagFinder> | undefined;
+
+    /**
+     * Returns the moderator tag associated with bbbMeeting
+     */
+    public async getModeratorTagForBbbMeeting(bbbRoom: string): Promise<string | undefined> {
+        if (this.bbbModeratorTagFinderPromise === undefined) {
+            this.bbbModeratorTagFinderPromise = this.getMap()
+                .then((map) => {
+                    return new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "You are loading a local map. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    }
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
+                });
+        }
+
+        try {
+            const bbbModeratorTagFinder = await this.bbbModeratorTagFinderPromise;
+            return bbbModeratorTagFinder.getModeratorTag(bbbRoom);
+        } catch (e) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
+                return undefined;
+            }
+            throw e;
+        }
+    }
+
+    public getJitsiSettings(): MapJitsiData | undefined {
+        const jitsi = this.thirdParty?.jitsi;
+        if (jitsi) {
+            return jitsi;
+        }
+        if (JITSI_URL) {
+            return {
+                url: JITSI_URL,
+                iss: JITSI_ISS,
+                secret: SECRET_JITSI_KEY,
+            };
+        }
+        return undefined;
+    }
+
+    public getBbbSettings(): MapBbbData | undefined {
+        const bbb = this.thirdParty?.bbb;
+        if (bbb) {
+            return bbb;
+        }
+        if (BBB_URL && BBB_SECRET) {
+            return {
+                url: BBB_URL,
+                secret: BBB_SECRET,
+            };
+        }
+        return undefined;
     }
 }
