@@ -29,9 +29,9 @@ import {
     ZoneMessage,
     LockGroupPromptMessage,
     RoomsList,
-    MapEditorModifyAreaMessage,
     PingMessage,
     QueryMessage,
+    EditMapMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -143,11 +143,11 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
-                        } else if (message.hasMapeditormodifyareamessage()) {
-                            socketManager.handleMapEditorModifyAreaMessage(
+                        } else if (message.hasEditmapmessage()) {
+                            socketManager.handleEditMapMessage(
                                 room,
                                 user,
-                                message.getMapeditormodifyareamessage() as MapEditorModifyAreaMessage
+                                message.getEditmapmessage() as EditMapMessage
                             );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();

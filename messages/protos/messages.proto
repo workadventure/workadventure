@@ -106,7 +106,7 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
-message MapEditorModifyAreaMessage {
+message ModifyAreaMessage {
   int32 id = 1;
   google.protobuf.UInt32Value x = 2;
   google.protobuf.UInt32Value y = 3;
@@ -134,7 +134,7 @@ message ClientToServerMessage {
     QueryMessage queryMessage = 20;
     XmppMessage xmppMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 23;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -239,7 +239,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     XmppMessage xmppMessage = 11;
-    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 12;
+    EditMapMessage editMapMessage = 12;
   }
 }
 
@@ -529,7 +529,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 23;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -561,7 +561,13 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
-    MapEditorModifyAreaMessage mapEditorModifyAreaMessage = 3;
+    EditMapMessage editMapMessage = 3;
+  }
+}
+
+message EditMapMessage {
+  oneof message {
+    ModifyAreaMessage modifyAreaMessage = 1;
   }
 }
 

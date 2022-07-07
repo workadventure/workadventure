@@ -21,7 +21,6 @@ import {
     JoinBBBMeetingQuery,
     JoinRoomMessage,
     LockGroupPromptMessage,
-    MapEditorModifyAreaMessage,
     PlayerDetailsUpdatedMessage,
     PointMessage,
     QueryMessage,
@@ -47,6 +46,7 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1048,8 +1048,13 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleMapEditorModifyAreaMessage(room: GameRoom, user: User, message: MapEditorModifyAreaMessage) {
-        room.getMapEditorMessagesHandler().handleModifyAreaMessage(message);
+    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
+        if (message.hasModifyareamessage()) {
+            const msg = message.getModifyareamessage();
+            if (msg) {
+                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+            }
+        }
     }
 
     getAllRooms(): RoomsList {

@@ -15,7 +15,6 @@ import {
     ItemEventMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
-    MapEditorModifyAreaMessage,
     PusherToBackMessage,
     RefreshRoomMessage,
     ReportPlayerMessage,
@@ -42,6 +41,7 @@ import {
     QueryMessage,
     XmppMessage,
     AskPositionMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -332,9 +332,9 @@ export class SocketManager implements ZoneEventListener {
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleMapEditorModifyAreaMessage(client: ExSocketInterface, message: MapEditorModifyAreaMessage): void {
+    handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setMapeditormodifyareamessage(message);
+        pusherToBackMessage.setEditmapmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 

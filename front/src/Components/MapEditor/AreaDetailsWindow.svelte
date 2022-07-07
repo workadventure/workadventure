@@ -29,7 +29,6 @@
             return;
         }
         areaPreview?.updateArea(areaData);
-        console.log("UPDATE PREVIEW");
     }
 
     onDestroy(() => {

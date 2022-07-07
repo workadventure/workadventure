@@ -105,7 +105,7 @@ export interface LockGroupPromptMessage {
     lock: boolean;
 }
 
-export interface MapEditorModifyAreaMessage {
+export interface ModifyAreaMessage {
     id: number;
     x: number | undefined;
     y: number | undefined;
@@ -136,7 +136,7 @@ export interface ClientToServerMessage {
         | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "xmppMessage"; xmppMessage: XmppMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
-        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface ItemEventMessage {
@@ -231,7 +231,7 @@ export interface SubMessage {
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
         | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
         | { $case: "xmppMessage"; xmppMessage: XmppMessage }
-        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface BatchMessage {
@@ -520,7 +520,7 @@ export interface PusherToBackMessage {
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
         | { $case: "queryMessage"; queryMessage: QueryMessage }
         | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
-        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface BatchToPusherMessage {
@@ -550,7 +550,11 @@ export interface SubToPusherRoomMessage {
     message?:
         | { $case: "variableMessage"; variableMessage: VariableWithTagMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
-        | { $case: "mapEditorModifyAreaMessage"; mapEditorModifyAreaMessage: MapEditorModifyAreaMessage };
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
+}
+
+export interface EditMapMessage {
+    message?: { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage };
 }
 
 export interface UserJoinedRoomMessage {

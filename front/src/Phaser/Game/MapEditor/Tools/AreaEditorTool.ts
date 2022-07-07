@@ -34,13 +34,17 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public subscribeToStreams(connection: RoomConnection): void {
-        connection.mapEditorModifyAreaMessageStream.subscribe((message) => {
-            console.log(message);
-            this.areaPreviews
-                .find((area) => area.getConfig().id === message.id)
-                ?.updateArea(message as ITiledMapRectangleObject, false);
-            this.scene.getGameMap().updateAreaById(message.id, AreaType.Static, message);
-            this.scene.markDirty();
+        connection.editMapMessageStream.subscribe((message) => {
+            switch (message.message?.$case) {
+                case "modifyAreaMessage": {
+                    const data = message.message.modifyAreaMessage;
+                    this.areaPreviews
+                        .find((area) => area.getConfig().id === data.id)
+                        ?.updateArea(data as ITiledMapRectangleObject, false);
+                    this.scene.getGameMap().updateAreaById(data.id, AreaType.Static, data);
+                    this.scene.markDirty();
+                }
+            }
         });
     }
 

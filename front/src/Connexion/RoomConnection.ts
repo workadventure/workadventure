@@ -48,7 +48,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    MapEditorModifyAreaMessage,
+    EditMapMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -171,8 +171,8 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
-    private readonly _mapEditorModifyAreaMessageStream = new Subject<MapEditorModifyAreaMessage>();
-    public readonly mapEditorModifyAreaMessageStream = this._mapEditorModifyAreaMessageStream.asObservable();
+    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
+    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
@@ -362,9 +362,9 @@ export class RoomConnection implements RoomConnection {
                                 this._variableMessageStream.next({ name, value });
                                 break;
                             }
-                            case "mapEditorModifyAreaMessage": {
-                                const message = subMessage.mapEditorModifyAreaMessage;
-                                this._mapEditorModifyAreaMessageStream.next(message);
+                            case "editMapMessage": {
+                                const message = subMessage.editMapMessage;
+                                this._editMapMessageStream.next(message);
                                 break;
                             }
                             case "xmppMessage": {
@@ -1008,13 +1008,18 @@ export class RoomConnection implements RoomConnection {
     public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
         this.send({
             message: {
-                $case: "mapEditorModifyAreaMessage",
-                mapEditorModifyAreaMessage: {
-                    id: config.id,
-                    x: config.x,
-                    y: config.y,
-                    width: config.width,
-                    height: config.height,
+                $case: "editMapMessage",
+                editMapMessage: {
+                    message: {
+                        $case: "modifyAreaMessage",
+                        modifyAreaMessage: {
+                            id: config.id,
+                            x: config.x,
+                            y: config.y,
+                            width: config.width,
+                            height: config.height,
+                        },
+                    },
                 },
             },
         });

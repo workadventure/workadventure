@@ -1,6 +1,7 @@
 import {
     BatchToPusherRoomMessage,
-    MapEditorModifyAreaMessage,
+    EditMapMessage,
+    ModifyAreaMessage,
     SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { RoomSocket } from "../RoomManager";
@@ -12,9 +13,13 @@ export class MapEditorMessagesHandler {
         this.roomListeners = roomListeners;
     }
 
-    public handleModifyAreaMessage(message: MapEditorModifyAreaMessage) {
+    public handleModifyAreaMessage(message: ModifyAreaMessage) {
+        const editMapMessage = new EditMapMessage();
+        editMapMessage.setModifyareamessage(message);
+
         const subMessage = new SubToPusherRoomMessage();
-        subMessage.setMapeditormodifyareamessage(message);
+        subMessage.setEditmapmessage(editMapMessage);
+
         const batchMessage = new BatchToPusherRoomMessage();
         batchMessage.addPayload(subMessage);
         // Dispatch the message on the room listeners
