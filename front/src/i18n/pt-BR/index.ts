@@ -13,6 +13,7 @@ import warning from "./warning";
 import emoji from "./emoji";
 import trigger from "./trigger";
 import muc from "./muc";
+import notification from "./notification";
 
 const pt_BR: BaseTranslation = {
     language: "Português Brasileiro",
@@ -31,6 +32,7 @@ const pt_BR: BaseTranslation = {
     emoji,
     trigger,
     muc,
+    notification,
 };
 
 export default pt_BR;

@@ -7,6 +7,7 @@ const chat: BaseTranslation = {
         visitCard: "Cartão de visita",
         addFriend: "Adicionar amigo",
     },
+    typing: "está digitando...",
 };
 
 export default chat;

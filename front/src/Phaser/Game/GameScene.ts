@@ -107,6 +107,7 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+import { chatVisibilityStore } from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -400,17 +401,17 @@ export class GameScene extends DirtyScene {
             if (layer.type === "objectgroup") {
                 for (const object of layer.objects) {
                     let objectsOfType: ITiledMapObject[] | undefined;
-                    if (object.type) {
-                        if (!this.objectsByType.has(object.type)) {
+                    if (object.class) {
+                        if (!this.objectsByType.has(object.class)) {
                             objectsOfType = new Array<ITiledMapObject>();
                         } else {
-                            objectsOfType = this.objectsByType.get(object.type);
+                            objectsOfType = this.objectsByType.get(object.class);
                             if (objectsOfType === undefined) {
                                 throw new Error("Unexpected object type not found");
                             }
                         }
                         objectsOfType.push(object);
-                        this.objectsByType.set(object.type, objectsOfType);
+                        this.objectsByType.set(object.class, objectsOfType);
                     }
                 }
             }
@@ -535,7 +536,7 @@ export class GameScene extends DirtyScene {
                     if (object.text) {
                         TextUtils.createTextFromITiledMapObject(this, object);
                     }
-                    if (object.type === "website") {
+                    if (object.class === "website") {
                         // Let's load iframes in the map
                         const url = PropertyUtils.mustFindStringProperty(
                             GameMapProperties.URL,
@@ -1155,6 +1156,18 @@ ${escapedMessage}
                         this.popUpElements.delete(closePopupEvent.popupId);
                     },
                 });
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.openChatStream.subscribe(() => {
+                chatVisibilityStore.set(true);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.closeChatStream.subscribe(() => {
+                chatVisibilityStore.set(false);
             })
         );
 

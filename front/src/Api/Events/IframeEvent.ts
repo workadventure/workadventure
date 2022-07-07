@@ -67,6 +67,14 @@ export const isIframeEventWrapper = z.union([
         data: isChatEvent,
     }),
     z.object({
+        type: z.literal("openChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("closeChat"),
+        data: z.undefined(),
+    }),
+    z.object({
         type: z.literal("cameraFollowPlayer"),
         data: isCameraFollowPlayerEvent,
     }),

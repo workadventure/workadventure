@@ -15,7 +15,7 @@ export class ModeratorTagFinder {
     private findModeratorTagInLayer(layer: ITiledMapLayer, mainProperty: string, tagProperty: string) {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "area") {
+                if (object.class === "area" || object.type === "area") {
                     this.registerProperties(layer.properties ?? [], mainProperty, tagProperty);
                 }
             }

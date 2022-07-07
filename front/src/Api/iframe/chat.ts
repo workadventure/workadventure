@@ -31,6 +31,14 @@ export class WorkadventureChatCommands extends IframeApiContribution<Workadventu
     onChatMessage(callback: (message: string) => void) {
         chatStream.subscribe(callback);
     }
+
+    open(): void {
+        sendToWorkadventure({ type: "openChat", data: undefined });
+    }
+
+    close(): void {
+        sendToWorkadventure({ type: "closeChat", data: undefined });
+    }
 }
 
 export default new WorkadventureChatCommands();
