@@ -1,5 +1,5 @@
 import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
-import Axios, { AxiosInstance } from "axios";
+import Axios  from "axios";
 import {EjabberdClient, ejabberdClient} from "./EjabberdClient";
 
 export interface ChatZone {
