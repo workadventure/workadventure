@@ -37,7 +37,6 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import { chatVisibilityStore } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
