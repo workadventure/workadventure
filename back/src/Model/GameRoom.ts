@@ -34,6 +34,7 @@ import {
     ADMIN_API_URL,
     BBB_SECRET,
     BBB_URL,
+    ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
     SECRET_JITSI_KEY,
@@ -125,11 +126,13 @@ export class GameRoom {
             mapDetails.thirdParty ?? undefined
         );
 
-        mapStorageClient.ping(new PingMessage(), (err, res) => {
-            console.log(`==================================`);
-            console.log(err);
-            console.log(JSON.stringify(res));
-        });
+        if (ENABLE_FEATURE_MAP_EDITOR) {
+            mapStorageClient.ping(new PingMessage(), (err, res) => {
+                console.log(`==================================`);
+                console.log(err);
+                console.log(JSON.stringify(res));
+            });
+        }
 
         return gameRoom;
     }
