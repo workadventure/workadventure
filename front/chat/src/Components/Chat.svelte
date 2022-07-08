@@ -150,6 +150,7 @@
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
                 </div>
+            {/if}
         {/if}
     </section>
 </aside>

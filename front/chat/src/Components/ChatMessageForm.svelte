@@ -1,6 +1,5 @@
 <script lang="ts">
     import { SendIcon } from "svelte-feather-icons";
-    import { chatInputFocusStore } from "../Stores/ChatStore";
     import {MucRoom} from "../Xmpp/MucRoom";
 
     export let mucRoom: MucRoom;
@@ -8,10 +7,8 @@
     let newMessageText = "";
 
     function onFocus() {
-        chatInputFocusStore.set(true);
     }
     function onBlur() {
-        chatInputFocusStore.set(false);
     }
 
     function saveMessage() {
