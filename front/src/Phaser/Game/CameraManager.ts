@@ -75,7 +75,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param setTo Viewport on which the camera should set the position
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
-    public setPosition(setTo: WaScaleManagerFocusTarget, duration: number = 1000): void {
+    public setPosition(setTo: WaScaleManagerFocusTarget, duration = 1000): void {
         if (this.cameraMode === CameraMode.Focus) {
             return;
         }
@@ -117,7 +117,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * @param setTo Viewport on which the camera should focus on
      * @param duration Time for the transition im MS. If set to 0, transition will occur immediately
      */
-    public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin: number = 0, duration: number = 1000): void {
+    public enterFocusMode(focusOn: WaScaleManagerFocusTarget, margin = 0, duration = 1000): void {
         this.setCameraMode(CameraMode.Focus);
         this.waScaleManager.saveZoom();
         this.waScaleManager.setFocusTarget(focusOn);
@@ -155,7 +155,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.restoreZoom(duration);
     }
 
-    public startFollowPlayer(player: Player, duration: number = 0): void {
+    public startFollowPlayer(player: Player, duration = 0): void {
         this.playerToFollow = player;
         this.setCameraMode(CameraMode.Follow);
         if (duration === 0) {
@@ -189,7 +189,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
      * Updates the offset of the character compared to the center of the screen according to the layout manager
      * (tries to put the character in the center of the remaining space if there is a discussion going on.
      */
-    public updateCameraOffset(box: Box, instant: boolean = false): void {
+    public updateCameraOffset(box: Box, instant = false): void {
         const xCenter = (box.xEnd - box.xStart) / 2 + box.xStart;
         const yCenter = (box.yEnd - box.yStart) / 2 + box.yStart;
 
@@ -227,7 +227,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         return this.cameraLocked;
     }
 
-    private getZoomModifierChange(width?: number, height?: number, multiplier: number = 1): number {
+    private getZoomModifierChange(width?: number, height?: number, multiplier = 1): number {
         if (!width || !height) {
             return 0;
         }
@@ -252,7 +252,7 @@ export class CameraManager extends Phaser.Events.EventEmitter {
         this.cameraMode = mode;
     }
 
-    private restoreZoom(duration: number = 0): void {
+    private restoreZoom(duration = 0): void {
         if (duration === 0) {
             this.waScaleManager.zoomModifier = this.waScaleManager.getSaveZoom();
             return;

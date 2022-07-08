@@ -25,9 +25,9 @@ export class IconButton extends Phaser.GameObjects.Container {
 
     private config: IconButtonConfig;
 
-    private hovered: boolean = false;
-    private pressed: boolean = false;
-    private selected: boolean = false;
+    private hovered = false;
+    private pressed = false;
+    private selected = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, config: IconButtonConfig) {
         super(scene, x, y);
@@ -48,7 +48,7 @@ export class IconButton extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
-    public select(select: boolean = true): void {
+    public select(select = true): void {
         if (this.selected === select) {
             return;
         }

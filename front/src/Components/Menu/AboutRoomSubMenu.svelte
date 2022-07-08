@@ -9,9 +9,9 @@
     let expandedTilesetCopyright = false;
     let expandedAudioCopyright = false;
 
-    let mapName: string = "";
-    let mapLink: string = "";
-    let mapDescription: string = "";
+    let mapName = "";
+    let mapLink = "";
+    let mapDescription = "";
     let mapCopyright: string = $LL.menu.about.copyrights.map.empty();
     let tilesetCopyright: string[] = [];
     let audioCopyright: string[] = [];

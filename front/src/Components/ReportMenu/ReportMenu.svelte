@@ -11,7 +11,7 @@
 
     let blockActive = true;
     let reportActive = !blockActive;
-    let disableReport: boolean = false;
+    let disableReport = false;
     let userUUID: string | undefined = playersStore.getPlayerById(get(showReportScreenStore).userId)?.userUuid;
     let userName = "No name";
     let unsubscriber: Unsubscriber;

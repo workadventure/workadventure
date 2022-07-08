@@ -28,8 +28,8 @@ export class PathfindingManager {
     public async findPath(
         start: { x: number; y: number },
         end: { x: number; y: number },
-        measuredInPixels: boolean = true,
-        tryFindingNearestAvailable: boolean = false
+        measuredInPixels = true,
+        tryFindingNearestAvailable = false
     ): Promise<{ x: number; y: number }[]> {
         let endPoints: { x: number; y: number }[] = [end];
         if (tryFindingNearestAvailable) {

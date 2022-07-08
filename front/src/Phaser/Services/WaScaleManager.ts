@@ -15,8 +15,8 @@ export class WaScaleManager {
     private hdpiManager: HdpiManager;
     private scaleManager: ScaleManager | undefined;
     private game!: Game;
-    private actualZoom: number = 1;
-    private _saveZoom: number = 1;
+    private actualZoom = 1;
+    private _saveZoom = 1;
 
     private focusTarget?: WaScaleManagerFocusTarget;
 

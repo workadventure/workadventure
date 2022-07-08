@@ -5,8 +5,8 @@
 
     export let userId: number;
     export let placeholderSrc: string;
-    export let width: string = "62px";
-    export let height: string = "62px";
+    export let width = "62px";
+    export let height = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
     let playerWokaPictureStore;

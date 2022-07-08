@@ -10,6 +10,6 @@ export interface UserInputHandlerInterface {
     handlePointerDownEvent: (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => void;
     handleSpaceKeyUpEvent: (event: Event) => Event;
 
-    addSpaceEventListener: (callback: Function) => void;
-    removeSpaceEventListner: (callback: Function) => void;
+    addSpaceEventListener: (callback: () => void) => void;
+    removeSpaceEventListener: (callback: () => void) => void;
 }

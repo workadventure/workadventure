@@ -140,7 +140,7 @@ const wa = {
     /**
      * @deprecated Use WA.nav.openCoWebSite instead
      */
-    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): Promise<CoWebsite> {
+    openCoWebSite(url: string, allowApi = false, allowPolicy = ""): Promise<CoWebsite> {
         console.warn("Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead");
         return nav.openCoWebSite(url, allowApi, allowPolicy);
     },
@@ -233,6 +233,7 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
             const payloadData = safeParsedPayload.data;
 
             const callback = registeredCallbacks[payloadData.type];
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             callback?.(payloadData.data);
         }

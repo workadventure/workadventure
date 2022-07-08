@@ -35,7 +35,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     private collectionKeys!: string[];
     private selectedCollectionIndex!: number;
     private selectedGridItemIndex?: number;
-    private gridRowsCount: number = 1;
+    private gridRowsCount = 1;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
@@ -279,7 +279,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
     }
 
-    private selectNextGridItem(previous: boolean = false, horizontally: boolean): void {
+    private selectNextGridItem(previous = false, horizontally: boolean): void {
         if (this.selectedGridItemIndex === undefined) {
             this.selectedGridItemIndex = 0;
         }

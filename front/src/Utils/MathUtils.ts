@@ -30,11 +30,7 @@ export class MathUtils {
         return value >= min && value <= max;
     }
 
-    public static distanceBetween(
-        p1: { x: number; y: number },
-        p2: { x: number; y: number },
-        squared: boolean = true
-    ): number {
+    public static distanceBetween(p1: { x: number; y: number }, p2: { x: number; y: number }, squared = true): number {
         const distance = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
         return squared ? Math.sqrt(distance) : distance;
     }

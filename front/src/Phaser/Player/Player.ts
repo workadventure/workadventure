@@ -181,7 +181,7 @@ export class Player extends Character {
         return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    private finishFollowingPath(cancelled: boolean = false): void {
+    private finishFollowingPath(cancelled = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });

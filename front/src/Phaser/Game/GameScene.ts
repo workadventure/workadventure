@@ -216,12 +216,12 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
+    private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
-    private preloading: boolean = true;
+    private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
@@ -229,11 +229,11 @@ export class GameScene extends DirtyScene {
     private areaManager!: AreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
-    private firstCameraUpdateSent: boolean = false;
+    private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
-    private jitsiDominantSpeaker: boolean = false;
-    private jitsiParticipantsCount: number = 0;
+    private showVoiceIndicatorChangeMessageSent = false;
+    private jitsiDominantSpeaker = false;
+    private jitsiParticipantsCount = 0;
     public readonly superLoad: SuperLoaderPlugin;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
@@ -2236,7 +2236,7 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant: boolean = false): void {
+    private reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
