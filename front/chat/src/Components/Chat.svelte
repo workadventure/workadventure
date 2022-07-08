@@ -18,7 +18,6 @@
 
     let searchValue = '';
     let showUsers = true;
-    let activeThread: unknown = null;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -42,7 +41,8 @@
     }
 
     function handleActiveThread(event: any){
-        activeThread = event.detail;
+        console.log(event);
+        //activeThread = event.detail;
     }
     function handleShowUsers(){
         showUsers = !showUsers;
