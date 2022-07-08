@@ -180,9 +180,9 @@ export class MediaManager {
         if (this.hasNotification()) {
             const title = `${userName} wants to discuss with you`;
             const options = {
-                icon: "/resources/logos/logo-WA-min.png",
-                image: "/resources/logos/logo-WA-min.png",
-                badge: "/resources/logos/logo-WA-min.png",
+                icon: "/static/images/logo-WA-min.png",
+                image: "/static/images/logo-WA-min.png",
+                badge: "/static/images/logo-WA-min.png",
             };
             new Notification(title, options);
         }
