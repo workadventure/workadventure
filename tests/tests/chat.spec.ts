@@ -1,5 +1,5 @@
-import {chromium, expect, test} from '@playwright/test';
-import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
+import {test} from '@playwright/test';
+import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.describe('Chat', () => {
@@ -12,8 +12,6 @@ test.describe('Chat', () => {
     await login(page, 'Alice', 2);
 
     await assertLogMessage(page, 'Chat fully loaded');
-
-    abortRecordLogs(page);
 
     await page.click('main.menuIcon img:nth-of-type(2)');
 
