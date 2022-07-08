@@ -23,9 +23,9 @@ export enum GameRoomPolicyTypes {
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    private versionNumber: number = 1;
+    private versionNumber = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
-    private isClosing: boolean = false;
+    private isClosing = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
     //public readonly variables = new Map<string, string>();
 
@@ -38,11 +38,11 @@ export class PusherRoom {
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public join(socket: ExSocketInterface) {
+    public join(socket: ExSocketInterface): void {
         this.listeners.add(socket);
     }
 
-    public leave(socket: ExSocketInterface) {
+    public leave(socket: ExSocketInterface): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
     }

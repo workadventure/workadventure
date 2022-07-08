@@ -92,7 +92,7 @@ const PONG_TIMEOUT = 10000;
 const PING_INTERVAL = 15000;
 
 export class IoSocketController {
-    private nextUserId: number = 1;
+    private nextUserId = 1;
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -101,7 +101,7 @@ export class IoSocketController {
         }
     }
 
-    adminRoomSocket() {
+    adminRoomSocket(): void {
         this.app.ws("/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
@@ -229,7 +229,7 @@ export class IoSocketController {
         });
     }
 
-    ioConnection() {
+    ioConnection(): void {
         this.app.ws("/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
@@ -237,7 +237,7 @@ export class IoSocketController {
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             upgrade: (res, req, context) => {
-                (async () => {
+                (async (): Promise<void> => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
 
