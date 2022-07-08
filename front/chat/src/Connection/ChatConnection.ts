@@ -7,18 +7,16 @@ import {
     PusherToIframeMessage,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    ClientToServerMessage as ClientToServerMessageTsProto, IframeToPusherMessage
+    IframeToPusherMessage
 } from "../Messages/ts-proto-generated/protos/messages";
 import {XmppClient} from "../Xmpp/XmppClient";
 import {Parser} from "@xmpp/xml";
-import {connectionStore} from "../Stores/ConnectionStore";
 
 const manualPingDelay = 20000;
 
 export class ChatConnection implements ChatConnection {
     private readonly socket: WebSocket;
     private userId: number | null = null;
-    private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private closed: boolean = false;
     private xmppClient: XmppClient | null = null;
 
