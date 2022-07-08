@@ -1,4 +1,4 @@
-import {ChatZone} from "./MucManager";
+import { ChatZone } from "./MucManager";
 
 export interface ChatClient {
     getAllMucRooms(): Promise<Array<string> | Error>;

@@ -1,7 +1,7 @@
-import Axios, {AxiosError, AxiosInstance} from "axios";
-import {EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER} from "../Enum/EnvironmentVariable";
-import {ChatZone} from "./MucManager";
-import {ChatClient} from "./ChatClient";
+import Axios, { AxiosError, AxiosInstance } from "axios";
+import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
+import { ChatZone } from "./MucManager";
+import { ChatClient } from "./ChatClient";
 
 export class EjabberdClient implements ChatClient {
     private axios: AxiosInstance | undefined;
@@ -19,14 +19,14 @@ export class EjabberdClient implements ChatClient {
 
     async getAllMucRooms(): Promise<Array<string> | Error> {
         return (await this.axios
-            ?.post("muc_online_rooms", {service: `conference.${EJABBERD_DOMAIN}`})
+            ?.post("muc_online_rooms", { service: `conference.${EJABBERD_DOMAIN}` })
             .then((response) => response.data as Array<string>)
             .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
     async destroyMucRoom(name: string) {
         await this.axios
-            ?.post("destroy_room", {name: EjabberdClient.encode(name), service: `conference.${EJABBERD_DOMAIN}`})
+            ?.post("destroy_room", { name: EjabberdClient.encode(name), service: `conference.${EJABBERD_DOMAIN}` })
             .catch((error) => console.error(error));
     }
 
