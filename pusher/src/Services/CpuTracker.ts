@@ -1,6 +1,6 @@
 import { CPU_OVERHEAT_THRESHOLD } from "../Enum/EnvironmentVariable";
 
-function secNSec2ms(secNSec: Array<number> | number) {
+function secNSec2ms(secNSec: Array<number> | number): number {
     if (Array.isArray(secNSec)) {
         return secNSec[0] * 1000 + secNSec[1] / 1000000;
     }
@@ -8,8 +8,8 @@ function secNSec2ms(secNSec: Array<number> | number) {
 }
 
 class CpuTracker {
-    private cpuPercent: number = 0;
-    private overHeating: boolean = false;
+    private cpuPercent = 0;
+    private overHeating = false;
 
     constructor() {
         let time = process.hrtime.bigint();
