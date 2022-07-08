@@ -110,7 +110,7 @@
         left: 0;
         min-height: 100vh;
         width: 100%;
-        min-width: 350px;
+        min-width: 300px;
         background: rgba(#1b1b29, 0.9);
         color: whitesmoke;
         display: flex;
