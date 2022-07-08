@@ -1,6 +1,7 @@
-import {expect, Frame, Page, test} from '@playwright/test';
+import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
-import {evaluateScript, getScriptFrame} from "./utils/scripting";
+import {evaluateScript} from "./utils/scripting";
+import {inViewport, isIntersectingViewport, outViewport} from "./utils/viewport";
 
 test.describe('Scripting chat functions', () => {
     test('can open / close chat', async ({ page}) => {
@@ -10,20 +11,18 @@ test.describe('Scripting chat functions', () => {
 
         await login(page);
 
-        const chatWindow = page.locator("aside.chatWindow");
-
-        await expect(chatWindow).not.toBeVisible();
+        await expect(await outViewport("#chatWindow", page)).toBeFalsy();
 
         await evaluateScript(page, async () => {
             return WA.chat.open();
         });
 
-        await expect(chatWindow).toBeVisible();
+        await expect(await inViewport("#chatWindow", page)).toBeTruthy();
 
         await evaluateScript(page, async () => {
             return WA.chat.close();
         });
 
-        await expect(chatWindow).not.toBeVisible();
+        await expect(await outViewport("#chatWindow", page)).toBeFalsy();
     });
 });

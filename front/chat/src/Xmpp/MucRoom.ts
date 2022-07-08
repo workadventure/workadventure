@@ -468,15 +468,11 @@ export class MucRoom {
     }
 
     public getPresenceStore(): UsersStore {
-        return {
-            subscribe: this.presenceStore.subscribe,
-        };
+        return this.presenceStore;
     }
 
     public getTeleportStore(): TeleportStore {
-        return {
-            subscribe: this.teleportStore.subscribe,
-        };
+        return this.teleportStore;
     }
 
     public getMessagesStore(): MessagesStore {

@@ -7,7 +7,7 @@ import {
     PusherToIframeMessage,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    IframeToPusherMessage, MucRoomDefinitionMessage
+    IframeToPusherMessage
 } from "../Messages/ts-proto-generated/protos/messages";
 import {XmppClient} from "../Xmpp/XmppClient";
 import {Parser} from "@xmpp/xml";
@@ -18,7 +18,6 @@ const manualPingDelay = 20000;
 export class ChatConnection implements ChatConnection {
     private readonly socket: WebSocket;
     private userId: number | null = null;
-    private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private closed: boolean = false;
     private xmppClient: XmppClient | null = null;
 

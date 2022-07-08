@@ -1,12 +1,7 @@
 <script lang="ts">
-    //import { fly } from "svelte/transition";
-    //import ChatMessageForm from "./ChatMessageForm.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    //import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
-    //import ChatForum from "./ChatForum.svelte";
     import {connectionStore} from "../Stores/ConnectionStore";
-    //import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
     import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
@@ -29,26 +24,6 @@
     let searchValue = '';
     let showUsers = true;
     let showLives = true;
-
-    /*
-    let forums = [
-        {
-            name: "Inside Workadventu.re",
-            activeUsers: 5,
-            unreads: 1,
-        },
-        {
-            name: "Random",
-            activeUsers: 12,
-            unreads: 0,
-        },
-        {
-            name: "World makers",
-            activeUsers: 4,
-            unreads: 5,
-        },
-    ];
-     */
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -174,45 +149,7 @@
                             on:showLives={handleShowLives}
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
-
-                    <!-- forum list
-
-					<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
-						<div class="tw-p-3 tw-flex tw-items-center">
-							{#if forumListUnreads()}
-						<span
-								class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-						>
-							{forumListUnreads()}
-						</span>
-							{/if}
-							<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
-							<button
-									class="tw-text-lighter-purple"
-									on:click={() => {
-							showForums = !showForums;
-						}}
-							>
-								<ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
-							</button>
-						</div>
-						{#if showForums}
-							<div class="tw-mt-3">
-								{#each forums as forum}
-									<ChatForum {forum} {openForum} />
-								{/each}
-							</div>
-							<div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-								<button
-										class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-								>See more…</button
-								>
-							</div>
-						{/if}
-					</div>
-					-->
                 </div>
-            {/if}
         {/if}
     </section>
 </aside>
@@ -226,7 +163,7 @@
         left: 0;
         min-height: 100vh;
         width: 100%;
-        min-width: 350px;
+        min-width: 300px;
         background: rgba(#1b1b29, 0.9);
         color: whitesmoke;
         display: flex;
