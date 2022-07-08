@@ -1,7 +1,7 @@
 import {Page} from "@playwright/test";
 
 // https://stackoverflow.com/a/68848306
-export function isIntersectingViewport(selector: string, page: Page): Promise<boolean> {
+function isIntersectingViewport(selector: string, page: Page): Promise<boolean> {
     return page.$eval(selector, async element => {
         const visibleRatio: number = await new Promise(resolve => {
             const observer = new IntersectionObserver(entries => {
@@ -15,4 +15,32 @@ export function isIntersectingViewport(selector: string, page: Page): Promise<bo
         });
         return visibleRatio > 0;
     });
+}
+
+export async function inViewport(selector: string, page: Page) {
+    let inViewport = false;
+    let i = 0;
+    do {
+        inViewport = await isIntersectingViewport(selector, page);
+        if (inViewport) {
+            break;
+        }
+        i++;
+        await page.waitForTimeout(100);
+    } while (i < 50);
+    return inViewport;
+}
+
+export async function outViewport(selector: string, page: Page) {
+    let outViewport = true;
+    let i = 0;
+    do {
+        outViewport = await isIntersectingViewport(selector, page);
+        if (!outViewport) {
+            break;
+        }
+        i++;
+        await page.waitForTimeout(100);
+    } while (i < 50);
+    return outViewport;
 }
