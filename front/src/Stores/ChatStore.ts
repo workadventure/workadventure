@@ -50,6 +50,7 @@ function createWritingStatusMessageStore() {
                 } else if (status === ChatMessageTypes.userStopWriting) {
                     list.delete(getAuthor(authorId));
                 }
+
                 return list;
             });
         },
@@ -167,3 +168,12 @@ function createChatSubMenuVisibilityStore() {
 }
 
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
+
+//TODO delete it with new XMPP integration
+//send list to chat iframe
+chatMessagesStore.subscribe((list) => {
+    iframeListener.sendMessageListToChatIframe(list);
+});
+writingStatusMessageStore.subscribe((list) => {
+    iframeListener.sendWritingStatusToChatIframe(list);
+});

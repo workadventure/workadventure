@@ -26,6 +26,16 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("joinMuc"),
         data: isJoinMucEvent,
     }),
+
+    //TODO delete with chat XMPP integration for the discussion circle
+    z.object({
+        type: z.literal("updateWritingStatusChatList"),
+        data: z.unknown(),
+    }),
+    z.object({
+        type: z.literal("updateMessagesChatList"),
+        data: z.unknown(),
+    }),
 ]);
 
 export const isLookingLikeIframeEventWrapper = z.object({

@@ -37,8 +37,9 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import { chatVisibilityStore } from "../Stores/ChatStore";
+import {ChatMessage, chatVisibilityStore} from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
+import {PlayerInterface} from "../Phaser/Game/PlayerInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -143,6 +144,9 @@ class IframeListener {
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+
+    private chatIframe: HTMLIFrameElement|null = null;
+
     private sendPlayerMove: boolean = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
@@ -570,6 +574,31 @@ class IframeListener {
                 uuid,
             },
         });
+    }
+
+    //TODO delete with chat XMPP integration for the discussion circle
+    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
+        if(!this.chatIframe) {
+            this.chatIframe = (document.getElementById('chatWorkAdventure') as HTMLIFrameElement | null);
+        }
+        console.log('sendWritingStatusToChatIframe => this.chatIframe', this.chatIframe);
+        const message = {
+            type: 'updateWritingStatusChatList',
+            data: list
+        };
+        this.chatIframe?.contentWindow?.postMessage(message, '*');
+    }
+
+    sendMessageListToChatIframe(list: ChatMessage[]) {
+        if(!this.chatIframe) {
+            this.chatIframe = (document.getElementById('chatWorkAdventure') as HTMLIFrameElement | null);
+        }
+        console.log('sendMessageListToChatIframe => this.chatIframe', this.chatIframe);
+        const message = {
+            type: 'updateMessagesChatList',
+            data: list
+        };
+        this.chatIframe?.contentWindow?.postMessage(message, '*');
     }
 
     /**

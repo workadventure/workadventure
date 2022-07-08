@@ -34,6 +34,14 @@ class IframeListener {
                                 get(connectionStore).getXmppClient()?.leaveMuc(iframeEvent.data.url);
                                 break;
                             }
+                            case "updateWritingStatusChatList": {
+                                console.log('updateWritingStatusChatList => iframeEvent', iframeEvent);
+                                break;
+                            }
+                            case "updateMessagesChatList": {
+                                console.log('updateMessagesChatList => iframeEvent', iframeEvent);
+                                break;
+                            }
                         }
                     }
                 }

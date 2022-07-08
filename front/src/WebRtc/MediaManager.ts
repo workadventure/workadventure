@@ -167,12 +167,9 @@ export class MediaManager {
         this.userInputManager = userInputManager;
     }
 
+    //TODO fix it with local storage configuration from front
     public hasNotification(): boolean {
-        if (this.canSendNotification && Notification.permission === "granted") {
-            return localUserStore.getNotification() === "granted";
-        } else {
-            return false;
-        }
+        return this.canSendNotification && Notification.permission === "granted";
     }
 
     public requestNotification() {
@@ -183,6 +180,7 @@ export class MediaManager {
         }
     }
 
+    //TODO delete it this after chat migration
     public createNotification(userName: string, notificationType: NotificationType) {
         if (document.hasFocus()) {
             return;
