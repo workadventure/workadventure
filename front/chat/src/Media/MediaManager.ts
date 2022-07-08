@@ -1,3 +1,5 @@
+import LL from "../i18n/i18n-svelte";
+import {get} from "svelte/store";
 
 export enum NotificationType {
     discussion = 1,
@@ -11,13 +13,11 @@ class MediaManager{
     private canSendNotification = true;
     private canPlayNotificationMessage = true;
 
+    //TODO fix it with local storage configuration from front
     public hasNotification(): boolean {
-        if (this.canSendNotification && Notification.permission === "granted") {
-            return localUserStore.getNotification() === "granted";
-        } else {
-            return false;
-        }
+        return this.canSendNotification && Notification.permission === "granted";
     }
+
 
     public createNotification(userName: string, notificationType: NotificationType) {
         if (document.hasFocus()) {
@@ -26,9 +26,9 @@ class MediaManager{
 
         if (this.hasNotification()) {
             const options = {
-                icon: "/resources/logos/logo-WA-min.png",
-                image: "/resources/logos/logo-WA-min.png",
-                badge: "/resources/logos/logo-WA-min.png",
+                icon: "/static/images/logo-WA-min.png",
+                image: "/static/images/logo-WA-min.png",
+                badge: "/static/images/logo-WA-min.png",
             };
             switch (notificationType) {
                 case NotificationType.discussion:
@@ -61,4 +61,4 @@ class MediaManager{
 
 }
 
-const export mediaManager = new MediaManager();
+export const mediaManager = new MediaManager();

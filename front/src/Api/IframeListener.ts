@@ -586,6 +586,7 @@ class IframeListener {
             type: 'updateWritingStatusChatList',
             data: list
         };
+        //TODO security check, test the possibilities to send message from another domain
         this.chatIframe?.contentWindow?.postMessage(message, '*');
     }
 
@@ -598,6 +599,7 @@ class IframeListener {
             type: 'updateMessagesChatList',
             data: list
         };
+        //TODO security check, test the possibilities to send message from another domain
         this.chatIframe?.contentWindow?.postMessage(message, '*');
     }
 
