@@ -446,8 +446,7 @@ export class GameMap {
             ) {
                 return true;
             }
-            for (const property of layer.layer.properties) {
-                //@ts-ignore
+            for (const property of layer.layer.properties as ITiledMapProperty[]) {
                 if (property.name && property.name === "exitUrl") {
                     return true;
                 }
@@ -597,7 +596,7 @@ export class GameMap {
         return properties;
     }
 
-    private getAreasOnPosition(position?: { x: number; y: number }, offsetY: number = 0): ITiledMapObject[] {
+    private getAreasOnPosition(position?: { x: number; y: number }, offsetY = 0): ITiledMapObject[] {
         if (!position) {
             return [];
         }

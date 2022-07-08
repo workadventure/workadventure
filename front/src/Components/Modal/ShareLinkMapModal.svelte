@@ -10,7 +10,7 @@
     const haveNavigatorSharingFeature: boolean =
         myNavigator && myNavigator.canShare != null && myNavigator.share != null;
 
-    let copied: boolean = false;
+    let copied = false;
 
     function copyLink() {
         try {

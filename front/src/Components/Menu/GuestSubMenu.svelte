@@ -5,7 +5,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 
     let entryPoint: string = $startLayerNamesStore[0];
-    let walkAutomatically: boolean = false;
+    let walkAutomatically = false;
     const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 

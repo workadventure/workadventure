@@ -42,7 +42,7 @@ class CoWebsiteManager {
     public onResize = this._onResize.asObservable();
 
     private cowebsiteDom: HTMLDivElement;
-    private resizing: boolean = false;
+    private resizing = false;
     private gameOverlayDom: HTMLDivElement;
     private cowebsiteBufferDom: HTMLDivElement;
     private cowebsiteAsideHolderDom: HTMLDivElement;

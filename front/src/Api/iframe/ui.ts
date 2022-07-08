@@ -49,7 +49,7 @@ export class RemotePlayer {
         this.name = remotePlayer.name;
     }
 
-    public addAction(key: string, callback: Function): ActionsMenuAction {
+    public addAction(key: string, callback: () => void): ActionsMenuAction {
         const newAction = new ActionsMenuAction(this, key, callback);
         this.actions.set(key, newAction);
         sendToWorkadventure({
@@ -78,9 +78,9 @@ export class RemotePlayer {
 export class ActionsMenuAction {
     private remotePlayer: RemotePlayer;
     private key: string;
-    private callback: Function;
+    private callback: () => void;
 
-    constructor(remotePlayer: RemotePlayer, key: string, callback: Function) {
+    constructor(remotePlayer: RemotePlayer, key: string, callback: () => void) {
         this.remotePlayer = remotePlayer;
         this.key = key;
         this.callback = callback;
