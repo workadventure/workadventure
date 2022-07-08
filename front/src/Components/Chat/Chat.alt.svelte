@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import { chatMessagesStore } from "../../../chat/src/Stores/ChatStore";
+    import { chatMessagesStore } from "../../Stores/ChatStore";
     import ChatMessageForm from "./ChatMessageForm.svelte";
     import ChatElement from "./ChatElement.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
