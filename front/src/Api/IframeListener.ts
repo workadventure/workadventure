@@ -37,9 +37,9 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import {ChatMessage, chatVisibilityStore} from "../Stores/ChatStore";
+import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
-import {PlayerInterface} from "../Phaser/Game/PlayerInterface";
+import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -338,9 +338,6 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
-                    } else if (iframeEvent.type == "closeChat") {
-                        chatVisibilityStore.set(false);
-                        window.focus();
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
                     } else {

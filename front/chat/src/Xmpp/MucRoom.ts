@@ -271,7 +271,7 @@ export class MucRoom {
                 )
             )
         );
-        console.warn("[XMPP]", ">> Destroy room sent");
+        if(_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
         this.connection.emitXmlMessage(messageMucDestroy);
     }
 

@@ -40,8 +40,8 @@
 		{#if showUsers}
 			<div transition:fly={{ y: -30, duration: 100 }}>
 				{#if [...$usersListStore].length === 0}
-					<p>This room is empty, copy this link to invite colleague or friend!</p>
-					<button type="button" class="nes-btn is-primary" on:click={null}>test</button>
+					<p class="tw-px-5">This room is empty !</p>
+					<!--<button type="button" class="nes-btn is-primary" on:click={null}>test</button>-->
 				{:else}
 					{#each [...$usersListStore]
                         .sort(([, a],[, b]) => Number(b.active) - Number(a.active))
