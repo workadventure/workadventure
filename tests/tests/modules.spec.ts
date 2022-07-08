@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { assertLogMessage } from './utils/log';
+import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.describe('Module', () => {
   test('loading should work out of the box', async ({ page }) => {
+    startRecordLogs(page);
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Modules/with_modules.json'
     );
@@ -11,5 +12,6 @@ test.describe('Module', () => {
     await login(page, 'Alice', 2);
 
     await assertLogMessage(page, 'Successfully loaded module: foo =  bar');
+    abortRecordLogs(page);
   });
 });

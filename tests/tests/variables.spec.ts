@@ -9,7 +9,7 @@ import {
   stopRedis,
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
-import { assertLogMessage } from './utils/log';
+import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.setTimeout(180000);
@@ -138,6 +138,8 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
+    startRecordLogs(page);
+
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
@@ -176,6 +178,7 @@ test.describe('Variables', () => {
       await timeout(15000);
       rooms = await getPusherRooms();
     }
+    abortRecordLogs(page);
     expect(
         rooms[
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
