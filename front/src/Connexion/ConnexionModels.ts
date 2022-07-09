@@ -18,6 +18,7 @@ export interface MessageUserJoined {
     companion: string | null;
     userUuid: string;
     outlineColor: number | undefined;
+    variables: Map<string, unknown>;
 }
 
 export interface PositionInterface {

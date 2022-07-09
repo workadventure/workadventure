@@ -5,28 +5,26 @@
  * from the Websocket but we cannot safely create/update a sprite until we are in the "update" method of the GameScene.
  */
 import {
-    AvailabilityStatus,
-    availabilityStatusToJSON, PlayerDetailsUpdatedMessage,
-    UserMovedMessage, VariableMessage
+    availabilityStatusToJSON,
+    PlayerDetailsUpdatedMessage,
+    UserMovedMessage,
 } from "../../Messages/ts-proto-generated/protos/messages";
-import {MessageUserJoined} from "../../Connexion/ConnexionModels";
-import {AddPlayerEvent} from "../../Api/Events/AddPlayerEvent";
-import {get} from "svelte/store";
-import {iframeListener} from "../../Api/IframeListener";
-import {RoomConnection} from "../../Connexion/RoomConnection";
+import { MessageUserJoined } from "../../Connexion/ConnexionModels";
+import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
+import { iframeListener } from "../../Api/IframeListener";
+import { RoomConnection } from "../../Connexion/RoomConnection";
 
 interface RemotePlayerData extends MessageUserJoined {
     showVoiceIndicator: boolean;
-    variables: Map<string, unknown>;
 }
 
 export type PlayerDetailsUpdate = {
-    player: RemotePlayerData,
+    player: RemotePlayerData;
     updated: {
-        outlineColor: boolean,
-        showVoiceIndicator: boolean,
-        availabilityStatus: boolean,
-    }
+        outlineColor: boolean;
+        showVoiceIndicator: boolean;
+        availabilityStatus: boolean;
+    };
 };
 
 export class RemotePlayersRepository {
@@ -84,9 +82,9 @@ export class RemotePlayersRepository {
                 updated: {
                     availabilityStatus: false,
                     outlineColor: false,
-                    showVoiceIndicator: false
+                    showVoiceIndicator: false,
                 },
-                player
+                player,
             };
             this.updatedPlayers.set(message.userId, updateStruct);
         }
@@ -168,6 +166,7 @@ export class RemotePlayersRepository {
             },
             outlineColor: player.outlineColor,
             availabilityStatus: availabilityStatusToJSON(player.availabilityStatus),
+            variables: player.variables,
         };
     }
 }

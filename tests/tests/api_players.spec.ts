@@ -30,6 +30,14 @@ test.describe('API WA.players', () => {
     const list2 = getCoWebsiteIframe(page2).locator('#list');
     await expect(list2).toContainText('Alice');
 
+    // Now, let's test variables
+    await getCoWebsiteIframe(page).locator('#the-variable').fill('yeah');
+    await getCoWebsiteIframe(page).locator('#the-variable').evaluate(e => e.blur());
+    const events2 = getCoWebsiteIframe(page2).locator('#events');
+    await expect(events2).toContainText("User 'Alice' testVariable changed. New value: yeah (tracked globally)");
+    await expect(events2).toContainText("User 'Alice' testVariable changed. New value: yeah (tracked locally)");
+    await expect(events2).toContainText("Asserted value from event and from WA.players.state is the same");
+
     await page2.close();
 
     await expect(events).toContainText('User left: Bob');
@@ -46,4 +54,10 @@ test.describe('API WA.players', () => {
     await expect(getCoWebsiteIframe(page).locator('#onPlayerEntersException')).toHaveText('Yes');
     await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
+
+  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page }) => {
+    // TODO.
+    // Need merge develop first
+  });
+
 });

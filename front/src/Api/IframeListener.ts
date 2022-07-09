@@ -20,7 +20,7 @@ import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
-import type {HasPlayerMovedEvent, HasPlayerMovedInterface} from "./Events/HasPlayerMovedEvent";
+import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
@@ -38,7 +38,7 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
-import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -339,9 +339,13 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
-        if (iframe.contentWindow) {
-            this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
-        }
+        iframe.addEventListener("load", () => {
+            if (iframe.contentWindow) {
+                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+            } else {
+                console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
+            }
+        });
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -358,9 +362,13 @@ class IframeListener {
      * Registers an event listener to know when iframes are closed and returns an "unsubscriber" function.
      */
     onIframeCloseEvent(source: MessageEventSource, callback: () => void): () => void {
-        this.iframeCloseCallbacks.get(source)?.add(callback);
+        const callbackSet = this.iframeCloseCallbacks.get(source);
+        if (callbackSet === undefined) {
+            throw new Error("Could not find iframe in list");
+        }
+        callbackSet.add(callback);
         return () => {
-            this.iframeCloseCallbacks.get(source)?.delete(callback);
+            callbackSet.delete(callback);
         };
     }
 

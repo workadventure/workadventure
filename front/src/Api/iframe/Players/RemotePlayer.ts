@@ -1,6 +1,6 @@
-import {AddPlayerEvent} from "../../Events/AddPlayerEvent";
-import {PositionInterface} from "../../../Connexion/ConnexionModels";
-import {Observable, Subject} from "rxjs";
+import { AddPlayerEvent } from "../../Events/AddPlayerEvent";
+import { PositionInterface } from "../../../Connexion/ConnexionModels";
+import { Observable, Subject } from "rxjs";
 
 export const remotePlayers = new Map<number, RemotePlayer>();
 
@@ -9,21 +9,29 @@ export interface RemotePlayerInterface {
     readonly name: string;
     readonly uuid: string;
     /*get availabilityStatus();*/
-    readonly outlineColor: number|undefined;
+    readonly outlineColor: number | undefined;
     readonly position: PositionInterface;
     /**
      * A stream updated with the position of this current player.
      */
     readonly position$: Observable<PositionInterface>;
+    readonly state: ReadOnlyState;
 }
+
+export type ReadOnlyState = { onVariableChange(key: string): Observable<unknown> } & {
+    readonly [key: string]: unknown;
+};
 
 export class RemotePlayer implements RemotePlayerInterface {
     private _userId: number;
     private _name: string;
     private _userUuid: string;
     private _availabilityStatus: string;
-    private _outlineColor: number|undefined;
+    private _outlineColor: number | undefined;
     private _position: PositionInterface;
+    private _variables: Map<string, unknown>;
+    private _variablesSubjects = new Map<string, Subject<unknown>>();
+    public readonly state: ReadOnlyState;
 
     public constructor(addPlayerEvent: AddPlayerEvent) {
         this._userId = addPlayerEvent.userId;
@@ -32,8 +40,36 @@ export class RemotePlayer implements RemotePlayerInterface {
         this._availabilityStatus = addPlayerEvent.availabilityStatus;
         this._outlineColor = addPlayerEvent.outlineColor;
         this._position = addPlayerEvent.position;
+        this._variables = addPlayerEvent.variables;
+        const variableSubjects = this._variablesSubjects;
+        const variables = this._variables;
+        this.state = new Proxy(
+            {
+                onVariableChange(key: string): Observable<unknown> {
+                    let subject = variableSubjects.get(key);
+                    if (subject === undefined) {
+                        subject = new Subject<unknown>();
+                        variableSubjects.set(key, subject);
+                    }
+                    return subject.asObservable();
+                },
+            },
+            {
+                get(target, p: PropertyKey, receiver: unknown): unknown {
+                    if (p in target) {
+                        return Reflect.get(target, p, receiver);
+                    }
+                    return variables.get(p.toString());
+                },
+                has(target, p: PropertyKey): boolean {
+                    if (p in target) {
+                        return true;
+                    }
+                    return variables.has(p.toString());
+                },
+            }
+        );
     }
-
 
     get id(): number {
         return this._userId;
@@ -64,16 +100,24 @@ export class RemotePlayer implements RemotePlayerInterface {
         this._position$.next(_position);
     }
 
-    public readonly _position$ = new Subject<PositionInterface>;
+    public readonly _position$ = new Subject<PositionInterface>();
     public readonly position$ = this._position$.asObservable();
 
     public destroy() {
         this._position$.complete();
     }
+
+    public setVariable(name: string, value: unknown): void {
+        this._variables.set(name, value);
+        const observable = this._variablesSubjects.get(name);
+        if (observable) {
+            observable.next(value);
+        }
+    }
 }
 
 export interface RemotePlayerMoved {
-    player: RemotePlayerInterface,
-    newPosition: PositionInterface,
-    oldPosition: PositionInterface,
+    player: RemotePlayerInterface;
+    newPosition: PositionInterface;
+    oldPosition: PositionInterface;
 }

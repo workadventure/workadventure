@@ -12,20 +12,33 @@
         window.addEventListener('load', () => {
             console.log('On load');
 
-            WA.onInit().then(() => {
+            WA.onInit().then(async () => {
                 console.log('After WA init');
-                WA.players.enableTracking();
+                await WA.players.enableTracking();
 
+                for (const remotePlayer of WA.players.list()) {
+                    remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {
+                        document.getElementById("events").innerText += "User '" + remotePlayer.name + "' testVariable changed. New value: " + value + " (tracked locally)\n";
+                        if (value === remotePlayer.state.testVariable) {
+                            document.getElementById("events").innerText += "Asserted value from event and from WA.players.state is the same\n";
+                        } else {
+                            document.getElementById("events").innerText += "ERROR! Value from event and from WA.players.state are different!\n";
+                        }
+                    });
+                }
 
-                WA.players.onPlayerEnters().subscribe((remotePlayer) => {
+                WA.players.onPlayerEnters.subscribe((remotePlayer) => {
                     document.getElementById("events").innerText += "New user: " + remotePlayer.name + "\n";
+                    remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {
+                        document.getElementById("events").innerText += "User '" + remotePlayer.name + "' testVariable changed. New value: " + value + " (tracked locally)\n";
+                    });
                 });
 
-                WA.players.onPlayerLeaves().subscribe((remotePlayer) => {
+                WA.players.onPlayerLeaves.subscribe((remotePlayer) => {
                     document.getElementById("events").innerText += "User left: " + remotePlayer.name + "\n";
                 });
 
-                WA.players.onPlayersMove().subscribe(({ player, newPosition, oldPosition }) => {
+                WA.players.onPlayersMove.subscribe(({ player, newPosition, oldPosition }) => {
                     document.getElementById("events").innerText += `User : ${player.name} moved from (${oldPosition.x}, ${oldPosition.y}) to (${newPosition.x}, ${newPosition.y})\n`;
                 });
 
@@ -35,6 +48,15 @@
                     for (const player of WA.players.list()) {
                         document.getElementById('list').innerHTML += "<li>User " + player.id + ": " + player.name + "</li>";
                     }
+                });
+
+                document.getElementById("the-variable").addEventListener('change', (event) => {
+                    const value = event.target.value;
+                    WA.player.sharedState.testVariable = value;
+                });
+
+                WA.players.onVariableChange("testVariable").subscribe(({ player, value }) => {
+                    document.getElementById("events").innerText += "User '" + player.name + "' testVariable changed. New value: " + value + " (tracked globally)\n";
                 });
             });
         })
@@ -48,6 +70,12 @@
 <br/>
 <button id="listCurrentPlayers">List current connected players</button>
 
+<hr/>
+
+Change a variable associated to current player:
+<input id="the-variable" type="text" />
+
+<hr/>
 <p>
 Events:
 <pre id="events">

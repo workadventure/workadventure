@@ -23,6 +23,7 @@ export class IframeEventDispatcher {
 
     public removeIframe(source: MessageEventSource) {
         this.targets.delete(source);
+        this.unsubscribers.get(source)?.();
         this.unsubscribers.delete(source);
     }
 
@@ -44,7 +45,6 @@ export class IframeEventDispatcher {
             console.warn("message dispatched: ", message);
         }
         for (const iframe of this.targets) {
-
             iframe.postMessage(message, {
                 targetOrigin: "*",
             });

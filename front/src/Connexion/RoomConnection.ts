@@ -2,7 +2,6 @@ import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -560,7 +559,12 @@ export class RoomConnection implements RoomConnection {
         this.closed = true;
     }
 
-    private toPositionMessage(x: number, y: number, direction: PositionMessage_Direction, moving: boolean): PositionMessageTsProto {
+    private toPositionMessage(
+        x: number,
+        y: number,
+        direction: PositionMessage_Direction,
+        moving: boolean
+    ): PositionMessageTsProto {
         return {
             x: Math.floor(x),
             y: Math.floor(y),
@@ -578,7 +582,13 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    public sharePosition(x: number, y: number, direction: PositionMessage_Direction, moving: boolean, viewport: ViewportInterface): void {
+    public sharePosition(
+        x: number,
+        y: number,
+        direction: PositionMessage_Direction,
+        moving: boolean,
+        viewport: ViewportInterface
+    ): void {
         if (!this.socket) {
             return;
         }
@@ -643,19 +653,8 @@ export class RoomConnection implements RoomConnection {
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
+            variables: new Map(Object.entries(message.variables)),
         };
-    }
-
-    /**
-     * Registers a listener on a message that is part of a batch
-     */
-    private onMessage(eventName: string, callback: Function): void {
-        let callbacks = this.listeners.get(eventName);
-        if (callbacks === undefined) {
-            callbacks = new Array<Function>();
-            this.listeners.set(eventName, callbacks);
-        }
-        callbacks.push(callback);
     }
 
     private toGroupCreatedUpdatedMessage(message: GroupUpdateMessageTsProto): GroupCreatedUpdatedMessageInterface {
@@ -909,21 +908,19 @@ export class RoomConnection implements RoomConnection {
         this.socket.send(bytes);
     }
 
-    public emitPlayerSetVariable(name: string, value :unknown): void {
-        console.log("emitPlayerSetVariable")
+    public emitPlayerSetVariable(name: string, value: unknown): void {
+        console.log("emitPlayerSetVariable");
         this.send({
             message: {
                 $case: "setPlayerDetailsMessage",
                 setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
                     setVariable: {
                         name,
-                        value: JSON.stringify(value)
-                    }
-                })
-
+                        value: JSON.stringify(value),
+                    },
+                }),
             },
         });
-
     }
 
     /**
@@ -938,10 +935,10 @@ export class RoomConnection implements RoomConnection {
             } catch (e) {
                 console.error(
                     'Unable to unserialize value received from server for variable "' +
-                    name +
-                    '". Value received: "' +
-                    serializedValue +
-                    '". Error: ',
+                        name +
+                        '". Value received: "' +
+                        serializedValue +
+                        '". Error: ',
                     e
                 );
             }

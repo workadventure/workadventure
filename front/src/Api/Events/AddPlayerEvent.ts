@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {isPlayerPosition} from "./PlayerPosition";
+import { isPlayerPosition } from "./PlayerPosition";
 
 export const isAddPlayerEvent = z.object({
     userId: z.number(),
@@ -11,15 +11,17 @@ export const isAddPlayerEvent = z.object({
     variables: z.map(z.string(), z.unknown()),
 });
 
-export const isRemotePlayerChangedEvent = isAddPlayerEvent.omit({
-    userUuid: true,
-}).partial({
-    name: true,
-    availabilityStatus: true,
-    outlineColor: true,
-    position: true
-});
-
+export const isRemotePlayerChangedEvent = isAddPlayerEvent
+    .omit({
+        userUuid: true,
+    })
+    .partial({
+        name: true,
+        availabilityStatus: true,
+        outlineColor: true,
+        position: true,
+        variables: true,
+    });
 
 /**
  * A message sent from the game to the iFrame to notify a new player arrived in our viewport

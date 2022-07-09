@@ -3,6 +3,7 @@ import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
+    isLookingLikeIframeEventWrapper,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
@@ -230,6 +231,13 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
             const callback = registeredCallbacks[payloadData.type];
             // @ts-ignore
             callback?.(payloadData.data);
+        } else {
+            const safeLooksLikeResponse = isLookingLikeIframeEventWrapper.safeParse(payload);
+            if (safeLooksLikeResponse.success) {
+                throw new Error(
+                    "Could not parse message received from WorkAdventure. Message:" + JSON.stringify(payload)
+                );
+            }
         }
     }
 });

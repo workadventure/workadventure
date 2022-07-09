@@ -707,6 +707,7 @@ export class GameScene extends DirtyScene {
                             outlineColor: message.outlineColor,
                             availabilityStatus: availabilityStatusToJSON(message.availabilityStatus),
                             position: message.position,
+                            variables: message.variables,
                         },
                     });
                 });

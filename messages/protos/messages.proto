@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/wrappers.proto";
+import "google/protobuf/struct.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
@@ -221,6 +222,7 @@ message UserJoinedMessage {
   uint32 outlineColor = 8;
   bool hasOutline = 9;
   AvailabilityStatus availabilityStatus = 10;
+  map<string, google.protobuf.Value> variables = 11;
 }
 
 message UserLeftMessage {
