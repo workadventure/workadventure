@@ -6,7 +6,7 @@ import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import type CancelablePromise from "cancelable-promise";
-import {PositionMessage_Direction} from "../../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -82,6 +82,12 @@ export class Player extends Character {
             this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled: isPreviousPathInProgress });
             this.followingPathPromiseResolve = resolve;
         });
+    }
+
+    public finishFollowingPath(cancelled: boolean = false): void {
+        this.pathToFollow = undefined;
+        this.pathWalkingSpeed = undefined;
+        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -179,12 +185,6 @@ export class Player extends Character {
             this.pathToFollow.shift();
         }
         return this.getMovementDirection(xDistance, yDistance, distance);
-    }
-
-    private finishFollowingPath(cancelled: boolean = false): void {
-        this.pathToFollow = undefined;
-        this.pathWalkingSpeed = undefined;
-        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {

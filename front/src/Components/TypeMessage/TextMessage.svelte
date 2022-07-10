@@ -8,7 +8,6 @@
 
     const content = JSON.parse(message.text);
     const converter = new QuillDeltaToHtmlConverter(content.ops, { inlineStyles: true });
-    const NAME_BUTTON = "Ok";
 
     function closeTextMessage() {
         textMessageStore.clearMessageById(message.id);
@@ -24,50 +23,12 @@
 <svelte:window on:keydown={onKeyDown} />
 
 <div
-    class="main-text-message nes-container is-rounded"
+    class="main-text-message tw-bg-dark-purple/95 tw-rounded tw-absolute tw-flex tw-w-3/5 tw-m-auto tw-py-3 tw-pl-5 tw-pr-2 tw-max-h-64 tw-left-0 tw-right-0 tw-pointer-events-auto"
     in:fly={{ x: -1000, duration: 500, delay: 250 }}
-    out:fade={{ duration: 250 }}
+    out:fade={{ duration: 150 }}
 >
-    <div class="content-text-message">
+    <div class="content-text-message tw-flex tw-text-white tw-max-h-60 tw-w-full tw-overflow-auto tw-mt-7 tw-mr-6">
         {@html converter.convert()}
     </div>
-    <div class="footer-text-message">
-        <button type="button" class="nes-btn is-primary" on:click|preventDefault={closeTextMessage}
-            >{NAME_BUTTON}</button
-        >
-    </div>
+    <button type="button" class="btn close-window" on:click|preventDefault={closeTextMessage}>&times </button>
 </div>
-
-<style lang="scss">
-    div.main-text-message {
-        display: flex;
-        flex-direction: column;
-        position: absolute;
-
-        max-height: 25%;
-        width: 60%;
-        margin-right: auto;
-        margin-left: auto;
-        top: 6%;
-        left: 0;
-        right: 0;
-        padding-bottom: 0;
-        z-index: 240;
-
-        pointer-events: auto;
-        background-color: #333333;
-
-        div.content-text-message {
-            flex: 1 1 auto;
-            max-height: calc(100% - 50px);
-            color: whitesmoke;
-
-            overflow: auto;
-        }
-
-        div.footer-text-message {
-            height: 50px;
-            text-align: center;
-        }
-    }
-</style>

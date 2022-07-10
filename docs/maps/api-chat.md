@@ -1,6 +1,38 @@
 {.section-title.accent.text-primary}
 # API Chat functions reference
 
+### Open the chat window
+
+```ts
+WA.chat.open(): void
+```
+
+Open instantly the chat window.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('my_layer').subscribe(() => {
+    WA.chat.open();
+});
+```
+
+### Close the chat window
+
+```ts
+WA.chat.close(): void
+```
+
+Close instantly the chat window.
+
+Example:
+
+```ts
+WA.room.onEnterLayer('my_layer').subscribe(() => {
+    WA.chat.close();
+});
+```
+
 ### Sending a message in the chat
 
 ```
@@ -14,13 +46,13 @@ Sends a message in the chat. The message is only visible in the browser of the c
 
 Example:
 
-```javascript
+```ts
 WA.chat.sendChatMessage('Hello world', 'Mr Robot');
 ```
 
 ### Listening to messages from the chat
 
-```javascript
+```ts
 WA.chat.onChatMessage(callback: (message: string) => void): void
 ```
 
@@ -30,7 +62,7 @@ Listens to messages typed by the current user and calls the callback. Messages f
 
 Example:
 
-```javascript
+```ts
 WA.chat.onChatMessage((message => {
     console.log('The user typed a message', message);
 }));

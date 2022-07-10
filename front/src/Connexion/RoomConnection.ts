@@ -33,8 +33,6 @@ import {
     EmoteEventMessage as EmoteEventMessageTsProto,
     PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    SendJitsiJwtMessage as SendJitsiJwtMessageTsProto,
-    BBBMeetingClientURLMessage as BBBMeetingClientURLMessageTsProto,
     ClientToServerMessage as ClientToServerMessageTsProto,
     PositionMessage as PositionMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
@@ -43,13 +41,51 @@ import {
     PingMessage as PingMessageTsProto,
     CharacterLayerMessage,
     AvailabilityStatus,
+    QueryMessage,
+    AnswerMessage,
+    JoinBBBMeetingAnswer,
+    XmppSettingsMessage,
+    XmppConnectionStatusChangeMessage_Status,
+    MoveToPositionMessage as MoveToPositionMessageProto,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { Subject } from "rxjs";
+import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import ElementExt from "../Xmpp/Lib/ElementExt";
+import { Parser } from "@xmpp/xml";
+import { mucRoomsStore } from "../Stores/MucRoomsStore";
+
+const parse = (data: string): ElementExt | null => {
+    const p = new Parser();
+
+    let result: ElementExt | null = null;
+    let error = null;
+
+    p.on("start", (el) => {
+        result = el;
+    });
+    p.on("element", (el) => {
+        if (!result) {
+            return;
+        }
+        result.append(el);
+    });
+    p.on("error", (err) => {
+        error = err;
+    });
+
+    p.write(data);
+    p.end(data);
+
+    if (error) {
+        throw error;
+    } else {
+        return result;
+    }
+};
 
 const manualPingDelay = 20000;
 
@@ -90,12 +126,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _teleportMessageMessageStream = new Subject<string>();
     public readonly teleportMessageMessageStream = this._teleportMessageMessageStream.asObservable();
-
-    private readonly _sendJitsiJwtMessageStream = new Subject<SendJitsiJwtMessageTsProto>();
-    public readonly sendJitsiJwtMessageStream = this._sendJitsiJwtMessageStream.asObservable();
-
-    private readonly _bbbMeetingClientURLMessageStream = new Subject<BBBMeetingClientURLMessageTsProto>();
-    public readonly bbbMeetingClientURLMessageStream = this._bbbMeetingClientURLMessageStream.asObservable();
 
     private readonly _worldFullMessageStream = new Subject<string | null>();
     public readonly worldFullMessageStream = this._worldFullMessageStream.asObservable();
@@ -141,8 +171,23 @@ export class RoomConnection implements RoomConnection {
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
+    private readonly _xmppMessageStream = new Subject<ElementExt>();
+    public readonly xmppMessageStream = this._xmppMessageStream.asObservable();
+
+    // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
+    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
+    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
+
+    // Question: should this not be a BehaviorSubject?
+    private readonly _xmppConnectionStatusChangeMessageStream = new Subject<XmppConnectionStatusChangeMessage_Status>();
+    public readonly xmppConnectionStatusChangeMessageStream =
+        this._xmppConnectionStatusChangeMessageStream.asObservable();
+
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
+
+    private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
+    public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -296,6 +341,16 @@ export class RoomConnection implements RoomConnection {
                                 this._variableMessageStream.next({ name, value });
                                 break;
                             }
+                            case "xmppMessage": {
+                                const elementExtParsed = parse(subMessage.xmppMessage.stanza);
+
+                                if (elementExtParsed == undefined) {
+                                    console.error("xmppMessage  => data is undefined => ", elementExtParsed);
+                                    break;
+                                }
+                                this._xmppMessageStream.next(elementExtParsed);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
                                 const _exhaustiveCheck: never = subMessage;
@@ -418,14 +473,6 @@ export class RoomConnection implements RoomConnection {
                     this._teleportMessageMessageStream.next(message.teleportMessageMessage.map);
                     break;
                 }
-                case "sendJitsiJwtMessage": {
-                    this._sendJitsiJwtMessageStream.next(message.sendJitsiJwtMessage);
-                    break;
-                }
-                case "bbbMeetingClientURLMessage": {
-                    this._bbbMeetingClientURLMessageStream.next(message.bbbMeetingClientURLMessage);
-                    break;
-                }
                 case "groupUsersUpdateMessage": {
                     this._groupUsersUpdateMessageStream.next(message.groupUsersUpdateMessage);
                     break;
@@ -464,6 +511,16 @@ export class RoomConnection implements RoomConnection {
                     }
                     break;
                 }
+                case "xmppSettingsMessage": {
+                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
+                    break;
+                }
+                case "xmppConnectionStatusChangeMessage": {
+                    this._xmppConnectionStatusChangeMessageStream.next(
+                        message.xmppConnectionStatusChangeMessage.status
+                    );
+                    break;
+                }
                 case "errorMessage": {
                     this._errorMessageStream.next(message.errorMessage);
                     console.error("An error occurred server side: " + message.errorMessage.message);
@@ -480,6 +537,40 @@ export class RoomConnection implements RoomConnection {
                     } else {
                         errorScreenStore.setError(message.errorScreenMessage);
                     }
+                    break;
+                }
+                case "moveToPositionMessage": {
+                    if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
+                        const tileIndex = gameManager
+                            .getCurrentGameScene()
+                            .getGameMap()
+                            .getTileIndexAt(
+                                message.moveToPositionMessage.position.x,
+                                message.moveToPositionMessage.position.y
+                            );
+                        gameManager.getCurrentGameScene().moveTo(tileIndex);
+                        get(mucRoomsStore).forEach((mucRoom) => {
+                            mucRoom.resetTeleportStore();
+                        });
+                    }
+                    this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                    break;
+                }
+                case "answerMessage": {
+                    const queryId = message.answerMessage.id;
+                    const query = this.queries.get(queryId);
+                    if (query === undefined) {
+                        throw new Error("Got an answer to a query we have no track of: " + queryId.toString());
+                    }
+                    if (message.answerMessage.answer === undefined) {
+                        throw new Error("Invalid message received. Answer missing.");
+                    }
+                    if (message.answerMessage.answer.$case === "error") {
+                        query.reject(new Error(message.answerMessage.answer.error.message));
+                    } else {
+                        query.resolve(message.answerMessage.answer);
+                    }
+                    this.queries.delete(queryId);
                     break;
                 }
                 default: {
@@ -701,6 +792,12 @@ export class RoomConnection implements RoomConnection {
 
     public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener("close", (event) => {
+            // Cleanup queries:
+            const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
+            for (const query of this.queries.values()) {
+                query.reject(error);
+            }
+
             if (this.closed === true || connectionManager.unloading) {
                 return;
             }
@@ -775,30 +872,6 @@ export class RoomConnection implements RoomConnection {
                 reportPlayerMessage: {
                     reportedUserUuid,
                     reportComment,
-                },
-            },
-        });
-    }
-
-    public emitQueryJitsiJwtMessage(jitsiRoom: string): void {
-        this.send({
-            message: {
-                $case: "queryJitsiJwtMessage",
-                queryJitsiJwtMessage: {
-                    jitsiRoom,
-                },
-            },
-        });
-    }
-
-    public emitJoinBBBMeeting(meetingId: string, props: Map<string, string | number | boolean>): void {
-        const meetingName = props.get("meetingName") as string;
-        this.send({
-            message: {
-                $case: "joinBBBMeetingMessage",
-                joinBBBMeetingMessage: {
-                    meetingId,
-                    meetingName,
                 },
             },
         });
@@ -906,6 +979,102 @@ export class RoomConnection implements RoomConnection {
         }
 
         this.socket.send(bytes);
+    }
+
+    public emitXmlMessage(xml: ElementExt): void {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "xmppMessage",
+                xmppMessage: {
+                    stanza: xml.toString(),
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    public emitAskPosition(uuid: string, playUri: string) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "askPositionMessage",
+                askPositionMessage: {
+                    userIdentifier: uuid,
+                    playUri,
+                },
+            },
+        }).finish();
+
+        this.socket.send(bytes);
+    }
+
+    private queries = new Map<
+        number,
+        {
+            answerType: string;
+            resolve: (message: Required<AnswerMessage>["answer"]) => void;
+            reject: (e: unknown) => void;
+        }
+    >();
+    private lastQueryId = 0;
+
+    private query<T extends Required<QueryMessage>["query"]>(message: T): Promise<Required<AnswerMessage>["answer"]> {
+        return new Promise<Required<AnswerMessage>["answer"]>((resolve, reject) => {
+            if (!message.$case.endsWith("Query")) {
+                throw new Error("Query types are supposed to be suffixed with Query");
+            }
+            const answerType = message.$case.substring(0, message.$case.length - 5) + "Answer";
+
+            this.queries.set(this.lastQueryId, {
+                answerType,
+                resolve,
+                reject,
+            });
+
+            this.send({
+                message: {
+                    $case: "queryMessage",
+                    queryMessage: {
+                        id: this.lastQueryId,
+                        query: message,
+                    },
+                },
+            });
+
+            this.lastQueryId++;
+        });
+    }
+
+    public async queryJitsiJwtToken(jitsiRoom: string): Promise<string> {
+        const answer = await this.query({
+            $case: "jitsiJwtQuery",
+            jitsiJwtQuery: {
+                jitsiRoom,
+            },
+        });
+        if (answer.$case !== "jitsiJwtAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.jitsiJwtAnswer.jwt;
+    }
+
+    public async queryBBBMeetingUrl(
+        meetingId: string,
+        props: Map<string, string | number | boolean>
+    ): Promise<JoinBBBMeetingAnswer> {
+        const meetingName = props.get("meetingName") as string;
+
+        const answer = await this.query({
+            $case: "joinBBBMeetingQuery",
+            joinBBBMeetingQuery: {
+                meetingId,
+                meetingName,
+            },
+        });
+        if (answer.$case !== "joinBBBMeetingAnswer") {
+            throw new Error("Unexpected answer");
+        }
+        return answer.joinBBBMeetingAnswer;
     }
 
     public emitPlayerSetVariable(name: string, value: unknown): void {

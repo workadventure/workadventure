@@ -13,11 +13,9 @@ import {
     FollowAbortMessage,
     GroupDeleteMessage,
     ItemEventMessage,
-    JoinBBBMeetingMessage,
     JoinRoomMessage,
     PlayGlobalMessage,
     PusherToBackMessage,
-    QueryJitsiJwtMessage,
     RefreshRoomMessage,
     ReportPlayerMessage,
     RoomJoinedMessage,
@@ -40,6 +38,9 @@ import {
     LockGroupPromptMessage,
     InvalidTextureMessage,
     ErrorScreenMessage,
+    QueryMessage,
+    XmppMessage,
+    AskPositionMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -237,6 +238,9 @@ export class SocketManager implements ZoneEventListener {
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
+                    if (client.xmppClient) {
+                        client.xmppClient.close();
+                    }
                 })
                 .on("error", (err: Error) => {
                     console.error(
@@ -257,6 +261,7 @@ export class SocketManager implements ZoneEventListener {
             streamToPusher.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
@@ -352,7 +357,7 @@ export class SocketManager implements ZoneEventListener {
 
     // Useless now, will be useful again if we allow editing details in game
     handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
-        console.log("handleSetPlayerDetails pusher")
+        console.log("handleSetPlayerDetails pusher");
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setSetplayerdetailsmessage(playerDetailsMessage);
 
@@ -420,6 +425,10 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
+                    if (socket.xmppClient) {
+                        console.log("leaveRoom => close");
+                        socket.xmppClient.close();
+                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
                     debug("User ", socket.name, " left: ", socket.userUuid);
@@ -462,16 +471,9 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public handleQueryJitsiJwtMessage(client: ExSocketInterface, queryJitsiJwtMessage: QueryJitsiJwtMessage) {
+    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setQueryjitsijwtmessage(queryJitsiJwtMessage);
-
-        client.backConnection.write(pusherToBackMessage);
-    }
-
-    public handleJoinBBBMeetingMessage(client: ExSocketInterface, joinBBBMeetingMessage: JoinBBBMeetingMessage) {
-        const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setJoinbbbmeetingmessage(joinBBBMeetingMessage);
+        pusherToBackMessage.setQuerymessage(queryMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
@@ -670,7 +672,7 @@ export class SocketManager implements ZoneEventListener {
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.getBroadcasttoworld()) {
-            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld("en", clientRoomUrl);
+            tabUrlRooms = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en");
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
@@ -686,6 +688,22 @@ export class SocketManager implements ZoneEventListener {
                 return;
             });
         }
+    }
+
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
+        if (client.xmppClient === undefined) {
+            throw new Error(
+                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
+            );
+        }
+        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+    }
+
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setAskpositionmessage(askPositionMessage);
+
+        client.backConnection.write(pusherToBackMessage);
     }
 }
 

@@ -36,81 +36,24 @@
 </script>
 
 <div
-    class="main-ban-message nes-container is-rounded"
+    class="main-ban-message tw-bg-dark-purple tw-rounded tw-text-white tw-self-center tw-m-1 tw-p-3 tw-w-full md:tw-w-2/3 tw-m-auto tw-h-full tw-py-3 tw-px-5 tw-pointer-events-auto lg:tw-py-7"
     in:fly={{ y: -1000, duration: 500, delay: 250 }}
     out:fade={{ duration: 200 }}
 >
-    <h2 class="title-ban-message">
-        <img src="resources/logos/report.svg" alt="***" />
+    <h2 class="tw-text-lg md:tw-text-2xl">
+        <img src="resources/logos/report.svg" alt="***" class="tw-w-4 tw-h-5 md:tw-w-10 md:tw-h-10" />
         {$LL.warning.importantMessage()}
-        <img src="resources/logos/report.svg" alt="***" />
+        <img src="resources/logos/report.svg" alt="***" class="tw-w-4 tw-h-5 md:tw-w-10 md:tw-h-10" />
     </h2>
-    <div class="content-ban-message">
-        <p>{message.text}</p>
+    <div class="tw-overflow-auto tw-py-2 tw-h-3/5 xl:tw-h-fit tw-h-max-96 tw-my-0 md:tw-my-3 lg:tw-p-5">
+        <p class="tw-text-sm md:tw-text-base">{message.text}</p>
     </div>
-    <div class="footer-ban-message">
+    <div class="tw-flex tw-justify-center">
         <button
             type="button"
-            class="nes-btn {nameButton === NAME_BUTTON ? 'is-primary' : 'is-error'}"
+            class="{nameButton === NAME_BUTTON ? 'light' : 'disabled'} tw-h-10"
             disabled={!(nameButton === NAME_BUTTON)}
             on:click|preventDefault={closeBanMessage}>{nameButton}</button
         >
     </div>
 </div>
-
-<style lang="scss">
-    div.main-ban-message {
-        display: flex;
-        flex-direction: column;
-        position: absolute;
-        top: 4%;
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
-        z-index: 850;
-
-        height: 70vh;
-        width: 60vw;
-        margin-left: auto;
-        margin-right: auto;
-        padding-bottom: 0;
-
-        pointer-events: auto;
-        background-color: #333333;
-        color: whitesmoke;
-
-        h2.title-ban-message {
-            flex: 1 1 auto;
-            max-height: 50px;
-            margin-bottom: 20px;
-
-            text-align: center;
-
-            img {
-                height: 50px;
-            }
-        }
-
-        div.content-ban-message {
-            flex: 1 1 auto;
-            max-height: calc(100% - 50px);
-            overflow: auto;
-
-            p {
-                white-space: pre-wrap;
-            }
-        }
-
-        div.footer-ban-message {
-            height: 50px;
-            margin-top: 10px;
-            text-align: center;
-
-            button {
-                width: 88px;
-                height: 44px;
-            }
-        }
-    }
-</style>

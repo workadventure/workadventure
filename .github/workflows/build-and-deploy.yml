@@ -17,24 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      # messages
-      - name: Install messages dependencies
-        run: yarn install
-        working-directory: messages
-
-      - name: Tag the API version
-        run: yarn run tag-version
-        working-directory: messages
-
-      - name: Build proto messages
-        run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
-        working-directory: messages
-
       # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -74,24 +56,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      # messages
-      - name: Install messages dependencies
-        run: yarn install
-        working-directory: messages
-
-      - name: Tag the API version
-        run: yarn run tag-version
-        working-directory: messages
-
-      - name: Build proto messages
-        run: yarn run proto && yarn run copy-to-back && yarn run json-copy-to-back
-        working-directory: messages
-
       # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -130,24 +94,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Setup NodeJS
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
-
-      # messages
-      - name: Install messages dependencies
-        run: yarn install
-        working-directory: messages
-
-      - name: Tag the API version
-        run: yarn run tag-version
-        working-directory: messages
-
-      - name: Build proto messages
-        run: yarn run proto && yarn run copy-to-pusher && yarn run json-copy-to-pusher
-        working-directory: messages
 
       # docker
       - name: Set up QEMU

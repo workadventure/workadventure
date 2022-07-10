@@ -42,7 +42,7 @@ import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
 import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
-import {isAddPlayerEvent, isRemotePlayerChangedEvent} from "./AddPlayerEvent";
+import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -67,6 +67,14 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("chat"),
         data: isChatEvent,
+    }),
+    z.object({
+        type: z.literal("openChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("closeChat"),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("cameraFollowPlayer"),

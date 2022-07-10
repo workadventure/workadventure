@@ -1,5 +1,10 @@
 import { PositionMessage_Direction } from "../Messages/ts-proto-generated/protos/messages";
 
+export interface MucRoomDefinitionInterface {
+    name: string;
+    url: string;
+}
+
 export class ProtobufClientUtils {
     public static toDirectionString(direction: PositionMessage_Direction): "up" | "down" | "left" | "right" {
         switch (direction) {

@@ -59,6 +59,12 @@ class IframeListener {
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
 
+    private readonly _openChatStream: Subject<void> = new Subject();
+    public readonly openChatStream = this._openChatStream.asObservable();
+
+    private readonly _closeChatStream: Subject<void> = new Subject();
+    public readonly closeChatStream = this._closeChatStream.asObservable();
+
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
@@ -261,6 +267,10 @@ class IframeListener {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
                         scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "openChat") {
+                        this._openChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "closeChat") {
+                        this._closeChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {

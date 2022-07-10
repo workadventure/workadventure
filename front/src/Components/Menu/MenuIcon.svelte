@@ -13,7 +13,7 @@
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    let miniLogo = gameManager.currentStartedRoom.miniLogo ?? logoWA;
+    let miniLogo = gameManager.currentStartedRoom?.miniLogo ?? logoWA;
 
     function showMenu() {
         menuVisiblilityStore.set(!get(menuVisiblilityStore));
@@ -96,6 +96,7 @@
             width: 60px;
             padding-top: 0;
             margin: 5%;
+            image-rendering: pixelated;
         }
     }
 
@@ -110,6 +111,7 @@
                 pointer-events: auto;
                 width: 60px;
                 padding-top: 0;
+                image-rendering: pixelated;
             }
         }
         .menuIcon img:hover {
@@ -121,6 +123,7 @@
         .menuIcon {
             img {
                 width: 50px;
+                image-rendering: pixelated;
             }
         }
     }

@@ -49,13 +49,13 @@ export class AreaManager {
                 throw new Error(`An area with the name "${createAreaEvent.name}" already exists in your map`);
             }
 
-            this.gameMap.setArea(createAreaEvent.name, {
+            this.gameMap.addArea({
                 ...createAreaEvent,
                 id: -1,
-                gid: -1,
                 visible: true,
                 rotation: 0,
                 type: "area",
+                class: "area",
                 ellipse: false,
                 polygon: [],
                 polyline: [],

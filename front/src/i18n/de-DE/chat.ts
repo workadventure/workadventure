@@ -7,6 +7,7 @@ const chat: NonNullable<Translation["chat"]> = {
         visitCard: "Visitenkarte",
         addFriend: "Freund*In hinzufügen",
     },
+    typing: "tippt...",
 };
 
 export default chat;
