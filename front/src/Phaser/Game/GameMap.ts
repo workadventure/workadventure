@@ -12,6 +12,7 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { PathTileType } from "../../Utils/PathfindingManager";
+import { areaChangeCallback, AreaType, GameMapAreas, ITiledMapRectangleObject } from "./GameMapAreas";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -24,22 +25,15 @@ export type layerChangeCallback = (
     allLayersOnNewPosition: Array<ITiledMapLayer>
 ) => void;
 
-export type areaChangeCallback = (
-    areasChangedByAction: Array<ITiledMapObject>,
-    allAreasOnNewPosition: Array<ITiledMapObject>
-) => void;
-
-export enum AreaType {
-    Static = "Static",
-    Dynamic = "Dynamic",
-}
-export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
-
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
  * It is used to handle layer properties.
  */
 export class GameMap {
+    /**
+     * Component responsible for holding gameMap Areas related logic
+     */
+    private gameMapAreas: GameMapAreas;
     /**
      * oldKey is the index of the previous tile.
      */
@@ -62,8 +56,6 @@ export class GameMap {
 
     private enterLayerCallbacks = Array<layerChangeCallback>();
     private leaveLayerCallbacks = Array<layerChangeCallback>();
-    private enterAreaCallbacks = Array<areaChangeCallback>();
-    private leaveAreaCallbacks = Array<areaChangeCallback>();
 
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
@@ -73,18 +65,6 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    /**
-     * Areas that we can do CRUD operations on via scripting API
-     */
-    private readonly dynamicAreas: ITiledMapRectangleObject[] = [];
-    /**
-     * Areas loaded from Tiled map file
-     */
-    private readonly staticAreas: ITiledMapRectangleObject[] = [];
-
-    private readonly areasPositionOffsetY: number = 16;
-    private readonly staticAreaNamePrefix = "STATIC_AREA_";
-    private unnamedStaticAreasCounter = 0;
     private readonly defaultTileSize = 32;
 
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
@@ -97,22 +77,8 @@ export class GameMap {
         this.map = upgradeMapToNewest(map);
         this.flatLayers = flattenGroupLayersMap(this.map);
         this.tiledObjects = GameMap.getObjectsFromLayers(this.flatLayers);
-        // NOTE: We leave "zone" for legacy reasons
-        this.tiledObjects
-            .filter((object) => ["zone", "area"].includes(object.class ?? ""))
-            .forEach((area) => {
-                let name = area.name;
-                if (!name) {
-                    name = `${this.staticAreaNamePrefix}${this.unnamedStaticAreasCounter}`;
-                    area.name = name;
-                    this.unnamedStaticAreasCounter++;
-                }
-                if (area.width === undefined || area.height === undefined) {
-                    console.warn(`Area name "${name}" must be a rectangle`);
-                    return;
-                }
-                this.staticAreas.push(area as ITiledMapRectangleObject);
-            });
+
+        this.gameMapAreas = new GameMapAreas(this);
 
         let depth = -2;
         for (const layer of this.flatLayers) {
@@ -228,7 +194,7 @@ export class GameMap {
         }
         this.oldPosition = this.position;
         this.position = { x, y };
-        const areasChanged = this.triggerAreasChange();
+        const areasChanged = this.gameMapAreas.triggerAreasChange(this.oldPosition, this.position);
         if (areasChanged) {
             this.triggerAllProperties();
         }
@@ -285,20 +251,6 @@ export class GameMap {
      */
     public onLeaveLayer(callback: layerChangeCallback) {
         this.leaveLayerCallbacks.push(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves inside another area.
-     */
-    public onEnterArea(callback: areaChangeCallback) {
-        this.enterAreaCallbacks.push(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves outside another area.
-     */
-    public onLeaveArea(callback: areaChangeCallback) {
-        this.leaveAreaCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -361,26 +313,6 @@ export class GameMap {
         this.setProperty(layer, propertyName, propertyValue);
         this.triggerAllProperties();
         this.triggerLayersChange();
-    }
-
-    public setAreaProperty(
-        areaName: string,
-        areaType: AreaType,
-        propertyName: string,
-        propertyValue: string | number | undefined | boolean
-    ) {
-        const area = this.getAreaByName(areaName, areaType);
-        if (area === undefined) {
-            console.warn('Could not find area "' + areaName + '" when calling setProperty');
-            return;
-        }
-        this.setProperty(area, propertyName, propertyValue);
-        this.triggerAllProperties();
-        this.triggerAreasChange();
-    }
-
-    public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
-        return areaType === AreaType.Dynamic ? this.dynamicAreas : this.staticAreas;
     }
 
     private setProperty(
@@ -469,115 +401,82 @@ export class GameMap {
         return this.tiledObjects.find((object) => object.name === name);
     }
 
-    public addArea(area: ITiledMapRectangleObject, type: AreaType): void {
-        this.getAreas(type).push(area);
+    /**
+     * Registers a callback called when the user moves inside another area.
+     */
+    public onEnterArea(callback: areaChangeCallback) {
+        this.gameMapAreas.onEnterArea(callback);
+    }
 
-        if (this.isPlayerInsideAreaByName(area.name, type)) {
-            this.triggerSpecificAreaOnEnter(area);
+    /**
+     * Registers a callback called when the user moves outside another area.
+     */
+    public onLeaveArea(callback: areaChangeCallback) {
+        this.gameMapAreas.onLeaveArea(callback);
+    }
+
+    public setAreaProperty(
+        areaName: string,
+        areaType: AreaType,
+        propertyName: string,
+        propertyValue: string | number | undefined | boolean
+    ) {
+        const area = this.getAreaByName(areaName, areaType);
+        if (area === undefined) {
+            console.warn('Could not find area "' + areaName + '" when calling setProperty');
+            return;
         }
+        this.setProperty(area, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.gameMapAreas.triggerAreasChange(this.oldPosition, this.position);
+    }
+
+    public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
+        return this.gameMapAreas.getAreas(areaType);
+    }
+
+    public addArea(area: ITiledMapRectangleObject, type: AreaType): void {
+        this.gameMapAreas.addArea(area, type, this.position);
     }
 
     public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
-        for (const callback of this.enterAreaCallbacks) {
-            callback([area], []);
-        }
+        this.gameMapAreas.triggerSpecificAreaOnEnter(area);
     }
 
     public triggerSpecificAreaOnLeave(area: ITiledMapRectangleObject): void {
-        for (const callback of this.leaveAreaCallbacks) {
-            callback([area], []);
-        }
+        this.gameMapAreas.triggerSpecificAreaOnLeave(area);
     }
 
     public getAreaByName(name: string, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.getAreas(type).find((area) => area.name === name);
+        return this.gameMapAreas.getAreaByName(name, type);
     }
 
     public getArea(id: number, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.getAreas(type).find((area) => area.id === id);
+        return this.gameMapAreas.getArea(id, type);
     }
 
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
-        const area = this.getAreaByName(name, type);
-        if (!area) {
-            return;
-        }
-        this.updateArea(area, config);
-
-        if (this.isPlayerInsideAreaByName(name, type)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
+        this.gameMapAreas.updateAreaByName(name, type, this.position, config);
     }
 
     public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
-        const area = this.getArea(id, type);
-        if (!area) {
-            return;
-        }
-        this.updateArea(area, config);
-
-        if (this.isPlayerInsideArea(id, type)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
-    }
-
-    private updateArea(area: ITiledMapRectangleObject, config: Partial<ITiledMapObject>): void {
-        if (config.x !== undefined) {
-            area.x = config.x;
-        }
-        if (config.y !== undefined) {
-            area.y = config.y;
-        }
-        if (config.width !== undefined) {
-            area.width = config.width;
-        }
-        if (config.height !== undefined) {
-            area.height = config.height;
-        }
+        this.gameMapAreas.updateAreaById(id, type, this.position, config);
     }
 
     public deleteAreaByName(name: string, type: AreaType): void {
-        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).find(
-            (area) => area.name === name
-        );
-        if (area) {
-            this.triggerSpecificAreaOnLeave(area);
-        }
-        const areas = this.getAreas(type);
-        const index = areas.findIndex((area) => area.name === name);
-        if (index !== -1) {
-            areas.splice(index, 1);
-        }
+        this.gameMapAreas.deleteAreaByName(name, type, this.position);
     }
 
     public deleteAreaById(id: number, type: AreaType): void {
-        const area = this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).find(
-            (area) => area.id === id
-        );
-        if (area) {
-            this.triggerSpecificAreaOnLeave(area);
-        }
-        const areas = this.getAreas(type);
-        const index = areas.findIndex((area) => area.id === id);
-        if (index !== -1) {
-            areas.splice(index, 1);
-        }
+        this.gameMapAreas.deleteAreaById(id, type, this.position);
     }
 
     public isPlayerInsideArea(id: number, type: AreaType): boolean {
-        return (
-            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
-                (area) => area.id === id
-            ) !== -1
-        );
+        return this.gameMapAreas.isPlayerInsideArea(id, type, this.position);
     }
 
     public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
-        return (
-            this.getAreasOnPosition(this.position, this.areasPositionOffsetY, type).findIndex(
-                (area) => area.name === name
-            ) !== -1
-        );
+        return this.gameMapAreas.isPlayerInsideAreaByName(name, type, this.position);
     }
 
     private getLayersByKey(key: number): Array<ITiledMapLayer> {
@@ -656,57 +555,8 @@ export class GameMap {
         }
     }
 
-    /**
-     * We use Tiled Objects with type "area" as areas with defined x, y, width and height for easier event triggering.
-     * @returns If there were any areas changes
-     */
-    private triggerAreasChange(): boolean {
-        const areasByOldPosition = this.getAreasOnPosition(this.oldPosition, this.areasPositionOffsetY);
-        const areasByNewPosition = this.getAreasOnPosition(this.position, this.areasPositionOffsetY);
-
-        const enterAreas = new Set(areasByNewPosition);
-        const leaveAreas = new Set(areasByOldPosition);
-
-        enterAreas.forEach((area) => {
-            if (leaveAreas.has(area)) {
-                leaveAreas.delete(area);
-                enterAreas.delete(area);
-            }
-        });
-
-        let areasChange = false;
-        if (enterAreas.size > 0) {
-            const areasArray = Array.from(enterAreas);
-
-            for (const callback of this.enterAreaCallbacks) {
-                callback(areasArray, areasByNewPosition);
-            }
-            areasChange = true;
-        }
-
-        if (leaveAreas.size > 0) {
-            const areasArray = Array.from(leaveAreas);
-            for (const callback of this.leaveAreaCallbacks) {
-                callback(areasArray, areasByNewPosition);
-            }
-            areasChange = true;
-        }
-        return areasChange;
-    }
-
     private getProperties(key: number): Map<string, string | boolean | number> {
-        const properties = new Map<string, string | boolean | number>();
-
-        for (const area of this.getAreasOnPosition(this.position, this.areasPositionOffsetY)) {
-            if (area.properties !== undefined) {
-                for (const property of area.properties) {
-                    if (property.value === undefined) {
-                        continue;
-                    }
-                    properties.set(property.name, property.value as string | number | boolean);
-                }
-            }
-        }
+        const properties = this.gameMapAreas.getProperties(this.position);
 
         for (const layer of this.flatLayers) {
             if (layer.type !== "tilelayer") {
@@ -744,27 +594,6 @@ export class GameMap {
         }
 
         return properties;
-    }
-
-    private getAreasOnPosition(
-        position?: { x: number; y: number },
-        offsetY: number = 0,
-        areaType?: AreaType
-    ): ITiledMapRectangleObject[] {
-        if (!position) {
-            return [];
-        }
-        const areasOfInterest = areaType
-            ? this.getAreas(areaType).values()
-            : [...this.staticAreas.values(), ...this.dynamicAreas.values()];
-
-        const overlappedAreas: ITiledMapRectangleObject[] = [];
-        for (const area of areasOfInterest) {
-            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
-                overlappedAreas.push(area);
-            }
-        }
-        return overlappedAreas;
     }
 
     private getTileProperty(index: number): Array<ITiledMapProperty> {

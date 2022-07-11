@@ -1,7 +1,7 @@
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { AreaType, ITiledMapRectangleObject } from "../../GameMap";
+import { AreaType, ITiledMapRectangleObject } from "../../GameMapAreas";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
