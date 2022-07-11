@@ -1,12 +1,7 @@
 <script lang="ts">
-    //import { fly } from "svelte/transition";
-    //import ChatMessageForm from "./ChatMessageForm.svelte";
     import { afterUpdate, beforeUpdate, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    //import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
-    //import ChatForum from "./ChatForum.svelte";
     import {connectionStore} from "../Stores/ConnectionStore";
-    //import LL from "../i18n/i18n-svelte";
     import Loader from "./Loader.svelte";
     import {mucRoomsStore, xmppServerConnectionStatusStore} from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
@@ -17,9 +12,10 @@
     import {locale} from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
-    //import {get} from "svelte/store";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
+    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeLine.svelte";
+    import Timeline from "./Timeline/Timeline.svelte";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -29,6 +25,7 @@
     let searchValue = '';
     let showUsers = true;
     let showLives = true;
+    let activeThreadTimeLine = false;
 
     /*
     let forums = [
@@ -54,9 +51,9 @@
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
 
-    onMount(() => {
+    onMount(async () => {
         if(!$locale){
-            localeDetector();
+            await localeDetector();
         }
         listDom.scrollTo(0, listDom.scrollHeight);
     });
@@ -71,8 +68,8 @@
         }
     }
 
-    function handleActiveThread(event: any){
-        activeThreadStore.set(event.detail);
+    function handleActiveThread(event: unknown){
+        activeThreadStore.set((event as {detail: MucRoom|undefined}).detail);
     }
     function handleShowUsers(){
         showUsers = !showUsers;
@@ -130,7 +127,11 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if $activeThreadStore}
+            {#if activeThreadTimeLine}
+                <ChatActiveThreadTimeLine 
+                        on:unactiveThreadTimeLine={() => activeThreadTimeLine = false}
+                />
+            {:else if $activeThreadStore}
                 <ChatActiveThread
                         messagesStore={$activeThreadStore.getMessagesStore()}
                         usersListStore={$activeThreadStore.getPresenceStore()}
@@ -155,9 +156,9 @@
                     </div>
                     <!-- chat users -->
                     <UsersList
+                            {showUsers}
                             usersListStore={defaultRoom().getPresenceStore()}
                             meStore={defaultRoom().getMeStore()}
-                            {showUsers}
                             searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showUsers={handleShowUsers}
@@ -173,6 +174,10 @@
                             on:activeThread={handleActiveThread}
                             on:showLives={handleShowLives}
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
+                    />
+
+                    <Timeline 
+                            on:activeThreadTimeLine={() => activeThreadTimeLine = true}
                     />
 
                     <!-- forum list
@@ -226,7 +231,6 @@
         left: 0;
         min-height: 100vh;
         width: 100%;
-        min-width: 350px;
         background: rgba(#1b1b29, 0.9);
         color: whitesmoke;
         display: flex;

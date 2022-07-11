@@ -76,7 +76,7 @@ export class XmppClient {
             });
 
             xmpp.on("error", (err: string) => {
-                console.error("XmppClient => receive => error");
+                console.error("XmppClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 rej(err);
             });

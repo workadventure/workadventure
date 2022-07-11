@@ -112,6 +112,38 @@ type RootTranslation = {
 	 * test
 	 */
 	CONNECTING: string
+	timeLine: {
+		/**
+		 * Your Timeline
+		 */
+		title: string
+		/**
+		 * Open your time line history!
+		 */
+		open: string
+		/**
+		 * WorkAdventure Timeline
+		 */
+		description: string
+		/**
+		 *  try to meet with you, are you here?
+		 */
+		incoming: string
+		/**
+		 *  quit the metting!
+		 */
+		outcoming: string
+	}
+	form: {
+		/**
+		 * Enter your message...
+		 */
+		placeholder: string
+		/**
+		 *  typing...
+		 */
+		typing: string
+	}
 }
 
 export type TranslationFunctions = {
@@ -211,6 +243,38 @@ export type TranslationFunctions = {
 	 * test
 	 */
 	CONNECTING: () => LocalizedString
+	timeLine: {
+		/**
+		 * Your Timeline
+		 */
+		title: () => LocalizedString
+		/**
+		 * Open your time line history!
+		 */
+		open: () => LocalizedString
+		/**
+		 * WorkAdventure Timeline
+		 */
+		description: () => LocalizedString
+		/**
+		 *  try to meet with you, are you here?
+		 */
+		incoming: () => LocalizedString
+		/**
+		 *  quit the metting!
+		 */
+		outcoming: () => LocalizedString
+	}
+	form: {
+		/**
+		 * Enter your message...
+		 */
+		placeholder: () => LocalizedString
+		/**
+		 *  typing...
+		 */
+		typing: () => LocalizedString
+	}
 }
 
 export type Formatters = {}

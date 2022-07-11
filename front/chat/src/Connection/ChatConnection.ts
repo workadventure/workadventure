@@ -7,7 +7,7 @@ import {
     PusherToIframeMessage,
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
-    IframeToPusherMessage, MucRoomDefinitionMessage
+    IframeToPusherMessage
 } from "../Messages/ts-proto-generated/protos/messages";
 import {XmppClient} from "../Xmpp/XmppClient";
 import {Parser} from "@xmpp/xml";
@@ -116,13 +116,13 @@ export class ChatConnection implements ChatConnection {
                     }
                     default: {
                         // Security check: if we forget a "case", the line below will catch the error at compile-time.
-                        const _exhaustiveCheck: any = message;
+                        const _exhaustiveCheck = message;
                     }
                 }
             }
-        } catch (e){
-            console.log('Error');
-            throw new Error('Error');
+        } catch (err){
+            console.log('Error', err);
+            throw err;
         }
     }
 

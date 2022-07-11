@@ -76,6 +76,15 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("closeChat"),
         data: z.undefined(),
     }),
+    /* @deprecated with new service chat messagerie */
+    z.object({
+        type: z.literal("addPersonnalMessage"),
+        data: z.string(),
+    }),
+    z.object({
+        type: z.literal("newChatMessageWritingStatus"),
+        data: z.number(),
+    }),
     z.object({
         type: z.literal("cameraFollowPlayer"),
         data: isCameraFollowPlayerEvent,

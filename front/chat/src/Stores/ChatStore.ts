@@ -1,17 +1,23 @@
 import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
-
-export const chatInputFocusStore = writable(false);
+import { localUserStore } from "./LocalUserStore";
+import { UserData } from "../Messages/JsonMessages/ChatData";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
+
+export const _newChatMessageWritingStatusSubject = new Subject<number>();
+export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
 
 export enum ChatMessageTypes {
     text = 1,
     me,
     userIncoming,
     userOutcoming,
+    userWriting,
+    userStopWriting,
 }
 
 export interface ChatMessage {
@@ -22,14 +28,33 @@ export interface ChatMessage {
     text?: string[];
 }
 
-const players = new Map<number, PlayerInterface>();
+export const playersStore = new Map<number, PlayerInterface>();
 
-function getAuthor(authorId: number): PlayerInterface {
-    const author = players.get(authorId);
+ function getAuthor(authorId: number): PlayerInterface {
+    const author = playersStore.get(authorId);
     if (!author) {
         throw new Error("Could not find data for author " + authorId);
     }
     return author;
+}
+
+function getMeOrCreate(){
+    let me = playersStore.get(0);
+    if(!me){
+        const userData = localUserStore.getUserData() as UserData;
+        me = {
+            userId: -2,
+            userUuid: userData.uuid,
+            name: userData.name,
+            characterLayers: [],
+            availabilityStatus: AvailabilityStatus.ONLINE,
+            color: userData.color,
+            visitCardUrl: null,
+            companion: null
+        } as PlayerInterface
+        playersStore.set(-2, me);
+    }
+    return me;
 }
 
 function createChatMessagesStore() {
@@ -46,7 +71,7 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.userIncoming,
                         targets: [getAuthor(authorId)],
-                        date: new Date(),
+                        date: new Date()
                     });
                 }
                 return list;
@@ -61,16 +86,13 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.userOutcoming,
                         targets: [getAuthor(authorId)],
-                        date: new Date(),
+                        date: new Date()
                     });
                 }
                 return list;
             });
         },
         addPersonnalMessage(text: string) {
-            //TODO use message API to send message in iframe
-            //iframeListener.sendUserInputChat(text);
-
             _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
@@ -80,7 +102,8 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.me,
                         text: [text],
-                        date: new Date(),
+                        author: getMeOrCreate(),
+                        date: new Date()
                     });
                 }
 
@@ -101,16 +124,14 @@ function createChatMessagesStore() {
                 ) {
                     lastMessage.text.push(text);
                 } else {
+                    const author = getAuthor(authorId);
                     list.push({
                         type: ChatMessageTypes.text,
                         text: [text],
-                        author: getAuthor(authorId),
-                        date: new Date(),
+                        author,
+                        date: new Date()
                     });
                 }
-
-                //TODO use message API to send user input chat message
-                //iframeListener.sendUserInputChat(text, origin);
                 return list;
             });
         },
@@ -131,5 +152,11 @@ function createChatSubMenuVisibilityStore() {
         },
     };
 }
-
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
+export const timeLineOpenedStore = writable<boolean>(false);
+
+export const writingStatusMessageStore = writable<Set<PlayerInterface>>(new Set<PlayerInterface>())
+
+export const chatInputFocusStore = writable(false);
+
+export const chatPeerConexionInprogress = writable<boolean>(false);

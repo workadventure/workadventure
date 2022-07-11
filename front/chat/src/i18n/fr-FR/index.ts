@@ -28,7 +28,18 @@ const fr_FR: Translation = {
     rankUp: "Promouvoir",
     rankDown: "Rétrograder",
     reinit: "Ré initialiser",
-    CONNECTING: "test"
+    CONNECTING: "test",
+    timeLine: {
+        title: 'Votre historique',
+        open: 'Ouvrir votre historique de converçation !',
+        description: 'Historique de vos converçations sur WorkAdventure!',
+        incoming: ' essait de vous contacter. Êtes vous disponible ?',
+        outcoming: ' a quitté le metting !'
+    },
+    form: {
+        placeholder: 'Écrire votre message...',
+        typing: ' écrit...'
+    }
 };
 
 export default fr_FR;

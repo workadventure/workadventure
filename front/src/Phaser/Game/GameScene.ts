@@ -106,7 +106,11 @@ import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
+import {
+    chatVisibilityStore,
+    _newChatMessageSubject,
+    _newChatMessageWritingStatusSubject,
+} from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -1166,6 +1170,19 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.closeChatStream.subscribe(() => {
                 chatVisibilityStore.set(false);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.addPersonnalMessageStream.subscribe((text) => {
+                iframeListener.sendUserInputChat(text);
+                _newChatMessageSubject.next(text);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
+                _newChatMessageWritingStatusSubject.next(status);
             })
         );
 

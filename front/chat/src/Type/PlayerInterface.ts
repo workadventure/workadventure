@@ -11,4 +11,5 @@ export interface PlayerInterface {
     availabilityStatus: AvailabilityStatus;
     color?: string;
     outlineColor?: number;
+    woka?: string;
 }

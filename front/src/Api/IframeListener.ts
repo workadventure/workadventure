@@ -66,6 +66,12 @@ class IframeListener {
     private readonly _closeChatStream: Subject<void> = new Subject();
     public readonly closeChatStream = this._closeChatStream.asObservable();
 
+    private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
+    public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
+
+    private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
+    public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
+
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
@@ -145,7 +151,7 @@ class IframeListener {
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
-    private chatIframe: HTMLIFrameElement|null = null;
+    private chatIframe: HTMLIFrameElement | null = null;
 
     private sendPlayerMove: boolean = false;
 
@@ -278,6 +284,10 @@ class IframeListener {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
                         this._closeChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "addPersonnalMessage") {
+                        this._addPersonnalMessageStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "newChatMessageWritingStatus") {
+                        this._newChatMessageWritingStatusStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -575,29 +585,47 @@ class IframeListener {
 
     //TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
-        if(!this.chatIframe) {
-            this.chatIframe = (document.getElementById('chatWorkAdventure') as HTMLIFrameElement | null);
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
-        console.log('sendWritingStatusToChatIframe => this.chatIframe', this.chatIframe);
         const message = {
-            type: 'updateWritingStatusChatList',
-            data: list
+            type: "updateWritingStatusChatList",
+            data: list,
         };
         //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, '*');
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
     }
 
-    sendMessageListToChatIframe(list: ChatMessage[]) {
-        if(!this.chatIframe) {
-            this.chatIframe = (document.getElementById('chatWorkAdventure') as HTMLIFrameElement | null);
+    sendMessageToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
-        console.log('sendMessageListToChatIframe => this.chatIframe', this.chatIframe);
         const message = {
-            type: 'updateMessagesChatList',
-            data: list
+            type: "addChatMessage",
+            data: chatMessage,
         };
         //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, '*');
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+
+    sendComingUserToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "comingUser",
+            data: chatMessage,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+    sendPeerConnexionStatusToChatIframe(status: boolean) {
+        const message = {
+            type: "peerConexionStatus",
+            data: status,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
     }
 
     /**

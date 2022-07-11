@@ -28,7 +28,18 @@ const en_US: BaseTranslation = {
     rankUp: "Promote",
     rankDown: "Retrograde",
     reinit: "Re initialize",
-    CONNECTING: "test"
+    CONNECTING: "test",
+    timeLine: {
+        title: 'Your Timeline',
+        open: 'Open your time line history!',
+        description: 'WorkAdventure Timeline',
+        incoming: ' try to meet with you, are you here?',
+        outcoming: ' quit the metting!'
+    },
+    form: {
+        placeholder: 'Enter your message...',
+        typing: ' typing...'
+    }
 };
 
 export default en_US;
