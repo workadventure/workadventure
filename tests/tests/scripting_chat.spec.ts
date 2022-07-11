@@ -1,7 +1,7 @@
 import {expect, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
-import {inViewport, isIntersectingViewport, outViewport} from "./utils/viewport";
+import {inViewport, outViewport} from "./utils/viewport";
 
 test.describe('Scripting chat functions', () => {
     test('can open / close chat', async ({ page}) => {

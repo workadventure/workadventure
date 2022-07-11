@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
-import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
+import { test } from '@playwright/test';
+import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.describe('Module', () => {
@@ -12,6 +12,5 @@ test.describe('Module', () => {
     await login(page, 'Alice', 2);
 
     await assertLogMessage(page, 'Successfully loaded module: foo =  bar');
-    abortRecordLogs(page);
   });
 });
