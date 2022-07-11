@@ -20,7 +20,6 @@ import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
-import type { HasPlayerMovedInterface } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
@@ -39,6 +38,7 @@ import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],

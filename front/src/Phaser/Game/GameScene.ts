@@ -60,7 +60,6 @@ import type { ActionableItem } from "../Items/ActionableItem";
 import type { ItemFactoryInterface } from "../Items/ItemFactoryInterface";
 import type { AddPlayerInterface } from "./AddPlayerInterface";
 import { CameraManager, CameraManagerEvent, CameraManagerEventCameraUpdateData } from "./CameraManager";
-import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedEvent";
 
 import { peerStore } from "../../Stores/PeerStore";
 import { biggestAvailableAreaStore } from "../../Stores/BiggestAvailableAreaStore";
@@ -119,6 +118,7 @@ import {
     ITiledMapProperty,
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
+import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
