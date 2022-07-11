@@ -1,6 +1,6 @@
 import { AddPlayerEvent } from "../../Events/AddPlayerEvent";
-import { PositionInterface } from "../../../Connexion/ConnexionModels";
 import { Observable, Subject } from "rxjs";
+import { PlayerPosition } from "../../Events/PlayerPosition";
 
 export const remotePlayers = new Map<number, RemotePlayer>();
 
@@ -10,11 +10,11 @@ export interface RemotePlayerInterface {
     readonly uuid: string;
     /*get availabilityStatus();*/
     readonly outlineColor: number | undefined;
-    readonly position: PositionInterface;
+    readonly position: PlayerPosition;
     /**
      * A stream updated with the position of this current player.
      */
-    readonly position$: Observable<PositionInterface>;
+    readonly position$: Observable<PlayerPosition>;
     readonly state: ReadOnlyState;
 }
 
@@ -28,7 +28,7 @@ export class RemotePlayer implements RemotePlayerInterface {
     private _userUuid: string;
     private _availabilityStatus: string;
     private _outlineColor: number | undefined;
-    private _position: PositionInterface;
+    private _position: PlayerPosition;
     private _variables: Map<string, unknown>;
     private _variablesSubjects = new Map<string, Subject<unknown>>();
     public readonly state: ReadOnlyState;
@@ -91,16 +91,16 @@ export class RemotePlayer implements RemotePlayerInterface {
         return this._outlineColor;
     }
 
-    get position(): PositionInterface {
+    get position(): PlayerPosition {
         return this._position;
     }
 
-    set position(_position: PositionInterface) {
+    set position(_position: PlayerPosition) {
         this._position = _position;
         this._position$.next(_position);
     }
 
-    public readonly _position$ = new Subject<PositionInterface>();
+    public readonly _position$ = new Subject<PlayerPosition>();
     public readonly position$ = this._position$.asObservable();
 
     public destroy() {
@@ -118,6 +118,6 @@ export class RemotePlayer implements RemotePlayerInterface {
 
 export interface RemotePlayerMoved {
     player: RemotePlayerInterface;
-    newPosition: PositionInterface;
-    oldPosition: PositionInterface;
+    newPosition: PlayerPosition;
+    oldPosition: PlayerPosition;
 }
