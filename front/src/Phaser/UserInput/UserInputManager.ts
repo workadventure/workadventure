@@ -3,6 +3,8 @@ import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { Direction } from "phaser3-rex-plugins/plugins/virtualjoystick.js";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { get } from "svelte/store";
 
 interface UserInputManagerDatum {
     keyInstance: Phaser.Input.Keyboard.Key;
@@ -270,10 +272,15 @@ export class UserInputManager {
         this.scene.input.on(
             Phaser.Input.Events.POINTER_DOWN,
             (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
-                if (!pointer.wasTouch || this.isInputDisabled) {
+                if (this.isInputDisabled) {
                     return;
                 }
                 this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
+
+                if (!pointer.wasTouch || get(mapEditorModeStore)) {
+                    return;
+                }
+
                 // Let's only display the joystick if there is one finger on the screen
                 if ((pointer.event as TouchEvent).touches.length === 1) {
                     this.joystick?.showAt(pointer.x, pointer.y);
@@ -283,11 +290,25 @@ export class UserInputManager {
             }
         );
 
-        this.scene.input.keyboard.on("keyup-SPACE", (event: Event) => {
+        this.scene.input.on(
+            Phaser.Input.Events.POINTER_MOVE,
+            (pointer: Phaser.Input.Pointer, gameObjects: Phaser.GameObjects.GameObject[]) => {
+                this.userInputHandler.handlePointerMoveEvent(pointer, gameObjects);
+            }
+        );
+
+        this.scene.input.keyboard.on("keyup", (event: KeyboardEvent) => {
             if (this.isInputDisabled) {
                 return;
             }
-            this.userInputHandler.handleSpaceKeyUpEvent(event);
+            this.userInputHandler.handleKeyUpEvent(event);
+        });
+
+        this.scene.input.keyboard.on("keydown", (event: KeyboardEvent) => {
+            if (this.isInputDisabled) {
+                return;
+            }
+            this.userInputHandler.handleKeyDownEvent(event);
         });
     }
 }
