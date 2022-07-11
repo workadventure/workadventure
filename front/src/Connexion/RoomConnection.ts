@@ -48,6 +48,7 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
+    EditMapMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject, BehaviorSubject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -58,6 +59,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
+import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -168,6 +170,9 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
+
+    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
+    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
@@ -355,6 +360,11 @@ export class RoomConnection implements RoomConnection {
                                 }
 
                                 this._variableMessageStream.next({ name, value });
+                                break;
+                            }
+                            case "editMapMessage": {
+                                const message = subMessage.editMapMessage;
+                                this._editMapMessageStream.next(message);
                                 break;
                             }
                             case "xmppMessage": {
@@ -990,6 +1000,26 @@ export class RoomConnection implements RoomConnection {
                 $case: "lockGroupPromptMessage",
                 lockGroupPromptMessage: {
                     lock,
+                },
+            },
+        });
+    }
+
+    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
+        this.send({
+            message: {
+                $case: "editMapMessage",
+                editMapMessage: {
+                    message: {
+                        $case: "modifyAreaMessage",
+                        modifyAreaMessage: {
+                            id: config.id,
+                            x: config.x,
+                            y: config.y,
+                            width: config.width,
+                            height: config.height,
+                        },
+                    },
                 },
             },
         });
