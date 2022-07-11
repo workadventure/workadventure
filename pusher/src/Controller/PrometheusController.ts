@@ -13,7 +13,7 @@ export class PrometheusController extends BaseHttpController {
         });
     }
 
-    routes() {
+    routes(): void {
         this.app.get("/metrics", this.metrics.bind(this));
     }
 

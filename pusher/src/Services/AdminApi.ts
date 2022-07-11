@@ -16,7 +16,6 @@ export interface AdminBannedData {
 }
 
 export const isFetchMemberDataByUuidResponse = z.object({
-    // @ts-ignore
     email: extendApi(z.string(), {
         description: "The email of the fetched user, it can be an email, an uuid or undefined.",
         example: "example@workadventu.re",
@@ -292,7 +291,7 @@ class AdminApi implements AdminInterface {
         reporterUserUuid: string,
         roomUrl: string,
         locale?: string
-    ) {
+    ): Promise<unknown> {
         /**
          * @openapi
          * /api/report:

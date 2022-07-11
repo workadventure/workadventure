@@ -4,7 +4,7 @@ import { OPID_CLIENT_ISSUER } from "../Enum/EnvironmentVariable";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class OpenIdProfileController extends BaseHttpController {
-    routes() {
+    routes(): void {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile", async (req, res) => {
             const { accessToken } = parse(req.path_query);
@@ -31,7 +31,7 @@ export class OpenIdProfileController extends BaseHttpController {
         });
     }
 
-    buildHtml(domain: string, email: string, pictureUrl?: string) {
+    buildHtml(domain: string, email: string, pictureUrl?: string): string {
         return `
                 <!DOCTYPE>
                 <html>
