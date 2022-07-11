@@ -14,10 +14,8 @@ import {
     ServerToClientMessage,
     SetPlayerDetailsMessage,
     SubMessage,
-    VariableMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
-import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -26,7 +24,7 @@ export class User implements Movable {
     public group?: Group;
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
-    private variables = new Map<string, string>();
+    public readonly variables = new Map<string, string>();
 
     public constructor(
         public id: number,
@@ -146,19 +144,18 @@ export class User implements Movable {
         this.voiceIndicatorShown = details.getShowvoiceindicator()?.getValue();
 
         const availabilityStatus = details.getAvailabilitystatus();
-        let sendStatusUpdate = false;
         if (availabilityStatus && availabilityStatus !== this.availabilityStatus) {
             this.availabilityStatus = availabilityStatus;
-            sendStatusUpdate = true;
         }
 
-        if (details.hasSetvariable()) {
-            console.log("updateDetails back")
-            const setVariable = details.getSetvariable() as VariableMessage;
+        const setVariable = details.getSetvariable();
+        if (setVariable) {
+            console.log(
+                "Variable '" + setVariable.getName() + "' for user '" + this.name + "' updated. New value: '",
+                setVariable.getValue() + "'"
+            );
             this.variables.set(setVariable.getName(), setVariable.getValue());
         }
-
-       
 
         /*const playerDetails = new SetPlayerDetailsMessage();
 
@@ -176,6 +173,4 @@ export class User implements Movable {
         }*/
         this.positionNotifier.updatePlayerDetails(this, details);
     }
-
-
 }

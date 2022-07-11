@@ -1,5 +1,5 @@
 import { z } from "zod";
-import {PositionMessage} from "../../Messages/ts-proto-generated/protos/messages";
+import { PositionMessage } from "../../Messages/ts-proto-generated/protos/messages";
 
 export const isHasPlayerMovedEvent = z.object({
     direction: z.enum(["right", "left", "up", "down"]),
@@ -11,8 +11,8 @@ export const isHasPlayerMovedEvent = z.object({
 });
 
 export interface HasPlayerMovedInterface extends PositionMessage {
-    oldX?: number,
-    oldY?: number,
+    oldX?: number;
+    oldY?: number;
 }
 
 /**

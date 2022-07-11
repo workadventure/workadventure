@@ -421,11 +421,6 @@
   resolved "https://registry.yarnpkg.com/@types/object-hash/-/object-hash-1.3.4.tgz#079ba142be65833293673254831b5e3e847fe58b"
   integrity sha512-xFdpkAkikBgqBdG9vIlsqffDV8GpvnPEzs0IUtr1v3BEB97ijsFQ4RXVbUZwjFThhB4MDSTUfvmxUD5PGx0wXA==
 
-"@types/prettier@^1.19.0":
-  version "1.19.1"
-  resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-1.19.1.tgz#33509849f8e679e4add158959fdb086440e9553f"
-  integrity sha512-5qOlnZscTn4xxM5MeGXAMOsIOIKIbh9e85zJWfBRVPlRMEVawzoPhINYbRGkBZCI8LxvBe7tJCdWiarA99OZfQ==
-
 "@types/pug@^2.0.4":
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/@types/pug/-/pug-2.0.4.tgz#8772fcd0418e3cd2cc171555d73007415051f4b2"
@@ -2823,22 +2818,22 @@ prettier-plugin-svelte@^2.7.0:
   resolved "https://registry.yarnpkg.com/prettier-plugin-svelte/-/prettier-plugin-svelte-2.7.0.tgz#ecfa4fe824238a4466a3497df1a96d15cf43cabb"
   integrity sha512-fQhhZICprZot2IqEyoiUYLTRdumULGRvw0o4dzl5jt0jfzVWdGqeYW27QTWAeXhoupEZJULmNoH3ueJwUWFLIA==
 
-prettier@^2.0.2:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.1.tgz#fff75fa9d519c54cf0fce328c1017d94546bc56a"
-  integrity sha512-vBZcPRUR5MZJwoyi3ZoyQlc1rXeEck8KgeC9AwwOn+exuxLxq5toTRDTSaVrXHxelDMHy9zlicw8u66yxoSUFg==
-
 prettier@^2.3.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.3.1.tgz#76903c3f8c4449bc9ac597acefa24dc5ad4cbea6"
   integrity sha512-p+vNbgpLjif/+D+DwAZAbndtRrR0md0MwfmOVN9N+2RgyACMT+7tfaRnT+WDPkqnuVwleyuBIG2XBxKDme3hPA==
+
+prettier@^2.5.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.7.1.tgz#e235806850d057f97bb08368a4f7d899f7760c64"
+  integrity sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==
 
 process@^0.11.1:
   version "0.11.10"
   resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
   integrity sha1-czIwDoQBYb2j5podHZGn1LwW8YI=
 
-protobufjs@^6.8.8:
+protobufjs@^6.11.3, protobufjs@^6.8.8:
   version "6.11.3"
   resolved "https://registry.yarnpkg.com/protobufjs/-/protobufjs-6.11.3.tgz#637a527205a35caa4f3e2a9a4a13ddffe0e7af74"
   integrity sha512-xL96WDdCZYdU7Slin569tFX712BxsxslWwAfAhCYjQKGTq7dAU91Lomy6nLLhh/dyGhk/YH4TwTSRxTzhuHyZg==
@@ -3514,34 +3509,33 @@ ts-node@^10.8.0:
     v8-compile-cache-lib "^3.0.1"
     yn "3.1.1"
 
-ts-poet@^4.5.0:
-  version "4.6.1"
-  resolved "https://registry.yarnpkg.com/ts-poet/-/ts-poet-4.6.1.tgz#015dc823d726655af9f095c900f84ed7c60e2dd3"
-  integrity sha512-DXJ+mBJIDp+jiaUgB4N5I/sczHHDU2FWacdbDNVAVS4Mh4hb7ckpvUWVW7m7/nAOcjR0r4Wt+7AoO7FeJKExfA==
+ts-poet@^4.15.0:
+  version "4.15.0"
+  resolved "https://registry.yarnpkg.com/ts-poet/-/ts-poet-4.15.0.tgz#637145fa554d3b27c56541578df0ce08cd9eb328"
+  integrity sha512-sLLR8yQBvHzi9d4R1F4pd+AzQxBfzOSSjfxiJxQhkUoH5bL7RsAC6wgvtVUQdGqiCsyS9rT6/8X2FI7ipdir5g==
   dependencies:
-    "@types/prettier" "^1.19.0"
     lodash "^4.17.15"
-    prettier "^2.0.2"
+    prettier "^2.5.1"
 
-ts-proto-descriptors@^1.2.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/ts-proto-descriptors/-/ts-proto-descriptors-1.3.1.tgz#760ebaaa19475b03662f7b358ffea45b9c5348f5"
-  integrity sha512-Cybb3fqceMwA6JzHdC32dIo8eVGVmXrM6TWhdk1XQVVHT/6OQqk0ioyX1dIdu3rCIBhRmWUhUE4HsyK+olmgMw==
+ts-proto-descriptors@1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/ts-proto-descriptors/-/ts-proto-descriptors-1.7.1.tgz#685d00305b06adfa929fd5a016a419382cd64c50"
+  integrity sha512-oIKUh3K4Xts4v29USGLfUG+2mEk32MsqpgZAOUyUlkrcIdv34yE+k2oZ2Nzngm6cV/JgFdOxRCqeyvmWHuYAyw==
   dependencies:
     long "^4.0.0"
     protobufjs "^6.8.8"
 
-ts-proto@^1.96.0:
-  version "1.96.0"
-  resolved "https://registry.yarnpkg.com/ts-proto/-/ts-proto-1.96.0.tgz#63768d7da533b337aee84db065dd66773bd4cac9"
-  integrity sha512-fKwaGzi8EOCU9xwmcXK917jj1WhFdLbFkPRawQ+5CAZM9eSXr/mpkz/yEctXCiuei364z6jAB2Odb64KCDFTPQ==
+ts-proto@^1.117.0:
+  version "1.117.0"
+  resolved "https://registry.yarnpkg.com/ts-proto/-/ts-proto-1.117.0.tgz#9186c36b7d71153fd65dc8f18c28defe54be65d7"
+  integrity sha512-htGXhOsq1oZ7T13YeNjpm4xYxniTk+tsdEX2/KQVg+2ycTjMw1POk7gI4B2agp1ABxv+Qwe5/QuLIf8fQQ72dw==
   dependencies:
     "@types/object-hash" "^1.3.0"
     dataloader "^1.4.0"
     object-hash "^1.3.1"
-    protobufjs "^6.8.8"
-    ts-poet "^4.5.0"
-    ts-proto-descriptors "^1.2.1"
+    protobufjs "^6.11.3"
+    ts-poet "^4.15.0"
+    ts-proto-descriptors "1.7.1"
 
 tsconfig-paths@^3.14.1:
   version "3.14.1"

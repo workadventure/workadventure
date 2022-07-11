@@ -109,15 +109,6 @@ import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/Emb
 import { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { PlayerDetailsUpdate, RemotePlayersRepository } from "./RemotePlayersRepository";
-import EVENT_TYPE = Phaser.Scenes.Events;
-import Texture = Phaser.Textures.Texture;
-import Sprite = Phaser.GameObjects.Sprite;
-import CanvasTexture = Phaser.Textures.CanvasTexture;
-import GameObject = Phaser.GameObjects.GameObject;
-import DOMElement = Phaser.GameObjects.DOMElement;
-import Tileset = Phaser.Tilemaps.Tileset;
-import SpriteSheetFile = Phaser.Loader.FileTypes.SpriteSheetFile;
-import FILE_LOAD_ERROR = Phaser.Loader.Events.FILE_LOAD_ERROR;
 
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";

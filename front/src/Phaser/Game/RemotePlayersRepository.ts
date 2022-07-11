@@ -39,7 +39,6 @@ export class RemotePlayersRepository {
         const player = {
             ...userJoinedMessage,
             showVoiceIndicator: false,
-            variables: new Map<string, unknown>(),
         };
         this.remotePlayersData.set(userJoinedMessage.userId, player);
         this.addedPlayers.set(userJoinedMessage.userId, player);

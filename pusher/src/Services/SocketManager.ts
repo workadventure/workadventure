@@ -357,7 +357,6 @@ export class SocketManager implements ZoneEventListener {
 
     // Useless now, will be useful again if we allow editing details in game
     handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
-        console.log("handleSetPlayerDetails pusher");
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setSetplayerdetailsmessage(playerDetailsMessage);
 

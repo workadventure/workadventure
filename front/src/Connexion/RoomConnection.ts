@@ -734,6 +734,12 @@ export class RoomConnection implements RoomConnection {
 
         const companion = message.companion;
 
+        const variables = new Map<string, unknown>();
+        //console.warn('VARIABLES FOR USER: ', message.variables);
+        for (const variable of Object.entries(message.variables)) {
+            variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
+        }
+
         return {
             userId: message.userId,
             name: message.name,
@@ -744,7 +750,7 @@ export class RoomConnection implements RoomConnection {
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
-            variables: new Map(Object.entries(message.variables)),
+            variables: variables,
         };
     }
 
@@ -792,11 +798,16 @@ export class RoomConnection implements RoomConnection {
 
     public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener("close", (event) => {
+            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() serveral times).
+            // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
+
             // Cleanup queries:
             const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
             for (const query of this.queries.values()) {
                 query.reject(error);
             }
+
+            this.completeStreams();
 
             if (this.closed === true || connectionManager.unloading) {
                 return;
@@ -808,6 +819,38 @@ export class RoomConnection implements RoomConnection {
             }
             callback();
         });
+    }
+
+    /**
+     * Sends a message to all observers: we are not going to send anything anymore on streams.
+     */
+    private completeStreams(): void {
+        this._errorMessageStream.complete();
+        this._errorScreenMessageStream.complete();
+        this._roomJoinedMessageStream.complete();
+        this._webRtcStartMessageStream.complete();
+        this._webRtcSignalToClientMessageStream.complete();
+        this._webRtcScreenSharingSignalToClientMessageStream.complete();
+        this._webRtcDisconnectMessageStream.complete();
+        this._teleportMessageMessageStream.complete();
+        this._worldFullMessageStream.complete();
+        this._worldConnexionMessageStream.complete();
+        this._tokenExpiredMessageStream.complete();
+        this._userMovedMessageStream.complete();
+        this._groupUpdateMessageStream.complete();
+        this._groupUsersUpdateMessageStream.complete();
+        this._groupDeleteMessageStream.complete();
+        this._userJoinedMessageStream.complete();
+        this._userLeftMessageStream.complete();
+        this._itemEventMessageStream.complete();
+        this._emoteEventMessageStream.complete();
+        this._variableMessageStream.complete();
+        this._playerDetailsUpdatedMessageStream.complete();
+        this._xmppMessageStream.complete();
+        this._xmppSettingsMessageStream.complete();
+        this._xmppConnectionStatusChangeMessageStream.complete();
+        this._connectionErrorStream.complete();
+        this._moveToPositionMessageStream.complete();
     }
 
     public getUserId(): number {
@@ -1078,7 +1121,7 @@ export class RoomConnection implements RoomConnection {
     }
 
     public emitPlayerSetVariable(name: string, value: unknown): void {
-        console.log("emitPlayerSetVariable");
+        //console.log("emitPlayerSetVariable", name, value);
         this.send({
             message: {
                 $case: "setPlayerDetailsMessage",
@@ -1103,9 +1146,8 @@ export class RoomConnection implements RoomConnection {
                 value = JSON.parse(serializedValue);
             } catch (e) {
                 console.error(
-                    'Unable to unserialize value received from server for variable "' +
-                        name +
-                        '". Value received: "' +
+                    "Unable to unserialize value received from server for a variable. " +
+                        'Value received: "' +
                         serializedValue +
                         '". Error: ',
                     e

@@ -2,6 +2,7 @@ import { expect, test, chromium } from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
+import {evaluateScript} from "./utils/scripting";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page }) => {
@@ -56,8 +57,38 @@ test.describe('API WA.players', () => {
   });
 
   test('Test that player B arriving after player A set his variables can read the variable.', async ({ page }) => {
-    // TODO.
-    // Need merge develop first
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.player.sharedState.myvar = 12;
+      return;
+    });
+
+    const browser = await chromium.launch();
+    const page2 = await browser.newPage();
+
+    await page2.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page2, 'Bob');
+
+    const myvar = await evaluateScript(page2, async () => {
+      await WA.onInit();
+      await WA.players.enableTracking();
+
+      for (const player of WA.players.list()) {
+        return player.state.myvar;
+      }
+    });
+
+    expect(myvar).toBe(12);
   });
 
 });

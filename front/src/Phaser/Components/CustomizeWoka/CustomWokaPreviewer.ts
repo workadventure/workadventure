@@ -1,7 +1,7 @@
-import {Easing} from "../../../types";
-import {getPlayerAnimations, PlayerAnimationTypes} from "../../Player/Animation";
-import {PositionMessage_Direction} from "../../../Messages/ts-proto-generated/protos/messages";
-import {ProtobufClientUtils} from "../../../Network/ProtobufClientUtils";
+import { Easing } from "../../../types";
+import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
+import { PositionMessage_Direction } from "../../../Messages/ts-proto-generated/protos/messages";
+import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
 export enum CustomWokaBodyPart {
     Body = "Body",
@@ -160,10 +160,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             if (textureKey === "__MISSING") {
                 continue;
             }
-            if (
-                this.moving &&
-                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== animationDirectionStr)
-            ) {
+            if (this.moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== animationDirectionStr)) {
                 sprite.play(textureKey + "-" + animationDirectionStr + "-" + PlayerAnimationTypes.Walk, true);
             } else if (!this.moving) {
                 sprite.anims.play(textureKey + "-" + animationDirectionStr + "-" + PlayerAnimationTypes.Idle, true);
@@ -182,7 +179,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             case PositionMessage_Direction.RIGHT:
                 return PositionMessage_Direction.DOWN;
             case PositionMessage_Direction.UNRECOGNIZED:
-                throw new Error('Unexpected value');
+                throw new Error("Unexpected value");
         }
     }
 }

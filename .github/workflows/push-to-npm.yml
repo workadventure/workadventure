@@ -22,6 +22,14 @@ jobs:
         run: cat package.json
         working-directory: "front/packages/iframe-api-typings"
 
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Copy files to front"
+        run: yarn run json-copy-to-front
+        working-directory: "messages"
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "front"

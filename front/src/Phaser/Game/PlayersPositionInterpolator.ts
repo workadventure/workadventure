@@ -3,7 +3,7 @@
  * Player movement is delayed by 200ms so position depends on ticks.
  */
 import type { PlayerMovement } from "./PlayerMovement";
-import {HasPlayerMovedInterface} from "../../Api/Events/HasPlayerMovedEvent";
+import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedEvent";
 
 export class PlayersPositionInterpolator {
     playerMovements: Map<number, PlayerMovement> = new Map<number, PlayerMovement>();
