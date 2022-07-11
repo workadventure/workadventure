@@ -1,4 +1,4 @@
-import { ITiledMapRectangleObject } from "../../Game/GameMap";
+import { ITiledMapRectangleObject } from "../../Game/GameMapAreas";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",

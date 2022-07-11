@@ -59,7 +59,7 @@ import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
-import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
+import { ITiledMapRectangleObject } from "../Phaser/Game/GameMapAreas";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
