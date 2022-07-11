@@ -1,5 +1,5 @@
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import type { WasCameraUpdatedEvent } from "../Events/WasCameraUpdatedEvent";
 import { apiCallback } from "./registeredCallbacks";
 
@@ -55,12 +55,12 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
      *
      * @returns {Subject<WasCameraUpdatedEvent>} An observable firing event when the camera is updated
      */
-    onCameraUpdate(): Subject<WasCameraUpdatedEvent> {
+    onCameraUpdate(): Observable<WasCameraUpdatedEvent> {
         sendToWorkadventure({
             type: "onCameraUpdate",
             data: undefined,
         });
-        return moveStream;
+        return moveStream.asObservable();
     }
 }
 
