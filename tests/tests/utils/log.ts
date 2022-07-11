@@ -9,7 +9,7 @@ let logs = [];
 export async function assertLogMessage(
   page: Page,
   substring: string,
-  timeout: number = 10000
+  timeout: number = 20_000
 ): Promise<void> {
   // wait for log to appear
   for (let i = 0; i < timeout / POLLING_INTERVAL; i++) {

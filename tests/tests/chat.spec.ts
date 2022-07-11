@@ -11,9 +11,9 @@ test.describe('Chat', () => {
 
     await login(page, 'Alice', 2);
 
-    await assertLogMessage(page, 'Chat fully loaded');
-
     await page.click('main.menuIcon img:nth-of-type(2)');
+    
+    await assertLogMessage(page, 'Chat fully loaded');
 
     // FIXME Ejabberd server not starting correctly in GitHub WorkFlow
     /*await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Users');
