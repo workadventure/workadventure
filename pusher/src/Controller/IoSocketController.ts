@@ -612,8 +612,6 @@ export class IoSocketController {
                     );
                 } else if (message.hasEditmapmessage()) {
                     socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
-                } else if (message.hasXmppmessage()) {
-                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,
