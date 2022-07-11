@@ -78,6 +78,7 @@ services:
       PUSHER_URL: //pusher.workadventure.localhost
     volumes:
       - ./front/chat:/usr/src/app
+      - ./libs:/usr/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
