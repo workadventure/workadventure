@@ -10,7 +10,6 @@
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
 
-    let chatWindow: HTMLIFrameElement;
     let chatIframe: HTMLIFrameElement;
 
     let subscribeListeners: Array<Unsubscriber> = [];
@@ -88,7 +87,7 @@
             })
         );
         subscribeListeners.push(
-            chatVisibilityStore.subscribe((value) => {
+            chatVisibilityStore.subscribe(() => {
                 if (get(gameManager.getInitStore())) {
                     gameManager.getCurrentGameScene()?.onResize();
                 }
@@ -119,7 +118,7 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div id="chatWindow" bind:this={chatWindow} class:show={$chatVisibilityStore} class="screen-blocker">
+<div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
     {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
     <iframe
         bind:this={chatIframe}

@@ -61,7 +61,7 @@
             .sort(([, a], [, b]) => Number(a.active) - Number(b.active))
             .filter(([, user]) => user.name
                 .toLocaleLowerCase()
-                .includes(searchValue)) as [ user]}
+                .includes(searchValue)) as [,user]}
             <ChatUser
               {openChat}
               {user}
