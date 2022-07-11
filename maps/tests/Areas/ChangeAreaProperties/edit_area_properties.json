@@ -55,23 +55,6 @@
          "name":"floorLayer",
          "objects":[
                 {
-                 "height":288,
-                 "id":11,
-                 "name":"Center",
-                 "properties":[
-                        {
-                         "name":"focusable",
-                         "type":"bool",
-                         "value":true
-                        }],
-                 "rotation":0,
-                 "type":"area",
-                 "visible":true,
-                 "width":512,
-                 "x":224,
-                 "y":256
-                }, 
-                {
                  "height":158.333333333333,
                  "id":13,
                  "name":"",

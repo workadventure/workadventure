@@ -41,6 +41,7 @@ import {
     QueryMessage,
     XmppMessage,
     AskPositionMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -329,6 +330,12 @@ export class SocketManager implements ZoneEventListener {
     handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setLockgrouppromptmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setEditmapmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 
