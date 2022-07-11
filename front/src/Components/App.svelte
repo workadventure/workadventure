@@ -6,7 +6,6 @@
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
     import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-    import Chat from "./Chat/Chat.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -14,6 +13,7 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
+    import Chat from "./Chat/Chat.svelte";
 
     export let game: Game;
 </script>
