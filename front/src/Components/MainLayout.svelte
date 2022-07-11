@@ -41,7 +41,6 @@
     import { showDesktopCapturerSourcePicker } from "../Stores/ScreenSharingStore";
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
-    import "../../style/tailwind.scss";
 
     let mainLayout: HTMLDivElement;
 

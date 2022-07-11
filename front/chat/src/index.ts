@@ -1,4 +1,4 @@
-import "../assets/scss/index.scss";
+import "../style/index.scss";
 
 import { HtmlUtils } from "./Utils/HtmlUtils";
 import App from "./Components/App.svelte";

@@ -57,7 +57,7 @@ services:
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
-      - ./libs:/usr/libs
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"

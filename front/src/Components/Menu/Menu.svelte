@@ -7,7 +7,6 @@
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import GuestSubMenu from "./GuestSubMenu.svelte";
     import chevronImg from "../images/chevron.svg";
-    import "../../../style/tailwind.scss";
 
     import {
         activeSubMenuStore,
