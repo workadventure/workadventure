@@ -32,6 +32,7 @@ services:
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE
+      - ENABLE_FEATURE_MAP_EDITOR
       - PUSHER_URL=//${PUSHER_HOST}
       - ICON_URL=//${ICON_HOST}
       - TURN_SERVER
@@ -83,6 +84,7 @@ services:
     command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
+      - ENABLE_FEATURE_MAP_EDITOR
       - SECRET_KEY
       - ADMIN_API_TOKEN
       - ADMIN_API_URL

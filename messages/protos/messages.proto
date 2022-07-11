@@ -4,6 +4,8 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+package workadventure;
+
 enum AvailabilityStatus {
   UNCHANGED = 0;
   ONLINE = 1;
@@ -105,6 +107,14 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message ModifyAreaMessage {
+  int32 id = 1;
+  google.protobuf.UInt32Value x = 2;
+  google.protobuf.UInt32Value y = 3;
+  google.protobuf.UInt32Value width = 4;
+  google.protobuf.UInt32Value height = 5;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -125,6 +135,7 @@ message ClientToServerMessage {
     QueryMessage queryMessage = 20;
     XmppMessage xmppMessage = 21;
     AskPositionMessage askPositionMessage = 22;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -236,6 +247,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     XmppMessage xmppMessage = 11;
+    EditMapMessage editMapMessage = 12;
   }
 }
 
@@ -527,6 +539,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -558,6 +571,13 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
+    EditMapMessage editMapMessage = 3;
+  }
+}
+
+message EditMapMessage {
+  oneof message {
+    ModifyAreaMessage modifyAreaMessage = 1;
   }
 }
 
@@ -656,5 +676,12 @@ service RoomManager {
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
+}
+
+/**
+ * Service handled by the "map-storage". Back servers connect to this service.
+ */
+service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
 }
