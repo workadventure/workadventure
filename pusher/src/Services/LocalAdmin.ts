@@ -76,7 +76,7 @@ class LocalAdmin implements AdminInterface {
         reporterUserUuid: string,
         roomUrl: string,
         locale?: string
-    ) {
+    ): Promise<unknown> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

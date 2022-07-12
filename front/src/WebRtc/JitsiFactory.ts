@@ -22,14 +22,14 @@ interface JitsiOptions {
     parentNode: HTMLElement;
     configOverwrite: jitsiConfigInterface;
     interfaceConfigOverwrite: typeof defaultInterfaceConfig;
-    onload?: Function;
+    onload?: () => void;
 }
 
 interface JitsiApi {
     executeCommand: (command: string, ...args: Array<unknown>) => void;
 
-    addListener: (type: string, callback: Function) => void;
-    removeListener: (type: string, callback: Function) => void;
+    addListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
+    removeListener: (type: string, callback: Function) => void; //eslint-disable-line @typescript-eslint/ban-types
     getParticipantsInfo(): { displayName: string; participantId: string }[];
     dispose: () => void;
 }
@@ -132,7 +132,7 @@ class JitsiFactory {
     private videoCallback = this.onVideoChange.bind(this);
     private dominantSpeakerChangedCallback = this.onDominantSpeakerChanged.bind(this);
     private participantsCountChangeCallback = this.onParticipantsCountChange.bind(this);
-    private jitsiScriptLoaded: boolean = false;
+    private jitsiScriptLoaded = false;
 
     /**
      * Slugifies the room name and prepends the room name with the instance
@@ -288,7 +288,6 @@ class JitsiFactory {
     }
 
     private updateParticipantsCountStore(): void {
-        //@ts-ignore
         jitsiParticipantsCountStore.set(this.jitsiApi?.getParticipantsInfo().length ?? 0);
     }
 

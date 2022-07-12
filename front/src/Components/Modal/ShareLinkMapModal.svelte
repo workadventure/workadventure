@@ -7,7 +7,7 @@
     const myNavigator: ExtNavigator = window.navigator;
     const haveNavigatorSharingFeature: boolean = myNavigator && myNavigator.share != null;
 
-    let copied: boolean = false;
+    let copied = false;
 
     async function copyLink() {
         try {

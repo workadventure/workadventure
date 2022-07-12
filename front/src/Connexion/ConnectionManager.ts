@@ -27,7 +27,7 @@ class ConnectionManager {
 
     private connexionType?: GameConnexionTypes;
     private reconnectingTimeout: NodeJS.Timeout | null = null;
-    private _unloading: boolean = false;
+    private _unloading = false;
     private authToken: string | null = null;
     private _currentRoom: Room | null = null;
 
@@ -265,7 +265,7 @@ class ConnectionManager {
         return Promise.resolve(this._currentRoom);
     }
 
-    public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
+    public async anonymousLogin(isBenchmark = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;

@@ -132,9 +132,10 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
-    XmppMessage xmppMessage = 21;
-    AskPositionMessage askPositionMessage = 22;
-    EditMapMessage editMapMessage = 23;
+    PingMessage pingMessage = 21;
+    XmppMessage xmppMessage = 22;
+    AskPositionMessage askPositionMessage = 23;
+    EditMapMessage editMapMessage = 24;
   }
 }
 
@@ -238,8 +239,9 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
-    XmppMessage xmppMessage = 11;
-    EditMapMessage editMapMessage = 12;
+    PingMessage pingMessage = 11;
+    XmppMessage xmppMessage = 12;
+    EditMapMessage editMapMessage = 13;
   }
 }
 

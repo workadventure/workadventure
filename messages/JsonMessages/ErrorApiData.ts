@@ -7,7 +7,6 @@ import { extendApi } from "@anatine/zod-openapi";
  */
 
 export const isErrorApiErrorData = extendApi(
-    // @ts-ignore
     z.object({
         type: z.literal("error"),
         code: extendApi(z.string(), {

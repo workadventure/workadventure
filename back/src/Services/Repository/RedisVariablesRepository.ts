@@ -37,6 +37,7 @@ export class RedisVariablesRepository implements VariablesRepositoryInterface {
 
         // TODO: SLOW WRITING EVERY 2 SECONDS WITH A TIMEOUT
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore See https://stackoverflow.com/questions/63539317/how-do-i-use-hmset-with-node-promisify
         return this.hset(roomUrl, key, value);
     }

@@ -11,7 +11,7 @@ import { BaseHttpController } from "./BaseHttpController";
 import { Metadata } from "grpc";
 
 export class AdminController extends BaseHttpController {
-    routes() {
+    routes(): void {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
         this.getRoomsList();
@@ -40,7 +40,7 @@ export class AdminController extends BaseHttpController {
      *         description: Will always return "ok".
      *         example: "ok"
      */
-    receiveRoomEditionPrompt() {
+    receiveRoomEditionPrompt(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/room/refresh", { middlewares: [adminToken] }, async (req, res) => {
             const body = await req.json();
@@ -107,7 +107,7 @@ export class AdminController extends BaseHttpController {
      *         description: Will always return "ok".
      *         example: "ok"
      */
-    receiveGlobalMessagePrompt() {
+    receiveGlobalMessagePrompt(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/message", { middlewares: [adminToken] }, async (req, res) => {
             const body = await req.json();
@@ -183,7 +183,7 @@ export class AdminController extends BaseHttpController {
      *               additionalProperties:
      *                 type: integer
      */
-    getRoomsList() {
+    getRoomsList(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/rooms", { middlewares: [adminToken] }, async (req, res) => {
             try {

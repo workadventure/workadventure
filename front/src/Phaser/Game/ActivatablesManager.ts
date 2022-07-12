@@ -11,7 +11,7 @@ export class ActivatablesManager {
 
     private currentPlayer: Player;
 
-    private canSelectByDistance: boolean = true;
+    private canSelectByDistance = true;
 
     private readonly outlineColor = 0xf9e81e;
     private readonly directionalActivationPositionShift = 50;
@@ -106,7 +106,7 @@ export class ActivatablesManager {
     }
 
     private findNearestActivatableObject(): ActivatableInterface | undefined {
-        let shortestDistance: number = Infinity;
+        let shortestDistance = Infinity;
         let closestObject: ActivatableInterface | undefined = undefined;
 
         for (const [object, distance] of this.activatableObjectsDistances.entries()) {
