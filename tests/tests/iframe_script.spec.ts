@@ -23,7 +23,7 @@ test.describe('Iframe API', () => {
 
     await login(page);
 
-    await page.click('.menuIcon img:first-child');
+    await page.click('#menuIcon img:first-child');
 
     await page.click('button:has-text("custom iframe menu")');
 

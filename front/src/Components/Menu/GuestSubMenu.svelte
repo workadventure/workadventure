@@ -12,7 +12,9 @@
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
         input.focus();
         input.select();
-        document.execCommand("copy");
+        navigator.clipboard
+            .writeText(input.value)
+            .catch((err) => console.error("Navigator clipboard write text error: ", err));
     }
 
     function getLink() {

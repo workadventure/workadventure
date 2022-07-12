@@ -58,6 +58,9 @@ export const isFetchMemberDataByUuidResponse = z.object({
     mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
         description: "The MUC room is a room of message",
     }),
+    activatedInviteUser: extendApi(z.optional(z.nullable(z.boolean())), {
+        description: "Button invite is activated in the action bar",
+    }),
 });
 
 export type FetchMemberDataByUuidResponse = z.infer<typeof isFetchMemberDataByUuidResponse>;

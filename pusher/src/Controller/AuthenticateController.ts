@@ -547,6 +547,7 @@ export class AuthenticateController extends BaseHttpController {
             jabberId: null,
             jabberPassword: null,
             mucRooms: [],
+            activatedInviteUser: true,
         };
         try {
             data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
