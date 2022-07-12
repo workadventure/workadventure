@@ -70,6 +70,7 @@
                 on:click={openEditNameScene}
             >
                 <img
+                    draggable="false"
                     src={btnProfileSubMenuIdentity}
                     alt={$LL.menu.profile.edit.name()}
                     width="26px"
@@ -103,6 +104,7 @@
                 on:click={openEnableCameraScene}
             >
                 <img
+                    draggable="false"
                     src={btnProfileSubMenuCamera}
                     alt={$LL.menu.profile.edit.camera()}
                     width="26px"
