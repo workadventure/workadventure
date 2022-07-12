@@ -28,6 +28,7 @@ const en_US: BaseTranslation = {
     rankUp: "Promote",
     rankDown: "Retrograde",
     reinit: "Re initialize",
+    enterText: "Enter a message ...",
     CONNECTING: "test",
     timeLine: {
         title: 'Your Timeline',

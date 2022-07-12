@@ -1,17 +1,15 @@
 <script lang="ts">
     import { SendIcon } from "svelte-feather-icons";
-    import { chatInputFocusStore } from "../Stores/ChatStore";
     import {MucRoom} from "../Xmpp/MucRoom";
+    import LL from "../i18n/i18n-svelte";
 
     export let mucRoom: MucRoom;
 
     let newMessageText = "";
 
     function onFocus() {
-        chatInputFocusStore.set(true);
     }
     function onBlur() {
-        chatInputFocusStore.set(false);
     }
 
     function saveMessage() {
@@ -25,16 +23,17 @@
 <form on:submit|preventDefault={saveMessage}>
     <div class="tw-w-full tw-p-2">
         <div
-            class="tw-flex tw-items-center tw-relative tw-border tw-border-solid tw-rounded-full tw-px-3 tw-py-1 tw-bg-dark"
+            class="tw-flex tw-items-center tw-relative"
         >
             <textarea
                 type="text"
                 bind:value={newMessageText}
-                class="tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-border-0 tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
-                placeholder="Enter your message..."
+                class="tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-1 focus:tw-ring-1 tw-mb-0 tw-min-h-[35px] tw-border-0 tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
+                placeholder={$LL.enterText()}
                 on:focus={onFocus}
                 on:blur={onBlur}
                 rows="1"
+                style="margin-bottom: 0;"
             />
             <button
                 type="submit"

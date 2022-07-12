@@ -18,7 +18,6 @@ const manualPingDelay = 20000;
 export class ChatConnection implements ChatConnection {
     private readonly socket: WebSocket;
     private userId: number | null = null;
-    private listeners: Map<string, Function[]> = new Map<string, Function[]>();
     private closed: boolean = false;
     private xmppClient: XmppClient | null = null;
 

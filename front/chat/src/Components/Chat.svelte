@@ -27,26 +27,6 @@
     let showLives = true;
     let activeThreadTimeLine = false;
 
-    /*
-    let forums = [
-        {
-            name: "Inside Workadventu.re",
-            activeUsers: 5,
-            unreads: 1,
-        },
-        {
-            name: "Random",
-            activeUsers: 12,
-            unreads: 0,
-        },
-        {
-            name: "World makers",
-            activeUsers: 4,
-            unreads: 5,
-        },
-    ];
-     */
-
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
     });
@@ -128,7 +108,7 @@
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
             {#if activeThreadTimeLine}
-                <ChatActiveThreadTimeLine 
+                <ChatActiveThreadTimeLine
                         on:unactiveThreadTimeLine={() => activeThreadTimeLine = false}
                 />
             {:else if $activeThreadStore}
@@ -176,46 +156,9 @@
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
 
-                    <Timeline 
+                    <Timeline
                             on:activeThreadTimeLine={() => activeThreadTimeLine = true}
                     />
-
-                    <!-- forum list
-
-					<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
-						<div class="tw-p-3 tw-flex tw-items-center">
-							{#if forumListUnreads()}
-						<span
-								class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-						>
-							{forumListUnreads()}
-						</span>
-							{/if}
-							<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
-							<button
-									class="tw-text-lighter-purple"
-									on:click={() => {
-							showForums = !showForums;
-						}}
-							>
-								<ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
-							</button>
-						</div>
-						{#if showForums}
-							<div class="tw-mt-3">
-								{#each forums as forum}
-									<ChatForum {forum} {openForum} />
-								{/each}
-							</div>
-							<div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-								<button
-										class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-								>See more…</button
-								>
-							</div>
-						{/if}
-					</div>
-					-->
                 </div>
             {/if}
         {/if}

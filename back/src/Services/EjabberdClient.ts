@@ -1,8 +1,9 @@
 import Axios, { AxiosError, AxiosInstance } from "axios";
 import { EJABBERD_DOMAIN, EJABBERD_PASSWORD, EJABBERD_URI, EJABBERD_USER } from "../Enum/EnvironmentVariable";
 import { ChatZone } from "./MucManager";
+import { ChatClient } from "./ChatClient";
 
-export class EjabberdClient {
+export class EjabberdClient implements ChatClient {
     private axios: AxiosInstance | undefined;
 
     constructor() {
@@ -16,20 +17,20 @@ export class EjabberdClient {
         });
     }
 
-    public async getAllMucRooms(): Promise<Array<string> | Error> {
+    async getAllMucRooms(): Promise<Array<string> | Error> {
         return (await this.axios
             ?.post("muc_online_rooms", { service: `conference.${EJABBERD_DOMAIN}` })
             .then((response) => response.data as Array<string>)
             .catch((error) => error as AxiosError)) as unknown as Promise<Array<string> | Error>;
     }
 
-    public async destroyMucRoom(name: string) {
+    async destroyMucRoom(name: string) {
         await this.axios
             ?.post("destroy_room", { name: EjabberdClient.encode(name), service: `conference.${EJABBERD_DOMAIN}` })
             .catch((error) => console.error(error));
     }
 
-    public async createMucRoom(chatZone: ChatZone) {
+    async createMucRoom(chatZone: ChatZone) {
         await this.axios
             ?.post("create_room", {
                 name: `${EjabberdClient.encode(chatZone.mucUrl ?? "")}`,

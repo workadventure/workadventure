@@ -28,6 +28,7 @@ const fr_FR: Translation = {
     rankUp: "Promouvoir",
     rankDown: "Rétrograder",
     reinit: "Ré initialiser",
+    enterText: "Écrire un message ...",
     CONNECTING: "test",
     timeLine: {
         title: 'Votre historique',

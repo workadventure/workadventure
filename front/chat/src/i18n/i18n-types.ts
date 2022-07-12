@@ -109,6 +109,10 @@ type RootTranslation = {
 	 */
 	reinit: string
 	/**
+	 * Enter a message ...
+	 */
+	enterText: string
+	/**
 	 * test
 	 */
 	CONNECTING: string
@@ -239,6 +243,10 @@ export type TranslationFunctions = {
 	 * Re initialize
 	 */
 	reinit: () => LocalizedString
+	/**
+	 * Enter a message ...
+	 */
+	enterText: () => LocalizedString
 	/**
 	 * test
 	 */
