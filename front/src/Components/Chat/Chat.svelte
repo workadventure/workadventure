@@ -256,7 +256,6 @@
     }
 </style>
 -->
-
 <style lang="scss">
     #chatWindow {
         z-index: 1000;

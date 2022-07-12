@@ -33,8 +33,8 @@ const en_US: BaseTranslation = {
         title: 'Your Timeline',
         open: 'Open your time line history!',
         description: 'WorkAdventure Timeline',
-        incoming: ' try to meet with you, are you here?',
-        outcoming: ' quit the metting!'
+        incoming: ' join the discussion',
+        outcoming: ' quit the discussion'
     },
     form: {
         placeholder: 'Enter your message...',

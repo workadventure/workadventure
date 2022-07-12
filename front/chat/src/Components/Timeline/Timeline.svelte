@@ -8,12 +8,10 @@
     const dispatch = createEventDispatcher();
 
     function open(){
-        console.log('activeThreadTimeLine');
         dispatch("activeThreadTimeLine");
     }
     function showTimeLine(){
         timeLineOpenedStore.set(!$timeLineOpenedStore);
-        console.log('showTimeLine', $timeLineOpenedStore);
     }
 </script>
 

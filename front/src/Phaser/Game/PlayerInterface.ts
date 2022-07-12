@@ -9,6 +9,7 @@ export interface PlayerInterface {
     companion: string | null;
     userUuid: string;
     availabilityStatus: AvailabilityStatus;
-    color?: string;
+    color?: string | null;
     outlineColor?: number;
+    wokaSrc?: string;
 }

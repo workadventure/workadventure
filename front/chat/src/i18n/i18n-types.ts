@@ -126,11 +126,11 @@ type RootTranslation = {
 		 */
 		description: string
 		/**
-		 *  try to meet with you, are you here?
+		 *  join the discussion
 		 */
 		incoming: string
 		/**
-		 *  quit the metting!
+		 *  quit the discussion
 		 */
 		outcoming: string
 	}
@@ -257,11 +257,11 @@ export type TranslationFunctions = {
 		 */
 		description: () => LocalizedString
 		/**
-		 *  try to meet with you, are you here?
+		 *  join the discussion
 		 */
 		incoming: () => LocalizedString
 		/**
-		 *  quit the metting!
+		 *  quit the discussion
 		 */
 		outcoming: () => LocalizedString
 	}

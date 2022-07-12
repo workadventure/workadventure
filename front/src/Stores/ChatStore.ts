@@ -13,7 +13,7 @@ export const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
-export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
+export const newChatMessageWritingStausSubject = _newChatMessageWritingStatusSubject.asObservable();
 
 export enum ChatMessageTypes {
     text = 1,

@@ -224,13 +224,7 @@
 
 <style lang="scss">
     aside.chatWindow {
-        z-index: 1000;
         pointer-events: auto;
-        position: absolute;
-        top: 0;
-        left: 0;
-        min-height: 100vh;
-        width: 100%;
         background: rgba(#1b1b29, 0.9);
         color: whitesmoke;
         display: flex;

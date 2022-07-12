@@ -11,6 +11,10 @@
 $font:  'Roboto', sans-serif;
 $font-condensed: 'Roboto Condensed', sans-serif;
 
+html{
+  scroll-behavior: smooth;
+}
+
 .nes-btn {
   font-family: "Press Start 2P";
 }

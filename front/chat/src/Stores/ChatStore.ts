@@ -4,6 +4,7 @@ import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { getColorByString } from "../Utils/ColorGenerator";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -28,6 +29,7 @@ export interface ChatMessage {
     text?: string[];
 }
 
+const PLAYERSTORE_ME_USERID = -2;
 export const playersStore = new Map<number, PlayerInterface>();
 
  function getAuthor(authorId: number): PlayerInterface {
@@ -39,20 +41,20 @@ export const playersStore = new Map<number, PlayerInterface>();
 }
 
 function getMeOrCreate(){
-    let me = playersStore.get(0);
+    let me = playersStore.get(PLAYERSTORE_ME_USERID);
     if(!me){
         const userData = localUserStore.getUserData() as UserData;
         me = {
-            userId: -2,
+            userId: PLAYERSTORE_ME_USERID,
             userUuid: userData.uuid,
             name: userData.name,
             characterLayers: [],
             availabilityStatus: AvailabilityStatus.ONLINE,
-            color: userData.color,
+            color: getColorByString(userData.name),
             visitCardUrl: null,
             companion: null
         } as PlayerInterface
-        playersStore.set(-2, me);
+        playersStore.set(PLAYERSTORE_ME_USERID, me);
     }
     return me;
 }
@@ -135,6 +137,12 @@ function createChatMessagesStore() {
                 return list;
             });
         },
+
+        reInitialize(){
+            update(() => {
+                return [];
+            })
+        }
     };
 }
 export const chatMessagesStore = createChatMessagesStore();

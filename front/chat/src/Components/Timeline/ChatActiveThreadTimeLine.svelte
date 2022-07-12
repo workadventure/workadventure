@@ -14,7 +14,8 @@
     let newMessageText = "";
 
     function reInitialize(){
-        console.log('reInitialize');
+        chatMessagesStore.reInitialize();
+        settingsView = false;
     }
 
     function onFocus() {
@@ -25,7 +26,6 @@
     }
     function saveMessage() {
         if (!newMessageText) return;
-        console.log('saveMessage');
         chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
     }
@@ -52,11 +52,46 @@
             _newChatMessageWritingStatusSubject.next(ChatMessageTypes.userStopWriting);
         }
     }
+
+    let keyShiftPressed = false;
+    function handlerKeyDown(keyDownEvent: KeyboardEvent){
+        if(keyDownEvent.key === "Shift"){
+            keyShiftPressed = true;
+        }
+    }
+    function handlerKeyUp(keyUpEvent: KeyboardEvent){
+
+        if(
+            keyShiftPressed === false 
+            && (
+                keyUpEvent.key === "Enter" 
+                || keyUpEvent.code === "Enter"
+            )
+        ){
+            saveMessage();
+            return;
+        }
+
+        if(keyUpEvent.key === "Shift"){
+            keyShiftPressed = false;
+        }
+    }
+
+    chatMessagesStore.subscribe(() => {
+        const element = document.getElementById('timeLine-messageList');
+        if(!element){
+            return;
+        }
+        setTimeout(() => {
+            window.scroll(0, element.scrollHeight);
+        }, 500);
+    });
 </script>
 
 <!-- thread -->
-<div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-fixed tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
-	<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
+<div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
+	
+    <div class="messageHeader tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
 		<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2">
 			<button class="tw-text-light-purple tw-m-0" on:click={backToThreadList}>
 				<ArrowLeftIcon />
@@ -87,7 +122,7 @@
 	</div>
 
 	{#if settingsView}
-		<div transition:fly={{ y: -100, duration: 100 }} class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
+		<div transition:fly={{ y: -100, duration: 100 }} class="settingsHeader tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
 			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5">
                 <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}>
                     <RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()} 
@@ -101,7 +136,7 @@
 	{:else}
 	
         <!-- MESSAGE LIST-->
-        <div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto">
+        <div id="timeLine-messageList" class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto">
             {#each $chatMessagesStore as message}
                 
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
@@ -110,9 +145,10 @@
                     {/if}
                     <div class="tw-mt-2">
                         <div class={`tw-flex ${message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"}`}>
-                            <div class={`${message.author ? 'tw-opacity-0':'tw-mt-4'} tw-relative wa-avatar-mini tw-mr-2`} style={`background-color: ${message.author?.color}`}>
+                            <div class={`${message.type === ChatMessageTypes.me || !message.author ? 'tw-opacity-0':'tw-mt-4'} tw-relative wa-avatar-mini tw-mr-2`} style={`background-color: ${message.author?.color}`}>
                                 <div class="wa-container">
-                                    <img class="tw-w-full" src={message.author?.woka ? message.author?.woka : '/static/images/logo-wa-2.png'} alt="Avatar"/>
+                                    <img class="tw-w-full" src={`${message.author?.wokaSrc ? message.author?.wokaSrc : '/static/images/logo-wa-2.png'}`} 
+                                    alt="Avatar" loading="lazy"/>
                                 </div>
                             </div>
                             <div class="tw-w-3/4">
@@ -123,7 +159,7 @@
                                 <div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2`}>
                                     {#if message.text}
                                         {#each message.text as text}
-                                            <p class="tw-mb-0">{text}</p>
+                                            <p class="messageText tw-mb-0">{text}</p>
                                         {/each}
                                     {/if}
                                 </div>
@@ -135,12 +171,16 @@
                 {#if message.targets && message.targets.length > 0}
                     {#if message.type === ChatMessageTypes.userIncoming}
                         {#each message.targets as target}
-                            <span class="tw-text-lighter-purple tw-text-xxs tw-py-1"><span class="tag tw-px-1 tw-py-1 tw-border tw-border-transparent tw-border-light-purple tw-border-solid tw-rounded-lg tw-bg-dark"><b>{target.name}</b></span> try to meet with you. Are your here?</span>
+                            <div class="handlerTag">
+                                <span class="tag tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"><b style={target.color ? `color: ${target.color};`: ''}>{target.name}</b>{$LL.timeLine.incoming()}</span>
+                            </div>
                         {/each}
                     {/if}
                     {#if message.type === ChatMessageTypes.userOutcoming}
                         {#each message.targets as target}
-                            <span class="tw-text-lighter-purple tw-text-xxs tw-py-1"><span class="tag tw-px-1 tw-py-1 tw-border tw-border-transparent tw-border-light-purple tw-border-solid tw-rounded-lg tw-bg-dark"><b>{target.name}</b></span> quit the meeting!</span>
+                            <div class="handlerTag">
+                                <span class="tag tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"><b style={target.color ? `color: ${target.color};`: ''}>{target.name}</b>{$LL.timeLine.outcoming()}</span>
+                            </div>
                         {/each}
                     {/if}
                 {/if}
@@ -162,9 +202,11 @@
                     <div class="tw-flex tw-items-center tw-relative">
                         <textarea
                             type="text"
-                            class="tw-flex-1 tw-text-sm tw-ml-2 tw-border tw-border-solid tw-rounded-full tw-bg-transparent tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
+                            class="tw-flex-1 tw-text-sm tw-ml-2 tw-border tw-border-solid tw-rounded-full tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
                             bind:value={newMessageText}
                             placeholder={$LL.form.placeholder()}
+                            on:keydown={handlerKeyDown}
+                            on:keyup={handlerKeyUp}
                             on:input={writing}
                             on:focus={onFocus}
                             on:blur={onBlur}
@@ -186,24 +228,65 @@
 </div>
 
 <style lang="scss">
-    form {
+    .messageHeader{
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: #1B1B29;
+        z-index: 2;
+    }
+    .settingsHeader{
+        padding-top: 44px;
+    }
+    .messageList{
         display: flex;
-        padding-left: 4px;
-        padding-right: 4px;
+        justify-content: flex-end;
+        overflow-y: scroll;
+        min-height: 100vh;
+        padding-bottom: 60px;
+        padding-top: 60px;
 
-        textarea{
-            border-color: white;
-            border-radius: 9998px;
+        .handlerTag{
+            text-align: center;
+
+            span.tag{
+                cursor: pointer;
+                width: fit-content;
+                padding: 2px 10px 2px 10px;
+                margin: 2px 0 2px 0;
+                border: solid 1px #979797;
+            }
+        }
+
+        p.messageText{
+            white-space: pre-line;
         }
     }
 
-    span.tag{
-        cursor: pointer;
-        margin: 0 2px 0 0;
-    }
-    div.typing span{
-        font-style: italic;
-        white-space: nowrap;
-        margin: 0 2px;
+    .messageForm{
+        position: fixed;
+        bottom: 0;
+        background: #1B1B29;
+        width: 100%;
+        z-index: 2;
+
+        form {
+            display: flex;
+            padding-left: 4px;
+            padding-right: 4px;
+
+            div.typing span{
+                font-style: italic;
+                white-space: nowrap;
+                margin: 0 2px;
+            }
+
+            textarea{
+                margin-bottom: 0;
+                border-radius: 9998px;
+                background-color: #0F1F2D;
+                border-color: #4D4B67;
+            }
+        }
     }
 </style>

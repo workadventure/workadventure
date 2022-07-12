@@ -33,8 +33,8 @@ const fr_FR: Translation = {
         title: 'Votre historique',
         open: 'Ouvrir votre historique de converçation !',
         description: 'Historique de vos converçations sur WorkAdventure!',
-        incoming: ' essait de vous contacter. Êtes vous disponible ?',
-        outcoming: ' a quitté le metting !'
+        incoming: ' a rejoint la conversation',
+        outcoming: ' a quitté la conversation'
     },
     form: {
         placeholder: 'Écrire votre message...',
