@@ -16,10 +16,12 @@ WORKDIR /usr/src
 COPY front/yarn.lock front/package.json ./
 RUN yarn install --network-timeout 1000000
 COPY front .
+COPY libs /usr/src/libs
 
 COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
 COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
+
 
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && yarn run build-iframe-api && NODE_OPTIONS="--max-old-space-size=6144" yarn build
