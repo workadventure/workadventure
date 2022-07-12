@@ -3,7 +3,7 @@
     import { onDestroy } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
-    import { ITiledMapRectangleObject } from "../../Phaser/Game/GameMap";
+    import { ITiledMapRectangleObject } from "../../Phaser/Game/GameMapAreas";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;
