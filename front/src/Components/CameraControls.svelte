@@ -261,7 +261,7 @@
                     on:click={followClick}
                 >
                     <button class:border-top-light={$followStateStore === "active"}>
-                        <img src={followImg} style="padding: 2px" alt="Toggle follow" />
+                        <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
                 </div>
 
@@ -272,9 +272,19 @@
                 >
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-                            <img src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
+                            <img
+                                draggable="false"
+                                src={layoutPresentationImg}
+                                style="padding: 2px"
+                                alt="Switch to mosaic mode"
+                            />
                         {:else}
-                            <img src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode" />
+                            <img
+                                draggable="false"
+                                src={layoutChatImg}
+                                style="padding: 2px"
+                                alt="Switch to presentation mode"
+                            />
                         {/if}
                     </button>
                 </div>
@@ -287,9 +297,14 @@
                 >
                     <button class=" " class:border-top-light={$currentPlayerGroupLockStateStore}>
                         {#if $currentPlayerGroupLockStateStore}
-                            <img src={lockCloseImg} style="padding: 2px" alt="Unlock videochat bubble" />
+                            <img
+                                draggable="false"
+                                src={lockCloseImg}
+                                style="padding: 2px"
+                                alt="Unlock videochat bubble"
+                            />
                         {:else}
-                            <img src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
+                            <img draggable="false" src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
                         {/if}
                     </button>
                 </div>
@@ -302,9 +317,19 @@
                 >
                     <button class:border-top-light={$requestedScreenSharingState}>
                         {#if $requestedScreenSharingState && !$silentStore}
-                            <img src={screenshareOn} style="padding: 2px;" alt="Stop screen sharing" />
+                            <img
+                                draggable="false"
+                                src={screenshareOn}
+                                style="padding: 2px;"
+                                alt="Stop screen sharing"
+                            />
                         {:else}
-                            <img src={screenshareOff} style="padding: 2px;" alt="Start screen sharing" />
+                            <img
+                                draggable="false"
+                                src={screenshareOff}
+                                style="padding: 2px;"
+                                alt="Start screen sharing"
+                            />
                         {/if}
                     </button>
                 </div>
@@ -321,9 +346,9 @@
                 >
                     <button class:border-top-light={$requestedCameraState}>
                         {#if $requestedCameraState && !$silentStore}
-                            <img src={cameraImg} style="padding: 2px;" alt="Turn off webcam" />
+                            <img draggable="false" src={cameraImg} style="padding: 2px;" alt="Turn off webcam" />
                         {:else}
-                            <img src={cameraOffImg} style="padding: 2px;" alt="Turn on webcam" />
+                            <img draggable="false" src={cameraOffImg} style="padding: 2px;" alt="Turn on webcam" />
                         {/if}
                     </button>
                 </div>
@@ -336,22 +361,32 @@
                 >
                     <button class:border-top-light={$requestedMicrophoneState}>
                         {#if $requestedMicrophoneState && !$silentStore}
-                            <img src={microphoneImg} style="padding: 2px;" alt="Turn off microphone" />
+                            <img
+                                draggable="false"
+                                src={microphoneImg}
+                                style="padding: 2px;"
+                                alt="Turn off microphone"
+                            />
                         {:else}
-                            <img src={microphoneOffImg} style="padding: 2px;" alt="Turn on microphone" />
+                            <img
+                                draggable="false"
+                                src={microphoneOffImg}
+                                style="padding: 2px;"
+                                alt="Turn on microphone"
+                            />
                         {/if}
                     </button>
                 </div>
 
                 <div on:click={() => analyticsClient.openedChat()} on:click={toggleChat} class="bottom-action-button">
                     <button class:border-top-light={$chatVisibilityStore}>
-                        <img src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
                     <button class:border-top-light={$emoteMenuSubStore}>
-                        <img src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+                        <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
                 </div>
             </div>
@@ -364,7 +399,7 @@
                     class="bottom-action-button"
                 >
                     <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
-                        <img src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
+                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
             </div>
@@ -442,12 +477,17 @@
 
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
-                        <img src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
+                        <img draggable="false" src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click|preventDefault={close}>
-                        <img src={closeImg} style="padding: 4px" alt={$LL.menu.icon.open.closeEmoji()} />
+                        <img
+                            draggable="false"
+                            src={closeImg}
+                            style="padding: 4px"
+                            alt={$LL.menu.icon.open.closeEmoji()}
+                        />
                     </button>
                 </div>
             </div>
