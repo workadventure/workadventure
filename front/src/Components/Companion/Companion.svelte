@@ -30,7 +30,7 @@
     }
 </script>
 
-<img {src} alt="" class="nes-pointer" style="--theme-width: {width}; --theme-height: {height}" />
+<img {src} alt="" class="nes-pointer" draggable="false" style="--theme-width: {width}; --theme-height: {height}" />
 
 <style>
     img {

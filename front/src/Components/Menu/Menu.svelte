@@ -127,7 +127,7 @@
                     <button type="button" class="tw-flex menu-item">
                         {subMenuTranslations[i]}
                     </button>
-                    <img src={chevronImg} class="menu-icon" alt="open submenu" />
+                    <img src={chevronImg} class="menu-icon" alt="open submenu" draggable="false" />
                 </div>
             {/each}
         </nav>
