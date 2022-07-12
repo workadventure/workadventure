@@ -843,7 +843,16 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection);
+
+                const me = this;
+                this.events.once("render", () => {
+                    if (me.connection) {
+                        this.simplePeer = new SimplePeer(me.connection);
+                    } else {
+                        console.warn("Connection to peers not started!");
+                    }
+                });
+
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
@@ -1687,6 +1696,10 @@ ${escapedMessage}
         this.sound.play(sound, {
             volume: 0.2,
         });
+    }
+
+    public getSimplePeer() {
+        return this.simplePeer;
     }
 
     public cleanupClosingScene(): void {
