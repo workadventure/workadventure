@@ -10,9 +10,7 @@ services:
       context: ./
       dockerfile: front/Dockerfile
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
-    volumes:
-      - ./front:/usr/src/app
-      - ./libs:/usr/src/libs
+    volumes: []
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"

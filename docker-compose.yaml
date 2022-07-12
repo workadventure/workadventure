@@ -54,7 +54,7 @@ services:
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
       OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
-      CHAT_URL: //chat.workadventure.localhost
+      CHAT_URL: //chat.workadventure.local    volumes: []host
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
