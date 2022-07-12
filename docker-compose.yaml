@@ -1,21 +1,21 @@
-version: "3.5"
+version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.5
+    image: traefik:v2.8
+    expose:
+      - "8080"
+    ports:
+      - "80:80"
     command:
       - --api.insecure=true
       - --providers.docker
       - --entryPoints.web.address=:80
-      - --entryPoints.websecure.address=:443
-      - "--providers.docker.exposedbydefault=false"
-    ports:
-      - "80:80"
-      - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
-    #depends_on:
-    #  - back
-    #  - front
+      - --providers.docker.exposedbydefault=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8080"
+      - "traefik.http.routers.api.rule=Host(`traefik.workadventure.localhost`)"
+      - "traefik.http.routers.api.service=api@internal"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -62,10 +62,6 @@ services:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
-      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front-ssl.entryPoints=websecure"
-      - "traefik.http.routers.front-ssl.tls=true"
-      - "traefik.http.routers.front-ssl.service=front"
 
   pusher:
     image: thecodingmachine/nodejs:16
@@ -101,10 +97,6 @@ services:
       - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.workadventure.localhost`)"
-      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
-      - "traefik.http.routers.pusher-ssl.tls=true"
-      - "traefik.http.routers.pusher-ssl.service=pusher"
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
@@ -125,10 +117,6 @@ services:
       - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
       - "traefik.http.routers.maps.entryPoints=web,traefik"
       - "traefik.http.services.maps.loadbalancer.server.port=80"
-      - "traefik.http.routers.maps-ssl.rule=Host(`maps.workadventure.localhost`)"
-      - "traefik.http.routers.maps-ssl.entryPoints=websecure"
-      - "traefik.http.routers.maps-ssl.tls=true"
-      - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
     image: thecodingmachine/nodejs:16
@@ -162,10 +150,6 @@ services:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
-      - "traefik.http.routers.back-ssl.rule=Host(`api.workadventure.localhost`)"
-      - "traefik.http.routers.back-ssl.entryPoints=websecure"
-      - "traefik.http.routers.back-ssl.tls=true"
-      - "traefik.http.routers.back-ssl.service=back"
 
   map-storage:
     image: thecodingmachine/nodejs:16
@@ -185,10 +169,6 @@ services:
       - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
       - "traefik.http.routers.map-storage.entryPoints=web"
       - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
-      - "traefik.http.routers.map-storage-ssl.rule=Host(`map-storage.workadventure.localhost`)"
-      - "traefik.http.routers.map-storage-ssl.entryPoints=websecure"
-      - "traefik.http.routers.map-storage-ssl.tls=true"
-      - "traefik.http.routers.map-storage-ssl.service=map-storage"
 
   uploader:
     image: thecodingmachine/nodejs:16
@@ -204,10 +184,6 @@ services:
       - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
       - "traefik.http.routers.uploader.entryPoints=web"
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
-      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.workadventure.localhost`)"
-      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
-      - "traefik.http.routers.uploader-ssl.tls=true"
-      - "traefik.http.routers.uploader-ssl.service=uploader"
 
   messages:
     image: thecodingmachine/workadventure-back-base:latest
@@ -232,10 +208,6 @@ services:
       - "traefik.http.routers.redisinsight.rule=Host(`redis.workadventure.localhost`)"
       - "traefik.http.routers.redisinsight.entryPoints=web"
       - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
-      - "traefik.http.routers.redisinsight-ssl.rule=Host(`redis.workadventure.localhost`)"
-      - "traefik.http.routers.redisinsight-ssl.entryPoints=websecure"
-      - "traefik.http.routers.redisinsight-ssl.tls=true"
-      - "traefik.http.routers.redisinsight-ssl.service=redisinsight"
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
@@ -244,10 +216,6 @@ services:
       - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
-      - "traefik.http.routers.icon-ssl.rule=Host(`icon.workadventure.localhost`)"
-      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
-      - "traefik.http.routers.icon-ssl.tls=true"
-      - "traefik.http.routers.icon-ssl.service=icon"
 
   ejabberd:
     image: ejabberd/ecs
@@ -258,10 +226,6 @@ services:
       - "traefik.http.routers.xmpp.rule=Host(`xmpp-admin.workadventure.localhost`)"
       - "traefik.http.routers.xmpp.entryPoints=web"
       - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
-      - "traefik.http.routers.xmpp-ssl.rule=Host(`xmpp-admin.workadventure.localhost`)"
-      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
-      - "traefik.http.routers.xmpp-ssl.tls=true"
-      - "traefik.http.routers.xmpp-ssl.service=xmpp"
 
 #  coturn:
 #    image: coturn/coturn:4.5.2
