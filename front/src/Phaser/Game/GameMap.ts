@@ -13,6 +13,7 @@ import {
 } from "@workadventure/tiled-map-type-guard";
 import { PathTileType } from "../../Utils/PathfindingManager";
 import { areaChangeCallback, AreaType, GameMapAreas, ITiledMapRectangleObject } from "./GameMapAreas";
+import { Observable, Subject } from "rxjs";
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -64,6 +65,11 @@ export class GameMap {
     public readonly flatLayers: ITiledMapLayer[];
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
+
+    /**
+     * Firing on map change, containing newest collision grid array
+     */
+    private mapChangedSubject = new Subject<number[][]>();
 
     private readonly defaultTileSize = 32;
 
@@ -118,6 +124,32 @@ export class GameMap {
                 }
             });
         }
+    }
+
+    public setLayerVisibility(layerName: string, visible: boolean): void {
+        const phaserLayer = this.findPhaserLayer(layerName);
+        let collisionGrid: number[][] = [];
+        if (phaserLayer != undefined) {
+            phaserLayer.setVisible(visible);
+            phaserLayer.setCollisionByProperty({ collides: true }, visible);
+            collisionGrid = this.getCollisionGrid(phaserLayer);
+        } else {
+            const phaserLayers = this.findPhaserLayers(layerName + "/");
+            if (phaserLayers.length === 0) {
+                console.warn(
+                    'Could not find layer with name that contains "' +
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
+                );
+                return;
+            }
+            for (let i = 0; i < phaserLayers.length; i++) {
+                phaserLayers[i].setVisible(visible);
+                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
+            }
+            collisionGrid = this.getCollisionGrid(undefined, false);
+        }
+        this.mapChangedSubject.next(collisionGrid);
     }
 
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
@@ -281,10 +313,12 @@ export class GameMap {
         if (phaserLayer) {
             if (tile === null) {
                 phaserLayer.putTileAt(-1, x, y);
-                return;
-            }
-            const tileIndex = this.getIndexForTileType(tile);
-            if (tileIndex !== undefined) {
+            } else {
+                const tileIndex = this.getIndexForTileType(tile);
+                if (tileIndex === undefined) {
+                    console.error("The tile '" + tile + "' that you want to place doesn't exist.");
+                    return;
+                }
                 this.putTileInFlatLayer(tileIndex, x, y, layer);
                 const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
                 for (const property of this.getTileProperty(tileIndex)) {
@@ -292,9 +326,8 @@ export class GameMap {
                         phaserTile.setCollision(true);
                     }
                 }
-            } else {
-                console.error("The tile '" + tile + "' that you want to place doesn't exist.");
             }
+            this.mapChangedSubject.next(this.getCollisionGrid(phaserLayer));
         } else {
             console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
         }
@@ -656,5 +689,9 @@ export class GameMap {
         }
 
         return objects;
+    }
+
+    public getMapChangedObservable(): Observable<number[][]> {
+        return this.mapChangedSubject.asObservable();
     }
 }

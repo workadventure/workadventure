@@ -84,6 +84,13 @@ export class Player extends Character {
         });
     }
 
+    public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
+        if (!this.pathToFollow) {
+            return undefined;
+        }
+        return this.pathToFollow[this.pathToFollow.length - 1];
+    }
+
     public finishFollowingPath(cancelled: boolean = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
