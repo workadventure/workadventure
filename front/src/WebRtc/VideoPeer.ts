@@ -17,6 +17,7 @@ import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -226,6 +227,8 @@ export class VideoPeer extends Peer {
                 //However, the output stream stream B is correctly blocked in A client
                 this.blocked = true;
                 this.toggleRemoteStream(false);
+                const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
+                simplePeer.blockedFromRemotePlayer(message.userId);
             } else if (message.type === MESSAGE_TYPE_UNBLOCKED) {
                 this.blocked = false;
                 this.toggleRemoteStream(true);
