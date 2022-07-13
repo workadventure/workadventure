@@ -746,7 +746,11 @@ export class GameMap {
         return properties;
     }
 
-    private getAreasOnPosition(position?: { x: number; y: number }, offsetY = 0,  areaType?: AreaType): ITiledMapRectangleObject[] {
+    private getAreasOnPosition(
+        position?: { x: number; y: number },
+        offsetY = 0,
+        areaType?: AreaType
+    ): ITiledMapRectangleObject[] {
         if (!position) {
             return [];
         }

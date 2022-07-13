@@ -19,7 +19,7 @@ export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
     //eslint-disable-next-line @typescript-eslint/ban-types
-    public mucRooms: Array<Object> = [];
+    public mucRooms: Array<any> = [];
 
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
