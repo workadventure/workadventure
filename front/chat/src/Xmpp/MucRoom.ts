@@ -6,9 +6,6 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import { localUserStore, userStore } from "../Stores/LocalUserStore";
-import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import {userStore} from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 
@@ -25,7 +22,10 @@ export type User = {
     woka: string;
     unreads: boolean;
     isAdmin: boolean;
+    chatState: string;
 };
+
+export const ChatStates = {ACTIVE: 'active', INACTIVE: 'inactive', GONE: 'gone', COMPOSING: 'composing', PAUSED: 'paused'};
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
@@ -57,7 +57,7 @@ export class MucRoom {
     private teleportStore: Writable<Teleport>;
     private messageStore: Writable<Message[]>;
     private meStore: Writable<Me>;
-    private nickCount: number = 0;
+    private nickCount = 0;
 
     constructor(
         private connection: ChatConnection,
@@ -79,18 +79,20 @@ export class MucRoom {
     public getUserDataByName(name: string) {
         let woka = defaultWoka;
         let color = '';
+        let jid = null;
         if(this.getPlayerName() === name){
             woka = get(userStore).woka;
             color = get(userStore).color;
         } else {
-            get(this.presenceStore).forEach((user) => {
+            get(this.presenceStore).forEach((user, jid_) => {
                 if (user.name === name) {
                     woka = user.woka;
                     color = user.color;
+                    jid = jid_;
                 }
             })
         }
-        return {woka, color};
+        return {woka, color, jid};
     }
 
   public goTo(type: string, playUri: string, uuid: string) {
@@ -292,6 +294,23 @@ export class MucRoom {
         return messageMucSubscribe;
     }
 
+    public sendChatState() {
+        const chatState = xml(
+            "message",
+            {
+                type: "groupchat",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml(ChatStates.COMPOSING, {
+                xmlns: "http://jabber.org/protocol/chatstates",
+            })
+        );
+        this.connection.emitXmlMessage(chatState);
+        if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
+    }
+
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
     if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
@@ -387,22 +406,31 @@ export class MucRoom {
         } if (xml.getName() === "message" && xml.getAttr("type") === "groupchat" && !xml.getChild('subject')) {
             const from = jid(xml.getAttr("from"));
             const name = from.resource;
-            let delay = xml.getChild('delay')?.getAttr('stamp');
-            if(delay){
-                delay = new Date(delay);
+            const state = xml.getChildByAttr('xmlns', 'http://jabber.org/protocol/chatstates');
+            if(!state) {
+                let delay = xml.getChild('delay')?.getAttr('stamp');
+                if (delay) {
+                    delay = new Date(delay);
+                } else {
+                    delay = new Date();
+                }
+                const body = xml.getChildText('body') ?? '';
+                this.messageStore.update(messages => {
+                    messages.push({
+                        name,
+                        body,
+                        time: delay
+                    });
+                    return messages;
+                })
+                handledMessage = true;
             } else {
-                delay = new Date();
+                const {jid} = this.getUserDataByName(name);
+                if(jid) {
+                    this.updateUser(jid, null, null, null, null, null, null, null, state.getName());
+                    handledMessage = true;
+                }
             }
-            const body = xml.getChildText('body') ?? '';
-            this.messageStore.update(messages => {
-                messages.push({
-                    name,
-                    body,
-                    time: delay
-                });
-                return messages;
-            })
-            handledMessage = true;
         }
 
     if (!handledMessage) {
@@ -411,43 +439,51 @@ export class MucRoom {
     }
   }
 
-  private getCurrentStatus(jid: string) {
-    return get(this.presenceStore).get(jid)?.status ?? USER_STATUS_DISCONNECTED;
-  }
-
-    private getCurrentPlayUri(jid: string) {
-        return get(this.presenceStore).get(jid)?.playUri ?? '';
+    private getCurrentName(jid: JID|string) {
+        return get(this.presenceStore).get(jid.toString())?.name ?? '';
     }
 
-  private getCurrentUuid(jid: string) {
-    return get(this.presenceStore).get(jid)?.uuid ?? "";
+  private getCurrentStatus(jid: JID|string) {
+    return get(this.presenceStore).get(jid.toString())?.status ?? USER_STATUS_DISCONNECTED;
   }
 
-  private getCurrentColor(jid: string) {
-    return get(this.presenceStore).get(jid)?.color ?? "#626262";
-  }
-
-    private getCurrentWoka(jid: string) {
-        return get(this.presenceStore).get(jid)?.woka ?? defaultWoka;
+    private getCurrentPlayUri(jid: JID|string) {
+        return get(this.presenceStore).get(jid.toString())?.playUri ?? '';
     }
 
-    private getCurrentIsAdmin(jid: string) {
-        return get(this.presenceStore).get(jid)?.isAdmin ?? false;
+  private getCurrentUuid(jid: JID|string) {
+    return get(this.presenceStore).get(jid.toString())?.uuid ?? "";
+  }
+
+  private getCurrentColor(jid: JID|string) {
+    return get(this.presenceStore).get(jid.toString())?.color ?? "#626262";
+  }
+
+    private getCurrentWoka(jid: JID|string) {
+        return get(this.presenceStore).get(jid.toString())?.woka ?? defaultWoka;
+    }
+
+    private getCurrentIsAdmin(jid: JID|string) {
+        return get(this.presenceStore).get(jid.toString())?.isAdmin ?? false;
+    }
+
+    private getCurrentChatState(jid: JID|string) {
+        return get(this.presenceStore).get(jid.toString())?.chatState ?? ChatStates.INACTIVE;
     }
 
     private getMeIsAdmin() {
         return get(this.meStore).isAdmin;
     }
 
-    private updateUser(jid: string, nick: string, playUri: string|null = null, uuid: string|null = null, status: string|null = null, color: string|null = null, woka: string|null = null, isAdmin: boolean|null = null) {
+    private updateUser(jid: JID|string, nick: string|null = null, playUri: string|null = null, uuid: string|null = null, status: string|null = null, color: string|null = null, woka: string|null = null, isAdmin: boolean|null = null, chatState: string|null = null) {
         const user = get(userStore);
         if (
             (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid &&
             nick !== this.getPlayerName()
         ) {
             this.presenceStore.update((list) => {
-                list.set(jid, {
-                    name: nick,
+                list.set(jid.toString(), {
+                    name: nick ?? this.getCurrentName(jid),
                     playUri: playUri ?? this.getCurrentPlayUri(jid),
                     uuid: uuid ?? this.getCurrentUuid(jid),
                     status: status ?? this.getCurrentStatus(jid),
@@ -456,7 +492,8 @@ export class MucRoom {
                     color: color ?? this.getCurrentColor(jid),
                     woka: woka ?? this.getCurrentWoka(jid),
                     unreads: false,
-                    isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid)
+                    isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
+                    chatState: chatState ?? this.getCurrentChatState(jid)
                 });
                 numberPresenceUserStore.set(list.size);
                 return list;

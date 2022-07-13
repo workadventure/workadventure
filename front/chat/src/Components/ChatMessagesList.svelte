@@ -1,9 +1,10 @@
 <script lang="ts">
-    import {MessagesStore, MucRoom} from "../Xmpp/MucRoom";
+    import {ChatStates, MessagesStore, MucRoom, UsersStore} from "../Xmpp/MucRoom";
     import LL, {locale} from "../i18n/i18n-svelte";
 
     export let messagesStore: MessagesStore;
     export let mucRoom: MucRoom;
+    export let usersListStore: UsersStore;
 
     let lastDate: Date;
 
@@ -50,6 +51,32 @@
 					</div>
 				</div>
 			</div>
+		</div>
+	{/each}
+	{#each [...$usersListStore].filter(([,user]) => user.chatState === ChatStates.COMPOSING) as [,user]}
+		<div class={`tw-mt-2`}>
+			<div class={`tw-flex tw-justify-start`}>
+			<div class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2`} style={`background-color: ${mucRoom.getUserDataByName(user.name).color}`}>
+				<div class="wa-container">
+					<img class="tw-w-full" src={mucRoom.getUserDataByName(user.name).woka} alt="Avatar"/>
+				</div>
+			</div>
+			<div class={`tw-w-3/4`}>
+				<div class="tw-w-fit">
+				<div style={`border-bottom-color:${mucRoom.getUserDataByName(user.name).color}`} class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}>
+					<span class="tw-text-lighter-purple tw-text-xxs">{user.name}</span>
+				</div>
+				<div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+					<!-- loading animation -->
+					<div class="loading-group">
+						<span class="loading-dot" />
+						<span class="loading-dot" />
+						<span class="loading-dot" />
+					</div>
+				</div>
+				</div>
+			</div>
+		</div>
 		</div>
 	{/each}
 </div>

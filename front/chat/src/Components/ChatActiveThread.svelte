@@ -184,6 +184,7 @@
 				{#if $meStore.isAdmin}
 					<button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()} </button>
 				{/if}
+				<button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.sendChatState()}><RefreshCwIcon size="13" class="tw-mr-2" /> test </button>
 			</div>
 			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
 				<p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Description</p>
@@ -207,7 +208,7 @@
 			</div>
 		</div>
 	{:else}
-		<ChatMessagesList {messagesStore} mucRoom={activeThread}/>
+		<ChatMessagesList {messagesStore} mucRoom={activeThread} usersListStore={activeThread.getPresenceStore()}/>
 
 		<div class="messageForm">
 			<ChatMessageForm mucRoom={activeThread}/>

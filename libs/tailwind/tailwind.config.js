@@ -26,6 +26,7 @@ module.exports = {
       grey: "#f6f6f6",
       dark: "#0F1F2D",
       green: "#94ff60",
+      orange: "#FF9F45",
 
       gray: "#7b7b7b",
 
@@ -35,6 +36,14 @@ module.exports = {
       transparent: "rgba(0,0,0,0)",
     },
     extend: {
+      fontSize: {
+        xxs: [
+          `${(0.65)}rem`,
+          {
+            lineHeight: `${(0.85)}rem`
+          },
+        ],
+      },
       minHeight: {
         10: "2.5rem",
       },

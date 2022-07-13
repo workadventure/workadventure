@@ -146,6 +146,7 @@
 <!--
 <aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
     <p class="close-icon noselect" on:click={closeChat}>&times</p>
+
     < LIST USER SECTION >
     <section class="roomsList">
         <p class="system-text chat-rooms">{$LL.muc.title()}</p>
@@ -166,6 +167,7 @@
             <div class="center"><Spinner /></div>
         {/if}
     </section>
+
     <MESSAGE LIST SECTION>
     <section class="messagesList" bind:this={listDom}>
         <p class="system-text">{$LL.chat.intro()}</p>
@@ -181,6 +183,7 @@
         <ChatMessageForm bind:handleForm={handleFormBlur} />
     </section>
 </aside>
+
 <style lang="scss">
     @import "../style/breakpoints.scss";
 
@@ -192,6 +195,7 @@
         line-height: 25px;
         cursor: pointer;
     }
+
     p.system-text {
         border-radius: 8px;
         padding: 6px;
@@ -201,9 +205,11 @@
         display: inline-block;
         position: fixed;
     }
+
     p.system-text.chat-rooms {
         margin-top: -50px;
     }
+
     aside.chatWindow {
         z-index: 1000;
         pointer-events: auto;
@@ -216,9 +222,12 @@
         color: whitesmoke;
         display: flex;
         flex-direction: column;
+
         padding: 10px;
+
         border-bottom-right-radius: 16px;
         border-top-right-radius: 16px;
+
         section {
             &.roomsList {
                 margin-top: 35px;
@@ -227,23 +236,28 @@
                 max-height: 50%;
                 flex: inherit;
                 padding-top: 50px;
+
                 /*p.room-name {
                     margin-top: 10px;
                 }*/
             }
+
             &.messagesList {
                 margin-top: 35px;
                 overflow-y: auto;
                 height: auto;
                 max-height: 80%;
+
                 ul {
                     list-style-type: none;
                     padding-left: 0;
+
                     li:nth-child(1) {
                         margin-top: 40px;
                     }
                 }
             }
+
             &.messageForm {
                 position: fixed;
                 bottom: 10px;
@@ -256,9 +270,11 @@
             padding-top: 15px;
         }
     }
+
     div.center {
         text-align: center;
     }
+
     div.reconnecting {
         margin-top: 3rem;
     }
