@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
             //@ts-ignore
-            mucRooms: [{ name: "Default", url: playUri, type: "default"}],
+            mucRooms: [{ name: "Default", url: playUri, type: "default" }],
             activatedInviteUser: true,
         };
     }
