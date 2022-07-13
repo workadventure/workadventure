@@ -8,6 +8,7 @@ import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import {userStore} from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
+import Timeout = NodeJS.Timeout;
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -58,6 +59,7 @@ export class MucRoom {
     private messageStore: Writable<Message[]>;
     private meStore: Writable<Me>;
     private nickCount = 0;
+    private composingTimeOut: Timeout | undefined;
 
     constructor(
         private connection: ChatConnection,
@@ -294,7 +296,7 @@ export class MucRoom {
         return messageMucSubscribe;
     }
 
-    public sendChatState() {
+    public sendChatState(state: string) {
         const chatState = xml(
             "message",
             {
@@ -303,7 +305,7 @@ export class MucRoom {
                 from: this.jid,
                 id: uuidv4(),
             },
-            xml(ChatStates.COMPOSING, {
+            xml(state, {
                 xmlns: "http://jabber.org/protocol/chatstates",
             })
         );
@@ -511,6 +513,20 @@ export class MucRoom {
             list.delete(jid.toString());
             return list;
         });
+    }
+
+    public updateComposingState(state: string){
+        if(state === ChatStates.COMPOSING) {
+            if (this.composingTimeOut) { this.sendChatState(ChatStates.COMPOSING); }
+            this.composingTimeOut = setTimeout(() => {
+                this.sendChatState(ChatStates.PAUSED);
+            }, 5_000);
+        } else {
+            this.sendChatState(ChatStates.PAUSED);
+        }
+        if (this.composingTimeOut) {
+            clearTimeout(this.composingTimeOut);
+        }
     }
 
   public getPresenceStore(): UsersStore {

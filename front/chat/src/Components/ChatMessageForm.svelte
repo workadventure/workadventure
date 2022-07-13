@@ -1,6 +1,6 @@
 <script lang="ts">
     import { SendIcon } from "svelte-feather-icons";
-    import {MucRoom} from "../Xmpp/MucRoom";
+    import {ChatStates, MucRoom} from "../Xmpp/MucRoom";
     import LL from "../i18n/i18n-svelte";
 
     export let mucRoom: MucRoom;
@@ -10,17 +10,19 @@
     function onFocus() {
     }
     function onBlur() {
+        mucRoom.updateComposingState(ChatStates.PAUSED);
     }
 
-    function saveMessage() {
+    function sendMessage() {
         if (!newMessageText) return;
+        mucRoom.updateComposingState(ChatStates.PAUSED);
         mucRoom.sendMessage(newMessageText);
         //chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
     }
 </script>
 
-<form on:submit|preventDefault={saveMessage}>
+<form on:submit|preventDefault={sendMessage}>
     <div class="tw-w-full tw-p-2">
         <div
             class="tw-flex tw-items-center tw-relative"
@@ -32,13 +34,14 @@
                 placeholder={$LL.enterText()}
                 on:focus={onFocus}
                 on:blur={onBlur}
+                on:keypress={() => mucRoom.updateComposingState(ChatStates.COMPOSING)}
                 rows="1"
                 style="margin-bottom: 0;"
             />
             <button
                 type="submit"
                 class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
-                on:click={saveMessage}
+                on:click={sendMessage}
             >
                 <SendIcon size="17" />
             </button>
