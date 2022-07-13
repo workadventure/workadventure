@@ -6,9 +6,6 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import { localUserStore, userStore } from "../Stores/LocalUserStore";
-import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import {userStore} from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 
@@ -25,7 +22,10 @@ export type User = {
     woka: string;
     unreads: boolean;
     isAdmin: boolean;
+    chatState: string;
 };
+
+const ChatStates = {ACTIVE: 'active', INACTIVE: 'inactive', GONE: 'gone', COMPOSING: 'composing', PAUSED: 'paused'};
 export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
@@ -57,7 +57,7 @@ export class MucRoom {
     private teleportStore: Writable<Teleport>;
     private messageStore: Writable<Message[]>;
     private meStore: Writable<Me>;
-    private nickCount: number = 0;
+    private nickCount = 0;
 
     constructor(
         private connection: ChatConnection,
@@ -292,6 +292,23 @@ export class MucRoom {
         return messageMucSubscribe;
     }
 
+    private sendChatState() {
+        const chatState = xml(
+            "iq",
+            {
+                type: "set",
+                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+                from: this.jid,
+                id: uuidv4(),
+            },
+            xml("active", {
+                xmlns: "http://jabber.org/protocol/chatstates",
+            })
+        );
+        this.connection.emitXmlMessage(chatState);
+        if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
+    }
+
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
     if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
@@ -435,11 +452,15 @@ export class MucRoom {
         return get(this.presenceStore).get(jid)?.isAdmin ?? false;
     }
 
+    private getCurrentChatState(jid: string) {
+        return get(this.presenceStore).get(jid)?.chatState ?? ChatStates.INACTIVE;
+    }
+
     private getMeIsAdmin() {
         return get(this.meStore).isAdmin;
     }
 
-    private updateUser(jid: string, nick: string, playUri: string|null = null, uuid: string|null = null, status: string|null = null, color: string|null = null, woka: string|null = null, isAdmin: boolean|null = null) {
+    private updateUser(jid: string, nick: string, playUri: string|null = null, uuid: string|null = null, status: string|null = null, color: string|null = null, woka: string|null = null, isAdmin: boolean|null = null, chatState: string|null = null) {
         const user = get(userStore);
         if (
             (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@ejabberd" !== jid &&
@@ -456,7 +477,8 @@ export class MucRoom {
                     color: color ?? this.getCurrentColor(jid),
                     woka: woka ?? this.getCurrentWoka(jid),
                     unreads: false,
-                    isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid)
+                    isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
+                    chatState: chatState ?? this.getCurrentChatState(jid)
                 });
                 numberPresenceUserStore.set(list.size);
                 return list;

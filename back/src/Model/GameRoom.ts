@@ -625,7 +625,7 @@ export class GameRoom {
      * @throws LocalUrlError if the map we are trying to load is hosted on a local network
      * @throws Error
      */
-    private getMap(): Promise<ITiledMap> {
+    private getMap(canLoadLocalUrl = false): Promise<ITiledMap> {
         if (!this.mapPromise) {
             this.mapPromise = mapFetcher.fetchMap(this.mapUrl, canLoadLocalUrl);
         }

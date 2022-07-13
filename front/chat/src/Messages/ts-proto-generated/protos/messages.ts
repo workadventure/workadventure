@@ -3,12 +3,7 @@ import Long from "long";
 import _m0 from "protobufjs/minimal";
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import {
-  UInt32Value,
-  BoolValue,
-  StringValue,
-  Int32Value,
-} from "../google/protobuf/wrappers";
+import { UInt32Value, BoolValue, StringValue, Int32Value } from "../google/protobuf/wrappers";
 
 export const protobufPackage = "workadventure";
 
@@ -9335,59 +9330,36 @@ export class MapStorageClientImpl implements MapStorage {
 }
 
 interface Rpc {
-  request(
-    service: string,
-    method: string,
-    data: Uint8Array
-  ): Promise<Uint8Array>;
-  clientStreamingRequest(
-    service: string,
-    method: string,
-    data: Observable<Uint8Array>
-  ): Promise<Uint8Array>;
-  serverStreamingRequest(
-    service: string,
-    method: string,
-    data: Uint8Array
-  ): Observable<Uint8Array>;
-  bidirectionalStreamingRequest(
-    service: string,
-    method: string,
-    data: Observable<Uint8Array>
-  ): Observable<Uint8Array>;
+    request(service: string, method: string, data: Uint8Array): Promise<Uint8Array>;
+    clientStreamingRequest(service: string, method: string, data: Observable<Uint8Array>): Promise<Uint8Array>;
+    serverStreamingRequest(service: string, method: string, data: Uint8Array): Observable<Uint8Array>;
+    bidirectionalStreamingRequest(
+        service: string,
+        method: string,
+        data: Observable<Uint8Array>
+    ): Observable<Uint8Array>;
 }
 
-type Builtin =
-  | Date
-  | Function
-  | Uint8Array
-  | string
-  | number
-  | boolean
-  | undefined;
+type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin
-  ? T
-  : T extends Array<infer U>
-  ? Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U>
-  ? ReadonlyArray<DeepPartial<U>>
-  : T extends { $case: string }
-  ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & {
-      $case: T["$case"];
-    }
-  : T extends {}
-  ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+    ? T
+    : T extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T extends ReadonlyArray<infer U>
+    ? ReadonlyArray<DeepPartial<U>>
+    : T extends { $case: string }
+    ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
+    : T extends {}
+    ? { [K in keyof T]?: DeepPartial<T[K]> }
+    : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin
-  ? P
-  : P &
-      { [K in keyof P]: Exact<P[K], I[K]> } &
-      Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+    ? P
+    : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 if (_m0.util.Long !== Long) {
-  _m0.util.Long = Long as any;
-  _m0.configure();
+    _m0.util.Long = Long as any;
+    _m0.configure();
 }
