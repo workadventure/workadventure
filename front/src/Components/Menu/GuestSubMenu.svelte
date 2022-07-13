@@ -4,7 +4,7 @@
     import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
 
     let entryPoint: string = $startLayerNamesStore[0];
-    let walkAutomatically: boolean = false;
+    let walkAutomatically = false;
     const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
     const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 
@@ -12,7 +12,9 @@
         const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
         input.focus();
         input.select();
-        document.execCommand("copy");
+        navigator.clipboard
+            .writeText(input.value)
+            .catch((err) => console.error("Navigator clipboard write text error: ", err));
     }
 
     function getLink() {

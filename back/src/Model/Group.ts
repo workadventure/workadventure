@@ -7,14 +7,14 @@ import { MAX_PER_GROUP } from "../Enum/EnvironmentVariable";
 import type { Zone } from "../Model/Zone";
 
 export class Group implements Movable {
-    private static nextId: number = 1;
+    private static nextId = 1;
 
     private id: number;
     private users: Set<User>;
     private x!: number;
     private y!: number;
-    private wasDestroyed: boolean = false;
-    private locked: boolean = false;
+    private wasDestroyed = false;
+    private locked = false;
     private roomId: string;
     private currentZone: Zone | null = null;
     /**
@@ -172,7 +172,7 @@ export class Group implements Movable {
         this.disconnectCallback(user, this);
     }
 
-    lock(lock: boolean = true): void {
+    lock(lock = true): void {
         this.locked = lock;
     }
 

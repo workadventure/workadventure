@@ -36,7 +36,7 @@ export type TeleportStore = Readable<Teleport>;
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
-    private nickCount: number = 0;
+    private nickCount = 0;
 
     constructor(
         private connection: RoomConnection,

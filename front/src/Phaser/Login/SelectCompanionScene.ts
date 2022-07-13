@@ -17,11 +17,11 @@ export class SelectCompanionScene extends ResizableScene {
     private selectedCompanion!: Phaser.Physics.Arcade.Sprite;
     private companions: Array<Phaser.Physics.Arcade.Sprite> = new Array<Phaser.Physics.Arcade.Sprite>();
     private companionModels: Array<CompanionResourceDescriptionInterface> = [];
-    private saveZoom: number = 0;
+    private saveZoom = 0;
 
     private currentCompanion = 0;
-    private pointerClicked: boolean = false;
-    private pointerTimer: number = 0;
+    private pointerClicked = false;
+    private pointerTimer = 0;
     private loader: Loader;
 
     constructor() {

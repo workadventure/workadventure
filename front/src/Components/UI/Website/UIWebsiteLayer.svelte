@@ -7,9 +7,10 @@
 
     let main: HTMLDivElement;
     const iframe = document.createElement("iframe");
+    iframe.id = `ui-website-${uiWebsite.id}`;
+    iframe.tabIndex = -1;
 
     $: {
-        iframe.id = `ui-website-${uiWebsite.id}`;
         iframe.src = uiWebsite.url;
         iframe.title = uiWebsite.url;
         iframe.style.border = "0";

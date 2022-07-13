@@ -103,7 +103,11 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PlayerDetailsUpdatedMessage,
+} from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
@@ -223,13 +227,13 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
+    private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private mapEditorModeManager!: MapEditorModeManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
-    private preloading: boolean = true;
+    private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
@@ -237,12 +241,12 @@ export class GameScene extends DirtyScene {
     private areaManager!: DynamicAreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
-    private firstCameraUpdateSent: boolean = false;
+    private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
-    private jitsiDominantSpeaker: boolean = false;
-    private jitsiParticipantsCount: number = 0;
-    private cleanupDone: boolean = false;
+    private showVoiceIndicatorChangeMessageSent = false;
+    private jitsiDominantSpeaker = false;
+    private jitsiParticipantsCount = 0;
+    private cleanupDone = false;
     public readonly superLoad: SuperLoaderPlugin;
     private xmppClient!: XmppClient;
 
@@ -844,7 +848,16 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection);
+                //eslint-disable-next-line @typescript-eslint/no-this-alias
+                const me = this;
+                this.events.once("render", () => {
+                    if (me.connection) {
+                        this.simplePeer = new SimplePeer(me.connection);
+                    } else {
+                        console.warn("Connection to peers not started!");
+                    }
+                });
+
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
@@ -950,6 +963,9 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+            if (availabilityStatus === AvailabilityStatus.SILENT) {
+                this.CurrentPlayer.showTalkIcon(false, true);
+            }
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -999,6 +1015,7 @@ export class GameScene extends DirtyScene {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                         if (volume === undefined) {
+                            this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
@@ -1696,6 +1713,10 @@ ${escapedMessage}
         });
     }
 
+    public getSimplePeer() {
+        return this.simplePeer;
+    }
+
     public cleanupClosingScene(): void {
         // make sure we restart CameraControls
         this.disableMediaBehaviors();
@@ -1922,21 +1943,6 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-                if ((pointer.event.target as Element)?.localName !== "canvas") {
-                    return;
-                }
-                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
-                    return; //we don't want the menu to open when pinching on a touch screen.
-                }
-
-                // toggle EmoteMenu
-                if (get(emoteMenuStore)) {
-                    emoteMenuStore.closeEmoteMenu();
-                } else {
-                    emoteMenuStore.openEmoteMenu();
-                }
-            });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
@@ -1945,7 +1951,6 @@ ${escapedMessage}
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
-                analyticsClient.launchEmote(emoteKey);
             });
         } catch (err) {
             if (err instanceof TextureError) {
@@ -2280,7 +2285,7 @@ ${escapedMessage}
             character.setApiOutlineColor(message.details?.outlineColor);
         }
         if (message.details?.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.details?.showVoiceIndicator);
+            character.showTalkIcon(message.details?.showVoiceIndicator, !message.details?.showVoiceIndicator);
         }
         if (message.details?.availabilityStatus !== undefined) {
             character.setAvailabilityStatus(message.details?.availabilityStatus);
@@ -2324,7 +2329,7 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant: boolean = false): void {
+    private reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();

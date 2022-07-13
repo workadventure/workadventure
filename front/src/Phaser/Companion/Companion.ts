@@ -19,7 +19,7 @@ export class Companion extends Container {
 
     private delta: number;
     private invisible: boolean;
-    private updateListener: Function;
+    private updateListener: (time: number, delta: number) => void;
     private target: { x: number; y: number; direction: PlayerAnimationDirections };
 
     private companionName: string;

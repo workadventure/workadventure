@@ -11,7 +11,9 @@ import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefi
 import { EJABBERD_DOMAIN, EJABBERD_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const { client, xml, jid } = require("@xmpp/client");
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
 
 interface JID {
@@ -100,7 +102,7 @@ export class XmppClient {
                     pusherToIframeMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
 
                     if (!this.clientSocket.disconnecting) {
-                        this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
+                        this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
                     }
                 }
             });
@@ -140,7 +142,6 @@ export class XmppClient {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
-            // @ts-ignore
             xmpp.start()
                 .then(() => {
                     console.log("XmppClient => start");
@@ -154,7 +155,7 @@ export class XmppClient {
 
             xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
-                // @ts-ignore
+
                 xmppMessage.setStanza(stanza.toString());
 
                 const pusherToIframeMessage = new PusherToIframeMessage();
@@ -188,7 +189,7 @@ export class XmppClient {
         });
     }*/
 
-    close() {
+    close(): void {
         console.log("> Disconnecting from xmppClient");
         this.clientPromise
             .then(async (xmpp) => {
@@ -205,7 +206,7 @@ export class XmppClient {
             .catch((e) => console.error(e));
 
         //cancel promise
-        //this.clientPromise.cancel();
+        this.clientPromise.cancel();
     }
 
     async send(stanza: string): Promise<void> {

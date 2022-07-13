@@ -13,6 +13,6 @@ export interface UserInputHandlerInterface {
     handleKeyUpEvent: (event: KeyboardEvent) => KeyboardEvent;
     handleKeyDownEvent: (event: KeyboardEvent) => KeyboardEvent;
 
-    addSpaceEventListener: (callback: Function) => void;
-    removeSpaceEventListner: (callback: Function) => void;
+    addSpaceEventListener: (callback: () => void) => void;
+    removeSpaceEventListener: (callback: () => void) => void;
 }

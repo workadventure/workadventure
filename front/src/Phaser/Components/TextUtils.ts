@@ -22,7 +22,7 @@ export class TextUtils {
             options.fontStyle = "italic";
         }
         // Note: there is no support for "strikeout" and "underline"
-        let fontSize: number = 16;
+        let fontSize = 16;
         if (object.text.pixelsize) {
             fontSize = object.text.pixelsize;
         }

@@ -52,6 +52,7 @@
             width: 100%;
         }
         i {
+            white-space: nowrap;
             span {
                 padding: 2px 32px;
             }

@@ -9,7 +9,7 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 export const LoginSceneName = "LoginScene";
 
 export class LoginScene extends ResizableScene {
-    private name: string = "";
+    private name = "";
 
     constructor() {
         super({

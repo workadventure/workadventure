@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc": "tsc && cp -rf ./data ./dist/",
-    "dev": "ts-node-dev --respawn ./server.ts",
+    "dev": "ts-node-dev --exit-child --respawn ./server.ts",
     "prod": "tsc && cp -rf ./data ./dist/ && node --max-old-space-size=4096 ./dist/server.js",
     "runprod": "node --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
@@ -79,7 +79,7 @@
     "jasmine": "^3.5.0",
     "lint-staged": "^11.0.0",
     "prettier": "^2.3.1",
-    "ts-node-dev": "^1.1.8",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^4.5.2"
   },
   "lint-staged": {

@@ -45,6 +45,15 @@ function createPlayersStore() {
         getPlayerById(userId: number): PlayerInterface | undefined {
             return players.get(userId);
         },
+        getPlayerByUuid(userUuid: string): PlayerInterface | undefined {
+            for (const user of players.values()) {
+                if (userUuid === user.userUuid) {
+                    return user;
+                }
+            }
+
+            return undefined;
+        },
         addFacticePlayer(name: string): number {
             let userId: number | null = null;
             players.forEach((p) => {

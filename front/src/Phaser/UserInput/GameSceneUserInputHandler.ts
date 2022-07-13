@@ -122,11 +122,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return event;
     }
 
-    public addSpaceEventListener(callback: Function): void {
+    public addSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard.addListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().disableSelectingByDistance();
     }
-    public removeSpaceEventListner(callback: Function): void {
+    public removeSpaceEventListener(callback: () => void): void {
         this.gameScene.input.keyboard.removeListener("keyup-SPACE", callback);
         this.gameScene.getActivatablesManager().enableSelectingByDistance();
     }
