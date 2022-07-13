@@ -37,10 +37,6 @@ jobs:
         run: yarn install
         working-directory: "front"
 
-      - name: "Install chat dependencies"
-        run: yarn install
-        working-directory: "front/chat"
-
       - name: "Install messages dependencies"
         run: yarn install
         working-directory: "messages"
@@ -109,6 +105,10 @@ jobs:
         with:
           version: '3.x'
 
+      - name: "Install libs/tailwind dependencies"
+        run: yarn install
+        working-directory: "libs/tailwind"
+
       - name: "Install dependencies"
         run: yarn install
         working-directory: "front/chat"
@@ -150,12 +150,12 @@ jobs:
         run: yarn run lint
         working-directory: "front/chat"
 
-      # TODO actiavte pretty
+      # TODO active
       #- name: "Pretty"
       #  run: yarn run pretty-check
-      #  working-directory: "front"
+      #  working-directory: "front/chat"
 
-      # TODO activate Jasmine
+      # TODO active
       #- name: "Jasmine"
       #  run: yarn test
       #  working-directory: "front/chat"
