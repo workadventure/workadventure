@@ -11,7 +11,9 @@ import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefi
 import { EJABBERD_DOMAIN, EJABBERD_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const { client, xml, jid } = require("@xmpp/client");
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
 
 interface JID {
@@ -118,11 +120,14 @@ export class XmppClient {
                 xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
+                        console.info("initial muc room", definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                        //@ts-ignore
                         if (!definition.name || !definition.url || !definition.type) {
                             throw new Error("Name URL and type cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
+                        //@ts-ignore
                         mucRoomDefinitionMessage.setUrl(definition.url);
                         mucRoomDefinitionMessage.setType(definition.type);
                         return mucRoomDefinitionMessage;
@@ -142,7 +147,6 @@ export class XmppClient {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
-            // @ts-ignore
             xmpp.start()
                 .then(() => {
                     console.log("XmppClient => start");
@@ -203,7 +207,8 @@ export class XmppClient {
         });
     }*/
 
-    close() {
+    close(): void {
+        console.log("> Disconnecting from xmppClient");
         this.clientPromise
             .then(async (xmpp) => {
                 //cancel promise

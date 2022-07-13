@@ -190,9 +190,9 @@ export class MediaManager {
 
         if (this.hasNotification()) {
             const options = {
-                icon: "/resources/logos/logo-WA-min.png",
-                image: "/resources/logos/logo-WA-min.png",
-                badge: "/resources/logos/logo-WA-min.png",
+                icon: "/static/images/logo-WA-min.png",
+                image: "/static/images/logo-WA-min.png",
+                badge: "/static/images/logo-WA-min.png",
             };
             switch (notificationType) {
                 case NotificationType.discussion:

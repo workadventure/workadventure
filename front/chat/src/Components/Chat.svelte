@@ -17,36 +17,38 @@
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeLine.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
 
-    let listDom: HTMLElement;
-    let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
+  let listDom: HTMLElement;
+  let chatWindowElement: HTMLElement;
+  let handleFormBlur: { blur(): void };
+  let autoscroll: boolean;
 
     let searchValue = '';
     let showUsers = true;
     let showLives = true;
     let activeThreadTimeLine = false;
 
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
+  beforeUpdate(() => {
+    autoscroll =
+      listDom &&
+      listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
+  });
 
-    onMount(async () => {
-        if(!$locale){
-            await localeDetector();
-        }
-        listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    function onClick(event: MouseEvent) {
-        if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
-            handleFormBlur.blur();
-        }
+  onMount(() => {
+    if (!$locale) {
+      localeDetector();
     }
+    listDom.scrollTo(0, listDom.scrollHeight);
+  });
+
+  afterUpdate(() => {
+    if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
+  });
+
+  function onClick(event: MouseEvent) {
+    if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
+      handleFormBlur.blur();
+    }
+  }
 
     function handleActiveThread(event: unknown){
         activeThreadStore.set((event as {detail: MucRoom|undefined}).detail);
@@ -58,15 +60,15 @@
         showLives = !showLives;
     }
 
-    function closeChat() {
-        window.parent.postMessage({ type: "closeChat" }, "*");
-        //document.activeElement?.blur();
+  function closeChat() {
+    window.parent.postMessage({ type: "closeChat" }, "*");
+    //document.activeElement?.blur();
+  }
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      closeChat();
     }
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            closeChat();
-        }
-    }
+  }
 
     const defaultRoom = (): MucRoom => {
         const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.type === 'default');

@@ -37,7 +37,7 @@ const emote: EmoteCallback = (emoteEventMessage, listener): void => {};
 
 describe("GameRoom", () => {
     it("should connect user1 and user2", async () => {
-        let connectCalledNumber: number = 0;
+        let connectCalledNumber = 0;
         const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalledNumber++;
         };
@@ -74,7 +74,7 @@ describe("GameRoom", () => {
     });
 
     it("should connect 3 users", async () => {
-        let connectCalled: boolean = false;
+        let connectCalled = false;
         const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalled = true;
         };
@@ -112,8 +112,8 @@ describe("GameRoom", () => {
     });
 
     it("should disconnect user1 and user2", async () => {
-        let connectCalled: boolean = false;
-        let disconnectCallNumber: number = 0;
+        let connectCalled = false;
+        let disconnectCallNumber = 0;
         const connect: ConnectCallback = (user: User, group: Group): void => {
             connectCalled = true;
         };

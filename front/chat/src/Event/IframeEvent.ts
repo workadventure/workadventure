@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isNotification } from "./Notification";
 import { isUserData } from "../Messages/JsonMessages/ChatData";
-import {isLocale} from "./Locale";
+import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import {isJoinMucEvent} from "./JoinMucEvent";
 
@@ -47,6 +47,6 @@ export const isIframeEventWrapper = z.union([
 ]);
 
 export const isLookingLikeIframeEventWrapper = z.object({
-    type: z.string(),
-    data: z.unknown().optional(),
+  type: z.string(),
+  data: z.unknown().optional(),
 });

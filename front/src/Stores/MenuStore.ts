@@ -52,7 +52,7 @@ export enum SubMenusInterface {
 
 type MenuKeys = keyof Translation["menu"]["sub"];
 
-interface TranslatedMenu {
+export interface TranslatedMenu {
     type: "translated";
     key: MenuKeys;
 }
@@ -67,8 +67,13 @@ interface ScriptingMenu {
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
 
+export const inviteMenu: MenuItem = {
+    type: "translated",
+    key: SubMenusInterface.invite,
+};
+
 function createSubMenusStore() {
-    const { subscribe, update } = writable<MenuItem[]>([
+    const { subscribe, update, set } = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
@@ -87,16 +92,14 @@ function createSubMenusStore() {
         },
         {
             type: "translated",
-            key: SubMenusInterface.invite,
-        },
-        {
-            type: "translated",
             key: SubMenusInterface.aboutRoom,
         },
+        inviteMenu,
     ]);
 
     return {
         subscribe,
+        set,
         addTranslatedMenu(menuCommand: MenuKeys) {
             update((menuList) => {
                 if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
@@ -192,3 +195,23 @@ export function getProfileUrl() {
 export function getMeUrl() {
     return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }
+
+export const inviteUserActivated = writable(true);
+
+inviteUserActivated.subscribe((value) => {
+    //update menu tab
+    const valuesSubMenusStore = get(subMenusStore);
+    if (!valuesSubMenusStore) {
+        return;
+    }
+    const indexInviteMenu = valuesSubMenusStore.findIndex(
+        (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+    );
+    if (value && indexInviteMenu === -1) {
+        valuesSubMenusStore.push(inviteMenu);
+        subMenusStore.set(valuesSubMenusStore);
+    } else if (!value && indexInviteMenu !== -1) {
+        valuesSubMenusStore.splice(indexInviteMenu, 1);
+        subMenusStore.set(valuesSubMenusStore);
+    }
+});

@@ -182,7 +182,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
-    public setClickable(clickable: boolean = true): void {
+    public setClickable(clickable = true): void {
         if (this.clickable === clickable) {
             return;
         }
@@ -247,11 +247,11 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
+    public showTalkIcon(show = true, forceClose = false): void {
         this.talkIcon.show(show, forceClose);
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant: boolean = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
         this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
     }
 

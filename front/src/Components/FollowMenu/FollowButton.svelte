@@ -1,7 +1,7 @@
 <script lang="ts">
     import followImg from "../images/follow.svg";
 
-    export let hidden: Boolean;
+    export let hidden: boolean;
 
     let cancelButton = false;
 </script>

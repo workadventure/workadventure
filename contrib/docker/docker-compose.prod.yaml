@@ -1,10 +1,11 @@
-version: "3.5"
+version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.6
+    image: traefik:v2.8
     command:
       - --log.level=${LOG_LEVEL}
       - --providers.docker
+      - --providers.docker.exposedbydefault=false
       # Entry points
       - --entryPoints.web.address=:${HTTP_PORT}
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
@@ -32,6 +33,7 @@ services:
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE
+      - ENABLE_FEATURE_MAP_EDITOR
       - PUSHER_URL=//${PUSHER_HOST}
       - ICON_URL=//${ICON_HOST}
       - TURN_SERVER
@@ -45,6 +47,7 @@ services:
       - DISABLE_ANONYMOUS
       - DISABLE_NOTIFICATIONS
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`${FRONT_HOST}`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=80"
@@ -68,6 +71,7 @@ services:
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
@@ -83,6 +87,7 @@ services:
     command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
+      - ENABLE_FEATURE_MAP_EDITOR
       - SECRET_KEY
       - ADMIN_API_TOKEN
       - ADMIN_API_URL
@@ -100,6 +105,7 @@ services:
       - REDIS_HOST=redis
       - PROMETHEUS_AUTHORIZATION_TOKEN
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
@@ -113,6 +119,7 @@ services:
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.icon.rule=Host(`${ICON_HOST}`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
@@ -126,6 +133,21 @@ services:
     image: redis:6
     volumes:
       - redisdata:/data
+
+  ejabberd:
+    image: ejabberd/ecs
+    volumes:
+      - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.xmpp.rule=Host(`${XMPP_HOST}`)"
+      - "traefik.http.routers.xmpp.entryPoints=web"
+      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+      - "traefik.http.routers.xmpp-ssl.rule=Host(`${XMPP_HOST}`)"
+      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
+      - "traefik.http.routers.xmpp-ssl.tls=true"
+      - "traefik.http.routers.xmpp-ssl.service=xmpp"
+      - "traefik.http.routers.xmpp-ssl.tls.certresolver=myresolver"
 
 volumes:
   redisdata:

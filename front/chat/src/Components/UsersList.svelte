@@ -14,14 +14,15 @@
     export let showUsers: boolean;
     export let searchValue: string;
 
-    let minimizeUser = true;
-    const maxUsersMinimized = 7;
+  let minimizeUser = true;
+  const maxUsersMinimized = 7;
 
     function openChat(user: User) {
         return user;
         //dispatch('activeThread', user);
     }
 </script>
+
 <div>
 	<div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
 		<div class="tw-px-4 tw-py-1 tw-flex tw-items-center">

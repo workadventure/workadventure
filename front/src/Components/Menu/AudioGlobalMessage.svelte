@@ -76,6 +76,7 @@
 <section class="section-input-send-audio centered-column">
     <img
         class="clickable tw-w-1/4"
+        draggable="false"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
         on:click|preventDefault={() => {

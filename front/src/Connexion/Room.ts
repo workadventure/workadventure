@@ -22,11 +22,12 @@ export class Room {
     private _contactPage: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
-    private _canReport: boolean = false;
+    private _canReport = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    //eslint-disable-next-line @typescript-eslint/ban-types
     private _mucRooms: Array<Object> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
@@ -75,7 +76,7 @@ export class Room {
         const baseUrl = new URL(currentRoomUrl);
 
         const currentRoom = new Room(baseUrl);
-        let instance: string = "global";
+        let instance = "global";
         if (currentRoom.id.startsWith("_/") || currentRoom.id.startsWith("*/")) {
             const match = /[_*]\/([^/]+)\/.+/.exec(currentRoom.id);
             if (!match) throw new Error('Could not extract instance from "' + currentRoom.id + '"');
@@ -232,6 +233,7 @@ export class Room {
         return this._loginSceneLogo;
     }
 
+    //eslint-disable-next-line @typescript-eslint/ban-types
     get mucRooms(): Array<Object> | undefined {
         return this._mucRooms;
     }

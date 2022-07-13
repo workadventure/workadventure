@@ -9,7 +9,7 @@ declare global {
 }
 
 class DesktopApi {
-    isSilent: boolean = false;
+    isSilent = false;
 
     init() {
         if (!window?.WAD?.desktop) {

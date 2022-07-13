@@ -7,6 +7,7 @@ function initListeners() {
     let second_website = undefined;
 
     WA.room.onEnterLayer('first_website').subscribe(async () => {
+        console.log("dfddf");
         first_website = await WA.ui.website.open({
             url: "http://maps.workadventure.localhost/tests/UIWebsite/index.html",
             position: {
@@ -18,6 +19,8 @@ function initListeners() {
                 width: "50vw",
             },
         });
+
+        console.log(first_website);
     });
 
     WA.room.onLeaveLayer('first_website').subscribe(() => {
