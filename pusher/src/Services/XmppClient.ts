@@ -41,7 +41,7 @@ export class XmppClient {
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
-    private deleteSubscribeOnDisconnect: boolean = false;
+    private deleteSubscribeOnDisconnect = false;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         const clientJID = jid(clientSocket.jabberId);
