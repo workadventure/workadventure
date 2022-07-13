@@ -266,6 +266,7 @@
     &-group{
         display: flex;
         align-items: center;
+        justify-content: center;
     }
 
     &-dot{
@@ -285,6 +286,7 @@
 
         &:nth-child(3){
             animation-delay: .6s;
+            margin-right: 0;
         }
     }
 }
