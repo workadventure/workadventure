@@ -22,13 +22,13 @@ jobs:
         run: cat package.json
         working-directory: "front/packages/iframe-api-typings"
 
-      - name: "Install dependencies"
-        run: yarn install
-        working-directory: "front"
-
       - name: "Install tailwind dependencies"
         run: yarn install
         working-directory: "libs/tailwind"
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "front"
 
       - name: "Build"
         run: yarn run build-typings
