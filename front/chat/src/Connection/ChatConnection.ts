@@ -124,10 +124,13 @@ export class ChatConnection implements ChatConnection {
           }
           default: {
             // Security check: if we forget a "case", the line below will catch the error at compile-time.
+            //@ts-ignore
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
             const _exhaustiveCheck: any = message;
           }
         }
       };
+      //eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       console.log("Error");
       throw new Error("Error");

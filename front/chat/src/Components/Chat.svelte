@@ -33,9 +33,9 @@
       listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
   });
 
-  onMount(() => {
+  onMount(async () => {
     if (!$locale) {
-      localeDetector();
+      await localeDetector();
     }
     listDom.scrollTo(0, listDom.scrollHeight);
   });

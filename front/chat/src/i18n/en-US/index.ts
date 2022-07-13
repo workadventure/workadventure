@@ -16,7 +16,6 @@ const en_US: BaseTranslation = {
   reconnecting: "Connection to presence server ...",
   waitingData: "Waiting user data ...",
   search: "Search for user, message, channel, etc.",
-  CONNECTING: "test",
     userOnline: "user online",
     usersOnline: "users online",
     open: "Open",
@@ -30,7 +29,6 @@ const en_US: BaseTranslation = {
     rankDown: "Retrograde",
     reinit: "Re initialize",
     enterText: "Enter a message ...",
-    CONNECTING: "test",
     timeLine: {
         title: 'Your Timeline',
         open: 'Open your time line history!',

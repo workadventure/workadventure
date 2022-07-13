@@ -29,7 +29,6 @@ const fr_FR: Translation = {
     rankDown: "Rétrograder",
     reinit: "Ré initialiser",
     enterText: "Écrire un message ...",
-    CONNECTING: "test",
     timeLine: {
         title: 'Votre historique',
         open: 'Ouvrir votre historique de converçation !',
