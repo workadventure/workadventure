@@ -574,7 +574,7 @@ export class RoomConnection implements RoomConnection {
         this.timeout = setTimeout(() => {
             console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
             this.socket.close();
-        }, pingTimeout);
+        }, manualPingDelay);
     }
 
     private sendPong(): void {
