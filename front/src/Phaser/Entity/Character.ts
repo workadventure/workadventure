@@ -78,7 +78,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             if (userId == undefined) {
                 return;
             }
-            let player = playersStore.getPlayerById(userId);
+            const player = playersStore.getPlayerById(userId);
             if (player == undefined) {
                 return;
             }
