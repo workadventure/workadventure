@@ -102,7 +102,7 @@ export class XmppClient {
                     pusherToIframeMessage.setXmppconnectionstatuschangemessage(xmppConnectionStatusChangeMessage);
 
                     if (!this.clientSocket.disconnecting) {
-                        this.clientSocket.send(serverToClientMessage.serializeBinary().buffer, true);
+                        this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                     }
                 }
             });
