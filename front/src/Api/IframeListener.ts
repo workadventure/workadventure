@@ -142,7 +142,7 @@ class IframeListener {
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
-    private sendPlayerMove: boolean = false;
+    private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -206,7 +206,7 @@ class IframeListener {
 
                     const errorHandler = (reason: unknown) => {
                         console.error("An error occurred while responding to an iFrame query.", reason);
-                        let reasonMsg: string = "";
+                        let reasonMsg = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
                         } else if (typeof reason === "object") {
@@ -360,7 +360,7 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
         return new Promise<void>((resolve) => {
             console.info("Loading map related script at ", scriptUrl);
 

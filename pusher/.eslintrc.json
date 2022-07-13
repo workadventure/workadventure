@@ -8,6 +8,7 @@
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking"
     ],
     "globals": {
@@ -29,6 +30,8 @@
         "@typescript-eslint/no-unused-vars": [
             "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
         ],
-        "no-throw-literal": "error"
+        "no-throw-literal": "error",
+        "@typescript-eslint/camelcase": "off",
+        "@typescript-eslint/ban-ts-ignore": "off"
     }
 }

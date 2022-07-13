@@ -94,7 +94,7 @@
         subscribeListeners.push(
             chatVisibilityStore.subscribe(() => {
                 if (get(gameManager.getInitStore())) {
-                    //gameManager.getCurrentGameScene()?.onResize();
+                    gameManager.getCurrentGameScene()?.onResize();
                 }
             })
         );
@@ -172,7 +172,9 @@
         <p class="system-text">{$LL.chat.intro()}</p>
         <ul>
             {#each $chatMessagesStore as message, i}
-                <li><ChatElement {message} line={i} /></li>
+                <li>
+                    <ChatElement {message} line={i} />
+                </li>
             {/each}
         </ul>
     </section>
@@ -182,6 +184,8 @@
 </aside>
 
 <style lang="scss">
+    @import "../style/breakpoints.scss";
+
     p.close-icon {
         position: absolute;
         padding: 4px;
@@ -211,9 +215,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        height: 100vh;
-        width: 30vw;
-        min-width: 350px;
+        height: 95%;
+        width: 95%;
         background: rgb(5, 31, 51, 0.9);
         color: whitesmoke;
         display: flex;
@@ -260,6 +263,11 @@
                 height: auto;
             }
         }
+
+        .messageForm {
+            flex: 0 70px;
+            padding-top: 15px;
+        }
     }
 
     div.center {
@@ -268,6 +276,20 @@
 
     div.reconnecting {
         margin-top: 3rem;
+    }
+
+    @include media-breakpoint-up(xxl) {
+        aside.chatWindow {
+            height: 100vh;
+            width: 30vw;
+        }
+    }
+
+    @include media-breakpoint-up(sm) {
+        aside.chatWindow {
+            height: calc(99vh - 50px);
+            width: 95vw;
+        }
     }
 </style>
 -->
@@ -283,9 +305,13 @@
         min-width: 250px;
         transition: all 0.1s ease-in-out;
         pointer-events: none;
+        visibility: hidden;
+        display: none;
         &.show {
             left: 0;
             pointer-events: auto;
+            visibility: visible;
+            display: block;
         }
         iframe {
             width: 100%;

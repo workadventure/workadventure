@@ -592,7 +592,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         return this.layers[categoryIndex][this.selectedLayers[categoryIndex]].id;
     }
 
-    private selectNextGridItem(previous: boolean = false): void {
+    private selectNextGridItem(previous = false): void {
         if (!this.selectedBodyPartType) {
             return;
         }
@@ -610,7 +610,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    private selectNextCategory(previous: boolean = false): void {
+    private selectNextCategory(previous = false): void {
         if (!this.selectedBodyPartType) {
             this.selectBodyPartType(CustomWokaBodyPart.Body);
             return;
@@ -636,7 +636,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         );
     }
 
-    private centerGridOnItem(item: WokaBodyPartSlot, duration: number = 500): void {
+    private centerGridOnItem(item: WokaBodyPartSlot, duration = 500): void {
         void this.bodyPartsDraggableGrid.centerOnItem(
             this.bodyPartsDraggableGrid.getAllItems().indexOf(item),
             duration

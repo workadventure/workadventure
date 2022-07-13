@@ -3,9 +3,14 @@ import Long from "long";
 import _m0 from "protobufjs/minimal";
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
-import { UInt32Value, BoolValue, StringValue, Int32Value } from "../google/protobuf/wrappers";
+import {
+  UInt32Value,
+  BoolValue,
+  StringValue,
+  Int32Value,
+} from "../google/protobuf/wrappers";
 
-export const protobufPackage = "";
+export const protobufPackage = "workadventure";
 
 export enum AvailabilityStatus {
     UNCHANGED = 0,
@@ -193,6 +198,14 @@ export interface LockGroupPromptMessage {
     lock: boolean;
 }
 
+export interface ModifyAreaMessage {
+    id: number;
+    x: number | undefined;
+    y: number | undefined;
+    width: number | undefined;
+    height: number | undefined;
+}
+
 export interface ClientToServerMessage {
     message?:
         | { $case: "userMovesMessage"; userMovesMessage: UserMovesMessage }
@@ -214,7 +227,9 @@ export interface ClientToServerMessage {
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
         | { $case: "queryMessage"; queryMessage: QueryMessage }
-        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
+        | { $case: "pingMessage"; pingMessage: PingMessage }
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface ItemEventMessage {
@@ -307,7 +322,9 @@ export interface SubMessage {
         | { $case: "emoteEventMessage"; emoteEventMessage: EmoteEventMessage }
         | { $case: "variableMessage"; variableMessage: VariableMessage }
         | { $case: "errorMessage"; errorMessage: ErrorMessage }
-        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage };
+        | { $case: "playerDetailsUpdatedMessage"; playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage }
+        | { $case: "pingMessage"; pingMessage: PingMessage }
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface BatchMessage {
@@ -384,6 +401,7 @@ export interface RoomJoinedMessage {
     userRoomToken: string;
     /** We send the current skin of the current player. */
     characterLayer: CharacterLayerMessage[];
+    activatedInviteUser: boolean;
 }
 
 export interface WebRtcStartMessage {
@@ -491,6 +509,7 @@ export interface JoinRoomMessage {
     visitCardUrl: string;
     userRoomToken: string;
     availabilityStatus: AvailabilityStatus;
+    activatedInviteUser: boolean;
 }
 
 export interface UserJoinedZoneMessage {
@@ -566,7 +585,8 @@ export interface PusherToBackMessage {
         | { $case: "followAbortMessage"; followAbortMessage: FollowAbortMessage }
         | { $case: "lockGroupPromptMessage"; lockGroupPromptMessage: LockGroupPromptMessage }
         | { $case: "queryMessage"; queryMessage: QueryMessage }
-        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage };
+        | { $case: "askPositionMessage"; askPositionMessage: AskPositionMessage }
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
 export interface BatchToPusherMessage {
@@ -595,7 +615,12 @@ export interface BatchToPusherRoomMessage {
 export interface SubToPusherRoomMessage {
     message?:
         | { $case: "variableMessage"; variableMessage: VariableWithTagMessage }
-        | { $case: "errorMessage"; errorMessage: ErrorMessage };
+        | { $case: "errorMessage"; errorMessage: ErrorMessage }
+        | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
+}
+
+export interface EditMapMessage {
+    message?: { $case: "modifyAreaMessage"; modifyAreaMessage: ModifyAreaMessage };
 }
 
 export interface UserJoinedRoomMessage {
@@ -1674,6 +1699,89 @@ export const LockGroupPromptMessage = {
     },
 };
 
+const baseModifyAreaMessage: object = { id: 0 };
+
+export const ModifyAreaMessage = {
+    encode(message: ModifyAreaMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.id !== 0) {
+            writer.uint32(8).int32(message.id);
+        }
+        if (message.x !== undefined) {
+            UInt32Value.encode({ value: message.x! }, writer.uint32(18).fork()).ldelim();
+        }
+        if (message.y !== undefined) {
+            UInt32Value.encode({ value: message.y! }, writer.uint32(26).fork()).ldelim();
+        }
+        if (message.width !== undefined) {
+            UInt32Value.encode({ value: message.width! }, writer.uint32(34).fork()).ldelim();
+        }
+        if (message.height !== undefined) {
+            UInt32Value.encode({ value: message.height! }, writer.uint32(42).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): ModifyAreaMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.id = reader.int32();
+                    break;
+                case 2:
+                    message.x = UInt32Value.decode(reader, reader.uint32()).value;
+                    break;
+                case 3:
+                    message.y = UInt32Value.decode(reader, reader.uint32()).value;
+                    break;
+                case 4:
+                    message.width = UInt32Value.decode(reader, reader.uint32()).value;
+                    break;
+                case 5:
+                    message.height = UInt32Value.decode(reader, reader.uint32()).value;
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): ModifyAreaMessage {
+        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
+        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
+        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : undefined;
+        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : undefined;
+        message.width = object.width !== undefined && object.width !== null ? Number(object.width) : undefined;
+        message.height = object.height !== undefined && object.height !== null ? Number(object.height) : undefined;
+        return message;
+    },
+
+    toJSON(message: ModifyAreaMessage): unknown {
+        const obj: any = {};
+        message.id !== undefined && (obj.id = Math.round(message.id));
+        message.x !== undefined && (obj.x = message.x);
+        message.y !== undefined && (obj.y = message.y);
+        message.width !== undefined && (obj.width = message.width);
+        message.height !== undefined && (obj.height = message.height);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<ModifyAreaMessage>, I>>(object: I): ModifyAreaMessage {
+        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
+        message.id = object.id ?? 0;
+        message.x = object.x ?? undefined;
+        message.y = object.y ?? undefined;
+        message.width = object.width ?? undefined;
+        message.height = object.height ?? undefined;
+        return message;
+    },
+};
+
 const baseClientToServerMessage: object = {};
 
 export const ClientToServerMessage = {
@@ -1735,8 +1843,14 @@ export const ClientToServerMessage = {
         if (message.message?.$case === "queryMessage") {
             QueryMessage.encode(message.message.queryMessage, writer.uint32(162).fork()).ldelim();
         }
+        if (message.message?.$case === "pingMessage") {
+            PingMessage.encode(message.message.pingMessage, writer.uint32(170).fork()).ldelim();
+        }
         if (message.message?.$case === "askPositionMessage") {
-            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(178).fork()).ldelim();
+            AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(186).fork()).ldelim();
+        }
+        if (message.message?.$case === "editMapMessage") {
+            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(194).fork()).ldelim();
         }
         return writer;
     },
@@ -1847,10 +1961,22 @@ export const ClientToServerMessage = {
                         queryMessage: QueryMessage.decode(reader, reader.uint32()),
                     };
                     break;
-                case 22:
+                case 21:
+                    message.message = {
+                        $case: "pingMessage",
+                        pingMessage: PingMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 23:
                     message.message = {
                         $case: "askPositionMessage",
                         askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 24:
+                    message.message = {
+                        $case: "editMapMessage",
+                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -1961,10 +2087,19 @@ export const ClientToServerMessage = {
         if (object.queryMessage !== undefined && object.queryMessage !== null) {
             message.message = { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) };
         }
+        if (object.pingMessage !== undefined && object.pingMessage !== null) {
+            message.message = { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) };
+        }
         if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
             message.message = {
                 $case: "askPositionMessage",
                 askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
+            };
+        }
+        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
             };
         }
         return message;
@@ -2036,9 +2171,17 @@ export const ClientToServerMessage = {
             (obj.queryMessage = message.message?.queryMessage
                 ? QueryMessage.toJSON(message.message?.queryMessage)
                 : undefined);
+        message.message?.$case === "pingMessage" &&
+            (obj.pingMessage = message.message?.pingMessage
+                ? PingMessage.toJSON(message.message?.pingMessage)
+                : undefined);
         message.message?.$case === "askPositionMessage" &&
             (obj.askPositionMessage = message.message?.askPositionMessage
                 ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
+                : undefined);
+        message.message?.$case === "editMapMessage" &&
+            (obj.editMapMessage = message.message?.editMapMessage
+                ? EditMapMessage.toJSON(message.message?.editMapMessage)
                 : undefined);
         return obj;
     },
@@ -2212,6 +2355,16 @@ export const ClientToServerMessage = {
             };
         }
         if (
+            object.message?.$case === "pingMessage" &&
+            object.message?.pingMessage !== undefined &&
+            object.message?.pingMessage !== null
+        ) {
+            message.message = {
+                $case: "pingMessage",
+                pingMessage: PingMessage.fromPartial(object.message.pingMessage),
+            };
+        }
+        if (
             object.message?.$case === "askPositionMessage" &&
             object.message?.askPositionMessage !== undefined &&
             object.message?.askPositionMessage !== null
@@ -2219,6 +2372,16 @@ export const ClientToServerMessage = {
             message.message = {
                 $case: "askPositionMessage",
                 askPositionMessage: AskPositionMessage.fromPartial(object.message.askPositionMessage),
+            };
+        }
+        if (
+            object.message?.$case === "editMapMessage" &&
+            object.message?.editMapMessage !== undefined &&
+            object.message?.editMapMessage !== null
+        ) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
             };
         }
         return message;
@@ -3166,6 +3329,12 @@ export const SubMessage = {
                 writer.uint32(82).fork()
             ).ldelim();
         }
+        if (message.message?.$case === "pingMessage") {
+            PingMessage.encode(message.message.pingMessage, writer.uint32(90).fork()).ldelim();
+        }
+        if (message.message?.$case === "editMapMessage") {
+            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(106).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -3236,6 +3405,18 @@ export const SubMessage = {
                         playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.decode(reader, reader.uint32()),
                     };
                     break;
+                case 11:
+                    message.message = {
+                        $case: "pingMessage",
+                        pingMessage: PingMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 13:
+                    message.message = {
+                        $case: "editMapMessage",
+                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -3303,6 +3484,15 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(object.playerDetailsUpdatedMessage),
             };
         }
+        if (object.pingMessage !== undefined && object.pingMessage !== null) {
+            message.message = { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) };
+        }
+        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
+            };
+        }
         return message;
     },
 
@@ -3347,6 +3537,14 @@ export const SubMessage = {
         message.message?.$case === "playerDetailsUpdatedMessage" &&
             (obj.playerDetailsUpdatedMessage = message.message?.playerDetailsUpdatedMessage
                 ? PlayerDetailsUpdatedMessage.toJSON(message.message?.playerDetailsUpdatedMessage)
+                : undefined);
+        message.message?.$case === "pingMessage" &&
+            (obj.pingMessage = message.message?.pingMessage
+                ? PingMessage.toJSON(message.message?.pingMessage)
+                : undefined);
+        message.message?.$case === "editMapMessage" &&
+            (obj.editMapMessage = message.message?.editMapMessage
+                ? EditMapMessage.toJSON(message.message?.editMapMessage)
                 : undefined);
         return obj;
     },
@@ -3453,6 +3651,26 @@ export const SubMessage = {
                 playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromPartial(
                     object.message.playerDetailsUpdatedMessage
                 ),
+            };
+        }
+        if (
+            object.message?.$case === "pingMessage" &&
+            object.message?.pingMessage !== undefined &&
+            object.message?.pingMessage !== null
+        ) {
+            message.message = {
+                $case: "pingMessage",
+                pingMessage: PingMessage.fromPartial(object.message.pingMessage),
+            };
+        }
+        if (
+            object.message?.$case === "editMapMessage" &&
+            object.message?.editMapMessage !== undefined &&
+            object.message?.editMapMessage !== null
+        ) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
             };
         }
         return message;
@@ -4168,7 +4386,7 @@ export const GroupUsersUpdateMessage = {
     },
 };
 
-const baseRoomJoinedMessage: object = { currentUserId: 0, tag: "", userRoomToken: "" };
+const baseRoomJoinedMessage: object = { currentUserId: 0, tag: "", userRoomToken: "", activatedInviteUser: false };
 
 export const RoomJoinedMessage = {
     encode(message: RoomJoinedMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4189,6 +4407,9 @@ export const RoomJoinedMessage = {
         }
         for (const v of message.characterLayer) {
             CharacterLayerMessage.encode(v!, writer.uint32(66).fork()).ldelim();
+        }
+        if (message.activatedInviteUser === true) {
+            writer.uint32(72).bool(message.activatedInviteUser);
         }
         return writer;
     },
@@ -4222,6 +4443,9 @@ export const RoomJoinedMessage = {
                 case 8:
                     message.characterLayer.push(CharacterLayerMessage.decode(reader, reader.uint32()));
                     break;
+                case 9:
+                    message.activatedInviteUser = reader.bool();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -4240,6 +4464,10 @@ export const RoomJoinedMessage = {
         message.userRoomToken =
             object.userRoomToken !== undefined && object.userRoomToken !== null ? String(object.userRoomToken) : "";
         message.characterLayer = (object.characterLayer ?? []).map((e: any) => CharacterLayerMessage.fromJSON(e));
+        message.activatedInviteUser =
+            object.activatedInviteUser !== undefined && object.activatedInviteUser !== null
+                ? Boolean(object.activatedInviteUser)
+                : false;
         return message;
     },
 
@@ -4267,6 +4495,7 @@ export const RoomJoinedMessage = {
         } else {
             obj.characterLayer = [];
         }
+        message.activatedInviteUser !== undefined && (obj.activatedInviteUser = message.activatedInviteUser);
         return obj;
     },
 
@@ -4278,6 +4507,7 @@ export const RoomJoinedMessage = {
         message.variable = object.variable?.map((e) => VariableMessage.fromPartial(e)) || [];
         message.userRoomToken = object.userRoomToken ?? "";
         message.characterLayer = object.characterLayer?.map((e) => CharacterLayerMessage.fromPartial(e)) || [];
+        message.activatedInviteUser = object.activatedInviteUser ?? false;
         return message;
     },
 };
@@ -5778,6 +6008,7 @@ const baseJoinRoomMessage: object = {
     visitCardUrl: "",
     userRoomToken: "",
     availabilityStatus: 0,
+    activatedInviteUser: false,
 };
 
 export const JoinRoomMessage = {
@@ -5814,6 +6045,9 @@ export const JoinRoomMessage = {
         }
         if (message.availabilityStatus !== 0) {
             writer.uint32(88).int32(message.availabilityStatus);
+        }
+        if (message.activatedInviteUser === true) {
+            writer.uint32(96).bool(message.activatedInviteUser);
         }
         return writer;
     },
@@ -5860,6 +6094,9 @@ export const JoinRoomMessage = {
                 case 11:
                     message.availabilityStatus = reader.int32() as any;
                     break;
+                case 12:
+                    message.activatedInviteUser = reader.bool();
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -5892,6 +6129,10 @@ export const JoinRoomMessage = {
             object.availabilityStatus !== undefined && object.availabilityStatus !== null
                 ? availabilityStatusFromJSON(object.availabilityStatus)
                 : 0;
+        message.activatedInviteUser =
+            object.activatedInviteUser !== undefined && object.activatedInviteUser !== null
+                ? Boolean(object.activatedInviteUser)
+                : false;
         return message;
     },
 
@@ -5921,6 +6162,7 @@ export const JoinRoomMessage = {
         message.userRoomToken !== undefined && (obj.userRoomToken = message.userRoomToken);
         message.availabilityStatus !== undefined &&
             (obj.availabilityStatus = availabilityStatusToJSON(message.availabilityStatus));
+        message.activatedInviteUser !== undefined && (obj.activatedInviteUser = message.activatedInviteUser);
         return obj;
     },
 
@@ -5943,6 +6185,7 @@ export const JoinRoomMessage = {
         message.visitCardUrl = object.visitCardUrl ?? "";
         message.userRoomToken = object.userRoomToken ?? "";
         message.availabilityStatus = object.availabilityStatus ?? 0;
+        message.activatedInviteUser = object.activatedInviteUser ?? false;
         return message;
     },
 };
@@ -6623,6 +6866,9 @@ export const PusherToBackMessage = {
         if (message.message?.$case === "askPositionMessage") {
             AskPositionMessage.encode(message.message.askPositionMessage, writer.uint32(178).fork()).ldelim();
         }
+        if (message.message?.$case === "editMapMessage") {
+            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(186).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -6736,6 +6982,12 @@ export const PusherToBackMessage = {
                     message.message = {
                         $case: "askPositionMessage",
                         askPositionMessage: AskPositionMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                case 23:
+                    message.message = {
+                        $case: "editMapMessage",
+                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
                     };
                     break;
                 default:
@@ -6852,6 +7104,12 @@ export const PusherToBackMessage = {
                 askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
             };
         }
+        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
+            };
+        }
         return message;
     },
 
@@ -6924,6 +7182,10 @@ export const PusherToBackMessage = {
         message.message?.$case === "askPositionMessage" &&
             (obj.askPositionMessage = message.message?.askPositionMessage
                 ? AskPositionMessage.toJSON(message.message?.askPositionMessage)
+                : undefined);
+        message.message?.$case === "editMapMessage" &&
+            (obj.editMapMessage = message.message?.editMapMessage
+                ? EditMapMessage.toJSON(message.message?.editMapMessage)
                 : undefined);
         return obj;
     },
@@ -7104,6 +7366,16 @@ export const PusherToBackMessage = {
             message.message = {
                 $case: "askPositionMessage",
                 askPositionMessage: AskPositionMessage.fromPartial(object.message.askPositionMessage),
+            };
+        }
+        if (
+            object.message?.$case === "editMapMessage" &&
+            object.message?.editMapMessage !== undefined &&
+            object.message?.editMapMessage !== null
+        ) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
             };
         }
         return message;
@@ -7583,6 +7855,9 @@ export const SubToPusherRoomMessage = {
         if (message.message?.$case === "errorMessage") {
             ErrorMessage.encode(message.message.errorMessage, writer.uint32(18).fork()).ldelim();
         }
+        if (message.message?.$case === "editMapMessage") {
+            EditMapMessage.encode(message.message.editMapMessage, writer.uint32(26).fork()).ldelim();
+        }
         return writer;
     },
 
@@ -7605,6 +7880,12 @@ export const SubToPusherRoomMessage = {
                         errorMessage: ErrorMessage.decode(reader, reader.uint32()),
                     };
                     break;
+                case 3:
+                    message.message = {
+                        $case: "editMapMessage",
+                        editMapMessage: EditMapMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
                 default:
                     reader.skipType(tag & 7);
                     break;
@@ -7624,6 +7905,12 @@ export const SubToPusherRoomMessage = {
         if (object.errorMessage !== undefined && object.errorMessage !== null) {
             message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
         }
+        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
+            };
+        }
         return message;
     },
 
@@ -7636,6 +7923,10 @@ export const SubToPusherRoomMessage = {
         message.message?.$case === "errorMessage" &&
             (obj.errorMessage = message.message?.errorMessage
                 ? ErrorMessage.toJSON(message.message?.errorMessage)
+                : undefined);
+        message.message?.$case === "editMapMessage" &&
+            (obj.editMapMessage = message.message?.editMapMessage
+                ? EditMapMessage.toJSON(message.message?.editMapMessage)
                 : undefined);
         return obj;
     },
@@ -7660,6 +7951,83 @@ export const SubToPusherRoomMessage = {
             message.message = {
                 $case: "errorMessage",
                 errorMessage: ErrorMessage.fromPartial(object.message.errorMessage),
+            };
+        }
+        if (
+            object.message?.$case === "editMapMessage" &&
+            object.message?.editMapMessage !== undefined &&
+            object.message?.editMapMessage !== null
+        ) {
+            message.message = {
+                $case: "editMapMessage",
+                editMapMessage: EditMapMessage.fromPartial(object.message.editMapMessage),
+            };
+        }
+        return message;
+    },
+};
+
+const baseEditMapMessage: object = {};
+
+export const EditMapMessage = {
+    encode(message: EditMapMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.message?.$case === "modifyAreaMessage") {
+            ModifyAreaMessage.encode(message.message.modifyAreaMessage, writer.uint32(10).fork()).ldelim();
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): EditMapMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = { ...baseEditMapMessage } as EditMapMessage;
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.message = {
+                        $case: "modifyAreaMessage",
+                        modifyAreaMessage: ModifyAreaMessage.decode(reader, reader.uint32()),
+                    };
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): EditMapMessage {
+        const message = { ...baseEditMapMessage } as EditMapMessage;
+        if (object.modifyAreaMessage !== undefined && object.modifyAreaMessage !== null) {
+            message.message = {
+                $case: "modifyAreaMessage",
+                modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
+            };
+        }
+        return message;
+    },
+
+    toJSON(message: EditMapMessage): unknown {
+        const obj: any = {};
+        message.message?.$case === "modifyAreaMessage" &&
+            (obj.modifyAreaMessage = message.message?.modifyAreaMessage
+                ? ModifyAreaMessage.toJSON(message.message?.modifyAreaMessage)
+                : undefined);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<EditMapMessage>, I>>(object: I): EditMapMessage {
+        const message = { ...baseEditMapMessage } as EditMapMessage;
+        if (
+            object.message?.$case === "modifyAreaMessage" &&
+            object.message?.modifyAreaMessage !== undefined &&
+            object.message?.modifyAreaMessage !== null
+        ) {
+            message.message = {
+                $case: "modifyAreaMessage",
+                modifyAreaMessage: ModifyAreaMessage.fromPartial(object.message.modifyAreaMessage),
             };
         }
         return message;
@@ -8877,108 +9245,149 @@ export class RoomManagerClientImpl implements RoomManager {
     }
     joinRoom(request: Observable<PusherToBackMessage>): Observable<ServerToClientMessage> {
         const data = request.pipe(map((request) => PusherToBackMessage.encode(request).finish()));
-        const result = this.rpc.bidirectionalStreamingRequest("RoomManager", "joinRoom", data);
+        const result = this.rpc.bidirectionalStreamingRequest("workadventure.RoomManager", "joinRoom", data);
         return result.pipe(map((data) => ServerToClientMessage.decode(new _m0.Reader(data))));
     }
 
     listenZone(request: ZoneMessage): Observable<BatchToPusherMessage> {
         const data = ZoneMessage.encode(request).finish();
-        const result = this.rpc.serverStreamingRequest("RoomManager", "listenZone", data);
+        const result = this.rpc.serverStreamingRequest("workadventure.RoomManager", "listenZone", data);
         return result.pipe(map((data) => BatchToPusherMessage.decode(new _m0.Reader(data))));
     }
 
     listenRoom(request: RoomMessage): Observable<BatchToPusherRoomMessage> {
         const data = RoomMessage.encode(request).finish();
-        const result = this.rpc.serverStreamingRequest("RoomManager", "listenRoom", data);
+        const result = this.rpc.serverStreamingRequest("workadventure.RoomManager", "listenRoom", data);
         return result.pipe(map((data) => BatchToPusherRoomMessage.decode(new _m0.Reader(data))));
     }
 
     adminRoom(request: Observable<AdminPusherToBackMessage>): Observable<ServerToAdminClientMessage> {
         const data = request.pipe(map((request) => AdminPusherToBackMessage.encode(request).finish()));
-        const result = this.rpc.bidirectionalStreamingRequest("RoomManager", "adminRoom", data);
+        const result = this.rpc.bidirectionalStreamingRequest("workadventure.RoomManager", "adminRoom", data);
         return result.pipe(map((data) => ServerToAdminClientMessage.decode(new _m0.Reader(data))));
     }
 
     sendAdminMessage(request: AdminMessage): Promise<EmptyMessage> {
         const data = AdminMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "sendAdminMessage", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "sendAdminMessage", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     sendGlobalAdminMessage(request: AdminGlobalMessage): Promise<EmptyMessage> {
         const data = AdminGlobalMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "sendGlobalAdminMessage", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "sendGlobalAdminMessage", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     ban(request: BanMessage): Promise<EmptyMessage> {
         const data = BanMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "ban", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "ban", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     sendAdminMessageToRoom(request: AdminRoomMessage): Promise<EmptyMessage> {
         const data = AdminRoomMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "sendAdminMessageToRoom", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "sendAdminMessageToRoom", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     sendWorldFullWarningToRoom(request: WorldFullWarningToRoomMessage): Promise<EmptyMessage> {
         const data = WorldFullWarningToRoomMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "sendWorldFullWarningToRoom", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "sendWorldFullWarningToRoom", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     sendRefreshRoomPrompt(request: RefreshRoomPromptMessage): Promise<EmptyMessage> {
         const data = RefreshRoomPromptMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "sendRefreshRoomPrompt", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "sendRefreshRoomPrompt", data);
         return promise.then((data) => EmptyMessage.decode(new _m0.Reader(data)));
     }
 
     getRooms(request: EmptyMessage): Promise<RoomsList> {
         const data = EmptyMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "getRooms", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "getRooms", data);
         return promise.then((data) => RoomsList.decode(new _m0.Reader(data)));
     }
 
     ping(request: PingMessage): Promise<PingMessage> {
         const data = PingMessage.encode(request).finish();
-        const promise = this.rpc.request("RoomManager", "ping", data);
+        const promise = this.rpc.request("workadventure.RoomManager", "ping", data);
+        return promise.then((data) => PingMessage.decode(new _m0.Reader(data)));
+    }
+}
+
+/** Service handled by the "map-storage". Back servers connect to this service. */
+export interface MapStorage {
+    ping(request: PingMessage): Promise<PingMessage>;
+}
+
+export class MapStorageClientImpl implements MapStorage {
+    private readonly rpc: Rpc;
+    constructor(rpc: Rpc) {
+        this.rpc = rpc;
+        this.ping = this.ping.bind(this);
+    }
+    ping(request: PingMessage): Promise<PingMessage> {
+        const data = PingMessage.encode(request).finish();
+        const promise = this.rpc.request("workadventure.MapStorage", "ping", data);
         return promise.then((data) => PingMessage.decode(new _m0.Reader(data)));
     }
 }
 
 interface Rpc {
-    request(service: string, method: string, data: Uint8Array): Promise<Uint8Array>;
-    clientStreamingRequest(service: string, method: string, data: Observable<Uint8Array>): Promise<Uint8Array>;
-    serverStreamingRequest(service: string, method: string, data: Uint8Array): Observable<Uint8Array>;
-    bidirectionalStreamingRequest(
-        service: string,
-        method: string,
-        data: Observable<Uint8Array>
-    ): Observable<Uint8Array>;
+  request(
+    service: string,
+    method: string,
+    data: Uint8Array
+  ): Promise<Uint8Array>;
+  clientStreamingRequest(
+    service: string,
+    method: string,
+    data: Observable<Uint8Array>
+  ): Promise<Uint8Array>;
+  serverStreamingRequest(
+    service: string,
+    method: string,
+    data: Uint8Array
+  ): Observable<Uint8Array>;
+  bidirectionalStreamingRequest(
+    service: string,
+    method: string,
+    data: Observable<Uint8Array>
+  ): Observable<Uint8Array>;
 }
 
-type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+type Builtin =
+  | Date
+  | Function
+  | Uint8Array
+  | string
+  | number
+  | boolean
+  | undefined;
 
 export type DeepPartial<T> = T extends Builtin
-    ? T
-    : T extends Array<infer U>
-    ? Array<DeepPartial<U>>
-    : T extends ReadonlyArray<infer U>
-    ? ReadonlyArray<DeepPartial<U>>
-    : T extends { $case: string }
-    ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & { $case: T["$case"] }
-    : T extends {}
-    ? { [K in keyof T]?: DeepPartial<T[K]> }
-    : Partial<T>;
+  ? T
+  : T extends Array<infer U>
+  ? Array<DeepPartial<U>>
+  : T extends ReadonlyArray<infer U>
+  ? ReadonlyArray<DeepPartial<U>>
+  : T extends { $case: string }
+  ? { [K in keyof Omit<T, "$case">]?: DeepPartial<T[K]> } & {
+      $case: T["$case"];
+    }
+  : T extends {}
+  ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : Partial<T>;
 
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin
-    ? P
-    : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+  ? P
+  : P &
+      { [K in keyof P]: Exact<P[K], I[K]> } &
+      Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 if (_m0.util.Long !== Long) {
-    _m0.util.Long = Long as any;
-    _m0.configure();
+  _m0.util.Long = Long as any;
+  _m0.configure();
 }

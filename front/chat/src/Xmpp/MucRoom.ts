@@ -6,6 +6,9 @@ import { writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
+import { localUserStore, userStore } from "../Stores/LocalUserStore";
+import Axios from "axios";
+import { PUSHER_URL } from "../Enum/EnvironmentVariable";
 import {userStore} from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 
@@ -27,8 +30,8 @@ export type UserList = Map<string, User>;
 export type UsersStore = Readable<UserList>;
 
 export type Teleport = {
-    state: boolean;
-    to: string | null;
+  state: boolean;
+  to: string | null;
 };
 export type TeleportStore = Readable<Teleport>;
 
@@ -90,11 +93,14 @@ export class MucRoom {
         return {woka, color};
     }
 
-    public goTo(type: string, playUri: string, uuid: string) {
-        this.teleportStore.set({ state: true, to: uuid });
-        if (type === "room") {
-            window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
-            /*
+  public goTo(type: string, playUri: string, uuid: string) {
+    this.teleportStore.set({ state: true, to: uuid });
+    if (type === "room") {
+      window.parent.postMessage(
+        { type: "goToPage", data: { url: `${playUri}#moveToUser=${uuid}` } },
+        "*"
+      );
+      /*
             Axios.get(`${PUSHER_URL}/room/access`, { params: { token: get(userStore).authToken, playUri, uuid: get(userStore).uuid } })
                 .then((_) => {
                     window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
@@ -114,31 +120,34 @@ export class MucRoom {
                     this.resetTeleportStore();
                 });
             */
-        } else if (type === "user") {
-            window.parent.postMessage({type: 'askPosition', data: {uuid, playUri}}, '*');
-        }
+    } else if (type === "user") {
+      window.parent.postMessage(
+        { type: "askPosition", data: { uuid, playUri } },
+        "*"
+      );
     }
+  }
 
-    public connect() {
-        this.sendSubscribe();
-    }
+  public connect() {
+    this.sendSubscribe();
+  }
 
-    private requestAllSubscribers() {
-        const messageMucListAllUsers = xml(
-            "iq",
-            {
-                type: "get",
-                to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-                from: this.jid,
-                id: uuidv4(),
-            },
-            xml("subscriptions", {
-                xmlns: "urn:xmpp:mucsub:0",
-            })
-        );
-        this.connection.emitXmlMessage(messageMucListAllUsers);
-        if(_VERBOSE) console.warn("[XMPP]", "Get all subscribers sent");
-    }
+  private requestAllSubscribers() {
+    const messageMucListAllUsers = xml(
+      "iq",
+      {
+        type: "get",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: uuidv4(),
+      },
+      xml("subscriptions", {
+        xmlns: "urn:xmpp:mucsub:0",
+      })
+    );
+    this.connection.emitXmlMessage(messageMucListAllUsers);
+    if (_VERBOSE) console.warn("[XMPP]", "Get all subscribers sent");
+  }
 
     private sendPresence() {
         const messagePresence = xml(
@@ -283,9 +292,9 @@ export class MucRoom {
         return messageMucSubscribe;
     }
 
-    onMessage(xml: ElementExt): void {
-        let handledMessage = false;
-        if(_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
+  onMessage(xml: ElementExt): void {
+    let handledMessage = false;
+    if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
 
         if (xml.getAttr("type") === "error") {
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
@@ -305,13 +314,13 @@ export class MucRoom {
 
             //if (from.resource === "") return;
 
-            //It's me (are you sure ?) and I want a profile details
-            //TODO create profile details with XMPP connection
-            //if (from.toString() === me.toString()) {
-            //    return;
-            //}
+      //It's me (are you sure ?) and I want a profile details
+      //TODO create profile details with XMPP connection
+      //if (from.toString() === me.toString()) {
+      //    return;
+      //}
 
-            const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
+      const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
                 const jid = x.getChild("item")?.getAttr("jid")?.split("/")[0];
@@ -396,27 +405,27 @@ export class MucRoom {
             handledMessage = true;
         }
 
-        if (!handledMessage) {
-            console.warn("Unhandled message targeted at the room: ", xml.toString());
-            console.warn("Message name : ", xml.getName());
-        }
+    if (!handledMessage) {
+      console.warn("Unhandled message targeted at the room: ", xml.toString());
+      console.warn("Message name : ", xml.getName());
     }
+  }
 
-    private getCurrentStatus(jid: string) {
-        return get(this.presenceStore).get(jid)?.status ?? USER_STATUS_DISCONNECTED;
-    }
+  private getCurrentStatus(jid: string) {
+    return get(this.presenceStore).get(jid)?.status ?? USER_STATUS_DISCONNECTED;
+  }
 
     private getCurrentPlayUri(jid: string) {
         return get(this.presenceStore).get(jid)?.playUri ?? '';
     }
 
-    private getCurrentUuid(jid: string) {
-        return get(this.presenceStore).get(jid)?.uuid ?? '';
-    }
+  private getCurrentUuid(jid: string) {
+    return get(this.presenceStore).get(jid)?.uuid ?? "";
+  }
 
-    private getCurrentColor(jid: string) {
-        return get(this.presenceStore).get(jid)?.color ?? '#626262';
-    }
+  private getCurrentColor(jid: string) {
+    return get(this.presenceStore).get(jid)?.color ?? "#626262";
+  }
 
     private getCurrentWoka(jid: string) {
         return get(this.presenceStore).get(jid)?.woka ?? defaultWoka;
@@ -467,13 +476,13 @@ export class MucRoom {
         });
     }
 
-    public getPresenceStore(): UsersStore {
-        return this.presenceStore;
-    }
+  public getPresenceStore(): UsersStore {
+    return this.presenceStore;
+  }
 
-    public getTeleportStore(): TeleportStore {
-        return this.teleportStore;
-    }
+  public getTeleportStore(): TeleportStore {
+    return this.teleportStore;
+  }
 
     public getMessagesStore(): MessagesStore {
         return {

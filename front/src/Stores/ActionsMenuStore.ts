@@ -2,7 +2,7 @@ import { writable } from "svelte/store";
 
 export type ActionsMenuAction = {
     actionName: string;
-    callback: Function;
+    callback: () => void;
     protected?: boolean;
     priority?: number;
     style?: "is-success" | "is-error" | "is-primary";

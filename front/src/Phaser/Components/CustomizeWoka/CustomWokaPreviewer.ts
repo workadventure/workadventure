@@ -33,7 +33,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     private turnIcon: Phaser.GameObjects.Image;
 
     private animationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
-    private moving: boolean = true;
+    private moving = true;
 
     private turnIconTween?: Phaser.Tweens.Tween;
 

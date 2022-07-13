@@ -36,7 +36,7 @@ export class HtmlUtils {
         return p.innerHTML;
     }
 
-    public static urlify(text: string, style: string = ""): string {
+    public static urlify(text: string, style = ""): string {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
         text = HtmlUtils.escapeHtml(text);
         return text.replace(urlRegex, (url: string) => {

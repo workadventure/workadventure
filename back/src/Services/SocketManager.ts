@@ -46,6 +46,7 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -131,6 +132,9 @@ export class SocketManager {
         }
 
         roomJoinedMessage.setCurrentuserid(user.id);
+        roomJoinedMessage.setActivatedinviteuser(
+            user.activatedInviteUser != undefined ? user.activatedInviteUser : true
+        );
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
@@ -1045,6 +1049,15 @@ export class SocketManager {
         }
         group.lock(message.getLock());
         room.emitLockGroupEvent(user, group.getId());
+    }
+
+    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
+        if (message.hasModifyareamessage()) {
+            const msg = message.getModifyareamessage();
+            if (msg) {
+                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+            }
+        }
     }
 
     getAllRooms(): RoomsList {

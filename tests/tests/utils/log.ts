@@ -7,6 +7,27 @@ const POLLING_INTERVAL = 50;
  */
 let logs = [];
 export async function assertLogMessage(
+    page: Page,
+    substring: string,
+    timeout: number = 10000
+): Promise<void> {
+  let logs = [];
+  await page.on('console', async (msg) => {
+    logs.push(await msg.text());
+  });
+
+  // wait for log to appear
+  for (let i = 0; i < timeout / POLLING_INTERVAL; i++) {
+    if (logs.includes(substring)) {
+      break;
+    }
+    await page.waitForTimeout(POLLING_INTERVAL);
+  }
+
+  expect(logs).toContain(substring);
+}
+
+/*export async function assertLogMessage(
   page: Page,
   substring: string,
   timeout: number = 20_000
@@ -20,7 +41,7 @@ export async function assertLogMessage(
   }
 
   expect(logs).toContain(substring);
-}
+}*/
 export function startRecordLogs(page: Page) {
   page.on('console', (msg) => {
     logs.push(msg.text());

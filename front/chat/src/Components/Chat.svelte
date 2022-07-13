@@ -16,35 +16,37 @@
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
 
-    let listDom: HTMLElement;
-    let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
+  let listDom: HTMLElement;
+  let chatWindowElement: HTMLElement;
+  let handleFormBlur: { blur(): void };
+  let autoscroll: boolean;
 
     let searchValue = '';
     let showUsers = true;
     let showLives = true;
 
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
+  beforeUpdate(() => {
+    autoscroll =
+      listDom &&
+      listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
+  });
 
-    onMount(() => {
-        if(!$locale){
-            localeDetector();
-        }
-        listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    function onClick(event: MouseEvent) {
-        if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
-            handleFormBlur.blur();
-        }
+  onMount(() => {
+    if (!$locale) {
+      localeDetector();
     }
+    listDom.scrollTo(0, listDom.scrollHeight);
+  });
+
+  afterUpdate(() => {
+    if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
+  });
+
+  function onClick(event: MouseEvent) {
+    if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
+      handleFormBlur.blur();
+    }
+  }
 
     function handleActiveThread(event: any){
         activeThreadStore.set(event.detail);
@@ -56,15 +58,15 @@
         showLives = !showLives;
     }
 
-    function closeChat() {
-        window.parent.postMessage({ type: "closeChat" }, "*");
-        //document.activeElement?.blur();
+  function closeChat() {
+    window.parent.postMessage({ type: "closeChat" }, "*");
+    //document.activeElement?.blur();
+  }
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      closeChat();
     }
-    function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
-            closeChat();
-        }
-    }
+  }
 
     const defaultRoom = (): MucRoom => {
         const defaultMucRoom = [...$mucRoomsStore].find(mucRoom => mucRoom.type === 'default');
@@ -156,18 +158,18 @@
 </aside>
 
 <style lang="scss">
-    aside.chatWindow {
-        z-index: 1000;
-        pointer-events: auto;
-        position: absolute;
-        top: 0;
-        left: 0;
-        min-height: 100vh;
-        width: 100%;
-        min-width: 300px;
-        background: rgba(#1b1b29, 0.9);
-        color: whitesmoke;
-        display: flex;
-        flex-direction: column;
-    }
+  aside.chatWindow {
+    z-index: 1000;
+    pointer-events: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-height: 100vh;
+    width: 100%;
+    min-width: 300px;
+    background: rgba(#1b1b29, 0.9);
+    color: whitesmoke;
+    display: flex;
+    flex-direction: column;
+  }
 </style>

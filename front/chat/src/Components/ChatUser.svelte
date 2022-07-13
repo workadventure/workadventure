@@ -111,7 +111,7 @@
                 {/if}
                 <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
                 <div class="wa-dropdown-item">Delete chat</div>-->
-            </div>
-        </div>
-    {/if}
+      </div>
+    </div>
+  {/if}
 </div>

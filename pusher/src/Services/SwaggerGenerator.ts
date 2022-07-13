@@ -9,9 +9,12 @@ import {
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isFetchMemberDataByUuidResponse } from "./AdminApi";
 import { isWokaDetail, wokaList, wokaTexture } from "../Messages/JsonMessages/PlayerTextures";
+import { SchemaObject } from "openapi3-ts";
 
 class SwaggerGenerator {
-    definitions(type: string | null) {
+    definitions(type: string | null): {
+        definitions: { [K: string]: SchemaObject };
+    } {
         const definitions = {
             definitions: {
                 AdminApiData: generateSchema(isAdminApiData),

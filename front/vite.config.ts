@@ -37,6 +37,7 @@ export default defineConfig({
                 "TURN_PASSWORD",
                 "JITSI_URL",
                 "JITSI_PRIVATE_MODE",
+                "ENABLE_FEATURE_MAP_EDITOR",
                 "START_ROOM_URL",
                 "MAX_USERNAME_LENGTH",
                 "MAX_PER_GROUP",

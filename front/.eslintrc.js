@@ -8,6 +8,7 @@ module.exports = {
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
     ],
     "globals": {
@@ -45,6 +46,8 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/restrict-template-expressions": "off",
         "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-empty-function": "off",
+        "@typescript-eslint/ban-ts-comment": "off"
     },
     "settings": {
         "svelte3/typescript": true,
