@@ -13,10 +13,12 @@ RUN yarn run tag-version && yarn run ts-proto
 # typescript build
 FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
-COPY libs ./../
+COPY libs/tailwind/yarn.lock libs/tailwind/package.json ./../libs/tailwind/
+RUN cd ../libs/tailwind && yarn install --network-timeout 1000000
 COPY front/yarn.lock front/package.json ./
 RUN yarn install --network-timeout 1000000
 COPY front .
+COPY libs ./../libs
 
 COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-generated
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
