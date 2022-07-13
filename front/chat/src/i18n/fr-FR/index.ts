@@ -40,6 +40,10 @@ const fr_FR: Translation = {
     form: {
         placeholder: 'Écrire votre message...',
         typing: ' écrit...'
+    },
+    notification: {
+        discussion: "veut discuter avec toi",
+        message: "a envoyé un message"
     }
 };
 

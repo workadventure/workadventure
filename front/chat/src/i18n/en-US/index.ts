@@ -40,6 +40,10 @@ const en_US: BaseTranslation = {
     form: {
         placeholder: 'Enter your message...',
         typing: ' typing...'
+    },
+    notification: {
+        discussion: "wants to discuss with you",
+        message: "sends you a message"
     }
 };
 
