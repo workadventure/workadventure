@@ -182,11 +182,11 @@
     }
 
     div.center {
-      text-align: center;
+        text-align: center;
     }
 
     div.reconnecting {
-      margin-top: 3rem;
+        margin-top: 3rem;
     }
 
     @include media-breakpoint-up(xxl) {

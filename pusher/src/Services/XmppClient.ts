@@ -118,12 +118,14 @@ export class XmppClient {
                 xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
-                        console.log(definition);
+                        console.info("initial muc room", definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                        //@ts-ignore
                         if (!definition.name || !definition.uri) {
                             throw new Error("Name and Uri cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
+                        //@ts-ignore
                         mucRoomDefinitionMessage.setUrl(definition.uri);
                         return mucRoomDefinitionMessage;
                     })
@@ -155,6 +157,7 @@ export class XmppClient {
             xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
 
+                //@ts-ignore
                 xmppMessage.setStanza(stanza.toString());
 
                 const subMessage = new SubMessage();
