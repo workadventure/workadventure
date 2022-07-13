@@ -27,6 +27,7 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    //eslint-disable-next-line @typescript-eslint/ban-types
     private _mucRooms: Array<Object> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
@@ -232,6 +233,7 @@ export class Room {
         return this._loginSceneLogo;
     }
 
+    //eslint-disable-next-line @typescript-eslint/ban-types
     get mucRooms(): Array<Object> | undefined {
         return this._mucRooms;
     }

@@ -703,7 +703,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage): void {
         if (client.xmppClient === undefined) {
             throw new Error(
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
@@ -712,7 +712,7 @@ export class SocketManager implements ZoneEventListener {
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
     }
 
-    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setAskpositionmessage(askPositionMessage);
 

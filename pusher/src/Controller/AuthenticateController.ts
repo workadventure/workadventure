@@ -11,7 +11,7 @@ import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
 export class AuthenticateController extends BaseHttpController {
-    routes() {
+    routes(): void {
         this.roomAccess();
         this.openIDLogin();
         this.openIDCallback();
@@ -21,8 +21,9 @@ export class AuthenticateController extends BaseHttpController {
         this.me();
     }
 
-    roomAccess() {
+    roomAccess(): void {
         this.app.get("/room/access", (req, res) => {
+            //eslint-disable-next-line @typescript-eslint/no-misused-promises
             (async () => {
                 try {
                     const { uuid, playUri } = parse(req.path_query);

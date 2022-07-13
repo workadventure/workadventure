@@ -89,6 +89,7 @@ interface UpgradeFailedInvalidData {
 }
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {

@@ -32,7 +32,7 @@ export class MathUtils {
 
     public static randomPositionFromRect(
         rectangle: { x: number; y: number; width: number; height: number },
-        margin: number = 0
+        margin = 0
     ): { x: number; y: number } {
         return {
             x: this.randomFrom(rectangle.x + margin, rectangle.x + rectangle.width - margin),

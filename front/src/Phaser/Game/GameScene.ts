@@ -245,7 +245,7 @@ export class GameScene extends DirtyScene {
     private showVoiceIndicatorChangeMessageSent = false;
     private jitsiDominantSpeaker = false;
     private jitsiParticipantsCount = 0;
-    private cleanupDone: boolean = false;
+    private cleanupDone = false;
     public readonly superLoad: SuperLoaderPlugin;
     private xmppClient!: XmppClient;
 
@@ -847,7 +847,7 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-
+                //eslint-disable-next-line @typescript-eslint/no-this-alias
                 const me = this;
                 this.events.once("render", () => {
                     if (me.connection) {

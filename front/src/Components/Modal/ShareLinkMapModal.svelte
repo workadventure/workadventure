@@ -2,6 +2,7 @@
     import { fly } from "svelte/transition";
     import { showShareLinkMapModalStore } from "../../Stores/ModalStore";
 
+    //eslint-disable-next-line @typescript-eslint/no-empty-interface
     interface ExtNavigator extends Navigator {}
 
     const myNavigator: ExtNavigator = window.navigator;
