@@ -68,6 +68,7 @@ export interface RoomJoinedMessageInterface {
     //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
+    playerVariables: Map<string, unknown>;
     characterLayers: BodyResourceDescriptionInterface[];
 }
 

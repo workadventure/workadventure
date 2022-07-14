@@ -25,7 +25,7 @@ const notification = "notificationPermission";
 const code = "code";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
-const userProperties = "user-properties";
+//const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 
@@ -297,7 +297,7 @@ class LocalUserStore {
         return localStorage.getItem(microphonePrivacySettings) === "true";
     }
 
-    getAllUserProperties(): Map<string, unknown> {
+    /*getAllUserProperties(): Map<string, unknown> {
         const result = new Map<string, string>();
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -316,7 +316,7 @@ class LocalUserStore {
 
     setUserProperty(name: string, value: unknown): void {
         localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
-    }
+    }*/
 }
 
 export const localUserStore = new LocalUserStore();

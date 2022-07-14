@@ -5,7 +5,7 @@ import { VariablesRepositoryInterface } from "./VariablesRepositoryInterface";
 
 let variablesRepository: VariablesRepositoryInterface;
 if (!redisClient) {
-    console.warn("WARNING: Redis isnot configured. No variables will be persisted.");
+    console.warn("WARNING: Redis is not configured. No variables will be persisted.");
     variablesRepository = new VoidVariablesRepository();
 } else {
     variablesRepository = new RedisVariablesRepository(redisClient);

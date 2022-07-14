@@ -70,6 +70,7 @@ export class GameRoom {
     private constructor(
         public readonly roomUrl: string,
         private mapUrl: string,
+        private roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -113,6 +114,7 @@ export class GameRoom {
         const gameRoom = new GameRoom(
             roomUrl,
             mapDetails.mapUrl,
+            mapDetails.group,
             connectCallback,
             disconnectCallback,
             minDistance,
@@ -157,14 +159,14 @@ export class GameRoom {
         return userList;
     }
 
-    public join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): User {
+    public async join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
             throw new Error("Missing position message");
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        const user = new User(
+        const user = await User.create(
             this.nextUserId,
             joinRoomMessage.getUseruuid(),
             joinRoomMessage.getIpaddress(),
@@ -176,6 +178,8 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
+            this.roomUrl,
+            this.roomGroup ?? undefined,
             joinRoomMessage.getCompanion()
         );
         this.nextUserId++;

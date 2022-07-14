@@ -13,9 +13,12 @@ import {
     PusherToBackMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
+    SetPlayerVariableMessage,
     SubMessage,
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
+import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
+import { playersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -24,7 +27,6 @@ export class User implements Movable {
     public group?: Group;
     private _following: User | undefined;
     private followedBy: Set<User> = new Set<User>();
-    public readonly variables = new Map<string, string>();
 
     public constructor(
         public id: number,
@@ -38,6 +40,7 @@ export class User implements Movable {
         public readonly visitCardUrl: string | null,
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
+        private readonly variables: PlayerVariables,
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean
@@ -45,6 +48,46 @@ export class User implements Movable {
         this.listenedZones = new Set<Zone>();
 
         this.positionNotifier.enter(this);
+    }
+
+    public static async create(
+        id: number,
+        uuid: string,
+        IPAddress: string,
+        position: PointInterface,
+        positionNotifier: PositionNotifier,
+        availabilityStatus: AvailabilityStatus,
+        socket: UserSocket,
+        tags: string[],
+        visitCardUrl: string | null,
+        name: string,
+        characterLayers: CharacterLayer[],
+        roomUrl: string,
+        roomGroup: string | undefined,
+        companion?: CompanionMessage,
+        outlineColor?: number,
+        voiceIndicatorShown?: boolean
+    ): Promise<User> {
+        const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository);
+        await variables.load();
+
+        return new User(
+            id,
+            uuid,
+            IPAddress,
+            position,
+            positionNotifier,
+            availabilityStatus,
+            socket,
+            tags,
+            visitCardUrl,
+            name,
+            characterLayers,
+            variables,
+            companion,
+            outlineColor,
+            voiceIndicatorShown
+        );
     }
 
     public getPosition(): PointInterface {
@@ -150,11 +193,34 @@ export class User implements Movable {
 
         const setVariable = details.getSetvariable();
         if (setVariable) {
-            console.log(
+            /*console.log(
                 "Variable '" + setVariable.getName() + "' for user '" + this.name + "' updated. New value: '",
                 setVariable.getValue() + "'"
-            );
-            this.variables.set(setVariable.getName(), setVariable.getValue());
+            );*/
+            const scope = setVariable.getScope();
+            if (scope === SetPlayerVariableMessage.Scope.WORLD) {
+                this.variables
+                    .saveWorldVariable(
+                        setVariable.getName(),
+                        setVariable.getValue(),
+                        setVariable.getPublic(),
+                        setVariable.getTtl()?.getValue(),
+                        setVariable.getPersist()
+                    )
+                    .catch((e) => console.error("An error occurred while saving world variable: ", e));
+            } else if (scope === SetPlayerVariableMessage.Scope.ROOM) {
+                this.variables
+                    .saveRoomVariable(
+                        setVariable.getName(),
+                        setVariable.getValue(),
+                        setVariable.getPublic(),
+                        setVariable.getTtl()?.getValue(),
+                        setVariable.getPersist()
+                    )
+                    .catch((e) => console.error("An error occurred while saving room variable: ", e));
+            } else {
+                const _exhaustiveCheck: never = scope;
+            }
         }
 
         /*const playerDetails = new SetPlayerDetailsMessage();
@@ -172,5 +238,9 @@ export class User implements Movable {
             playerDetails.setAvailabilitystatus(details.getAvailabilitystatus());
         }*/
         this.positionNotifier.updatePlayerDetails(this, details);
+    }
+
+    public getVariables(): PlayerVariables {
+        return this.variables;
     }
 }

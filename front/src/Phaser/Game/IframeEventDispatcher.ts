@@ -10,15 +10,20 @@ export class IframeEventDispatcher {
     private targets = new Set<MessageEventSource>();
     private unsubscribers = new Map<MessageEventSource, () => void>();
 
-    public addIframe(source: MessageEventSource) {
-        this.targets.add(source);
-        this.unsubscribers.set(
-            source,
-            iframeListener.onIframeCloseEvent(source, () => {
-                this.targets.delete(source);
-                this.unsubscribers.delete(source);
-            })
-        );
+    public addIframe(source: MessageEventSource): boolean {
+        if (!this.targets.has(source)) {
+            this.targets.add(source);
+            this.unsubscribers.set(
+                source,
+                iframeListener.onIframeCloseEvent(source, () => {
+                    this.targets.delete(source);
+                    this.unsubscribers.delete(source);
+                })
+            );
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public removeIframe(source: MessageEventSource) {
@@ -39,11 +44,11 @@ export class IframeEventDispatcher {
      * Sends the message... to all iframes listening for users.
      */
     public postMessage(message: IframeResponseEvent) {
-        if (this.targets.size === 0) {
+        /*if (this.targets.size === 0) {
             console.warn("MESSAGE NOT DISPATCHED: ", message);
         } else {
             console.warn("message dispatched: ", message);
-        }
+        }*/
         for (const iframe of this.targets) {
             iframe.postMessage(message, {
                 targetOrigin: "*",

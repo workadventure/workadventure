@@ -133,6 +133,16 @@ export class SocketManager {
 
         roomJoinedMessage.setCurrentuserid(user.id);
 
+        const playerVariables = user.getVariables().getVariables();
+
+        for (const [name, value] of playerVariables.entries()) {
+            const variableMessage = new VariableMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value.value);
+
+            roomJoinedMessage.addPlayervariable(variableMessage);
+        }
+
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
         socket.write(serverToClientMessage);
@@ -318,7 +328,7 @@ export class SocketManager {
         const room = await socketManager.getOrCreateRoom(roomId);
 
         //join world
-        const user = room.join(socket, joinRoomMessage);
+        const user = await room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
         console.log(new Date().toISOString() + " A user joined");
@@ -362,8 +372,13 @@ export class SocketManager {
             userJoinedZoneMessage.setHasoutline(true);
             userJoinedZoneMessage.setOutlinecolor(outlineColor);
         }
-        for (const entry of user.variables.entries()) {
-            userJoinedZoneMessage.getVariablesMap().set(entry[0], entry[1]);
+        for (const entry of user.getVariables().getVariables().entries()) {
+            const key = entry[0];
+            const value = entry[1].value;
+            const isPublic = entry[1].isPublic;
+            if (isPublic) {
+                userJoinedZoneMessage.getVariablesMap().set(key, value);
+            }
         }
 
         const subMessage = new SubToPusherMessage();

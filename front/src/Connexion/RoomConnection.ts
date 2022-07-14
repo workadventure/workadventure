@@ -20,36 +20,37 @@ import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
 import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    TokenExpiredMessage,
-    WorldConnexionMessage,
+    AnswerMessage,
+    AvailabilityStatus,
+    CharacterLayerMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    EditMapMessage,
+    EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
-    UserMovedMessage as UserMovedMessageTsProto,
-    GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
+    GroupUpdateMessage as GroupUpdateMessageTsProto,
+    JoinBBBMeetingAnswer,
+    MoveToPositionMessage as MoveToPositionMessageProto,
+    PingMessage as PingMessageTsProto,
+    PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
+    PositionMessage as PositionMessageTsProto,
+    PositionMessage_Direction,
+    QueryMessage,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+    TokenExpiredMessage,
     UserJoinedMessage as UserJoinedMessageTsProto,
     UserLeftMessage as UserLeftMessageTsProto,
-    EmoteEventMessage as EmoteEventMessageTsProto,
-    PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
-    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    ClientToServerMessage as ClientToServerMessageTsProto,
-    PositionMessage as PositionMessageTsProto,
+    UserMovedMessage as UserMovedMessageTsProto,
     ViewportMessage as ViewportMessageTsProto,
-    PositionMessage_Direction,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    PingMessage as PingMessageTsProto,
-    CharacterLayerMessage,
-    AvailabilityStatus,
-    QueryMessage,
-    AnswerMessage,
-    JoinBBBMeetingAnswer,
-    XmppSettingsMessage,
+    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
+    WorldConnexionMessage,
     XmppConnectionStatusChangeMessage_Status,
-    MoveToPositionMessage as MoveToPositionMessageProto,
-    EditMapMessage,
+    XmppSettingsMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { Subject, BehaviorSubject } from "rxjs";
+import { BehaviorSubject, Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
@@ -59,6 +60,7 @@ import ElementExt from "../Xmpp/Lib/ElementExt";
 import { Parser } from "@xmpp/xml";
 import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
+import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 
 const parse = (data: string): ElementExt | null => {
     const p = new Parser();
@@ -382,6 +384,11 @@ export class RoomConnection implements RoomConnection {
                         variables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
+                    const playerVariables = new Map<string, unknown>();
+                    for (const variable of roomJoinedMessage.playerVariable) {
+                        playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
+                    }
+
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
@@ -410,6 +417,7 @@ export class RoomConnection implements RoomConnection {
                             items,
                             variables,
                             characterLayers,
+                            playerVariables,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
@@ -1150,15 +1158,35 @@ export class RoomConnection implements RoomConnection {
         return answer.joinBBBMeetingAnswer;
     }
 
-    public emitPlayerSetVariable(name: string, value: unknown): void {
+    public emitPlayerSetVariable(event: SetPlayerVariableEvent): void {
         //console.log("emitPlayerSetVariable", name, value);
+        let scope: SetPlayerVariableMessage_Scope;
+        switch (event.scope) {
+            case "room": {
+                scope = SetPlayerVariableMessage_Scope.ROOM;
+                break;
+            }
+            case "world": {
+                scope = SetPlayerVariableMessage_Scope.WORLD;
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = event.scope;
+                return;
+            }
+        }
+
         this.send({
             message: {
                 $case: "setPlayerDetailsMessage",
                 setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
                     setVariable: {
-                        name,
-                        value: JSON.stringify(value),
+                        name: event.key,
+                        value: JSON.stringify(event.value),
+                        public: event.public,
+                        ttl: event.ttl,
+                        scope,
+                        persist: event.persist,
                     },
                 }),
             },

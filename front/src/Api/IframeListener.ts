@@ -607,7 +607,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;
@@ -634,20 +634,30 @@ class IframeListener {
 
     dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
         // Let's dispatch the message to the other iframes
-        for (const iframe of this.iframes) {
-            if (iframe.contentWindow !== source) {
-                iframe.contentWindow?.postMessage(
-                    {
-                        type: "setVariable",
-                        data: {
-                            key,
-                            value,
-                        },
-                    },
-                    "*"
-                );
-            }
-        }
+        this.postMessage(
+            {
+                type: "setVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
+    }
+
+    dispatchPlayerVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        this.postMessage(
+            {
+                type: "setPlayerVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
     }
 }
 

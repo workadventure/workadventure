@@ -52,7 +52,12 @@
 
                 document.getElementById("the-variable").addEventListener('change', (event) => {
                     const value = event.target.value;
-                    WA.player.sharedState.testVariable = value;
+                    WA.player.state.saveVariable("testVariable", value, {
+                        public: true,
+                        persist: true,
+                        ttl: 200,
+                        scope: "room"
+                    });
                 });
 
                 WA.players.onVariableChange("testVariable").subscribe(({ player, value }) => {

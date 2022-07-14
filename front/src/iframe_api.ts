@@ -27,7 +27,7 @@ export type { EmbeddedWebsite } from "./Api/iframe/Room/EmbeddedWebsite";
 export type { Area } from "./Api/iframe/Area/Area";
 export type { RemotePlayer, ActionsMenuAction } from "./Api/iframe/ui";
 
-const globalState = createState("global");
+const globalState = createState();
 
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
@@ -235,9 +235,14 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
         if (safeParsedPayload.success) {
             const payloadData = safeParsedPayload.data;
 
-            const callback = registeredCallbacks[payloadData.type];
-            // @ts-ignore
-            callback?.(payloadData.data);
+            const callbacks = registeredCallbacks[payloadData.type];
+            if (callbacks === undefined) {
+                throw new Error('Missing event handler for event of type "' + payloadData.type + "'");
+            }
+            for (const callback of callbacks) {
+                // @ts-ignore
+                callback?.(payloadData.data);
+            }
         } else {
             const safeLooksLikeResponse = isLookingLikeIframeEventWrapper.safeParse(payload);
             if (safeLooksLikeResponse.success) {

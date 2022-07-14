@@ -3,6 +3,13 @@ import { REDIS_HOST, REDIS_PASSWORD, REDIS_PORT } from "../Enum/EnvironmentVaria
 
 let redisClient: RedisClient | null = null;
 
+// FIXME: configure timeouts and retries
+// FIXME: configure timeouts and retries
+// FIXME: configure timeouts and retries
+// FIXME: configure timeouts and retries
+// FIXME: configure timeouts and retries
+// FIXME: configure timeouts and retries
+
 if (REDIS_HOST !== undefined) {
     const config: ClientOpts = {
         host: REDIS_HOST,

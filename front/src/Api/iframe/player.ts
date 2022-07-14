@@ -2,7 +2,7 @@ import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "
 import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events/HasPlayerMovedEvent";
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
-import { createState } from "./state";
+import { playerState } from "./playerState";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -37,8 +37,7 @@ export const setUuid = (_uuid: string | undefined) => {
 };
 
 export class WorkadventurePlayerCommands extends IframeApiContribution<WorkadventurePlayerCommands> {
-    readonly state = createState("player");
-    readonly sharedState = createState("sharedPlayer");
+    readonly state = playerState;
 
     callbacks = [
         apiCallback({

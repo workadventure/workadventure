@@ -119,6 +119,7 @@ import {
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
 import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
+import { PlayerVariablesManager } from "./PlayerVariablesManager";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -201,6 +202,7 @@ export class GameScene extends DirtyScene {
     private preloading: boolean = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
+    private playerVariablesManager!: PlayerVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
     private embeddedWebsiteManager!: EmbeddedWebsiteManager;
     private areaManager!: DynamicAreaManager;
@@ -830,6 +832,11 @@ export class GameScene extends DirtyScene {
                     this.gameMap,
                     onConnect.room.variables
                 );
+                this.playerVariablesManager = new PlayerVariablesManager(
+                    this.connection,
+                    this.playersEventDispatcher,
+                    onConnect.room.playerVariables
+                );
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
                 // Analyze tags to find if we are admin. If yes, show console.
@@ -1404,7 +1411,8 @@ ${escapedMessage}
                 roomId: this.roomUrl,
                 tags: this.connection ? this.connection.getAllTags() : [],
                 variables: this.sharedVariablesManager.variables,
-                playerVariables: localUserStore.getAllUserProperties(),
+                //playerVariables: localUserStore.getAllUserProperties(),
+                playerVariables: this.playerVariablesManager.variables,
                 userRoomToken: this.connection ? this.connection.userRoomToken : "",
             };
         });
@@ -1421,8 +1429,17 @@ ${escapedMessage}
                 throw new Error('Missing source in "enablePlayersTracking" query. This should never happen.');
             }
 
+            if (
+                enablePlayersTrackingEvent.trackMovement === true &&
+                enablePlayersTrackingEvent.trackPlayers === false
+            ) {
+                throw new Error("Cannot enable trackMovement without enabling trackPlayers first");
+            }
+
+            let sendPlayers = false;
+
             if (enablePlayersTrackingEvent.trackPlayers) {
-                this.playersEventDispatcher.addIframe(source);
+                sendPlayers = this.playersEventDispatcher.addIframe(source);
             } else {
                 this.playersEventDispatcher.removeIframe(source);
             }
@@ -1433,9 +1450,11 @@ ${escapedMessage}
             }
 
             const addPlayerEvents: AddPlayerEvent[] = [];
-            if (enablePlayersTrackingEvent.trackPlayers) {
-                for (const player of this.remotePlayersRepository.getPlayers()) {
-                    addPlayerEvents.push(RemotePlayersRepository.toIframeAddPlayerEvent(player));
+            if (sendPlayers) {
+                if (enablePlayersTrackingEvent.trackPlayers) {
+                    for (const player of this.remotePlayersRepository.getPlayers()) {
+                        addPlayerEvents.push(RemotePlayersRepository.toIframeAddPlayerEvent(player));
+                    }
                 }
             }
             return addPlayerEvents;
@@ -1520,9 +1539,14 @@ ${escapedMessage}
         );
 
         iframeListener.registerAnswerer("setVariable", (event, source) => {
-            switch (event.target) {
+            // TODO: "setVariable" message has a useless "target"
+            // TODO: "setVariable" message has a useless "target"
+            // TODO: "setVariable" message has a useless "target"
+            // TODO: design another message when sending from iframeAPI to front
+
+            this.sharedVariablesManager.setVariable(event, source);
+            /*switch (event.target) {
                 case "global": {
-                    this.sharedVariablesManager.setVariable(event, source);
                     break;
                 }
                 case "player": {
@@ -1540,7 +1564,7 @@ ${escapedMessage}
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     const _exhaustiveCheck: never = event.target;
                 }
-            }
+            }*/
         });
 
         iframeListener.registerAnswerer("removeActionMessage", (message) => {
@@ -1741,6 +1765,7 @@ ${escapedMessage}
         iframeListener.unregisterAnswerer("closeUIWebsite");
         iframeListener.unregisterAnswerer("enablePlayersTracking");
         this.sharedVariablesManager?.close();
+        this.playerVariablesManager?.close();
         this.embeddedWebsiteManager?.close();
         this.areaManager?.close();
         this.playersEventDispatcher.cleanup();

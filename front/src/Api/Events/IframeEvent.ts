@@ -43,6 +43,7 @@ import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
 import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
 import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
+import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -246,6 +247,10 @@ export const isIframeResponseEvent = z.union([
         data: isSetVariableEvent,
     }),
     z.object({
+        type: z.literal("setPlayerVariable"),
+        data: isSetVariableEvent,
+    }),
+    z.object({
         type: z.literal("setSharedPlayerVariable"),
         data: isSetSharedPlayerVariableEvent,
     }),
@@ -288,6 +293,10 @@ export const iframeQueryMapTypeGuards = {
     },
     setVariable: {
         query: isSetVariableEvent,
+        answer: z.undefined(),
+    },
+    setPlayerVariable: {
+        query: isSetPlayerVariableEvent,
         answer: z.undefined(),
     },
     loadTileset: {

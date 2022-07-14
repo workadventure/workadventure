@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@playwright/test": "~1.21.0",
+    "@playwright/test": "~1.23.0",
     "@types/dockerode": "^3.3.0",
     "axios": "^0.24.0",
     "dockerode": "^3.3.1",

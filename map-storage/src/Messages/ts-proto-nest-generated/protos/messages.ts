@@ -61,7 +61,7 @@ export interface SetPlayerDetailsMessage {
     removeOutlineColor: boolean | undefined;
     showVoiceIndicator: boolean | undefined;
     availabilityStatus: AvailabilityStatus;
-    setVariable: VariableMessage | undefined;
+    setVariable: SetPlayerVariableMessage | undefined;
 }
 
 export interface UserMovesMessage {
@@ -150,6 +150,21 @@ export interface ItemEventMessage {
 export interface VariableMessage {
     name: string;
     value: string;
+}
+
+export interface SetPlayerVariableMessage {
+    name: string;
+    value: string;
+    public: boolean;
+    persist: boolean;
+    ttl: number | undefined;
+    scope: SetPlayerVariableMessage_Scope;
+}
+
+export enum SetPlayerVariableMessage_Scope {
+    ROOM = 0,
+    WORLD = 1,
+    UNRECOGNIZED = -1,
 }
 
 export interface XmppMessage {
@@ -315,6 +330,7 @@ export interface RoomJoinedMessage {
     userRoomToken: string;
     /** We send the current skin of the current player. */
     characterLayer: CharacterLayerMessage[];
+    playerVariable: VariableMessage[];
 }
 
 export interface WebRtcStartMessage {

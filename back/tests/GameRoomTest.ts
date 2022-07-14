@@ -57,9 +57,9 @@ describe("GameRoom", () => {
             () => {}
         );
 
-        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
+        const user1 = await world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
 
-        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage("2", 500, 100));
+        const user2 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 500, 100));
 
         world.updatePosition(user2, new Point(261, 100));
 
@@ -94,15 +94,15 @@ describe("GameRoom", () => {
             () => {}
         );
 
-        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
+        const user1 = await world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
 
-        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage("2", 200, 100));
+        const user2 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 200, 100));
 
         expect(connectCalled).toBe(true);
         connectCalled = false;
 
         // baz joins at the outer limit of the group
-        const user3 = world.join(createMockUserSocket(), createJoinRoomMessage("2", 311, 100));
+        const user3 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 311, 100));
 
         expect(connectCalled).toBe(false);
 
@@ -135,9 +135,9 @@ describe("GameRoom", () => {
             () => {}
         );
 
-        const user1 = world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
+        const user1 = await world.join(createMockUserSocket(), createJoinRoomMessage("1", 100, 100));
 
-        const user2 = world.join(createMockUserSocket(), createJoinRoomMessage("2", 259, 100));
+        const user2 = await world.join(createMockUserSocket(), createJoinRoomMessage("2", 259, 100));
 
         expect(connectCalled).toBe(true);
         expect(disconnectCallNumber).toBe(0);
