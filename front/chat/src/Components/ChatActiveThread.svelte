@@ -179,7 +179,7 @@
 		</div>
 	</div>
 	{#if settingsView}
-		<div transition:fly={{ y: -100, duration: 100 }} class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
+		<div in:fly={{ y: -100, duration: 100, delay: 200 }} out:fly={{ y: -100, duration: 100 }} class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
 			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5">
 				{#if $meStore.isAdmin}
 					<button class="wa-action" type="button" on:click|stopPropagation={() => activeThread.reInitialize()}><RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()} </button>
