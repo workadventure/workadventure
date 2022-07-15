@@ -9,7 +9,7 @@ import { playersStore } from "../Stores/PlayersStore";
 import {
     chatMessagesStore,
     newChatMessageSubject,
-    newChatMessageWritingStausSubject,
+    newChatMessageWritingStatusSubject,
     writingStatusMessageStore,
 } from "../Stores/ChatStore";
 import { getIceServersConfig } from "../Components/Video/utils";
@@ -186,7 +186,7 @@ export class VideoPeer extends Peer {
                 );
             });
 
-            this.newWritingStatusMessageSubscribtion = newChatMessageWritingStausSubject.subscribe((status) => {
+            this.newWritingStatusMessageSubscribtion = newChatMessageWritingStatusSubject.subscribe((status) => {
                 if (status == undefined) return;
                 this.write(
                     new Buffer(

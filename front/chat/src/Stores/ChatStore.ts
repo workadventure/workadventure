@@ -50,7 +50,7 @@ function getMeOrCreate(){
             name: userData.name,
             characterLayers: [],
             availabilityStatus: AvailabilityStatus.ONLINE,
-            color: getColorByString(userData.name),
+            color: userData.color ? userData.color : getColorByString(userData.name),
             visitCardUrl: null,
             companion: null
         } as PlayerInterface
