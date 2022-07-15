@@ -3,7 +3,8 @@ import * as fs from "fs";
 import { ADMIN_URL } from "../Enum/EnvironmentVariable";
 import SwaggerGenerator from "../Services/SwaggerGenerator";
 import swaggerJsdoc from "swagger-jsdoc";
-import LiveDirectory from "live-directory";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const LiveDirectory = require("live-directory");
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {
