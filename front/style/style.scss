@@ -49,38 +49,38 @@ body .message-info.warning {
         }
     }
 
-    video {
-        height: fit-content;
-        max-height: 100%;
-        max-width: 100%;
-        width: 100%;
-        cursor: url("./images/cursor_pointer.png"), pointer;
-
-        &.mobile {
-            width: 100%;
-            height: 21vh;
-        }
-        &:focus {
-            outline: none;
-        }
-    }
+    //video {
+    //    height: fit-content;
+    //    max-height: 100%;
+    //    max-width: 100%;
+    //    width: 100%;
+    //    cursor: url('./images/cursor_pointer.png'), pointer;
+    //
+    //    &.mobile{
+    //        width: 100%;
+    //        height: 21vh;
+    //    }
+    //    &:focus{
+    //        outline: none;
+    //    }
+    //}
 
     i {
-        position: absolute;
-        width: 150px;
-        height: auto;
-        left: -6px;
-        top: calc(100% - 28px);
-        text-align: center;
-        color: white;
-        span {
-            font-size: 14px;
-            margin: 2px;
-            background-color: white;
-            border: solid 3px black;
-            border-radius: 8px;
-            font-style: normal;
-        }
+        ////position: absolute;
+        //width: 100px;
+        //height: auto;
+        //left: -6px;
+        //top: calc(100% - 28px);
+        //text-align: center;
+        //color: white;
+        //span{
+        //    font-size: 14px;
+        //    margin: 2px;
+        //    background-color: white;
+        //    border: solid 3px black;
+        //    border-radius: 8px;
+        //    font-style: normal;
+        //}
     }
 
     .woka-icon {

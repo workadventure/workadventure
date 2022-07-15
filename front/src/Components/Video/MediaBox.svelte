@@ -15,7 +15,9 @@
 </script>
 
 <div
-    class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
+    class="media-container {isHightlighted ? 'hightlighted' : ''}
+    tw-flex tw-h-32 tw-w-60 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96 tw-m-0 tw-p-0
+"
     class:clickable={isClickable}
     class:mozaic-solo={mozaicSolo}
     class:mozaic-full-width={mozaicFullWidth}
@@ -36,7 +38,6 @@
     @import "../../../style/breakpoints.scss";
 
     .media-container {
-        display: flex;
         margin-top: 4%;
         margin-bottom: 4%;
         margin-left: auto;
@@ -46,8 +47,6 @@
         pointer-events: auto;
 
         padding: 0;
-        max-height: 200px;
-        max-width: 85%;
 
         &:hover {
             margin-top: 2%;
