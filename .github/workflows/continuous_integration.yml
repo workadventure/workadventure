@@ -146,9 +146,10 @@ jobs:
         run: yarn run lint
         working-directory: "front/chat"
 
-      - name: "Typecheck"
-        run: yarn run typecheck
-        working-directory: "front/chat"
+      # TODO active
+      #- name: "Typecheck"
+      #  run: yarn run typecheck
+      #  working-directory: "front/chat"
 
       # TODO active
       #- name: "Pretty"
