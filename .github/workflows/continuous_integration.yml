@@ -138,16 +138,16 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
         working-directory: "front/chat"
 
-      - name: "Typecheck"
-        run: yarn run typecheck
-        working-directory: "front/chat"
-
       - name: "Svelte check"
         run: yarn run svelte-check
         working-directory: "front/chat"
 
       - name: "Lint"
         run: yarn run lint
+        working-directory: "front/chat"
+
+      - name: "Typecheck"
+        run: yarn run typecheck
         working-directory: "front/chat"
 
       # TODO active
