@@ -248,17 +248,17 @@ export class MucRoom {
         }
     }
 
-    // public getPresenceStore(): UsersStore {
-    //     return {
-    //         subscribe: this.presenceStore.subscribe,
-    //     };
-    // }
-    //
-    // public getTeleportStore(): TeleportStore {
-    //     return {
-    //         subscribe: this.teleportStore.subscribe,
-    //     };
-    // }
+    public getPresenceStore(): UsersStore {
+        return {
+            subscribe: this.presenceStore.subscribe,
+        };
+    }
+
+    public getTeleportStore(): TeleportStore {
+        return {
+            subscribe: this.teleportStore.subscribe,
+        };
+    }
 
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });
