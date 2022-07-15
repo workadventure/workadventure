@@ -1,7 +1,6 @@
 import {
   detectLocale,
   navigatorDetector,
-  initLocalStorageDetector,
 } from "typesafe-i18n/detectors";
 import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
 import { setLocale } from "./i18n-svelte";

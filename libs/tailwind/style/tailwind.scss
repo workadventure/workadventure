@@ -117,7 +117,8 @@
         .wa-container{
             @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full;
             img {
-                margin-top: 4px;
+                width: 30px;
+                height: 30px;
             }
         }
     }
@@ -135,7 +136,13 @@
     }
 
     .wa-separator{
-        @apply before:tw-content-[''] before:tw-absolute before:tw-left-0 before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-right-0 after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative;
+        &::before{
+            left: -5px;
+        }
+        &::after{
+            right: -5px;
+        }
+        @apply before:tw-content-[''] before:tw-absolute before:tw-top-1/2 before:tw-w-1/3 before:tw-h-px before:tw-bg-lighter-purple after:tw-content-[''] after:tw-absolute after:tw-top-1/2 after:tw-w-1/3 after:tw-h-px after:tw-bg-lighter-purple tw-text-light-purple-alt tw-text-xs tw-uppercase tw-text-center tw-relative;
     }
 
     .wa-action{

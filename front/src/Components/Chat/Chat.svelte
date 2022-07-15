@@ -134,8 +134,9 @@
 <div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
     {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
     <iframe
+        id="chatWorkAdventure"
         bind:this={chatIframe}
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         title="WorkAdventureChat"
         src={CHAT_URL}
         class="tw-border-0"

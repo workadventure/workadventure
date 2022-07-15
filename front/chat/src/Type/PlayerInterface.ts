@@ -1,5 +1,10 @@
-import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
-import type { BodyResourceDescriptionInterface } from "../Entity/PlayerTextures";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+
+export interface BodyResourceDescriptionInterface {
+    id: string;
+    img: string;
+    level?: number;
+}
 
 export interface PlayerInterface {
     userId: number;

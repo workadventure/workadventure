@@ -28,8 +28,22 @@ const fr_FR: Translation = {
     rankUp: "Promouvoir",
     rankDown: "Rétrograder",
     reinit: "Ré initialiser",
-    "enterText": "Écrire un message ...",
-    CONNECTING: "test"
+    enterText: "Écrire un message ...",
+    timeLine: {
+        title: 'Votre historique',
+        open: 'Ouvrir votre historique de converçation !',
+        description: 'Historique de vos converçations sur WorkAdventure!',
+        incoming: ' a rejoint la conversation',
+        outcoming: ' a quitté la conversation'
+    },
+    form: {
+        placeholder: 'Écrire votre message...',
+        typing: ' écrit...'
+    },
+    notification: {
+        discussion: "veut discuter avec toi",
+        message: "a envoyé un message"
+    }
 };
 
 export default fr_FR;

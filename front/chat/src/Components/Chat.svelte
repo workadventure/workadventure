@@ -12,9 +12,10 @@
     import {locale} from "../i18n/i18n-svelte";
     import ChatLiveRooms from "./ChatLiveRooms.svelte";
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
-    //import {get} from "svelte/store";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
+    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeLine.svelte";
+    import Timeline from "./Timeline/Timeline.svelte";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
@@ -24,6 +25,7 @@
     let searchValue = '';
     let showUsers = true;
     let showLives = true;
+    let activeThreadTimeLine = false;
 
   beforeUpdate(() => {
     autoscroll =
@@ -31,9 +33,9 @@
       listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
   });
 
-  onMount(() => {
+  onMount(async () => {
     if (!$locale) {
-      localeDetector();
+      await localeDetector();
     }
     listDom.scrollTo(0, listDom.scrollHeight);
   });
@@ -48,8 +50,8 @@
     }
   }
 
-    function handleActiveThread(event: any){
-        activeThreadStore.set(event.detail);
+    function handleActiveThread(event: unknown){
+        activeThreadStore.set((event as {detail: MucRoom|undefined}).detail);
     }
     function handleShowUsers(){
         showUsers = !showUsers;
@@ -107,7 +109,11 @@
         {#if !$connectionStore || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore?$LL.reconnecting():$LL.waitingData()}/>
         {:else}
-            {#if $activeThreadStore}
+            {#if activeThreadTimeLine}
+                <ChatActiveThreadTimeLine
+                        on:unactiveThreadTimeLine={() => activeThreadTimeLine = false}
+                />
+            {:else if $activeThreadStore}
                 <ChatActiveThread
                         messagesStore={$activeThreadStore.getMessagesStore()}
                         usersListStore={$activeThreadStore.getPresenceStore()}
@@ -132,9 +138,9 @@
                     </div>
                     <!-- chat users -->
                     <UsersList
+                            {showUsers}
                             usersListStore={defaultRoom().getPresenceStore()}
                             meStore={defaultRoom().getMeStore()}
-                            {showUsers}
                             searchValue={searchValue.toLocaleLowerCase()}
                             on:activeThread={handleActiveThread}
                             on:showUsers={handleShowUsers}
@@ -151,6 +157,10 @@
                             on:showLives={handleShowLives}
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
+
+                    <Timeline
+                            on:activeThreadTimeLine={() => activeThreadTimeLine = true}
+                    />
                 </div>
             {/if}
         {/if}
@@ -158,18 +168,11 @@
 </aside>
 
 <style lang="scss">
-  aside.chatWindow {
-    z-index: 1000;
-    pointer-events: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    min-height: 100vh;
-    width: 100%;
-    min-width: 300px;
-    background: rgba(#1b1b29, 0.9);
-    color: whitesmoke;
-    display: flex;
-    flex-direction: column;
-  }
+    aside.chatWindow {
+        pointer-events: auto;
+        background: rgba(#1b1b29, 0.9);
+        color: whitesmoke;
+        display: flex;
+        flex-direction: column;
+    }
 </style>

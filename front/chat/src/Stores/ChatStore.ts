@@ -1,15 +1,12 @@
 import { writable } from "svelte/store";
-import { playersStore } from "./PlayersStore";
-import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
-import { iframeListener } from "../Api/IframeListener";
+import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
-import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
-import { peerStore } from "./PeerStore";
+import { localUserStore } from "./LocalUserStore";
+import { UserData } from "../Messages/JsonMessages/ChatData";
+import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { getColorByString } from "../Utils/ColorGenerator";
 
-export const chatVisibilityStore = writable(false);
-export const chatInputFocusStore = writable(false);
-
-export const _newChatMessageSubject = new Subject<string>();
+const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
@@ -32,32 +29,35 @@ export interface ChatMessage {
     text?: string[];
 }
 
-function getAuthor(authorId: number): PlayerInterface {
-    const author = playersStore.getPlayerById(authorId);
+const PLAYERSTORE_ME_USERID = -2;
+export const playersStore = new Map<number, PlayerInterface>();
+
+ function getAuthor(authorId: number): PlayerInterface {
+    const author = playersStore.get(authorId);
     if (!author) {
         throw new Error("Could not find data for author " + authorId);
     }
     return author;
 }
 
-function createWritingStatusMessageStore() {
-    const { subscribe, update } = writable<Set<PlayerInterface>>(new Set<PlayerInterface>());
-    return {
-        subscribe,
-        addWritingStatus(authorId: number, status: 5 | 6) {
-            update((list) => {
-                if (status === ChatMessageTypes.userWriting) {
-                    list.add(getAuthor(authorId));
-                } else if (status === ChatMessageTypes.userStopWriting) {
-                    list.delete(getAuthor(authorId));
-                }
-
-                return list;
-            });
-        },
-    };
+function getMeOrCreate(){
+    let me = playersStore.get(PLAYERSTORE_ME_USERID);
+    if(!me){
+        const userData = localUserStore.getUserData() as UserData;
+        me = {
+            userId: PLAYERSTORE_ME_USERID,
+            userUuid: userData.uuid,
+            name: userData.name,
+            characterLayers: [],
+            availabilityStatus: AvailabilityStatus.ONLINE,
+            color: userData.color ? userData.color : getColorByString(userData.name),
+            visitCardUrl: null,
+            companion: null
+        } as PlayerInterface
+        playersStore.set(PLAYERSTORE_ME_USERID, me);
+    }
+    return me;
 }
-export const writingStatusMessageStore = createWritingStatusMessageStore();
 
 function createChatMessagesStore() {
     const { subscribe, update } = writable<ChatMessage[]>([]);
@@ -73,17 +73,9 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.userIncoming,
                         targets: [getAuthor(authorId)],
-                        date: new Date(),
+                        date: new Date()
                     });
                 }
-
-                /* @deprecated with new chat service */
-                iframeListener.sendComingUserToChatIframe({
-                    type: ChatMessageTypes.userIncoming,
-                    targets: [getAuthor(authorId)],
-                    date: new Date(),
-                });
-
                 return list;
             });
         },
@@ -96,24 +88,13 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.userOutcoming,
                         targets: [getAuthor(authorId)],
-                        date: new Date(),
+                        date: new Date()
                     });
                 }
-
-                /* @deprecated with new chat service */
-                iframeListener.sendComingUserToChatIframe({
-                    type: ChatMessageTypes.userOutcoming,
-                    targets: [getAuthor(authorId)],
-                    date: new Date(),
-                });
-
-                //end of writing message
-                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
                 return list;
             });
         },
         addPersonnalMessage(text: string) {
-            iframeListener.sendUserInputChat(text);
             _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
@@ -123,7 +104,8 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.me,
                         text: [text],
-                        date: new Date(),
+                        author: getMeOrCreate(),
+                        date: new Date()
                     });
                 }
 
@@ -135,11 +117,7 @@ function createChatMessagesStore() {
          */
         addExternalMessage(authorId: number, text: string, origin?: Window) {
             update((list) => {
-                const author = getAuthor(authorId);
-                let lastMessage = null;
-                if (list.length > 0) {
-                    lastMessage = list[list.length - 1];
-                }
+                const lastMessage = list[list.length - 1];
                 if (
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.text &&
@@ -148,34 +126,23 @@ function createChatMessagesStore() {
                 ) {
                     lastMessage.text.push(text);
                 } else {
+                    const author = getAuthor(authorId);
                     list.push({
                         type: ChatMessageTypes.text,
                         text: [text],
-                        author: author,
-                        date: new Date(),
+                        author,
+                        date: new Date()
                     });
                 }
-
-                //TODO delete it with new XMPP integration
-                //send list to chat iframe
-                iframeListener.sendMessageToChatIframe({
-                    type: ChatMessageTypes.text,
-                    text: [text],
-                    author: author,
-                    date: new Date(),
-                });
-
-                //create message sound and text notification
-                mediaManager.playNewMessageNotification();
-                mediaManager.createNotification(author.name, NotificationType.message);
-                //end of writing message
-                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
-
-                iframeListener.sendUserInputChat(text, origin);
                 return list;
             });
-            chatVisibilityStore.set(true);
         },
+
+        reInitialize(){
+            update(() => {
+                return [];
+            })
+        }
     };
 }
 export const chatMessagesStore = createChatMessagesStore();
@@ -193,22 +160,11 @@ function createChatSubMenuVisibilityStore() {
         },
     };
 }
-
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
+export const timeLineOpenedStore = writable<boolean>(false);
 
-//TODO delete it with new XMPP integration
-//send list to chat iframe
-writingStatusMessageStore.subscribe((list) => {
-    try {
-        iframeListener.sendWritingStatusToChatIframe(list);
-    } catch (err) {
-        console.error(err);
-    }
-});
-peerStore.subscribe((list) => {
-    try {
-        iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
-    } catch (err) {
-        console.error(err);
-    }
-});
+export const writingStatusMessageStore = writable<Set<PlayerInterface>>(new Set<PlayerInterface>())
+
+export const chatInputFocusStore = writable(false);
+
+export const chatPeerConexionInprogress = writable<boolean>(false);

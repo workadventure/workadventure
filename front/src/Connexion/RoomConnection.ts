@@ -331,6 +331,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                //@ts-ignore
                                 const _exhaustiveCheck: never = subMessage;
                             }
                         }
@@ -560,6 +561,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                    //@ts-ignore
                     const _exhaustiveCheck: never = message;
                 }
             }

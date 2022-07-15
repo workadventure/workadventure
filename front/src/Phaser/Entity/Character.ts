@@ -21,6 +21,7 @@ import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+import { playersStore } from "../../Stores/PlayersStore";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -61,7 +62,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: CancelablePromise<string>
+        companionTexturePromise?: CancelablePromise<string>,
+        userId?: number | null
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -71,6 +73,17 @@ export abstract class Character extends Container implements OutlineableInterfac
 
         this.sprites = new Map<string, Sprite>();
         this._pictureStore = writable(undefined);
+
+        this._pictureStore.subscribe((src) => {
+            if (userId == undefined) {
+                return;
+            }
+            const player = playersStore.getPlayerById(userId);
+            if (player == undefined) {
+                return;
+            }
+            player.wokaSrc = src;
+        });
 
         //textures are inside a Promise in case they need to be lazyloaded before use.
         this.texturePromise = texturesPromise
