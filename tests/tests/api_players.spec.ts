@@ -267,4 +267,87 @@ test.describe('API WA.players', () => {
     expect(variable).toBe(12);
   });
 
+  // This test is testing that we are listening on the back side to variables modification inside Redis.
+  // All players with same UUID should share the same state (public or private as long as it is persisted)
+  test('Test that 2 players sharing the same UUID are notified of persisted private variable changes.', async ({ page, context }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
+      await WA.onInit();
+      return WA.player.id;
+    }));
+
+    // We use a new tab to keep the same LocalStorage
+    const page2 = await context.newPage();
+
+    await page2.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    //await login(page2, 'Bob');
+
+    console.log("PAGE 2 MY ID", await evaluateScript(page2, async () => {
+      await WA.onInit();
+      return WA.player.id;
+    }));
+
+
+    let gotExpectedNotification = false;
+    let gotUnexpectedNotification = false;
+    await page2.on('console', async (msg) => {
+      const text = await msg.text();
+      console.log(text);
+      if (text === 'NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE') {
+        gotExpectedNotification = true;
+      } else if (text === 'NOTIFICATION RECEIVED FOR should_not_be_notified VARIABLE CHANGE') {
+        gotUnexpectedNotification = true;
+      }
+    });
+
+
+    await evaluateScript(page2, async () => {
+      await WA.onInit();
+      await WA.players.enableTracking();
+
+      WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
+        console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
+      });
+      WA.player.state.onVariableChange('should_not_be_notified').subscribe(() => {
+        console.error('NOTIFICATION RECEIVED FOR should_not_be_notified VARIABLE CHANGE');
+      });
+
+      return;
+    });
+
+
+    await evaluateScript(page, async () => {
+      await WA.onInit();
+
+      WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
+        public: false,
+        persist: true,
+        scope: "room",
+      });
+
+      WA.player.state.saveVariable('should_not_be_notified', 'should_not_be_notified', {
+        public: false,
+        persist: false,
+        scope: "room",
+      });
+
+      return;
+    });
+
+    await page.waitForTimeout(1000);
+
+    await expect(gotExpectedNotification).toBe(true);
+    await expect(gotUnexpectedNotification).toBe(false);
+
+    await page2.close();
+  });
+
 });
