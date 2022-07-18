@@ -24,7 +24,14 @@ import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
+import {
+    activeSubMenuStore,
+    handleMenuRegistrationEvent,
+    handleMenuUnregisterEvent,
+    MenuItem, menuVisiblilityStore, SubMenusInterface,
+    subMenusStore,
+    TranslatedMenu
+} from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
@@ -39,6 +46,7 @@ import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
+import {get} from "svelte/store";
 import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
@@ -146,6 +154,9 @@ class IframeListener {
 
     private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
     public readonly askPositionStream = this._askPositionStream.asObservable();
+
+    private readonly _openInviteMenuStream: Subject<void> = new Subject();
+    public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
@@ -350,6 +361,8 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
+                    } else if(iframeEvent.type == "openInviteMenu"){
+                        this._openInviteMenuStream.next();
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

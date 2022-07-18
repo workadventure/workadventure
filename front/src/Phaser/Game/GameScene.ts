@@ -72,7 +72,15 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
-import { contactPageStore } from "../../Stores/MenuStore";
+import {
+    activeSubMenuStore,
+    contactPageStore,
+    MenuItem,
+    menuVisiblilityStore,
+    SubMenusInterface,
+    subMenusStore,
+    TranslatedMenu
+} from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -1270,6 +1278,25 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
                 this.connection?.emitAskPosition(event.uuid, event.playUri);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.openInviteMenuStream.subscribe(() => {
+                const indexInviteMenu = get(subMenusStore).findIndex(
+                    (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+                );
+                if (indexInviteMenu === -1) {
+                    console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, get(subMenusStore));
+                    return;
+                }
+                if (get(menuVisiblilityStore) && get(activeSubMenuStore) === indexInviteMenu) {
+                    menuVisiblilityStore.set(false);
+                    activeSubMenuStore.set(0);
+                    return;
+                }
+                activeSubMenuStore.set(indexInviteMenu);
+                menuVisiblilityStore.set(true);
             })
         );
 

@@ -17,10 +17,15 @@
   let minimizeUser = true;
   const maxUsersMinimized = 7;
 
-    function openChat(user: User) {
-        return user;
-        //dispatch('activeThread', user);
-    }
+  function openChat(user: User) {
+      return user;
+      //dispatch('activeThread', user);
+  }
+
+  function showInviteMenu(){
+    window.parent.postMessage({ type: "closeChat" }, "*");
+    window.parent.postMessage({ type: "openInviteMenu" }, "*");
+  }
 </script>
 
 <div>
@@ -33,41 +38,58 @@
                                 {usersListUnreads()}
                             </span>
 			{/if}-->
-			<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">{$LL.users()}</p>
-			<button class="tw-text-lighter-purple" on:click={() => dispatch('showUsers')}>
-				<ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
+			<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+              {$LL.users()}
+            </p>
+			<button
+                    class="tw-text-lighter-purple"
+                    on:click={() => dispatch("showUsers")}
+            >
+				<ChevronUpIcon
+                        class={`tw-transform tw-transition ${
+                          showUsers ? "" : "tw-rotate-180"
+                        }`}
+                />
 			</button>
 		</div>
 		{#if showUsers}
 			<div transition:fly={{ y: -30, duration: 100 }}>
 				{#if [...$usersListStore].length === 0}
-					<p class="tw-px-5">This room is empty !</p>
-					<!--<button type="button" class="nes-btn is-primary" on:click={null}>test</button>-->
+                  <div class="tw-px-5 tw-mb-2">
+					<p>{$LL.roomEmpty()}</p>
+                    <button type="button" class="light tw-m-auto" on:click={showInviteMenu}>
+                      {$LL.invite()}
+                    </button>
+                  </div>
 				{:else}
 					{#each [...$usersListStore]
                         .sort(([, a],[, b]) => Number(b.active) - Number(a.active))
 						.splice(0, minimizeUser?maxUsersMinimized:[...$usersListStore].length)
-						.filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue))
-							as [jid, user]}
+						.filter(([, user]) => user.name
+                                .toLocaleLowerCase()
+                                .includes(searchValue)) as [jid, user]}
 						<ChatUser
 								{openChat}
 								{user}
 								{jid}
-								on:goTo={(event) => dispatch('goTo', event.detail)}
-								on:rankUp={(event) => dispatch('rankUp', event.detail)}
-								on:rankDown={(event) => dispatch('rankDown', event.detail)}
-								on:ban={(event) => dispatch('ban', event.detail)}
+								on:goTo={(event) => dispatch("goTo", event.detail)}
+								on:rankUp={(event) => dispatch("rankUp", event.detail)}
+								on:rankDown={(event) => dispatch("rankDown", event.detail)}
+								on:ban={(event) => dispatch("ban", event.detail)}
 								{searchValue}
 								{meStore}
 						/>
 					{/each}
 				{/if}
 				{#if [...$usersListStore].length > maxUsersMinimized}
-					<div class="tw-px-4 tw-mb-6  tw-flex tw-justify-end" on:click={() => minimizeUser = !minimizeUser}>
+					<div
+                            class="tw-px-4 tw-mb-6  tw-flex tw-justify-end"
+                            on:click={() => (minimizeUser = !minimizeUser)}
+                    >
 						<button
 								class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
 						>
-							See {minimizeUser?'more':'less'}…
+							See {minimizeUser ? "more" : "less"}…
 						</button>
 					</div>
 				{/if}
