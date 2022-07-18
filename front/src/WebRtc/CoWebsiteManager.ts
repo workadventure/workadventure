@@ -48,7 +48,7 @@ class CoWebsiteManager {
     private cowebsiteAsideHolderDom: HTMLDivElement;
     private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
-    private coWebsiteResizeSize: number = 50;
+    private coWebsiteResizeSize = 50;
 
     private buttonCloseCoWebsite: HTMLElement;
 
