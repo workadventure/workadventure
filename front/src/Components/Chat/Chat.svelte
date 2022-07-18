@@ -122,7 +122,7 @@
     {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
     <iframe
         bind:this={chatIframe}
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-same-origin"
         title="WorkAdventureChat"
         src={CHAT_URL}
         class="tw-border-0"
