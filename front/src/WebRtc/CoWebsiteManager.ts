@@ -49,7 +49,7 @@ class CoWebsiteManager {
     private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
 
-    private buttonCloseCoWebsite: HTMLElement;
+    private buttonCloseCoWebsite;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
