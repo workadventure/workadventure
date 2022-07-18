@@ -22,6 +22,17 @@ if (REDIS_HOST !== undefined) {
 
     redisClient = createClient(config);
 
+    // Enable keyspace events to listen to changes in player variables.
+    // Listen to:
+    // - E: Keyevent events
+    // - h: Hash commands
+    // - x: Expired events (events generated every time a key expires)
+    redisClient.config("SET", "notify-keyspace-events", "Ehx", (e, result) => {
+        if (e) {
+            console.error("An error occurred while configuring Redis: ", e);
+        }
+    });
+
     redisClient.on("error", (err) => {
         console.error("Error connecting to Redis:", err);
     });
