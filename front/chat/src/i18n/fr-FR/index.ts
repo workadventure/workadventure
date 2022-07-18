@@ -17,6 +17,8 @@ const fr_FR: Translation = {
   waitingData: "En attentes des informations de l'utilisateur ...",
   search: "Rechercher un utilisateur, un message, un canal ...",
   CONNECTING: "test",
+  invite: "Inviter",
+  roomEmpty: "Cette salle est vide, invitez un collègue ou un ami à vous rejoindre !"
 };
 
 export default fr_FR;

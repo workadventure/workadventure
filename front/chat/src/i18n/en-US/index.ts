@@ -17,6 +17,8 @@ const en_US: BaseTranslation = {
   waitingData: "Waiting user data ...",
   search: "Search for user, message, channel, etc.",
   CONNECTING: "test",
+  invite: "Invite",
+  roomEmpty: "This room is empty, invite a colleague or friend to join you!"
 };
 
 export default en_US;

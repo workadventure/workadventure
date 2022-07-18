@@ -186,6 +186,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("askPosition"),
         data: isAskPositionEvent,
     }),
+    z.object({
+        type: z.literal("openInviteMenu"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

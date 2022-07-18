@@ -18,6 +18,11 @@
     return user;
     //dispatch('activeThread', user);
   }
+
+  function showInviteMenu(){
+    window.parent.postMessage({ type: "closeChat" }, "*");
+    window.parent.postMessage({ type: "openInviteMenu" }, "*");
+  }
 </script>
 
 <div>
@@ -49,12 +54,12 @@
     {#if showUsers}
       <div transition:fly={{ y: -30, duration: 100 }}>
         {#if [...$usersListStore].length === 0}
-          <p>
-            This room is empty, copy this link to invite colleague or friend!
-          </p>
-          <button type="button" class="nes-btn is-primary" on:click={null}
-            >test</button
-          >
+          <div class="tw-px-5 tw-mb-2">
+            <p>{$LL.roomEmpty()}</p>
+          <button type="button" class="light tw-m-auto" on:click={showInviteMenu}>
+            {$LL.invite()}
+          </button>
+          </div>
         {:else}
           {#each [...$usersListStore]
             .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
