@@ -39,12 +39,17 @@ class LocalAdmin implements AdminInterface {
             });
         }
 
-        const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
-        if (!match) {
-            throw new Error("URL format is not good : " + roomUrl.pathname);
+        let mapUrl = "";
+        let match = /\/~\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+        if (match) {
+            mapUrl = roomUrl.protocol + "//" + "localhost:3000/" + match[1];
+        } else {
+            match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+            if (!match) {
+                throw new Error("URL format is not good : " + roomUrl.pathname);
+            }
+            mapUrl = roomUrl.protocol + "//" + match[1];
         }
-
-        const mapUrl = roomUrl.protocol + "//" + match[1];
 
         return Promise.resolve({
             mapUrl,

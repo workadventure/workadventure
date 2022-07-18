@@ -141,6 +141,7 @@ class ConnectionManager {
             }
             urlManager.pushRoomIdToUrl(this._currentRoom);
         }
+
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();

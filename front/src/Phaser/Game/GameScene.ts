@@ -343,6 +343,7 @@ export class GameScene extends DirtyScene {
                 });
             }
         });
+
         this.load.scenePlugin("AnimatedTiles", AnimatedTiles, "animatedTiles", "animatedTiles");
         this.load.on("filecomplete-tilemapJSON-" + this.MapUrlFile, (key: string, type: string, data: unknown) => {
             this.onMapLoad(data).catch((e) => console.error(e));

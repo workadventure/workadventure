@@ -583,14 +583,19 @@ export class GameRoom {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
-            if (!match) {
-                console.error("Unexpected room URL", roomUrl);
-                throw new Error('Unexpected room URL "' + roomUrl + '"');
+            let mapUrl = "";
+            const match = /\/~\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+            if (match) {
+                mapUrl = "http://localhost:3000/maps/map.json";
+            } else {
+                const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+                if (!match) {
+                    console.error("Unexpected room URL", roomUrl);
+                    throw new Error('Unexpected room URL "' + roomUrl + '"');
+                }
+
+                mapUrl = roomUrlObj.protocol + "//" + match[1];
             }
-
-            const mapUrl = roomUrlObj.protocol + "//" + match[1];
-
             return {
                 mapUrl,
                 authenticationMandatory: null,
