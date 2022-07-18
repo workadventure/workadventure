@@ -1,4 +1,4 @@
-import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { MathUtils } from "../../Utils/MathUtils";
 import { AreaType, GameMap } from "./GameMap";
@@ -123,7 +123,8 @@ export class StartPositionCalculator {
         if (!this.gameMap.hasStartTile) {
             return false;
         }
-        const layer = this.gameMap.findLayer(this.startPositionName) || this.gameMap.findLayer(this.DEFAULT_START_NAME);
+        const layer = (this.gameMap.findLayer(this.startPositionName) ||
+            this.gameMap.findLayer(this.DEFAULT_START_NAME)) as ITiledMapTileLayer | undefined;
         if (!layer) {
             return false;
         }
