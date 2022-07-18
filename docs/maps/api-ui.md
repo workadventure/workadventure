@@ -49,8 +49,8 @@ Example:
 let helloWorldPopup;
 
 // Open the popup when we enter a given zone
-helloWorldPopup = WA.room.onEnterLayer("myZone").subscribe(() => {
-    WA.ui.openPopup("popupRectangle", 'Hello world!', [{
+WA.room.onEnterLayer("myZone").subscribe(() => {
+    helloWorldPopup = WA.ui.openPopup("popupRectangle", 'Hello world!', [{
         label: "Close",
         className: "primary",
         callback: (popup) => {
@@ -174,10 +174,16 @@ When clicking on other player's WOKA, the contextual menu (we call it ActionsMen
 To do that, we need to listen for the `onRemotePlayerClicked` stream and make use of the `remotePlayer` object that is passed by as a payload.
 
 ```ts
-WA.ui.onRemotePlayerClicked.subscribe((remotePlayer) => {
+WA.ui.onRemotePlayerClicked.subscribe((remotePlayer: RemotePlayer) => {
     remotePlayer.addAction('Ask to tell a joke', () => {
         console.log('I am NOT telling you a joke!');
     });
+}
+
+interface RemotePlayer {
+    id: number,
+    uuid: string,
+    name: string,
 }
 ```
 

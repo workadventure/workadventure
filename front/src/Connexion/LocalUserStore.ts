@@ -1,9 +1,12 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { v4 as uuidv4 } from "uuid";
+import { Emoji } from "../Stores/EmoteStore";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
 const customCursorPositionKey = "customCursorPosition";
+const requestedCameraStateKey = "requestedCameraStateKey";
+const requestedMicrophoneStateKey = "requestedMicrophoneStateKey";
 const characterLayersKey = "characterLayers";
 const companionKey = "companion";
 const gameQualityKey = "gameQuality";
@@ -26,6 +29,7 @@ const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
+const emojiFavorite = "emojiFavorite";
 
 class LocalUserStore {
     saveUser(localUser: LocalUser) {
@@ -60,6 +64,22 @@ class LocalUserStore {
 
     getCustomCursorPosition(): { activeRow: number; selectedLayers: number[] } | null {
         return JSON.parse(localStorage.getItem(customCursorPositionKey) || "null");
+    }
+
+    getRequestedCameraState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedCameraStateKey) || "true");
+    }
+
+    setRequestedCameraState(value: boolean): void {
+        localStorage.setItem(requestedCameraStateKey, JSON.stringify(value));
+    }
+
+    getRequestedMicrophoneState(): boolean {
+        return JSON.parse(localStorage.getItem(requestedMicrophoneStateKey) || "true");
+    }
+
+    setRequestedMicrophoneState(value: boolean): void {
+        localStorage.setItem(requestedMicrophoneStateKey, JSON.stringify(value));
     }
 
     setCharacterLayers(layers: string[]): void {
@@ -298,6 +318,31 @@ class LocalUserStore {
 
     setUserProperty(name: string, value: unknown): void {
         localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
+    }
+
+    setEmojiFavorite(value: Map<number, Emoji>) {
+        const valueToSave: Array<Emoji> = new Array<Emoji>();
+        for (const data of value.values()) {
+            valueToSave.push(data);
+        }
+        localStorage.setItem(emojiFavorite, JSON.stringify(valueToSave));
+    }
+    getEmojiFavorite(): Map<number, Emoji> | null {
+        const value = localStorage.getItem(emojiFavorite);
+        if (value == undefined) return null;
+
+        const emojis = JSON.parse(value);
+        if (!Array.isArray(emojis)) {
+            localStorage.removeItem(emojiFavorite);
+            return null;
+        }
+
+        const array: Array<Emoji> = JSON.parse(value) as Array<Emoji>;
+        const map: Map<number, Emoji> = new Map<number, Emoji>();
+        array.forEach((value, index) => {
+            map.set(index + 1, value);
+        });
+        return map;
     }
 }
 

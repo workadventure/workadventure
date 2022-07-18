@@ -1,25 +1,55 @@
 <script lang="ts">
-    import { requestedScreenSharingState, screenSharingAvailableStore } from "../Stores/ScreenSharingStore";
+    import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
     import { requestedCameraState, requestedMicrophoneState, silentStore } from "../Stores/MediaStore";
-    import monitorImg from "./images/monitor.svg";
-    import monitorCloseImg from "./images/monitor-close.svg";
-    import cinemaImg from "./images/cinema.svg";
-    import cinemaCloseImg from "./images/cinema-close.svg";
-    import microphoneImg from "./images/microphone.svg";
-    import microphoneCloseImg from "./images/microphone-close.svg";
-    import layoutPresentationImg from "./images/layout-presentation.svg";
-    import layoutChatImg from "./images/layout-chat.svg";
-    import followImg from "./images/follow.svg";
-    import lockImg from "./images/lock.svg";
+    import cameraImg from "./images/camera.png";
+    import cameraOffImg from "./images/camera-off.png";
+    import microphoneImg from "./images/microphone.png";
+    import microphoneOffImg from "./images/microphone-off.png";
+    import layoutPresentationImg from "./images/layout-presentation.png";
+    import layoutChatImg from "./images/layout-chat.png";
+    import bubbleImg from "./images/bubble-talk.png";
+    import followImg from "./images/follow.png";
+    import lockOpenImg from "./images/lock-opened.png";
+    import lockCloseImg from "./images/lock-closed.png";
+    import screenshareOn from "./images/screenshare-on.png";
+    import screenshareOff from "./images/screenshare-off.png";
+    import emojiPickOn from "./images/emoji-on.png";
+    import closeImg from "./images/close.png";
+    import penImg from "./images/pen.png";
+    import WorkAdventureImg from "./images/icon-workadventure-white.png";
     import { LayoutMode } from "../WebRtc/LayoutManager";
-    import { peerStore } from "../Stores/PeerStore";
     import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
     import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
     import { gameManager } from "../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
+    import { chatVisibilityStore } from "../Stores/ChatStore";
+    import {
+        activeSubMenuStore,
+        menuVisiblilityStore,
+        inviteUserActivated,
+        SubMenusInterface,
+        subMenusStore,
+        MenuItem,
+        TranslatedMenu,
+    } from "../Stores/MenuStore";
+    import {
+        Emoji,
+        emoteDataStore,
+        emoteMenuStore,
+        emoteMenuSubCurrentEmojiSelectedStore,
+        emoteMenuSubStore,
+        emoteStore,
+    } from "../Stores/EmoteStore";
+    import LL from "../i18n/i18n-svelte";
+    import { bottomActionBarVisibilityStore } from "../Stores/BottomActionBarStore";
+    import { fly } from "svelte/transition";
+    import { ADMIN_URL } from "../Enum/EnvironmentVariable";
+    import { limitMapStore } from "../Stores/GameStore";
+    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 
     const gameScene = gameManager.getCurrentGameScene();
+    let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -75,194 +105,414 @@
     function lockClick() {
         gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
+
+    function toggleChat() {
+        chatVisibilityStore.set(!$chatVisibilityStore);
+    }
+
+    function toggleEmojiPicker() {
+        $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+    }
+
+    function clickEmoji(selected?: number) {
+        //if open, in edit mode or playing mode
+        if ($emoteMenuStore && selected != undefined) {
+            //select place to change in emoji sub menu
+            emoteMenuSubCurrentEmojiSelectedStore.set(selected);
+        } else if (selected != undefined) {
+            //get emoji and play it
+            let emoji: Emoji | null | undefined = $emoteDataStore.get(selected);
+            if (emoji == undefined) {
+                return;
+            }
+            analyticsClient.launchEmote(emoji);
+            emoteStore.set(emoji);
+
+            //play UX animation
+            focusElement(selected);
+        }
+    }
+
+    function edit(): void {
+        if ($emoteMenuStore) emoteMenuStore.closeEmoteMenu();
+        else emoteMenuStore.openEmoteMenu();
+    }
+
+    function close(): void {
+        emoteMenuStore.closeEmoteMenu();
+        emoteMenuSubStore.closeEmoteMenu();
+    }
+
+    function focusElement(key: number) {
+        if (!$emoteMenuSubStore) {
+            return;
+        }
+        const name: string | undefined = $emoteDataStore.get(key)?.name;
+        if (name == undefined) {
+            return;
+        }
+        const element: HTMLElement | null = document.getElementById(`button-${name}`);
+        if (element == undefined) {
+            return;
+        }
+        element.focus();
+        element.classList.add("focus");
+
+        //blur element after ends of animation
+        setTimeout(() => {
+            element.blur();
+            element.classList.remove("focus");
+        }, 2000);
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+        let key = null;
+        if (e.key === "1" || e.key === "F1") {
+            key = 1;
+        }
+        if (e.key === "2" || e.key === "F2") {
+            key = 2;
+        }
+        if (e.key === "3" || e.key === "F3") {
+            key = 3;
+        }
+        if (e.key === "4" || e.key === "F4") {
+            key = 4;
+        }
+        if (e.key === "5" || e.key === "F5") {
+            key = 5;
+        }
+        if (e.key === "6" || e.key === "F6") {
+            key = 6;
+        }
+        if (!key) {
+            return;
+        }
+        focusElement(key);
+        clickEmoji(key);
+    }
+
+    function showInvite() {
+        const indexInviteMenu = $subMenusStore.findIndex(
+            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+        );
+        if (indexInviteMenu === -1) {
+            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
+            return;
+        }
+        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+            return;
+        }
+        activeSubMenuStore.set(indexInviteMenu);
+        menuVisiblilityStore.set(true);
+    }
+
+    function showMenu() {
+        const indexInviteMenu = $subMenusStore.findIndex(
+            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
+        );
+        if (indexInviteMenu === -1) {
+            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
+            return;
+        }
+        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+            return;
+        }
+        activeSubMenuStore.set(indexInviteMenu);
+        menuVisiblilityStore.set(true);
+    }
+
+    function register() {
+        window.open(`${ADMIN_URL}/second-step-register`, "_self");
+    }
+
+    function noDrag() {
+        return false;
+    }
+
+    const isMobile = isMediaBreakpointUp("md");
 </script>
 
-<div class="btn-cam-action">
-    <div class="btn-layout" on:click={switchLayoutMode} class:hide={$peerStore.size === 0}>
-        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
-            <img class="noselect" src={layoutPresentationImg} style="padding: 2px" alt="Switch to mosaic mode" />
-        {:else}
-            <img class="noselect" src={layoutChatImg} style="padding: 2px" alt="Switch to presentation mode" />
+<svelte:window on:keydown={onKeyDown} />
+
+<div
+    class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+    style="margin-bottom: 10px"
+    class:animated={$bottomActionBarVisibilityStore}
+>
+    <div class="bottom-action-bar" class:move-menu={$bottomActionBarVisibilityStore}>
+        {#if $bottomActionBarVisibilityStore}
+            <div
+                class="bottom-action-section tw-flex animate"
+                id="bubble-menu"
+                in:fly={{ y: 70, duration: 100, delay: 500 }}
+                out:fly={{ y: 70, duration: 100, delay: 0 }}
+                class:tw-translate-x-0={$bottomActionBarVisibilityStore}
+                class:translate-right={!$bottomActionBarVisibilityStore}
+            >
+                <div
+                    class="tw-transition-all bottom-action-button"
+                    class:disabled={$followStateStore !== "off"}
+                    on:click={() => analyticsClient.follow()}
+                    on:click={followClick}
+                >
+                    <button class:border-top-light={$followStateStore === "active"}>
+                        <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
+                    </button>
+                </div>
+
+                <div
+                    class="tw-transition-all bottom-action-button"
+                    on:click={() => analyticsClient.layoutPresentChange()}
+                    on:click={switchLayoutMode}
+                >
+                    <button>
+                        {#if $embedScreenLayoutStore === LayoutMode.Presentation}
+                            <img
+                                draggable="false"
+                                src={layoutPresentationImg}
+                                style="padding: 2px"
+                                alt="Switch to mosaic mode"
+                            />
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={layoutChatImg}
+                                style="padding: 2px"
+                                alt="Switch to presentation mode"
+                            />
+                        {/if}
+                    </button>
+                </div>
+
+                <div
+                    class="tw-transition-all bottom-action-button"
+                    class:disabled={$currentPlayerGroupLockStateStore}
+                    on:click={() => analyticsClient.lockDiscussion()}
+                    on:click={lockClick}
+                >
+                    <button class=" " class:border-top-light={$currentPlayerGroupLockStateStore}>
+                        {#if $currentPlayerGroupLockStateStore}
+                            <img
+                                draggable="false"
+                                src={lockCloseImg}
+                                style="padding: 2px"
+                                alt="Unlock videochat bubble"
+                            />
+                        {:else}
+                            <img draggable="false" src={lockOpenImg} style="padding: 2px" alt="Lock videochat bubble" />
+                        {/if}
+                    </button>
+                </div>
+
+                <div
+                    class="tw-transition-all bottom-action-button"
+                    on:click={() => analyticsClient.screenSharing()}
+                    on:click={screenSharingClick}
+                    class:enabled={$requestedScreenSharingState}
+                >
+                    <button class:border-top-light={$requestedScreenSharingState}>
+                        {#if $requestedScreenSharingState && !$silentStore}
+                            <img
+                                draggable="false"
+                                src={screenshareOn}
+                                style="padding: 2px;"
+                                alt="Stop screen sharing"
+                            />
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={screenshareOff}
+                                style="padding: 2px;"
+                                alt="Start screen sharing"
+                            />
+                        {/if}
+                    </button>
+                </div>
+            </div>
         {/if}
-    </div>
 
-    <div
-        class="btn-follow"
-        class:hide={($peerStore.size === 0 && $followStateStore === "off") || $silentStore}
-        class:disabled={$followStateStore !== "off"}
-        on:click={() => analyticsClient.follow()}
-        on:click={followClick}
-    >
-        <img class="noselect" src={followImg} alt="" />
-    </div>
+        <div class="tw-flex tw-flex-row base-section animated">
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <div
+                    class="bottom-action-button"
+                    on:click={() => analyticsClient.camera()}
+                    on:click={cameraClick}
+                    class:disabled={!$requestedCameraState || $silentStore}
+                >
+                    <button class:border-top-light={$requestedCameraState}>
+                        {#if $requestedCameraState && !$silentStore}
+                            <img draggable="false" src={cameraImg} style="padding: 2px;" alt="Turn off webcam" />
+                        {:else}
+                            <img draggable="false" src={cameraOffImg} style="padding: 2px;" alt="Turn on webcam" />
+                        {/if}
+                    </button>
+                </div>
 
-    <div
-        class="btn-lock"
-        class:hide={$peerStore.size === 0 || $silentStore}
-        class:disabled={$currentPlayerGroupLockStateStore}
-        on:click={() => analyticsClient.lockDiscussion()}
-        on:click={lockClick}
-    >
-        <img class="noselect" src={lockImg} alt="" />
-    </div>
+                <div
+                    class="bottom-action-button"
+                    on:click={() => analyticsClient.microphone()}
+                    on:click={microphoneClick}
+                    class:disabled={!$requestedMicrophoneState || $silentStore}
+                >
+                    <button class:border-top-light={$requestedMicrophoneState}>
+                        {#if $requestedMicrophoneState && !$silentStore}
+                            <img
+                                draggable="false"
+                                src={microphoneImg}
+                                style="padding: 2px;"
+                                alt="Turn off microphone"
+                            />
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={microphoneOffImg}
+                                style="padding: 2px;"
+                                alt="Turn on microphone"
+                            />
+                        {/if}
+                    </button>
+                </div>
 
-    <div
-        class="btn-monitor"
-        on:click={() => analyticsClient.screenSharing()}
-        on:click={screenSharingClick}
-        class:hide={!$screenSharingAvailableStore || $silentStore}
-        class:enabled={$requestedScreenSharingState}
-    >
-        {#if $requestedScreenSharingState && !$silentStore}
-            <img class="noselect" src={monitorImg} alt="Start screen sharing" />
-        {:else}
-            <img class="noselect" src={monitorCloseImg} alt="Stop screen sharing" />
-        {/if}
-    </div>
+                <div on:click={() => analyticsClient.openedChat()} on:click={toggleChat} class="bottom-action-button">
+                    <button class:border-top-light={$chatVisibilityStore}>
+                        <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
+                    </button>
+                </div>
 
-    <div
-        class="btn-video"
-        on:click={() => analyticsClient.camera()}
-        on:click={cameraClick}
-        class:disabled={!$requestedCameraState || $silentStore}
-    >
-        {#if $requestedCameraState && !$silentStore}
-            <img class="noselect" src={cinemaImg} alt="Turn on webcam" />
-        {:else}
-            <img class="noselect" src={cinemaCloseImg} alt="Turn off webcam" />
-        {/if}
-    </div>
+                <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                    <button class:border-top-light={$emoteMenuSubStore}>
+                        <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
+                    </button>
+                </div>
+            </div>
 
-    <div
-        class="btn-micro"
-        on:click={() => analyticsClient.microphone()}
-        on:click={microphoneClick}
-        class:disabled={!$requestedMicrophoneState || $silentStore}
-    >
-        {#if $requestedMicrophoneState && !$silentStore}
-            <img class="noselect" src={microphoneImg} alt="Turn on microphone" />
-        {:else}
-            <img class="noselect" src={microphoneCloseImg} alt="Turn off microphone" />
-        {/if}
+            <div class="bottom-action-section tw-flex tw-flex-initial">
+                <div
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openedMenu()}
+                    on:click={showMenu}
+                    class="bottom-action-button"
+                >
+                    <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
+                        <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
+                    </button>
+                </div>
+            </div>
+
+            {#if $limitMapStore}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openRegister()}
+                    on:click={register}
+                >
+                    <button
+                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        id="register-btn"
+                        class:border-top-light={$menuVisiblilityStore}
+                    >
+                        {$LL.menu.icon.open.register()}
+                    </button>
+                </div>
+            {/if}
+
+            {#if $inviteUserActivated}
+                <div
+                    class="bottom-action-section tw-flex tw-flex-initial"
+                    in:fly={{}}
+                    on:dragstart|preventDefault={noDrag}
+                    on:click={() => analyticsClient.openInvite()}
+                    on:click={showInvite}
+                >
+                    <button
+                        class="btn light tw-m-0 tw-font-bold tw-text-xs sm:tw-text-base"
+                        id="invite-btn"
+                        class:border-top-light={$menuVisiblilityStore}
+                    >
+                        {$LL.menu.sub.invite()}
+                    </button>
+                </div>
+            {/if}
+        </div>
     </div>
 </div>
 
+{#if $emoteMenuSubStore}
+    <div
+        class="tw-flex tw-justify-center tw-m-auto tw-absolute tw-left-0 tw-right-0 tw-bottom-0"
+        style="margin-bottom: 64px;"
+    >
+        <div class="bottom-action-bar">
+            <div class="bottom-action-section tw-flex animate">
+                {#each [...$emoteDataStore.keys()] as key}
+                    <div class="tw-transition-all bottom-action-button">
+                        <button
+                            on:click={() => {
+                                clickEmoji(key);
+                            }}
+                            id={`button-${$emoteDataStore.get(key)?.name}`}
+                            class="emoji"
+                            class:focus={$emoteMenuStore && $emoteMenuSubCurrentEmojiSelectedStore === key}
+                        >
+                            <img
+                                class="emoji"
+                                style="padding: 2px"
+                                draggable="false"
+                                alt={$emoteDataStore.get(key)?.unicode}
+                                id={`icon-${$emoteDataStore.get(key)?.name}`}
+                                src={$emoteDataStore.get(key)?.url}
+                            />
+                            {#if !isMobile}
+                                <span class="tw-text-white">{key}</span>
+                            {/if}
+                        </button>
+                    </div>
+                {/each}
+
+                <div class="tw-transition-all bottom-action-button">
+                    <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
+                        <img draggable="false" src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
+                    </button>
+                </div>
+                <div class="tw-transition-all bottom-action-button">
+                    <button on:click|preventDefault={close}>
+                        <img
+                            draggable="false"
+                            src={closeImg}
+                            style="padding: 4px"
+                            alt={$LL.menu.icon.open.closeEmoji()}
+                        />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+    .animated {
+        transition-property: transform;
+        transition-duration: 0.5s;
+    }
 
-    .btn-cam-action {
-        pointer-events: all;
-        position: absolute;
-        display: inline-flex;
-        bottom: 10px;
-        right: 15px;
-        width: 360px;
-        height: 40px;
-        text-align: center;
-        align-content: center;
-        justify-content: flex-end;
-        z-index: 251;
+    .translate-right {
+        transform: translateX(2rem);
+    }
 
-        &:hover {
-            div.hide {
-                transform: translateY(60px);
-            }
+    @media only screen and (max-width: 640px) {
+        //is equal to tailwind's sm breakpoint
+        .translate-right {
+            transform: translateX(0);
         }
-    }
-    /*btn animation*/
-    .btn-cam-action div {
-        cursor: url("../../style/images/cursor_pointer.png"), pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: solid 0px black;
-        width: 44px;
-        height: 44px;
-        background: #666;
-        box-shadow: 2px 2px 24px #444;
-        border-radius: 48px;
-        transform: translateY(15px);
-        transition-timing-function: ease-in-out;
-        transition: all 0.3s;
-        margin: 0 2%;
 
-        &.hide {
-            transform: translateY(60px);
-        }
-    }
-    .btn-cam-action div.disabled {
-        background: #d75555;
-    }
-    .btn-cam-action div.enabled {
-        background: #73c973;
-    }
-    .btn-cam-action:hover div {
-        transform: translateY(0);
-    }
-    .btn-cam-action div:hover {
-        background: #407cf7;
-        box-shadow: 4px 4px 48px #666;
-        transition: 120ms;
-    }
-    .btn-micro {
-        pointer-events: auto;
-    }
-    .btn-video {
-        pointer-events: auto;
-        transition: all 0.25s;
-    }
-    .btn-monitor {
-        pointer-events: auto;
-    }
-    .btn-layout {
-        pointer-events: auto;
-        transition: all 0.15s;
-    }
-    .btn-cam-action div img {
-        height: 22px;
-        width: 30px;
-        position: relative;
-        cursor: url("../../style/images/cursor_pointer.png"), pointer;
-    }
-
-    .btn-follow {
-        pointer-events: auto;
-
-        img {
-            filter: brightness(0) invert(1);
-        }
-    }
-
-    .btn-lock {
-        pointer-events: auto;
-
-        img {
-            filter: brightness(0) invert(1);
-        }
-    }
-
-    @media (hover: none) {
-        /**
-        * If we cannot hover over elements, let's display camera button in full.
-        */
-        .btn-cam-action {
-            div {
-                transform: translateY(0px);
-            }
-        }
-    }
-
-    @include media-breakpoint-up(sm) {
-        .btn-cam-action {
-            right: 0;
-            width: 100%;
-            height: 40%;
-            max-height: 40px;
-
-            div {
-                width: 20%;
-                max-height: 44px;
-            }
+        .move-menu {
+            transform: translate(-3rem, -2rem);
         }
     }
 </style>

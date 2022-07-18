@@ -100,6 +100,10 @@
             overflow-y: auto;
             overflow-x: hidden;
         }
+
+        #full-medias {
+            overflow: hidden;
+        }
     }
 
     #embed-left-block {
@@ -123,7 +127,6 @@
             height: 100% !important;
             width: 100% !important;
             position: relative;
-            z-index: 200;
 
             &-container {
                 height: 100% !important;
@@ -132,13 +135,14 @@
                 margin: 0 !important;
                 padding: 0 !important;
                 .actions {
-                    z-index: 202;
+                    z-index: 151;
                     position: absolute;
                     width: 100%;
-                    top: 0;
+                    top: 5px;
+                    right: 5px;
                     display: flex;
                     flex-direction: row;
-                    justify-content: end;
+                    justify-content: flex-end;
                     gap: 2%;
 
                     button {

@@ -4,7 +4,8 @@ import { MiddlewareNext, MiddlewarePromise } from "hyper-express/types/component
 import { ADMIN_API_TOKEN } from "../Enum/EnvironmentVariable";
 
 export function adminToken(req: Request, res: Response, next?: MiddlewareNext): MiddlewarePromise {
-    const token = req.header("admin-token");
+    let token = req.header("admin-token"); // @deprecated, use the authorization header instead.
+    token = token || req.header("authorization");
 
     if (ADMIN_API_TOKEN === "") {
         res.status(401).end("No token configured!");

@@ -5,7 +5,7 @@ import { socketManager } from "../Services/SocketManager";
 import { BaseHttpController } from "./BaseHttpController";
 
 export class DebugController extends BaseHttpController {
-    routes() {
+    routes(): void {
         this.app.get("/dump", (req, res) => {
             const query = parse(req.path_query);
 

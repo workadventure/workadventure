@@ -22,11 +22,13 @@ export class Room {
     private _contactPage: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
-    private _canReport: boolean = false;
+    private _canReport = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    //eslint-disable-next-line @typescript-eslint/ban-types
+    private _mucRooms: Array<Object> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
@@ -74,7 +76,7 @@ export class Room {
         const baseUrl = new URL(currentRoomUrl);
 
         const currentRoom = new Room(baseUrl);
-        let instance: string = "global";
+        let instance = "global";
         if (currentRoom.id.startsWith("_/") || currentRoom.id.startsWith("*/")) {
             const match = /[_*]\/([^/]+)\/.+/.exec(currentRoom.id);
             if (!match) throw new Error('Could not extract instance from "' + currentRoom.id + '"');
@@ -126,6 +128,9 @@ export class Room {
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+
+                this._mucRooms = data.mucRooms ?? undefined;
+
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -134,10 +139,10 @@ export class Room {
                 throw new Error("Data received by the /map endpoint of the Pusher is not in a valid format.");
             }
         } catch (e) {
-            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "Token decrypted error") {
+            if (axios.isAxiosError(e) && e.response?.status == 401 && e.response?.data === "The Token is invalid") {
                 console.warn("JWT token sent could not be decrypted. Maybe it expired?");
                 localUserStore.setAuthToken(null);
-                window.location.assign("/login");
+                window.location.reload();
             } else if (axios.isAxiosError(e)) {
                 console.error("Error => getMapDetail", e, e.response);
             } else {
@@ -226,6 +231,11 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    //eslint-disable-next-line @typescript-eslint/ban-types
+    get mucRooms(): Array<Object> | undefined {
+        return this._mucRooms;
     }
 
     get showPoweredBy(): boolean | undefined {

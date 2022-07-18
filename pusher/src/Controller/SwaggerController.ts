@@ -2,12 +2,12 @@ import { BaseHttpController } from "./BaseHttpController";
 import * as fs from "fs";
 import { ADMIN_URL } from "../Enum/EnvironmentVariable";
 import SwaggerGenerator from "../Services/SwaggerGenerator";
+import swaggerJsdoc from "swagger-jsdoc";
+import LiveDirectory from "live-directory";
 
 export class SwaggerController extends BaseHttpController {
-    routes() {
+    routes(): void {
         this.app.get("/openapi/pusher", (req, res) => {
-            // Let's load the module dynamically (it may not exist in prod because part of the -dev packages)
-            const swaggerJsdoc = require("swagger-jsdoc");
             const options = {
                 swaggerDefinition: {
                     openapi: "3.0.0",
@@ -23,8 +23,6 @@ export class SwaggerController extends BaseHttpController {
         });
 
         this.app.get("/openapi/admin", (req, res) => {
-            // Let's load the module dynamically (it may not exist in prod because part of the -dev packages)
-            const swaggerJsdoc = require("swagger-jsdoc");
             const options = {
                 swaggerDefinition: {
                     swagger: "2.0",
@@ -213,27 +211,25 @@ export class SwaggerController extends BaseHttpController {
         });
 
         // Create a LiveDirectory instance to virtualize directory with our assets
-        // @ts-ignore
-        const LiveDirectory = require("live-directory");
         const LiveAssets = new LiveDirectory({
-            path: __dirname + "/../../node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
+            path: process.cwd() + "/node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
             keep: {
                 extensions: [".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".html"], // We only want to serve files with these extensions
             },
-            ignore: (path: string) => {
+            ignore: (path: string): boolean => {
                 return path.startsWith("."); // We want to ignore dotfiles for safety
             },
         });
 
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
-            fs.readFile(__dirname + "/../../node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
+            fs.readFile(process.cwd() + "/node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
                 if (err) {
                     return response.status(500).send(err.message);
                 }
 
                 const urls = [
-                    { url: "/openapi/pusher", name: "Front <- Pusher" },
+                    { url: "/openapi/pusher", name: "Front -> Pusher <- Admin" },
                     { url: "/openapi/admin", name: "Pusher -> Admin" },
                     { url: "/openapi/external-admin", name: "Admin -> External Admin" },
                 ];

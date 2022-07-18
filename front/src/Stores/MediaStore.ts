@@ -12,18 +12,25 @@ import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+
 import deepEqual from "fast-deep-equal";
 
 /**
  * A store that contains the camera state requested by the user (on or off).
  */
 function createRequestedCameraState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedCameraState());
 
     return {
         subscribe,
-        enableWebcam: () => set(true),
-        disableWebcam: () => set(false),
+        enableWebcam: () => {
+            set(true);
+            localUserStore.setRequestedCameraState(true);
+        },
+        disableWebcam: () => {
+            set(false);
+            localUserStore.setRequestedCameraState(false);
+        },
     };
 }
 
@@ -31,12 +38,18 @@ function createRequestedCameraState() {
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
-    const { subscribe, set } = writable(true);
+    const { subscribe, set } = writable(localUserStore.getRequestedMicrophoneState());
 
     return {
         subscribe,
-        enableMicrophone: () => set(true),
-        disableMicrophone: () => set(false),
+        enableMicrophone: () => {
+            set(true);
+            localUserStore.setRequestedMicrophoneState(true);
+        },
+        disableMicrophone: () => {
+            set(false);
+            localUserStore.setRequestedMicrophoneState(false);
+        },
     };
 }
 
@@ -689,18 +702,28 @@ export const microphoneListStore = derived(deviceListStore, ($deviceListStore) =
     return $deviceListStore.filter((device) => device.kind === "audioinput");
 });
 
+function isConstrainDOMStringParameters(param: ConstrainDOMString): param is ConstrainDOMStringParameters {
+    return (
+        typeof param === "object" &&
+        ((param as ConstrainDOMStringParameters).ideal !== undefined ||
+            (param as ConstrainDOMStringParameters).exact !== undefined)
+    );
+}
+
 // TODO: detect the new webcam and automatically switch on it.
 cameraListStore.subscribe((devices) => {
     // If the selected camera is unplugged, let's remove the constraint on deviceId
     const constraints = get(videoConstraintStore);
-    if (!constraints.deviceId) {
+    const deviceId = constraints.deviceId;
+    if (!deviceId) {
         return;
     }
 
     // If we cannot find the device ID, let's remove it.
-    // @ts-ignore
-    if (!devices.find((device) => device.deviceId === constraints.deviceId.exact)) {
-        videoConstraintStore.setDeviceId(undefined);
+    if (isConstrainDOMStringParameters(deviceId)) {
+        if (!devices.find((device) => device.deviceId === deviceId.exact)) {
+            videoConstraintStore.setDeviceId(undefined);
+        }
     }
 });
 
@@ -710,14 +733,16 @@ microphoneListStore.subscribe((devices) => {
     if (typeof constraints === "boolean") {
         return;
     }
-    if (!constraints.deviceId) {
+    const deviceId = constraints.deviceId;
+    if (!deviceId) {
         return;
     }
 
     // If we cannot find the device ID, let's remove it.
-    // @ts-ignore
-    if (!devices.find((device) => device.deviceId === constraints.deviceId.exact)) {
-        audioConstraintStore.setDeviceId(undefined);
+    if (isConstrainDOMStringParameters(deviceId)) {
+        if (!devices.find((device) => device.deviceId === deviceId.exact)) {
+            audioConstraintStore.setDeviceId(undefined);
+        }
     }
 });
 

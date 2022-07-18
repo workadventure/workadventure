@@ -105,7 +105,7 @@ export class WokaBodyPartSlot extends GridItem {
         this.sprites.Hat.setTexture(textureKeys.Hat).setVisible(textureKeys.Hat !== "");
     }
 
-    public select(select: boolean = true): void {
+    public select(select = true): void {
         if (this.selected === select) {
             return;
         }

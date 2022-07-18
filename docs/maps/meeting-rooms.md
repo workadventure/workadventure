@@ -10,7 +10,7 @@ On your map, you can define special zones (meeting rooms) that will trigger the 
 In order to create Jitsi meet zones:
 
 * You must create a specific object.
-* Object must be of type "`area`"
+* Object must be of class "`area`"
 * In object properties, you MUST add a "`jitsiRoom`" property (of type "`string`"). The value of the property is the name of the room in Jitsi. Note: the name of the room will be "slugified" and prepended with a hash of the room URL
 * You may also use "jitsiWidth" property (of type "number" between 0 and 100) to control the width of the iframe containing the meeting room.
 
@@ -34,6 +34,10 @@ If you set `jitsiTrigger: onaction`, when the user walks on the area, an alert m
 </figure>
 
 If you set `jitsiTriggerMessage: your message action` you can edit alert message displayed. If is not defined, the default message displayed is 'Press on SPACE to enter in jitsi meet room'.
+
+## Prevent Jitsi meet from being closable
+
+If you wish your meeting to not be closable by a close button, you can make use of `openWebsiteClosable` property and set it to `false`.
 
 ## Customizing your "Jitsi meet"
 
@@ -126,7 +130,7 @@ The same concept of Jitsi rooms is applied to BigBlueButton rooms. When a player
 In order to create a BigBlueButton session zone:
 
 * You must create a specific object.
-* Object must be of type "`area`"
+* Object must be of class "`area`"
 * In object properties:
   * You MUST add a "`bbbMeeting`" property (of type "`string`"). The value of this property will be used to calculate the meetingID of the BigBlueButton room. We suggest you to use [a random UUID](https://www.uuidgenerator.net/version4).
   * You CAN add a "`meetingName`" property (of type "`string`"). The value of this property will be used as `meetingName` of the BigBlueButton room. If you do not set it, `meetingName` will be the same as `meetingID`.

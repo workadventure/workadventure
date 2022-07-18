@@ -13,6 +13,8 @@ import { ClientDuplexStream } from "grpc";
 import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
+import { PusherRoom } from "../../Model/PusherRoom";
+import { XmppClient } from "../../Services/XmppClient";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -21,6 +23,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     roomId: string;
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
+    userIdentifier: string;
     IPAddress: string; // IP address
     name: string;
     characterLayers: WokaDetail[];
@@ -41,4 +44,16 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
+    // The ID of the timer that sends ping requests.
+    // Ping requests are sent from the server because the setTimeout on the browser is unreliable when the tab is hidden.
+    pingIntervalId: NodeJS.Timeout | undefined;
+    // When this timeout triggers, no pong has been received.
+    pongTimeoutId: NodeJS.Timeout | undefined;
+    resetPongTimeout: () => void;
+    pusherRoom: PusherRoom | undefined;
+    xmppClient: XmppClient | undefined;
+    jabberId: string;
+    jabberPassword: string;
+    mucRooms: Array<Array<string>>;
+    activatedInviteUser: boolean | undefined;
 }

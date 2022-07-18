@@ -13,22 +13,26 @@
     }
 </script>
 
-<div class="create-map-main">
-    <section class="container-overflow">
+<div>
+    <section>
         <section>
-            <h3>{$LL.menu.contact.gettingStarted.title()}</h3>
+            <h3 class="blue-title">{$LL.menu.contact.gettingStarted.title()}</h3>
             <p>{$LL.menu.contact.gettingStarted.description()}</p>
-            <button type="button" class="nes-btn is-primary" on:click={goToGettingStarted}
-                >{$LL.menu.contact.gettingStarted.title()}</button
-            >
+            <div class="centered-column">
+                <button type="button" class="light" on:click={goToGettingStarted}
+                    >{$LL.menu.contact.gettingStarted.title()}</button
+                >
+            </div>
         </section>
 
         <section>
-            <h3>{$LL.menu.contact.createMap.title()}</h3>
+            <h3 class="blue-title">{$LL.menu.contact.createMap.title()}</h3>
             <p>{$LL.menu.contact.createMap.description()}</p>
-            <button type="button" class="nes-btn" on:click={goToBuildingMap}
-                >{$LL.menu.contact.createMap.title()}</button
-            >
+            <div class="centered-column">
+                <button type="button" class="light" on:click={goToBuildingMap}
+                    >{$LL.menu.contact.createMap.title()}</button
+                >
+            </div>
         </section>
 
         <iframe
@@ -36,32 +40,7 @@
             src={$contactPageStore}
             allow="clipboard-read; clipboard-write self {$contactPageStore}"
             allowfullscreen
+            class="tw-border-0 tw-w-full tw-h-screen"
         />
     </section>
 </div>
-
-<style lang="scss">
-    div.create-map-main {
-        height: calc(100% - 56px);
-
-        text-align: center;
-
-        section {
-            margin-bottom: 50px;
-        }
-
-        section.container-overflow {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: auto;
-        }
-    }
-
-    iframe {
-        border: none;
-        height: calc(100% - 56px);
-        width: 100%;
-        margin: 0;
-    }
-</style>

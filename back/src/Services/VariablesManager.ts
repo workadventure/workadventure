@@ -1,7 +1,7 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { User } from "../Model/User";
 import { variablesRepository } from "./Repository/VariablesRepository";
 import { redisClient } from "./RedisClient";
@@ -92,7 +92,7 @@ export class VariablesManager {
     private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "variable") {
+                if (object.class === "variable" || object.type === "variable") {
                     if (object.template) {
                         console.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
@@ -101,11 +101,11 @@ export class VariablesManager {
                     }
 
                     // We store a copy of the object (to make it immutable)
-                    objects.set(object.name as string, this.iTiledObjectToVariable(object));
+                    objects.set(object.name, this.iTiledObjectToVariable(object));
                 }
             }
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
+            for (const innerLayer of layer.layers) {
                 this.recursiveFindVariablesInLayer(innerLayer, objects);
             }
         }

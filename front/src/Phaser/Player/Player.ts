@@ -84,6 +84,12 @@ export class Player extends Character {
         });
     }
 
+    public finishFollowingPath(cancelled = false): void {
+        this.pathToFollow = undefined;
+        this.pathWalkingSpeed = undefined;
+        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
+    }
+
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
         return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
     }
@@ -179,12 +185,6 @@ export class Player extends Character {
             this.pathToFollow.shift();
         }
         return this.getMovementDirection(xDistance, yDistance, distance);
-    }
-
-    private finishFollowingPath(cancelled: boolean = false): void {
-        this.pathToFollow = undefined;
-        this.pathWalkingSpeed = undefined;
-        this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
     }
 
     private getMovementDirection(xDistance: number, yDistance: number, distance: number): [number, number] {

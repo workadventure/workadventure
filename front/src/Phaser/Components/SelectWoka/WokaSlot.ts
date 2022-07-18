@@ -29,7 +29,7 @@ export class WokaSlot extends GridItem {
         return this.sprite;
     }
 
-    public select(select: boolean = true): void {
+    public select(select = true): void {
         this.selection.setVisible(select);
     }
 }

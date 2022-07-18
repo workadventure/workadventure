@@ -8,6 +8,9 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Mostrar invitació",
             register: "Registre",
             chat: "Obrir chat",
+            userlist: "Lista de utilizadores",
+            openEmoji: "Open emoji selected popup",
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {

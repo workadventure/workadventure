@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
+import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -41,7 +42,6 @@ const isMapThirdPartyData = z.object({
 });
 
 export const isMapDetailsData = z.object({
-    // @ts-ignore
     mapUrl: extendApi(z.string(), {
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",
@@ -53,6 +53,9 @@ export const isMapDetailsData = z.object({
     group: extendApi(z.nullable(z.string()), {
         description: 'The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)',
         example: "myorg/myworld",
+    }),
+    mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
+        description: "The MUC room is a room of message",
     }),
 
     contactPage: extendApi(z.optional(z.nullable(z.string())), {

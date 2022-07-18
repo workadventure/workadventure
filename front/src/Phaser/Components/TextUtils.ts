@@ -1,6 +1,6 @@
-import type { ITiledMapObject } from "../Map/ITiledMap";
 import type { GameScene } from "../Game/GameScene";
 import { GameMapProperties } from "../Game/GameMapProperties";
+import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {
@@ -22,7 +22,7 @@ export class TextUtils {
             options.fontStyle = "italic";
         }
         // Note: there is no support for "strikeout" and "underline"
-        let fontSize: number = 16;
+        let fontSize = 16;
         if (object.text.pixelsize) {
             fontSize = object.text.pixelsize;
         }
@@ -42,7 +42,7 @@ export class TextUtils {
             color = object.text.color;
         }
         options.color = color;
-        if (object.text.wrap === true) {
+        if (object.text.wrap === true && object.width) {
             options.wordWrap = {
                 width: object.width,
                 //useAdvancedWrap: true

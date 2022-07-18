@@ -27,7 +27,7 @@ class ConnectionManager {
 
     private connexionType?: GameConnexionTypes;
     private reconnectingTimeout: NodeJS.Timeout | null = null;
-    private _unloading: boolean = false;
+    private _unloading = false;
     private authToken: string | null = null;
     private _currentRoom: Room | null = null;
 
@@ -206,13 +206,15 @@ class ConnectionManager {
                     window.location.hash;
             }
 
-            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
-            //use href to keep # value
-            await localUserStore.setLastRoomUrl(new URL(roomPath).href);
+            const roomPathUrl = new URL(roomPath);
 
             //get detail map for anonymous login and set texture in local storage
             //before set token of user we must load room and all information. For example the mandatory authentication could be require on current room
-            this._currentRoom = await Room.createRoom(new URL(roomPath));
+            this._currentRoom = await Room.createRoom(roomPathUrl);
+
+            //Set last room visited! (connected or nor, must to be saved in localstorage and cache API)
+            //use href to keep # value
+            await localUserStore.setLastRoomUrl(roomPathUrl.href);
 
             //todo: add here some kind of warning if authToken has expired.
             if (!this.authToken && !this._currentRoom.authenticationMandatory) {
@@ -263,7 +265,7 @@ class ConnectionManager {
         return Promise.resolve(this._currentRoom);
     }
 
-    public async anonymousLogin(isBenchmark: boolean = false): Promise<void> {
+    public async anonymousLogin(isBenchmark = false): Promise<void> {
         const data = await axiosWithRetry.post(`${PUSHER_URL}/anonymLogin`).then((res) => res.data);
         this.localUser = new LocalUser(data.userUuid, data.email);
         this.authToken = data.authToken;

@@ -10,12 +10,9 @@ import { adminService } from "../Services/AdminService";
 import Axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 
-export interface TokenInterface {
-    userUuid: string;
-}
-
 export class AuthenticateController extends BaseHttpController {
-    routes() {
+    routes(): void {
+        this.roomAccess();
         this.openIDLogin();
         this.openIDCallback();
         this.register();
@@ -24,7 +21,29 @@ export class AuthenticateController extends BaseHttpController {
         this.me();
     }
 
-    openIDLogin() {
+    roomAccess(): void {
+        this.app.get("/room/access", (req, res) => {
+            //eslint-disable-next-line @typescript-eslint/no-misused-promises
+            (async () => {
+                try {
+                    const { uuid, playUri } = parse(req.path_query);
+                    if (!uuid || !playUri) {
+                        throw new Error("Missing uuid and playUri parameters.");
+                    }
+                    return res.json(
+                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    );
+                } catch (e) {
+                    console.warn(e);
+                }
+                res.status(500);
+                res.send("User cannot be identified.");
+                return;
+            })().catch((e) => console.error(e));
+        });
+    }
+
+    openIDLogin(): void {
         /**
          * @openapi
          * /login-screen:
@@ -81,7 +100,7 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
-    openIDCallback() {
+    openIDCallback(): void {
         /**
          * @openapi
          * /login-callback:
@@ -329,12 +348,12 @@ export class AuthenticateController extends BaseHttpController {
      *                   description: The list of messages to be displayed when the user logs?
      *                   example: ???
      */
-    private register() {
+    private register(): void {
         this.app.options("/register", {}, (req, res) => {
             res.status(200).send("");
         });
         this.app.post("/register", (req, res) => {
-            (async () => {
+            (async (): Promise<void> => {
                 const param = await req.json();
 
                 //todo: what to do if the organizationMemberToken is already used?
@@ -393,7 +412,7 @@ export class AuthenticateController extends BaseHttpController {
      *       403:
      *         description: Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)
      */
-    private anonymLogin() {
+    private anonymLogin(): void {
         this.app.post("/anonymLogin", (req, res) => {
             if (DISABLE_ANONYMOUS) {
                 res.status(403);
@@ -424,7 +443,7 @@ export class AuthenticateController extends BaseHttpController {
      *       302:
      *         description: Redirects the user to the profile screen of the admin
      */
-    profileCallback() {
+    profileCallback(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
             const { token, playUri } = parse(req.path_query);
@@ -473,34 +492,35 @@ export class AuthenticateController extends BaseHttpController {
      *       200:
      *         description: Data of user connected
      */
-    me() {
-        // @ts-ignore
-        this.app.get("/me", async (req, res): void => {
-            const { token } = parse(req.path_query);
-            try {
-                //verify connected by token
-                if (token != undefined) {
-                    try {
-                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-                        if (authTokenData.accessToken == undefined) {
-                            throw Error("Token cannot to be checked on Hydra");
-                        }
-                        const me = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+    me(): void {
+        this.app.get("/me", (req, res): void => {
+            (async (): Promise<void> => {
+                const { token } = parse(req.path_query);
+                try {
+                    //verify connected by token
+                    if (token != undefined) {
+                        try {
+                            const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+                            if (authTokenData.accessToken == undefined) {
+                                throw Error("Token cannot to be checked on Hydra");
+                            }
+                            const me = await openIDClient.checkTokenAuth(authTokenData.accessToken);
 
-                        //get login profile
-                        res.status(200);
-                        res.json({ ...me });
-                        return;
-                    } catch (error) {
-                        this.castErrorToResponse(error, res);
-                        return;
+                            //get login profile
+                            res.status(200);
+                            res.json({ ...me });
+                            return;
+                        } catch (error) {
+                            this.castErrorToResponse(error, res);
+                            return;
+                        }
                     }
+                } catch (error) {
+                    console.error("me => ERROR", error);
+                    this.castErrorToResponse(error, res);
+                    return;
                 }
-            } catch (error) {
-                console.error("me => ERROR", error);
-                this.castErrorToResponse(error, res);
-                return;
-            }
+            })();
         });
     }
 
@@ -526,6 +546,10 @@ export class AuthenticateController extends BaseHttpController {
             visitCardUrl: null,
             textures: [],
             userRoomToken: undefined,
+            jabberId: null,
+            jabberPassword: null,
+            mucRooms: [],
+            activatedInviteUser: true,
         };
         try {
             data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);

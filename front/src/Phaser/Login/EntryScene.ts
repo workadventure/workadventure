@@ -1,6 +1,5 @@
 import { gameManager } from "../Game/GameManager";
 import { Scene } from "phaser";
-import { ErrorScene } from "../Reconnecting/ErrorScene";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { ReconnectingTextures } from "../Reconnecting/ReconnectingScene";
 import { localeDetector } from "../../i18n/locales";
@@ -14,7 +13,7 @@ export const EntrySceneName = "EntryScene";
  * and to route to the next correct scene.
  */
 export class EntryScene extends Scene {
-    private localeLoaded: boolean = false;
+    private localeLoaded = false;
 
     constructor() {
         super({
@@ -51,7 +50,8 @@ export class EntryScene extends Scene {
                                 window.location.assign(errorType.data.urlToRedirect);
                             } else errorScreenStore.setError(err?.response?.data);
                         } else {
-                            ErrorScene.showError(err, this.scene);
+                            errorScreenStore.setException(err);
+                            //ErrorScene.showError(err, this.scene);
                         }
                     });
             })

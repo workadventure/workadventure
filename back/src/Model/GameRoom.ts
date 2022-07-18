@@ -20,19 +20,21 @@ import {
     SubToPusherRoomMessage,
     VariableWithTagMessage,
     ServerToClientMessage,
+    PingMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { RoomSocket, ZoneSocket } from "../RoomManager";
 import { Admin } from "../Model/Admin";
 import { adminApi } from "../Services/AdminApi";
 import { isMapDetailsData, MapDetailsData, MapThirdPartyData } from "../Messages/JsonMessages/MapDetailsData";
-import { ITiledMap } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { mapFetcher } from "../Services/MapFetcher";
 import { VariablesManager } from "../Services/VariablesManager";
 import {
     ADMIN_API_URL,
     BBB_SECRET,
     BBB_URL,
+    ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
     SECRET_JITSI_KEY,
@@ -42,6 +44,9 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
+import { mapStorageClient } from "../Services/MapStorageClient";
+import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
+import { MapLoadingError } from "../Services/MapLoadingError";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -56,10 +61,11 @@ export class GameRoom {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
-    private versionNumber: number = 1;
-    private nextUserId: number = 1;
+    private versionNumber = 1;
+    private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
+    private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
 
     private constructor(
         public readonly roomUrl: string,
@@ -120,6 +126,14 @@ export class GameRoom {
             mapDetails.thirdParty ?? undefined
         );
 
+        if (ENABLE_FEATURE_MAP_EDITOR) {
+            mapStorageClient.ping(new PingMessage(), (err, res) => {
+                console.log(`==================================`);
+                console.log(err);
+                console.log(JSON.stringify(res));
+            });
+        }
+
         return gameRoom;
     }
 
@@ -162,7 +176,10 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
-            joinRoomMessage.getCompanion()
+            joinRoomMessage.getCompanion(),
+            undefined,
+            undefined,
+            joinRoomMessage.getActivatedinviteuser()
         );
         this.nextUserId++;
         this.users.set(user.id, user);
@@ -207,7 +224,7 @@ export class GameRoom {
     }
 
     public isEmpty(): boolean {
-        return this.users.size === 0 && this.admins.size === 0;
+        return this.users.size === 0 && this.admins.size === 0 && this.roomListeners.size === 0;
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
@@ -581,6 +598,7 @@ export class GameRoom {
                 mapUrl,
                 authenticationMandatory: null,
                 group: null,
+                mucRooms: null,
                 showPoweredBy: true,
             };
         }
@@ -671,32 +689,108 @@ export class GameRoom {
         return this.groups.get(id);
     }
 
-    private jitsiModeratorTagFinder: ModeratorTagFinder | undefined;
+    private jitsiModeratorTagFinderPromise: Promise<ModeratorTagFinder> | undefined;
 
     /**
      * Returns the moderator tag associated with jitsiRoom
      */
     public async getModeratorTagForJitsiRoom(jitsiRoom: string): Promise<string | undefined> {
-        if (this.jitsiModeratorTagFinder === undefined) {
-            const map = await this.getMap();
-            this.jitsiModeratorTagFinder = new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
+        if (this.jitsiModeratorTagFinderPromise === undefined) {
+            this.jitsiModeratorTagFinderPromise = this.getMap()
+                .then((map) => {
+                    return new ModeratorTagFinder(map, "jitsiRoom", "jitsiRoomAdminTag");
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "You are loading a local map. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'jitsiRoomAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    }
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
+                });
         }
 
-        return this.jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
+        try {
+            const jitsiModeratorTagFinder = await this.jitsiModeratorTagFinderPromise;
+            return jitsiModeratorTagFinder.getModeratorTag(jitsiRoom);
+        } catch (e) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
+                return undefined;
+            }
+            throw e;
+        }
     }
 
-    private bbbModeratorTagFinder: ModeratorTagFinder | undefined;
+    private bbbModeratorTagFinderPromise: Promise<ModeratorTagFinder> | undefined;
 
     /**
      * Returns the moderator tag associated with bbbMeeting
      */
-    public async getModeratorTagForBbbMeeting(bbbMeeting: string): Promise<string | undefined> {
-        if (this.bbbModeratorTagFinder === undefined) {
-            const map = await this.getMap();
-            this.bbbModeratorTagFinder = new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
+    public async getModeratorTagForBbbMeeting(bbbRoom: string): Promise<string | undefined> {
+        if (this.bbbModeratorTagFinderPromise === undefined) {
+            this.bbbModeratorTagFinderPromise = this.getMap()
+                .then((map) => {
+                    return new ModeratorTagFinder(map, "bbbMeeting", "bbbMeetingAdminTag");
+                })
+                .catch((e) => {
+                    if (e instanceof LocalUrlError) {
+                        // If we are trying to load a local URL, we are probably in test mode.
+                        // In this case, let's bypass the server-side checks completely.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "You are loading a local map. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    } else {
+                        // An error occurred while loading the map
+                        // Right now, let's bypass the error. In the future, we should make sure the user is aware of that
+                        // and that he/she will act on it to fix the problem.
+
+                        for (const roomListener of this.roomListeners) {
+                            emitErrorOnRoomSocket(
+                                roomListener,
+                                "Your map does not seem accessible from the WorkAdventure servers. Is it behind a firewall or a proxy? Your map should be accessible from the WorkAdventure servers. The 'bbbMeetingAdminTag' property cannot be read from local maps."
+                            );
+                        }
+                    }
+                    throw new MapLoadingError(
+                        e instanceof Error ? e.message : typeof e === "string" ? e : "unknown_error"
+                    );
+                });
         }
 
-        return this.bbbModeratorTagFinder.getModeratorTag(bbbMeeting);
+        try {
+            const bbbModeratorTagFinder = await this.bbbModeratorTagFinderPromise;
+            return bbbModeratorTagFinder.getModeratorTag(bbbRoom);
+        } catch (e) {
+            console.warn("Could not access map file.", e);
+            if (e instanceof MapLoadingError) {
+                return undefined;
+            }
+            throw e;
+        }
     }
 
     public getJitsiSettings(): MapJitsiData | undefined {
@@ -726,5 +820,9 @@ export class GameRoom {
             };
         }
         return undefined;
+    }
+
+    public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
+        return this.mapEditorMessagesHandler;
     }
 }

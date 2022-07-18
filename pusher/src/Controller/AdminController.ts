@@ -3,14 +3,18 @@ import {
     AdminRoomMessage,
     WorldFullWarningToRoomMessage,
     RefreshRoomPromptMessage,
+    EmptyMessage,
+    RoomsList,
 } from "../Messages/generated/messages_pb";
 import { adminToken } from "../Middleware/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";
+import { Metadata } from "grpc";
 
 export class AdminController extends BaseHttpController {
-    routes() {
+    routes(): void {
         this.receiveGlobalMessagePrompt();
         this.receiveRoomEditionPrompt();
+        this.getRoomsList();
     }
 
     /**
@@ -18,6 +22,8 @@ export class AdminController extends BaseHttpController {
      * /room/refresh:
      *   post:
      *     description: Forces anyone out of the room. The request must be authenticated with the "admin-token" header.
+     *     tags:
+     *      - Admin endpoint
      *     parameters:
      *      - name: "admin-token"
      *        in: "header"
@@ -34,7 +40,7 @@ export class AdminController extends BaseHttpController {
      *         description: Will always return "ok".
      *         example: "ok"
      */
-    receiveRoomEditionPrompt() {
+    receiveRoomEditionPrompt(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/room/refresh", { middlewares: [adminToken] }, async (req, res) => {
             const body = await req.json();
@@ -70,6 +76,8 @@ export class AdminController extends BaseHttpController {
      * /message:
      *   post:
      *     description: Sends a message (or a world full message) to a number of rooms.
+     *     tags:
+     *      - Admin endpoint
      *     parameters:
      *      - name: "admin-token"
      *        in: "header"
@@ -99,7 +107,7 @@ export class AdminController extends BaseHttpController {
      *         description: Will always return "ok".
      *         example: "ok"
      */
-    receiveGlobalMessagePrompt() {
+    receiveGlobalMessagePrompt(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.post("/message", { middlewares: [adminToken] }, async (req, res) => {
             const body = await req.json();
@@ -148,6 +156,87 @@ export class AdminController extends BaseHttpController {
             }
 
             res.send("ok");
+        });
+    }
+
+    /**
+     * @openapi
+     * /rooms:
+     *   get:
+     *     description: Returns the list of all rooms, along the number of users in each room.
+     *     tags:
+     *      - Admin endpoint
+     *     parameters:
+     *      - name: "Authorization"
+     *        in: "header"
+     *        required: true
+     *        type: "string"
+     *        description: The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)
+     *     responses:
+     *       200:
+     *         description: Will always return "ok".
+     *         example: "{\"https://workadventu.re/@/company/world/room\": 24}"
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               additionalProperties:
+     *                 type: integer
+     */
+    getRoomsList(): void {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.app.get("/rooms", { middlewares: [adminToken] }, async (req, res) => {
+            try {
+                const roomClients = await apiClientRepository.getAllClients();
+
+                const emptyMessage = new EmptyMessage();
+
+                const promises: Promise<RoomsList>[] = [];
+                for (const roomClient of roomClients) {
+                    promises.push(
+                        new Promise<RoomsList>((resolve, reject) => {
+                            roomClient.getRooms(
+                                emptyMessage,
+                                new Metadata(),
+                                {
+                                    deadline: Date.now() + 1000,
+                                },
+                                (error, result) => {
+                                    if (error) {
+                                        reject(error);
+                                    } else {
+                                        resolve(result);
+                                    }
+                                }
+                            );
+                        })
+                    );
+                }
+
+                // Note: this call will take at most 1 second because we won't wait more for all the promises to resolve.
+                const roomsListsResult = await Promise.allSettled(promises);
+
+                const rooms: Record<string, number> = {};
+
+                for (const roomsListResult of roomsListsResult) {
+                    if (roomsListResult.status === "fulfilled") {
+                        for (const room of roomsListResult.value.getRoomdescriptionList()) {
+                            rooms[room.getRoomid()] = room.getNbusers();
+                        }
+                    } else {
+                        console.warn(
+                            "One back server did not respond within one second to the call to 'getRooms': ",
+                            roomsListResult.reason
+                        );
+                    }
+                }
+
+                res.setHeader("Content-Type", "application/json").send(JSON.stringify(rooms));
+                return;
+            } catch (err) {
+                this.castErrorToResponse(err, res);
+                return;
+            }
         });
     }
 }

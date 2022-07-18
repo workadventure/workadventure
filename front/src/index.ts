@@ -147,7 +147,7 @@ HtmlUtils.querySelectorOrFail("#game canvas").addEventListener("contextmenu", fu
 });
 
 window.addEventListener("resize", function () {
-    coWebsiteManager.resetStyleMain();
+    coWebsiteManager.restoreMainSize();
 
     waScaleManager.applyNewSize();
     waScaleManager.refreshFocusOnTarget();

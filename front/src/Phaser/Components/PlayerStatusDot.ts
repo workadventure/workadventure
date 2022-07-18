@@ -7,6 +7,8 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
 
     private availabilityStatus: AvailabilityStatus;
 
+    private animationTween?: Phaser.Tweens.Tween;
+
     private readonly COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> = {
         [AvailabilityStatus.AWAY]: { filling: 0xf5931e, outline: 0x875d13 },
         [AvailabilityStatus.ONLINE]: { filling: 0x8cc43f, outline: 0x427a25 },
@@ -33,7 +35,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant: boolean = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
         if (this.availabilityStatus === availabilityStatus || availabilityStatus === AvailabilityStatus.UNCHANGED) {
             return;
         }
@@ -46,8 +48,13 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     private playStatusChangeAnimation(): void {
+        if (!this.scene) {
+            this.redraw();
+            return;
+        }
         this.scale = 1;
-        this.scene.tweens.add({
+        this.animationTween?.stop();
+        this.animationTween = this.scene.tweens.add({
             targets: [this],
             duration: 200,
             yoyo: true,

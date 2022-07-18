@@ -24,7 +24,7 @@ The name of the layers of this map are :
 
 ### Detecting when the user enters/leaves a layer
 
-```
+```ts
 WA.room.onEnterLayer(name: string): Subscription
 WA.room.onLeaveLayer(name: string): Subscription
 ```
@@ -48,7 +48,7 @@ WA.room.onLeaveLayer("myLayer").subscribe(() => {
 
 ### Show / Hide a layer
 
-```
+```ts
 WA.room.showLayer(layerName : string): void
 WA.room.hideLayer(layerName : string) : void
 ```
@@ -66,7 +66,7 @@ WA.room.hideLayer("bottom");
 
 ### Set/Create properties in a layer
 
-```
+```ts
 WA.room.setProperty(layerName : string, propertyName : string, propertyValue : string | number | boolean | undefined) : void;
 ```
 
@@ -82,9 +82,89 @@ Example :
 WA.room.setProperty("wikiLayer", "openWebsite", "https://www.wikipedia.org/");
 ```
 
+### Working with area objects
+You can use Tiled objects of special class `area` to hold various properties, instead of layers. They, too, can be modified with scripting API.
+
+### Detecting when the user enters/leaves an area
+
+```ts
+WA.room.area.onEnter(name: string): Subscription
+WA.room.area.onLeave(name: string): Subscription
+```
+
+Listens to the position of the current user. The event is triggered when the user enters or leaves a given area.
+
+- **name**: the name of the area as defined in Tiled.
+
+Example:
+
+```ts
+const myAreaSubscriber = WA.room.area.onEnter("myArea").subscribe(() => {
+  WA.chat.sendChatMessage("Hello!", "Mr Robot");
+});
+
+WA.room.area.onLeave("myArea").subscribe(() => {
+  WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
+  myAreaSubscriber.unsubscribe();
+});
+```
+
+### Create Area
+
+You can create new Area object (currently limited to rectangular shapes):
+
+```ts
+const area = WA.room.area.create({
+    name: 'MyNewArea',
+    x: 100,
+    y: 100,
+    width: 320,
+    height: 320,
+});
+```
+
+### Modify Area
+
+It is possible to modify already existing Area object (currently limited to x, y, width, height):
+
+```ts
+const area = await WA.room.area.get('MyNewArea');
+if (area) {
+    area.x = 150;
+    area.y = 150;
+}
+```
+
+### Delete Area
+
+You can delete Area if it has a name:
+
+```ts
+WA.room.area.delete('MyNewArea');
+```
+
+### Set/Create properties in an Area object
+
+```ts
+setProperty(propertyName : string, propertyValue : string | number | boolean | undefined) : void;
+```
+
+Set the value of the `propertyName` property of the area at `propertyValue`. If the property doesn't exist,
+create the property `propertyName` and set the value of the property at `propertyValue`.
+
+Note :
+To unset a property from an area, use `setProperty` with `propertyValue` set to `undefined`.
+
+Example :
+
+```ts
+const area = await WA.room.area.get('wikiArea');
+area.setProperty("openWebsite", "https://www.wikipedia.org/");
+```
+
 ### Get the room id
 
-```
+```ts
 WA.room.id: string;
 ```
 
@@ -92,7 +172,7 @@ The ID of the current room is available from the `WA.room.id` property.
 
 {.alert.alert-info} You need to wait for the end of the initialization before accessing `WA.room.id`
 
-```typescript
+```ts
 WA.onInit().then(() => {
   console.log("Room id: ", WA.room.id);
   // Will output something like: 'https://play.workadventu.re/@/myorg/myworld/myroom', or 'https://play.workadventu.re/_/global/mymap.org/map.json"
@@ -101,7 +181,7 @@ WA.onInit().then(() => {
 
 ### Get the map URL
 
-```
+```ts
 WA.room.mapURL: string;
 ```
 
@@ -109,7 +189,7 @@ The URL of the map is available from the `WA.room.mapURL` property.
 
 {.alert.alert-info} You need to wait for the end of the initialization before accessing `WA.room.mapURL`
 
-```typescript
+```ts
 WA.onInit().then(() => {
   console.log("Map URL: ", WA.room.mapURL);
   // Will output something like: 'https://mymap.org/map.json"
@@ -118,7 +198,7 @@ WA.onInit().then(() => {
 
 ### Getting map data
 
-```
+```ts
 WA.room.getTiledMap(): Promise<ITiledMap>
 ```
 
@@ -135,7 +215,7 @@ the [Tiled documentation to learn more about the format of the JSON map](https:/
 
 ### Changing tiles
 
-```
+```ts
 WA.room.setTiles(tiles: TileDescriptor[]): void
 ```
 
@@ -174,7 +254,7 @@ WA.room.setTiles([
 
 ### Loading a tileset
 
-```
+```ts
 WA.room.loadTileset(url: string): Promise<number>
 ```
 
@@ -195,7 +275,7 @@ the ["website" objects](website-in-map.md)).
 
 ### Getting an instance of a website already embedded in the map
 
-```
+```ts
 WA.room.website.get(objectName: string): Promise<EmbeddedWebsite>
 ```
 
@@ -211,7 +291,7 @@ website.visible = true;
 
 ### Adding a new website in a map
 
-```
+```ts
 WA.room.website.create(website: CreateEmbeddedWebsiteEvent): EmbeddedWebsite
 
 interface CreateEmbeddedWebsiteEvent {
@@ -255,7 +335,7 @@ const website = WA.room.website.create({
 
 ### Deleting a website from a map
 
-```
+```ts
 WA.room.website.delete(name: string): Promise<void>
 ```
 
@@ -265,7 +345,7 @@ Use `WA.room.website.delete` to completely remove an embedded website from your 
 
 Instances of the `EmbeddedWebsite` class represent the website displayed on the map.
 
-```typescript
+```ts
 class EmbeddedWebsite {
   readonly name: string;
   url: string;

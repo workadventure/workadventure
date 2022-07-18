@@ -12,11 +12,14 @@ const warning: NonNullable<Translation["warning"]> = {
         screenSharing:
             "Zugriff auf die Bildschirmfreigabe verweigert. Hier klicken um deine Browser Berechtigungen zu prüfen.",
         room: "Zutritt nicht gestattet. Dir fehlt die Berechtigung um diesen Raum zu betreten.",
+        teleport: "Sie dürfen sich nicht zu diesem Benutzer beamen.",
     },
     importantMessage: "Wichtige Nachricht",
     connectionLost: "Verbindungen unterbrochen. Wiederverbinden...",
     connectionLostTitle: "Verbindungen unterbrochen",
     connectionLostSubtitle: "Wiederverbinden",
+    waitingConnectionTitle: "Auf Verbindung warten",
+    waitingConnectionSubtitle: "Verbinden",
 };
 
 export default warning;

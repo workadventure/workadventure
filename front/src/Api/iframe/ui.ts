@@ -1,18 +1,12 @@
-import { isButtonClickedEvent } from "../Events/ButtonClickedEvent";
-import { isMenuItemClickedEvent } from "../Events/ui/MenuItemClickedEvent";
 import { IframeApiContribution, sendToWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
 import type { ButtonClickedCallback, ButtonDescriptor } from "./Ui/ButtonDescriptor";
 import { Popup } from "./Ui/Popup";
 import { ActionMessage } from "./Ui/ActionMessage";
-import { isMessageReferenceEvent } from "../Events/ui/TriggerActionMessageEvent";
 import { Menu } from "./Ui/Menu";
 import type { RequireOnlyOne } from "../types";
-import { isRemotePlayerClickedEvent, RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
-import {
-    ActionsMenuActionClickedEvent,
-    isActionsMenuActionClickedEvent,
-} from "../Events/ActionsMenuActionClickedEvent";
+import { RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
+import { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClickedEvent";
 import { Observable, Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
@@ -42,20 +36,20 @@ export interface ActionMessageOptions {
     callback: () => void;
 }
 
-export interface RemotePlayerInterface {
-    addAction(key: string, callback: Function): void;
-}
-
-export class RemotePlayer implements RemotePlayerInterface {
-    private id: number;
+export class RemotePlayer {
+    public readonly id: number;
+    public readonly uuid: string;
+    public readonly name: string;
 
     private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
 
-    constructor(id: number) {
-        this.id = id;
+    constructor(remotePlayer: RemotePlayerClickedEvent) {
+        this.id = remotePlayer.id;
+        this.uuid = remotePlayer.uuid;
+        this.name = remotePlayer.name;
     }
 
-    public addAction(key: string, callback: Function): ActionsMenuAction {
+    public addAction(key: string, callback: () => void): ActionsMenuAction {
         const newAction = new ActionsMenuAction(this, key, callback);
         this.actions.set(key, newAction);
         sendToWorkadventure({
@@ -84,9 +78,9 @@ export class RemotePlayer implements RemotePlayerInterface {
 export class ActionsMenuAction {
     private remotePlayer: RemotePlayer;
     private key: string;
-    private callback: Function;
+    private callback: () => void;
 
-    constructor(remotePlayer: RemotePlayer, key: string, callback: Function) {
+    constructor(remotePlayer: RemotePlayer, key: string, callback: () => void) {
         this.remotePlayer = remotePlayer;
         this.key = key;
         this.callback = callback;
@@ -102,21 +96,20 @@ export class ActionsMenuAction {
 }
 
 export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventureUiCommands> {
-    public readonly _onRemotePlayerClicked: Subject<RemotePlayerInterface>;
-    public readonly onRemotePlayerClicked: Observable<RemotePlayerInterface>;
+    public readonly _onRemotePlayerClicked: Subject<RemotePlayer>;
+    public readonly onRemotePlayerClicked: Observable<RemotePlayer>;
 
     private currentlyClickedRemotePlayer?: RemotePlayer;
 
     constructor() {
         super();
-        this._onRemotePlayerClicked = new Subject<RemotePlayerInterface>();
+        this._onRemotePlayerClicked = new Subject<RemotePlayer>();
         this.onRemotePlayerClicked = this._onRemotePlayerClicked.asObservable();
     }
 
     callbacks = [
         apiCallback({
             type: "buttonClickedEvent",
-            typeChecker: isButtonClickedEvent,
             callback: (payloadData) => {
                 const callback = popupCallbacks.get(payloadData.popupId)?.get(payloadData.buttonId);
                 const popup = popups.get(payloadData.popupId);
@@ -130,7 +123,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "menuItemClicked",
-            typeChecker: isMenuItemClickedEvent,
             callback: (event) => {
                 const callback = menuCallbacks.get(event.menuItem);
                 const menu = menus.get(event.menuItem);
@@ -144,7 +136,6 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "messageTriggered",
-            typeChecker: isMessageReferenceEvent,
             callback: (event) => {
                 const actionMessage = actionMessages.get(event.uuid);
                 if (actionMessage) {
@@ -154,15 +145,13 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "remotePlayerClickedEvent",
-            typeChecker: isRemotePlayerClickedEvent,
             callback: (payloadData: RemotePlayerClickedEvent) => {
-                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData.id);
+                this.currentlyClickedRemotePlayer = new RemotePlayer(payloadData);
                 this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
             },
         }),
         apiCallback({
             type: "actionsMenuActionClickedEvent",
-            typeChecker: isActionsMenuActionClickedEvent,
             callback: (payloadData: ActionsMenuActionClickedEvent) => {
                 this.currentlyClickedRemotePlayer?.callAction(payloadData.actionName);
             },

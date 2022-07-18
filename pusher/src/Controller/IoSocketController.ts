@@ -10,8 +10,6 @@ import {
     WebRtcSignalToServerMessage,
     PlayGlobalMessage,
     ReportPlayerMessage,
-    QueryJitsiJwtMessage,
-    JoinBBBMeetingMessage,
     SendUserMessage,
     ServerToClientMessage,
     CompanionMessage,
@@ -21,7 +19,12 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
+    XmppMessage,
+    AskPositionMessage,
     AvailabilityStatus,
+    QueryMessage,
+    PingMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -29,14 +32,19 @@ import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "..
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import {
+    ADMIN_SOCKETS_TOKEN,
+    DISABLE_ANONYMOUS,
+    EJABBERD_DOMAIN,
+    EJABBERD_JWT_SECRET,
+    SOCKET_IDLE_TIMER,
+} from "../Enum/EnvironmentVariable";
 import { Zone } from "../Model/Zone";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { AdminMessageInterface, isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
-import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
@@ -69,6 +77,8 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
+    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
+    activatedInviteUser: boolean | undefined;
 }
 
 interface UpgradeFailedInvalidData {
@@ -77,6 +87,10 @@ interface UpgradeFailedInvalidData {
     message: string;
     roomId: string;
 }
+import Jwt from "jsonwebtoken";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+//eslint-disable-next-line @typescript-eslint/no-var-requires
+const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -86,8 +100,13 @@ interface UpgradeFailedErrorData {
 
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
+// Maximum time to wait for a pong answer to a ping before closing connection.
+// Note: PONG_TIMEOUT must be less than PING_INTERVAL
+const PONG_TIMEOUT = 10000;
+const PING_INTERVAL = 15000;
+
 export class IoSocketController {
-    private nextUserId: number = 1;
+    private nextUserId = 1;
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -96,7 +115,7 @@ export class IoSocketController {
         }
     }
 
-    adminRoomSocket() {
+    adminRoomSocket(): void {
         this.app.ws("/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
@@ -224,16 +243,15 @@ export class IoSocketController {
         });
     }
 
-    ioConnection() {
+    ioConnection(): void {
         this.app.ws("/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            //idleTimeout: 10,
             upgrade: (res, req, context) => {
-                (async () => {
+                (async (): Promise<void> => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
 
@@ -338,90 +356,82 @@ export class IoSocketController {
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
+                            jabberId: null,
+                            jabberPassword: null,
+                            mucRooms: [],
+                            activatedInviteUser: true,
                         };
 
                         let characterLayerObjs: WokaDetail[];
 
-                        if (ADMIN_API_URL) {
+                        try {
                             try {
-                                try {
-                                    userData = await adminService.fetchMemberDataByUuid(
-                                        userIdentifier,
-                                        roomId,
-                                        IPAddress,
-                                        characterLayers,
-                                        locale
-                                    );
-                                } catch (err) {
-                                    if (Axios.isAxiosError(err)) {
-                                        const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                        if (errorType.success) {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: "error",
-                                                    status: err?.response?.status,
-                                                    error: errorType.data,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        } else {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: null,
-                                                    status: 500,
-                                                    message: err?.response?.data,
-                                                    roomId: roomId,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        }
+                                userData = await adminService.fetchMemberDataByUuid(
+                                    userIdentifier,
+                                    roomId,
+                                    IPAddress,
+                                    characterLayers,
+                                    locale
+                                );
+                            } catch (err) {
+                                if (Axios.isAxiosError(err)) {
+                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                    if (errorType.success) {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                status: err?.response?.status,
+                                                error: errorType.data,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    } else {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: null,
+                                                status: 500,
+                                                message: err?.response?.data,
+                                                roomId: roomId,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
                                     }
-                                    throw err;
                                 }
-                                memberMessages = userData.messages;
-                                memberTags = userData.tags;
-                                memberVisitCardUrl = userData.visitCardUrl;
-                                memberTextures = userData.textures;
-                                memberUserRoomToken = userData.userRoomToken;
-                                characterLayerObjs = memberTextures;
-                            } catch (e) {
-                                console.log(
-                                    "access not granted for user " +
-                                        (userIdentifier || "anonymous") +
-                                        " and room " +
-                                        roomId
-                                );
-                                console.error(e);
-                                throw new Error("User cannot access this world");
+                                throw err;
                             }
-                        } else {
-                            const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
-                            if (fetchedTextures === undefined) {
-                                // The textures we want to use do not exist!
-                                // We need to go in error.
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "textureInvalid",
-                                        message: "",
-                                        roomId,
-                                    } as UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                                return;
+                            memberMessages = userData.messages;
+                            memberTags = userData.tags;
+                            memberVisitCardUrl = userData.visitCardUrl;
+                            memberTextures = userData.textures;
+                            memberUserRoomToken = userData.userRoomToken;
+                            characterLayerObjs = memberTextures;
+                        } catch (e) {
+                            console.log(
+                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                            );
+                            console.error(e);
+                            throw new Error("User cannot access this world");
+                        }
+
+                        if (!userData.jabberId) {
+                            // If there is no admin, or no user, let's log users using JWT tokens
+                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            if (EJABBERD_JWT_SECRET) {
+                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                    expiresIn: "1d",
+                                    algorithm: "HS256",
+                                });
+                            } else {
+                                userData.jabberPassword = "no_password_set";
                             }
-                            characterLayerObjs = fetchedTextures;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -442,6 +452,7 @@ export class IoSocketController {
                                 token,
                                 userUuid: userData.userUuid,
                                 IPAddress,
+                                userIdentifier,
                                 roomId,
                                 name,
                                 companion,
@@ -451,6 +462,11 @@ export class IoSocketController {
                                 tags: memberTags,
                                 visitCardUrl: memberVisitCardUrl,
                                 userRoomToken: memberUserRoomToken,
+                                textures: memberTextures,
+                                jabberId: userData.jabberId,
+                                jabberPassword: userData.jabberPassword,
+                                mucRooms: userData.mucRooms,
+                                activatedInviteUser: userData.activatedInviteUser,
                                 position: {
                                     x: x,
                                     y: y,
@@ -472,6 +488,9 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
+                            if (!(e instanceof InvalidTokenError)) {
+                                console.error(e);
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -545,6 +564,26 @@ export class IoSocketController {
                         }
                     });
                 }
+
+                const pingMessage = new PingMessage();
+                const pingSubMessage = new SubMessage();
+                pingSubMessage.setPingmessage(pingMessage);
+
+                client.pingIntervalId = setInterval(() => {
+                    client.emitInBatch(pingSubMessage);
+
+                    if (client.pongTimeoutId) {
+                        console.warn("Warning, emitting a new ping message before previous pong message was received.");
+                        client.resetPongTimeout();
+                    }
+
+                    client.pongTimeoutId = setTimeout(() => {
+                        console.log("Connexion lost with user ", client.userUuid);
+                        client.close();
+                    }, PONG_TIMEOUT);
+                }, PING_INTERVAL);
+
+                client.resetPongTimeout();
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
@@ -577,16 +616,8 @@ export class IoSocketController {
                     socketManager.emitPlayGlobalMessage(client, message.getPlayglobalmessage() as PlayGlobalMessage);
                 } else if (message.hasReportplayermessage()) {
                     socketManager.handleReportMessage(client, message.getReportplayermessage() as ReportPlayerMessage);
-                } else if (message.hasQueryjitsijwtmessage()) {
-                    socketManager.handleQueryJitsiJwtMessage(
-                        client,
-                        message.getQueryjitsijwtmessage() as QueryJitsiJwtMessage
-                    );
-                } else if (message.hasJoinbbbmeetingmessage()) {
-                    socketManager.handleJoinBBBMeetingMessage(
-                        client,
-                        message.getJoinbbbmeetingmessage() as JoinBBBMeetingMessage
-                    );
+                } else if (message.hasQuerymessage()) {
+                    socketManager.handleQueryMessage(client, message.getQuerymessage() as QueryMessage);
                 } else if (message.hasEmotepromptmessage()) {
                     socketManager.handleEmotePromptMessage(
                         client,
@@ -609,6 +640,17 @@ export class IoSocketController {
                         client,
                         message.getLockgrouppromptmessage() as LockGroupPromptMessage
                     );
+                } else if (message.hasPingmessage()) {
+                    client.resetPongTimeout();
+                } else if (message.hasEditmapmessage()) {
+                    socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
+                } else if (message.hasXmppmessage()) {
+                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
+                } else if (message.hasAskpositionmessage()) {
+                    socketManager.handleAskPositionMessage(
+                        client,
+                        message.getAskpositionmessage() as AskPositionMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */
@@ -626,6 +668,13 @@ export class IoSocketController {
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
+                } finally {
+                    if (Client.pingIntervalId) {
+                        clearInterval(Client.pingIntervalId);
+                    }
+                    if (Client.pongTimeoutId) {
+                        clearTimeout(Client.pongTimeoutId);
+                    }
                 }
             },
         });
@@ -644,10 +693,17 @@ export class IoSocketController {
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
         };
+        client.resetPongTimeout = (): void => {
+            if (client.pongTimeoutId) {
+                clearTimeout(client.pongTimeoutId);
+                client.pongTimeoutId = undefined;
+            }
+        };
         client.disconnecting = false;
 
         client.messages = ws.messages;
         client.name = ws.name;
+        client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
         client.characterLayers = ws.characterLayers;
@@ -655,6 +711,10 @@ export class IoSocketController {
         client.availabilityStatus = ws.availabilityStatus;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
+        client.jabberId = ws.jabberId;
+        client.jabberPassword = ws.jabberPassword;
+        client.mucRooms = ws.mucRooms;
+        client.activatedInviteUser = ws.activatedInviteUser;
         return client;
     }
 }

@@ -42,12 +42,15 @@ class CoWebsiteManager {
     public onResize = this._onResize.asObservable();
 
     private cowebsiteDom: HTMLDivElement;
-    private resizing: boolean = false;
+    private resizing = false;
     private gameOverlayDom: HTMLDivElement;
     private cowebsiteBufferDom: HTMLDivElement;
     private cowebsiteAsideHolderDom: HTMLDivElement;
     private cowebsiteLoaderDom: HTMLDivElement;
     private previousTouchMoveCoordinates: TouchMoveCoordinates | null = null; //only use on touchscreens to track touch movement
+    private coWebsiteResizeSize: number = 50;
+
+    private buttonCloseCoWebsite: HTMLElement;
 
     private loaderAnimationInterval: {
         interval: NodeJS.Timeout | undefined;
@@ -56,6 +59,12 @@ class CoWebsiteManager {
 
     private resizeObserver = new ResizeObserver(() => {
         this.resizeAllIframes();
+
+        if (!this.isFullScreen && this.cowebsiteAsideHolderDom.style.visibility === "hidden") {
+            this.toggleFullScreenIcon(true);
+            this.restoreMainSize();
+            this.fire();
+        }
     });
 
     public getMainState() {
@@ -115,10 +124,16 @@ class CoWebsiteManager {
         this.cowebsiteAsideHolderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteAsideHolderDomId);
         this.cowebsiteLoaderDom = HtmlUtils.getElementByIdOrFail<HTMLDivElement>(cowebsiteLoaderDomId);
 
+        this.buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
+
         this.loaderAnimationInterval = {
             interval: undefined,
             trails: undefined,
         };
+
+        mainCoWebsite.subscribe((coWebsite) => {
+            this.buttonCloseCoWebsite.hidden = !coWebsite?.isClosable() ?? false;
+        });
 
         this.holderListeners();
         this.transitionListeners();
@@ -126,8 +141,7 @@ class CoWebsiteManager {
         this.resizeObserver.observe(this.cowebsiteDom);
         this.resizeObserver.observe(this.gameOverlayDom);
 
-        const buttonCloseCoWebsite = HtmlUtils.getElementByIdOrFail(cowebsiteCloseButtonId);
-        buttonCloseCoWebsite.addEventListener("click", () => {
+        this.buttonCloseCoWebsite.addEventListener("click", () => {
             analyticsClient.closeMultiIframe();
             const coWebsite = this.getMainCoWebsite();
 
@@ -148,7 +162,7 @@ class CoWebsiteManager {
         buttonFullScreenFrame.addEventListener("click", () => {
             analyticsClient.fullScreenMultiIframe();
             buttonFullScreenFrame.blur();
-            this.fullscreen();
+            this.toggleFullscreen();
         });
 
         const buttonSwipe = HtmlUtils.getElementByIdOrFail(cowebsiteSwipeButtonId);
@@ -177,6 +191,10 @@ class CoWebsiteManager {
                 }
             }
         });
+    }
+
+    public cleanup(): void {
+        this.closeCoWebsites();
     }
 
     public getCoWebsiteBuffer(): HTMLDivElement {
@@ -225,6 +243,8 @@ class CoWebsiteManager {
                     this.width = tempValue;
                 }
             }
+
+            this.saveMainSize();
             this.fire();
         };
 
@@ -352,7 +372,9 @@ class CoWebsiteManager {
         this.cowebsiteDom.classList.add("closing");
         this.cowebsiteDom.classList.remove("opened");
         this.openedMain.set(iframeStates.closed);
-        this.resetStyleMain();
+        this.cowebsiteDom.style.height = "";
+        this.cowebsiteDom.style.width = "";
+        this.coWebsiteResizeSize = 50;
         this.fire();
     }
 
@@ -406,25 +428,51 @@ class CoWebsiteManager {
         }
     }
 
+    private saveMainSize() {
+        this.coWebsiteResizeSize = this.verticalMode
+            ? Math.round((this.height * 100) / window.innerHeight)
+            : Math.round((this.width * 100) / window.innerWidth);
+    }
+
+    public restoreMainSize() {
+        this.verticalMode ? (this.cowebsiteDom.style.width = "") : (this.cowebsiteDom.style.height = "");
+        this.verticalMode
+            ? (this.height = Math.round((this.coWebsiteResizeSize * window.innerHeight) / 100))
+            : (this.width = Math.round((this.coWebsiteResizeSize * window.innerWidth) / 100));
+    }
+
     private loadMain(openingWidth?: number): void {
         this.activateMainLoaderAnimation();
 
-        if (!this.verticalMode && openingWidth) {
-            let newWidth = 50;
+        let newWidth = openingWidth ?? 50;
 
-            if (openingWidth > 100) {
+        if (newWidth > 75 && !this.isFullScreen) {
+            this.coWebsiteResizeSize = 75;
+            this.toggleFullscreen();
+        } else if (this.verticalMode) {
+            const holderPercent = Math.round((this.cowebsiteAsideHolderDom.offsetHeight * 100) / window.innerHeight);
+
+            if (newWidth < holderPercent) {
+                newWidth = holderPercent;
+            } else if (newWidth > this.maxWidth) {
                 newWidth = 100;
-            } else if (openingWidth > 1) {
-                newWidth = openingWidth;
             }
 
-            newWidth = Math.round((newWidth * this.maxWidth) / 100);
+            this.cowebsiteDom.style.width = "";
+            this.height = Math.round((newWidth * window.innerHeight) / 100);
+            this.saveMainSize();
+        } else {
+            const holderPercent = Math.round((this.cowebsiteAsideHolderDom.offsetWidth * 100) / window.innerWidth);
 
-            if (newWidth < this.cowebsiteAsideHolderDom.offsetWidth) {
-                newWidth = this.cowebsiteAsideHolderDom.offsetWidth;
+            if (newWidth < holderPercent) {
+                newWidth = holderPercent;
+            } else if (newWidth > this.maxWidth) {
+                newWidth = 100;
             }
 
-            this.width = newWidth;
+            this.cowebsiteDom.style.height = "";
+            this.width = Math.round((newWidth * window.innerWidth) / 100);
+            this.saveMainSize();
         }
 
         this.cowebsiteDom.classList.add("opened");
@@ -436,11 +484,6 @@ class CoWebsiteManager {
             this.resizeAllIframes();
         });
         this.openedMain.set(iframeStates.opened);
-    }
-
-    public resetStyleMain() {
-        this.cowebsiteDom.style.width = "";
-        this.cowebsiteDom.style.height = "";
     }
 
     public getCoWebsites(): CoWebsite[] {
@@ -637,7 +680,7 @@ class CoWebsiteManager {
             this.displayMain();
         }
 
-        const coWebsiteLloading = coWebsite
+        const coWebsiteLoading = coWebsite
             .load()
             .then(() => {
                 const mainCoWebsite = this.getMainCoWebsite();
@@ -668,7 +711,7 @@ class CoWebsiteManager {
                 this.removeCoWebsiteFromStack(coWebsite);
             });
 
-        return coWebsiteLloading;
+        return coWebsiteLoading;
     }
 
     public unloadCoWebsite(coWebsite: CoWebsite): Promise<void> {
@@ -745,10 +788,10 @@ class CoWebsiteManager {
         waScaleManager.refreshFocusOnTarget();
     }
 
-    private fullscreen(): void {
+    private toggleFullscreen(): void {
         if (this.isFullScreen) {
             this.toggleFullScreenIcon(true);
-            this.resetStyleMain();
+            this.restoreMainSize();
             this.fire();
             //we don't trigger a resize of the phaser game since it won't be visible anyway.
         } else {

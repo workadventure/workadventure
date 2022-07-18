@@ -11,10 +11,11 @@ on the right side of the screen)
 In order to create a zone that opens websites:
 
 * You must create a specific object.
-* Object must be of type "`area`"
+* Object class must be "`area`"
 * In object properties, you MUST add a "`openWebsite`" property (of type "`string`"). The value of the property is the URL of the website to open (the URL must start with "https://")
 * You may also use "`openWebsiteWidth`" property (of type "`int`" or "`float`" between 0 and 100) to control the width of the iframe.
 * You may also use "`openTab`" property (of type "`string`") to open in a new tab instead.
+* You can decide if the website should be closable with "`openWebsiteClosable`" property (of type "`bool`")
 
 {.alert.alert-warning}
 A website can explicitly forbid another website from loading it in an iFrame using

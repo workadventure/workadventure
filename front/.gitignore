@@ -6,3 +6,4 @@ dist/
 !templater.sh
 /public/iframe_api.js
 /public/es.js
+/svelte-check-watch/public/iframe_api.js

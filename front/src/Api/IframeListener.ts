@@ -10,7 +10,6 @@ import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
     IframeResponseEvent,
-    IframeResponseEventMap,
     isIframeEventWrapper,
     isIframeQueryWrapper,
     isLookingLikeIframeEventWrapper,
@@ -19,7 +18,7 @@ import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
 import { PlaySoundEvent } from "./Events/PlaySoundEvent";
 import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
-import { SetPropertyEvent } from "./Events/setPropertyEvent";
+import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
 import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
@@ -35,7 +34,9 @@ import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -55,6 +56,12 @@ class IframeListener {
 
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
+
+    private readonly _openChatStream: Subject<void> = new Subject();
+    public readonly openChatStream = this._openChatStream.asObservable();
+
+    private readonly _closeChatStream: Subject<void> = new Subject();
+    public readonly closeChatStream = this._closeChatStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
@@ -101,6 +108,9 @@ class IframeListener {
     private readonly _setPropertyStream: Subject<SetPropertyEvent> = new Subject();
     public readonly setPropertyStream = this._setPropertyStream.asObservable();
 
+    private readonly _setAreaPropertyStream: Subject<SetAreaPropertyEvent> = new Subject();
+    public readonly setAreaPropertyStream = this._setAreaPropertyStream.asObservable();
+
     private readonly _playSoundStream: Subject<PlaySoundEvent> = new Subject();
     public readonly playSoundStream = this._playSoundStream.asObservable();
 
@@ -119,13 +129,16 @@ class IframeListener {
     private readonly _modifyEmbeddedWebsiteStream: Subject<ModifyEmbeddedWebsiteEvent> = new Subject();
     public readonly modifyEmbeddedWebsiteStream = this._modifyEmbeddedWebsiteStream.asObservable();
 
+    private readonly _modifyAreaStream: Subject<ModifyAreaEvent> = new Subject();
+    public readonly modifyAreaStream = this._modifyAreaStream.asObservable();
+
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
-    private sendPlayerMove: boolean = false;
+    private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -189,7 +202,7 @@ class IframeListener {
 
                     const errorHandler = (reason: unknown) => {
                         console.error("An error occurred while responding to an iFrame query.", reason);
-                        let reasonMsg: string = "";
+                        let reasonMsg = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
                         } else if (typeof reason === "object") {
@@ -244,12 +257,18 @@ class IframeListener {
                         this._hideLayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "setProperty") {
                         this._setPropertyStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "setAreaProperty") {
+                        this._setAreaPropertyStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "cameraSet") {
                         this._cameraSetStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "cameraFollowPlayer") {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
                         scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "openChat") {
+                        this._openChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "closeChat") {
+                        this._closeChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -290,6 +309,8 @@ class IframeListener {
                         this._setTilesStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyEmbeddedWebsite") {
                         this._modifyEmbeddedWebsiteStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "modifyArea") {
+                        this._modifyAreaStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "modifyUIWebsite") {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
@@ -333,7 +354,7 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
         return new Promise<void>((resolve) => {
             console.info("Loading map related script at ", scriptUrl);
 
@@ -544,7 +565,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent<keyof IframeResponseEventMap>, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;

@@ -13,7 +13,7 @@
     let unsubscriberFileStore: Unsubscriber | null = null;
     let unsubscriberVolumeStore: Unsubscriber | null = null;
 
-    let isAudioAllowed: boolean = true;
+    let isAudioAllowed = true;
 
     onMount(() => {
         let volume = Math.min(localUserStore.getAudioPlayerVolume(), get(audioManagerVolumeStore).volume);

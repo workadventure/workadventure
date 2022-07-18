@@ -39,8 +39,8 @@ export class TexturesHelper {
         height: number,
         sourceTextureKey: string,
         sourceTextureFrame?: number | string,
-        sourceTextureWidth: number = 32,
-        sourceTextureHeight: number = 32
+        sourceTextureWidth = 32,
+        sourceTextureHeight = 32
     ): void {
         const rt = scene.make.renderTexture({ x: 0, y: 0, width, height }, false);
         const widthTiles = Math.ceil(width / sourceTextureWidth);

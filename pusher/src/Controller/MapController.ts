@@ -3,10 +3,11 @@ import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { parse } from "query-string";
 import { BaseHttpController } from "./BaseHttpController";
 import { adminService } from "../Services/AdminService";
+import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
-    routes() {
+    routes(): void {
         /**
          * @openapi
          * /map:
@@ -104,7 +105,7 @@ export class MapController extends BaseHttpController {
                 return;
             }
 
-            (async () => {
+            (async (): Promise<void> => {
                 try {
                     let mapDetails = await adminService.fetchMapDetails(
                         query.playUri as string,
@@ -121,7 +122,14 @@ export class MapController extends BaseHttpController {
                     res.json(mapDetails);
                     return;
                 } catch (e) {
-                    this.castErrorToResponse(e, res);
+                    if (e instanceof InvalidTokenError) {
+                        console.warn("Invalid token received", e);
+                        res.status(401);
+                        res.send("The Token is invalid");
+                        return;
+                    } else {
+                        this.castErrorToResponse(e, res);
+                    }
                 }
             })();
         });
