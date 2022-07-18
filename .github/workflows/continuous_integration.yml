@@ -106,11 +106,11 @@ jobs:
           version: '3.x'
 
       - name: "Install libs/tailwind dependencies"
-        run: yarn install
+        run: yarn install &&
         working-directory: "libs/tailwind"
 
       - name: "Install dependencies"
-        run: yarn install
+        run: yarn install && cp -R ../../libs/tailwind ../libs/tailwind
         working-directory: "front/chat"
 
       - name: "Install messages dependencies"
