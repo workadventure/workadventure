@@ -1,6 +1,7 @@
-import {test} from '@playwright/test';
+import {chromium, expect, Page, test} from '@playwright/test';
 import { assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
+import {inViewport} from "./utils/viewport";
 
 test.describe('Chat', () => {
   test('should connect to ejabberd and show list of users', async ({ page }) => {
@@ -11,12 +12,11 @@ test.describe('Chat', () => {
 
     await login(page, 'Alice', 2);
 
-    // FIXME
-    //await assertLogMessage(page, 'Chat fully loaded');
+    await assertLogMessage(page, 'Chat fully loaded');
 
-    //await page.click('main.menuIcon img:nth-of-type(2)');
+    await openChat(page);
 
-    /*await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Users');
+    await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Users');
 
     const browser = await chromium.launch();
     const page2 = await browser.newPage();
@@ -29,10 +29,14 @@ test.describe('Chat', () => {
 
     await assertLogMessage(page2, 'Chat fully loaded');
 
-    await page2.click('main.menuIcon img:nth-of-type(2)');
-
-    await page2.waitForTimeout(500);
+    await openChat(page);
 
     await expect(page2.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
-*/  });
+  });
 });
+
+
+async function openChat(page: Page) {
+  await page.click('.bottom-action-bar .bottom-action-section:nth-of-type(1) .bottom-action-button:nth-of-type(3) button');
+  await expect(await inViewport("#chatWindow", page)).toBeTruthy();
+}
