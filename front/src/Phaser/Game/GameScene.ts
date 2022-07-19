@@ -79,7 +79,7 @@ import {
     menuVisiblilityStore,
     SubMenusInterface,
     subMenusStore,
-    TranslatedMenu
+    TranslatedMenu,
 } from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
@@ -1272,7 +1272,10 @@ ${escapedMessage}
                     (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
                 );
                 if (indexInviteMenu === -1) {
-                    console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, get(subMenusStore));
+                    console.error(
+                        `Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `,
+                        get(subMenusStore)
+                    );
                     return;
                 }
                 if (get(menuVisiblilityStore) && get(activeSubMenuStore) === indexInviteMenu) {

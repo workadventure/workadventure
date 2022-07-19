@@ -24,10 +24,7 @@ import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
-import {
-    handleMenuRegistrationEvent,
-    handleMenuUnregisterEvent,
-} from "../Stores/MenuStore";
+import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
@@ -341,7 +338,7 @@ class IframeListener {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
-                    } else if(iframeEvent.type == "openInviteMenu"){
+                    } else if (iframeEvent.type == "openInviteMenu") {
                         this._openInviteMenuStream.next();
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
