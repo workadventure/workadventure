@@ -38,7 +38,7 @@ class App {
         new WokaListController(webserver);
         new PingController(webserver);
         //if (ENABLE_OPENAPI_ENDPOINT) {
-            //new SwaggerController(webserver);
+        //new SwaggerController(webserver);
         //}
     }
 }
