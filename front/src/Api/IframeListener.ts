@@ -25,12 +25,8 @@ import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
 import {
-    activeSubMenuStore,
     handleMenuRegistrationEvent,
     handleMenuUnregisterEvent,
-    MenuItem, menuVisiblilityStore, SubMenusInterface,
-    subMenusStore,
-    TranslatedMenu
 } from "../Stores/MenuStore";
 import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
 import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
@@ -45,7 +41,6 @@ import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
-import {get} from "svelte/store";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -163,7 +158,7 @@ class IframeListener {
     init() {
         window.addEventListener(
             "message",
-            (message: MessageEvent<unknown>) => {
+            (message: MessageEvent) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
