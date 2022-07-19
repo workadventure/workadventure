@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { findContainer, startContainer, stopContainer } from './utils/containers';
 import { login } from './utils/roles';
 
-test.setTimeout(60000);
+test.setTimeout(120_000);
 test.describe('Connection', () => {
   test('can succeed even if WorkAdventure starts while pusher is down', async ({ page }) => {
     await page.goto(
