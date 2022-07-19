@@ -11,7 +11,6 @@ export async function assertLogMessage(
     substring: string,
     timeout: number = 10000
 ): Promise<void> {
-  let logs = [];
   await page.on('console', async (msg) => {
     logs.push(await msg.text());
   });
@@ -43,7 +42,7 @@ export async function assertLogMessage(
   expect(logs).toContain(substring);
 }*/
 export function startRecordLogs(page: Page) {
-  page.on('console', (msg) => {
+  page.on('console', async (msg) => {
     logs.push(msg.text());
   });
 }
