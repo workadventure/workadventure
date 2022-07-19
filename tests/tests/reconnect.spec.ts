@@ -26,6 +26,6 @@ test.describe('Connection', () => {
 
     //await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 
-    await page.waitForResponse(response => response.status() === 200, { timeout: 90000 });
+    await page.waitForResponse(response => response.status() === 200, { timeout: 120_000 });
   });
 });

@@ -7,7 +7,7 @@ test.describe('Chat', () => {
   test('should connect to ejabberd and show list of users', async ({ page }) => {
     startRecordLogs(page);
     await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/starter/map.json'
+      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
     await login(page, 'Alice', 2);
@@ -22,7 +22,7 @@ test.describe('Chat', () => {
     const page2 = await browser.newPage();
 
     await page2.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/starter/map.json'
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
     await login(page2, 'Chapelier', 3);

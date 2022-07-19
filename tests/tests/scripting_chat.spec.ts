@@ -11,15 +11,19 @@ test.describe('Scripting chat functions', () => {
 
         await login(page);
 
+        await page.waitForTimeout(1000);
+
         await expect(await outViewport("#chatWindow", page)).toBeFalsy();
 
         await evaluateScript(page, async () => {
+            // @ts-ignore
             return WA.chat.open();
         });
 
         await expect(await inViewport("#chatWindow", page)).toBeTruthy();
 
         await evaluateScript(page, async () => {
+            // @ts-ignore
             return WA.chat.close();
         });
 
