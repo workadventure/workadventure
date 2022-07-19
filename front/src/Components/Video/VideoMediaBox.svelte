@@ -68,7 +68,7 @@
   <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
   <video
     class:no-video={!$constraintStore || $constraintStore.video === false}
-    class="tw-w-full"
+    class="tw-h-full"
     use:srcObject={$streamStore}
     autoplay
     playsinline
@@ -78,17 +78,21 @@
 <div class="nametag-container tw-flex tw-flex-col tw-absolute tw-justify-end
 tw-w-32 sm:tw-w-40 md:tw-w-20 lg:tw-w-24 xl:tw-w-36 2xl:tw-w-48
 tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
-
-">
+"
+     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+>
   <i class="tw-flex">
-    <span style="background-color: {backGroundColor}; color: {textColor};" class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 tw-py-1 tw-font-semibold tw-text-base tw-not-italic">{name}</span>
+    <span style="background-color: {backGroundColor}; color: {textColor};"
+          class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 tw-py-1 tw-font-semibold tw-text-base tw-not-italic">{name}</span>
   </i>
 </div>
 <div class="woka-container tw-flex tw-flex-col tw-absolute tw-justify-end
 tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48 tw-pb-2
-">
+"
+     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+>
   <div class="tw-flex{($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
-    <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px"/>
+    <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
   </div>
 </div>
 

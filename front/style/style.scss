@@ -37,6 +37,15 @@ body .message-info.warning {
     background: #ffa500d6;
 }
 
+.media-container {
+    &.hightlighted {
+        @apply tw-pointer-events-auto;
+        div>.nametag-container, div>.woka-container{
+            @apply tw-h-[32vw] tw-w-[57vw];
+        }
+    }
+}
+
 .video-container {
     display: flex;
     transition: all 0.2s ease;

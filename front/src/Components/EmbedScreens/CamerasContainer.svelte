@@ -18,7 +18,9 @@
 
 <style lang="scss">
     .cameras-container {
-        flex: 0 0 25%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
         overflow-y: auto;
         overflow-x: hidden;
         pointer-events: auto;

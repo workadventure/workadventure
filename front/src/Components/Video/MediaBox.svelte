@@ -15,8 +15,10 @@
 </script>
 
 <div
-    class="media-container {isHightlighted ? 'hightlighted' : ''}
-    tw-flex tw-h-32 tw-w-60 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96 tw-m-0 tw-p-0
+    class="media-container {isHightlighted ?
+    'hightlighted tw-h-[32vw] tw-w-[57vw]' :
+    'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+     tw-m-0 tw-p-0
 "
     class:clickable={isClickable}
     class:mozaic-solo={mozaicSolo}
@@ -38,10 +40,6 @@
     @import "../../../style/breakpoints.scss";
 
     .media-container {
-        margin-top: 4%;
-        margin-bottom: 4%;
-        margin-left: auto;
-        margin-right: auto;
         transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
             max-width 0.2s;
         pointer-events: auto;
@@ -54,17 +52,18 @@
         }
 
         &.hightlighted {
-            margin-top: 0% !important;
-            margin-bottom: 0% !important;
-            margin-left: 0% !important;
-
-            max-height: 100% !important;
-            max-width: 96% !important;
-
-            &:hover {
-                margin-top: 0% !important;
-                margin-bottom: 0% !important;
-            }
+            //@apply tw-h-[26vh] tw-w-[46vh];
+            //margin-top: 0% !important;
+            //margin-bottom: 0% !important;
+            //margin-left: 0% !important;
+            //
+            //max-height: 100% !important;
+            //max-width: 96% !important;
+            //
+            //&:hover {
+            //    margin-top: 0% !important;
+            //    margin-bottom: 0% !important;
+            //}
         }
 
         &.mozaic-solo {
@@ -112,13 +111,6 @@
             background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             width: 100%;
-        }
-    }
-
-    @include media-breakpoint-only(md) {
-        .media-container {
-            margin-top: 10%;
-            margin-bottom: 10%;
         }
     }
 </style>
