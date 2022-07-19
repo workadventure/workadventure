@@ -1,8 +1,6 @@
 import type { Translation } from "../i18n-types";
 
 const fr_FR: Translation = {
-  // TODO: your translations go here
-  HI: "Hallo {name}! Bitte hinterlasse einen Stern, wenn dir das Projekt gefällt: https://github.com/ivanhofer/typesafe-i18n",
   users: "Utilisateurs",
   userList: {
     disconnected: "Non connecté",
@@ -16,7 +14,6 @@ const fr_FR: Translation = {
   reconnecting: "Connexion au serveur ...",
   waitingData: "En attentes des informations de l'utilisateur ...",
   search: "Rechercher un utilisateur, un message, un canal ...",
-  CONNECTING: "test",
   invite: "Inviter",
   roomEmpty: "Cette salle est vide, invitez un collègue ou un ami à vous rejoindre !"
 };
