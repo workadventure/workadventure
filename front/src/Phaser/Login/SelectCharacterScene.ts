@@ -22,7 +22,7 @@ import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
-import { myCameraVisibilityStore } from "../../Stores/MyCameraStoreVisibility";
+import { myCameraStore } from "../../Stores/MyCameraStoreVisibility";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -139,7 +139,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.selectedWoka = null;
-        myCameraVisibilityStore.set(false);
+        myCameraStore.set(false);
         this.scene.sleep(SelectCharacterSceneName);
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
