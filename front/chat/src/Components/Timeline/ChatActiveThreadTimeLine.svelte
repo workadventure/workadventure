@@ -62,9 +62,9 @@
     function handlerKeyUp(keyUpEvent: KeyboardEvent){
 
         if(
-            keyShiftPressed === false 
+            keyShiftPressed === false
             && (
-                keyUpEvent.key === "Enter" 
+                keyUpEvent.key === "Enter"
                 || keyUpEvent.code === "Enter"
             )
         ){
@@ -90,15 +90,15 @@
 
 <!-- thread -->
 <div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
-	
-    <div class="messageHeader tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1">
-		<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2">
+
+    <div class="messageHeader tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-border-t-0">
+		<div class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0" >
 			<button class="tw-text-light-purple tw-m-0" on:click={backToThreadList}>
 				<ArrowLeftIcon />
 			</button>
 		</div>
 		<div class="tw-text-center">
-			<div class="tw-flex">
+			<div class="tw-flex tw-justify-center">
 				<b>{$LL.timeLine.title()}</b>
 				<!-- Have a event when user is in spountanéous discussion -->
                 {#if $chatPeerConexionInprogress}
@@ -110,7 +110,7 @@
 			</div>
             <div class="tw-text-xs tw-text-lighter-purple tw-mt-0">{$LL.timeLine.description()}</div>
 		</div>
-		<div class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2" on:click={() => settingsView = !settingsView}>
+		<div class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0" on:click={() => settingsView = !settingsView}>
 			<button class="tw-text-light-purple tw-m-0">
 				{#if settingsView}
 					<MessageCircleIcon />
@@ -125,7 +125,7 @@
 		<div transition:fly={{ y: -100, duration: 100 }} class="settingsHeader tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full">
 			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5">
                 <button class="wa-action" type="button" on:click|stopPropagation={reInitialize}>
-                    <RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()} 
+                    <RefreshCwIcon size="13" class="tw-mr-2" /> {$LL.reinit()}
                 </button>
 			</div>
 			<div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
@@ -134,11 +134,11 @@
 			</div>
 		</div>
 	{:else}
-	
+
         <!-- MESSAGE LIST-->
         <div id="timeLine-messageList" class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto">
             {#each $chatMessagesStore as message}
-                
+
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                     {#if showDate(message.date)}
                         <div class="wa-separator">{message.date.toLocaleDateString($locale, { year: 'numeric', month: 'short', day: 'numeric' })}</div>
@@ -147,7 +147,7 @@
                         <div class={`tw-flex ${message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"}`}>
                             <div class={`${message.type === ChatMessageTypes.me || !message.author ? 'tw-opacity-0':'tw-mt-4'} tw-relative wa-avatar-mini tw-mr-2`} style={`background-color: ${message.author?.color}`}>
                                 <div class="wa-container">
-                                    <img class="tw-w-full" src={`${message.author?.wokaSrc ? message.author?.wokaSrc : '/static/images/logo-wa-2.png'}`} 
+                                    <img class="tw-w-full" src={`${message.author?.wokaSrc ? message.author?.wokaSrc : '/static/images/logo-wa-2.png'}`}
                                     alt="Avatar" loading="lazy"/>
                                 </div>
                             </div>
@@ -236,7 +236,7 @@
         z-index: 2;
     }
     .settingsHeader{
-        padding-top: 44px;
+        padding-top: 58px;
     }
     .messageList{
         display: flex;

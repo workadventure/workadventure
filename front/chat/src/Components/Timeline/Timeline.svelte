@@ -47,13 +47,6 @@
                     </h1>
                     <div class="tw-text-xs tw-text-lighter-purple tw-mt-0">{$LL.timeLine.open()}</div>
                 </div>
-            
-                <div class="wa-dropdown">
-                    <!-- toggle -->
-                    <button class="tw-text-light-purple tw-m-0" on:click|stopPropagation={open}>
-                        <MoreHorizontalIcon />
-                    </button>
-                </div>
             </div>
 
         </div>

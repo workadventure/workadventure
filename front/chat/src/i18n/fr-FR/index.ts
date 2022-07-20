@@ -31,8 +31,8 @@ const fr_FR: Translation = {
   enterText: "Écrire un message ...",
   timeLine: {
     title: 'Votre historique',
-    open: 'Ouvrir votre historique de converçation !',
-    description: 'Historique de vos converçations sur WorkAdventure!',
+    open: 'Ouvrir votre historique de conversation !',
+    description: 'Historique de vos conversations sur WorkAdventure!',
     incoming: ' a rejoint la conversation',
     outcoming: ' a quitté la conversation'
   },
