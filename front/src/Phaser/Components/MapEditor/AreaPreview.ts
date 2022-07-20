@@ -1,3 +1,4 @@
+import { mapEditorSelectedAreaPreviewStore } from "../../../Stores/MapEditorStore";
 import { ITiledMapRectangleObject } from "../../Game/GameMap";
 
 export enum AreaPreviewEvent {
@@ -44,6 +45,8 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         if (sendUpdate) {
             this.emit(AreaPreviewEvent.Updated, this.config);
         }
+        // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
+        mapEditorSelectedAreaPreviewStore.set(this);
     }
 
     private createPreview(config: ITiledMapRectangleObject): Phaser.GameObjects.Rectangle {

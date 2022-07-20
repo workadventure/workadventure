@@ -14,9 +14,11 @@
     const gameScene = gameManager.getCurrentGameScene();
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
+        console.log("AREA PREVIEW STORE UPDATE");
         areaPreview = preview;
         if (preview) {
             areaData = { ...preview.getConfig() };
+            // areaData = preview.getConfig();
         }
     });
 
