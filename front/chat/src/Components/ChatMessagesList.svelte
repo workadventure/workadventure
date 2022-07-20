@@ -108,8 +108,8 @@
       </div>
     </div>
   {/each}
-  {#each [...$usersStore].filter(([, user]) => user.chatState === ChatStates.COMPOSING) as [ user]}
-    <div class={`tw-mt-2`}>
+  {#each [...$usersStore].filter(([, userFilter]) => userFilter.chatState === ChatStates.COMPOSING) as [nb, user]}
+    <div class={`tw-mt-2`} id={`user-line-${nb}`}>
       <div class={`tw-flex tw-justify-start`}>
         <div
           class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
