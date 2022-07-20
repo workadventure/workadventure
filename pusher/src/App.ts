@@ -7,10 +7,10 @@ import { DebugController } from "./Controller/DebugController";
 import { AdminController } from "./Controller/AdminController";
 import { OpenIdProfileController } from "./Controller/OpenIdProfileController";
 import { WokaListController } from "./Controller/WokaListController";
-//import { SwaggerController } from "./Controller/SwaggerController";
+import { SwaggerController } from "./Controller/SwaggerController";
 import HyperExpress from "hyper-express";
 import { cors } from "./Middleware/Cors";
-//import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
+import { ENABLE_OPENAPI_ENDPOINT } from "./Enum/EnvironmentVariable";
 import { PingController } from "./Controller/PingController";
 import { IoSocketChatController } from "./Controller/IoSocketChatController";
 
@@ -37,9 +37,9 @@ class App {
         new OpenIdProfileController(webserver);
         new WokaListController(webserver);
         new PingController(webserver);
-        //if (ENABLE_OPENAPI_ENDPOINT) {
-        //new SwaggerController(webserver);
-        //}
+        if (ENABLE_OPENAPI_ENDPOINT) {
+            new SwaggerController(webserver);
+        }
     }
 }
 
