@@ -307,7 +307,7 @@ class LocalUserStore {
                 if (key.startsWith(userProperties + "_")) {
                     const value = localStorage.getItem(key);
                     if (value) {
-                        const userKey = key.substr((userProperties + "_").length);
+                        const userKey = key.substring((userProperties + "_").length);
                         result.set(userKey, JSON.parse(value));
                     }
                 }

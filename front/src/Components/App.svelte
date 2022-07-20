@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LinkTag, MetaTags } from "svelte-meta-tags";
     import type { Game } from "../Phaser/Game/Game";
     import { chatVisibilityStore } from "../Stores/ChatStore";
     import { errorStore } from "../Stores/ErrorStore";
@@ -16,9 +17,57 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { gameManager } from "../Phaser/Game/GameManager";
 
     export let game: Game;
+
+    const startedRoom = gameManager?.currentStartedRoom;
+
+    const organization = startedRoom?.organization ?? "";
+    const windowTitle =
+        (startedRoom?.name ? `${startedRoom.name} | ${organization}` : organization) + startedRoom?.showPoweredBy ===
+            undefined || startedRoom.showPoweredBy === true
+            ? "WorkAdventure"
+            : "";
+    const windowDescription = startedRoom?.description ?? "Work, Meet & Learn. Your workplace. Better.";
+    const favicons = startedRoom?.favicons ?? [];
+    const ogImageUrl = startedRoom?.ogImageUrl ?? "https://workadventu.re/images/general/logo-og.png";
+
+    const additionalLinkTags: LinkTag[] = [];
+
+    favicons.forEach((favicon) => {
+        additionalLinkTags.push({
+            rel: favicon.rel,
+            href: favicon.href,
+            sizes: favicon.sizes,
+        });
+    });
 </script>
+
+<MetaTags
+    title={windowTitle}
+    description={windowDescription}
+    openGraph={{
+        url: window.location.href,
+        title: windowTitle,
+        type: "website",
+        description: windowDescription,
+        images: [
+            {
+                url: ogImageUrl,
+                alt: windowTitle,
+            },
+        ],
+    }}
+    twitter={{
+        cardType: "summary_large_image",
+        title: windowTitle,
+        description: windowDescription,
+        image: ogImageUrl,
+        imageAlt: windowTitle,
+    }}
+    additionalLinkTags={[...additionalLinkTags]}
+/>
 
 {#if $errorScreenStore !== undefined}
     <div>

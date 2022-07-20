@@ -13,29 +13,39 @@ export interface RoomRedirect {
     redirectUrl: string;
 }
 
+export type Favicon = {
+    rel: string;
+    href: string;
+    sizes?: string;
+};
+
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
     private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
-    private _mapUrl: string | undefined;
+    private _mapUrl?: string;
     private readonly _search: URLSearchParams;
-    private _contactPage: string | undefined;
+    private _contactPage?: string;
     private _group: string | null = null;
-    private _expireOn: Date | undefined;
+    private _expireOn?: Date;
     private _canReport = false;
-    private _miniLogo: string | undefined;
-    private _loadingCowebsiteLogo: string | undefined;
-    private _loadingLogo: string | undefined;
-    private _loginSceneLogo: string | undefined;
-    //eslint-disable-next-line @typescript-eslint/ban-types
-    private _mucRooms: Array<Object> | undefined;
-    private _showPoweredBy: boolean | undefined = true;
+    private _miniLogo?: string;
+    private _loadingCowebsiteLogo?: string;
+    private _loadingLogo?: string;
+    private _loginSceneLogo?: string;
+    private _showPoweredBy?: boolean = true;
+    private _mucRooms?: Array<Object>;
+    private _name?: string;
+    private _organization?: string;
+    private _description?: string;
+    private _favicons?: Favicon[];
+    private _ogImageUrl?: string;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
 
         if (this.id.startsWith("/")) {
-            this.id = this.id.substr(1);
+            this.id = this.id.substring(1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -122,6 +132,7 @@ export class Room {
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
+
                 this._canReport = data.canReport ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
@@ -130,6 +141,12 @@ export class Room {
                 this._showPoweredBy = data.showPoweredBy ?? true;
 
                 this._mucRooms = data.mucRooms ?? undefined;
+
+                this._name = data.name ?? undefined;
+                this._organization = data.organization;
+                this._description = data.description;
+                this._favicons = data.favicons;
+                this._ogImageUrl = data.ogImageUrl;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -240,5 +257,25 @@ export class Room {
 
     get showPoweredBy(): boolean | undefined {
         return this._showPoweredBy;
+    }
+
+    get name(): string | undefined {
+        return this._name;
+    }
+
+    get organization(): string | undefined {
+        return this._organization;
+    }
+
+    get description(): string | undefined {
+        return this._description;
+    }
+
+    get favicons(): Favicon[] | [] {
+        return this._favicons ?? [];
+    }
+
+    get ogImageUrl(): string | undefined {
+        return this._ogImageUrl;
     }
 }

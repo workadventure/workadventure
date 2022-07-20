@@ -396,7 +396,7 @@ export class GameScene extends DirtyScene {
             console.warn("Your map file seems to be invalid. Errors: ", parseResult.error);
         }*/
 
-        const url = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
+        const url = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset) => {
             if (typeof tileset.name === "undefined" || typeof tileset.image === "undefined") {
                 console.warn("Don't know how to handle tileset ", tileset);
@@ -509,7 +509,7 @@ export class GameScene extends DirtyScene {
         this.companion = gameManager.getCompanion();
 
         this.Map = this.add.tilemap(this.MapUrlFile);
-        const mapDirUrl = this.MapUrlFile.substr(0, this.MapUrlFile.lastIndexOf("/"));
+        const mapDirUrl = this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
         this.mapFile.tilesets.forEach((tileset: ITiledMapTileset) => {
             this.Terrains.push(
                 this.Map.addTilesetImage(
@@ -1509,7 +1509,7 @@ ${escapedMessage}
         );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
             return this.connectionAnswerPromiseDeferred.promise.then(() => {
-                const jsonTilesetDir = eventTileset.url.substr(0, eventTileset.url.lastIndexOf("/"));
+                const jsonTilesetDir = eventTileset.url.substring(0, eventTileset.url.lastIndexOf("/"));
                 //Initialise the firstgid to 1 because if there is no tileset in the tilemap, the firstgid will be 1
                 let newFirstgid = 1;
                 const lastTileset = this.mapFile.tilesets[this.mapFile.tilesets.length - 1];
