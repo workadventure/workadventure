@@ -131,7 +131,7 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
+<div id="chatWindow" class:show={$chatVisibilityStore}>
     {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
     <iframe
         id="chatWorkAdventure"
@@ -323,12 +323,12 @@
             padding: 0 7px 2px 6px;
             min-height: fit-content;
             position: absolute;
-            right: -20px;
+            right: -21px;
             z-index: -1;
             font-size: 20px;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
-            background: #181824;
+            background: rgba(27, 27, 41, 0.95);
         }
     }
 </style>

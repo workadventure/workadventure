@@ -170,7 +170,7 @@
 <style lang="scss">
     aside.chatWindow {
         pointer-events: auto;
-        background: rgba(#1b1b29, 0.9);
+        background: rgba(27, 27, 41, 0.79);
         color: whitesmoke;
         display: flex;
         flex-direction: column;
