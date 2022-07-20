@@ -14,9 +14,9 @@
     import {activeThreadStore} from "../Stores/ActiveThreadStore";
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
-    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeLine.svelte";
+    import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
-    import {timeLineOpenedStore} from "../Stores/ChatStore";
+    import {timelineOpenedStore} from "../Stores/ChatStore";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -134,7 +134,7 @@
                                     class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                                     placeholder={$LL.search()}
                                     bind:value={searchValue}
-                                    on:input={() => timeLineOpenedStore.set(false)}
+                                    on:input={() => timelineOpenedStore.set(false)}
                             />
                         </div>
                     </div>

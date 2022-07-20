@@ -3,7 +3,12 @@
     import {ChevronUpIcon} from "svelte-feather-icons";
     import {createEventDispatcher} from "svelte";
     import LL from "../../i18n/i18n-svelte";
-    import { chatPeerConexionInprogress, timeLineOpenedStore } from "../../Stores/ChatStore";
+    import {
+        chatMessagesStore,
+        chatPeerConnectionInProgress,
+        lastTimelineMessageRead,
+        timelineOpenedStore
+    } from "../../Stores/ChatStore";
 
     const dispatch = createEventDispatcher();
 
@@ -11,27 +16,35 @@
         dispatch("activeThreadTimeLine");
     }
     function showTimeLine(){
-        timeLineOpenedStore.set(!$timeLineOpenedStore);
+        timelineOpenedStore.set(!$timelineOpenedStore);
     }
+
+    $: unreadMessages = $chatMessagesStore.filter(message => message.date > $lastTimelineMessageRead).length;
 </script>
 
 <div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center" on:click={showTimeLine}>
+        {#if unreadMessages}
+        <span
+                class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+        >
+            {unreadMessages}
+        </span>
+        {/if}
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">{$LL.timeLine.title()}</p>
         <button class="tw-text-lighter-purple" on:click|stopPropagation={showTimeLine}>
-            <ChevronUpIcon class={`tw-transform tw-transition ${$timeLineOpenedStore ? '' : 'tw-rotate-180'}`} />
+            <ChevronUpIcon class={`tw-transform tw-transition ${$timelineOpenedStore ? '' : 'tw-rotate-180'}`} />
         </button>
     </div>
 
-    {#if $timeLineOpenedStore}
+    {#if $timelineOpenedStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
-
             <div class="wa-chat-item">
                 <div class="tw-relative" on:click|stopPropagation={open}>
                     <img src="/static/images/logo-wa-2.png" alt="Send" width="35" />
 
                     <!-- use chat store and get new notification -->
-                    {#if $chatPeerConexionInprogress}
+                    {#if $chatPeerConnectionInProgress}
                         <div class="tw-block tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1">
                             <div class="tw-block tw-relative">
                                 <span class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"></span>
@@ -47,6 +60,13 @@
                     </h1>
                     <div class="tw-text-xs tw-text-lighter-purple tw-mt-0">{$LL.timeLine.open()}</div>
                 </div>
+                {#if unreadMessages}
+                    <span
+                            class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+                    >
+                        {unreadMessages}
+                    </span>
+                {/if}
             </div>
 
         </div>

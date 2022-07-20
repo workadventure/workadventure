@@ -2,7 +2,7 @@ import {isLookingLikeIframeEventWrapper, isIframeEventWrapper} from "./Event/Ifr
 import {userStore} from "./Stores/LocalUserStore";
 import {ChatConnection} from "./Connection/ChatConnection";
 import {connectionStore} from "./Stores/ConnectionStore";
-import {chatMessagesStore, ChatMessageTypes, chatPeerConexionInprogress, newChatMessageSubject, newChatMessageWritingStatusSubject, playersStore, timeLineOpenedStore, writingStatusMessageStore} from "./Stores/ChatStore"
+import {chatMessagesStore, ChatMessageTypes, chatPeerConnectionInProgress, newChatMessageSubject, newChatMessageWritingStatusSubject, playersStore, timelineOpenedStore, writingStatusMessageStore} from "./Stores/ChatStore"
 import {setCurrentLocale} from "./i18n/locales";
 import {Locales} from "./i18n/i18n-types";
 import {get} from "svelte/store";
@@ -74,9 +74,9 @@ class IframeListener {
                                 break;
                             }
                             case "peerConexionStatus": {
-                                chatPeerConexionInprogress.set(iframeEvent.data);
+                                chatPeerConnectionInProgress.set(iframeEvent.data);
                                 if(iframeEvent.data){
-                                    timeLineOpenedStore.set(true);
+                                    timelineOpenedStore.set(true);
                                 }
                                 break;
                             }

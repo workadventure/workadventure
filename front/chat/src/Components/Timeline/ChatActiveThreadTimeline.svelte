@@ -2,8 +2,16 @@
     import { fly } from "svelte/transition";
     import { SettingsIcon, ArrowLeftIcon, MessageCircleIcon, RefreshCwIcon } from "svelte-feather-icons";
     import { SendIcon } from "svelte-feather-icons";
-    import { chatMessagesStore, chatInputFocusStore, ChatMessageTypes, chatPeerConexionInprogress, writingStatusMessageStore, _newChatMessageWritingStatusSubject } from "../../Stores/ChatStore";
-    import {createEventDispatcher} from "svelte";
+    import {
+        chatMessagesStore,
+        chatInputFocusStore,
+        ChatMessageTypes,
+        chatPeerConnectionInProgress,
+        writingStatusMessageStore,
+        _newChatMessageWritingStatusSubject,
+        lastTimelineMessageRead
+    } from "../../Stores/ChatStore";
+    import {createEventDispatcher, onDestroy, onMount} from "svelte";
     import LL, {locale} from "../../i18n/i18n-svelte";
     import { activeThreadStore } from "../../Stores/ActiveThreadStore";
 
@@ -77,15 +85,28 @@
         }
     }
 
-    chatMessagesStore.subscribe(() => {
-        const element = document.getElementById('timeLine-messageList');
-        if(!element){
-            return;
-        }
-        setTimeout(() => {
-            window.scroll(0, element.scrollHeight);
-        }, 500);
+
+    let messagesList: HTMLElement;
+    let subscribers = [];
+
+    onMount(() => {
+        messagesList.addEventListener('scroll', () => {
+            console.log('scrolled to end 2');
+            if(messagesList && messagesList.scrollTop === (messagesList.scrollHeight - messagesList.offsetHeight)){
+                lastTimelineMessageRead.set(new Date());
+			}
+        });
+        subscribers.push(chatMessagesStore.subscribe(() => {
+            setTimeout(() => {
+                window.scroll(0, messagesList.scrollHeight);
+                lastTimelineMessageRead.set(new Date());
+            }, 500);
+        }));
     });
+
+    onDestroy(() => {
+        subscribers.map(subscriber => subscriber());
+	});
 </script>
 
 <!-- thread -->
@@ -101,7 +122,7 @@
 			<div class="tw-flex tw-justify-center">
 				<b>{$LL.timeLine.title()}</b>
 				<!-- Have a event when user is in spountanéous discussion -->
-                {#if $chatPeerConexionInprogress}
+                {#if $chatPeerConnectionInProgress}
                     <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
                         <span class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"></span>
                         <span class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"></span>
@@ -136,9 +157,8 @@
 	{:else}
 
         <!-- MESSAGE LIST-->
-        <div id="timeLine-messageList" class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto">
+        <div id="timeLine-messageList" class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto" bind:this={messagesList}>
             {#each $chatMessagesStore as message}
-
                 {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
                     {#if showDate(message.date)}
                         <div class="wa-separator">{message.date.toLocaleDateString($locale, { year: 'numeric', month: 'short', day: 'numeric' })}</div>

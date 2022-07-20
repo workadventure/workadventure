@@ -98,7 +98,7 @@ function createChatMessagesStore() {
             _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
-                if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text) {
+                if (lastMessage && lastMessage.type === ChatMessageTypes.me && lastMessage.text && (((((new Date()).getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000) < 2) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
@@ -122,7 +122,8 @@ function createChatMessagesStore() {
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.text &&
                     lastMessage.text &&
-                    lastMessage?.author?.userId === authorId
+                    lastMessage?.author?.userId === authorId &&
+                    (((((new Date()).getTime() - lastMessage.date.getTime()) % 86400000) % 3600000) / 60000) < 2
                 ) {
                     lastMessage.text.push(text);
                 } else {
@@ -161,10 +162,13 @@ function createChatSubMenuVisibilityStore() {
     };
 }
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
-export const timeLineOpenedStore = writable<boolean>(false);
+
+export const timelineOpenedStore = writable<boolean>(false);
+
+export const lastTimelineMessageRead = writable<Date>(new Date());
 
 export const writingStatusMessageStore = writable<Set<PlayerInterface>>(new Set<PlayerInterface>())
 
 export const chatInputFocusStore = writable(false);
 
-export const chatPeerConexionInprogress = writable<boolean>(false);
+export const chatPeerConnectionInProgress = writable<boolean>(false);
