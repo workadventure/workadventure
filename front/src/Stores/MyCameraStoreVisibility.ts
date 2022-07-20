@@ -19,3 +19,5 @@ export const myCameraStore = writable(false);
  */
 
 export const myMicrophoneStore = writable(false);
+
+export const inExternalServiceStore = writable(false);

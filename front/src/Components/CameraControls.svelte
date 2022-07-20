@@ -47,7 +47,7 @@
     import { ADMIN_URL } from "../Enum/EnvironmentVariable";
     import { limitMapStore } from "../Stores/GameStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-    import { myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
+    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
 
     const gameScene = gameManager.getCurrentGameScene();
     let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
@@ -339,48 +339,60 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if myCameraStore}
-                    <div
-                        class="bottom-action-button"
-                        on:click={() => analyticsClient.camera()}
-                        on:click={cameraClick}
-                        class:disabled={!$requestedCameraState || $silentStore}
-                    >
-                        <button class:border-top-light={$requestedCameraState}>
-                            {#if $requestedCameraState && !$silentStore}
-                                <img draggable="false" src={cameraImg} style="padding: 2px;" alt="Turn off webcam" />
-                            {:else}
-                                <img draggable="false" src={cameraOffImg} style="padding: 2px;" alt="Turn on webcam" />
-                            {/if}
-                        </button>
-                    </div>
-                {/if}
+                {#if !inExternalServiceStore}
+                    {#if myCameraStore}
+                        <div
+                            class="bottom-action-button"
+                            on:click={() => analyticsClient.camera()}
+                            on:click={cameraClick}
+                            class:disabled={!$requestedCameraState || $silentStore}
+                        >
+                            <button class:border-top-light={$requestedCameraState}>
+                                {#if $requestedCameraState && !$silentStore}
+                                    <img
+                                        draggable="false"
+                                        src={cameraImg}
+                                        style="padding: 2px;"
+                                        alt="Turn off webcam"
+                                    />
+                                {:else}
+                                    <img
+                                        draggable="false"
+                                        src={cameraOffImg}
+                                        style="padding: 2px;"
+                                        alt="Turn on webcam"
+                                    />
+                                {/if}
+                            </button>
+                        </div>
+                    {/if}
 
-                {#if $myMicrophoneStore}
-                    <div
-                        class="bottom-action-button"
-                        on:click={() => analyticsClient.microphone()}
-                        on:click={microphoneClick}
-                        class:disabled={!$requestedMicrophoneState || $silentStore}
-                    >
-                        <button class:border-top-light={$requestedMicrophoneState}>
-                            {#if $requestedMicrophoneState && !$silentStore}
-                                <img
-                                    draggable="false"
-                                    src={microphoneImg}
-                                    style="padding: 2px;"
-                                    alt="Turn off microphone"
-                                />
-                            {:else}
-                                <img
-                                    draggable="false"
-                                    src={microphoneOffImg}
-                                    style="padding: 2px;"
-                                    alt="Turn on microphone"
-                                />
-                            {/if}
-                        </button>
-                    </div>
+                    {#if $myMicrophoneStore}
+                        <div
+                            class="bottom-action-button"
+                            on:click={() => analyticsClient.microphone()}
+                            on:click={microphoneClick}
+                            class:disabled={!$requestedMicrophoneState || $silentStore}
+                        >
+                            <button class:border-top-light={$requestedMicrophoneState}>
+                                {#if $requestedMicrophoneState && !$silentStore}
+                                    <img
+                                        draggable="false"
+                                        src={microphoneImg}
+                                        style="padding: 2px;"
+                                        alt="Turn off microphone"
+                                    />
+                                {:else}
+                                    <img
+                                        draggable="false"
+                                        src={microphoneOffImg}
+                                        style="padding: 2px;"
+                                        alt="Turn on microphone"
+                                    />
+                                {/if}
+                            </button>
+                        </div>
+                    {/if}
                 {/if}
 
                 <div on:click={() => analyticsClient.openedChat()} on:click={toggleChat} class="bottom-action-button">
