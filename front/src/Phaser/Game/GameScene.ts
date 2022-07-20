@@ -99,7 +99,12 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
+import {
+    availabilityStatusStore,
+    localVolumeStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
@@ -1204,6 +1209,42 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.turnOffMicrophoneStream.subscribe(() => {
+                requestedMicrophoneState.disableMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.turnOffWebcamStream.subscribe(() => {
+                requestedCameraState.disableWebcam();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableMicrophoneStream.subscribe(() => {
+                mediaManager.disableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreMicrophoneStream.subscribe(() => {
+                mediaManager.enableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableWebcamStream.subscribe(() => {
+                mediaManager.disableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreMicrophoneStream.subscribe(() => {
+                mediaManager.enableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
                 this.userInputManager.disableControls();
             })
@@ -1217,15 +1258,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(true);
-                this.disableMediaBehaviors();
+                mediaManager.disableProximityMeeting();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(false);
-                this.enableMediaBehaviors();
+                mediaManager.enableProximityMeeting();
             })
         );
 
@@ -1749,7 +1788,7 @@ ${escapedMessage}
 
     public cleanupClosingScene(): void {
         // make sure we restart CameraControls
-        this.disableMediaBehaviors();
+        mediaManager.disableProximityMeeting();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
         // Stop the script, if any
@@ -2365,16 +2404,6 @@ ${escapedMessage}
             biggestAvailableAreaStore.recompute();
             this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
         });
-    }
-
-    public enableMediaBehaviors() {
-        if (!get(denyProximityMeetingStore)) {
-            mediaManager.showMyCamera();
-        }
-    }
-
-    public disableMediaBehaviors() {
-        mediaManager.hideMyCamera();
     }
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {

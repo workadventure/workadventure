@@ -7,7 +7,7 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
+import { myCameraStore, myMicrophoneStore, proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -81,12 +81,28 @@ export class MediaManager {
             });
     }
 
-    public showMyCamera(): void {
-        myCameraVisibilityStore.set(true);
+    public enableMyCamera(): void {
+        myCameraStore.set(true);
     }
 
-    public hideMyCamera(): void {
-        myCameraVisibilityStore.set(false);
+    public disableMyCamera(): void {
+        myCameraStore.set(false);
+    }
+
+    public enableMyMicrophone(): void {
+        myMicrophoneStore.set(true);
+    }
+
+    public disableMyMicrophone(): void {
+        myMicrophoneStore.set(false);
+    }
+
+    public enableProximityMeeting(): void {
+        proximityMeetingStore.set(true);
+    }
+
+    public disableProximityMeeting(): void {
+        proximityMeetingStore.set(false);
     }
 
     private getScreenSharingId(userId: string): string {
