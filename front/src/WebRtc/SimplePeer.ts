@@ -101,7 +101,8 @@ export class SimplePeer {
             )
         );
 
-        mediaManager.showMyCamera();
+        mediaManager.enableMyCamera();
+        mediaManager.enableMyMicrophone();
 
         //receive message start
         this.rxJsUnsubscribers.push(
