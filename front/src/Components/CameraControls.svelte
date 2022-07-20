@@ -48,8 +48,6 @@
     import { limitMapStore } from "../Stores/GameStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
-
-    const gameScene = gameManager.getCurrentGameScene();
     let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     function screenSharingClick(): void {
@@ -90,21 +88,21 @@
     function followClick() {
         switch ($followStateStore) {
             case "off":
-                gameScene.connection?.emitFollowRequest();
+                gameManager.getCurrentGameScene().connection?.emitFollowRequest();
                 followRoleStore.set("leader");
                 followStateStore.set("active");
                 break;
             case "requesting":
             case "active":
             case "ending":
-                gameScene.connection?.emitFollowAbort();
+                gameManager.getCurrentGameScene().connection?.emitFollowAbort();
                 followUsersStore.stopFollowing();
                 break;
         }
     }
 
     function lockClick() {
-        gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
+        gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
 
     function toggleChat() {
@@ -339,8 +337,8 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !inExternalServiceStore}
-                    {#if myCameraStore}
+                {#if !$inExternalServiceStore}
+                    {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
                             on:click={() => analyticsClient.camera()}

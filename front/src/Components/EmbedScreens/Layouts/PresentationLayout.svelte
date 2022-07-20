@@ -54,7 +54,7 @@
             <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
         </div>
     {:else}
-        <div id="embed-left-block" class:full={$peerStore.size === 0}>
+        <div id="embed-left-block" class:full={$peerStore && $peerStore.size === 0}>
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}

@@ -150,7 +150,7 @@
             <MyCamera />
         {/if}
 
-        {#if proximityMeetingStore}
+        {#if $proximityMeetingStore}
             <CameraControls />
         {/if}
 
