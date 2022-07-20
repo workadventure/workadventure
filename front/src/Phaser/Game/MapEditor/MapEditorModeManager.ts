@@ -44,6 +44,10 @@ export class MapEditorModeManager {
      * We are making use of CommandPattern to implement an Undo-Redo mechanism
      */
     private commandsHistory: Command[];
+    /**
+     * Which command was called most recently
+     */
+    private currentCommandIndex: number;
 
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
@@ -52,6 +56,7 @@ export class MapEditorModeManager {
         this.scene = scene;
 
         this.commandsHistory = [];
+        this.currentCommandIndex = -1;
 
         this.active = false;
         this.pointerDown = false;
@@ -76,7 +81,30 @@ export class MapEditorModeManager {
                 return;
             }
         }
+        // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+        if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
+            this.commandsHistory.splice(this.currentCommandIndex + 1);
+        }
         this.commandsHistory.push(command);
+        this.currentCommandIndex += 1;
+    }
+
+    public undoCommand(): void {
+        if (this.commandsHistory.length === 0 || this.currentCommandIndex === -1) {
+            return;
+        }
+        this.commandsHistory[this.currentCommandIndex].undo();
+        this.currentCommandIndex -= 1;
+        console.log("undo command");
+    }
+
+    public redoCommand(): void {
+        if (this.commandsHistory.length === 0 || this.currentCommandIndex === this.commandsHistory.length - 1) {
+            return;
+        }
+        console.log("redo command");
+        this.commandsHistory[this.currentCommandIndex + 1].execute();
+        this.currentCommandIndex += 1;
     }
 
     public isActive(): boolean {
@@ -100,6 +128,18 @@ export class MapEditorModeManager {
             }
             case "1": {
                 this.equipTool(EditorToolName.AreaEditor);
+                break;
+            }
+            case "r": {
+                this.redoCommand();
+                console.log(`Commands size: ${this.commandsHistory.length}`);
+                console.log(`INDEX: ${this.currentCommandIndex}`);
+                break;
+            }
+            case "u": {
+                this.undoCommand();
+                console.log(`Commands size: ${this.commandsHistory.length}`);
+                console.log(`INDEX: ${this.currentCommandIndex}`);
                 break;
             }
             default: {

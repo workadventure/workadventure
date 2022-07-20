@@ -15,7 +15,9 @@
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
         areaPreview = preview;
-        areaData = preview?.getConfig();
+        if (preview) {
+            areaData = { ...preview.getConfig() };
+        }
     });
 
     function onKeyDown(e: KeyboardEvent) {
@@ -32,10 +34,10 @@
         if (!areaData || !areaPreview) {
             return;
         }
+        console.log(areaPreview.getConfig().x);
         gameScene
             .getMapEditorModeManager()
             .executeCommand(CommandType.UpdateAreaCommand, { areaPreview, config: areaData });
-        // areaPreview?.updateArea(areaData);
     }
 
     onDestroy(() => {
