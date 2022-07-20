@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fly } from "svelte/animate";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
@@ -304,15 +305,15 @@
         height: 100vh;
         width: 28vw;
         min-width: 250px;
-        transition: all 0.1s ease-in-out;
+        transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;
-        display: none;
+        //display: none;
         &.show {
             left: 0;
             pointer-events: auto;
             visibility: visible;
-            display: block;
+            //display: block;
         }
         iframe {
             width: 100%;
