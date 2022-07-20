@@ -6,7 +6,12 @@ import { BrowserTooOldError } from "./Errors/BrowserTooOldError";
 import { errorStore } from "./ErrorStore";
 import { getNavigatorType, isIOS, NavigatorType } from "../WebRtc/DeviceUtils";
 import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
-import { myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyCameraStoreVisibility";
+import {
+    inExternalServiceStore,
+    myCameraStore,
+    myMicrophoneStore,
+    proximityMeetingStore,
+} from "./MyCameraStoreVisibility";
 import { peerStore } from "./PeerStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
 import { MediaStreamConstraintsError } from "./Errors/MediaStreamConstraintsError";
@@ -263,6 +268,7 @@ export const mediaStreamConstraintsStore = derived(
         requestedMicrophoneState,
         myCameraStore,
         myMicrophoneStore,
+        inExternalServiceStore,
         enableCameraSceneVisibilityStore,
         videoConstraintStore,
         audioConstraintStore,
@@ -276,6 +282,7 @@ export const mediaStreamConstraintsStore = derived(
             $requestedMicrophoneState,
             $myCameraStore,
             $myMicrophoneStore,
+            $inExternalServiceStore,
             $enableCameraSceneVisibilityStore,
             $videoConstraintStore,
             $audioConstraintStore,
@@ -319,6 +326,11 @@ export const mediaStreamConstraintsStore = derived(
 
         // Disable microphone when in a Jitsi
         if ($myMicrophoneStore === false) {
+            currentAudioConstraint = false;
+        }
+
+        if ($inExternalServiceStore === true) {
+            currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
 
