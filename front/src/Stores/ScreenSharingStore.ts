@@ -1,7 +1,7 @@
 import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
-import { myCameraStore, myMicrophoneStore } from "./MyCameraStoreVisibility";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyCameraStoreVisibility";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
 import type {} from "../Api/desktop";
 
@@ -43,8 +43,8 @@ let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, peerStore],
-    ([$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $peerStore], set) => {
+    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, inExternalServiceStore, peerStore],
+    ([$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $inExternalServiceStore, $peerStore], set) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         let currentAudioConstraint: boolean | MediaTrackConstraints = false;
 
@@ -61,6 +61,11 @@ export const screenSharingConstraintsStore = derived(
 
         // Disable screen sharing when in a Jitsi
         if (!$myMicrophoneStore) {
+            currentAudioConstraint = false;
+        }
+
+        if (!$inExternalServiceStore) {
+            currentVideoConstraint = false;
             currentAudioConstraint = false;
         }
 
