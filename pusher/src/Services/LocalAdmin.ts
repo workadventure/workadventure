@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
             //@ts-ignore
-            mucRooms: [{ name: "Default", url: playUri }],
+            mucRooms: [{ name: "Default", url: playUri, type: "default" }],
             activatedInviteUser: true,
         };
     }
@@ -100,6 +100,16 @@ class LocalAdmin implements AdminInterface {
     }
 
     async logoutOauth(token: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

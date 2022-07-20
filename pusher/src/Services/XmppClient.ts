@@ -41,6 +41,7 @@ export class XmppClient {
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
+    private deleteSubscribeOnDisconnect = false;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         const clientJID = jid(clientSocket.jabberId);
@@ -77,7 +78,7 @@ export class XmppClient {
             });
 
             xmpp.on("error", (err: string) => {
-                console.error("XmppClient => receive => error");
+                console.error("XmppClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 rej(err);
             });
@@ -122,12 +123,13 @@ export class XmppClient {
                         console.info("initial muc room", definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
                         //@ts-ignore
-                        if (!definition.name || !definition.url) {
-                            throw new Error("Name and Url cannot be empty!");
+                        if (!definition.name || !definition.url || !definition.type) {
+                            throw new Error("Name URL and type cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
                         //@ts-ignore
                         mucRoomDefinitionMessage.setUrl(definition.url);
+                        mucRoomDefinitionMessage.setType(definition.type);
                         return mucRoomDefinitionMessage;
                     })
                 );
@@ -158,9 +160,21 @@ export class XmppClient {
 
             xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
+                // @ts-ignore
+                const stanzaString = stanza.toString();
+                xmppMessage.setStanza(stanzaString);
 
-                //@ts-ignore
-                xmppMessage.setStanza(stanza.toString());
+                if (
+                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
+                    !stanzaString.includes('type="unavailable"')
+                ) {
+                    this.deleteSubscribeOnDisconnect = true;
+                } else if (
+                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
+                    stanzaString.includes('type="unavailable"')
+                ) {
+                    this.deleteSubscribeOnDisconnect = false;
+                }
 
                 const pusherToIframeMessage = new PusherToIframeMessage();
                 pusherToIframeMessage.setXmppmessage(xmppMessage);
@@ -197,12 +211,18 @@ export class XmppClient {
         console.log("> Disconnecting from xmppClient");
         this.clientPromise
             .then(async (xmpp) => {
-                console.log(">> Disconnecting from xmppClient");
                 //cancel promise
                 this.clientPromise.cancel();
-                //send presence unavailable to notify server
-                await xmpp.send(xml("presence", { type: "unavailable" }));
-                console.log("Send presence unavailable to xmppClient");
+                //send presence unavailable to notify server and other users
+                await xmpp.send(
+                    xml(
+                        "presence",
+                        { type: "unavailable" },
+                        xml("user", {
+                            deleteSubscribeOnDisconnect: this.deleteSubscribeOnDisconnect ? "true" : "false",
+                        })
+                    )
+                );
                 await xmpp.stop();
 
                 return xmpp;
@@ -210,7 +230,7 @@ export class XmppClient {
             .catch((e) => console.error(e));
 
         //cancel promise
-        this.clientPromise.cancel();
+        setTimeout(() => this.clientPromise.cancel(), 0);
     }
 
     async send(stanza: string): Promise<void> {

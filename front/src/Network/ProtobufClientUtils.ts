@@ -5,6 +5,7 @@ import type { PointInterface } from "../Connexion/ConnexionModels";
 export interface MucRoomDefinitionInterface {
     name: string;
     url: string;
+    type: string;
 }
 
 export class ProtobufClientUtils {

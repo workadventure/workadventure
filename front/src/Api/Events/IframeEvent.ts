@@ -41,6 +41,8 @@ import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isAskPositionEvent } from "./AskPositionEvent";
+import { isLeaveMucEvent } from "./LeaveMucEvent";
+import { isJoinMucEvent } from "./JoinMucEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -73,6 +75,15 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("closeChat"),
         data: z.undefined(),
+    }),
+    /* @deprecated with new service chat messagerie */
+    z.object({
+        type: z.literal("addPersonnalMessage"),
+        data: z.string(),
+    }),
+    z.object({
+        type: z.literal("newChatMessageWritingStatus"),
+        data: z.number(),
     }),
     z.object({
         type: z.literal("cameraFollowPlayer"),
@@ -278,6 +289,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("messageTriggered"),
         data: isMessageReferenceEvent,
+    }),
+    z.object({
+        type: z.literal("leaveMuc"),
+        data: isLeaveMucEvent,
+    }),
+    z.object({
+        type: z.literal("joinMuc"),
+        data: isJoinMucEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;

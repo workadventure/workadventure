@@ -105,7 +105,6 @@ import {
     requestedCameraState,
     requestedMicrophoneState,
 } from "../../Stores/MediaStore";
-import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -125,7 +124,11 @@ import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
 import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
+import {
+    chatVisibilityStore,
+    _newChatMessageSubject,
+    _newChatMessageWritingStatusSubject,
+} from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -261,7 +264,6 @@ export class GameScene extends DirtyScene {
     private jitsiParticipantsCount = 0;
     private cleanupDone = false;
     public readonly superLoad: SuperLoaderPlugin;
-    private xmppClient!: XmppClient;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -1245,6 +1247,19 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.addPersonnalMessageStream.subscribe((text) => {
+                iframeListener.sendUserInputChat(text);
+                _newChatMessageSubject.next(text);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
+                _newChatMessageWritingStatusSubject.next(status);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
                 this.userInputManager.disableControls();
             })
@@ -1801,7 +1816,6 @@ ${escapedMessage}
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.xmppClient?.close();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -2431,13 +2445,22 @@ ${escapedMessage}
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
     private bannedUser() {
+        errorScreenStore.setError(
+            ErrorScreenMessage.fromPartial({
+                type: "error",
+                code: "USER_BANNED",
+                title: "BANNED",
+                subtitle: "You were banned from WorkAdventure",
+                details: "If you want more information, you may contact us at: hello@workadventu.re",
+            })
+        );
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
-        this.scene.start(ErrorSceneName, {
+        /*this.scene.start(ErrorSceneName, {
             title: "Banned",
             subTitle: "You were banned from WorkAdventure",
             message: "If you want more information, you may contact us at: hello@workadventu.re",
-        });
+        });*/
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

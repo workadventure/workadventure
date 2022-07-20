@@ -45,6 +45,7 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -76,6 +77,7 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
     volumes:
       - ./front/chat:/usr/src/app

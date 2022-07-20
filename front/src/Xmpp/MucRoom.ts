@@ -42,13 +42,14 @@ export class MucRoom {
         private connection: RoomConnection,
         public readonly name: string,
         private roomJid: JID,
+        private type: string,
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
     }
 
-    private getPlayerName() {
+    public getPlayerName() {
         return (gameManager.getPlayerName() ?? "unknown") + (this.nickCount > 0 ? `[${this.nickCount}]` : "");
     }
 
@@ -247,17 +248,17 @@ export class MucRoom {
         }
     }
 
-    // public getPresenceStore(): UsersStore {
-    //     return {
-    //         subscribe: this.presenceStore.subscribe,
-    //     };
-    // }
-    //
-    // public getTeleportStore(): TeleportStore {
-    //     return {
-    //         subscribe: this.teleportStore.subscribe,
-    //     };
-    // }
+    public getPresenceStore(): UsersStore {
+        return {
+            subscribe: this.presenceStore.subscribe,
+        };
+    }
+
+    public getTeleportStore(): TeleportStore {
+        return {
+            subscribe: this.teleportStore.subscribe,
+        };
+    }
 
     public resetTeleportStore(): void {
         this.teleportStore.set({ state: false, to: null });

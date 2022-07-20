@@ -37,7 +37,9 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
+import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -81,6 +83,12 @@ class IframeListener {
 
     private readonly _restoreWebcamStream: Subject<void> = new Subject();
     public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
+
+    private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
+    public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
+
+    private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
+    public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
@@ -163,6 +171,9 @@ class IframeListener {
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+
+    private chatIframe: HTMLIFrameElement | null = null;
+
     private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
@@ -294,6 +305,10 @@ class IframeListener {
                         this._openChatStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closeChat") {
                         this._closeChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "addPersonnalMessage") {
+                        this._addPersonnalMessageStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "newChatMessageWritingStatus") {
+                        this._newChatMessageWritingStatusStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -603,6 +618,51 @@ class IframeListener {
         });
     }
 
+    //TODO delete with chat XMPP integration for the discussion circle
+    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "updateWritingStatusChatList",
+            data: list,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+
+    sendMessageToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "addChatMessage",
+            data: chatMessage,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+
+    sendComingUserToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "comingUser",
+            data: chatMessage,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+    sendPeerConnexionStatusToChatIframe(status: boolean) {
+        const message = {
+            type: "peerConexionStatus",
+            data: status,
+        };
+        //TODO security check, test the possibilities to send message from another domain
+        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */
@@ -647,6 +707,26 @@ class IframeListener {
                 );
             }
         }
+    }
+
+    sendLeaveMucEvent(url: string) {
+        this.postMessage({
+            type: "leaveMuc",
+            data: {
+                url,
+            },
+        });
+    }
+
+    sendJoinMucEvent(url: string, name: string, type: string) {
+        this.postMessage({
+            type: "joinMuc",
+            data: {
+                url,
+                name,
+                type,
+            },
+        });
     }
 }
 
