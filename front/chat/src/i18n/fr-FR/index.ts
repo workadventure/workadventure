@@ -15,14 +15,16 @@ const fr_FR: Translation = {
   waitingData: "En attentes des informations de l'utilisateur ...",
   search: "Rechercher un utilisateur, un message, un canal ...",
   invite: "Inviter",
-  roomEmpty: "Cette salle est vide, invitez un collègue ou un ami à vous rejoindre !",
+  roomEmpty:
+    "Cette salle est vide, invitez un collègue ou un ami à vous rejoindre !",
   userOnline: "utilisateur en ligne",
   usersOnline: "utilisateurs en ligne",
   open: "Ouvrir",
   me: "Moi",
   ban: {
     title: "Bannir",
-    content: "Bannir l'utilisateur {userName} du monde courrant. Cela peut être annulé depuis l'administration.",
+    content:
+      "Bannir l'utilisateur {userName} du monde courrant. Cela peut être annulé depuis l'administration.",
     ban: "Bannir cet utilisateur",
   },
   rankUp: "Promouvoir",
@@ -30,20 +32,20 @@ const fr_FR: Translation = {
   reinit: "Ré initialiser",
   enterText: "Écrire un message ...",
   timeLine: {
-    title: 'Votre historique',
-    open: 'Ouvrir votre historique de conversation !',
-    description: 'Historique de vos conversations sur WorkAdventure!',
-    incoming: ' a rejoint la conversation',
-    outcoming: ' a quitté la conversation'
+    title: "Votre historique",
+    open: "Ouvrir votre historique de conversation !",
+    description: "Historique de vos conversations sur WorkAdventure!",
+    incoming: " a rejoint la conversation",
+    outcoming: " a quitté la conversation",
   },
   form: {
-    placeholder: 'Écrire votre message...',
-    typing: ' écrit...'
+    placeholder: "Écrire votre message...",
+    typing: " écrit...",
   },
   notification: {
     discussion: "veut discuter avec toi",
-    message: "a envoyé un message"
-  }
+    message: "a envoyé un message",
+  },
 };
 
 export default fr_FR;

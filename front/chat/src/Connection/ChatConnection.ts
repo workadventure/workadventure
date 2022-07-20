@@ -9,9 +9,9 @@ import {
   XmppConnectionStatusChangeMessage_Status,
   IframeToPusherMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
-import {XmppClient} from "../Xmpp/XmppClient";
-import {Parser} from "@xmpp/xml";
-import {userStore} from "../Stores/LocalUserStore";
+import { XmppClient } from "../Xmpp/XmppClient";
+import { Parser } from "@xmpp/xml";
+import { userStore } from "../Stores/LocalUserStore";
 
 const manualPingDelay = 20000;
 
@@ -147,29 +147,34 @@ export class ChatConnection implements ChatConnection {
       },
     }).finish();
 
-        this.socket.send(bytes);
-    }
+    this.socket.send(bytes);
+  }
 
-    public emitBanUserByUuid(playUri: string, uuidToBan: string, name: string, message: string) {
-        const bytes = IframeToPusherMessage.encode({
-            message: {
-                $case: "banUserByUuidMessage",
-                banUserByUuidMessage: {
-                    playUri,
-                    uuidToBan,
-                    name,
-                    message,
-                    byUserEmail: userStore.get().email ?? "",
-                },
-            },
-        }).finish();
+  public emitBanUserByUuid(
+    playUri: string,
+    uuidToBan: string,
+    name: string,
+    message: string
+  ) {
+    const bytes = IframeToPusherMessage.encode({
+      message: {
+        $case: "banUserByUuidMessage",
+        banUserByUuidMessage: {
+          playUri,
+          uuidToBan,
+          name,
+          message,
+          byUserEmail: userStore.get().email ?? "",
+        },
+      },
+    }).finish();
 
-        this.socket.send(bytes);
-    }
+    this.socket.send(bytes);
+  }
 
-    public getXmppClient(): XmppClient|null {
-        return this.xmppClient;
-    }
+  public getXmppClient(): XmppClient | null {
+    return this.xmppClient;
+  }
 }
 
 const parse = (data: string): ElementExt | null => {

@@ -22,7 +22,8 @@ const en_US: BaseTranslation = {
   me: "Me",
   ban: {
     title: "Banish",
-    content: "Ban user {userName} from the running world. This can be cancelled from the administration.",
+    content:
+      "Ban user {userName} from the running world. This can be cancelled from the administration.",
     ban: "Ban this user",
   },
   rankUp: "Promote",
@@ -30,20 +31,20 @@ const en_US: BaseTranslation = {
   reinit: "Re initialize",
   enterText: "Enter a message ...",
   timeLine: {
-    title: 'Your Timeline',
-    open: 'Open your time line history!',
-    description: 'WorkAdventure Timeline',
-    incoming: ' join the discussion',
-    outcoming: ' quit the discussion'
+    title: "Your Timeline",
+    open: "Open your time line history!",
+    description: "WorkAdventure Timeline",
+    incoming: " join the discussion",
+    outcoming: " quit the discussion",
   },
   form: {
-    placeholder: 'Enter your message...',
-    typing: ' typing...'
+    placeholder: "Enter your message...",
+    typing: " typing...",
   },
   notification: {
     discussion: "wants to discuss with you",
-    message: "sends you a message"
-  }
+    message: "sends you a message",
+  },
 };
 
 export default en_US;

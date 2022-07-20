@@ -87,6 +87,11 @@ export class XmppClient {
                 status = "disconnected";
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
+                console.log("offline", status);
+                console.log("xmpp.status", xmpp.status);
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                }
                 this.timeout = setTimeout(() => {
                     this.createClient(res, rej);
                 }, 10000);

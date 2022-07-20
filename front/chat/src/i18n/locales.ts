@@ -1,7 +1,4 @@
-import {
-  detectLocale,
-  navigatorDetector,
-} from "typesafe-i18n/detectors";
+import { detectLocale, navigatorDetector } from "typesafe-i18n/detectors";
 import { FALLBACK_LOCALE } from "../Enum/EnvironmentVariable";
 import { setLocale } from "./i18n-svelte";
 import type { Locales } from "./i18n-types";

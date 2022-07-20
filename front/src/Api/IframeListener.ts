@@ -627,8 +627,11 @@ class IframeListener {
             type: "updateWritingStatusChatList",
             data: list,
         };
-        //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendWritingStatusToChatIframe Error => ", err);
+        }
     }
 
     sendMessageToChatIframe(chatMessage: ChatMessage) {
@@ -639,8 +642,11 @@ class IframeListener {
             type: "addChatMessage",
             data: chatMessage,
         };
-        //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendMessageToChatIframe Error => ", err);
+        }
     }
 
     sendComingUserToChatIframe(chatMessage: ChatMessage) {
@@ -651,16 +657,25 @@ class IframeListener {
             type: "comingUser",
             data: chatMessage,
         };
-        //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendComingUserToChatIframe Error => ", err);
+        }
     }
     sendPeerConnexionStatusToChatIframe(status: boolean) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
         const message = {
             type: "peerConexionStatus",
             data: status,
         };
-        //TODO security check, test the possibilities to send message from another domain
-        this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendPeerConnexionStatusToChatIframe Error => ", err);
+        }
     }
 
     /**
