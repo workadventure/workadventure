@@ -48,194 +48,192 @@
     import { limitMapStore } from "../Stores/GameStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
+        let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
-    const gameScene = gameManager.getCurrentGameScene();
-    let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
-
-    function screenSharingClick(): void {
-        if ($silentStore) return;
-        if ($requestedScreenSharingState === true) {
-            requestedScreenSharingState.disableScreenSharing();
-        } else {
-            requestedScreenSharingState.enableScreenSharing();
+        function screenSharingClick(): void {
+            if ($silentStore) return;
+            if ($requestedScreenSharingState === true) {
+                requestedScreenSharingState.disableScreenSharing();
+            } else {
+                requestedScreenSharingState.enableScreenSharing();
+            }
         }
-    }
 
-    function cameraClick(): void {
-        if ($silentStore) return;
-        if ($requestedCameraState === true) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
+        function cameraClick(): void {
+            if ($silentStore) return;
+            if ($requestedCameraState === true) {
+                requestedCameraState.disableWebcam();
+            } else {
+                requestedCameraState.enableWebcam();
+            }
         }
-    }
 
-    function microphoneClick(): void {
-        if ($silentStore) return;
-        if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
+        function microphoneClick(): void {
+            if ($silentStore) return;
+            if ($requestedMicrophoneState === true) {
+                requestedMicrophoneState.disableMicrophone();
+            } else {
+                requestedMicrophoneState.enableMicrophone();
+            }
         }
-    }
 
-    function switchLayoutMode() {
-        if ($embedScreenLayoutStore === LayoutMode.Presentation) {
-            $embedScreenLayoutStore = LayoutMode.VideoChat;
-        } else {
-            $embedScreenLayoutStore = LayoutMode.Presentation;
+        function switchLayoutMode() {
+            if ($embedScreenLayoutStore === LayoutMode.Presentation) {
+                $embedScreenLayoutStore = LayoutMode.VideoChat;
+            } else {
+                $embedScreenLayoutStore = LayoutMode.Presentation;
+            }
         }
-    }
 
-    function followClick() {
-        switch ($followStateStore) {
-            case "off":
-                gameScene.connection?.emitFollowRequest();
-                followRoleStore.set("leader");
-                followStateStore.set("active");
-                break;
-            case "requesting":
-            case "active":
-            case "ending":
-                gameScene.connection?.emitFollowAbort();
-                followUsersStore.stopFollowing();
-                break;
+        function followClick() {
+            switch ($followStateStore) {
+                case "off":
+                    gameManager.getCurrentGameScene().connection?.emitFollowRequest();
+                    followRoleStore.set("leader");
+                    followStateStore.set("active");
+                    break;
+                case "requesting":
+                case "active":
+                case "ending":
+                    gameManager.getCurrentGameScene().connection?.emitFollowAbort();
+                    followUsersStore.stopFollowing();
+                    break;
+            }
         }
-    }
 
-    function lockClick() {
-        gameScene.connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
-    }
+        function lockClick() {
+            gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
+        }
 
-    function toggleChat() {
-        chatVisibilityStore.set(!$chatVisibilityStore);
-    }
+        function toggleChat() {
+            chatVisibilityStore.set(!$chatVisibilityStore);
+        }
 
-    function toggleEmojiPicker() {
-        $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
-    }
+        function toggleEmojiPicker() {
+            $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+        }
 
-    function clickEmoji(selected?: number) {
-        //if open, in edit mode or playing mode
-        if ($emoteMenuStore && selected != undefined) {
-            //select place to change in emoji sub menu
-            emoteMenuSubCurrentEmojiSelectedStore.set(selected);
-        } else if (selected != undefined) {
-            //get emoji and play it
-            let emoji: Emoji | null | undefined = $emoteDataStore.get(selected);
-            if (emoji == undefined) {
+        function clickEmoji(selected?: number) {
+            //if open, in edit mode or playing mode
+            if ($emoteMenuStore && selected != undefined) {
+                //select place to change in emoji sub menu
+                emoteMenuSubCurrentEmojiSelectedStore.set(selected);
+            } else if (selected != undefined) {
+                //get emoji and play it
+                let emoji: Emoji | null | undefined = $emoteDataStore.get(selected);
+                if (emoji == undefined) {
+                    return;
+                }
+                analyticsClient.launchEmote(emoji);
+                emoteStore.set(emoji);
+
+                //play UX animation
+                focusElement(selected);
+            }
+        }
+
+        function edit(): void {
+            if ($emoteMenuStore) emoteMenuStore.closeEmoteMenu();
+            else emoteMenuStore.openEmoteMenu();
+        }
+
+        function close(): void {
+            emoteMenuStore.closeEmoteMenu();
+            emoteMenuSubStore.closeEmoteMenu();
+        }
+
+        function focusElement(key: number) {
+            if (!$emoteMenuSubStore) {
                 return;
             }
-            analyticsClient.launchEmote(emoji);
-            emoteStore.set(emoji);
+            const name: string | undefined = $emoteDataStore.get(key)?.name;
+            if (name == undefined) {
+                return;
+            }
+            const element: HTMLElement | null = document.getElementById(`button-${name}`);
+            if (element == undefined) {
+                return;
+            }
+            element.focus();
+            element.classList.add("focus");
 
-            //play UX animation
-            focusElement(selected);
+            //blur element after ends of animation
+            setTimeout(() => {
+                element.blur();
+                element.classList.remove("focus");
+            }, 2000);
         }
-    }
 
-    function edit(): void {
-        if ($emoteMenuStore) emoteMenuStore.closeEmoteMenu();
-        else emoteMenuStore.openEmoteMenu();
-    }
+        function onKeyDown(e: KeyboardEvent) {
+            let key = null;
+            if (e.key === "1" || e.key === "F1") {
+                key = 1;
+            }
+            if (e.key === "2" || e.key === "F2") {
+                key = 2;
+            }
+            if (e.key === "3" || e.key === "F3") {
+                key = 3;
+            }
+            if (e.key === "4" || e.key === "F4") {
+                key = 4;
+            }
+            if (e.key === "5" || e.key === "F5") {
+                key = 5;
+            }
+            if (e.key === "6" || e.key === "F6") {
+                key = 6;
+            }
+            if (!key) {
+                return;
+            }
+            focusElement(key);
+            clickEmoji(key);
+        }
 
-    function close(): void {
-        emoteMenuStore.closeEmoteMenu();
-        emoteMenuSubStore.closeEmoteMenu();
-    }
+        function showInvite() {
+            const indexInviteMenu = $subMenusStore.findIndex(
+                    (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+            );
+            if (indexInviteMenu === -1) {
+                console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
+                return;
+            }
+            if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+                menuVisiblilityStore.set(false);
+                activeSubMenuStore.set(0);
+                return;
+            }
+            activeSubMenuStore.set(indexInviteMenu);
+            menuVisiblilityStore.set(true);
+        }
 
-    function focusElement(key: number) {
-        if (!$emoteMenuSubStore) {
-            return;
+        function showMenu() {
+            const indexInviteMenu = $subMenusStore.findIndex(
+                    (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
+            );
+            if (indexInviteMenu === -1) {
+                console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
+                return;
+            }
+            if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
+                menuVisiblilityStore.set(false);
+                activeSubMenuStore.set(0);
+                return;
+            }
+            activeSubMenuStore.set(indexInviteMenu);
+            menuVisiblilityStore.set(true);
         }
-        const name: string | undefined = $emoteDataStore.get(key)?.name;
-        if (name == undefined) {
-            return;
-        }
-        const element: HTMLElement | null = document.getElementById(`button-${name}`);
-        if (element == undefined) {
-            return;
-        }
-        element.focus();
-        element.classList.add("focus");
 
-        //blur element after ends of animation
-        setTimeout(() => {
-            element.blur();
-            element.classList.remove("focus");
-        }, 2000);
-    }
+        function register() {
+            window.open(`${ADMIN_URL}/second-step-register`, "_self");
+        }
 
-    function onKeyDown(e: KeyboardEvent) {
-        let key = null;
-        if (e.key === "1" || e.key === "F1") {
-            key = 1;
+        function noDrag() {
+            return false;
         }
-        if (e.key === "2" || e.key === "F2") {
-            key = 2;
-        }
-        if (e.key === "3" || e.key === "F3") {
-            key = 3;
-        }
-        if (e.key === "4" || e.key === "F4") {
-            key = 4;
-        }
-        if (e.key === "5" || e.key === "F5") {
-            key = 5;
-        }
-        if (e.key === "6" || e.key === "F6") {
-            key = 6;
-        }
-        if (!key) {
-            return;
-        }
-        focusElement(key);
-        clickEmoji(key);
-    }
 
-    function showInvite() {
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
-            menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
-            return;
-        }
-        activeSubMenuStore.set(indexInviteMenu);
-        menuVisiblilityStore.set(true);
-    }
-
-    function showMenu() {
-        const indexInviteMenu = $subMenusStore.findIndex(
-            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.profile
-        );
-        if (indexInviteMenu === -1) {
-            console.error(`Menu key: ${SubMenusInterface.profile} was not founded in subMenusStore: `, $subMenusStore);
-            return;
-        }
-        if ($menuVisiblilityStore && $activeSubMenuStore === indexInviteMenu) {
-            menuVisiblilityStore.set(false);
-            activeSubMenuStore.set(0);
-            return;
-        }
-        activeSubMenuStore.set(indexInviteMenu);
-        menuVisiblilityStore.set(true);
-    }
-
-    function register() {
-        window.open(`${ADMIN_URL}/second-step-register`, "_self");
-    }
-
-    function noDrag() {
-        return false;
-    }
-
-    const isMobile = isMediaBreakpointUp("md");
+        const isMobile = isMediaBreakpointUp("md");
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -339,8 +337,8 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !inExternalServiceStore}
-                    {#if myCameraStore}
+                {#if !$inExternalServiceStore}
+                    {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
                             on:click={() => analyticsClient.camera()}
