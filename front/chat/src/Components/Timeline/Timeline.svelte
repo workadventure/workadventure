@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
-    import {ChevronUpIcon, MoreHorizontalIcon} from "svelte-feather-icons";
+    import {ChevronUpIcon} from "svelte-feather-icons";
     import {createEventDispatcher} from "svelte";
     import LL from "../../i18n/i18n-svelte";
     import { chatPeerConexionInprogress, timeLineOpenedStore } from "../../Stores/ChatStore";

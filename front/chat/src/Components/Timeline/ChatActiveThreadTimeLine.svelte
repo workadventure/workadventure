@@ -147,8 +147,7 @@
                         <div class={`tw-flex ${message.type === ChatMessageTypes.me ? "tw-justify-end" : "tw-justify-start"}`}>
                             <div class={`${message.type === ChatMessageTypes.me || !message.author ? 'tw-opacity-0':'tw-mt-4'} tw-relative wa-avatar-mini tw-mr-2`} style={`background-color: ${message.author?.color}`}>
                                 <div class="wa-container">
-                                    <img class="tw-w-full" src={`${message.author?.wokaSrc ? message.author?.wokaSrc : '/static/images/logo-wa-2.png'}`}
-                                    alt="Avatar" loading="lazy"/>
+                                    <img class="tw-w-full" src={`${message.author?.wokaSrc ? message.author?.wokaSrc : '/static/images/logo-wa-2.png'}`} alt="Avatar" loading="lazy"/>
                                 </div>
                             </div>
                             <div class="tw-w-3/4">

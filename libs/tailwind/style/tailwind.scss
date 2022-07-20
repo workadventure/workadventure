@@ -113,9 +113,9 @@
     }
 
     .wa-avatar-mini{
-        @apply tw-w-8 tw-h-8 tw-rounded-xl tw-border tw-border-lighter-purple tw-border-solid;
+        @apply tw-w-8 tw-h-8 tw-rounded-xl tw-border tw-border-lighter-purple tw-border-solid tw-overflow-hidden;
         .wa-container{
-            @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full;
+            @apply tw-rounded-xl tw-overflow-hidden tw-w-full tw-h-full tw-mt-1;
             img {
                 width: 30px;
                 height: 30px;

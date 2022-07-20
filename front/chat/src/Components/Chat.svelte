@@ -16,6 +16,7 @@
     import {Ban, GoTo, RankDown, RankUp} from "../Type/CustomEvent";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeLine.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
+    import {timeLineOpenedStore} from "../Stores/ChatStore";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -133,6 +134,7 @@
                                     class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
                                     placeholder={$LL.search()}
                                     bind:value={searchValue}
+                                    on:input={() => timeLineOpenedStore.set(false)}
                             />
                         </div>
                     </div>
@@ -158,9 +160,7 @@
                             liveRooms={[...$mucRoomsStore].filter(mucRoom => mucRoom.type === 'live' && mucRoom.name.toLowerCase().includes(searchValue))}
                     />
 
-                    <Timeline
-                            on:activeThreadTimeLine={() => activeThreadTimeLine = true}
-                    />
+                    <Timeline on:activeThreadTimeLine={() => activeThreadTimeLine = true} />
                 </div>
             {/if}
         {/if}

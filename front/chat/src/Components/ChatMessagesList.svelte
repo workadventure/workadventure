@@ -40,7 +40,7 @@
 			<div class={`tw-flex ${isMe(message.name) ? "tw-justify-end" : "tw-justify-start"}`}>
 				<div class={`${isMe(message.name) || needHideHeader(message.name, message.time, i) ?'tw-opacity-0':'tw-mt-4'} tw-relative wa-avatar-mini tw-mr-2`} transition:fade={{duration: 100}} style={`background-color: ${mucRoom.getUserDataByName(message.name).color}`}>
 					<div class="wa-container">
-						<img class="tw-w-full" src={mucRoom.getUserDataByName(message.name).woka} alt="Avatar"/>
+						<img class="tw-w-full" src={mucRoom.getUserDataByName(message.name).woka} alt="Avatar" loading="lazy"/>
 					</div>
 				</div>
 				<div class={`tw-w-3/4`} transition:fly={{ x: isMe(message.name)?10:-10, delay: 100, duration: 200 }}>
