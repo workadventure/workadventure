@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { findContainer, startContainer, stopContainer } from './utils/containers';
 import { login } from './utils/roles';
 
-test.setTimeout(120_000);
+test.setTimeout(180_000);
 test.describe('Connection', () => {
   test('can succeed even if WorkAdventure starts while pusher is down', async ({ page }) => {
     await page.goto(
@@ -26,6 +26,6 @@ test.describe('Connection', () => {
 
     //await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
 
-    await page.waitForResponse(response => response.status() === 200, { timeout: 120_000 });
+    await page.waitForResponse(response => response.status() === 200, { timeout: 180_000 });
   });
 });
