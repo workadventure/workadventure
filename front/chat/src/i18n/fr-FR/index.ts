@@ -1,9 +1,7 @@
 import type { Translation } from "../i18n-types";
 
 const fr_FR: Translation = {
-  // TODO: your translations go here
-  HI: "Hallo {name}! Bitte hinterlasse einen Stern, wenn dir das Projekt gefällt: https://github.com/ivanhofer/typesafe-i18n",
-  users: 'Utilisateurs',
+  users: "Utilisateurs",
   userList: {
     disconnected: "Non connecté",
     isHere: "Sur cette map !",

@@ -14,8 +14,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.port=8080"
-      - "traefik.http.routers.api.rule=Host(`traefik.workadventure.localhost`)"
-      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+    depends_on:
+      - back
+      - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -53,7 +56,7 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
+      DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
       CHAT_URL: //chat.workadventure.localhost
     command: yarn run start

@@ -110,6 +110,30 @@ export const isIframeEventWrapper = z.union([
         data: isGoToPageEvent,
     }),
     z.object({
+        type: z.literal("turnOffMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("turnOffWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
         type: z.literal("disablePlayerControls"),
         data: z.undefined(),
     }),
