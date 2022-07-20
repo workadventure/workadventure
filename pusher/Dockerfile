@@ -28,7 +28,7 @@ COPY pusher/yarn.lock pusher/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder /usr/src/dist /usr/src/dist
-# Due to a bug in LiveDirectory, we need to have the live-directory dir be owned by the current user.
+# Need to have the swagger ui dir be owned by the current user.
 RUN chown node:node -R /usr/src/node_modules/swagger-ui-dist
 
 USER node

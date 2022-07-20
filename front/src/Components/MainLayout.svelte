@@ -3,7 +3,7 @@
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
-    import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
+    import { myCameraStore, proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -147,8 +147,11 @@
             <LayoutActionManager />
         {/if}
 
-        {#if $myCameraVisibilityStore}
+        {#if $myCameraStore}
             <MyCamera />
+        {/if}
+
+        {#if proximityMeetingStore}
             <CameraControls />
         {/if}
 

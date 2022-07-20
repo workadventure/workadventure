@@ -1,4 +1,4 @@
-version: '3.6'
+version: "3.6"
 services:
   # overrides for e2e tests to be closer to production
   # use with command:

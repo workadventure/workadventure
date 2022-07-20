@@ -14,8 +14,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.port=8080"
-      - "traefik.http.routers.api.rule=Host(`traefik.workadventure.localhost`)"
-      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+    depends_on:
+      - back
+      - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
