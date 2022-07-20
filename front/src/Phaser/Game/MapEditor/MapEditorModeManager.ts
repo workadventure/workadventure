@@ -2,12 +2,20 @@ import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { GameScene } from "../GameScene";
+import { UpdateAreaCommand, UpdateAreaCommandPayload } from "./Commands/Area/UpdateAreaCommand";
+import { Command } from "./Commands/Command";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
 }
+
+export enum CommandType {
+    UpdateAreaCommand = "UpdateAreaCommand",
+}
+
+export type CommandPayload = UpdateAreaCommandPayload;
 
 export class MapEditorModeManager {
     private scene: GameScene;
@@ -32,11 +40,18 @@ export class MapEditorModeManager {
      */
     private activeTool?: EditorToolName;
 
+    /**
+     * We are making use of CommandPattern to implement an Undo-Redo mechanism
+     */
+    private commandsHistory: Command[];
+
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
     constructor(scene: GameScene) {
         this.scene = scene;
+
+        this.commandsHistory = [];
 
         this.active = false;
         this.pointerDown = false;
@@ -47,6 +62,21 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
+    }
+
+    public executeCommand(type: CommandType, payload: CommandPayload): void {
+        let command: Command;
+        switch (type) {
+            case CommandType.UpdateAreaCommand: {
+                command = new UpdateAreaCommand(payload);
+                command.execute();
+                break;
+            }
+            default: {
+                return;
+            }
+        }
+        this.commandsHistory.push(command);
     }
 
     public isActive(): boolean {

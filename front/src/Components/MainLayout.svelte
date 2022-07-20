@@ -130,7 +130,7 @@
         {#if $mapEditorModeStore}
             <Lazy
                 when={$mapEditorSelectedAreaPreviewStore !== undefined}
-                component={() => import("./MapEditor/AreaDetailsWindow.svelte")}
+                component={() => import("./MapEditor/AreaPreviewWindow.svelte")}
             />
         {/if}
 

@@ -4,10 +4,14 @@
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { ITiledMapRectangleObject } from "../../Phaser/Game/GameMap";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { CommandType } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;
     let mapEditorSelectedAreaPreviewStoreUnsubscriber: Unsubscriber;
+
+    const gameScene = gameManager.getCurrentGameScene();
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
         areaPreview = preview;
@@ -16,19 +20,22 @@
 
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "Escape") {
-            closeAreaDetailsWindow();
+            closeAreaPreviewWindow();
         }
     }
 
-    function closeAreaDetailsWindow() {
+    function closeAreaPreviewWindow() {
         $mapEditorSelectedAreaPreviewStore = undefined;
     }
 
     function updatePreview() {
-        if (!areaData) {
+        if (!areaData || !areaPreview) {
             return;
         }
-        areaPreview?.updateArea(areaData);
+        gameScene
+            .getMapEditorModeManager()
+            .executeCommand(CommandType.UpdateAreaCommand, { areaPreview, config: areaData });
+        // areaPreview?.updateArea(areaData);
     }
 
     onDestroy(() => {
@@ -42,7 +49,7 @@
 
 {#if areaPreview && areaData}
     <div class="area-details-window nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeAreaDetailsWindow}>&times</button>
+        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times</button>
         <h2>{areaData.name}</h2>
         fields:
         <hr />
