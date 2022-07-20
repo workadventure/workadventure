@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { fly } from "svelte/animate";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
