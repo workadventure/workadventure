@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const emoji: NonNullable<Translation["emoji"]> = {
+const emoji: DeepPartial<Translation["emoji"]> = {
     search: "Chercher un emoji...",
     categories: {
         recents: "Emojis récents",

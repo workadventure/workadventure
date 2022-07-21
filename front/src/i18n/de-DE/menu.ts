@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -80,7 +81,6 @@ const menu: NonNullable<Translation["menu"]> = {
         copy: "Kopieren",
         share: "Teilen",
         walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
-        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",
