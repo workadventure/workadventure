@@ -1,14 +1,19 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
-  import { ChatStates, MessagesStore, MucRoom } from "../Xmpp/MucRoom";
+  import {ChatStates, defaultColor, defaultWoka, MessagesStore, MucRoom} from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
+  import {userStore} from "../Stores/LocalUserStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
+  export let defaultRoom: MucRoom;
 
   let messagesList: HTMLElement;
 
   let lastDate: Date;
+
+  $: presenseStore = defaultRoom.getPresenceStore();
+
 
   function needHideHeader(name: string, date: Date, i: number) {
     let previousMsg = $messagesStore[i - 1];
@@ -30,6 +35,31 @@
   }
   function isMe(name: string) {
     return name === mucRoom.getPlayerName();
+  }
+
+  function findUserInDefault(name: string){
+    if(isMe(name)){
+      return ['',$userStore];
+    }
+    return [...$presenseStore].find(([,user]) => user.name === name);
+  }
+
+  function getWoka(name: string){
+    const user = findUserInDefault(name);
+    if(user) {
+      return user[1].woka;
+    } else {
+      return defaultWoka;
+    }
+  }
+
+  function getColor(name: string){
+    const user = findUserInDefault(name);
+    if(user) {
+      return user[1].color;
+    } else {
+      return defaultColor;
+    }
   }
 
   export const scrollDown = () => {
@@ -73,13 +103,13 @@
           } tw-relative wa-avatar-mini tw-mr-2`}
           transition:fade={{ duration: 100 }}
           style={`background-color: ${
-            mucRoom.getUserDataByName(message.name).color
+            getColor(message.name)
           }`}
         >
           <div class="wa-container">
             <img
               class="tw-w-full"
-              src={mucRoom.getUserDataByName(message.name).woka}
+              src={getWoka(message.name)}
               alt="Avatar"
               loading="lazy"
             />
@@ -95,7 +125,7 @@
         >
           <div
             style={`border-bottom-color:${
-              mucRoom.getUserDataByName(message.name).color
+              getColor(message.name)
             }`}
             class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
               needHideHeader(message.name, message.time, i) ? "tw-hidden" : ""
@@ -125,7 +155,7 @@
         <div
           class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
           style={`background-color: ${
-            mucRoom.getUserDataByName(user.name).color
+            getColor(user.name)
           }`}
           in:fade={{ duration: 100 }}
           out:fade={{ delay: 200, duration: 100 }}
@@ -133,7 +163,7 @@
           <div class="wa-container">
             <img
               class="tw-w-full"
-              src={mucRoom.getUserDataByName(user.name).woka}
+              src={getWoka(user.name)}
               alt="Avatar"
             />
           </div>
@@ -146,7 +176,7 @@
           <div class="tw-w-fit">
             <div
               style={`border-bottom-color:${
-                mucRoom.getUserDataByName(user.name).color
+                getColor(user.name)
               }`}
               class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
             >

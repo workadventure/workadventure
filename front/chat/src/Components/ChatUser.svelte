@@ -8,7 +8,7 @@
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
-  import { MeStore, User } from "../Xmpp/MucRoom";
+  import {defaultColor, defaultWoka, MeStore, MucRoom, User} from "../Xmpp/MucRoom";
   import walk from "../../public/static/images/walk.svg";
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
@@ -25,6 +25,10 @@
   export let searchValue: string = "";
   export let meStore: MeStore;
   export let jid: string;
+
+  export let defaultRoom: MucRoom;
+
+  $: presenseStore = defaultRoom.getPresenceStore();
 
   let chatMenuActive = false;
   let openChatUserMenu = () => {
@@ -46,6 +50,28 @@
     dispatch("ban", { user, name, playUri });
   }
 
+  function findUserInDefault(name: string){
+    return [...$presenseStore].find(([,user]) => user.name === name);
+  }
+
+  function getWoka(name: string){
+    const user = findUserInDefault(name);
+    if(user) {
+      return user[1].woka;
+    } else {
+      return defaultWoka;
+    }
+  }
+
+  function getColor(name: string){
+    const user = findUserInDefault(name);
+    if(user) {
+      return user[1].color;
+    } else {
+      return defaultColor;
+    }
+  }
+
   $: chunks = highlightWords({
     text: user.name.match(/\[\d*]/)
       ? user.name.substring(0, user.name.search(/\[\d*]/))
@@ -61,11 +87,11 @@
 >
   <div
     class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
-    style={`background-color: ${user.color}`}
+    style={`background-color: ${getColor(user.name)}`}
     on:click|stopPropagation={() => openChat(user)}
   >
     <div class="wa-container">
-      <img class="tw-w-full" src={user.woka} alt="Avatar" />
+      <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
     </div>
     {#if user.active}
       <span

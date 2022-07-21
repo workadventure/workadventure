@@ -43,17 +43,15 @@
           on:focus={onFocus}
           on:blur={onBlur}
           on:keydown={(key) => {
-            if (
-              (key.keyCode === 13 && key.shiftKey) ||
-              [8, 46].includes(key.keyCode)
-            ) {
+            if((key.key === 'Enter' && key.shiftKey) || ['Backspace','Delete'].includes(key.keyCode)){
               setTimeout(() => adjustHeight(), 10);
             }
-            if (key.keyCode === 13 && !key.shiftKey) {
+            if(key.key === 'Enter' && !key.shiftKey){
               sendMessage();
               setTimeout(() => (newMessageText = ""), 10);
               return false;
             }
+            return true;
           }}
           on:keypress={() => {
             adjustHeight();

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MeStore, User, UsersStore } from "../Xmpp/MucRoom";
+  import {MeStore, MucRoom, User, UsersStore} from "../Xmpp/MucRoom";
   import ChatUser from "./ChatUser.svelte";
   import { createEventDispatcher } from "svelte";
   import { ChevronUpIcon } from "svelte-feather-icons";
@@ -18,6 +18,8 @@
   export let meStore: MeStore;
   export let showUsers: boolean;
   export let searchValue: string;
+
+  export let defaultRoom: MucRoom;
 
   let minimizeUser = true;
   const maxUsersMinimized = 7;
@@ -83,6 +85,7 @@
               {openChat}
               {user}
               {jid}
+              {defaultRoom}
               on:goTo={(event) => dispatch("goTo", event.detail)}
               on:rankUp={(event) => dispatch("rankUp", event.detail)}
               on:rankDown={(event) => dispatch("rankDown", event.detail)}

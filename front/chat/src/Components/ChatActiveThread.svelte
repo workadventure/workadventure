@@ -35,7 +35,9 @@
   export let messagesStore: MessagesStore;
   export let settingsView = false;
 
-  let messagesList: HTMLElement;
+  export let defaultRoom: MucRoom;
+
+  let messagesList: ChatMessagesList;
 
   function openChat(user: User) {
     return user;
@@ -77,7 +79,7 @@
           </div>
         {/if}
       </div>
-      <OnlineUsers {usersListStore} />
+      <OnlineUsers {usersListStore}/>
     </div>
     <div
       class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
@@ -130,6 +132,7 @@
             {openChat}
             {user}
             {jid}
+            {defaultRoom}
             on:goTo={(event) => dispatch("goTo", event.detail)}
             on:rankUp={(event) => dispatch("rankUp", event.detail)}
             on:rankDown={(event) => dispatch("rankDown", event.detail)}
@@ -142,6 +145,7 @@
     </div>
   {:else}
     <ChatMessagesList
+      {defaultRoom}
       {messagesStore}
       mucRoom={activeThread}
       bind:this={messagesList}

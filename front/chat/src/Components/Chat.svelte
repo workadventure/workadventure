@@ -119,6 +119,7 @@
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
+        defaultRoom={defaultRoom()}
         on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
         on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
         on:rankDown={(event) =>
@@ -141,9 +142,10 @@
           </div>
         </div>
         <!-- chat users -->
-        {#if defaultMucRoom != undefined}
+        {#if defaultMucRoom !== undefined}
           <UsersList
             {showUsers}
+            defaultRoom={defaultMucRoom}
             usersListStore={defaultMucRoom?.getPresenceStore()}
             meStore={defaultMucRoom?.getMeStore()}
             searchValue={searchValue.toLocaleLowerCase()}
