@@ -21,7 +21,6 @@ import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { playersStore } from "../../Stores/PlayersStore";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
