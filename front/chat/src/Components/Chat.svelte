@@ -148,21 +148,21 @@
         {#if defaultMucRoom !== undefined}
           <UsersList
             {showUsers}
-            usersListStore={defaultMucRoom.getPresenceStore()}
-            meStore={defaultMucRoom.getMeStore()}
+            usersListStore={defaultMucRoom?.getPresenceStore()}
+            meStore={defaultMucRoom?.getMeStore()}
             searchValue={searchValue.toLocaleLowerCase()}
             on:activeThread={handleActiveThread}
             on:showUsers={handleShowUsers}
             on:goTo={(event) =>
-              defaultMucRoom.goTo(
+              defaultMucRoom?.goTo(
                 event.detail.type,
                 event.detail.playUri,
                 event.detail.uuid
               )}
-            on:rankUp={(event) => defaultMucRoom.rankUp(event.detail.jid)}
-            on:rankDown={(event) => defaultMucRoom.rankDown(event.detail.jid)}
+            on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+            on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
             on:ban={(event) =>
-              defaultMucRoom.ban(
+              defaultMucRoom?.ban(
                 event.detail.user,
                 event.detail.name,
                 event.detail.playUri
