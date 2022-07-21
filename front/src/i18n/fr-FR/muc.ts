@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import { Translation } from "../i18n-types";
 
-const muc: NonNullable<Translation["muc"]> = {
+const muc: DeepPartial<Translation["muc"]> = {
     title: "Liste des utilisateurs",
     userList: {
         disconnected: "Non connecté",

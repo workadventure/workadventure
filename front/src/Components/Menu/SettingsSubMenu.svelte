@@ -165,7 +165,11 @@
         <h3 class="blue-title">{$LL.menu.settings.language.title()}</h3>
         <select class="tw-w-full languages-switcher" bind:value={valueLocale}>
             {#each displayableLocales as locale (locale.id)}
-                <option value={locale.id}>{`${locale.language} (${locale.region})`}</option>
+                <option value={locale.id}>
+                    {`${locale.language ? locale.language.charAt(0).toUpperCase() + locale.language.slice(1) : ""} (${
+                        locale.region
+                    })`}
+                </option>
             {/each}
         </select>
 

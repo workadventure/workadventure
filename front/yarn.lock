@@ -3462,6 +3462,11 @@ ts-deepmerge@^2.0.3:
   resolved "https://registry.yarnpkg.com/ts-deepmerge/-/ts-deepmerge-2.0.4.tgz#294d08c0b6957cb15f3eac2dfa020611e0db8cf1"
   integrity sha512-+xUYN/yYCwAtK7NtE0M1w5U1TlJg8ODoepMttmfsuRSo/Pz49bv7ZCILkCiBEpGBOIRrFMynnIhrY42U57Rl1g==
 
+ts-deepmerge@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/ts-deepmerge/-/ts-deepmerge-2.0.4.tgz#294d08c0b6957cb15f3eac2dfa020611e0db8cf1"
+  integrity sha512-+xUYN/yYCwAtK7NtE0M1w5U1TlJg8ODoepMttmfsuRSo/Pz49bv7ZCILkCiBEpGBOIRrFMynnIhrY42U57Rl1g==
+
 ts-deferred@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/ts-deferred/-/ts-deferred-1.0.4.tgz#58145ebaeef5b8f2a290b8cec3d060839f9489c7"

@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const report: BaseTranslation = {
+const report: DeepPartial<Translation["report"]> = {
     block: {
         title: "Bloquear",
         content: "Bloqueie qualquer comunicação de e para {userName}. Isso pode ser revertido.",

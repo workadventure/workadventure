@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const woka: NonNullable<Translation["woka"]> = {
+const woka: DeepPartial<Translation["woka"]> = {
     customWoka: {
         title: "Personnalisez votre WOKA",
         navigation: {
