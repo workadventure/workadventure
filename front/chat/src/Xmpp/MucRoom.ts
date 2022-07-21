@@ -9,8 +9,8 @@ import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
-import { UserData } from "../Messages/JsonMessages/ChatData";
 import UsersList from "../Components/UsersList.svelte";
+import { UserData } from "../Messages/JsonMessages/ChatData";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -146,20 +146,6 @@ export class MucRoom {
       color: "#000000",
       woka: defaultWoka,
     };
-  }
-
-  public getWokaByName(presenceStore: UsersList, name: string) {
-    let woka = defaultWoka;
-    if (this.getPlayerName() === name) {
-      woka = get(userStore).woka;
-    } else {
-      presenceStore.map((jid_: string, user: User) => {
-        if (user.name === name) {
-          woka = user.woka;
-        }
-      });
-    }
-    return woka;
   }
 
   public goTo(type: string, playUri: string, uuid: string) {
