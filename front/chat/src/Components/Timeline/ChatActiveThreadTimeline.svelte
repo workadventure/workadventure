@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fly } from "svelte/transition";
+  import { fade, fly } from "svelte/transition";
   import {
     SettingsIcon,
     ArrowLeftIcon,
@@ -20,8 +20,10 @@
   import LL, { locale } from "../../i18n/i18n-svelte";
   import { activeThreadStore } from "../../Stores/ActiveThreadStore";
   import { Unsubscriber } from "svelte/store";
+  import { mucRoomsStore } from "../../Stores/MucRoomsStore";
 
   const dispatch = createEventDispatcher();
+  const defaultMucRoom = mucRoomsStore.getDefaultRoom();
 
   export let settingsView = false;
 
@@ -229,8 +231,8 @@
                   <img
                     class="tw-w-full"
                     src={`${
-                      message.author?.wokaSrc
-                        ? message.author?.wokaSrc
+                      message.author?.woka
+                        ? message.author?.woka
                         : "/static/images/logo-wa-2.png"
                     }`}
                     alt="Avatar"
@@ -296,6 +298,58 @@
           {/if}
         {/if}
       {/each}
+
+      {#if defaultMucRoom}
+        {#each [...$writingStatusMessageStore] as user}
+          <div class={`tw-mt-2`}>
+            <div class={`tw-flex tw-justify-start`}>
+              <div
+                class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
+                style={`background-color: ${
+                  defaultMucRoom?.getUserDataByUuid(user.userUuid).color
+                }`}
+                in:fade={{ duration: 100 }}
+                out:fade={{ delay: 200, duration: 100 }}
+              >
+                <div class="wa-container">
+                  <img
+                    class="tw-w-full"
+                    src={defaultMucRoom.getUserDataByUuid(user.userUuid).woka}
+                    alt="Avatar"
+                  />
+                </div>
+              </div>
+              <div
+                class={`tw-w-3/4`}
+                in:fly={{ x: -10, delay: 100, duration: 200 }}
+                out:fly={{ x: -10, duration: 200 }}
+              >
+                <div class="tw-w-fit">
+                  <div
+                    style={`border-bottom-color:${
+                      defaultMucRoom.getUserDataByUuid(user.userUuid).color
+                    }`}
+                    class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
+                  >
+                    <span class="tw-text-lighter-purple tw-text-xxs"
+                      >{defaultMucRoom.getUserDataByUuid(user.userUuid)
+                        .name}</span
+                    >
+                  </div>
+                  <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
+                    <!-- loading animation -->
+                    <div class="loading-group">
+                      <span class="loading-dot" />
+                      <span class="loading-dot" />
+                      <span class="loading-dot" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        {/each}
+      {/if}
     </div>
 
     <!--MESSAGE FORM-->

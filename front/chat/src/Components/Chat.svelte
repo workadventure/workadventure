@@ -74,15 +74,10 @@
     }
   }
 
-  const defaultRoom = (): MucRoom => {
-    const defaultMucRoom = [...$mucRoomsStore].find(
-      (mucRoom) => mucRoom.type === "default"
-    );
-    if (!defaultMucRoom) {
-      throw new Error("No default MucRoom");
-    }
-    return defaultMucRoom;
-  };
+  let defaultMucRoom = mucRoomsStore.getDefaultRoom();
+  mucRoomsStore.subscribe(() => {
+    defaultMucRoom = mucRoomsStore.getDefaultRoom();
+  });
 
   function handleGoTo(mucRoom: MucRoom | undefined, event: GoTo) {
     if (mucRoom) {
@@ -146,28 +141,30 @@
           </div>
         </div>
         <!-- chat users -->
-        <UsersList
-          {showUsers}
-          usersListStore={defaultRoom().getPresenceStore()}
-          meStore={defaultRoom().getMeStore()}
-          searchValue={searchValue.toLocaleLowerCase()}
-          on:activeThread={handleActiveThread}
-          on:showUsers={handleShowUsers}
-          on:goTo={(event) =>
-            defaultRoom().goTo(
-              event.detail.type,
-              event.detail.playUri,
-              event.detail.uuid
-            )}
-          on:rankUp={(event) => defaultRoom().rankUp(event.detail.jid)}
-          on:rankDown={(event) => defaultRoom().rankDown(event.detail.jid)}
-          on:ban={(event) =>
-            defaultRoom().ban(
-              event.detail.user,
-              event.detail.name,
-              event.detail.playUri
-            )}
-        />
+        {#if defaultMucRoom != undefined}
+          <UsersList
+            {showUsers}
+            usersListStore={defaultMucRoom?.getPresenceStore()}
+            meStore={defaultMucRoom?.getMeStore()}
+            searchValue={searchValue.toLocaleLowerCase()}
+            on:activeThread={handleActiveThread}
+            on:showUsers={handleShowUsers}
+            on:goTo={(event) =>
+              defaultMucRoom?.goTo(
+                event.detail.type,
+                event.detail.playUri,
+                event.detail.uuid
+              )}
+            on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+            on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+            on:ban={(event) =>
+              defaultMucRoom?.ban(
+                event.detail.user,
+                event.detail.name,
+                event.detail.playUri
+              )}
+          />
+        {/if}
 
         <ChatLiveRooms
           {showLives}

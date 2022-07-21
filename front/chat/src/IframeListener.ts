@@ -11,13 +11,14 @@ import {
   chatPeerConnectionInProgress,
   newChatMessageSubject,
   newChatMessageWritingStatusSubject,
-  playersStore,
   timelineOpenedStore,
   writingStatusMessageStore,
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
 import { get } from "svelte/store";
+import { mucRoomsStore } from "./Stores/MucRoomsStore";
+import { defaultUserData } from "./Xmpp/MucRoom";
 
 class IframeListener {
   init() {
@@ -72,37 +73,38 @@ class IframeListener {
             }
             case "addChatMessage": {
               if (
-                iframeEvent.data.author?.userId == undefined ||
+                iframeEvent.data.author?.userUuid == undefined ||
                 iframeEvent.data.text == undefined
               ) {
                 break;
               }
-              const userId: number = iframeEvent.data.author?.userId;
-              const author = playersStore.get(userId);
-              if (!author) {
-                playersStore.set(userId, iframeEvent.data.author);
+
+              let userData = defaultUserData;
+              const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+              if (mucRoomDefault) {
+                userData = mucRoomDefault.getUserDataByUuid(
+                  iframeEvent.data.author?.userUuid
+                );
               }
+
               for (const chatMessageText of iframeEvent.data.text) {
-                chatMessagesStore.addExternalMessage(userId, chatMessageText);
+                chatMessagesStore.addExternalMessage(userData, chatMessageText);
               }
               break;
             }
             case "comingUser": {
-              const userId: number = iframeEvent.data.author?.userId;
-              const author = playersStore.get(userId);
-              if (!author) {
-                playersStore.set(userId, iframeEvent.data.author);
-              }
               for (const target of iframeEvent.data.targets) {
-                const author = playersStore.get(target.userId);
-                if (!author) {
-                  playersStore.set(target.userId, target);
+                let userData = defaultUserData;
+                const mucRoomDefault = mucRoomsStore.getDefaultRoom();
+                if (mucRoomDefault) {
+                  userData = mucRoomDefault.getUserDataByUuid(target.userUuid);
                 }
+
                 if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
-                  chatMessagesStore.addIncomingUser(target.userId);
+                  chatMessagesStore.addIncomingUser(userData);
                 }
                 if (ChatMessageTypes.userOutcoming === iframeEvent.data.type) {
-                  chatMessagesStore.addOutcomingUser(target.userId);
+                  chatMessagesStore.addOutcomingUser(userData);
                 }
               }
               break;

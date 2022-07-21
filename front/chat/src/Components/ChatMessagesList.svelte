@@ -41,7 +41,9 @@
   $: usersStore = mucRoom.getPresenceStore();
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14" bind:this={messagesList}>
+<div
+  class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14" bind:this={messagesList}
+>
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
       <div class="wa-separator">
@@ -164,3 +166,14 @@
     </div>
   {/each}
 </div>
+
+<style lang="scss">
+  .messageList {
+    display: flex;
+    justify-content: flex-end;
+    overflow: scroll;
+    padding: 60px 0;
+    height: auto;
+    min-height: 100vh;
+  }
+</style>

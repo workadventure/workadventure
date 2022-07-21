@@ -45,11 +45,11 @@
 
 <!-- thread -->
 <div
-  class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-fixed tw-w-full"
+  class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
   transition:fly={{ x: 500, duration: 400 }}
 >
   <div
-    class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-z-10 tw-border-t-0 "
+    class="messageHead wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-z-10 tw-border-t-0"
   >
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
@@ -96,11 +96,9 @@
     <div
       in:fly={{ y: -100, duration: 100, delay: 200 }}
       out:fly={{ y: -100, duration: 100 }}
-      class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+      class="messageSettings tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
     >
-      <div
-        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
-      >
+      <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5">
         {#if $meStore.isAdmin}
           <button
             class="wa-action"
@@ -114,9 +112,8 @@
         class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5"
       >
         <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-          Description
+          Chatzone
         </p>
-        <p>Test</p>
       </div>
       <div
         class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
@@ -150,3 +147,19 @@
     </div>
   {/if}
 </div>
+
+<style lang="scss">
+  .messageHead {
+    position: fixed;
+    top: 0px;
+    width: 100%;
+  }
+  .messageSettings {
+    padding: 44px 0;
+  }
+  .messageForm {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+</style>

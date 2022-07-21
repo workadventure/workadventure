@@ -74,17 +74,6 @@ export abstract class Character extends Container implements OutlineableInterfac
         this.sprites = new Map<string, Sprite>();
         this._pictureStore = writable(undefined);
 
-        this._pictureStore.subscribe((src) => {
-            if (userId == undefined) {
-                return;
-            }
-            const player = playersStore.getPlayerById(userId);
-            if (player == undefined) {
-                return;
-            }
-            player.wokaSrc = src;
-        });
-
         //textures are inside a Promise in case they need to be lazyloaded before use.
         this.texturePromise = texturesPromise
             .then((textures) => {
