@@ -10,6 +10,7 @@ import {
     CompanionMessage,
     FollowAbortMessage,
     FollowConfirmationMessage,
+    PlayerDetailsUpdatedMessage,
     PusherToBackMessage,
     ServerToClientMessage,
     SetPlayerDetailsMessage,
@@ -18,7 +19,8 @@ import {
 } from "../Messages/generated/messages_pb";
 import { CharacterLayer } from "../Model/Websocket/CharacterLayer";
 import { PlayerVariables } from "../Services/PlayersRepository/PlayerVariables";
-import { playersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { getPlayersVariablesRepository } from "../Services/PlayersRepository/PlayersVariablesRepository";
+import { BrothersFinder } from "./BrothersFinder";
 
 export type UserSocket = ServerDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -41,6 +43,7 @@ export class User implements Movable {
         public readonly name: string,
         public readonly characterLayers: CharacterLayer[],
         private readonly variables: PlayerVariables,
+        private readonly brothersFinder: BrothersFinder,
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
         private voiceIndicatorShown?: boolean
@@ -64,10 +67,12 @@ export class User implements Movable {
         characterLayers: CharacterLayer[],
         roomUrl: string,
         roomGroup: string | undefined,
+        brothersFinder: BrothersFinder,
         companion?: CompanionMessage,
         outlineColor?: number,
         voiceIndicatorShown?: boolean
     ): Promise<User> {
+        const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository);
         await variables.load();
 
@@ -84,6 +89,7 @@ export class User implements Movable {
             name,
             characterLayers,
             variables,
+            brothersFinder,
             companion,
             outlineColor,
             voiceIndicatorShown
@@ -218,6 +224,38 @@ export class User implements Movable {
                         setVariable.getPersist()
                     )
                     .catch((e) => console.error("An error occurred while saving room variable: ", e));
+
+                // Very special case: if we are updating a player variable AND if if the variable is persisted, we must also
+                // update the variable of all other users with the same UUID!
+                if (setVariable.getPersist()) {
+                    // Let's have a look at all other users sharing the same UUID
+                    const brothers = this.brothersFinder.getBrothers(this);
+                    for (const brother of brothers) {
+                        brother.variables
+                            .saveRoomVariable(
+                                setVariable.getName(),
+                                setVariable.getValue(),
+                                setVariable.getPublic(),
+                                setVariable.getTtl()?.getValue(),
+                                // We don't need to persist this for every player as this will write in the same place in DB.
+                                false
+                            )
+                            .catch((e) =>
+                                console.error(
+                                    "An error occurred while saving room variable for a user with same UUID: ",
+                                    e
+                                )
+                            );
+
+                        // Let's dispatch the message to the user.
+                        const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
+                        playerDetailsUpdatedMessage.setUserid(brother.id);
+                        playerDetailsUpdatedMessage.setDetails(details);
+                        const subMessage = new SubMessage();
+                        subMessage.setPlayerdetailsupdatedmessage(playerDetailsUpdatedMessage);
+                        brother.emitInBatch(subMessage);
+                    }
+                }
             } else {
                 const _exhaustiveCheck: never = scope;
             }

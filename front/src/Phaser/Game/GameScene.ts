@@ -768,6 +768,13 @@ export class GameScene extends DirtyScene {
                 });
 
                 this.connection.playerDetailsUpdatedMessageStream.subscribe((message) => {
+                    // Is this message for me (exceptionally, we can use this stream to send messages to users
+                    // who share the same UUID as us)
+                    if (message.userId === this.connection?.getUserId() && message.details?.setVariable) {
+                        this.playerVariablesManager.updateVariable(message.details?.setVariable);
+                        return;
+                    }
+
                     this.remotePlayersRepository.updatePlayer(message);
                 });
 

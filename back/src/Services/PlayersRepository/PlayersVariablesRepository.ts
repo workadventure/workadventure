@@ -1,14 +1,20 @@
 import { RedisPlayersVariablesRepository } from "./RedisPlayersVariablesRepository";
-import { redisClient } from "../RedisClient";
+import { getRedisClient } from "../RedisClient";
 import { VoidPlayersVariablesRepository } from "./VoidPlayersVariablesRepository";
 import { PlayersVariablesRepositoryInterface } from "./PlayersVariablesRepositoryInterface";
 
-let playersVariablesRepository: PlayersVariablesRepositoryInterface;
-if (!redisClient) {
-    console.warn("WARNING: Redis is not configured. No players variables will be persisted.");
-    playersVariablesRepository = new VoidPlayersVariablesRepository();
-} else {
-    playersVariablesRepository = new RedisPlayersVariablesRepository(redisClient);
-}
+let playerVariablesRepository: PlayersVariablesRepositoryInterface | undefined;
 
-export { playersVariablesRepository };
+export async function getPlayersVariablesRepository(): Promise<PlayersVariablesRepositoryInterface> {
+    if (playerVariablesRepository) {
+        return playerVariablesRepository;
+    }
+
+    const redisClient = await getRedisClient();
+    if (!redisClient) {
+        console.warn("WARNING: Redis is not configured. No players variables will be persisted.");
+        return (playerVariablesRepository = new VoidPlayersVariablesRepository());
+    } else {
+        return (playerVariablesRepository = new RedisPlayersVariablesRepository(redisClient));
+    }
+}

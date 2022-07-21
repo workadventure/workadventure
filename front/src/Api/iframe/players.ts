@@ -117,7 +117,6 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
         });
 
         for (const remotePlayerEvent of remotePlayersData) {
-            console.log("PLAYER WAS ALREADY ON THE ROOM WHEN WE STARTED TRACKING ", remotePlayerEvent);
             this.registerRemotePlayer(remotePlayerEvent);
         }
     }

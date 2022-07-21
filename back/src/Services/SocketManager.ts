@@ -891,7 +891,7 @@ export class SocketManager {
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
-        if (recipients.length === 0) {
+        if (recipients.size === 0) {
             console.error(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
@@ -924,7 +924,7 @@ export class SocketManager {
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
-        if (recipients.length === 0) {
+        if (recipients.size === 0) {
             console.error(
                 "In banUser, could not find user with id '" +
                     recipientUuid +

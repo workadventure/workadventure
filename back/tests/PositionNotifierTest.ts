@@ -7,6 +7,13 @@ import { Movable } from "../src/Model/Movable";
 import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
 import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
+import { BrothersFinder } from "../src/Model/BrothersFinder";
+
+class VoidBrothersFinder implements BrothersFinder {
+    getBrothers(user: User): Iterable<User> {
+        return [];
+    }
+}
 
 describe("PositionNotifier", () => {
     it("should receive notifications when player moves", async () => {
@@ -50,6 +57,7 @@ describe("PositionNotifier", () => {
             [],
             "https://example.com/room.json",
             undefined,
+            new VoidBrothersFinder()
         );
 
         const user2 = await User.create(
@@ -71,6 +79,7 @@ describe("PositionNotifier", () => {
             [],
             "https://example.com/room.json",
             undefined,
+            new VoidBrothersFinder()
         );
 
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
@@ -162,6 +171,7 @@ describe("PositionNotifier", () => {
             [],
             "https://example.com/room.json",
             undefined,
+            new VoidBrothersFinder()
         );
 
         const user2 = await User.create(
@@ -183,6 +193,7 @@ describe("PositionNotifier", () => {
             [],
             "https://example.com/room.json",
             undefined,
+            new VoidBrothersFinder()
         );
 
         const listener = {} as ZoneSocket;

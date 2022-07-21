@@ -28,6 +28,10 @@ export class PlayerVariables {
         if (worldUrl) {
             this.worldKey = `pw_${subject}_|@|_${worldUrl}`;
         }
+
+        // Possible improvement: for player variables that are stored at the WORLD level, we may want to broadcast
+        // a message to other worlds to notify users with same UUID of a variable change.
+        // We could use Redis PubSub for this.
     }
 
     public async load(): Promise<void> {

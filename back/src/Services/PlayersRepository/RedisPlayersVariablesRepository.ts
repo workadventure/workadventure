@@ -1,10 +1,9 @@
-import { promisify } from "util";
-import { RedisClient } from "redis";
 import {
     LoadVariablesReturn,
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
 } from "./PlayersVariablesRepositoryInterface";
+import { RedisClient } from "../RedisClient";
 
 /**
  * Class in charge of saving/loading variables relative to a player in DB.
@@ -18,22 +17,7 @@ import {
  *       isPublic is "1" or "0"
  */
 export class RedisPlayersVariablesRepository implements PlayersVariablesRepositoryInterface {
-    private readonly hgetall: OmitThisParameter<(arg1: string) => Promise<{ [p: string]: string }>>;
-    private readonly hset: OmitThisParameter<(arg1: [string, ...string[]]) => Promise<number>>;
-    private readonly hdel: OmitThisParameter<(arg1: string, arg2: string) => Promise<number>>;
-    private readonly expire: OmitThisParameter<(arg1: string, arg2: number) => Promise<number>>;
-    //private readonly scan: OmitThisParameter<(arg1: string, arg2: string, arg3: string) => Promise<[string, string[]]>>;
-
-    constructor(private redisClient: RedisClient) {
-        /* eslint-disable @typescript-eslint/unbound-method */
-        this.hgetall = promisify(redisClient.hgetall).bind(redisClient);
-        this.hset = promisify(redisClient.hset).bind(redisClient);
-        this.hdel = promisify(redisClient.hdel).bind(redisClient);
-        this.expire = promisify(redisClient.expire).bind(redisClient);
-
-        //this.scan = promisify(redisClient.scan).bind(redisClient);
-        /* eslint-enable @typescript-eslint/unbound-method */
-    }
+    constructor(private redisClient: RedisClient) {}
 
     // FIXME: SCAN TAKES O(N). BAAAAAD!
     // So we need to use HSET... maybe store TTL inside?
@@ -56,14 +40,13 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
      * Load all variables for a user in a room / world.
      */
     async loadVariables(hashKey: string): LoadVariablesReturn {
-        const variables = await this.hgetall(hashKey);
+        const variables = await this.redisClient.hGetAll(hashKey);
 
         const map = new Map<string, VariableWithScope>();
 
         const now = new Date().getTime();
 
         let maxExpire: number | undefined = 0;
-        console.log("RESULT OF HGETALL for key: ", hashKey, variables);
         for (const entry of Object.entries(variables ?? [])) {
             const key = entry[0];
             const [expireStr, isPublicStr, value] = entry[1].split(":", 3);
@@ -96,12 +79,12 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
 
                 // Let's check the TTL. If it is less than current date, let's remove the key.
                 if (expire < now) {
-                    this.hdel(hashKey, key).catch((e) => console.error(e));
+                    this.redisClient.hDel(hashKey, key).catch((e) => console.error(e));
                     continue;
                 }
 
                 if (expire === undefined) {
-                    maxExpire === undefined;
+                    maxExpire = undefined;
                 } else if (maxExpire !== undefined) {
                     maxExpire = Math.max(expire, maxExpire);
                 }
@@ -131,7 +114,7 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
         // which is translated to empty string when fetching the value in the pusher.
         // Therefore, empty string server side == undefined client side.
         if (value === "") {
-            await this.hdel(redisKey, key);
+            await this.redisClient.hDel(redisKey, key);
             return;
         }
 
@@ -140,12 +123,12 @@ export class RedisPlayersVariablesRepository implements PlayersVariablesReposito
 
         // TODO: SLOW WRITING EVERY 2 SECONDS WITH A TIMEOUT
 
-        // @ts-ignore See https://stackoverflow.com/questions/63539317/how-do-i-use-hmset-with-node-promisify
-        await this.hset(redisKey, key, storedValue);
+        await this.redisClient.hSet(redisKey, key, storedValue);
+        console.log("Saved variable to Redis: ", redisKey, key, storedValue);
         if (maxExpire !== undefined) {
-            this.expire(redisKey, Math.floor((maxExpire - new Date().getTime()) / 1000)).catch((e) =>
-                console.error("Failed calling EXPIRE", e)
-            );
+            this.redisClient
+                .expire(redisKey, Math.floor((maxExpire - new Date().getTime()) / 1000))
+                .catch((e) => console.error("Failed calling EXPIRE", e));
         }
     }
 }
