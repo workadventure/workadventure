@@ -7,7 +7,13 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { myCameraStore, myMicrophoneStore, proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
+import {
+    myCameraApiBlockedStore,
+    myCameraStore,
+    myMicrophoneBlockedStore,
+    myMicrophoneStore,
+    proximityMeetingStore,
+} from "../Stores/MyCameraStoreVisibility";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -82,7 +88,9 @@ export class MediaManager {
     }
 
     public enableMyCamera(): void {
-        myCameraStore.set(true);
+        if (!get(myCameraApiBlockedStore)) {
+            myCameraStore.set(true);
+        }
     }
 
     public disableMyCamera(): void {
@@ -90,7 +98,9 @@ export class MediaManager {
     }
 
     public enableMyMicrophone(): void {
-        myMicrophoneStore.set(true);
+        if (!get(myMicrophoneBlockedStore)) {
+            myMicrophoneStore.set(true);
+        }
     }
 
     public disableMyMicrophone(): void {
