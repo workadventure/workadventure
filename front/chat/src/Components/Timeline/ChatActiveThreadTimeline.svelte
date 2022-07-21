@@ -125,7 +125,7 @@
   transition:fly={{ x: 500, duration: 400 }}
 >
   <div
-    class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-border-t-0"
+    class="wa-thread-head"
   >
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
@@ -171,6 +171,7 @@
     <div
       transition:fly={{ y: -100, duration: 100 }}
       class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+      style="margin-top: 56px"
     >
       <div
         class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
@@ -197,7 +198,7 @@
     <!-- MESSAGE LIST-->
     <div
       id="timeLine-messageList"
-      class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto tw-mt-0 tw-mb-14"
+      class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
       bind:this={messagesList}
     >
       {#each $chatMessagesStore as message}

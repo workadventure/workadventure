@@ -51,7 +51,7 @@
   transition:fly={{ x: 500, duration: 400 }}
 >
   <div
-    class="messageHead wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-z-10 tw-border-t-0"
+    class="wa-thread-head"
   >
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
@@ -98,7 +98,8 @@
     <div
       in:fly={{ y: -100, duration: 100, delay: 200 }}
       out:fly={{ y: -100, duration: 100 }}
-      class="messageSettings tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+      class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+      style="margin-top: 52px"
     >
       <div
         class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
@@ -161,14 +162,6 @@
 </div>
 
 <style lang="scss">
-  .messageHead {
-    position: fixed;
-    top: 0px;
-    width: 100%;
-  }
-  .messageSettings {
-    padding: 44px 0;
-  }
   .messageForm {
     position: fixed;
     bottom: 0;

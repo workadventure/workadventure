@@ -77,7 +77,7 @@
 </script>
 
 <div
-  class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14"
+  class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
   bind:this={messagesList}
 >
   {#each $messagesStore as message, i}
@@ -196,7 +196,6 @@
     display: flex;
     justify-content: flex-end;
     overflow: scroll;
-    padding: 60px 0;
     height: auto;
     min-height: 100vh;
   }

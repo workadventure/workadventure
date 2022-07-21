@@ -127,7 +127,7 @@
         on:ban={(event) => handleBan($activeThreadStore, event.detail)}
       />
     {:else}
-      <div>
+      <div class="wa-message-bg">
         <!-- searchbar -->
         <div
           class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
@@ -191,7 +191,7 @@
 <style lang="scss">
   aside.chatWindow {
     pointer-events: auto;
-    background: rgba(27, 27, 41, 0.79);
+    //background: rgba(27, 27, 41, 0.79);
     color: whitesmoke;
     display: flex;
     flex-direction: column;
