@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
-import UsersList from "../Components/UsersList.svelte";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 
 export const USER_STATUS_AVAILABLE = "available";
@@ -48,6 +47,8 @@ export type Message = {
   body: string;
   name: string;
   time: Date;
+  id: string;
+  delivered: boolean;
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -507,6 +508,8 @@ export class MucRoom {
             name,
             body,
             time: delay,
+            id: '',
+            delivered: true
           });
           return messages;
         });

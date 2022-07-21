@@ -5,7 +5,7 @@
     defaultColor,
     defaultWoka,
     MessagesStore,
-    MucRoom,
+    MucRoom, User,
   } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { userStore } from "../Stores/LocalUserStore";
@@ -42,9 +42,9 @@
     return name === mucRoom.getPlayerName();
   }
 
-  function findUserInDefault(name: string) {
+  function findUserInDefault(name: string): User | undefined {
     if (isMe(name)) {
-      return ["", $userStore];
+      return $userStore;
     }
     const userData = [...$presenseStore].find(([, user]) => user.name === name);
     let user = undefined;
