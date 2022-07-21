@@ -341,6 +341,7 @@ export class IoSocketController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : "";
+                        const isLogged = tokenData?.accessToken ? true : false;
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
@@ -368,6 +369,7 @@ export class IoSocketController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
+                                    isLogged,
                                     roomId,
                                     IPAddress,
                                     characterLayers,

@@ -1,6 +1,5 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
@@ -23,16 +22,23 @@ export class AuthenticateController extends BaseHttpController {
 
     roomAccess(): void {
         this.app.get("/room/access", (req, res) => {
-            //eslint-disable-next-line @typescript-eslint/no-misused-promises
-            (async () => {
+            (async (): Promise<void> => {
                 try {
-                    const { uuid, playUri } = parse(req.path_query);
+                    const { uuid, playUri, token } = parse(req.path_query);
                     if (!uuid || !playUri) {
                         throw new Error("Missing uuid and playUri parameters.");
                     }
-                    return res.json(
-                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    const isLogged = token ? true : false;
+                    res.json(
+                        await adminService.fetchMemberDataByUuid(
+                            uuid as string,
+                            isLogged,
+                            playUri as string,
+                            req.ip,
+                            []
+                        )
                     );
+                    return;
                 } catch (e) {
                     console.warn(e);
                 }
@@ -187,10 +193,13 @@ export class AuthenticateController extends BaseHttpController {
                     try {
                         const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
 
+                        const isLogged = authTokenData.accessToken ? true : false;
+
                         //Get user data from Admin Back Office
                         //This is very important to create User Local in LocalStorage in WorkAdventure
                         const resUserData = await adminService.fetchMemberDataByUuid(
                             authTokenData.identifier,
+                            isLogged,
                             playUri as string,
                             IPAddress,
                             [],
@@ -251,10 +260,13 @@ export class AuthenticateController extends BaseHttpController {
                     userInfo?.locale
                 );
 
+                const isLogged = userInfo?.access_token ? true : false;
+
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
                 const data = await adminService.fetchMemberDataByUuid(
                     email,
+                    isLogged,
                     playUri as string,
                     IPAddress,
                     [],
@@ -522,40 +534,5 @@ export class AuthenticateController extends BaseHttpController {
                 }
             })();
         });
-    }
-
-    /**
-     *
-     * @param email
-     * @param playUri
-     * @param IPAddress
-     * @return
-     |object
-     * @private
-     */
-    private async getUserByUserIdentifier(
-        email: string,
-        playUri: string,
-        IPAddress: string
-    ): Promise<FetchMemberDataByUuidResponse | object> {
-        let data: FetchMemberDataByUuidResponse = {
-            email: email,
-            userUuid: email,
-            tags: [],
-            messages: [],
-            visitCardUrl: null,
-            textures: [],
-            userRoomToken: undefined,
-            jabberId: null,
-            jabberPassword: null,
-            mucRooms: [],
-            activatedInviteUser: true,
-        };
-        try {
-            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
-        } catch (err) {
-            console.error("openIDCallback => fetchMemberDataByUuid", err);
-        }
-        return data;
     }
 }

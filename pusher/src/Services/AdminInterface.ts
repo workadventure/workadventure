@@ -13,6 +13,7 @@ export interface AdminInterface {
      */
     fetchMemberDataByUuid(
         userIdentifier: string,
+        isLogged: boolean,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
