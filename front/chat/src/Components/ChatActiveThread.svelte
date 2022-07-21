@@ -35,8 +35,6 @@
   export let messagesStore: MessagesStore;
   export let settingsView = false;
 
-  export let defaultRoom: MucRoom;
-
   let messagesList: ChatMessagesList;
 
   function openChat(user: User) {
@@ -57,7 +55,7 @@
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
     >
       <button
-        class="tw-text-light-purple tw-m-0"
+        class="tw-text-lighter-purple tw-m-0"
         on:click={() => {
           activeThreadStore.reset();
         }}
@@ -85,7 +83,7 @@
       class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
       on:click={() => (settingsView = !settingsView)}
     >
-      <button class="tw-text-light-purple tw-m-0">
+      <button class="tw-text-lighter-purple tw-m-0">
         {#if settingsView}
           <MessageCircleIcon />
         {:else}
@@ -133,7 +131,6 @@
             {openChat}
             {user}
             {jid}
-            {defaultRoom}
             on:goTo={(event) => dispatch("goTo", event.detail)}
             on:rankUp={(event) => dispatch("rankUp", event.detail)}
             on:rankDown={(event) => dispatch("rankDown", event.detail)}
@@ -146,7 +143,6 @@
     </div>
   {:else}
     <ChatMessagesList
-      {defaultRoom}
       {messagesStore}
       mucRoom={activeThread}
       bind:this={messagesList}

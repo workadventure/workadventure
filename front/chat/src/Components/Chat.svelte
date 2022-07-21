@@ -74,9 +74,14 @@
     }
   }
 
-  let defaultMucRoom = mucRoomsStore.getDefaultRoom();
+
+  let defaultMucRoom = undefined;
   mucRoomsStore.subscribe(() => {
-    defaultMucRoom = mucRoomsStore.getDefaultRoom();
+    try {
+      defaultMucRoom = mucRoomsStore.getDefaultRoom();
+    } catch (e: Error){
+      console.log(e);
+    }
   });
 
   function handleGoTo(mucRoom: MucRoom | undefined, event: GoTo) {
@@ -119,7 +124,6 @@
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
-        defaultRoom={defaultMucRoom}
         on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
         on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
         on:rankDown={(event) =>
@@ -145,22 +149,21 @@
         {#if defaultMucRoom !== undefined}
           <UsersList
             {showUsers}
-            defaultRoom={defaultMucRoom}
-            usersListStore={defaultMucRoom?.getPresenceStore()}
-            meStore={defaultMucRoom?.getMeStore()}
+            usersListStore={defaultMucRoom.getPresenceStore()}
+            meStore={defaultMucRoom.getMeStore()}
             searchValue={searchValue.toLocaleLowerCase()}
             on:activeThread={handleActiveThread}
             on:showUsers={handleShowUsers}
             on:goTo={(event) =>
-              defaultMucRoom?.goTo(
+              defaultMucRoom.goTo(
                 event.detail.type,
                 event.detail.playUri,
                 event.detail.uuid
               )}
-            on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
-            on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+            on:rankUp={(event) => defaultMucRoom.rankUp(event.detail.jid)}
+            on:rankDown={(event) => defaultMucRoom.rankDown(event.detail.jid)}
             on:ban={(event) =>
-              defaultMucRoom?.ban(
+              defaultMucRoom.ban(
                 event.detail.user,
                 event.detail.name,
                 event.detail.playUri

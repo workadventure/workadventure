@@ -9,16 +9,16 @@
   } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { userStore } from "../Stores/LocalUserStore";
+  import {mucRoomsStore} from "../Stores/MucRoomsStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
-  export let defaultRoom: MucRoom;
 
   let messagesList: HTMLElement;
 
   let lastDate: Date;
 
-  $: presenseStore = defaultRoom.getPresenceStore();
+  $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
   function needHideHeader(name: string, date: Date, i: number) {
     let previousMsg = $messagesStore[i - 1];
@@ -46,13 +46,14 @@
     if (isMe(name)) {
       return ["", $userStore];
     }
-    return [...$presenseStore].find(([, user]) => user.name === name);
+    const [, user] = [...$presenseStore].find(([, user]) => user.name === name);
+    return user;
   }
 
   function getWoka(name: string) {
     const user = findUserInDefault(name);
     if (user) {
-      return user[1].woka;
+      return user.woka;
     } else {
       return defaultWoka;
     }
@@ -61,7 +62,7 @@
   function getColor(name: string) {
     const user = findUserInDefault(name);
     if (user) {
-      return user[1].color;
+      return user.color;
     } else {
       return defaultColor;
     }

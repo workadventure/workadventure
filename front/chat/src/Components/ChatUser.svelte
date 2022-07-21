@@ -12,12 +12,12 @@
     defaultColor,
     defaultWoka,
     MeStore,
-    MucRoom,
     User,
   } from "../Xmpp/MucRoom";
   import walk from "../../public/static/images/walk.svg";
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
+  import {mucRoomsStore} from "../Stores/MucRoomsStore";
 
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
@@ -32,9 +32,7 @@
   export let meStore: MeStore;
   export let jid: string;
 
-  export let defaultRoom: MucRoom;
-
-  $: presenseStore = defaultRoom.getPresenceStore();
+  $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
   let chatMenuActive = false;
   let openChatUserMenu = () => {
@@ -57,13 +55,14 @@
   }
 
   function findUserInDefault(name: string) {
-    return [...$presenseStore].find(([, user]) => user.name === name);
+    const [, user] = [...$presenseStore].find(([, user]) => user.name === name);
+    return user;
   }
 
   function getWoka(name: string) {
     const user = findUserInDefault(name);
     if (user) {
-      return user[1].woka;
+      return user.woka;
     } else {
       return defaultWoka;
     }
@@ -72,7 +71,7 @@
   function getColor(name: string) {
     const user = findUserInDefault(name);
     if (user) {
-      return user[1].color;
+      return user.color;
     } else {
       return defaultColor;
     }

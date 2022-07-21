@@ -120,7 +120,7 @@
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
     >
-      <button class="tw-text-light-purple tw-m-0" on:click={backToThreadList}>
+      <button class="tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
         <ArrowLeftIcon />
       </button>
     </div>
@@ -147,7 +147,7 @@
       class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
       on:click={() => (settingsView = !settingsView)}
     >
-      <button class="tw-text-light-purple tw-m-0">
+      <button class="tw-text-lighter-purple tw-m-0">
         {#if settingsView}
           <MessageCircleIcon />
         {:else}
