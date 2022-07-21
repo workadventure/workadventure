@@ -58,15 +58,15 @@ body .message-info.warning {
 }
 
 .screen-sharing {
-    .nametag-container {
+    .nametag-screenshare-container {
         i {
-            @apply tw-opacity-5 tw-transition-opacity;
+            @apply tw-opacity-20 tw-transition-opacity;
         }
     }
 }
 
 .screen-sharing:hover {
-    .nametag-container {
+    .nametag-screenshare-container {
         i {
             @apply tw-opacity-100;
         }
