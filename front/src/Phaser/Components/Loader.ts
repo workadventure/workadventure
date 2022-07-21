@@ -3,6 +3,7 @@ import { gameManager } from "../Game/GameManager";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import CancelablePromise from "cancelable-promise";
 import Texture = Phaser.Textures.Texture;
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 
 const TextName = "Loading...";
 

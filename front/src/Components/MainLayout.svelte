@@ -3,14 +3,14 @@
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
-    import { myCameraStore, proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
+    import { myCameraStore } from "../Stores/MyCameraStoreVisibility";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
     import { menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
     import { showReportScreenStore, userReportEmpty } from "../Stores/ShowReportScreenStore";
     import AudioManager from "./AudioManager/AudioManager.svelte";
-    import CameraControls from "./CameraControls.svelte";
+    import ActionBar from "./ActionBar/ActionBar.svelte";
     import EmbedScreensContainer from "./EmbedScreens/EmbedScreensContainer.svelte";
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
@@ -150,9 +150,7 @@
             <MyCamera />
         {/if}
 
-        {#if $proximityMeetingStore}
-            <CameraControls />
-        {/if}
+        <ActionBar />
 
         <!-- audio when user have a message TODO delete it with new chat -->
         <audio id="newMessageSound" src="/resources/objects/new-message.mp3" style="width: 0;height: 0;opacity: 0" />

@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const notification: NonNullable<Translation["notification"]> = {
+const notification: DeepPartial<Translation["notification"]> = {
     discussion: "will mit dir diskutieren",
     message: "sendet Ihnen eine Nachricht",
 };

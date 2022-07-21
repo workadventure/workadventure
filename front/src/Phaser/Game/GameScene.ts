@@ -137,6 +137,7 @@ import {
     ITiledMapProperty,
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -937,6 +938,8 @@ export class GameScene extends DirtyScene {
                 this.tryMovePlayerWithMoveToUserParameter();
             })
             .catch((e) => console.error(e));
+
+        gameSceneIsLoadedStore.set(true);
     }
 
     private subscribeToStores(): void {
@@ -1802,8 +1805,9 @@ ${escapedMessage}
     }
 
     public cleanupClosingScene(): void {
-        // make sure we restart CameraControls
-        mediaManager.disableProximityMeeting();
+        // make sure we restart own medias
+        mediaManager.disableMyCamera();
+        mediaManager.disableMyMicrophone();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
         // Stop the script, if any

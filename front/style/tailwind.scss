@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "wa-theme/action-menu-bar.scss";
+
+@layer base {
+    * {
+        @apply tw-font-sans;
+    }
+}
+
+@layer components {
+    //Menus - Main one uses theses classes
+    .menu-container {
+        @apply tw-flex tw-h-3/4 tw-w-full tw-text-white tw-pointer-events-auto tw-z-[900] tw-right-0 tw-left-0 tw-m-auto;
+        @apply md:tw-w-4/5 md:tw-top-14 md:tw-m-auto md:tw-absolute;
+
+        .menu-nav-sidebar {
+            @apply tw-bg-dark-purple/95 tw-rounded tw-overflow-auto tw-w-1/5;
+        }
+
+        .menu-submenu-container {
+            border-left: 1px solid theme("colors.light-purple");
+            @apply tw-p-3 tw-w-4/5 tw-overflow-auto;
+        }
+
+        .menu-item-container {
+            @apply tw-flex tw-flex-row tw-items-center tw-justify-between tw-py-0 tw-px-3 tw-transition-colors tw-duration-300;
+        }
+
+        .menu-item {
+            @apply tw-bg-transparent tw-h-12 tw-font-sans tw-font-bold tw-text-sm tw-items-center tw-pl-1 tw-text-white tw-align-middle tw-text-left tw-break-words tw-outline-none;
+            @apply md:tw-text-base md:tw-pl-3 md:tw-mr-1;
+        }
+
+        .menu-item-container:hover,
+        .active {
+            @apply tw-bg-light-purple clickable;
+
+            .menu-icon {
+                @apply tw-brightness-125;
+            }
+        }
+    }
+
+    .menu-icon {
+        @apply tw-h-3 tw-p-0.5 tw-invisible md:tw-visible;
+    }
+
+    //Buttons - basic buttons appearance
+    button,
+    .btn {
+        @apply tw-border-none tw-rounded tw-px-2 tw-py-1 tw-mx-0.5 tw-my-1 tw-items-center tw-flex tw-no-underline tw-transition-colors tw-duration-300 tw-break-words tw-outline-none;
+        @apply md:tw-px-4;
+        * {
+            @apply clickable;
+        }
+    }
+
+    .btn:hover,
+    button:hover {
+        @apply tw-no-underline;
+        filter: brightness(1.25);
+    }
+
+    .resizing-width {
+        @apply tw-w-3/4 md:tw-w-1/2 lg:tw-w-1/3;
+    }
+
+    .resizing-text {
+        @apply tw-text-sm md:tw-text-base;
+    }
+
+    //Dialog boxes used to notify user about something (follow feature, jitsi room, etc...)
+    .blue-dialog-box {
+        @apply tw-bg-dark-purple/95 tw-rounded tw-text-light-blue tw-self-center tw-m-1 tw-p-1 tw-align-middle tw-align-middle tw-pointer-events-auto;
+    }
+
+    .outline-light {
+        @apply tw-border-light-blue tw-border-solid tw-border;
+    }
+}
+
+@layer utilities {
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="url"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="month"],
+    input[type="week"],
+    input[type="time"],
+    input[type="search"],
+    input[type="tel"],
+    select,
+    textarea,
+    textarea[type="text"] {
+        @apply tw-bg-dark-blue tw-text-white tw-border-light-purple tw-rounded-lg focus:tw-border-lighter-purple focus:tw-ring-lighter-purple tw-mb-5 tw-transition-all tw-duration-300;
+        @apply placeholder:tw-text-lighter-purple;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+        @apply tw-border-light-purple tw-text-light-purple focus:tw-border-lighter-purple focus:tw-ring-lighter-purple tw-transition-all tw-duration-150;
+    }
+
+    input[type="checkbox"] {
+        @apply tw-rounded;
+    }
+
+    .blue-title {
+        @apply tw-text-light-blue tw-font-sans tw-text-base tw-font-normal;
+    }
+
+    button,
+    .btn {
+        &.light,
+        &.dark,
+        &.outline,
+        &.disabled,
+        &.danger {
+            @apply tw-min-h-10;
+        }
+
+        &.light {
+            @apply tw-bg-light-blue tw-text-dark-purple;
+        }
+
+        &.dark {
+            @apply tw-bg-dark-purple tw-text-light-blue;
+        }
+
+        &.outline {
+            @apply tw-bg-transparent tw-text-light-blue tw-border tw-border-light-blue tw-border-solid;
+        }
+
+        &.outline:hover {
+            @apply tw-bg-light-blue tw-text-dark-purple;
+            .darken-icon {
+                @apply tw-brightness-0;
+            }
+        }
+
+        &.disabled {
+            @apply tw-bg-grey tw-text-dark-purple tw-cursor-not-allowed tw-opacity-60;
+        }
+
+        &.danger {
+            @apply tw-bg-pop-red tw-text-dark-purple;
+        }
+
+        &.close-window {
+            @apply tw-bg-pop-red tw-text-white tw-ring-1 tw-ring-dark-blue tw-absolute tw-right-6 tw-px-0 tw-py-0 tw-h-5 tw-w-5 tw-justify-center tw-outline-none;
+        }
+    }
+
+    section {
+        @apply tw-mb-4 tw-p-2 tw-h-full;
+        .bottom-separator {
+            border-bottom: 1px solid theme("colors.light-purple");
+        }
+    }
+
+    .centered-column {
+        @apply tw-flex tw-flex-col tw-items-center;
+    }
+
+    .tooltip {
+        @apply tw-relative tw-inline-block;
+    }
+
+    .tooltip .tooltiptext {
+        @apply tw-bg-medium-purple tw-text-white tw-text-center tw-items-center tw-px-3 tw-py-5 tw-rounded tw-bottom-full tw-absolute tw-invisible;
+    }
+
+    .tooltip:hover .tooltiptext {
+        @apply tw-visible;
+    }
+
+    .tooltip .tooltiptext::after {
+        content: "";
+        @apply tw-absolute tw-border-solid tw-top-full tw-left-10;
+        margin-left: -5px;
+        border-width: 5px;
+        border-color: theme("colors.medium-purple") theme("colors.transparent") theme("colors.transparent")
+            theme("colors.transparent");
+    }
+
+    .clickable,
+    .clickable:hover {
+        cursor: url("./images/cursor_pointer.png"), pointer;
+    }
+}

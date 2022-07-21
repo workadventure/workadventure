@@ -63,6 +63,7 @@
     section {
         font-family: "Press Start 2P";
         color: #ebeeee;
+        height: auto;
         margin: 5px;
 
         &.category {
@@ -77,7 +78,7 @@
 
         &.action {
             position: absolute;
-            margin-top: 70vh;
+            margin-top: 80vh;
             top: 0;
             width: 100%;
             text-align: center;

@@ -14,6 +14,7 @@
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
     import Chat from "./Chat/Chat.svelte";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
 
     export let game: Game;
 </script>
@@ -42,7 +43,7 @@
     <div class="scrollable">
         <EnableCameraScene {game} />
     </div>
-{:else}
+{:else if $gameSceneIsLoadedStore}
     <Chat />
     <MainLayout />
 {/if}

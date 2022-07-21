@@ -185,7 +185,7 @@
 </aside>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
+    @import "../../../style/breakpoints.scss";
 
     p.close-icon {
         position: absolute;

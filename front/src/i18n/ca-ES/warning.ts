@@ -1,9 +1,10 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
 
 const upgradeLink = ADMIN_URL + "/pricing";
 
-const warning: NonNullable<Translation["warning"]> = {
+const warning: DeepPartial<Translation["warning"]> = {
     title: "Atenció!",
     content: `Aquest món està apropant-se al seu límit! Podeu actualitzar la seva capacitat <a href="${upgradeLink}" target="_blank">aquí</a>`,
     limit: "Aquest món està apropant-se al seu límit!",

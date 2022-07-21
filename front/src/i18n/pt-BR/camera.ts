@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const camera: BaseTranslation = {
+const camera: DeepPartial<Translation["camera"]> = {
     enable: {
         title: "Ligue sua câmera e microfone",
         start: "Vamos lá!",
