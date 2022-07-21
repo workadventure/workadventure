@@ -1,5 +1,4 @@
 import { DeepPartial } from "../../Utils/DeepPartial";
-s;
 import type { Translation } from "../i18n-types";
 
 const companion: DeepPartial<Translation["companion"]> = {
