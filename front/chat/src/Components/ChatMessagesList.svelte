@@ -10,6 +10,7 @@
   import LL, { locale } from "../i18n/i18n-svelte";
   import { userStore } from "../Stores/LocalUserStore";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
+  import {UserData} from "../Messages/JsonMessages/ChatData";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
@@ -42,7 +43,7 @@
     return name === mucRoom.getPlayerName();
   }
 
-  function findUserInDefault(name: string): User | undefined {
+  function findUserInDefault(name: string): User | UserData | undefined {
     if (isMe(name)) {
       return $userStore;
     }
