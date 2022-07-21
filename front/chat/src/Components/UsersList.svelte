@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {MeStore, MucRoom, User, UsersStore} from "../Xmpp/MucRoom";
+  import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
   import ChatUser from "./ChatUser.svelte";
   import { createEventDispatcher } from "svelte";
   import { ChevronUpIcon } from "svelte-feather-icons";

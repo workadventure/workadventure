@@ -1,8 +1,14 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
-  import {ChatStates, defaultColor, defaultWoka, MessagesStore, MucRoom} from "../Xmpp/MucRoom";
+  import {
+    ChatStates,
+    defaultColor,
+    defaultWoka,
+    MessagesStore,
+    MucRoom,
+  } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
-  import {userStore} from "../Stores/LocalUserStore";
+  import { userStore } from "../Stores/LocalUserStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
@@ -13,7 +19,6 @@
   let lastDate: Date;
 
   $: presenseStore = defaultRoom.getPresenceStore();
-
 
   function needHideHeader(name: string, date: Date, i: number) {
     let previousMsg = $messagesStore[i - 1];
@@ -37,25 +42,25 @@
     return name === mucRoom.getPlayerName();
   }
 
-  function findUserInDefault(name: string){
-    if(isMe(name)){
-      return ['',$userStore];
+  function findUserInDefault(name: string) {
+    if (isMe(name)) {
+      return ["", $userStore];
     }
-    return [...$presenseStore].find(([,user]) => user.name === name);
+    return [...$presenseStore].find(([, user]) => user.name === name);
   }
 
-  function getWoka(name: string){
+  function getWoka(name: string) {
     const user = findUserInDefault(name);
-    if(user) {
+    if (user) {
       return user[1].woka;
     } else {
       return defaultWoka;
     }
   }
 
-  function getColor(name: string){
+  function getColor(name: string) {
     const user = findUserInDefault(name);
-    if(user) {
+    if (user) {
       return user[1].color;
     } else {
       return defaultColor;
@@ -102,9 +107,7 @@
               : "tw-mt-4"
           } tw-relative wa-avatar-mini tw-mr-2`}
           transition:fade={{ duration: 100 }}
-          style={`background-color: ${
-            getColor(message.name)
-          }`}
+          style={`background-color: ${getColor(message.name)}`}
         >
           <div class="wa-container">
             <img
@@ -124,9 +127,7 @@
           }}
         >
           <div
-            style={`border-bottom-color:${
-              getColor(message.name)
-            }`}
+            style={`border-bottom-color:${getColor(message.name)}`}
             class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1 ${
               needHideHeader(message.name, message.time, i) ? "tw-hidden" : ""
             }`}
@@ -154,18 +155,12 @@
       <div class={`tw-flex tw-justify-start`}>
         <div
           class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-          style={`background-color: ${
-            getColor(user.name)
-          }`}
+          style={`background-color: ${getColor(user.name)}`}
           in:fade={{ duration: 100 }}
           out:fade={{ delay: 200, duration: 100 }}
         >
           <div class="wa-container">
-            <img
-              class="tw-w-full"
-              src={getWoka(user.name)}
-              alt="Avatar"
-            />
+            <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
           </div>
         </div>
         <div
@@ -175,9 +170,7 @@
         >
           <div class="tw-w-fit">
             <div
-              style={`border-bottom-color:${
-                getColor(user.name)
-              }`}
+              style={`border-bottom-color:${getColor(user.name)}`}
               class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
             >
               <span class="tw-text-lighter-purple tw-text-xxs">{user.name}</span

@@ -8,7 +8,13 @@
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
-  import {defaultColor, defaultWoka, MeStore, MucRoom, User} from "../Xmpp/MucRoom";
+  import {
+    defaultColor,
+    defaultWoka,
+    MeStore,
+    MucRoom,
+    User,
+  } from "../Xmpp/MucRoom";
   import walk from "../../public/static/images/walk.svg";
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
@@ -50,22 +56,22 @@
     dispatch("ban", { user, name, playUri });
   }
 
-  function findUserInDefault(name: string){
-    return [...$presenseStore].find(([,user]) => user.name === name);
+  function findUserInDefault(name: string) {
+    return [...$presenseStore].find(([, user]) => user.name === name);
   }
 
-  function getWoka(name: string){
+  function getWoka(name: string) {
     const user = findUserInDefault(name);
-    if(user) {
+    if (user) {
       return user[1].woka;
     } else {
       return defaultWoka;
     }
   }
 
-  function getColor(name: string){
+  function getColor(name: string) {
     const user = findUserInDefault(name);
-    if(user) {
+    if (user) {
       return user[1].color;
     } else {
       return defaultColor;
