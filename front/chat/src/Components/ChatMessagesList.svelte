@@ -2,7 +2,6 @@
   import { fade, fly } from "svelte/transition";
   import { ChatStates, MessagesStore, MucRoom } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
-  import {lastTimelineMessageRead} from "../Stores/ChatStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
@@ -42,7 +41,7 @@
   $: usersStore = mucRoom.getPresenceStore();
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto tw-mt-0 tw-mb-14" bind:this={messagesList}>
+<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14" bind:this={messagesList}>
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
       <div class="wa-separator">

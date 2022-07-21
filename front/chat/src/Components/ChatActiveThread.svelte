@@ -41,128 +41,6 @@
     return user;
     //dispatch('activeThread', user);
   }
-
-  // let threadList = [
-  //     // newest first
-  //     {
-  //         type: "message",
-  //         user_id: 3,
-  //         user_color: "#04F17A",
-  //         user_name: "Grégoire",
-  //         user_avatar: "yoda2-avatar.png",
-  //         time: "2 min ago",
-  //         text: "Check that",
-  //     },
-  //     {
-  //         type: "attachment",
-  //         user_id: 3,
-  //         user_color: "#04F17A",
-  //         user_name: "Grégoire",
-  //         user_avatar: "yoda2-avatar.png",
-  //         info: "a rejoint conversation",
-  //     },
-  //
-  //     {
-  //         type: "message",
-  //         user_id: 3,
-  //         user_color: "#04F17A",
-  //         user_name: "Grégoire",
-  //         user_avatar: "yoda2-avatar.png",
-  //         time: "2 min ago",
-  //         text: "Etiam rutrum, velit et auctor iaculis, massa leo luctus tellus, sit amet bibendum arcu augue in odio. ",
-  //     },
-  //     {
-  //         type: "event",
-  //         user_id: 3,
-  //         user_color: "#04F17A",
-  //         user_name: "Grégoire",
-  //         info: "a rejoint conversation",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_name: "Me",
-  //         user_id: 1,
-  //         user_color: "#FF475a",
-  //         time: "2 min ago",
-  //         me: true,
-  //         text: "My last message",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_name: "Me",
-  //         user_id: 1,
-  //         user_color: "#FF475a",
-  //         time: "2 min ago",
-  //         me: true,
-  //         text: "Donec varius lacus sit amet finibus pharetra.",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_id: 2,
-  //         user_name: "Bernadette",
-  //         user_avatar: "yoda-avatar.png",
-  //         user_color: "#365DFF",
-  //         time: "2 min ago",
-  //         text: "Another message",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_id: 2,
-  //         user_name: "Bernadette",
-  //         user_avatar: "yoda-avatar.png",
-  //         user_color: "#365DFF",
-  //         time: "2 min ago",
-  //         text: "Aliquam sollicitudin massa non massa gravida, id bibendum nulla feugiat. Etiam rutrum, velit et auctor iaculis, massa leo luctus tellus, sit amet bibendum arcu",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_id: 2,
-  //         user_name: "Bernadette",
-  //         user_avatar: "yoda-avatar.png",
-  //         user_color: "#365DFF",
-  //         time: "2 min ago",
-  //         text: "Nam tempus turpis et nulla luctus posuere. Nam lobortis, libero sed varius pellentesque, tellus mauris mollis eros, eget pretium quam nulla sit amet quam",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_name: "Me",
-  //         user_id: 1,
-  //         user_color: "#FF475a",
-  //         time: "4 min ago",
-  //         me: true,
-  //         text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam convallis, dolor vitae tempor porta, dui nisl volutpat ligula",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_id: 2,
-  //         user_color: "#365DFF",
-  //         user_name: "Bernadette",
-  //         user_avatar: "yoda-avatar.png",
-  //         time: "9 min ago",
-  //         text: "Nam lacinia, leo eleifend aliquet varius, lorem massa gravida nunc, vel tempus dui diam eu nisl.  ",
-  //     },
-  //     {
-  //         type: "message",
-  //         user_name: "Bernadette",
-  //         user_avatar: "yoda-avatar.png",
-  //         user_color: "#365DFF",
-  //         user_id: 2,
-  //         time: "10 min ago",
-  //         text: "Nunc eget congue arcu. ",
-  //     },
-  // ];
-  //
-  // let threadListUserTyping: {
-  //     user_id: number;
-  //     user_name: string;
-  //     user_avatar: string;
-  //     user_color: string;
-  // } = {
-  //     user_id: 3,
-  //     user_name: "Grégoire",
-  //     user_avatar: "yoda2-avatar.png",
-  //     user_color: "#04F17A",
-  // };
 </script>
 
 <!-- thread -->
@@ -267,6 +145,7 @@
     <ChatMessagesList {messagesStore} mucRoom={activeThread} bind:this={messagesList}/>
 
     <div class="messageForm">
+
       <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown}/>
     </div>
   {/if}

@@ -106,6 +106,10 @@
     }
 
     function toggleChat() {
+        if(!$chatVisibilityStore){
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+        }
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -206,6 +210,7 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
+        chatVisibilityStore.set(false);
     }
 
     function showMenu() {
@@ -223,6 +228,7 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
+        chatVisibilityStore.set(false);
     }
 
     function register() {

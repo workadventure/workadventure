@@ -195,7 +195,7 @@
     <!-- MESSAGE LIST-->
     <div
       id="timeLine-messageList"
-      class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto"
+      class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-2 tw-overflow-auto tw-mt-0 tw-mb-14"
       bind:this={messagesList}
     >
       {#each $chatMessagesStore as message}
@@ -342,18 +342,16 @@
     display: flex;
     justify-content: flex-end;
     overflow-y: scroll;
-    min-height: 100vh;
-    padding-bottom: 60px;
-    padding-top: 60px;
 
     .handlerTag {
       text-align: center;
 
       span.tag {
+        @apply tw-bg-dark;
         cursor: pointer;
         width: fit-content;
-        padding: 2px 10px 2px 10px;
-        margin: 2px 0 2px 0;
+        padding: 2px 10px;
+        margin: 2px 0;
         border: solid 1px #979797;
       }
     }
