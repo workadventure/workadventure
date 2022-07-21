@@ -15,6 +15,7 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
 
     export let game: Game;
 </script>
@@ -43,7 +44,7 @@
     <div class="scrollable">
         <EnableCameraScene {game} />
     </div>
-{:else}
+{:else if $gameSceneIsLoadedStore}
     <MainLayout />
 
     {#if $chatVisibilityStore}

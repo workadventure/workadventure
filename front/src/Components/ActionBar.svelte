@@ -24,6 +24,7 @@
     import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import { chatVisibilityStore } from "../Stores/ChatStore";
+    import { proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -48,7 +49,8 @@
     import { limitMapStore } from "../Stores/GameStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
-    let menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+
+    const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -337,7 +339,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore}
+                {#if !$inExternalServiceStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
@@ -511,6 +513,8 @@
 {/if}
 
 <style lang="scss">
+    @import "../../style/breakpoints.scss";
+
     .animated {
         transition-property: transform;
         transition-duration: 0.5s;
@@ -520,7 +524,7 @@
         transform: translateX(2rem);
     }
 
-    @media only screen and (max-width: 640px) {
+    @include media-breakpoint-down(sm) {
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
