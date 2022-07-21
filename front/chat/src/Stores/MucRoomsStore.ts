@@ -31,10 +31,10 @@ function createMucRoomsStore() {
       const defaultMucRoom = [...get(mucRoomsStore).values()].find(
         (mucRoom) => mucRoom.type === "default"
       );
-      if(!defaultMucRoom){
-        throw new Error('No default MUC room');
+      if (!defaultMucRoom) {
+        throw new Error("No default MUC room");
       }
-       return defaultMucRoom;
+      return defaultMucRoom;
     },
   };
 }

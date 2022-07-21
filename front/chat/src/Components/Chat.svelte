@@ -74,12 +74,11 @@
     }
   }
 
-
   let defaultMucRoom = undefined;
   mucRoomsStore.subscribe(() => {
     try {
       defaultMucRoom = mucRoomsStore.getDefaultRoom();
-    } catch (e: Error){
+    } catch (e: Error) {
       console.log(e);
     }
   });

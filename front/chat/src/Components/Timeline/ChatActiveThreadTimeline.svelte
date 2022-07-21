@@ -114,9 +114,7 @@
   class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
   transition:fly={{ x: 500, duration: 400 }}
 >
-  <div
-    class="wa-thread-head"
-  >
+  <div class="wa-thread-head">
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
     >

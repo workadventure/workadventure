@@ -9,7 +9,7 @@
   } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { userStore } from "../Stores/LocalUserStore";
-  import {mucRoomsStore} from "../Stores/MucRoomsStore";
+  import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;

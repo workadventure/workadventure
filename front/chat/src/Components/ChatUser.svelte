@@ -8,16 +8,11 @@
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
-  import {
-    defaultColor,
-    defaultWoka,
-    MeStore,
-    User,
-  } from "../Xmpp/MucRoom";
+  import { defaultColor, defaultWoka, MeStore, User } from "../Xmpp/MucRoom";
   import walk from "../../public/static/images/walk.svg";
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
-  import {mucRoomsStore} from "../Stores/MucRoomsStore";
+  import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
