@@ -356,12 +356,6 @@
     <div class="wa-message-form">
       <form on:submit|preventDefault={saveMessage}>
         <div class="tw-w-full tw-p-2">
-          <div class="typing tw-text-lighter-purple tw-text-xxs">
-            {#each [...$writingStatusMessageStore] as user}
-              <span>@{user.name} is typing...</span>
-            {/each}
-          </div>
-
           <div class="tw-flex tw-items-center tw-relative">
             <textarea
               type="text"
