@@ -106,7 +106,7 @@
     }
 
     function toggleChat() {
-        if(!$chatVisibilityStore){
+        if (!$chatVisibilityStore) {
             menuVisiblilityStore.set(false);
             activeSubMenuStore.set(0);
         }

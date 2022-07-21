@@ -33,9 +33,9 @@
   }
 
   $: usersFiltered = [...$usersListStore]
-          .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
-          .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
-          .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
+    .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
+    .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
+    .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
 </script>
 
 <div>

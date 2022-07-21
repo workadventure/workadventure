@@ -98,7 +98,9 @@
       out:fly={{ y: -100, duration: 100 }}
       class="messageSettings tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
     >
-      <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5">
+      <div
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
+      >
         {#if $meStore.isAdmin}
           <button
             class="wa-action"
@@ -139,11 +141,17 @@
       </div>
     </div>
   {:else}
-    <ChatMessagesList {messagesStore} mucRoom={activeThread} bind:this={messagesList}/>
+    <ChatMessagesList
+      {messagesStore}
+      mucRoom={activeThread}
+      bind:this={messagesList}
+    />
 
     <div class="messageForm">
-
-      <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown}/>
+      <ChatMessageForm
+        mucRoom={activeThread}
+        on:scrollDown={messagesList.scrollDown}
+      />
     </div>
   {/if}
 </div>

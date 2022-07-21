@@ -2,7 +2,7 @@
   import { SendIcon } from "svelte-feather-icons";
   import { ChatStates, MucRoom } from "../Xmpp/MucRoom";
   import LL from "../i18n/i18n-svelte";
-  import {createEventDispatcher} from "svelte";
+  import { createEventDispatcher } from "svelte";
 
   export let mucRoom: MucRoom;
 
@@ -15,20 +15,22 @@
   function onFocus() {}
   function onBlur() {}
 
-  function adjustHeight(){
+  function adjustHeight() {
     textarea.style.height = "auto";
     textarea.style.height = textarea.scrollHeight + "px";
   }
 
   function sendMessage() {
-    if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0) return;
+    if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+      return;
     mucRoom.updateComposingState(ChatStates.PAUSED);
     mucRoom.sendMessage(newMessageText);
-    newMessageText = '';
-    dispatch('scrollDown');
+    newMessageText = "";
+    dispatch("scrollDown");
     return false;
   }
 </script>
+
 <div class="wa-message-form">
   <form on:submit|preventDefault={sendMessage}>
     <div class="tw-w-full tw-p-2">
@@ -41,12 +43,15 @@
           on:focus={onFocus}
           on:blur={onBlur}
           on:keydown={(key) => {
-            if((key.keyCode === 13 && key.shiftKey) || [8,46].includes(key.keyCode)){
+            if (
+              (key.keyCode === 13 && key.shiftKey) ||
+              [8, 46].includes(key.keyCode)
+            ) {
               setTimeout(() => adjustHeight(), 10);
             }
-            if(key.keyCode === 13 && !key.shiftKey){
+            if (key.keyCode === 13 && !key.shiftKey) {
               sendMessage();
-              setTimeout(() => newMessageText = '', 10);
+              setTimeout(() => (newMessageText = ""), 10);
               return false;
             }
           }}
@@ -57,7 +62,7 @@
           }}
           rows="1"
           style="margin-bottom: 0;"
-        ></textarea>
+        />
         <button
           type="submit"
           class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"

@@ -42,7 +42,8 @@
 </script>
 
 <div
-  class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14" bind:this={messagesList}
+  class="messageList tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-mt-0 tw-mb-14"
+  bind:this={messagesList}
 >
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
