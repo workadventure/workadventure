@@ -8,8 +8,8 @@ function secNSec2ms(secNSec: Array<number> | number) {
 }
 
 class CpuTracker {
-    private cpuPercent: number = 0;
-    private overHeating: boolean = false;
+    private cpuPercent = 0;
+    private overHeating = false;
 
     constructor() {
         let time = process.hrtime.bigint();

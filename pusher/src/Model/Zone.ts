@@ -81,7 +81,7 @@ export class UserDescriptor {
         );
     }
 
-    public update(userMovedMessage: UserMovedMessage) {
+    public update(userMovedMessage: UserMovedMessage): void {
         const position = userMovedMessage.getPosition();
         if (position === undefined) {
             throw new Error("Missing position");
@@ -89,7 +89,7 @@ export class UserDescriptor {
         this.position = position;
     }
 
-    public updateDetails(playerDetails: SetPlayerDetailsMessage) {
+    public updateDetails(playerDetails: SetPlayerDetailsMessage): void {
         if (playerDetails.getRemoveoutlinecolor()) {
             this.outlineColor = undefined;
         } else {
@@ -157,7 +157,7 @@ export class GroupDescriptor {
         return new GroupDescriptor(message.getGroupid(), message.getGroupsize(), position, message.getLocked());
     }
 
-    public update(groupDescriptor: GroupDescriptor) {
+    public update(groupDescriptor: GroupDescriptor): void {
         this.groupSize = groupDescriptor.groupSize;
         this.position = groupDescriptor.position;
         this.locked = groupDescriptor.locked;
@@ -191,7 +191,7 @@ export class Zone {
     private groups: Map<number, GroupDescriptor> = new Map<number, GroupDescriptor>();
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
     private backConnection!: ClientReadableStream<BatchToPusherMessage>;
-    private isClosing: boolean = false;
+    private isClosing = false;
 
     constructor(
         private positionDispatcher: PositionDispatcher,
@@ -324,7 +324,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user entered
      */
-    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined) {
+    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
             if (listener.userId === user.userId) {
                 continue;
@@ -340,7 +340,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this group entered
      */
-    private notifyGroupEnter(group: GroupDescriptor, oldZone: ZoneDescriptor | undefined) {
+    private notifyGroupEnter(group: GroupDescriptor, oldZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
             if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
                 this.socketListener.onGroupEnters(group, listener);
@@ -353,7 +353,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user left
      */
-    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined) {
+    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
             if (listener.userId === userId) {
                 continue;
@@ -366,7 +366,7 @@ export class Zone {
         }
     }
 
-    private notifyEmote(emoteMessage: EmoteEventMessage) {
+    private notifyEmote(emoteMessage: EmoteEventMessage): void {
         for (const listener of this.listeners) {
             if (listener.userId === emoteMessage.getActoruserid()) {
                 continue;
@@ -375,8 +375,7 @@ export class Zone {
         }
     }
 
-    private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage) {
-        //console.log('notifyPlayerDetailsUpdated', playerDetailsUpdatedMessage.getDetails()?.getUpdatevariable()));
+    private notifyPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage): void {
         for (const listener of this.listeners) {
             if (listener.userId === playerDetailsUpdatedMessage.getUserid()) {
                 continue;
@@ -385,7 +384,7 @@ export class Zone {
         }
     }
 
-    private notifyError(errorMessage: ErrorMessage) {
+    private notifyError(errorMessage: ErrorMessage): void {
         for (const listener of this.listeners) {
             this.socketListener.onError(errorMessage, listener);
         }
@@ -394,7 +393,7 @@ export class Zone {
     /**
      * Notify listeners of this zone that this group left
      */
-    private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor | undefined) {
+    private notifyGroupLeft(groupId: number, newZone: ZoneDescriptor | undefined): void {
         for (const listener of this.listeners) {
             if (listener.groupId === groupId) {
                 continue;
@@ -417,13 +416,13 @@ export class Zone {
         return false;
     }
 
-    private notifyGroupMove(groupDescriptor: GroupDescriptor) {
+    private notifyGroupMove(groupDescriptor: GroupDescriptor): void {
         for (const listener of this.listeners) {
             this.socketListener.onGroupMoves(groupDescriptor, listener);
         }
     }
 
-    private notifyUserMove(userDescriptor: UserDescriptor) {
+    private notifyUserMove(userDescriptor: UserDescriptor): void {
         for (const listener of this.listeners) {
             if (listener.userId === userDescriptor.userId) {
                 continue;

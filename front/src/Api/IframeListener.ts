@@ -65,6 +65,24 @@ class IframeListener {
     private readonly _closeChatStream: Subject<void> = new Subject();
     public readonly closeChatStream = this._closeChatStream.asObservable();
 
+    private readonly _turnOffMicrophoneStream: Subject<void> = new Subject();
+    public readonly turnOffMicrophoneStream = this._turnOffMicrophoneStream.asObservable();
+
+    private readonly _turnOffWebcamStream: Subject<void> = new Subject();
+    public readonly turnOffWebcamStream = this._turnOffWebcamStream.asObservable();
+
+    private readonly _disableMicrophoneStream: Subject<void> = new Subject();
+    public readonly disableMicrophoneStream = this._disableMicrophoneStream.asObservable();
+
+    private readonly _restoreMicrophoneStream: Subject<void> = new Subject();
+    public readonly restoreMicrophoneStream = this._restoreMicrophoneStream.asObservable();
+
+    private readonly _disableWebcamStream: Subject<void> = new Subject();
+    public readonly disableWebcamStream = this._disableWebcamStream.asObservable();
+
+    private readonly _restoreWebcamStream: Subject<void> = new Subject();
+    public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
+
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
 
@@ -140,7 +158,7 @@ class IframeListener {
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
-    private sendPlayerMove: boolean = false;
+    private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -204,7 +222,7 @@ class IframeListener {
 
                     const errorHandler = (reason: unknown) => {
                         console.error("An error occurred while responding to an iFrame query.", reason);
-                        let reasonMsg: string = "";
+                        let reasonMsg = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
                         } else if (typeof reason === "object") {
@@ -291,6 +309,18 @@ class IframeListener {
                         this._disablePlayerControlStream.next();
                     } else if (iframeEvent.type === "restorePlayerControls") {
                         this._enablePlayerControlStream.next();
+                    } else if (iframeEvent.type === "turnOffMicrophone") {
+                        this._turnOffMicrophoneStream.next();
+                    } else if (iframeEvent.type === "turnOffWebcam") {
+                        this._turnOffWebcamStream.next();
+                    } else if (iframeEvent.type === "disableMicrophone") {
+                        this._disableMicrophoneStream.next();
+                    } else if (iframeEvent.type === "restoreMicrophone") {
+                        this._restoreMicrophoneStream.next();
+                    } else if (iframeEvent.type === "disableWebcam") {
+                        this._disableWebcamStream.next();
+                    } else if (iframeEvent.type === "restoreWebcam") {
+                        this._restoreWebcamStream.next();
                     } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
                         this._disablePlayerProximityMeetingStream.next();
                     } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
@@ -382,7 +412,7 @@ class IframeListener {
         };
     }
 
-    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
         return new Promise<void>((resolve) => {
             console.info("Loading map related script at ", scriptUrl);
 

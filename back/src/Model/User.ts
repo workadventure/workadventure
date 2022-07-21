@@ -46,7 +46,8 @@ export class User implements Movable {
         private readonly brothersFinder: BrothersFinder,
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
-        private voiceIndicatorShown?: boolean
+        private voiceIndicatorShown?: boolean,
+        public readonly activatedInviteUser?: boolean
     ) {
         this.listenedZones = new Set<Zone>();
 
@@ -70,7 +71,8 @@ export class User implements Movable {
         brothersFinder: BrothersFinder,
         companion?: CompanionMessage,
         outlineColor?: number,
-        voiceIndicatorShown?: boolean
+        voiceIndicatorShown?: boolean,
+        activatedInviteUser?: boolean
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository);
@@ -92,7 +94,8 @@ export class User implements Movable {
             brothersFinder,
             companion,
             outlineColor,
-            voiceIndicatorShown
+            voiceIndicatorShown,
+            activatedInviteUser
         );
     }
 

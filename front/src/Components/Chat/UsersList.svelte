@@ -5,7 +5,14 @@
     import { createEventDispatcher } from "svelte";
     import { searchValue } from "../../Stores/Utils/SearchStore";
     import { localUserStore } from "../../Connexion/LocalUserStore";
-    import { activeSubMenuStore, menuVisiblilityStore } from "../../Stores/MenuStore";
+    import {
+        activeSubMenuStore,
+        MenuItem,
+        menuVisiblilityStore,
+        SubMenusInterface,
+        subMenusStore,
+        TranslatedMenu,
+    } from "../../Stores/MenuStore";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
 
     export let usersListStore: UsersStore;
@@ -28,7 +35,14 @@
 
     function openInviteMenu() {
         chatVisibilityStore.set(false);
-        activeSubMenuStore.set(2);
+        const indexInviteMenu = $subMenusStore.findIndex(
+            (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+        );
+        if (indexInviteMenu === -1) {
+            console.error(`Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `, $subMenusStore);
+            return;
+        }
+        activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
     }
 </script>

@@ -4,7 +4,7 @@ interface Size {
 }
 
 export class HdpiManager {
-    private _zoomModifier: number = 1;
+    private _zoomModifier = 1;
 
     /**
      *

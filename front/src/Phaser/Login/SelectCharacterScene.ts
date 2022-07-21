@@ -22,7 +22,7 @@ import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
-import { myCameraVisibilityStore } from "../../Stores/MyCameraStoreVisibility";
+import { myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";
@@ -35,7 +35,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
     private collectionKeys!: string[];
     private selectedCollectionIndex!: number;
     private selectedGridItemIndex?: number;
-    private gridRowsCount: number = 1;
+    private gridRowsCount = 1;
 
     protected lazyloadingAttempt = true; //permit to update texture loaded after renderer
     private loader: Loader;
@@ -139,7 +139,8 @@ export class SelectCharacterScene extends AbstractCharacterScene {
             return;
         }
         this.selectedWoka = null;
-        myCameraVisibilityStore.set(false);
+        myCameraStore.set(false);
+        myMicrophoneStore.set(false);
         this.scene.sleep(SelectCharacterSceneName);
         this.scene.run(CustomizeSceneName);
         selectCharacterSceneVisibleStore.set(false);
@@ -279,7 +280,7 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         });
     }
 
-    private selectNextGridItem(previous: boolean = false, horizontally: boolean): void {
+    private selectNextGridItem(previous = false, horizontally: boolean): void {
         if (this.selectedGridItemIndex === undefined) {
             this.selectedGridItemIndex = 0;
         }

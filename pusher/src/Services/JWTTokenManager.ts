@@ -18,11 +18,11 @@ class JWTTokenManager {
         return Jwt.verify(token, ADMIN_SOCKETS_TOKEN) as AdminSocketTokenData;
     }
 
-    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string) {
+    public createAuthToken(identifier: string, accessToken?: string, username?: string, locale?: string): string {
         return Jwt.sign({ identifier, accessToken, username, locale }, SECRET_KEY, { expiresIn: "30d" });
     }
 
-    public verifyJWTToken(token: string, ignoreExpiration: boolean = false): AuthTokenData {
+    public verifyJWTToken(token: string, ignoreExpiration = false): AuthTokenData {
         try {
             return Jwt.verify(token, SECRET_KEY, { ignoreExpiration }) as AuthTokenData;
         } catch (e) {

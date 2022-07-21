@@ -1,20 +1,19 @@
-version: "3"
+version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.0
+    image: traefik:v2.8
+    expose:
+      - "8080"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
     command:
       - --api.insecure=true
       - --providers.docker
       - --entryPoints.web.address=:80
       - --entryPoints.websecure.address=:443
-    ports:
-      - "80:80"
-      - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
-    depends_on:
-      - back
-      - front
+      - --providers.docker.exposedbydefault=false
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
@@ -48,6 +47,7 @@ services:
     volumes:
       - ./front:/usr/src/app
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.front.rule=PathPrefix(`/`)"
       - "traefik.http.routers.front.entryPoints=web,traefik"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
@@ -87,6 +87,7 @@ services:
     volumes:
       - ./pusher:/usr/src/app
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.strip-pusher-prefix.stripprefix.prefixes=/pusher"
       - "traefik.http.routers.pusher.rule=PathPrefix(`/pusher`)"
       - "traefik.http.routers.pusher.middlewares=strip-pusher-prefix@docker"
@@ -128,6 +129,7 @@ services:
     volumes:
       - ./maps:/var/www/html
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.strip-maps-prefix.stripprefix.prefixes=/maps"
       - "traefik.http.routers.maps.rule=PathPrefix(`/maps`)"
       - "traefik.http.routers.maps.middlewares=strip-maps-prefix@docker"
@@ -163,6 +165,7 @@ services:
     volumes:
       - ./back:/usr/src/app
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.strip-api-prefix.stripprefix.prefixes=/api"
       - "traefik.http.routers.back.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.back.middlewares=strip-api-prefix@docker"
@@ -184,6 +187,7 @@ services:
     volumes:
       - ./uploader:/usr/src/app
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes=/uploader"
       - "traefik.http.routers.uploader.rule=PathPrefix(`/uploader`)"
       - "traefik.http.routers.uploader.middlewares=strip-uploader-prefix@docker"
@@ -213,6 +217,7 @@ services:
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
+      - "traefik.enable=true"
       - "traefik.http.middlewares.strip-icon-prefix.stripprefix.prefixes=/icon"
       - "traefik.http.routers.icon.rule=PathPrefix(`/icon`)"
       - "traefik.http.routers.icon.middlewares=strip-icon-prefix@docker"

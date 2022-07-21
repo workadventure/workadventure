@@ -35,7 +35,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
         this.scene.add.existing(this);
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant: boolean = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
         if (this._availabilityStatus === availabilityStatus || availabilityStatus === AvailabilityStatus.UNCHANGED) {
             return;
         }

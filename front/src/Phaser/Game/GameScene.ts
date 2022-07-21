@@ -86,7 +86,12 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
+import {
+    availabilityStatusStore,
+    localVolumeStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { XmppClient } from "../../Xmpp/XmppClient";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
@@ -100,6 +105,7 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
 import {
     availabilityStatusToJSON,
+    AvailabilityStatus,
     ErrorScreenMessage,
     PositionMessage_Direction,
 } from "../../Messages/ts-proto-generated/protos/messages";
@@ -193,13 +199,13 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
+    private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private mapEditorModeManager!: MapEditorModeManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
-    private preloading: boolean = true;
+    private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private playerVariablesManager!: PlayerVariablesManager;
@@ -208,12 +214,12 @@ export class GameScene extends DirtyScene {
     private areaManager!: DynamicAreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
-    private firstCameraUpdateSent: boolean = false;
+    private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
-    private jitsiDominantSpeaker: boolean = false;
-    private jitsiParticipantsCount: number = 0;
-    private cleanupDone: boolean = false;
+    private showVoiceIndicatorChangeMessageSent = false;
+    private jitsiDominantSpeaker = false;
+    private jitsiParticipantsCount = 0;
+    private cleanupDone = false;
     public readonly superLoad: SuperLoaderPlugin;
     private xmppClient!: XmppClient;
     private playersEventDispatcher = new IframeEventDispatcher();
@@ -826,7 +832,16 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection);
+                //eslint-disable-next-line @typescript-eslint/no-this-alias
+                const me = this;
+                this.events.once("render", () => {
+                    if (me.connection) {
+                        this.simplePeer = new SimplePeer(me.connection);
+                    } else {
+                        console.warn("Connection to peers not started!");
+                    }
+                });
+
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) => {
@@ -936,6 +951,9 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+            if (availabilityStatus === AvailabilityStatus.SILENT) {
+                this.CurrentPlayer.showTalkIcon(false, true);
+            }
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -985,6 +1003,7 @@ export class GameScene extends DirtyScene {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                         if (volume === undefined) {
+                            this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
@@ -1165,6 +1184,42 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.turnOffMicrophoneStream.subscribe(() => {
+                requestedMicrophoneState.disableMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.turnOffWebcamStream.subscribe(() => {
+                requestedCameraState.disableWebcam();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableMicrophoneStream.subscribe(() => {
+                mediaManager.disableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreMicrophoneStream.subscribe(() => {
+                mediaManager.enableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableWebcamStream.subscribe(() => {
+                mediaManager.disableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreMicrophoneStream.subscribe(() => {
+                mediaManager.enableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
                 this.userInputManager.disableControls();
             })
@@ -1178,15 +1233,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(true);
-                this.disableMediaBehaviors();
+                mediaManager.disableProximityMeeting();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(false);
-                this.enableMediaBehaviors();
+                mediaManager.enableProximityMeeting();
             })
         );
 
@@ -1724,9 +1777,13 @@ ${escapedMessage}
         });
     }
 
+    public getSimplePeer() {
+        return this.simplePeer;
+    }
+
     public cleanupClosingScene(): void {
         // make sure we restart CameraControls
-        this.disableMediaBehaviors();
+        mediaManager.disableProximityMeeting();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
         // Stop the script, if any
@@ -1954,21 +2011,6 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-                if ((pointer.event.target as Element)?.localName !== "canvas") {
-                    return;
-                }
-                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
-                    return; //we don't want the menu to open when pinching on a touch screen.
-                }
-
-                // toggle EmoteMenu
-                if (get(emoteMenuStore)) {
-                    emoteMenuStore.closeEmoteMenu();
-                } else {
-                    emoteMenuStore.openEmoteMenu();
-                }
-            });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
@@ -1977,7 +2019,6 @@ ${escapedMessage}
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
-                analyticsClient.launchEmote(emoteKey);
             });
         } catch (err) {
             if (err instanceof TextureError) {
@@ -2335,22 +2376,12 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant: boolean = false): void {
+    private reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
             this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
         });
-    }
-
-    public enableMediaBehaviors() {
-        if (!get(denyProximityMeetingStore)) {
-            mediaManager.showMyCamera();
-        }
-    }
-
-    public disableMediaBehaviors() {
-        mediaManager.hideMyCamera();
     }
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {

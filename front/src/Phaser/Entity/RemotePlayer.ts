@@ -23,7 +23,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
     public readonly activationRadius: number;
 
     private visitCardUrl: string | null;
-    private isActionsMenuInitialized: boolean = false;
+    private isActionsMenuInitialized = false;
     private actionsMenuStoreUnsubscriber: Unsubscriber;
 
     constructor(

@@ -19,8 +19,8 @@ export class Button extends Phaser.GameObjects.Container {
 
     private config: ButtonConfig;
 
-    private hovered: boolean = false;
-    private pressed: boolean = false;
+    private hovered = false;
+    private pressed = false;
 
     constructor(scene: Phaser.Scene, x: number, y: number, config: ButtonConfig) {
         super(scene, x, y);

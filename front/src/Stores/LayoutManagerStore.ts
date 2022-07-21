@@ -36,7 +36,7 @@ function createLayoutManagerAction() {
                 const index = list.findIndex((action) => action.uuid === uuid);
 
                 if (index !== -1) {
-                    list[index].userInputManager?.removeSpaceEventListner(list[index].callback);
+                    list[index].userInputManager?.removeSpaceEventListener(list[index].callback);
                     list.splice(index, 1);
                 }
 

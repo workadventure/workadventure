@@ -49,8 +49,8 @@ Example:
 let helloWorldPopup;
 
 // Open the popup when we enter a given zone
-helloWorldPopup = WA.room.onEnterLayer("myZone").subscribe(() => {
-    WA.ui.openPopup("popupRectangle", 'Hello world!', [{
+WA.room.onEnterLayer("myZone").subscribe(() => {
+    helloWorldPopup = WA.ui.openPopup("popupRectangle", 'Hello world!', [{
         label: "Close",
         className: "primary",
         callback: (popup) => {

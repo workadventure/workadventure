@@ -84,7 +84,7 @@ export class Player extends Character {
         });
     }
 
-    public finishFollowingPath(cancelled: boolean = false): void {
+    public finishFollowingPath(cancelled = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });

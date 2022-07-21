@@ -17,6 +17,7 @@ import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import Peer from "simple-peer/simplepeer.min.js";
 import { Buffer } from "buffer";
+import { gameManager } from "../Phaser/Game/GameManager";
 
 export type PeerStatus = "connecting" | "connected" | "error" | "closed";
 
@@ -29,10 +30,10 @@ export const MESSAGE_TYPE_UNBLOCKED = "unblocked";
  * A peer connection used to transmit video / audio signals between 2 peers.
  */
 export class VideoPeer extends Peer {
-    public toClose: boolean = false;
-    public _connected: boolean = false;
+    public toClose = false;
+    public _connected = false;
     public remoteStream!: MediaStream;
-    private blocked: boolean = false;
+    private blocked = false;
     public readonly userId: number;
     public readonly userUuid: string;
     public readonly uniqueId: string;
@@ -43,8 +44,8 @@ export class VideoPeer extends Peer {
     public readonly statusStore: Readable<PeerStatus>;
     public readonly constraintsStore: Readable<ObtainedMediaStreamConstraints | null>;
     private newMessageSubscribtion: Subscription | undefined;
+    private closing = false; //this is used to prevent destroy() from being called twice
     private newWritingStatusMessageSubscribtion: Subscription | undefined;
-    private closing: Boolean = false; //this is used to prevent destroy() from being called twice
     private localStreamStoreSubscribe: Unsubscriber;
     private obtainedMediaConstraintStoreSubscribe: Unsubscriber;
 
@@ -226,6 +227,8 @@ export class VideoPeer extends Peer {
                 //However, the output stream stream B is correctly blocked in A client
                 this.blocked = true;
                 this.toggleRemoteStream(false);
+                const simplePeer = gameManager.getCurrentGameScene().getSimplePeer();
+                simplePeer.blockedFromRemotePlayer(message.userId);
             } else if (message.type === MESSAGE_TYPE_UNBLOCKED) {
                 this.blocked = false;
                 this.toggleRemoteStream(true);

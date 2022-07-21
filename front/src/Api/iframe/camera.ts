@@ -15,21 +15,14 @@ export class WorkAdventureCameraCommands extends IframeApiContribution<WorkAdven
         }),
     ];
 
-    public set(
-        x: number,
-        y: number,
-        width?: number,
-        height?: number,
-        lock: boolean = false,
-        smooth: boolean = false
-    ): void {
+    public set(x: number, y: number, width?: number, height?: number, lock = false, smooth = false): void {
         sendToWorkadventure({
             type: "cameraSet",
             data: { x, y, width, height, lock, smooth },
         });
     }
 
-    public followPlayer(smooth: boolean = false): void {
+    public followPlayer(smooth = false): void {
         sendToWorkadventure({
             type: "cameraFollowPlayer",
             data: { smooth },
