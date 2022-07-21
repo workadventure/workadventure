@@ -2,9 +2,12 @@
   import { fade, fly } from "svelte/transition";
   import { ChatStates, MessagesStore, MucRoom } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
+  import {lastTimelineMessageRead} from "../Stores/ChatStore";
 
   export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
+
+  let messagesList: HTMLElement;
 
   let lastDate: Date;
 
@@ -30,10 +33,16 @@
     return name === mucRoom.getPlayerName();
   }
 
+  export const scrollDown = () => {
+    setTimeout(() => {
+      messagesList.scroll(0, messagesList.scrollHeight);
+    }, 100);
+  };
+
   $: usersStore = mucRoom.getPresenceStore();
 </script>
 
-<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto">
+<div class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-auto tw-mt-0 tw-mb-14" bind:this={messagesList}>
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
       <div class="wa-separator">
@@ -102,7 +111,7 @@
             >
           </div>
           <div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2`}>
-            <p class="tw-mb-0">{message.body}</p>
+            <p class="tw-mb-0 tw-whitespace-pre-line">{message.body}</p>
           </div>
         </div>
       </div>

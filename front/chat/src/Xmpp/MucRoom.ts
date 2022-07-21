@@ -599,17 +599,22 @@ export class MucRoom {
 
   public updateComposingState(state: string) {
     if (state === ChatStates.COMPOSING) {
-      if (this.composingTimeOut) {
+      if (!this.composingTimeOut) {
         this.sendChatState(ChatStates.COMPOSING);
+      } else {
+        clearTimeout(this.composingTimeOut);
       }
       this.composingTimeOut = setTimeout(() => {
         this.sendChatState(ChatStates.PAUSED);
+        if (this.composingTimeOut) {
+          clearTimeout(this.composingTimeOut);
+        }
       }, 5_000);
     } else {
+      if (this.composingTimeOut) {
+        clearTimeout(this.composingTimeOut);
+      }
       this.sendChatState(ChatStates.PAUSED);
-    }
-    if (this.composingTimeOut) {
-      clearTimeout(this.composingTimeOut);
     }
   }
 

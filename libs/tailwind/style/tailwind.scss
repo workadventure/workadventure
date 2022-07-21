@@ -126,6 +126,10 @@
     .wa-dropdown{
         @apply tw-relative tw-bg-dark-purple/95 tw-rounded;
 
+        button{
+            @apply tw-bg-dark-purple/95;
+        }
+
         &-menu{
             @apply tw-bg-dark-purple/95 tw-absolute tw-right-0 tw-z-20 tw-min-w-[150px] tw-shadow-lg tw-border tw-rounded tw-flex tw-flex-col tw-border-solid tw-font-medium tw-text-white tw-border-light-purple tw-text-xs;
         }
@@ -151,6 +155,35 @@
         &:hover{
             @apply tw-bg-pop-red tw-text-dark-purple;
         }
+    }
+
+    .wa-message-form {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 2;
+
+        form {
+            display: flex;
+            padding-left: 4px;
+            padding-right: 4px;
+
+            div.typing span {
+                font-style: italic;
+                white-space: nowrap;
+                margin: 0 2px;
+            }
+
+            textarea {
+                @apply tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-1 focus:tw-ring-1 tw-mb-0 tw-min-h-[35px] tw-resize-none tw-border-0 placeholder:tw-italic placeholder:tw-text-light-purple tw-rounded-3xl tw-bg-dark-purple/95;
+                margin-bottom: 0;
+                border-color: #4d4b67;
+            }
+        }
+    }
+
+    .wa-message-bg {
+        background: rgba(27,27,41, .79);
     }
 }
 

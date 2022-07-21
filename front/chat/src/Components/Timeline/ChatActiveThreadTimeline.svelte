@@ -119,11 +119,11 @@
 
 <!-- thread -->
 <div
-  class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
+  class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-fixed tw-w-full"
   transition:fly={{ x: 500, duration: 400 }}
 >
   <div
-    class="messageHeader tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-border-t-0"
+    class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-border-t-0"
   >
     <div
       class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
@@ -168,10 +168,10 @@
   {#if settingsView}
     <div
       transition:fly={{ y: -100, duration: 100 }}
-      class="settingsHeader tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+      class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
     >
       <div
-        class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
       >
         <button
           class="wa-action"
@@ -183,7 +183,7 @@
         </button>
       </div>
       <div
-        class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5"
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5"
       >
         <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
           Description
@@ -299,7 +299,7 @@
     </div>
 
     <!--MESSAGE FORM-->
-    <div class="messageForm">
+    <div class="wa-message-form">
       <form on:submit|preventDefault={saveMessage}>
         <div class="tw-w-full tw-p-2">
           <div class="typing tw-text-lighter-purple tw-text-xxs">
@@ -311,7 +311,6 @@
           <div class="tw-flex tw-items-center tw-relative">
             <textarea
               type="text"
-              class="tw-flex-1 tw-text-sm tw-ml-2 tw-border tw-border-solid tw-rounded-full tw-outline-0 focus:tw-ring-0 tw-mb-0 tw-min-h-[35px] tw-resize-none placeholder:tw-italic placeholder:tw-text-light-purple"
               bind:value={newMessageText}
               placeholder={$LL.form.placeholder()}
               on:keydown={handlerKeyDown}
@@ -336,13 +335,6 @@
 </div>
 
 <style lang="scss">
-  .messageHeader {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background: #1b1b29;
-    z-index: 2;
-  }
   .settingsHeader {
     padding-top: 58px;
   }
@@ -368,33 +360,6 @@
 
     p.messageText {
       white-space: pre-line;
-    }
-  }
-
-  .messageForm {
-    position: fixed;
-    bottom: 0;
-    background: #1b1b29;
-    width: 100%;
-    z-index: 2;
-
-    form {
-      display: flex;
-      padding-left: 4px;
-      padding-right: 4px;
-
-      div.typing span {
-        font-style: italic;
-        white-space: nowrap;
-        margin: 0 2px;
-      }
-
-      textarea {
-        margin-bottom: 0;
-        border-radius: 9998px;
-        background-color: #0f1f2d;
-        border-color: #4d4b67;
-      }
     }
   }
 </style>

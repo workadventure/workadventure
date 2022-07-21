@@ -31,6 +31,11 @@
     window.parent.postMessage({ type: "closeChat" }, "*");
     window.parent.postMessage({ type: "openInviteMenu" }, "*");
   }
+
+  $: userFiltered = [...$usersListStore]
+          .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
+          .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
+          .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
 </script>
 
 <div>
@@ -73,12 +78,7 @@
             </button>
           </div>
         {:else}
-          {#each [...$usersListStore]
-            .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
-            .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
-            .filter(([, user]) => user.name
-                .toLocaleLowerCase()
-                .includes(searchValue)) as [jid, user]}
+          {#each usersFiltered as [jid, user]}
             <ChatUser
               {openChat}
               {user}

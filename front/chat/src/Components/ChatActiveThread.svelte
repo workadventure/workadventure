@@ -35,6 +35,8 @@
   export let messagesStore: MessagesStore;
   export let settingsView = false;
 
+  let messagesList: HTMLElement;
+
   function openChat(user: User) {
     return user;
     //dispatch('activeThread', user);
@@ -169,10 +171,10 @@
   transition:fly={{ x: 500, duration: 400 }}
 >
   <div
-    class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1"
+    class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-flex tw-justify-between tw-items-center tw-px-1 tw-z-10 tw-border-t-0 "
   >
     <div
-      class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2"
+      class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
     >
       <button
         class="tw-text-light-purple tw-m-0"
@@ -183,7 +185,7 @@
         <ArrowLeftIcon />
       </button>
     </div>
-    <div class="tw-text-center">
+    <div class="tw-text-center tw-pt-1 tw-pb-2">
       <div class="tw-flex">
         <b>{activeThread.name}</b>
         {#if activeThread.type === "live"}
@@ -200,7 +202,7 @@
       <OnlineUsers {usersListStore} />
     </div>
     <div
-      class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2"
+      class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
       on:click={() => (settingsView = !settingsView)}
     >
       <button class="tw-text-light-purple tw-m-0">
@@ -219,7 +221,7 @@
       class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
     >
       <div
-        class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5 tw-pb-0.5"
       >
         {#if $meStore.isAdmin}
           <button
@@ -231,7 +233,7 @@
         {/if}
       </div>
       <div
-        class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5"
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5"
       >
         <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
           Description
@@ -239,7 +241,7 @@
         <p>Test</p>
       </div>
       <div
-        class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
+        class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
       >
         <p
           class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto"
@@ -262,10 +264,10 @@
       </div>
     </div>
   {:else}
-    <ChatMessagesList {messagesStore} mucRoom={activeThread} />
+    <ChatMessagesList {messagesStore} mucRoom={activeThread} bind:this={messagesList}/>
 
     <div class="messageForm">
-      <ChatMessageForm mucRoom={activeThread} />
+      <ChatMessageForm mucRoom={activeThread} on:scrollDown={messagesList.scrollDown}/>
     </div>
   {/if}
 </div>
