@@ -390,6 +390,8 @@
     display: flex;
     justify-content: flex-end;
     overflow-y: scroll;
+    min-height: calc(100vh - 40px);
+    padding: 60px 0;
 
     .handlerTag {
       text-align: center;
