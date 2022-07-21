@@ -393,15 +393,6 @@
 
     .handlerTag {
       text-align: center;
-
-      span.tag {
-        @apply tw-bg-dark;
-        cursor: pointer;
-        width: fit-content;
-        padding: 2px 10px;
-        margin: 2px 0;
-        border: solid 1px #979797;
-      }
     }
 
     p.messageText {

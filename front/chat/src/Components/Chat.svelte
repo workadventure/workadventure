@@ -113,13 +113,13 @@
       <ChatActiveThreadTimeLine
         on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)}
       />
-    {:else if $activeThreadStore}
+    {:else if $activeThreadStore && defaultMucRoom}
       <ChatActiveThread
         messagesStore={$activeThreadStore.getMessagesStore()}
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
-        defaultRoom={defaultRoom()}
+        defaultRoom={defaultMucRoom}
         on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
         on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
         on:rankDown={(event) =>
