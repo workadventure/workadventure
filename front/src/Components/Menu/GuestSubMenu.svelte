@@ -60,7 +60,7 @@
             <button type="button" class="light" on:click={shareLink}>{$LL.menu.invite.share()}</button>
         </section>
     {/if}
-    <h3 class="blue-title">Select an entry point</h3>
+    <h3 class="blue-title">{$LL.menu.invite.selectEntryPoint()}</h3>
     <section>
         <select
             class="tw-w-full"

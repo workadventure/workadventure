@@ -1,30 +1,30 @@
 <script lang="ts">
-    import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
-    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../Stores/MediaStore";
-    import cameraImg from "./images/camera.png";
-    import cameraOffImg from "./images/camera-off.png";
-    import microphoneImg from "./images/microphone.png";
-    import microphoneOffImg from "./images/microphone-off.png";
-    import layoutPresentationImg from "./images/layout-presentation.png";
-    import layoutChatImg from "./images/layout-chat.png";
-    import bubbleImg from "./images/bubble-talk.png";
-    import followImg from "./images/follow.png";
-    import lockOpenImg from "./images/lock-opened.png";
-    import lockCloseImg from "./images/lock-closed.png";
-    import screenshareOn from "./images/screenshare-on.png";
-    import screenshareOff from "./images/screenshare-off.png";
-    import emojiPickOn from "./images/emoji-on.png";
-    import closeImg from "./images/close.png";
-    import penImg from "./images/pen.png";
-    import WorkAdventureImg from "./images/icon-workadventure-white.png";
-    import { LayoutMode } from "../WebRtc/LayoutManager";
-    import { embedScreenLayoutStore } from "../Stores/EmbedScreensStore";
-    import { followRoleStore, followStateStore, followUsersStore } from "../Stores/FollowStore";
-    import { gameManager } from "../Phaser/Game/GameManager";
-    import { currentPlayerGroupLockStateStore } from "../Stores/CurrentPlayerGroupStore";
-    import { analyticsClient } from "../Administration/AnalyticsClient";
-    import { chatVisibilityStore } from "../Stores/ChatStore";
-    import { proximityMeetingStore } from "../Stores/MyCameraStoreVisibility";
+    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
+    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
+    import cameraImg from "../images/camera.png";
+    import cameraOffImg from "../images/camera-off.png";
+    import microphoneImg from "../images/microphone.png";
+    import microphoneOffImg from "../images/microphone-off.png";
+    import layoutPresentationImg from "../images/layout-presentation.png";
+    import layoutChatImg from "../images/layout-chat.png";
+    import bubbleImg from "../images/bubble-talk.png";
+    import followImg from "../images/follow.png";
+    import lockOpenImg from "../images/lock-opened.png";
+    import lockCloseImg from "../images/lock-closed.png";
+    import screenshareOn from "../images/screenshare-on.png";
+    import screenshareOff from "../images/screenshare-off.png";
+    import emojiPickOn from "../images/emoji-on.png";
+    import closeImg from "../images/close.png";
+    import penImg from "../images/pen.png";
+    import WorkAdventureImg from "../images/icon-workadventure-white.png";
+    import { LayoutMode } from "../../WebRtc/LayoutManager";
+    import { embedScreenLayoutStore } from "../../Stores/EmbedScreensStore";
+    import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
+    import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { proximityMeetingStore } from "../../Stores/MyCameraStoreVisibility";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -33,7 +33,7 @@
         subMenusStore,
         MenuItem,
         TranslatedMenu,
-    } from "../Stores/MenuStore";
+    } from "../../Stores/MenuStore";
     import {
         Emoji,
         emoteDataStore,
@@ -41,14 +41,14 @@
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
         emoteStore,
-    } from "../Stores/EmoteStore";
-    import LL from "../i18n/i18n-svelte";
-    import { bottomActionBarVisibilityStore } from "../Stores/BottomActionBarStore";
+    } from "../../Stores/EmoteStore";
+    import LL from "../../i18n/i18n-svelte";
+    import { bottomActionBarVisibilityStore } from "../../Stores/BottomActionBarStore";
     import { fly } from "svelte/transition";
-    import { ADMIN_URL } from "../Enum/EnvironmentVariable";
-    import { limitMapStore } from "../Stores/GameStore";
-    import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
-    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../Stores/MyCameraStoreVisibility";
+    import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+    import { limitMapStore } from "../../Stores/GameStore";
+    import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
+    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -513,7 +513,7 @@
 {/if}
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+    @import "../../../style/breakpoints.scss";
 
     .animated {
         transition-property: transform;
