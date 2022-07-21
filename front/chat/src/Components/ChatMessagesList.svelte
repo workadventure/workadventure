@@ -46,7 +46,11 @@
     if (isMe(name)) {
       return ["", $userStore];
     }
-    const [, user] = [...$presenseStore].find(([, user]) => user.name === name);
+    const userData = [...$presenseStore].find(([, user]) => user.name === name);
+    let user = undefined;
+    if(userData) {
+      [, user] = userData;
+    }
     return user;
   }
 

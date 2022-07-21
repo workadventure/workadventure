@@ -13,6 +13,7 @@
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
+  import {userStore} from "../Stores/LocalUserStore";
 
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
@@ -50,7 +51,11 @@
   }
 
   function findUserInDefault(name: string) {
-    const [, user] = [...$presenseStore].find(([, user]) => user.name === name);
+    const userData = [...$presenseStore].find(([, user]) => user.name === name);
+    let user = undefined;
+    if(userData) {
+      [, user] = userData;
+    }
     return user;
   }
 
