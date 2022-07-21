@@ -85,98 +85,64 @@ body .message-info.warning {
         }
     }
 
-    //video {
-    //    height: fit-content;
-    //    max-height: 100%;
-    //    max-width: 100%;
-    //    width: 100%;
-    //    cursor: url('./images/cursor_pointer.png'), pointer;
+    //.woka-icon {
+    //    position: absolute;
+    //    left: 90px;
+    //    top: calc(100% - 24px);
+    //    height: 23px;
+    //    overflow: hidden;
+    //    border-radius: 50%;
+    //    transition: all 0.2s ease;
     //
-    //    &.mobile{
-    //        width: 100%;
-    //        height: 21vh;
+    //    &.no-video {
+    //        left: calc(50% - 30px);
+    //        top: calc(50% - 30px);
+    //        height: auto;
+    //
+    //        img {
+    //            height: 60px;
+    //            width: 60px;
+    //        }
     //    }
-    //    &:focus{
-    //        outline: none;
+    //
+    //    img {
+    //        height: 40px;
+    //        width: 40px;
     //    }
     //}
 
-    i {
-        ////position: absolute;
-        //width: 100px;
-        //height: auto;
-        //left: -6px;
-        //top: calc(100% - 28px);
-        //text-align: center;
-        //color: white;
-        //span{
-        //    font-size: 14px;
-        //    margin: 2px;
-        //    background-color: white;
-        //    border: solid 3px black;
-        //    border-radius: 8px;
-        //    font-style: normal;
-        //}
-    }
+    //&:hover {
+    //    .woka-icon {
+    //        top: calc(100% - 30px);
+    //        height: 30px;
+    //
+    //        &.no-video {
+    //            top: calc(100% - 32px);
+    //            height: 35px;
+    //        }
+    //    }
+    //}
 
-    .woka-icon {
-        position: absolute;
-        left: 90px;
-        top: calc(100% - 24px);
-        height: 23px;
-        overflow: hidden;
-        border-radius: 50%;
-        transition: all 0.2s ease;
-
-        &.no-video {
-            left: calc(50% - 30px);
-            top: calc(50% - 30px);
-            height: auto;
-
-            img {
-                height: 60px;
-                width: 60px;
-            }
-        }
-
-        img {
-            height: 40px;
-            width: 40px;
-        }
-    }
-
-    &:hover {
-        .woka-icon {
-            top: calc(100% - 30px);
-            height: 30px;
-
-            &.no-video {
-                top: calc(100% - 32px);
-                height: 35px;
-            }
-        }
-    }
-
-    img {
-        position: absolute;
-        display: none;
-        width: 20px;
-        height: 20px;
-        left: 5px;
-        bottom: 5px;
-        padding: 10px;
-
-        &.active {
-            display: block !important;
-        }
-    }
-
-    img.block-logo {
-        left: 30%;
-        bottom: 15%;
-        width: 150px;
-        height: 150px;
-    }
+    //img {
+    //    position: absolute;
+    //    display: none;
+    //    width: 20px;
+    //    height: 20px;
+    //    left: 5px;
+    //    bottom: 5px;
+    //    padding: 10px;
+    //
+    //    &.active {
+    //        display: block !important;
+    //    }
+    //}
+    //
+    //img.block-logo {
+    //    left: 30%;
+    //    bottom: 15%;
+    //    width: 150px;
+    //    height: 150px;
+    //}
 
     button.report {
         display: block;

@@ -24,20 +24,24 @@ module.exports = {
       "pop-red": "#FF475a",
       grey: "#f6f6f6",
 
-      //Useful adds
-      white: "#FFFFFF",
-      black: "#000000",
-      transparent: "rgba(0,0,0,0)"
+            //Useful adds
+            white: "#FFFFFF",
+            black: "#000000",
+            transparent: "rgba(0,0,0,0)",
+        },
+        screens: {
+            "xs": "375px",
+            ...defaultTheme.screens
+        },
+        extend: {
+            minHeight: {
+                10: "2.5rem",
+            },
+            scale: {
+                "01": "0.1",
+                140: "1.4",
+            },
+        },
     },
-    screens: {
-      "xs": "375px",
-      ...defaultTheme.screens
-    },
-    extend: {
-      minHeight: {
-        10: "2.5rem"
-      }
-    }
-  },
-  plugins: [require("@tailwindcss/forms")]
+    plugins: [require("@tailwindcss/forms")],
 };

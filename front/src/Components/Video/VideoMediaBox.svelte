@@ -102,7 +102,13 @@
         </div>
     </div>
     {#if $constraintStore && $constraintStore.audio !== false}
-        <SoundMeterWidget volume={$volumeStore} />
+        <div
+            class="voice-meter-webcam-container tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2
+    tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96
+  "
+        >
+            <SoundMeterWidget volume={$volumeStore} />
+        </div>
     {/if}
 </div>
 

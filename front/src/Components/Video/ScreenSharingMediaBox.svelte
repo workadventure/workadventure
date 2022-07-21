@@ -43,7 +43,7 @@
         />
         <div
             class="nametag-screenshare-container tw-flex tw-flex-col tw-absolute tw-justify-end
-tw-w-32 sm:tw-w-40 md:tw-w-20 lg:tw-w-24 xl:tw-w-36 2xl:tw-w-48
+tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
 tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
 "
             on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
