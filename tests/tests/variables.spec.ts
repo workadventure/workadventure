@@ -183,6 +183,8 @@ test.describe('Variables', () => {
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
             ]
     ).toBe(2);
+
+    await page2.close();
   });
 });
 
