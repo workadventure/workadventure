@@ -127,6 +127,7 @@ import {
 import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PositionInterface;
@@ -1200,24 +1201,28 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disableMicrophoneStream.subscribe(() => {
+                myMicrophoneBlockedStore.set(true);
                 mediaManager.disableMyMicrophone();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.restoreMicrophoneStream.subscribe(() => {
+                myMicrophoneBlockedStore.set(false);
                 mediaManager.enableMyMicrophone();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.disableWebcamStream.subscribe(() => {
+                myCameraApiBlockedStore.set(true);
                 mediaManager.disableMyCamera();
             })
         );
 
         this.iframeSubscriptionList.push(
-            iframeListener.restoreMicrophoneStream.subscribe(() => {
+            iframeListener.restoreWebcamStream.subscribe(() => {
+                myCameraApiBlockedStore.set(false);
                 mediaManager.enableMyCamera();
             })
         );
