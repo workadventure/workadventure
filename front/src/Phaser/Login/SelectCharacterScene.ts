@@ -245,8 +245,12 @@ export class SelectCharacterScene extends AbstractCharacterScene {
         this.selectedWoka?.stop()?.setFrame(0);
         this.selectedWoka = item.getSprite();
         const wokaKey = this.selectedWoka.texture.key;
-        this.createWokaAnimation(wokaKey);
-        this.selectedWoka.play(wokaKey);
+        if (wokaKey !== "__MISSING") {
+            this.createWokaAnimation(wokaKey);
+        }
+        if (this.anims.exists(wokaKey)) {
+            this.selectedWoka.play(wokaKey);
+        }
         item.select(true);
     }
 
