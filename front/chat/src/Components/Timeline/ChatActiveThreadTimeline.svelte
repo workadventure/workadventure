@@ -373,12 +373,6 @@
     min-height: calc(100vh - 40px);
     padding: 60px 0;
 
-    .handlerTag {
-      span.tag {
-        border: solid 1px #979797;
-      }
-    }
-
     p.messageText {
       white-space: pre-line;
     }

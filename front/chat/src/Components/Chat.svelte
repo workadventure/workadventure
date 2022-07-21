@@ -74,7 +74,7 @@
     }
   }
 
-  let defaultMucRoom = undefined;
+  let defaultMucRoom: MucRoom | undefined = undefined;
   mucRoomsStore.subscribe(() => {
     try {
       defaultMucRoom = mucRoomsStore.getDefaultRoom();
