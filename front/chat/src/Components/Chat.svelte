@@ -78,7 +78,7 @@
   mucRoomsStore.subscribe(() => {
     try {
       defaultMucRoom = mucRoomsStore.getDefaultRoom();
-    } catch (e: never) {
+    } catch (e: unknown) {
       console.log(e);
     }
   });
@@ -104,7 +104,7 @@
     }
   }
 
-  consoneverinfo("Chat fully loaded");
+  console.log("Chat fully loaded");
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
