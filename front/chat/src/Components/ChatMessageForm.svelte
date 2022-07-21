@@ -45,7 +45,7 @@
           on:keydown={(key) => {
             if (
               (key.key === "Enter" && key.shiftKey) ||
-              ["Backspace", "Delete"].includes(key.keyCode)
+              ["Backspace", "Delete"].includes(key.key)
             ) {
               setTimeout(() => adjustHeight(), 10);
             }
