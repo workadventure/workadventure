@@ -50,7 +50,7 @@ export type Message = {
   time: Date;
 };
 export type MessagesList = Message[];
-export type MessagesStore = Readable<Message[]>;
+export type MessagesStore = Readable<MessagesList>;
 
 export type Me = {
   isAdmin: boolean;
@@ -69,7 +69,7 @@ export const defaultUserData: UserData = {
   name: "",
   playUri: "",
   authToken: "",
-  color: "#000000",
+  color: defaultColor,
   woka: defaultWoka,
 };
 
@@ -137,15 +137,7 @@ export class MucRoom {
         }
       }
     }
-    return {
-      uuid: "default",
-      email: null,
-      name: "",
-      playUri: "",
-      authToken: "",
-      color: "#000000",
-      woka: defaultWoka,
-    };
+    return defaultUserData;
   }
 
   public goTo(type: string, playUri: string, uuid: string) {

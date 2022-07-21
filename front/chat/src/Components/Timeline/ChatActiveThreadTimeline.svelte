@@ -46,16 +46,6 @@
     newMessageText = "";
   }
 
-  let lastDate: Date;
-  function showDate(date: Date) {
-    if (!lastDate) {
-      lastDate = date;
-      return true;
-    } else {
-      return date.toDateString() !== lastDate.toDateString();
-    }
-  }
-
   function backToThreadList() {
     activeThreadStore.reset();
     dispatch("unactiveThreadTimeLine");
@@ -203,15 +193,6 @@
     >
       {#each $chatMessagesStore as message}
         {#if message.type === ChatMessageTypes.text || message.type === ChatMessageTypes.me}
-          {#if showDate(message.date)}
-            <div class="wa-separator">
-              {message.date.toLocaleDateString($locale, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
-            </div>
-          {/if}
           <div class="tw-mt-2">
             <div
               class={`tw-flex ${
@@ -275,9 +256,9 @@
         {#if message.targets && message.targets.length > 0}
           {#if message.type === ChatMessageTypes.userIncoming}
             {#each message.targets as target}
-              <div class="handlerTag">
+              <div class="tw-text-center tw-mt-2">
                 <span
-                  class="tag tw-bg-dark tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
+                  class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                   ><b style={target.color ? `color: ${target.color};` : ""}
                     >{target.name}</b
                   >{$LL.timeLine.incoming()}</span
@@ -287,9 +268,9 @@
           {/if}
           {#if message.type === ChatMessageTypes.userOutcoming}
             {#each message.targets as target}
-              <div class="handlerTag">
+              <div class="tw-text-center tw-mt-2">
                 <span
-                  class="tag tw-bg-dark tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
+                  class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                   ><b style={target.color ? `color: ${target.color};` : ""}
                     >{target.name}</b
                   >{$LL.timeLine.outcoming()}</span
@@ -395,13 +376,7 @@
     padding: 60px 0;
 
     .handlerTag {
-      text-align: center;
-
       span.tag {
-        cursor: pointer;
-        width: fit-content;
-        padding: 2px 10px;
-        margin: 2px 0;
         border: solid 1px #979797;
       }
     }
