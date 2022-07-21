@@ -1,6 +1,7 @@
-import { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import { Translation } from "../i18n-types";
 
-const muc: BaseTranslation = {
+const muc: DeepPartial<Translation["muc"]> = {
     title: "Lista de usuários",
     userList: {
         disconnected: "Desconectado",

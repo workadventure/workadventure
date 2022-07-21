@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const login: NonNullable<Translation["login"]> = {
+const login: DeepPartial<Translation["login"]> = {
     input: {
         name: {
             placeholder: "Entrez votre nom",

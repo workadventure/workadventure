@@ -1,4 +1,5 @@
-import type { BaseTranslation } from "../i18n-types";
+import merge from "ts-deepmerge";
+import en_US from "../en-US";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
@@ -15,9 +16,7 @@ import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
 
-const pt_BR: BaseTranslation = {
-    language: "Português Brasileiro",
-    country: "Brazil",
+const pt_BR = merge(en_US, {
     audio,
     camera,
     chat,
@@ -33,6 +32,6 @@ const pt_BR: BaseTranslation = {
     trigger,
     muc,
     notification,
-};
+});
 
 export default pt_BR;
