@@ -15,25 +15,29 @@
 </script>
 
 <div
-    class="media-container {isHightlighted ?
-    'hightlighted tw-h-[32vw] tw-w-[57vw]' :
-    'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
-     tw-m-0 tw-p-0
+    class="media-container {isHightlighted
+        ? 'hightlighted tw-mr-6'
+        : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
 "
     class:clickable={isClickable}
     class:mozaic-solo={mozaicSolo}
     class:mozaic-full-width={mozaicFullWidth}
     class:mozaic-quarter={mozaicQuarter}
 >
-    <div>
-        {#if streamable instanceof VideoPeer}
+    {#if streamable instanceof VideoPeer}
+        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
             <VideoMediaBox peer={streamable} clickable={isClickable} />
-        {:else if streamable instanceof ScreenSharingPeer}
+        </div>
+    {:else if streamable instanceof ScreenSharingPeer}
+        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
-        {:else}
+        </div>
+    {:else}
+        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
-        {/if}
-    </div>
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -107,10 +111,10 @@
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         }
 
-        > div {
-            background-color: rgba(0, 0, 0, 0.6);
-            display: flex;
-            width: 100%;
-        }
+        //> div {
+        //    background-color: rgba(0, 0, 0, 0.6);
+        //    display: flex;
+        //    width: 100%;
+        //}
     }
 </style>

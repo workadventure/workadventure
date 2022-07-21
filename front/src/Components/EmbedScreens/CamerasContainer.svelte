@@ -20,7 +20,7 @@
     .cameras-container {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 1.25rem;
         overflow-y: auto;
         overflow-x: hidden;
         pointer-events: auto;
