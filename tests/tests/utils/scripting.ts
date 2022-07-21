@@ -71,6 +71,7 @@ export async function getScriptFrame(page: Page, title: string) : Promise<Frame>
 
 async function getFrameWithTitle(page: Page, searchedTitle: string) : Promise<Frame | undefined> {
     for (const frame of page.frames()) {
+        await frame.waitForLoadState("domcontentloaded");
         const title = await frame.title();
         if (title === searchedTitle) {
             return frame;
