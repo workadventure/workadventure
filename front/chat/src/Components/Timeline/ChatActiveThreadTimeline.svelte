@@ -276,7 +276,7 @@
             {#each message.targets as target}
               <div class="handlerTag">
                 <span
-                  class="tag tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
+                  class="tag tw-bg-dark tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
                   ><b style={target.color ? `color: ${target.color};` : ""}
                     >{target.name}</b
                   >{$LL.timeLine.incoming()}</span
@@ -288,7 +288,7 @@
             {#each message.targets as target}
               <div class="handlerTag">
                 <span
-                  class="tag tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
+                  class="tag tw-bg-dark tw-px-1 tw-py-1 tw-border tw-border-light-purple tw-border-solid tw-rounded-full tw-bg-transparent tw-text-xs"
                   ><b style={target.color ? `color: ${target.color};` : ""}
                     >{target.name}</b
                   >{$LL.timeLine.outcoming()}</span
@@ -393,6 +393,14 @@
 
     .handlerTag {
       text-align: center;
+
+      span.tag {
+        cursor: pointer;
+        width: fit-content;
+        padding: 2px 10px;
+        margin: 2px 0;
+        border: solid 1px #979797;
+      }
     }
 
     p.messageText {
