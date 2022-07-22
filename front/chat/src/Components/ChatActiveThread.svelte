@@ -37,7 +37,6 @@
 
   let messagesList: ChatMessagesList;
 
-
   function openChat(user: User) {
     return user;
     //dispatch('activeThread', user);
@@ -141,10 +140,7 @@
       </div>
     </div>
   {:else}
-    <ChatMessagesList
-      mucRoom={activeThread}
-      bind:this={messagesList}
-    />
+    <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
 
     <div class="messageForm">
       <ChatMessageForm

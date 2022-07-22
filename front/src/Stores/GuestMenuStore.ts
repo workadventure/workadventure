@@ -17,17 +17,21 @@ export function getLink(): string {
         startLayerName = value;
     });
     const entryPoint: string | null = startLayerName.length > 0 ? startLayerName[0] : null;
-    const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
-    const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
+    try {
+        const currentPlayer = gameManager.getCurrentGameScene().CurrentPlayer;
+        const playerPos = { x: Math.floor(currentPlayer.x), y: Math.floor(currentPlayer.y) };
 
-    let walkAutomatically = false;
-    walkAutomaticallyStore.subscribe((value) => {
-        walkAutomatically = value;
-    });
+        let walkAutomatically = false;
+        walkAutomaticallyStore.subscribe((value) => {
+            walkAutomatically = value;
+        });
 
-    return `${getRoomId()}${entryPoint ? `#${entryPoint}` : ""}${
-        walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
-    }`;
+        return `${getRoomId()}${entryPoint ? `#${entryPoint}` : ""}${
+            walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
+        }`;
+    } catch (err) {
+        return getRoomId();
+    }
 }
 
 export function getRoomId(): string {

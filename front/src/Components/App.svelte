@@ -4,7 +4,10 @@
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
-    import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+    import {
+        selectCharacterSceneVisibleStore,
+        selectCharacterCustomizeSceneVisibleStore,
+    } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
@@ -43,7 +46,7 @@
     <div class="scrollable">
         <EnableCameraScene {game} />
     </div>
-{:else if $gameSceneIsLoadedStore}
+{:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
     <Chat />
     <MainLayout />
 {/if}

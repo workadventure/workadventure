@@ -94,7 +94,6 @@
     scrollDown();
   };
 
-
   let subscribers = new Array<Unsubscriber>();
 
   onMount(() => {
@@ -104,7 +103,7 @@
         document.documentElement.scrollHeight
       ) {
         isScrolledDown = true;
-        if($unreads > 0) {
+        if ($unreads > 0) {
           mucRoom.lastMessageSeen = new Date();
           mucRoom.getCountMessagesToSee().set(0);
         }
@@ -113,13 +112,15 @@
       }
     });
 
-    subscribers.push(mucRoom.getMessagesStore().subscribe(() => {
-      if(isScrolledDown){
-        scrollDownAndRead();
-      }
-    }));
+    subscribers.push(
+      mucRoom.getMessagesStore().subscribe(() => {
+        if (isScrolledDown) {
+          scrollDownAndRead();
+        }
+      })
+    );
 
-    if($unreads === 0){
+    if ($unreads === 0) {
       isScrolledDown = true;
       scrollDown();
     }
@@ -127,7 +128,7 @@
 
   onDestroy(() => {
     window.removeEventListener("scroll", () => null);
-    subscribers.forEach(subscriber => subscriber());
+    subscribers.forEach((subscriber) => subscriber());
   });
 
   $: usersStore = mucRoom.getPresenceStore();
@@ -318,15 +319,21 @@
     </div>
   {/each}
   {#if $unreads > 0}
-    <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
+    <div
+      class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer"
+    >
       <div
-              transition:fly={{ y: 10, duration: 200 }}
-              style="margin: auto"
-              class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
-              role="button"
-              on:click={scrollDownAndRead}>
+        transition:fly={{ y: 10, duration: 200 }}
+        style="margin: auto"
+        class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+        role="button"
+        on:click={scrollDownAndRead}
+      >
         <ArrowDownIcon size="14" />
-        <p class="tw-m-0">{$unreads} {$unreads > 1?'nouveaux messages':'nouveau message'}</p>
+        <p class="tw-m-0">
+          {$unreads}
+          {$unreads > 1 ? "nouveaux messages" : "nouveau message"}
+        </p>
       </div>
     </div>
   {/if}
