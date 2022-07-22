@@ -158,20 +158,15 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
     ];
 
-    public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {
-        sendToWorkadventure({
-            type: "addActionsMenuKeyToRemotePlayer",
-            data: { id, actionKey },
-        });
-    }
-
-    public removeActionsMenuKeyFromRemotePlayer(id: number, actionKey: string): void {
-        sendToWorkadventure({
-            type: "removeActionsMenuKeyFromRemotePlayer",
-            data: { id, actionKey },
-        });
-    }
-
+    /**
+     * Open a popup in front of the game.
+     * {@link https://workadventu.re/map-building/api-ui.md#opening-a-popup | Website documentation}
+     *
+     * @param {string} targetObject Targeted object name
+     * @param {string} message Message to display
+     * @param {ButtonDescriptor[]} buttons Buttons displayed below popup
+     * @returns {Popup} Popup created
+     */
     public openPopup(targetObject: string, message: string, buttons: ButtonDescriptor[]): Popup {
         popupId++;
         const popup = new Popup(popupId);
@@ -207,6 +202,14 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return popup;
     }
 
+    /**
+     * Add a custom menu item containing the text commandDescriptor in the navbar of the menu. options attribute accepts an object.
+     * {@link https://workadventu.re/map-building/api-ui.md#add-custom-menu | Website documentation}
+     *
+     * @param {string} commandDescriptor Command description
+     * @param {MenuOptions | ((commandDescriptor: string) => void)} options Manu options
+     * @returns {Menu} Menu created
+     */
     public registerMenuCommand(
         commandDescriptor: string,
         options: MenuOptions | ((commandDescriptor: string) => void)
@@ -259,14 +262,43 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return menu;
     }
 
+    public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {
+        sendToWorkadventure({
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id, actionKey },
+        });
+    }
+
+    public removeActionsMenuKeyFromRemotePlayer(id: number, actionKey: string): void {
+        sendToWorkadventure({
+            type: "removeActionsMenuKeyFromRemotePlayer",
+            data: { id, actionKey },
+        });
+    }
+
+    /**
+     * Display a bubble like in proximity meeting (Draft function).
+     * Todo: enhanced bubble functions behaviors
+     */
     public displayBubble(): void {
         sendToWorkadventure({ type: "displayBubble", data: undefined });
     }
 
+    /**
+     * Remove a bubble like in proximity meeting.
+     * Todo: enhanced bubble functions behaviors
+     */
     public removeBubble(): void {
         sendToWorkadventure({ type: "removeBubble", data: undefined });
     }
 
+    /**
+     * Displays a message at the bottom of the screen (that will disappear when space bar is pressed).
+     * {@link https://workadventu.re/map-building/api-ui.md#awaiting-user-confirmation-with-space-bar | Website documentation}
+     *
+     * @param {ActionMessageOptions} actionMessageOptions Action options
+     * @returns {ActionMessage} Trigger action message
+     */
     public displayActionMessage(actionMessageOptions: ActionMessageOptions): ActionMessage {
         const actionMessage = new ActionMessage(actionMessageOptions, () => {
             actionMessages.delete(actionMessage.uuid);
