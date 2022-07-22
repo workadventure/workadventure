@@ -4,7 +4,6 @@
     ChatStates,
     defaultColor,
     defaultWoka,
-    MessagesStore,
     MucRoom,
     User,
   } from "../Xmpp/MucRoom";
@@ -17,14 +16,17 @@
     AlertCircleIcon,
     Trash2Icon,
     RefreshCwIcon,
+    ArrowDownIcon,
   } from "svelte-feather-icons";
+  import { Unsubscriber } from "svelte/store";
 
-  export let messagesStore: MessagesStore;
   export let mucRoom: MucRoom;
 
-  let messagesList: HTMLElement;
+  $: unreads = mucRoom.getCountMessagesToSee();
+  $: messagesStore = mucRoom.getMessagesStore();
 
   let lastDate: Date;
+  let isScrolledDown = false;
 
   $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
@@ -82,9 +84,18 @@
 
   export const scrollDown = () => {
     setTimeout(() => {
-      window.scroll(0, messagesList.scrollHeight);
-    }, 100);
+      window.scroll(0, document.documentElement.scrollHeight);
+    }, 0);
   };
+
+  const scrollDownAndRead = () => {
+    mucRoom.lastMessageSeen = new Date();
+    mucRoom.getCountMessagesToSee().set(0);
+    scrollDown();
+  };
+
+
+  let subscribers = new Array<Unsubscriber>();
 
   onMount(() => {
     window.addEventListener("scroll", () => {
@@ -92,14 +103,31 @@
         window.innerHeight + window.scrollY ===
         document.documentElement.scrollHeight
       ) {
-        mucRoom.lastMessageSeen = new Date();
-        mucRoom.getCountMessagesToSee().set(0);
+        isScrolledDown = true;
+        if($unreads > 0) {
+          mucRoom.lastMessageSeen = new Date();
+          mucRoom.getCountMessagesToSee().set(0);
+        }
+      } else {
+        isScrolledDown = false;
       }
     });
+
+    subscribers.push(mucRoom.getMessagesStore().subscribe(() => {
+      if(isScrolledDown){
+        scrollDownAndRead();
+      }
+    }));
+
+    if($unreads === 0){
+      isScrolledDown = true;
+      scrollDown();
+    }
   });
 
   onDestroy(() => {
     window.removeEventListener("scroll", () => null);
+    subscribers.forEach(subscriber => subscriber());
   });
 
   $: usersStore = mucRoom.getPresenceStore();
@@ -107,7 +135,6 @@
 
 <div
   class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
-  bind:this={messagesList}
 >
   {#each $messagesStore as message, i}
     {#if showDate(message.time)}
@@ -290,6 +317,19 @@
       </div>
     </div>
   {/each}
+  {#if $unreads > 0}
+    <div class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer">
+      <div
+              transition:fly={{ y: 10, duration: 200 }}
+              style="margin: auto"
+              class="tw-bg-lighter-purple tw-rounded-xl tw-h-5 tw-px-2 tw-w-fit tw-text-xs tw-flex tw-justify-center tw-items-center tw-shadow-grey"
+              role="button"
+              on:click={scrollDownAndRead}>
+        <ArrowDownIcon size="14" />
+        <p class="tw-m-0">{$unreads} {$unreads > 1?'nouveaux messages':'nouveau message'}</p>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style lang="scss">
