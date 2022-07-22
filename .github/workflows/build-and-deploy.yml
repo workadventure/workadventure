@@ -363,7 +363,7 @@ jobs:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
       - name: Add a comment in PR
-        uses: unsplash/comment-on-pr@master
+        uses: unsplash/comment-on-pr@v1.3.1
         if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

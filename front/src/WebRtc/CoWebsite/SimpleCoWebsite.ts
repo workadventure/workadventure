@@ -22,7 +22,7 @@ export class SimpleCoWebsite implements CoWebsite {
         this.allowApi = allowApi;
         this.allowPolicy = allowPolicy;
         this.widthPercent = widthPercent;
-        this.closable = closable ?? true;
+        this.closable = closable ?? false;
     }
 
     getId(): string {

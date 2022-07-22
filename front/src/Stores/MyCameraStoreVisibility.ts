@@ -12,6 +12,7 @@ export const proximityMeetingStore = writable(true);
  */
 
 export const myCameraStore = writable(false);
+export const myCameraApiBlockedStore = writable(false);
 
 /**
  * A store that contains whether my microphone is shown or not.
@@ -19,5 +20,6 @@ export const myCameraStore = writable(false);
  */
 
 export const myMicrophoneStore = writable(false);
+export const myMicrophoneBlockedStore = writable(false);
 
 export const inExternalServiceStore = writable(false);
