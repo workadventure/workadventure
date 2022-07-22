@@ -367,8 +367,5 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cat << EOF | gh pr comment ${{ github.event.pull_request.number }} --body-file -
-          Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re
-          Tests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests
-          EOF
+        with:
+          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
