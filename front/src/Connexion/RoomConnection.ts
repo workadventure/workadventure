@@ -58,7 +58,6 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
 
 const manualPingDelay = 20000;
@@ -535,9 +534,6 @@ export class RoomConnection implements RoomConnection {
                                 message.moveToPositionMessage.position.y
                             );
                         gameManager.getCurrentGameScene().moveTo(tileIndex);
-                        get(mucRoomsStore).forEach((mucRoom) => {
-                            mucRoom.resetTeleportStore();
-                        });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;

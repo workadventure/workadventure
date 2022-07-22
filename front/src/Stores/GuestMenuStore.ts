@@ -30,6 +30,7 @@ export function getLink(): string {
             walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
         }`;
     } catch (err: unknown) {
+        console.error("GuestMenuStore => getLink: ", err);
         return getRoomId();
     }
 }
