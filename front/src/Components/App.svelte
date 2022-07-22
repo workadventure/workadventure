@@ -26,7 +26,7 @@
     const organization = startedRoom?.organization ?? "";
     const windowTitle =
         (startedRoom?.name ? `${startedRoom.name} | ${organization}` : organization) + startedRoom?.showPoweredBy ===
-            undefined || startedRoom.showPoweredBy === true
+            undefined || startedRoom?.showPoweredBy === true
             ? "WorkAdventure"
             : "";
     const windowDescription = startedRoom?.description ?? "Work, Meet & Learn. Your workplace. Better.";
