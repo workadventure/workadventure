@@ -323,9 +323,11 @@ jobs:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 
       - name: Add a comment in PR
-        uses: unsplash/comment-on-pr@v1.3.1
         if: ${{ github.event_name == 'pull_request' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: "Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re \nTests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests"
+        run: |
+          cat << EOF | gh pr comment ${{ github.event.pull_request.number }} --body-file -
+          Environment deployed at https://play-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re
+          Tests available at https://maps-${{ env.GITHUB_HEAD_REF_SLUG }}.test.workadventu.re/tests
+          EOF
