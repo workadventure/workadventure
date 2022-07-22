@@ -722,6 +722,7 @@ export class MucRoom {
     this.messageStore.update((messages) => {
       return messages.filter((message) => message.id !== idMessage);
     });
+    return true;
   }
 
   public sendBack(idMessage: string) {
@@ -731,6 +732,7 @@ export class MucRoom {
       );
       return messages.filter((message) => message.id !== idMessage);
     });
+    return true;
   }
 
   public getPresenceStore(): UsersStore {
