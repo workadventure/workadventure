@@ -157,9 +157,9 @@
                       style={`border-bottom-color:${getColor(message.name)}`}
                       class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
               needHideHeader(message.name, message.time, i) ? "tw-hidden" : ""
-            }`}
+            } ${isMe(message.name)?'tw-flex-row-reverse':'tw-flex-row'}`}
               >
-            <span class="tw-text-lighter-purple tw-mr-2"
+            <span class={`tw-text-lighter-purple ${isMe(message.name)?'tw-ml-2':'tw-mr-2'}`}
             >{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span
             >
                 <span
