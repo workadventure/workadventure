@@ -54,6 +54,16 @@ const wa = {
     camera,
     state: globalState,
 
+    /**
+     * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your
+     * script / iFrame to exchange data with WorkAdventure. You should wait for the WorkAdventure
+     * API to be fully ready using the WA.onInit() method.
+     * {@link https://workadventu.re/map-building/api-start.md#waiting-for-workadventure-api-to-be-available | Website documentation}
+     *
+     * Some properties (like the current user name, or the room ID) are not available until WA.onInit has completed.
+     *
+     * @returns {void}
+     */
     onInit(): Promise<void> {
         return initPromise;
     },
