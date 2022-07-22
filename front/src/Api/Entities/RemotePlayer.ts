@@ -15,7 +15,7 @@ export class RemotePlayer {
         this.name = remotePlayer.name;
     }
 
-    public addAction(key: string, callback: Function): ActionsMenuAction {
+    public addAction(key: string, callback: () => void): ActionsMenuAction {
         const newAction = new ActionsMenuAction(this, key, callback);
         this.actions.set(key, newAction);
         sendToWorkadventure({
