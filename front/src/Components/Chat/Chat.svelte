@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, get, Unsubscriber, writable } from "svelte/store";
+    import { derived, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
@@ -93,8 +93,10 @@
         );
         subscribeListeners.push(
             chatVisibilityStore.subscribe(() => {
-                if (get(gameManager.getInitStore())) {
+                try {
                     gameManager.getCurrentGameScene()?.onResize();
+                } catch (err) {
+                    console.info("gameManager doesn't exist!", err);
                 }
             })
         );

@@ -34,10 +34,6 @@ class IframeListener {
           const iframeEvent = iframeEventGuarded.data;
           switch (iframeEvent.type) {
             case "userData": {
-              console.info(
-                "UserData received from WorkAdventure !",
-                iframeEvent.data
-              );
               userStore.set(iframeEvent.data);
               connectionStore.set(
                 new ChatConnection(

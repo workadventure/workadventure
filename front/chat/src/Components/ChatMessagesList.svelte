@@ -238,9 +238,7 @@
                 >
               </div>
               <div
-                class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 ${
-                  isMe(message.name) ? "tw-text-right" : "tw-text-left"
-                }`}
+                class="tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
               >
                 <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                   {message.body}

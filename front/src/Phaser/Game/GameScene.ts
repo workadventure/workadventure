@@ -932,9 +932,6 @@ export class GameScene extends DirtyScene {
                 //     });
                 // });
 
-                // Connect to XMPP
-                //this.xmppClient = new XmppClient(this.connection);
-
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
             })
@@ -2467,11 +2464,6 @@ ${escapedMessage}
         );
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
-        /*this.scene.start(ErrorSceneName, {
-            title: "Banned",
-            subTitle: "You were banned from WorkAdventure",
-            message: "If you want more information, you may contact us at: hello@workadventu.re",
-        });*/
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
