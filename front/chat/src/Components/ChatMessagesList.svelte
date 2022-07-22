@@ -181,127 +181,121 @@
                 : "tw-mt-2"
             }`}
       >
-        <div
-          class={`tw-flex ${
-            isMe(message.name) ? "tw-justify-end" : "tw-justify-start"
-          }`}
-        >
-          <div class="tw-flex tw-flex-row tw-items-center">
+        <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
+          <div
+            class={`tw-flex tw-flex-wrap tw-max-w-full ${
+              isMe(message.name) ? "tw-justify-end" : "tw-justify-start"
+            }`}
+          >
             <div
-              class={`tw-flex ${
-                isMe(message.name) ? "tw-justify-end" : "tw-justify-start"
-              }`}
+              class={`${
+                isMe(message.name) ||
+                needHideHeader(message.name, message.time, i)
+                  ? "tw-opacity-0"
+                  : "tw-mt-4"
+              } tw-relative wa-avatar-mini tw-mr-2`}
+              transition:fade={{ duration: 100 }}
+              style={`background-color: ${getColor(message.name)}`}
             >
-              <div
-                class={`${
-                  isMe(message.name) ||
-                  needHideHeader(message.name, message.time, i)
-                    ? "tw-opacity-0"
-                    : "tw-mt-4"
-                } tw-relative wa-avatar-mini tw-mr-2`}
-                transition:fade={{ duration: 100 }}
-                style={`background-color: ${getColor(message.name)}`}
-              >
-                <div class="wa-container">
-                  <img
-                    class="tw-w-full"
-                    src={getWoka(message.name)}
-                    alt="Avatar"
-                    loading="lazy"
-                  />
-                </div>
-              </div>
-              <div
-                class={`tw-w-3/4`}
-                transition:fly={{
-                  x: isMe(message.name) ? 10 : -10,
-                  delay: 100,
-                  duration: 200,
-                }}
-              >
-                <div
-                  style={`border-bottom-color:${getColor(message.name)}`}
-                  class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
-                    needHideHeader(message.name, message.time, i)
-                      ? "tw-hidden"
-                      : ""
-                  } ${
-                    isMe(message.name) ? "tw-flex-row-reverse" : "tw-flex-row"
-                  }`}
-                >
-                  <span
-                    class={`tw-text-lighter-purple ${
-                      isMe(message.name) ? "tw-ml-2" : "tw-mr-2"
-                    }`}
-                    >{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span
-                  >
-                  <span class="tw-text-xxxs"
-                    >{message.time.toLocaleTimeString($locale, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}</span
-                  >
-                </div>
-                <div
-                  class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 ${
-                    isMe(message.name) ? "tw-text-right" : "tw-text-left"
-                  }`}
-                >
-                  <p class="tw-mb-0 tw-whitespace-pre-line">{message.body}</p>
-                </div>
+              <div class="wa-container">
+                <img
+                  class="tw-w-full"
+                  src={getWoka(message.name)}
+                  alt="Avatar"
+                  loading="lazy"
+                />
               </div>
             </div>
-            {#if message.error}
+            <div
+              style="max-width: 75%"
+              transition:fly={{
+                x: isMe(message.name) ? 10 : -10,
+                delay: 100,
+                duration: 200,
+              }}
+            >
               <div
-                class="wa-error-message"
-                on:mouseleave={() =>
+                style={`border-bottom-color:${getColor(message.name)}`}
+                class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+                  needHideHeader(message.name, message.time, i)
+                    ? "tw-hidden"
+                    : ""
+                } ${
+                  isMe(message.name) ? "tw-flex-row-reverse" : "tw-flex-row"
+                }`}
+              >
+                <span
+                  class={`tw-text-lighter-purple ${
+                    isMe(message.name) ? "tw-ml-2" : "tw-mr-2"
+                  }`}
+                  >{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span
+                >
+                <span class="tw-text-xxxs"
+                  >{message.time.toLocaleTimeString($locale, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}</span
+                >
+              </div>
+              <div
+                class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 ${
+                  isMe(message.name) ? "tw-text-right" : "tw-text-left"
+                }`}
+              >
+                <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+                  {message.body}
+                </p>
+              </div>
+            </div>
+          </div>
+          {#if message.error}
+            <div
+              class="wa-error-message"
+              on:mouseleave={() =>
+                document
+                  .getElementById(`error_${message.id}`)
+                  ?.classList.add("tw-invisible")}
+            >
+              <div
+                class={`tw-text-pop-red tw-ml-1 tw-flex ${
+                  needHideHeader(message.name, message.time, i) ? "" : "tw-mt-4"
+                }`}
+                on:click={() =>
                   document
                     .getElementById(`error_${message.id}`)
-                    ?.classList.add("tw-invisible")}
+                    ?.classList.remove("tw-invisible")}
               >
-                <div
-                  class={`tw-text-pop-red tw-ml-1 tw-flex ${
-                    needHideHeader(message.name, message.time, i)
-                      ? ""
-                      : "tw-mt-4"
-                  }`}
+                <AlertCircleIcon size="16" />
+              </div>
+              <div
+                id={`error_${message.id}`}
+                class={`wa-dropdown-menu tw-invisible`}
+              >
+                <span
+                  class="wa-dropdown-item"
                   on:click={() =>
+                    mucRoom.sendBack(message.id) &&
                     document
                       .getElementById(`error_${message.id}`)
-                      ?.classList.remove("tw-invisible")}
+                      ?.classList.add("tw-invisible")}
                 >
-                  <AlertCircleIcon size="16" />
-                </div>
-                <div
-                  id={`error_${message.id}`}
-                  class={`wa-dropdown-menu tw-invisible`}
+                  <RefreshCwIcon size="13" class="tw-mr-1" />
+                  {$LL.sendBack()}
+                </span>
+                <span
+                  class="wa-dropdown-item tw-text-pop-red"
+                  on:click={() =>
+                    mucRoom.deleteMessage(message.id) &&
+                    document
+                      .getElementById(`error_${message.id}`)
+                      ?.classList.add("tw-invisible")}
                 >
-                  <span
-                    class="wa-dropdown-item"
-                    on:click={() =>
-                      mucRoom.sendBack(message.id) &&
-                      document
-                        .getElementById(`error_${message.id}`)
-                        ?.classList.add("tw-invisible")}
-                  >
-                    <RefreshCwIcon size="13" class="tw-mr-1" />
-                    {$LL.sendBack()}
-                  </span>
-                  <span
-                    class="wa-dropdown-item tw-text-pop-red"
-                    on:click={() =>
-                      mucRoom.deleteMessage(message.id) &&
-                      document
-                        .getElementById(`error_${message.id}`)
-                        ?.classList.add("tw-invisible")}
-                  >
-                    <Trash2Icon size="13" class="tw-mr-1" />
-                    {$LL.delete()}
-                  </span>
-                </div>
+                  <Trash2Icon size="13" class="tw-mr-1" />
+                  {$LL.delete()}
+                </span>
               </div>
-            {/if}
-          </div>
+            </div>
+          {/if}
         </div>
       </div>
     {/each}
