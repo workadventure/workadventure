@@ -24,11 +24,15 @@
     const startedRoom = gameManager?.currentStartedRoom;
 
     const organization = startedRoom?.organization ?? "";
-    const windowTitle =
-        (startedRoom?.name ? `${startedRoom.name} | ${organization}` : organization) + startedRoom?.showPoweredBy ===
-            undefined || startedRoom?.showPoweredBy === true
-            ? "WorkAdventure"
-            : "";
+    console.log(
+        "the test",
+        startedRoom?.showPoweredBy === undefined || startedRoom?.showPoweredBy === true ? "WorkAdventure" : ""
+    );
+    let windowTitle = startedRoom?.name ? `${startedRoom.name} | ${organization}` : organization;
+    windowTitle +=
+        windowTitle && (startedRoom?.showPoweredBy === undefined || startedRoom?.showPoweredBy) === true ? " | " : "";
+    windowTitle +=
+        startedRoom?.showPoweredBy === undefined || startedRoom?.showPoweredBy === true ? "WorkAdventure" : "";
     const windowDescription = startedRoom?.description ?? "Work, Meet & Learn. Your workplace. Better.";
     const favicons = startedRoom?.favicons ?? [];
     const ogImageUrl = startedRoom?.ogImageUrl ?? "https://workadventu.re/images/general/logo-og.png";
