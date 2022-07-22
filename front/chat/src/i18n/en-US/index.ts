@@ -45,6 +45,9 @@ const en_US: BaseTranslation = {
     discussion: "wants to discuss with you",
     message: "sends you a message",
   },
+  see: "See",
+  less: "less",
+  more: "more"
 };
 
 export default en_US;

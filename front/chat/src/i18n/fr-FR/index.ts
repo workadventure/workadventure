@@ -46,6 +46,9 @@ const fr_FR: Translation = {
     discussion: "veut discuter avec toi",
     message: "a envoyé un message",
   },
+  see: "Voir",
+  less: "plus",
+  more: "moins"
 };
 
 export default fr_FR;
