@@ -79,6 +79,7 @@ interface UpgradeData {
     };
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     activatedInviteUser: boolean | undefined;
+    isLogged: boolean;
 }
 
 interface UpgradeFailedInvalidData {
@@ -481,6 +482,7 @@ export class IoSocketController {
                                     bottom,
                                     left,
                                 },
+                                isLogged,
                             } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,
@@ -717,6 +719,7 @@ export class IoSocketController {
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
         client.activatedInviteUser = ws.activatedInviteUser;
+        client.isLogged = ws.isLogged;
         return client;
     }
 }

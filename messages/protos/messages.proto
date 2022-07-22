@@ -483,6 +483,7 @@ message JoinRoomMessage {
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
+  bool isLogged = 13;
 }
 
 message UserJoinedZoneMessage {

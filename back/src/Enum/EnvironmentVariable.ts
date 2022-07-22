@@ -20,6 +20,14 @@ export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const MAP_STORAGE_URL = process.env.MAP_STORAGE_URL || "";
+// The maximum time to leave of player variables for anonymous players (3 months by default).
+// Use "-1" for infinity.
+// 7776000 seconds = 3 months
+export const ANONYMOUS_PLAYER_VARIABLES_MAX_TTL =
+    parseInt(process.env.ANONYMOUS_PLAYER_VARIABLES_MAX_TTL || "7776000") || 7776000;
+// The maximum time to leave of player variables for logged players (no limit by default).
+// Use "-1" for infinity.
+export const LOGGED_PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.LOGGED_PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
 
 export {
     MINIMUM_DISTANCE,

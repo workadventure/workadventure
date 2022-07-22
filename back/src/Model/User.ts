@@ -33,6 +33,7 @@ export class User implements Movable {
     public constructor(
         public id: number,
         public readonly uuid: string,
+        public readonly isLogged: boolean,
         public readonly IPAddress: string,
         private position: PointInterface,
         private positionNotifier: PositionNotifier,
@@ -57,6 +58,7 @@ export class User implements Movable {
     public static async create(
         id: number,
         uuid: string,
+        isLogged: boolean,
         IPAddress: string,
         position: PointInterface,
         positionNotifier: PositionNotifier,
@@ -75,12 +77,13 @@ export class User implements Movable {
         activatedInviteUser?: boolean
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
-        const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository);
+        const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
         await variables.load();
 
         return new User(
             id,
             uuid,
+            isLogged,
             IPAddress,
             position,
             positionNotifier,

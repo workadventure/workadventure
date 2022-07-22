@@ -6,6 +6,7 @@ import {
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
 } from "./PlayersVariablesRepositoryInterface";
+import { ANONYMOUS_PLAYER_VARIABLES_MAX_TTL, LOGGED_PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
 
 export class PlayerVariables {
     private roomVariables!: Map<string, VariableWithScope>;
@@ -22,7 +23,8 @@ export class PlayerVariables {
         private subject: string,
         private roomUrl: string,
         private worldUrl: string | undefined,
-        private repository: PlayersVariablesRepositoryInterface
+        private repository: PlayersVariablesRepositoryInterface,
+        private isLogged: boolean
     ) {
         this.roomKey = `pr_${subject}_|@|_${roomUrl}`;
         if (worldUrl) {
@@ -71,6 +73,8 @@ export class PlayerVariables {
         ttl: number | undefined,
         persist: boolean
     ): Promise<void> {
+        ttl = this.restrictTtlAccordingToLimits(ttl);
+
         const expire = ttl === undefined ? undefined : new Date().getTime() + ttl * 1000;
 
         if (this.maxExpireRoom !== undefined) {
@@ -91,6 +95,25 @@ export class PlayerVariables {
         }
     }
 
+    private restrictTtlAccordingToLimits(ttl: number | undefined): number | undefined {
+        // Let's limit the maximum time of the TTL according to the settings.
+        if (this.isLogged && LOGGED_PLAYER_VARIABLES_MAX_TTL >= 0) {
+            if (ttl === undefined) {
+                return LOGGED_PLAYER_VARIABLES_MAX_TTL;
+            } else {
+                return Math.max(ttl, LOGGED_PLAYER_VARIABLES_MAX_TTL);
+            }
+        } else if (!this.isLogged && ANONYMOUS_PLAYER_VARIABLES_MAX_TTL >= 0) {
+            if (ttl === undefined) {
+                return ANONYMOUS_PLAYER_VARIABLES_MAX_TTL;
+            } else {
+                return Math.max(ttl, LOGGED_PLAYER_VARIABLES_MAX_TTL);
+            }
+        }
+
+        return ttl;
+    }
+
     public async saveWorldVariable(
         key: string,
         value: string,
@@ -102,6 +125,8 @@ export class PlayerVariables {
             // We are not part of a world. We shall fallback to the room.
             return this.saveRoomVariable(key, value, isPublic, ttl, persist);
         }
+
+        ttl = this.restrictTtlAccordingToLimits(ttl);
 
         const expire = ttl === undefined ? undefined : new Date().getTime() + ttl * 1000;
 
