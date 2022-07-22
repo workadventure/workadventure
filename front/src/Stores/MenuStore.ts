@@ -20,8 +20,8 @@ menuVisiblilityStore.subscribe((value) => {
         if (timeOut) {
             clearTimeout(timeOut);
         }
+        profileInPorgress.set(true);
         timeOut = setTimeout(() => {
-            profileInPorgress.set(true);
             axios
                 .get(getMeUrl())
                 .then((data) => {

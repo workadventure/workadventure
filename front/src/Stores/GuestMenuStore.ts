@@ -29,7 +29,7 @@ export function getLink(): string {
         return `${getRoomId()}${entryPoint ? `#${entryPoint}` : ""}${
             walkAutomatically ? `&moveTo=${playerPos.x},${playerPos.y}` : ""
         }`;
-    } catch (err) {
+    } catch (err: unknown) {
         return getRoomId();
     }
 }

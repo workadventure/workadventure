@@ -25,7 +25,6 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import Spinner from "../Chat/Spinner.svelte";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -122,7 +121,7 @@
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
             {#if $userIsConnected && ($profileAvailable || $profileInPorgress)}
                 {#if $profileInPorgress}
-                    <Spinner />
+                    <div class="connecting-spinner" />
                 {:else if $profileAvailable && PROFILE_URL != undefined}
                     <iframe
                         title="profile"
@@ -152,4 +151,8 @@
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
+    .connecting-spinner {
+        left: 50%;
+        top: 60%;
+    }
 </style>
