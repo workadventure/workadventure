@@ -100,7 +100,8 @@
             <button
               class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
             >
-              {$LL.see()} {minimizeUser ? $LL.less() : $LL.more()} …
+              {$LL.see()}
+              {minimizeUser ? $LL.less() : $LL.more()} …
             </button>
           </div>
         {/if}

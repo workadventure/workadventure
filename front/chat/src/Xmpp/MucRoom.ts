@@ -386,14 +386,14 @@ export class MucRoom {
   public sendMessage(text: string) {
     const idMessage = uuidv4();
     const message = xml(
-        "message",
-        {
-          type: "groupchat",
-          to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-          from: this.jid,
-          id: idMessage,
-        },
-        xml("body", {}, text)
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, text)
     );
     this.connection.emitXmlMessage(message);
 
@@ -404,7 +404,7 @@ export class MucRoom {
         time: new Date(),
         id: idMessage,
         delivered: false,
-        error: false
+        error: false,
       });
       return messages;
     });
@@ -412,12 +412,14 @@ export class MucRoom {
     this.lastMessageSeen = new Date();
     this.countMessagesToSee.set(0);
 
-    if(this.sendTimeOut){
+    if (this.sendTimeOut) {
       clearTimeout(this.sendTimeOut);
     }
     this.sendTimeOut = setTimeout(() => {
       this.messageStore.update((messages) => {
-        messages = messages.map((message) => !message.delivered?{...message, error: true}:message);
+        messages = messages.map((message) =>
+          !message.delivered ? { ...message, error: true } : message
+        );
         return messages;
       });
     }, 10_000);
@@ -552,13 +554,17 @@ export class MucRoom {
         }
         const body = xml.getChildText("body") ?? "";
         this.messageStore.update((messages) => {
-          if(messages.find(message => message.id === idMessage)){
+          if (messages.find((message) => message.id === idMessage)) {
             this.countMessagesToSee.set(0);
             this.lastMessageSeen = new Date();
-            messages = messages.map(message => message.id === idMessage? {...message, delivered: true} : message);
+            messages = messages.map((message) =>
+              message.id === idMessage
+                ? { ...message, delivered: true }
+                : message
+            );
           } else {
-            if(delay > this.lastMessageSeen){
-              this.countMessagesToSee.update(last => last + 1);
+            if (delay > this.lastMessageSeen) {
+              this.countMessagesToSee.update((last) => last + 1);
             }
             messages.push({
               name,
@@ -566,7 +572,7 @@ export class MucRoom {
               time: delay,
               id: idMessage,
               delivered: true,
-              error: false
+              error: false,
             });
           }
           return messages;
@@ -712,16 +718,18 @@ export class MucRoom {
     }
   }
 
-  public deleteMessage(idMessage: string){
+  public deleteMessage(idMessage: string) {
     this.messageStore.update((messages) => {
-      return messages.filter(message => message.id !== idMessage);
+      return messages.filter((message) => message.id !== idMessage);
     });
   }
 
-  public sendBack(idMessage: string){
+  public sendBack(idMessage: string) {
     this.messageStore.update((messages) => {
-      this.sendMessage(messages.find(message => message.id === idMessage)?.body ?? '');
-      return messages.filter(message => message.id !== idMessage);
+      this.sendMessage(
+        messages.find((message) => message.id === idMessage)?.body ?? ""
+      );
+      return messages.filter((message) => message.id !== idMessage);
     });
   }
 
@@ -741,8 +749,8 @@ export class MucRoom {
     return this.meStore;
   }
 
-  public getCountMessagesToSee(){
-    return this.countMessagesToSee
+  public getCountMessagesToSee() {
+    return this.countMessagesToSee;
   }
 
   public getUrl(): string {

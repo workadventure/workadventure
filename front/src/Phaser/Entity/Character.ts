@@ -82,7 +82,7 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
-                    if(userId != undefined){
+                    if (userId != undefined) {
                         currentPlayerWokaStore.set(htmlImageElementSrc);
                     }
                 });

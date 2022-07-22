@@ -50,7 +50,7 @@ const fr_FR: Translation = {
   less: "plus",
   more: "moins",
   sendBack: "Renvoyer",
-  delete: "Supprimer"
+  delete: "Supprimer",
 };
 
 export default fr_FR;

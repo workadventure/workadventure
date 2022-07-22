@@ -42,19 +42,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         companionTexturePromise?: CancelablePromise<string>,
         activationRadius?: number
     ) {
-        super(
-            Scene,
-            x,
-            y,
-            texturesPromise,
-            name,
-            direction,
-            moving,
-            1,
-            true,
-            companion,
-            companionTexturePromise
-        );
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
 
         //set data
         this.userId = userId;
