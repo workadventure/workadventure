@@ -34,7 +34,7 @@ export class Room {
     private _loadingLogo?: string;
     private _loginSceneLogo?: string;
     private _showPoweredBy?: boolean = true;
-    private _mucRooms?: Array<Object>;
+    private _mucRooms?: unknown[];
     private _name?: string;
     private _organization?: string;
     private _description?: string;
@@ -250,8 +250,7 @@ export class Room {
         return this._loginSceneLogo;
     }
 
-    //eslint-disable-next-line @typescript-eslint/ban-types
-    get mucRooms(): Array<Object> | undefined {
+    get mucRooms(): unknown[] | undefined {
         return this._mucRooms;
     }
 
