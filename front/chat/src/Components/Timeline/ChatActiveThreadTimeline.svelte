@@ -105,7 +105,7 @@
   });
 
   onDestroy(() => {
-    subscribers.forEach(subscriber => subscriber());
+    subscribers.forEach((subscriber) => subscriber());
   });
 </script>
 

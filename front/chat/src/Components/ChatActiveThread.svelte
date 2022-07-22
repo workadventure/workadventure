@@ -13,13 +13,7 @@
   import { createEventDispatcher } from "svelte";
   import ChatMessagesList from "./ChatMessagesList.svelte";
   import OnlineUsers from "./OnlineUsers.svelte";
-  import {
-    MessagesStore,
-    MeStore,
-    MucRoom,
-    User,
-    UsersStore,
-  } from "../Xmpp/MucRoom";
+  import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
 
   const dispatch = createEventDispatcher<{
@@ -32,11 +26,9 @@
   export let activeThread: MucRoom;
   export let usersListStore: UsersStore;
   export let meStore: MeStore;
-  export let messagesStore: MessagesStore;
   export let settingsView = false;
 
   let messagesList: ChatMessagesList;
-
 
   function openChat(user: User) {
     return user;
@@ -141,10 +133,7 @@
       </div>
     </div>
   {:else}
-    <ChatMessagesList
-      mucRoom={activeThread}
-      bind:this={messagesList}
-    />
+    <ChatMessagesList mucRoom={activeThread} bind:this={messagesList} />
 
     <div class="messageForm">
       <ChatMessageForm
