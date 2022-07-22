@@ -12,7 +12,7 @@
   import { userStore } from "../Stores/LocalUserStore";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
   import { UserData } from "../Messages/JsonMessages/ChatData";
-  import { onMount } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import {
     AlertCircleIcon,
     Trash2Icon,
@@ -87,17 +87,19 @@
   };
 
   onMount(() => {
-    messagesList.addEventListener("scroll", () => {
+    window.addEventListener("scroll", () => {
       if (
-        messagesList &&
-        messagesList.scrollTop ===
-          messagesList.scrollHeight - messagesList.offsetHeight
+        window.innerHeight + window.scrollY ===
+        document.documentElement.scrollHeight
       ) {
-        console.log("end of scroll, reset counter");
         mucRoom.lastMessageSeen = new Date();
         mucRoom.getCountMessagesToSee().set(0);
       }
     });
+  });
+
+  onDestroy(() => {
+    window.removeEventListener("scroll", () => null);
   });
 
   $: usersStore = mucRoom.getPresenceStore();
@@ -123,7 +125,7 @@
       }
             ${
               needHideHeader(message.name, message.time, i)
-                ? "tw-mt-1"
+                ? "tw-mt-0.5"
                 : "tw-mt-2"
             }`}
     >
@@ -203,7 +205,7 @@
               on:mouseleave={() =>
                 document
                   .getElementById(`error_${message.id}`)
-                  .classList.add("tw-invisible")}
+                  ?.classList.add("tw-invisible")}
             >
               <div
                 class={`tw-text-pop-red tw-ml-1 tw-flex ${
@@ -212,7 +214,7 @@
                 on:click={() =>
                   document
                     .getElementById(`error_${message.id}`)
-                    .classList.remove("tw-invisible")}
+                    ?.classList.remove("tw-invisible")}
               >
                 <AlertCircleIcon size="16" />
               </div>
@@ -226,7 +228,7 @@
                     mucRoom.sendBack(message.id) &&
                     document
                       .getElementById(`error_${message.id}`)
-                      .classList.add("tw-invisible")}
+                      ?.classList.add("tw-invisible")}
                 >
                   <RefreshCwIcon size="13" class="tw-mr-1" />
                   {$LL.sendBack()}
@@ -237,7 +239,7 @@
                     mucRoom.deleteMessage(message.id) &&
                     document
                       .getElementById(`error_${message.id}`)
-                      .classList.add("tw-invisible")}
+                      ?.classList.add("tw-invisible")}
                 >
                   <Trash2Icon size="13" class="tw-mr-1" />
                   {$LL.delete()}
