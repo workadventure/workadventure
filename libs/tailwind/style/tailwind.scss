@@ -172,6 +172,9 @@
         width: 100%;
         z-index: 2;
 
+        //background: rgb(27,27,41);
+        //background: linear-gradient(0deg, rgba(27,27,41,1) 0%, rgba(27,27,41,1) 90%, rgba(27,27,41,0) 100%);
+
         form {
             display: flex;
             padding-left: 4px;
@@ -188,6 +191,18 @@
                 margin-bottom: 0;
                 border-color: #4d4b67;
             }
+        }
+    }
+
+    .wa-messages-list-container{
+        @apply tw-overflow-x-scroll tw-mb-10;
+        max-height: calc( 100vh - 2.8rem );
+        -webkit-mask-image: linear-gradient(180deg, black 0%, black 97%, transparent 100%);
+        mask-image: linear-gradient(180deg, black 0%, black 97%, transparent 100%);
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+            display: none;
         }
     }
 

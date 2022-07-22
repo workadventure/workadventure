@@ -117,9 +117,8 @@
       <ChatActiveThreadTimeLine
         on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)}
       />
-    {:else if $activeThreadStore && defaultMucRoom}
+    {:else if $activeThreadStore !== undefined && defaultMucRoom}
       <ChatActiveThread
-        messagesStore={$activeThreadStore.getMessagesStore()}
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
