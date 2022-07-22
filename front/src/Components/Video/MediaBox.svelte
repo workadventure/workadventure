@@ -55,20 +55,6 @@
             margin-bottom: 2%;
         }
 
-        &.hightlighted {
-            //@apply tw-h-[26vh] tw-w-[46vh];
-            //margin-top: 0% !important;
-            //margin-bottom: 0% !important;
-            //margin-left: 0% !important;
-            //
-            //max-height: 100% !important;
-            //max-width: 96% !important;
-            //
-            //&:hover {
-            //    margin-top: 0% !important;
-            //    margin-bottom: 0% !important;
-            //}
-        }
 
         &.mozaic-solo {
             max-height: inherit !important;
@@ -110,11 +96,5 @@
         &.clickable {
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         }
-
-        //> div {
-        //    background-color: rgba(0, 0, 0, 0.6);
-        //    display: flex;
-        //    width: 100%;
-        //}
     }
 </style>

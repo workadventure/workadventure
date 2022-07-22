@@ -1,10 +1,11 @@
 <script lang="ts">
     export let volume = 0;
     let display = true;
+    export let classcss;
 </script>
 
 <div
-    class="tw-flex tw-justify-between tw-w-10 tw-h-10 md:tw-w-6 md:tw-w-6 lg:tw-w-10 lg:tw-h-10 tw-absolute tw-items-center"
+    class="tw-flex tw-justify-between tw-w-10 tw-h-10 md:tw-w-6 md:tw-w-6 lg:tw-w-10 lg:tw-h-10 tw-items-center {classcss ?? ''}"
     class:active={display}
 >
     <div
