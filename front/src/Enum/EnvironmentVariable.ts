@@ -1,10 +1,10 @@
 import { getEnvConfig } from "@geprog/vite-plugin-env-config/getEnvConfig";
 
 const DEBUG_MODE: boolean = getEnvConfig("DEBUG_MODE") == "true";
-const PUSHER_URL = getEnvConfig("PUSHER_URL") || "//pusher.workadventure.localhost";
-export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "//workadventu.re";
-const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "//uploader.workadventure.localhost";
-const ICON_URL = getEnvConfig("ICON_URL") || "//icon.workadventure.localhost";
+const PUSHER_URL = getEnvConfig("PUSHER_URL") || "http://pusher.workadventure.localhost";
+export const ADMIN_URL = getEnvConfig("ADMIN_URL") || "http://workadventu.re";
+const UPLOADER_URL = getEnvConfig("UPLOADER_URL") || "http://uploader.workadventure.localhost";
+const ICON_URL = getEnvConfig("ICON_URL") || "http://icon.workadventure.localhost";
 const STUN_SERVER: string = getEnvConfig("STUN_SERVER") || "stun:stun.l.google.com:19302";
 const TURN_SERVER: string = getEnvConfig("TURN_SERVER") || "";
 const SKIP_RENDER_OPTIMIZATIONS: boolean = getEnvConfig("SKIP_RENDER_OPTIMIZATIONS") == "true";
