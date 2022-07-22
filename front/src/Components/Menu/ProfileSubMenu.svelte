@@ -6,6 +6,7 @@
         menuVisiblilityStore,
         userIsConnected,
         profileAvailable,
+        profileInPorgress,
         getProfileUrl,
     } from "../../Stores/MenuStore";
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
@@ -24,6 +25,7 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import Spinner from "../Chat/Spinner.svelte";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -118,20 +120,22 @@
 
     <div class="content">
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
-            {#if $userIsConnected && $profileAvailable}
-                {#if PROFILE_URL != undefined}
+            {#if $userIsConnected && ($profileAvailable || $profileInPorgress)}
+                {#if $profileInPorgress}
+                    <Spinner />
+                {:else if $profileAvailable && PROFILE_URL != undefined}
                     <iframe
                         title="profile"
                         src={getProfileUrl()}
                         class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
                     />
+                    <button
+                        type="button"
+                        class="btn outline resizing-width tw-justify-center"
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
+                    >
                 {/if}
-                <button
-                    type="button"
-                    class="btn outline resizing-width tw-justify-center"
-                    on:click={() => analyticsClient.logout()}
-                    on:click={logOut}>{$LL.menu.profile.logout()}</button
-                >
             {:else}
                 <a
                     type="button"
