@@ -49,6 +49,7 @@ export type Message = {
   time: Date;
   id: string;
   delivered: boolean;
+  error: boolean;
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -81,6 +82,9 @@ export class MucRoom {
   private meStore: Writable<Me>;
   private nickCount = 0;
   private composingTimeOut: Timeout | undefined;
+  public lastMessageSeen: Date;
+  private countMessagesToSee: Writable<number>;
+  private sendTimeOut: Timeout | undefined;
 
   constructor(
     private connection: ChatConnection,
@@ -93,6 +97,8 @@ export class MucRoom {
     this.messageStore = writable<Message[]>(new Array(0));
     this.teleportStore = writable<Teleport>({ state: false, to: null });
     this.meStore = writable<Me>({ isAdmin: false });
+    this.lastMessageSeen = new Date();
+    this.countMessagesToSee = writable<number>(0);
   }
 
   public getPlayerName() {
@@ -377,6 +383,47 @@ export class MucRoom {
     if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
   }
 
+  public sendMessage(text: string) {
+    const idMessage = uuidv4();
+    const message = xml(
+        "message",
+        {
+          type: "groupchat",
+          to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+          from: this.jid,
+          id: idMessage,
+        },
+        xml("body", {}, text)
+    );
+    this.connection.emitXmlMessage(message);
+
+    this.messageStore.update((messages) => {
+      messages.push({
+        name: this.getPlayerName(),
+        body: text,
+        time: new Date(),
+        id: idMessage,
+        delivered: false,
+        error: false
+      });
+      return messages;
+    });
+
+    this.lastMessageSeen = new Date();
+    this.countMessagesToSee.set(0);
+
+    if(this.sendTimeOut){
+      clearTimeout(this.sendTimeOut);
+    }
+    this.sendTimeOut = setTimeout(() => {
+      this.messageStore.update((messages) => {
+        messages = messages.map((message) => !message.delivered?{...message, error: true}:message);
+        return messages;
+      });
+    }, 10_000);
+    if (_VERBOSE) console.warn("[XMPP]", "Message sent");
+  }
+
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
     if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
@@ -490,6 +537,7 @@ export class MucRoom {
       !xml.getChild("subject")
     ) {
       const from = jid(xml.getAttr("from"));
+      const idMessage = xml.getAttr("id");
       const name = from.resource;
       const state = xml.getChildByAttr(
         "xmlns",
@@ -504,13 +552,23 @@ export class MucRoom {
         }
         const body = xml.getChildText("body") ?? "";
         this.messageStore.update((messages) => {
-          messages.push({
-            name,
-            body,
-            time: delay,
-            id: '',
-            delivered: true
-          });
+          if(messages.find(message => message.id === idMessage)){
+            this.countMessagesToSee.set(0);
+            this.lastMessageSeen = new Date();
+            messages = messages.map(message => message.id === idMessage? {...message, delivered: true} : message);
+          } else {
+            if(delay > this.lastMessageSeen){
+              this.countMessagesToSee.update(last => last + 1);
+            }
+            messages.push({
+              name,
+              body,
+              time: delay,
+              id: idMessage,
+              delivered: true,
+              error: false
+            });
+          }
           return messages;
         });
         handledMessage = true;
@@ -654,6 +712,19 @@ export class MucRoom {
     }
   }
 
+  public deleteMessage(idMessage: string){
+    this.messageStore.update((messages) => {
+      return messages.filter(message => message.id !== idMessage);
+    });
+  }
+
+  public sendBack(idMessage: string){
+    this.messageStore.update((messages) => {
+      this.sendMessage(messages.find(message => message.id === idMessage)?.body ?? '');
+      return messages.filter(message => message.id !== idMessage);
+    });
+  }
+
   public getPresenceStore(): UsersStore {
     return this.presenceStore;
   }
@@ -663,30 +734,15 @@ export class MucRoom {
   }
 
   public getMessagesStore(): MessagesStore {
-    return {
-      subscribe: this.messageStore.subscribe,
-    };
+    return this.messageStore;
   }
 
   public getMeStore(): MeStore {
-    return {
-      subscribe: this.meStore.subscribe,
-    };
+    return this.meStore;
   }
 
-  public sendMessage(text: string) {
-    const message = xml(
-      "message",
-      {
-        type: "groupchat",
-        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
-        from: this.jid,
-        id: uuidv4(),
-      },
-      xml("body", {}, text)
-    );
-    this.connection.emitXmlMessage(message);
-    if (_VERBOSE) console.warn("[XMPP]", "Message sent");
+  public getCountMessagesToSee(){
+    return this.countMessagesToSee
   }
 
   public getUrl(): string {

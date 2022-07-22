@@ -99,7 +99,7 @@
         setTimeout(() => {
           window.scroll(0, messagesList.scrollHeight);
           lastTimelineMessageRead.set(new Date());
-        }, 500);
+        }, 50);
       })
     );
   });

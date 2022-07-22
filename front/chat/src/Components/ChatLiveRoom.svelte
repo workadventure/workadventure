@@ -23,12 +23,12 @@
     forumMenuActive = false;
   };
 
-  $: console.log(searchValue);
-
   $: chunks = highlightWords({
     text: liveRoom.name,
     query: searchValue,
   });
+
+  $: unreads = liveRoom.getCountMessagesToSee();
 </script>
 
 <div class={`wa-chat-item`} on:mouseleave={closeChatUserMenu}>
@@ -61,15 +61,13 @@
     <OnlineUsers {usersListStore} />
   </div>
 
-  <!--
-	{#if liveRoom.unreads}
-        <span
-				class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-		>
-            {liveRoom.unreads}
-        </span>
-	{/if}
-	-->
+  {#if $unreads}
+    <span
+            class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded tw-animate-pulse"
+    >
+      {$unreads}
+    </span>
+  {/if}
 
   <div class="wa-dropdown">
     <!-- toggle -->

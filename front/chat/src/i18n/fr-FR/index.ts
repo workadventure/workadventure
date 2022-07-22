@@ -48,7 +48,9 @@ const fr_FR: Translation = {
   },
   see: "Voir",
   less: "plus",
-  more: "moins"
+  more: "moins",
+  sendBack: "Renvoyer",
+  delete: "Supprimer"
 };
 
 export default fr_FR;

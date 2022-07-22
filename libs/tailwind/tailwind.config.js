@@ -37,6 +37,12 @@ module.exports = {
     },
     extend: {
       fontSize: {
+        xxxs: [
+          `${(0.50)}rem`,
+          {
+            lineHeight: `${(0.70)}rem`
+          },
+        ],
         xxs: [
           `${(0.65)}rem`,
           {

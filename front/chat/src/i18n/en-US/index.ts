@@ -47,7 +47,9 @@ const en_US: BaseTranslation = {
   },
   see: "See",
   less: "less",
-  more: "more"
+  more: "more",
+  sendBack: "Send back",
+  delete: "Delete"
 };
 
 export default en_US;
