@@ -2425,7 +2425,9 @@ ${escapedMessage}
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
-            this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+            if(this.cameraManager != undefined){
+                this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+            }
         });
     }
 

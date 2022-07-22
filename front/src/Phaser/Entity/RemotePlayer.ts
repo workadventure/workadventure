@@ -53,8 +53,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             1,
             true,
             companion,
-            companionTexturePromise,
-            userId
+            companionTexturePromise
         );
 
         //set data

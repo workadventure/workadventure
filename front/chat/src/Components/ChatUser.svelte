@@ -49,10 +49,10 @@
     dispatch("ban", { user, name, playUri });
   }
 
-  function findUserInDefault(name: string): User | undefined{
+  function findUserInDefault(name: string): User | undefined {
     const userData = [...$presenseStore].find(([, user]) => user.name === name);
     let user = undefined;
-    if(userData) {
+    if (userData) {
       [, user] = userData;
     }
     return user;

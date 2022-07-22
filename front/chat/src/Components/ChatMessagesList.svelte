@@ -5,7 +5,8 @@
     defaultColor,
     defaultWoka,
     MessagesStore,
-    MucRoom, User,
+    MucRoom,
+    User,
   } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { userStore } from "../Stores/LocalUserStore";
@@ -51,7 +52,7 @@
     }
     const userData = [...$presenseStore].find(([, user]) => user.name === name);
     let user = undefined;
-    if(userData) {
+    if (userData) {
       [, user] = userData;
     }
     return user;

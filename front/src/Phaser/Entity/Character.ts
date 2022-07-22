@@ -62,7 +62,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         isClickable: boolean,
         companion: string | null,
         companionTexturePromise?: CancelablePromise<string>,
-        userId?: number | null
+        userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -82,7 +82,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
-                    currentPlayerWokaStore.set(htmlImageElementSrc);
+                    if(userId != undefined){
+                        currentPlayerWokaStore.set(htmlImageElementSrc);
+                    }
                 });
             })
             .catch(() => {

@@ -16,7 +16,7 @@ export const profileAvailable = writable(true);
 menuVisiblilityStore.subscribe((value) => {
     if (userIsConnected && value && IDENTITY_URL != null) {
         axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
+            console.info("I'm not connected", err);
             profileAvailable.set(false);
         });
     }
