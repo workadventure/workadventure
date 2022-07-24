@@ -49,7 +49,10 @@
   });
 
   function onClick(event: MouseEvent) {
-    if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
+    if (
+      handleFormBlur &&
+      HtmlUtils.isClickedOutside(event, chatWindowElement)
+    ) {
       handleFormBlur.blur();
     }
   }

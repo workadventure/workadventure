@@ -51,6 +51,24 @@ const fr_FR: Translation = {
   more: "moins",
   sendBack: "Renvoyer",
   delete: "Supprimer",
+  emoji: {
+    icon: "Icone pour ouvrir ou fermer la selection d'emoji",
+    search: "Chercher un emoji...",
+    categories: {
+      recents: "Emojis récents",
+      smileys: "Smileys & emotions",
+      people: "Personne & corps",
+      animals: "Animaux & nature",
+      food: "Nourriture & boissons",
+      activities: "Activités",
+      travel: "Voyage & endroits",
+      objects: "Objets",
+      symbols: "Symbols",
+      flags: "Drapeaux",
+      custom: "Personalisés",
+    },
+    notFound: "Aucun emoji trouvé",
+  },
 };
 
 export default fr_FR;

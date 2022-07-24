@@ -49,15 +49,7 @@ export class XmppClient {
         this.clientDomain = clientJID.domain;
         this.clientResource = clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
-        this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
-            this.createClient(res, rej);
-            onCancel(() => {
-                if (this.timeout) {
-                    clearTimeout(this.timeout);
-                    this.timeout = undefined;
-                }
-            });
-        });
+        this.start();
     }
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
@@ -80,7 +72,7 @@ export class XmppClient {
             xmpp.on("error", (err: string) => {
                 console.error("XmppClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
-                rej(err);
+                //rej(err);
             });
 
             xmpp.on("offline", () => {
@@ -210,9 +202,9 @@ export class XmppClient {
         });
     }*/
 
-    close(): void {
+    close(): CancelablePromise {
         console.log("> Disconnecting from xmppClient");
-        this.clientPromise
+        return this.clientPromise
             .then(async (xmpp) => {
                 //cancel promise
                 this.clientPromise.cancel();
@@ -230,10 +222,30 @@ export class XmppClient {
 
                 return xmpp;
             })
-            .catch((e) => console.error(e));
+            .catch((err) => {
+                console.error('> Disconnecting from xmppClient => error: ', err);
+            });
+    }
 
-        //cancel promise
-        setTimeout(() => this.clientPromise.cancel(), 0);
+    start(): CancelablePromise {
+        console.log("> Connecting from xmppClient");
+        return this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
+            this.createClient(res, rej);
+            onCancel(() => {
+                if (this.timeout) {
+                    clearTimeout(this.timeout);
+                    this.timeout = undefined;
+                }
+            });
+        }).catch((err) => {
+            console.error('> Connecting from xmppClient => error: ', err);
+            if(this.timeout){
+                clearTimeout(this.timeout);
+            }
+            return this.close().then(() => {
+                return this.start();
+            });
+        });
     }
 
     async send(stanza: string): Promise<void> {

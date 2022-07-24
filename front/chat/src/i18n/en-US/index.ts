@@ -50,6 +50,24 @@ const en_US: BaseTranslation = {
   more: "more",
   sendBack: "Send back",
   delete: "Delete",
+  emoji: {
+    icon: "Icon to open or close emoji selected popup",
+    search: "Search emojis...",
+    categories: {
+      recents: "Recent Emojis",
+      smileys: "Smileys & Emotion",
+      people: "People & Body",
+      animals: "Animals & Nature",
+      food: "Food & Drink",
+      activities: "Activities",
+      travel: "Travel & Places",
+      objects: "Objects",
+      symbols: "Symbols",
+      flags: "Flags",
+      custom: "Custom",
+    },
+    notFound: "No emojis found",
+  },
 };
 
 export default en_US;

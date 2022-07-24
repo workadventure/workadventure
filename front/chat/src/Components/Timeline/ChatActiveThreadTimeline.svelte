@@ -5,6 +5,7 @@
     ArrowLeftIcon,
     MessageCircleIcon,
     RefreshCwIcon,
+    SmileIcon,
   } from "svelte-feather-icons";
   import { SendIcon } from "svelte-feather-icons";
   import {
@@ -21,12 +22,14 @@
   import { activeThreadStore } from "../../Stores/ActiveThreadStore";
   import { Unsubscriber } from "svelte/store";
   import { mucRoomsStore } from "../../Stores/MucRoomsStore";
+  import { EmojiButton } from "@joeattardi/emoji-button";
 
   const dispatch = createEventDispatcher();
   const defaultMucRoom = mucRoomsStore.getDefaultRoom();
 
   export let settingsView = false;
 
+  let areaMessageText: HTMLElement;
   let newMessageText = "";
 
   function reInitialize() {
@@ -84,6 +87,9 @@
   let messagesList: HTMLElement;
   let subscribers = new Array<Unsubscriber>();
 
+  let emojiContainer: HTMLElement;
+  let picker: EmojiButton;
+
   onMount(() => {
     messagesList.addEventListener("scroll", () => {
       if (
@@ -102,11 +108,57 @@
         }, 50);
       })
     );
+
+    picker = new EmojiButton({
+      styleProperties: {
+        "--font": "Press Start 2P",
+        "--background-color": "#23222c",
+        "--text-color": "#ffffff",
+        "--secondary-text-color": "#ffffff",
+        "--category-button-color": "#ffffff",
+        "--category-button-active-color": "#56eaff",
+      },
+      position: "bottom",
+      emojisPerRow: 5,
+      autoFocusSearch: false,
+      style: "twemoji",
+      showPreview: false,
+      i18n: {
+        search: $LL.emoji.search(),
+        categories: {
+          recents: $LL.emoji.categories.recents(),
+          smileys: $LL.emoji.categories.smileys(),
+          people: $LL.emoji.categories.people(),
+          animals: $LL.emoji.categories.animals(),
+          food: $LL.emoji.categories.food(),
+          activities: $LL.emoji.categories.activities(),
+          travel: $LL.emoji.categories.travel(),
+          objects: $LL.emoji.categories.objects(),
+          symbols: $LL.emoji.categories.symbols(),
+          flags: $LL.emoji.categories.flags(),
+          custom: $LL.emoji.categories.custom(),
+        },
+        notFound: $LL.emoji.notFound(),
+      },
+    });
+
+    picker.on("emoji", ({ emoji }) => {
+      newMessageText += emoji;
+    });
+    picker.on("hidden", () => {
+      emojiOpened = false;
+    });
   });
 
   onDestroy(() => {
     subscribers.forEach((subscriber) => subscriber());
   });
+
+  let emojiOpened = false;
+  function openEmoji() {
+    picker.showPicker(emojiContainer);
+    emojiOpened = true;
+  }
 </script>
 
 <!-- thread -->
@@ -334,11 +386,16 @@
 
     <!--MESSAGE FORM-->
     <div class="wa-message-form">
+      <div class="emote-menu-container">
+        <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
+      </div>
+
       <form on:submit|preventDefault={saveMessage}>
         <div class="tw-w-full tw-p-2">
           <div class="tw-flex tw-items-center tw-relative">
             <textarea
               type="text"
+              bind:this={areaMessageText}
               bind:value={newMessageText}
               placeholder={$LL.form.placeholder()}
               on:keydown={handlerKeyDown}
@@ -348,6 +405,14 @@
               on:blur={onBlur}
               rows="1"
             />
+            <button
+              class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
+                emojiOpened ? "tw-text-light-blue" : ""
+              }`}
+              on:click|preventDefault|stopPropagation={openEmoji}
+            >
+              <SmileIcon size="17" />
+            </button>
             <button
               type="submit"
               class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
