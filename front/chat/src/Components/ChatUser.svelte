@@ -4,13 +4,13 @@
     MoreHorizontalIcon,
     ShieldOffIcon,
     ShieldIcon,
-    SlashIcon,
+    SlashIcon, EyeIcon,
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
   import { defaultColor, defaultWoka, MeStore, User } from "../Xmpp/MucRoom";
-  import walk from "../../public/static/images/walk.svg";
-  import teleport from "../../public/static/images/teleport.svg";
+  import walk from "/static/images/walk.svg";
+  import teleport from "/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
@@ -145,7 +145,6 @@
     </span>
   {/if}
 
-  {#if user.active}
     <div class="wa-dropdown">
       <button
         class="tw-text-light-purple focus:outline-none tw-m-0"
@@ -158,6 +157,12 @@
         class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`}
         on:mouseleave={closeChatUserMenu}
       >
+        <span
+                class="wa-dropdown-item tw-text-white"
+                on:click|stopPropagation={() => openChat(user)}
+        ><EyeIcon size="13" /> {$LL.see()}</span
+        >
+        {#if user.active}
         {#if user.isInSameMap}
           <span
             class="wa-dropdown-item"
@@ -207,9 +212,9 @@
             >
           {/if}
         {/if}
+        {/if}
         <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
                 <div class="wa-dropdown-item">Delete chat</div>-->
       </div>
     </div>
-  {/if}
 </div>

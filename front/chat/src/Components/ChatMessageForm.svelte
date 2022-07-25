@@ -4,8 +4,9 @@
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher, onMount } from "svelte";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  import {SingleRoom} from "../Xmpp/SingleRoom";
 
-  export let mucRoom: MucRoom;
+  export let room: MucRoom | SingleRoom;
 
   const dispatch = createEventDispatcher();
 
@@ -27,8 +28,10 @@
   function sendMessage() {
     if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
       return;
-    mucRoom.updateComposingState(ChatStates.PAUSED);
-    mucRoom.sendMessage(newMessageText);
+    if(room instanceof MucRoom){
+      room.updateComposingState(ChatStates.PAUSED);
+    }
+    room.sendMessage(newMessageText);
     newMessageText = "";
     dispatch("scrollDown");
     return false;
@@ -113,7 +116,9 @@
           }}
           on:keypress={() => {
             adjustHeight();
-            mucRoom.updateComposingState(ChatStates.COMPOSING);
+            if(room instanceof MucRoom){
+              room.updateComposingState(ChatStates.COMPOSING);
+             }
             return true;
           }}
           rows="1"

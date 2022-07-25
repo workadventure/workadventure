@@ -6,12 +6,14 @@
   import { fly } from "svelte/transition";
   import LL from "../i18n/i18n-svelte";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
+  import {singleRoomsStore} from "../Stores/SingleRoomsStore";
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
     rankUp: RankUp;
     rankDown: RankDown;
     ban: Ban;
     showUsers: undefined;
+    activeThread: User
   }>();
 
   export let usersListStore: UsersStore;
@@ -23,8 +25,7 @@
   const maxUsersMinimized = 7;
 
   function openChat(user: User) {
-    return user;
-    //dispatch('activeThread', user);
+    dispatch('activeThread', singleRoomsStore.getOrCreateSingleRoom(user));
   }
 
   function showInviteMenu() {

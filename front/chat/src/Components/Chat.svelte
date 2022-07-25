@@ -15,7 +15,7 @@
   import { locale } from "../i18n/i18n-svelte";
   import ChatLiveRooms from "./ChatLiveRooms.svelte";
   import { activeThreadStore } from "../Stores/ActiveThreadStore";
-  import ChatActiveThread from "./ChatActiveThread.svelte";
+  import ChatActiveMucRoom from "./ChatActiveMucRoom.svelte";
   import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
   import Timeline from "./Timeline/Timeline.svelte";
   import {
@@ -23,6 +23,7 @@
     timelineOpenedStore,
   } from "../Stores/ChatStore";
   import { Unsubscriber, derived } from "svelte/store";
+  import ChatActiveSingleRoom from "./ChatActiveSingleRoom.svelte";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
@@ -123,10 +124,9 @@
         on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)}
       />
     {:else if $activeThreadStore !== undefined && defaultMucRoom}
-      <ChatActiveThread
-        usersListStore={$activeThreadStore.getPresenceStore()}
-        meStore={$activeThreadStore.getMeStore()}
-        activeThread={$activeThreadStore}
+      {#if $activeThreadStore instanceof MucRoom}
+      <ChatActiveMucRoom
+        activeMucRoom={$activeThreadStore}
         on:goTo={(event) =>
           defaultMucRoom?.goTo(
             event.detail.type,
@@ -142,6 +142,25 @@
             event.detail.playUri
           )}
       />
+        {:else}
+        <ChatActiveSingleRoom
+                activeSingleRoom={$activeThreadStore}
+                on:goTo={(event) =>
+          defaultMucRoom?.goTo(
+            event.detail.type,
+            event.detail.playUri,
+            event.detail.uuid
+          )}
+                on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+                on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+                on:ban={(event) =>
+          defaultMucRoom?.ban(
+            event.detail.user,
+            event.detail.name,
+            event.detail.playUri
+          )}
+        />
+        {/if}
     {:else}
       <div class="wa-message-bg">
         <!-- searchbar -->

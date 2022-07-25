@@ -200,7 +200,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messageMucListAllUsers);
-    if (_VERBOSE) console.warn("[XMPP]", "Get all subscribers sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Get all subscribers sent");
   }
 
   private sendPresence() {
@@ -232,7 +232,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messagePresence);
-    if (_VERBOSE) console.warn("[XMPP]", "Presence sent", get(userStore).uuid);
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Presence sent", get(userStore).uuid);
   }
 
   private sendSubscribe() {
@@ -261,7 +261,7 @@ export class MucRoom {
     );
     this.connection.emitXmlMessage(messageMucSubscribe);
     if (_VERBOSE)
-      console.warn("[XMPP]", "Subscribe sent", messageMucSubscribe.toString());
+      console.warn("[XMPP]", "[MR]", "Subscribe sent", messageMucSubscribe.toString());
   }
 
   public rankUp(userJID: string | JID) {
@@ -296,7 +296,7 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Affiliation sent");
     this.connection.emitXmlMessage(messageMucAffiliateUser);
   }
 
@@ -309,7 +309,7 @@ export class MucRoom {
       name,
       "Test message de ban"
     );
-    if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Ban user message sent");
   }
 
   public reInitialize() {
@@ -344,7 +344,7 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Destroy room sent");
     this.connection.emitXmlMessage(messageMucDestroy);
   }
 
@@ -362,7 +362,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messageMucSubscribe);
-    if (_VERBOSE) console.warn("[XMPP]", "Disconnect sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Disconnect sent");
     return messageMucSubscribe;
   }
 
@@ -380,7 +380,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(chatState);
-    if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Chat state sent");
   }
 
   public sendMessage(text: string) {
@@ -423,12 +423,12 @@ export class MucRoom {
         return messages;
       });
     }, 10_000);
-    if (_VERBOSE) console.warn("[XMPP]", "Message sent");
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Message sent");
   }
 
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
-    if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
+    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "<< Message received", xml.getName());
 
     if (xml.getAttr("type") === "error") {
       if (
@@ -598,8 +598,8 @@ export class MucRoom {
     }
 
     if (!handledMessage) {
-      console.warn("Unhandled message targeted at the room: ", xml.toString());
-      console.warn("Message name : ", xml.getName());
+      console.warn("[XMPP]", "[MR]", "Unhandled message targeted at the room: ", xml.toString());
+      console.warn("[XMPP]", "[MR]", "Message name : ", xml.getName());
     }
   }
 
