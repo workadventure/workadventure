@@ -4,6 +4,7 @@
     ChatStates,
     defaultColor,
     defaultWoka,
+    Message,
     MucRoom,
     User,
   } from "../Xmpp/MucRoom";
@@ -17,8 +18,10 @@
     Trash2Icon,
     RefreshCwIcon,
     ArrowDownIcon,
+    CornerDownLeftIcon,
   } from "svelte-feather-icons";
   import { Unsubscriber } from "svelte/store";
+  import { selectedMessageToReply } from "../Stores/ChatStore";
 
   export let mucRoom: MucRoom;
 
@@ -111,6 +114,10 @@
     } else {
       isScrolledDown = false;
     }
+  }
+
+  function selectMessage(message: Message){
+    selectedMessageToReply.set(message)
   }
 
   onMount(() => {
@@ -238,11 +245,16 @@
                 >
               </div>
               <div
-                class="tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
               >
                 <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                   {message.body}
                 </p>
+                <div class="action tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left" 
+                  on:click={() => selectMessage(message)}
+                >
+                  <CornerDownLeftIcon size="17"/>
+                </div>
               </div>
             </div>
           </div>
@@ -384,6 +396,22 @@
         position: absolute;
         margin-left: 100%;
         margin-top: calc(20% - 3px);
+      }
+    }
+  }
+  .message{
+    position: relative;
+    .action{
+      display: none;
+      position: absolute;
+      right: -16px;
+      top: 4px;
+      padding: 2px;
+      cursor: pointer;
+    }
+    &:hover{
+      .action{
+        display: block;
       }
     }
   }

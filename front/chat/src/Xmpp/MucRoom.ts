@@ -50,6 +50,8 @@ export type Message = {
   id: string;
   delivered: boolean;
   error: boolean;
+  from: string;
+  type: messageType;
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -59,6 +61,12 @@ export type Me = {
 };
 
 export type MeStore = Readable<Me>;
+
+enum messageType {
+  message = 1,
+  reply,
+  react
+};
 
 const _VERBOSE = true;
 export const defaultWoka =
@@ -405,10 +413,48 @@ export class MucRoom {
         id: idMessage,
         delivered: false,
         error: false,
+        from: this.jid,
+        type: messageType.message
       });
       return messages;
     });
 
+    this.manageResendMessage();
+  }
+
+  public replyMessage(text: string, message: Message){
+    const idMessage = uuidv4();
+    const messageReplying = xml(
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, text),
+      xml("reply", {to: message.from, id: message.id, xmlns: 'urn:xmpp:reply:0'})
+    );
+    this.connection.emitXmlMessage(messageReplying);
+
+    this.messageStore.update((messages) => {
+      messages.push({
+        name: this.getPlayerName(),
+        body: text,
+        time: new Date(),
+        id: idMessage,
+        delivered: false,
+        error: false,
+        from: this.jid,
+        type: messageType.reply
+      });
+      return messages;
+    });
+
+    this.manageResendMessage();
+  }
+
+  private manageResendMessage(){
     this.lastMessageSeen = new Date();
     this.countMessagesToSee.set(0);
 
@@ -573,6 +619,8 @@ export class MucRoom {
               id: idMessage,
               delivered: true,
               error: false,
+              from: from.toString(),
+              type: messageType.message
             });
           }
           return messages;

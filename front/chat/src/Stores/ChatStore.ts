@@ -3,6 +3,7 @@ import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
+import { Message } from "../Xmpp/MucRoom";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -161,3 +162,5 @@ export const writingStatusMessageStore = writable<Set<PlayerInterface>>(
 export const chatInputFocusStore = writable(false);
 
 export const chatPeerConnectionInProgress = writable<boolean>(false);
+
+export const selectedMessageToReply = writable<Message | null>(null);
