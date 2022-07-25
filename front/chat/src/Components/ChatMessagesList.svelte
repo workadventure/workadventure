@@ -546,6 +546,8 @@
       margin-top: 4px;
       span {
         display: block;
+        background-color: #c3c3c345;
+        border: solid 1px #c3c3c3;
         &.active {
           background-color: #56eaff4f;
           border: solid 1px #56eaff;

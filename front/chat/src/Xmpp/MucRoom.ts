@@ -523,7 +523,10 @@ export class MucRoom {
     if (!messages) return false;
 
     return messages.reduce((value, message) => {
-      if (message.emoji === emojiStr && message.from === this.jid) {
+      if (
+        message.emoji == emojiStr &&
+        jid(message.from).getLocal() == jid(this.jid).getLocal()
+      ) {
         value = message.operation == reactAction.add ? true : false;
       }
       return value;
@@ -557,12 +560,14 @@ export class MucRoom {
       xml("body", {}, emoji),
       xml("reaction", {
         to: messageReact.from,
+        from: this.jid,
         id: messageReact.id,
         xmlns: "urn:xmpp:reaction:0",
         reaction: emoji,
         action,
       })
     );
+    console.log("this.jid", jid(this.jid));
     this.connection.emitXmlMessage(messageReacted);
 
     this.messageReactStore.update((reactMessages) => {
@@ -735,7 +740,7 @@ export class MucRoom {
           const newReactMessage = {
             id: idMessage,
             message: xml.getChild("reaction")?.getAttr("id"),
-            from: this.jid,
+            from: xml.getChild("reaction")?.getAttr("from"),
             emoji: body,
             operation: xml.getChild("reaction")?.getAttr("action"),
           };
