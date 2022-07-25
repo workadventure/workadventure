@@ -59,7 +59,7 @@
     }
     listDom.scrollTo(0, listDom.scrollHeight);
     subscribers.push(
-      mucRoomsStore.subscribe((mucRooms: MucRoom[]) => {
+      mucRoomsStore.subscribe(() => {
         try {
           defaultMucRoom = mucRoomsStore.getDefaultRoom();
         } catch (e: unknown) {
