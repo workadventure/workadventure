@@ -223,13 +223,13 @@ export class XmppClient {
                 return xmpp;
             })
             .catch((err) => {
-                console.error('> Disconnecting from xmppClient => error: ', err);
+                console.error("> Disconnecting from xmppClient => error: ", err);
             });
     }
 
     start(): CancelablePromise {
         console.log("> Connecting from xmppClient");
-        return this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
+        return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
                 if (this.timeout) {
@@ -238,14 +238,14 @@ export class XmppClient {
                 }
             });
         }).catch((err) => {
-            console.error('> Connecting from xmppClient => error: ', err);
-            if(this.timeout){
+            console.error("> Connecting from xmppClient => error: ", err);
+            if (this.timeout) {
                 clearTimeout(this.timeout);
             }
             return this.close().then(() => {
                 return this.start();
             });
-        });
+        }));
     }
 
     async send(stanza: string): Promise<void> {

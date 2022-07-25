@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
@@ -156,6 +156,14 @@ export const lastTimelineMessageRead = writable<Date>(new Date());
 
 export const writingStatusMessageStore = writable<Set<PlayerInterface>>(
   new Set<PlayerInterface>()
+);
+
+export const timelineMessagesToSee = derived(
+  [chatMessagesStore, lastTimelineMessageRead],
+  ([$chatMessagesStore, $lastTimelineMessageRead]) =>
+    $chatMessagesStore.filter(
+      (message) => message.date > $lastTimelineMessageRead
+    ).length
 );
 
 export const chatInputFocusStore = writable(false);

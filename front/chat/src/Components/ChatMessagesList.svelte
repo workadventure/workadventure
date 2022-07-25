@@ -228,7 +228,20 @@
                   class={`tw-text-lighter-purple ${
                     isMe(message.name) ? "tw-ml-2" : "tw-mr-2"
                   }`}
-                  >{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span
+                  >{#if isMe(message.name)}{$LL.me()}{:else}
+                    {message.name.match(/\[\d*]/)
+                      ? message.name.substring(0, message.name.search(/\[\d*]/))
+                      : message.name}
+                    {#if message.name.match(/\[\d*]/)}
+                      <span class="tw-font-light tw-text-xxs tw-text-gray">
+                        #{message.name
+                          .match(/\[\d*]/)
+                          ?.join()
+                          ?.replace("[", "")
+                          ?.replace("]", "")}
+                      </span>
+                    {/if}
+                  {/if}</span
                 >
                 <span class="tw-text-xxxs"
                   >{message.time.toLocaleTimeString($locale, {
