@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
@@ -165,3 +165,10 @@ export const chatPeerConnectionInProgress = writable<boolean>(false);
 
 export const selectedMessageToReply = writable<Message | null>(null);
 export const selectedMessageToReact = writable<Message | null>(null);
+export const timelineMessagesToSee = derived(
+  [chatMessagesStore, lastTimelineMessageRead],
+  ([$chatMessagesStore, $lastTimelineMessageRead]) =>
+    $chatMessagesStore.filter(
+      (message) => message.date > $lastTimelineMessageRead
+    ).length
+);

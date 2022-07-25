@@ -4,9 +4,7 @@
   import { createEventDispatcher } from "svelte";
   import LL from "../../i18n/i18n-svelte";
   import {
-    chatMessagesStore,
     chatPeerConnectionInProgress,
-    lastTimelineMessageRead,
     timelineOpenedStore,
   } from "../../Stores/ChatStore";
 
@@ -19,9 +17,7 @@
     timelineOpenedStore.set(!$timelineOpenedStore);
   }
 
-  $: unreadMessages = $chatMessagesStore.filter(
-    (message) => message.date > $lastTimelineMessageRead
-  ).length;
+  $: unreadMessages = $timelineMessagesToSee;
 </script>
 
 <div

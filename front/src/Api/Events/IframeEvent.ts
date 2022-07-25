@@ -225,6 +225,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("openInviteMenu"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("chatTotalMessagesToSee"),
+        data: z.number(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

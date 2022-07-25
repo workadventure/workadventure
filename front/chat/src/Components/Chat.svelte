@@ -19,7 +19,11 @@
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
   import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
   import Timeline from "./Timeline/Timeline.svelte";
-  import { timelineOpenedStore } from "../Stores/ChatStore";
+  import {
+    timelineMessagesToSee,
+    timelineOpenedStore,
+  } from "../Stores/ChatStore";
+  import { Unsubscriber, derived } from "svelte/store";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
@@ -37,11 +41,40 @@
       listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
   });
 
+  let defaultMucRoom: MucRoom | undefined = undefined;
+  let subscribers = new Array<Unsubscriber>();
+
+  $: totalMessagesToSee = derived(
+    [
+      ...[...$mucRoomsStore].map((mucRoom) => mucRoom.getCountMessagesToSee()),
+      timelineMessagesToSee,
+    ],
+    ($totalMessagesToSee) =>
+      $totalMessagesToSee.reduce((sum, number) => sum + number, 0)
+  );
+
   onMount(async () => {
     if (!$locale) {
       await localeDetector();
     }
     listDom.scrollTo(0, listDom.scrollHeight);
+    subscribers.push(
+      mucRoomsStore.subscribe(() => {
+        try {
+          defaultMucRoom = mucRoomsStore.getDefaultRoom();
+        } catch (e: unknown) {
+          console.log(e);
+        }
+      })
+    );
+    subscribers.push(
+      totalMessagesToSee.subscribe((total) => {
+        window.parent.postMessage(
+          { type: "chatTotalMessagesToSee", data: total },
+          "*"
+        );
+      })
+    );
   });
 
   afterUpdate(() => {
@@ -77,7 +110,6 @@
     }
   }
 
-  let defaultMucRoom: MucRoom | undefined = undefined;
   mucRoomsStore.subscribe(() => {
     try {
       defaultMucRoom = mucRoomsStore.getDefaultRoom();

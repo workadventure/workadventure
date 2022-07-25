@@ -29,6 +29,8 @@
     selectedMessageToReply,
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  } from "svelte-feather-icons";
+  import { Unsubscriber } from "svelte/store";
 
   export let mucRoom: MucRoom;
 
@@ -226,7 +228,7 @@
   </div>
 
   <div
-    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
   >
     {#each $messagesStore as message, i}
       {#if showDate(message.time)}
@@ -297,7 +299,20 @@
                   class={`tw-text-lighter-purple ${
                     isMe(message.name) ? "tw-ml-2" : "tw-mr-2"
                   }`}
-                  >{#if isMe(message.name)}{$LL.me()}{:else}{message.name}{/if}</span
+                  >{#if isMe(message.name)}{$LL.me()}{:else}
+                    {message.name.match(/\[\d*]/)
+                      ? message.name.substring(0, message.name.search(/\[\d*]/))
+                      : message.name}
+                    {#if message.name.match(/\[\d*]/)}
+                      <span class="tw-font-light tw-text-xxs tw-text-gray">
+                        #{message.name
+                          .match(/\[\d*]/)
+                          ?.join()
+                          ?.replace("[", "")
+                          ?.replace("]", "")}
+                      </span>
+                    {/if}
+                  {/if}</span
                 >
                 <span class="tw-text-xxxs"
                   >{message.time.toLocaleTimeString($locale, {
@@ -486,7 +501,6 @@
   .wa-messages-list {
     padding-bottom: 60px;
   }
-
   .wa-error-message {
     position: relative;
     .wa-dropdown-menu {

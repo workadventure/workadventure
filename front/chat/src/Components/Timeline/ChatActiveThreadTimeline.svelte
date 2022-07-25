@@ -277,8 +277,22 @@
                   class="tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1"
                 >
                   <span class="tw-text-lighter-purple"
-                    >{#if message.type === ChatMessageTypes.me}{$LL.me()}{:else}{message
-                        .author?.name}{/if}</span
+                    >{#if message.type === ChatMessageTypes.me}{$LL.me()}{:else}
+                      {message.author?.name.match(/\[\d*]/)
+                        ? message.author?.name.substring(
+                            0,
+                            message.author?.name.search(/\[\d*]/)
+                          )
+                        : message.author?.name}
+                      {#if message.author?.name.match(/\[\d*]/)}
+                        <span class="tw-font-light tw-text-xs tw-text-gray">
+                          #{message.author?.name
+                            .match(/\[\d*]/)
+                            ?.join()
+                            ?.replace("[", "")
+                            ?.replace("]", "")}
+                        </span>
+                      {/if}{/if}</span
                   >
                   <span
                     >{message.date.toLocaleTimeString($locale, {
@@ -309,7 +323,18 @@
                 <span
                   class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                   ><b style={target.color ? `color: ${target.color};` : ""}
-                    >{target.name}</b
+                    >{target.name.match(/\[\d*]/)
+                      ? target.name.substring(0, target.name.search(/\[\d*]/))
+                      : target.name}
+                    {#if target.name.match(/\[\d*]/)}
+                      <span class="tw-font-light tw-text-xs tw-text-gray">
+                        #{target.name
+                          .match(/\[\d*]/)
+                          ?.join()
+                          ?.replace("[", "")
+                          ?.replace("]", "")}
+                      </span>
+                    {/if}</b
                   >{$LL.timeLine.incoming()}</span
                 >
               </div>
@@ -321,7 +346,18 @@
                 <span
                   class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                   ><b style={target.color ? `color: ${target.color};` : ""}
-                    >{target.name}</b
+                    >{target.name.match(/\[\d*]/)
+                      ? target.name.substring(0, target.name.search(/\[\d*]/))
+                      : target.name}
+                    {#if target.name.match(/\[\d*]/)}
+                      <span class="tw-font-light tw-text-xs tw-text-gray">
+                        #{target.name
+                          .match(/\[\d*]/)
+                          ?.join()
+                          ?.replace("[", "")
+                          ?.replace("]", "")}
+                      </span>
+                    {/if}</b
                   >{$LL.timeLine.outcoming()}</span
                 >
               </div>

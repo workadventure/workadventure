@@ -168,6 +168,9 @@ class IframeListener {
     private readonly _openInviteMenuStream: Subject<void> = new Subject();
     public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
 
+    private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
+    public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
@@ -385,6 +388,8 @@ class IframeListener {
                         this._askPositionStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "openInviteMenu") {
                         this._openInviteMenuStream.next();
+                    } else if (iframeEvent.type == "chatTotalMessagesToSee") {
+                        this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;

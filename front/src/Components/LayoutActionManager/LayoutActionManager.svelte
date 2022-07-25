@@ -31,6 +31,7 @@
         animation: moveMessage 0.7s;
         animation-iteration-count: infinite;
         animation-timing-function: ease-in-out;
+        margin-bottom: 2rem;
     }
 
     @keyframes moveMessage {
