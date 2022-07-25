@@ -110,27 +110,6 @@
     }
   }
 
-  function handleGoTo(mucRoom: MucRoom | undefined, event: GoTo) {
-    if (mucRoom) {
-      mucRoom.goTo(event.type, event.playUri, event.type);
-    }
-  }
-  function handleRankUp(mucRoom: MucRoom | undefined, event: RankUp) {
-    if (mucRoom) {
-      mucRoom.rankUp(event.jid);
-    }
-  }
-  function handleRankDown(mucRoom: MucRoom | undefined, event: RankDown) {
-    if (mucRoom) {
-      mucRoom.rankDown(event.jid);
-    }
-  }
-  function handleBan(mucRoom: MucRoom | undefined, event: Ban) {
-    if (mucRoom) {
-      mucRoom.ban(event.user, event.name, event.playUri);
-    }
-  }
-
   console.log("Chat fully loaded");
 </script>
 
@@ -149,11 +128,20 @@
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
-        on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
-        on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
-        on:rankDown={(event) =>
-          handleRankDown($activeThreadStore, event.detail)}
-        on:ban={(event) => handleBan($activeThreadStore, event.detail)}
+        on:goTo={(event) =>
+          defaultMucRoom?.goTo(
+            event.detail.type,
+            event.detail.playUri,
+            event.detail.uuid
+          )}
+        on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+        on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+        on:ban={(event) =>
+          defaultMucRoom?.ban(
+            event.detail.user,
+            event.detail.name,
+            event.detail.playUri
+          )}
       />
     {:else}
       <div class="wa-message-bg">
