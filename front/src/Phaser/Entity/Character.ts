@@ -20,6 +20,7 @@ import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -60,7 +61,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: CancelablePromise<string>
+        companionTexturePromise?: CancelablePromise<string>,
+        userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -80,6 +82,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
+                    if (userId != undefined) {
+                        currentPlayerWokaStore.set(htmlImageElementSrc);
+                    }
                 });
             })
             .catch(() => {

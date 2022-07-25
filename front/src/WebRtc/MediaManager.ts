@@ -241,7 +241,6 @@ export class MediaManager {
             (elementAudioNewMessageNotification as HTMLAudioElement)
                 .play()
                 .then(() => {
-                    console.log("elementAudioNewMessageNotification => played");
                     this.canPlayNotificationMessage = false;
                     return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
                 })
