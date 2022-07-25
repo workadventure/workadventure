@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const error: NonNullable<Translation["error"]> = {
+const error: DeepPartial<Translation["error"]> = {
     accessLink: {
         title: "Enllaç d'accés incorrecte",
         subTitle: "No s'ha trobat el mapa. Si us plau, reviseu el vostre enllaç d'accés.",

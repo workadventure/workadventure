@@ -12,7 +12,9 @@ import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefi
 import { EJABBERD_DOMAIN, EJABBERD_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const { client, xml, jid } = require("@xmpp/client");
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
 
 interface JID {
@@ -116,12 +118,14 @@ export class XmppClient {
                 xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
-                        console.log(definition);
+                        console.info("initial muc room", definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
+                        //@ts-ignore
                         if (!definition.name || !definition.uri) {
                             throw new Error("Name and Uri cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
+                        //@ts-ignore
                         mucRoomDefinitionMessage.setUrl(definition.uri);
                         return mucRoomDefinitionMessage;
                     })
@@ -140,7 +144,6 @@ export class XmppClient {
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
-            // @ts-ignore
             xmpp.start()
                 .then(() => {
                     console.log("XmppClient => start");
@@ -153,7 +156,8 @@ export class XmppClient {
 
             xmpp.on("stanza", (stanza: unknown) => {
                 const xmppMessage = new XmppMessage();
-                // @ts-ignore
+
+                //@ts-ignore
                 xmppMessage.setStanza(stanza.toString());
 
                 const subMessage = new SubMessage();
@@ -185,7 +189,7 @@ export class XmppClient {
         });
     }*/
 
-    close() {
+    close(): void {
         this.clientPromise
             .then(async (xmpp) => {
                 //send presence unavailable to notify server

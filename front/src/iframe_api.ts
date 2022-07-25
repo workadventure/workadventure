@@ -54,6 +54,16 @@ const wa = {
     camera,
     state: globalState,
 
+    /**
+     * When your script / iFrame loads WorkAdventure, it takes a few milliseconds for your
+     * script / iFrame to exchange data with WorkAdventure. You should wait for the WorkAdventure
+     * API to be fully ready using the WA.onInit() method.
+     * {@link https://workadventu.re/map-building/api-start.md#waiting-for-workadventure-api-to-be-available | Website documentation}
+     *
+     * Some properties (like the current user name, or the room ID) are not available until WA.onInit has completed.
+     *
+     * @returns {void}
+     */
     onInit(): Promise<void> {
         return initPromise;
     },
@@ -140,7 +150,7 @@ const wa = {
     /**
      * @deprecated Use WA.nav.openCoWebSite instead
      */
-    openCoWebSite(url: string, allowApi: boolean = false, allowPolicy: string = ""): Promise<CoWebsite> {
+    openCoWebSite(url: string, allowApi = false, allowPolicy = ""): Promise<CoWebsite> {
         console.warn("Method WA.openCoWebSite is deprecated. Please use WA.nav.openCoWebSite instead");
         return nav.openCoWebSite(url, allowApi, allowPolicy);
     },
@@ -233,6 +243,7 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
             const payloadData = safeParsedPayload.data;
 
             const callback = registeredCallbacks[payloadData.type];
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             callback?.(payloadData.data);
         }

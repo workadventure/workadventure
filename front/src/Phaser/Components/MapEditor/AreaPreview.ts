@@ -34,7 +34,7 @@ export class AreaPreview extends Phaser.GameObjects.Container {
         return this;
     }
 
-    public updateArea(config: ITiledMapRectangleObject, sendUpdate: boolean = true): void {
+    public updateArea(config: ITiledMapRectangleObject, sendUpdate = true): void {
         this.config = {
             ...this.config,
             ...config,

@@ -37,6 +37,10 @@ export class Area implements IArea {
         });
     }
 
+    public get x() {
+        return this._x;
+    }
+
     public set x(x: number) {
         this._x = x;
         sendToWorkadventure({
@@ -59,6 +63,10 @@ export class Area implements IArea {
         });
     }
 
+    public get y() {
+        return this._y;
+    }
+
     public set width(width: number) {
         this._width = width;
         sendToWorkadventure({
@@ -70,6 +78,10 @@ export class Area implements IArea {
         });
     }
 
+    public get width() {
+        return this._width;
+    }
+
     public set height(height: number) {
         this._height = height;
         sendToWorkadventure({
@@ -79,18 +91,6 @@ export class Area implements IArea {
                 height: this._height,
             },
         });
-    }
-
-    public get x() {
-        return this._x;
-    }
-
-    public get y() {
-        return this._y;
-    }
-
-    public get width() {
-        return this._width;
     }
 
     public get height() {

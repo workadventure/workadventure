@@ -5,7 +5,7 @@ import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import { banMessageStore } from "../Stores/TypeMessageStore/BanMessageStore";
 
 class UserMessageManager {
-    receiveBannedMessageListener!: Function;
+    receiveBannedMessageListener!: () => void;
 
     constructor() {
         adminMessagesService.messageStream.subscribe((event) => {
@@ -22,7 +22,7 @@ class UserMessageManager {
         });
     }
 
-    setReceiveBanListener(callback: Function) {
+    setReceiveBanListener(callback: () => void) {
         this.receiveBannedMessageListener = callback;
     }
 }

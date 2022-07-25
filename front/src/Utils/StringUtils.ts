@@ -1,5 +1,5 @@
 export class StringUtils {
-    public static parsePointFromParam(param: string, separator: string = ","): { x: number; y: number } | undefined {
+    public static parsePointFromParam(param: string, separator = ","): { x: number; y: number } | undefined {
         const values = param.split(separator).map((val) => parseInt(val));
         if (values.length !== 2) {
             return;

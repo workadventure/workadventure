@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const menu: BaseTranslation = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -9,6 +10,8 @@ const menu: BaseTranslation = {
             register: "Registro",
             chat: "Abrir bate-papo",
             userlist: "Lista de usuários",
+            openEmoji: "Abrir pop-up de emoji selecionado",
+            closeEmoji: "Fechar menu de emojis",
         },
     },
     visitCard: {

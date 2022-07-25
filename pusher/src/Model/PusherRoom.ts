@@ -18,11 +18,12 @@ const debug = Debug("room");
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
-    public mucRooms: Array<Object> = [];
+    private versionNumber = 1;
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public mucRooms: Array<any> = [];
 
-    private versionNumber: number = 1;
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
-    private isClosing: boolean = false;
+    private isClosing = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
@@ -42,18 +43,19 @@ export class PusherRoom {
         this.positionNotifier.setViewport(socket, viewport);
     }
 
-    public join(socket: ExSocketInterface) {
+    public join(socket: ExSocketInterface): void {
         this.listeners.add(socket);
 
         if (!this.mucRooms) {
             return;
         }
 
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
         socket.xmppClient = new XmppClient(socket, this.mucRooms);
         socket.pusherRoom = this;
     }
 
-    public leave(socket: ExSocketInterface) {
+    public leave(socket: ExSocketInterface): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
         if (socket.xmppClient) {

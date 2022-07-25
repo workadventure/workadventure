@@ -61,8 +61,8 @@ export class GameRoom {
     private itemsState = new Map<number, unknown>();
 
     private readonly positionNotifier: PositionNotifier;
-    private versionNumber: number = 1;
-    private nextUserId: number = 1;
+    private versionNumber = 1;
+    private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
     private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
@@ -176,7 +176,10 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
-            joinRoomMessage.getCompanion()
+            joinRoomMessage.getCompanion(),
+            undefined,
+            undefined,
+            joinRoomMessage.getActivatedinviteuser()
         );
         this.nextUserId++;
         this.users.set(user.id, user);

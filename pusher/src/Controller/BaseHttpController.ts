@@ -8,7 +8,7 @@ export class BaseHttpController {
         this.routes();
     }
 
-    protected routes() {
+    protected routes(): void {
         /* Define routes on children */
     }
 

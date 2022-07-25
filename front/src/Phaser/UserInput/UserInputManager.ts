@@ -228,11 +228,11 @@ export class UserInputManager {
         return eventsMap;
     }
 
-    addSpaceEventListner(callback: Function) {
+    addSpaceEventListner(callback: () => void) {
         this.userInputHandler.addSpaceEventListener(callback);
     }
-    removeSpaceEventListner(callback: Function) {
-        this.userInputHandler.removeSpaceEventListner(callback);
+    removeSpaceEventListener(callback: () => void) {
+        this.userInputHandler.removeSpaceEventListener(callback);
     }
 
     destroy(): void {

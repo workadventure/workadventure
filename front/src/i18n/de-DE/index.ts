@@ -1,5 +1,5 @@
+import merge from "ts-deepmerge";
 import en_US from "../en-US";
-import type { Translation } from "../i18n-types";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
@@ -16,8 +16,7 @@ import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
 
-const de_DE: Translation = {
-    ...(en_US as Translation),
+const de_DE = merge(en_US, {
     audio,
     camera,
     chat,
@@ -33,6 +32,6 @@ const de_DE: Translation = {
     trigger,
     muc,
     notification,
-};
+});
 
 export default de_DE;
