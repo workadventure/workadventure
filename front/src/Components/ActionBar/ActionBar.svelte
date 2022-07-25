@@ -49,9 +49,9 @@
     import { limitMapStore } from "../../Stores/GameStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
-    import {iframeListener} from "../../Api/IframeListener";
-    import {onDestroy, onMount} from "svelte";
-    import {Unsubscriber, writable} from "svelte/store";
+    import { iframeListener } from "../../Api/IframeListener";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber, writable } from "svelte/store";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -251,7 +251,7 @@
     });
 
     onDestroy(() => {
-        return subscribers.map(subscriber => subscriber());
+        return subscribers.map((subscriber) => subscriber());
     });
 
     const isMobile = isMediaBreakpointUp("md");
@@ -414,11 +414,18 @@
                     {/if}
                 {/if}
 
-                <div on:click={() => analyticsClient.openedChat()} on:click={toggleChat} class="bottom-action-button tw-relative">
+                <div
+                    on:click={() => analyticsClient.openedChat()}
+                    on:click={toggleChat}
+                    class="bottom-action-button tw-relative"
+                >
                     <button class:border-top-light={$chatVisibilityStore}>
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $totalMessagesToSee > 0}<span class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full">{$totalMessagesToSee}</span>{/if}
+                    {#if $totalMessagesToSee > 0}<span
+                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
+                            >{$totalMessagesToSee}</span
+                        >{/if}
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">

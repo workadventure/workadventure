@@ -227,8 +227,8 @@ export const isIframeEventWrapper = z.union([
     }),
     z.object({
         type: z.literal("chatTotalMessagesToSee"),
-        data: z.number()
-    })
+        data: z.number(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

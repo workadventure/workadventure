@@ -388,7 +388,7 @@ class IframeListener {
                         this._askPositionStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "openInviteMenu") {
                         this._openInviteMenuStream.next();
-                    } else if(iframeEvent.type == "chatTotalMessagesToSee"){
+                    } else if (iframeEvent.type == "chatTotalMessagesToSee") {
                         this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
