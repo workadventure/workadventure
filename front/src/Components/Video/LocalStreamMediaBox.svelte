@@ -23,7 +23,7 @@
 <div class="video-container screen-blocker {cssClass ? cssClass : ''}" class:hide={!stream}>
     {#if stream}
         <video
-          class="tw-text-pop-greentw-h-full tw-max-w-full tw-mx-auto tw-rounded"
+            class="tw-text-pop-greentw-h-full tw-max-w-full tw-mx-auto tw-rounded"
             use:srcObject={stream}
             autoplay
             muted

@@ -1,132 +1,121 @@
 <script lang="ts">
-  import type { VideoPeer } from "../../WebRtc/VideoPeer";
-  import SoundMeterWidget from "../SoundMeterWidget.svelte";
-  import microphoneCloseImg from "../images/microphone-close.svg";
-  import reportImg from "./images/report.svg";
-  import blockSignImg from "./images/blockSign.svg";
-  import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
-  import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
-  import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
-  import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
-  import type { Streamable } from "../../Stores/StreamableCollectionStore";
-  import { fade, fly } from "svelte/transition";
+    import type { VideoPeer } from "../../WebRtc/VideoPeer";
+    import SoundMeterWidget from "../SoundMeterWidget.svelte";
+    import microphoneCloseImg from "../images/microphone-close.svg";
+    import reportImg from "./images/report.svg";
+    import blockSignImg from "./images/blockSign.svg";
+    import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
+    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import { fade, fly } from "svelte/transition";
 
-  import Woka from "../Woka/Woka.svelte";
-  import { onMount } from "svelte";
-  import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
+    import Woka from "../Woka/Woka.svelte";
+    import { onMount } from "svelte";
+    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
 
-  export let clickable = false;
+    export let clickable = false;
 
-  export let peer: VideoPeer;
-  let streamStore = peer.streamStore;
-  let volumeStore = peer.volumeStore;
-  let name = peer.userName;
-  let backGroundColor = getColorByString(peer.userName);
-  let textColor = getTextColorByBackgroundColor(backGroundColor);
-  let statusStore = peer.statusStore;
-  let constraintStore = peer.constraintsStore;
+    export let peer: VideoPeer;
+    let streamStore = peer.streamStore;
+    let volumeStore = peer.volumeStore;
+    let name = peer.userName;
+    let backGroundColor = getColorByString(peer.userName);
+    let textColor = getTextColorByBackgroundColor(backGroundColor);
+    let statusStore = peer.statusStore;
+    let constraintStore = peer.constraintsStore;
 
-  function openReport(peer: VideoPeer): void {
-    showReportScreenStore.set({ userId: peer.userId, userName: peer.userName });
-  }
+    function openReport(peer: VideoPeer): void {
+        showReportScreenStore.set({ userId: peer.userId, userName: peer.userName });
+    }
 
-  let embedScreen: EmbedScreen;
-  let videoContainer: HTMLDivElement;
-  let minimized = isMediaBreakpointOnly("md");
+    let embedScreen: EmbedScreen;
+    let videoContainer: HTMLDivElement;
+    let minimized = isMediaBreakpointOnly("md");
 
-  if (peer) {
-    embedScreen = {
-      type: "streamable",
-      embed: peer as unknown as Streamable
-    };
-  }
+    if (peer) {
+        embedScreen = {
+            type: "streamable",
+            embed: peer as unknown as Streamable,
+        };
+    }
 
-  function noDrag() {
-    return false;
-  }
+    function noDrag() {
+        return false;
+    }
 
-  const resizeObserver = new ResizeObserver(() => {
-    minimized = isMediaBreakpointOnly("md");
-  });
+    const resizeObserver = new ResizeObserver(() => {
+        minimized = isMediaBreakpointOnly("md");
+    });
 
-  onMount(() => {
-    resizeObserver.observe(videoContainer);
-  });
+    onMount(() => {
+        resizeObserver.observe(videoContainer);
+    });
 </script>
 
-<div class="video-container"
-     class:no-clikable={!clickable}
-     bind:this={videoContainer}
-     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+<div
+    class="video-container"
+    class:no-clikable={!clickable}
+    bind:this={videoContainer}
+    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
-  {#if !$constraintStore || $constraintStore.video}
     <div
-      class="screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
-      class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
-      class:tw-items-center={$statusStore === "connecting" || $statusStore === "error"}
+        class="screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
+        class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
+        class:tw-items-center={$statusStore === "connecting" || $statusStore === "error"}
     >
-      {#if $statusStore === "connecting"}
-        <div class="connecting-spinner" />
-      {:else if $statusStore === "error"}
-        <div class="rtc-error" />
-      {/if}
-      <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
-      <video
-        class:no-video={!$constraintStore || $constraintStore.video === false}
-        class="tw-h-full tw-max-w-full tw-rounded"
-        use:srcObject={$streamStore}
-        autoplay
-        playsinline
-      />
+        {#if $statusStore === "connecting"}
+            <div class="connecting-spinner" />
+        {:else if $statusStore === "error"}
+            <div class="rtc-error" />
+        {/if}
+        <!-- svelte-ignore a11y-media-has-caption &ndash;&gt;-->
+        <video
+            class:no-video={!$constraintStore || $constraintStore.video === false}
+            class="tw-h-full tw-max-w-full tw-rounded"
+            use:srcObject={$streamStore}
+            autoplay
+            playsinline
+        />
 
-      <div
-        class="nametag-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
-  tw-w-32 sm:tw-w-40 md:tw-w-20 lg:tw-w-24 xl:tw-w-36 2xl:tw-w-48
+        <div
+            class="nametag-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
+tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
   tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
-  ">
-        <i class="tw-flex">
-            <span
-              style="background-color: {backGroundColor}; color: {textColor};"
-              class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 lg:tw-py-1 tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic"
-            >{name}</span
-            >
-        </i>
-      </div>
-      <div
-        class="woka-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
+  "
+        >
+            <i class="tw-flex">
+                <span
+                    style="background-color: {backGroundColor}; color: {textColor};"
+                    class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 lg:tw-py-1 tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic tw-max-h-8 tw-overflow-auto tw-break-words tw-max-w-full"
+                    >{name}</span
+                >
+            </i>
+        </div>
+        <div
+            class="woka-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
   tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48 tw-pb-2
   "
-      >
-        <div class="tw-flex{($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
-          <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+        >
+            <div class="tw-flex{($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
+                <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+            </div>
         </div>
-      </div>
-      {#if $constraintStore && $constraintStore.audio !== false}
-        <div
-          class="voice-meter-webcam-container tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2
+        {#if $constraintStore && $constraintStore.audio !== false}
+            <div
+                class="voice-meter-webcam-container tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2
     tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96
-  ">
-          <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute"/>
-        </div>
-      {/if}
+  "
+            >
+                <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" />
+            </div>
+        {/if}
     </div>
-  {:else}
-    <div style="background-color: {backGroundColor}; color: {textColor}"
-         class="tw-w-full tw-rounded tw-p-2 tw-flex tw-flex-row tw-items-center "
-    >
-      <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-      <span
-        class="tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic"
-      >{name}</span>
-      <SoundMeterWidget volume={$volumeStore} classcss="tw-relative tw-mr-0 tw-ml-auto" />
-    </div>
-  {/if}
 </div>
 
 <style lang="scss">
-
-
-  video.no-video {
-    visibility: collapse;
-  }
+    video.no-video {
+        visibility: collapse;
+    }
 </style>

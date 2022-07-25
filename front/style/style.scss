@@ -85,65 +85,6 @@ body .message-info.warning {
         }
     }
 
-    //.woka-icon {
-    //    position: absolute;
-    //    left: 90px;
-    //    top: calc(100% - 24px);
-    //    height: 23px;
-    //    overflow: hidden;
-    //    border-radius: 50%;
-    //    transition: all 0.2s ease;
-    //
-    //    &.no-video {
-    //        left: calc(50% - 30px);
-    //        top: calc(50% - 30px);
-    //        height: auto;
-    //
-    //        img {
-    //            height: 60px;
-    //            width: 60px;
-    //        }
-    //    }
-    //
-    //    img {
-    //        height: 40px;
-    //        width: 40px;
-    //    }
-    //}
-
-    //&:hover {
-    //    .woka-icon {
-    //        top: calc(100% - 30px);
-    //        height: 30px;
-    //
-    //        &.no-video {
-    //            top: calc(100% - 32px);
-    //            height: 35px;
-    //        }
-    //    }
-    //}
-
-    //img {
-    //    position: absolute;
-    //    display: none;
-    //    width: 20px;
-    //    height: 20px;
-    //    left: 5px;
-    //    bottom: 5px;
-    //    padding: 10px;
-    //
-    //    &.active {
-    //        display: block !important;
-    //    }
-    //}
-    //
-    //img.block-logo {
-    //    left: 30%;
-    //    bottom: 15%;
-    //    width: 150px;
-    //    height: 150px;
-    //}
-
     button.report {
         display: block;
         cursor: url("./images/cursor_pointer.png"), pointer;

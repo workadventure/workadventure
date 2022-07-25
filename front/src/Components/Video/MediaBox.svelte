@@ -5,6 +5,7 @@
     import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import VideoOffBox from "./VideoOffBox.svelte";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -12,33 +13,79 @@
     export let mozaicSolo = false;
     export let mozaicFullWidth = false;
     export let mozaicQuarter = false;
+
+    //let peer: VideoPeer;
+    let peer = streamable;
+    let constraintStore = peer.constraintsStore;
 </script>
 
-<div
-    class="media-container {isHightlighted
-        ? 'hightlighted tw-mr-6'
-        : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+{#if streamable instanceof VideoPeer}
+    {#if $constraintStore && !$constraintStore.video}
+        <div
+            class="media-container {isHightlighted
+                ? 'hightlighted tw-max-w-sm tw-mx-auto'
+                : 'tw-flex tw-m-auto tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96 tw-h-10'}
      tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
 "
-    class:clickable={isClickable}
-    class:mozaic-solo={mozaicSolo}
-    class:mozaic-full-width={mozaicFullWidth}
-    class:mozaic-quarter={mozaicQuarter}
->
-    {#if streamable instanceof VideoPeer}
-        <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
-            <VideoMediaBox peer={streamable} clickable={isClickable} />
+            class:clickable={isClickable}
+            class:mozaic-solo={mozaicSolo}
+            class:mozaic-full-width={mozaicFullWidth}
+            class:mozaic-quarter={mozaicQuarter}
+        >
+            <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
+                <VideoOffBox peer={streamable} clickable={isClickable} />
+            </div>
         </div>
-    {:else if streamable instanceof ScreenSharingPeer}
+    {:else}
+        <div
+            class="media-container {isHightlighted
+                ? 'hightlighted tw-mr-6'
+                : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+"
+            class:clickable={isClickable}
+            class:mozaic-solo={mozaicSolo}
+            class:mozaic-full-width={mozaicFullWidth}
+            class:mozaic-quarter={mozaicQuarter}
+        >
+            <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
+                <VideoMediaBox peer={streamable} clickable={isClickable} />
+            </div>
+        </div>
+    {/if}
+{:else if streamable instanceof ScreenSharingPeer}
+    <div
+        class="media-container {isHightlighted
+            ? 'hightlighted tw-mr-6'
+            : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+"
+        class:clickable={isClickable}
+        class:mozaic-solo={mozaicSolo}
+        class:mozaic-full-width={mozaicFullWidth}
+        class:mozaic-quarter={mozaicQuarter}
+    >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
-    {:else}
+    </div>
+{:else}
+    <div
+        class="media-container {isHightlighted
+            ? 'hightlighted tw-mr-6'
+            : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
+     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+"
+        class:clickable={isClickable}
+        class:mozaic-solo={mozaicSolo}
+        class:mozaic-full-width={mozaicFullWidth}
+        class:mozaic-quarter={mozaicQuarter}
+    >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex">
             <LocalStreamMediaBox peer={streamable} clickable={isClickable} cssClass="" />
         </div>
-    {/if}
-</div>
+    </div>
+{/if}
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
@@ -54,7 +101,6 @@
             margin-top: 2%;
             margin-bottom: 2%;
         }
-
 
         &.mozaic-solo {
             max-height: inherit !important;
