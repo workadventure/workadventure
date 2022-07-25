@@ -2,15 +2,19 @@ import {get, writable} from "svelte/store";
 import {SingleRoom, User} from "../Xmpp/SingleRoom";
 import {connectionStore} from "./ConnectionStore";
 import jid from "@xmpp/jid";
-import { EJABBERD_DOMAIN } from "../Enum/EnvironmentVariable";
 
 function createSingleRoomsStore() {
   const { subscribe, update, set } = writable<Set<SingleRoom>>(new Set<SingleRoom>());
 
   return {
     subscribe,
-    getOrCreateSingleRoom(user: User){
-      return [...get(singleRoomsStore)].find((singleRoom: SingleRoom) => singleRoom.user === user) ?? new SingleRoom(get(connectionStore), user, new jid.JID(null, EJABBERD_DOMAIN), "test")
+    getOrCreateSingleRoom(userJid: string, user: User): SingleRoom{
+      let singleRoom = [...get(singleRoomsStore)].find((singleRoom: SingleRoom) => singleRoom.user === user);
+      if(!singleRoom){
+        singleRoom = new SingleRoom(get(connectionStore), user, jid(userJid), get(connectionStore).getXmppClient()?.jid ?? '');
+        this.addSingleRoom(singleRoom);
+      }
+      return singleRoom;
     },
     addSingleRoom(singleRoom: SingleRoom) {
       update((set) => {

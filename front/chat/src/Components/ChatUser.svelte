@@ -86,13 +86,13 @@
 
 <div
   class={`wa-chat-item`}
-  on:click|stopPropagation={() => openChat(user)}
+  on:click|stopPropagation={() => openChat(jid, user)}
   on:mouseleave={closeChatUserMenu}
 >
   <div
     class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
     style={`background-color: ${getColor(user.name)}`}
-    on:click|stopPropagation={() => openChat(user)}
+    on:click|stopPropagation={() => openChat(jid, user)}
   >
     <div class="wa-container">
       <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
@@ -105,7 +105,7 @@
   </div>
   <div
     class={`tw-flex-auto tw-ml-3`}
-    on:click|stopPropagation={() => openChat(user)}
+    on:click|stopPropagation={() => openChat(jid, user)}
   >
     <h1 class={`tw-text-sm tw-font-bold tw-mb-0`}>
       {#each chunks as chunk (chunk.key)}
@@ -159,7 +159,7 @@
       >
         <span
                 class="wa-dropdown-item tw-text-white"
-                on:click|stopPropagation={() => openChat(user)}
+                on:click|stopPropagation={() => openChat(jid, user)}
         ><EyeIcon size="13" /> {$LL.see()}</span
         >
         {#if user.active}

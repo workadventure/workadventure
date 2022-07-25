@@ -7,6 +7,7 @@
   import LL from "../i18n/i18n-svelte";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
   import {singleRoomsStore} from "../Stores/SingleRoomsStore";
+  import {JID} from "@xmpp/jid";
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
     rankUp: RankUp;
@@ -24,8 +25,8 @@
   let minimizeUser = true;
   const maxUsersMinimized = 7;
 
-  function openChat(user: User) {
-    dispatch('activeThread', singleRoomsStore.getOrCreateSingleRoom(user));
+  function openChat(userJid: JID, user: User) {
+    dispatch('activeThread', singleRoomsStore.getOrCreateSingleRoom(userJid, user));
   }
 
   function showInviteMenu() {
