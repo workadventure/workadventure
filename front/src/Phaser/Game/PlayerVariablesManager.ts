@@ -3,6 +3,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { SetPlayerVariableEvent } from "../../Api/Events/SetPlayerVariableEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { SetPlayerVariableMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {localUserStore} from "../../Connexion/LocalUserStore";
 
 /**
  * Stores variables and provides a bridge between scripts and the pusher server.
@@ -33,6 +34,16 @@ export class PlayerVariablesManager {
         }
 
         this._variables.set(key, event.value);
+
+        // If we are not logged
+        if (localUserStore.getAuthToken() === null) {
+            // FIXME: save TTL too!
+            // FIXME: save TTL too!
+            // FIXME: save TTL too!
+            // FIXME: save public / private!
+            // FIXME: user properties are relative to room or to world!!!
+            localUserStore.setUserProperty(event.key, event.value);
+        }
 
         // Dispatch to the room connection.
         if (emitOnNetwork) {

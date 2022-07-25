@@ -856,10 +856,21 @@ export class GameScene extends DirtyScene {
                     this.gameMap,
                     onConnect.room.variables
                 );
+                let playerVariables : Map<string, unknown> = onConnect.room.playerVariables;
+                // If the user is not logged, we initialize the variables with variables from the local storage
+                // FIXME: NOT ENOUGH!
+                // FIXME: NOT ENOUGH!
+                // FIXME: NOT ENOUGH!
+                // FIXME: we need to send variables that we have stored locally to the server!
+                // FIXME: the server will send back the list of variables.
+                // FIXME: SO WE NEED TO SEND VARIABLES FROM localUserStore.getAllUserProperties()
+                /*if (!localUserStore.getAuthToken()) {
+                    playerVariables = new Map({ ...localUserStore.getAllUserProperties(), ...playerVariables });
+                }*/
                 this.playerVariablesManager = new PlayerVariablesManager(
                     this.connection,
                     this.playersEventDispatcher,
-                    onConnect.room.playerVariables
+                    playerVariables
                 );
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);
