@@ -23,6 +23,7 @@
     timelineOpenedStore,
   } from "../Stores/ChatStore";
   import { Unsubscriber, derived } from "svelte/store";
+  import ChatForums from "./ChatForums.svelte";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
