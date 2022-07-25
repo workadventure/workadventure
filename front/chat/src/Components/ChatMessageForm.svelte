@@ -36,7 +36,7 @@
   function sendMessage() {
     if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
       return;
-    if($selectedMessageToReply){
+    if ($selectedMessageToReply) {
       sendReplyMessage();
       return false;
     }
@@ -73,7 +73,11 @@
   }
 
   function sendReplyMessage() {
-    if (!$selectedMessageToReply || !newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+    if (
+      !$selectedMessageToReply ||
+      !newMessageText ||
+      newMessageText.replace(/\s/g, "").length === 0
+    )
       return;
     mucRoom.updateComposingState(ChatStates.PAUSED);
     mucRoom.replyMessage(newMessageText, $selectedMessageToReply);
@@ -132,42 +136,43 @@
 </script>
 
 <div class="wa-message-form">
-
   {#if $selectedMessageToReply}
-    <div class="reply-message">
+    <div
+      class="replyMessage"
+      on:click={() => selectedMessageToReply.set(null)}
+      transition:fly={{
+        x: isMe($selectedMessageToReply.name) ? 10 : -10,
+        delay: 100,
+        duration: 200,
+      }}
+    >
       <div
-        style="max-width: 75%"
-        transition:fly={{
-          x: isMe($selectedMessageToReply.name) ? 10 : -10,
-          delay: 100,
-          duration: 200,
-        }}
+        style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
+        class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+          isMe($selectedMessageToReply.name)
+            ? "tw-flex-row-reverse"
+            : "tw-flex-row"
+        }`}
       >
-        <div
-          style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-          class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
-            isMe($selectedMessageToReply.name) ? "tw-flex-row-reverse" : "tw-flex-row"
+        <span
+          class={`tw-text-lighter-purple ${
+            isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"
           }`}
+          >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
         >
-          <span
-            class={`tw-text-lighter-purple ${
-              isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"
-            }`}
-            >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
-          >
-          <span class="tw-text-xxxs"
-            >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}</span
-          >
-        </div>
-        <div
-          class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+        <span class="tw-text-xxxs"
+          >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</span
         >
-          <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-            {$selectedMessageToReply.body}
-        </div>
+      </div>
+      <div
+        class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+      >
+        <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+          {$selectedMessageToReply.body}
+        </p>
       </div>
     </div>
   {/if}
@@ -231,11 +236,35 @@
 </div>
 
 <style lang="scss">
+  .replyMessage {
+    padding: 0 20px;
+    margin: 0;
+    position: relative;
+
+    &::after {
+      content: "x";
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      color: white;
+      font-size: 12px;
+      position: absolute;
+      top: 0;
+      right: 4px;
+      border: solid 1px white;
+      text-align: center;
+      border-radius: 99%;
+    }
+
+    .message {
+      opacity: 0.5;
+    }
+  }
+
   form {
     display: flex;
     padding-left: 4px;
     padding-right: 4px;
-
     // button {
     //     background-color: #254560;
     //     border-bottom-right-radius: 4px;

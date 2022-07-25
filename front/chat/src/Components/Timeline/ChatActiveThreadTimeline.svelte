@@ -29,7 +29,6 @@
 
   export let settingsView = false;
 
-  let areaMessageText: HTMLElement;
   let newMessageText = "";
 
   function reInitialize() {
@@ -395,7 +394,6 @@
           <div class="tw-flex tw-items-center tw-relative">
             <textarea
               type="text"
-              bind:this={areaMessageText}
               bind:value={newMessageText}
               placeholder={$LL.form.placeholder()}
               on:keydown={handlerKeyDown}

@@ -69,10 +69,12 @@ export class XmppClient {
                 roomId: this.clientSocket.roomId,
             });
 
-            xmpp.on("error", (err: string) => {
+            xmpp.on("error", (err: unknown) => {
                 console.error("XmppClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 //rej(err);
+                xmpp.stop();
+                this.close();
             });
 
             xmpp.on("offline", () => {

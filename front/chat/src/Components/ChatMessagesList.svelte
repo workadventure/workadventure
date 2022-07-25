@@ -19,9 +19,16 @@
     RefreshCwIcon,
     ArrowDownIcon,
     CornerDownLeftIcon,
+    CornerLeftUpIcon,
+    SmileIcon,
+    MoreHorizontalIcon,
   } from "svelte-feather-icons";
   import { Unsubscriber } from "svelte/store";
-  import { selectedMessageToReply } from "../Stores/ChatStore";
+  import {
+    selectedMessageToReact,
+    selectedMessageToReply,
+  } from "../Stores/ChatStore";
+  import { EmojiButton } from "@joeattardi/emoji-button";
 
   export let mucRoom: MucRoom;
 
@@ -31,6 +38,8 @@
   let lastDate: Date;
   let isScrolledDown = false;
   let messagesList: HTMLElement;
+  let picker: EmojiButton;
+  let emojiContainer: HTMLElement;
 
   $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
@@ -116,8 +125,14 @@
     }
   }
 
-  function selectMessage(message: Message){
-    selectedMessageToReply.set(message)
+  function selectMessage(message: Message) {
+    selectedMessageToReply.set(message);
+  }
+
+  function reactMessage(message: Message) {
+    //open emoji dropdown
+    setTimeout(() => picker.showPicker(emojiContainer), 100);
+    selectedMessageToReact.set(message);
   }
 
   onMount(() => {
@@ -153,6 +168,48 @@
         }
       }
     }
+    picker = new EmojiButton({
+      styleProperties: {
+        "--font": "Press Start 2P",
+        "--background-color": "#23222c",
+        "--text-color": "#ffffff",
+        "--secondary-text-color": "#ffffff",
+        "--category-button-color": "#ffffff",
+        "--category-button-active-color": "#56eaff",
+      },
+      emojisPerRow: 5,
+      autoFocusSearch: false,
+      style: "twemoji",
+      showPreview: false,
+      i18n: {
+        search: $LL.emoji.search(),
+        categories: {
+          recents: $LL.emoji.categories.recents(),
+          smileys: $LL.emoji.categories.smileys(),
+          people: $LL.emoji.categories.people(),
+          animals: $LL.emoji.categories.animals(),
+          food: $LL.emoji.categories.food(),
+          activities: $LL.emoji.categories.activities(),
+          travel: $LL.emoji.categories.travel(),
+          objects: $LL.emoji.categories.objects(),
+          symbols: $LL.emoji.categories.symbols(),
+          flags: $LL.emoji.categories.flags(),
+          custom: $LL.emoji.categories.custom(),
+        },
+        notFound: $LL.emoji.notFound(),
+      },
+    });
+
+    picker.on("emoji", ({ emoji }) => {
+      if (!$selectedMessageToReact) {
+        return;
+      }
+      mucRoom.sendReactMessage(emoji, $selectedMessageToReact);
+      selectedMessageToReact.set(null);
+    });
+    picker.on("hidden", () => {
+      selectedMessageToReact.set(null);
+    });
   });
 
   onDestroy(() => {
@@ -164,8 +221,12 @@
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
+  <div class="emote-menu-container">
+    <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
+  </div>
+
   <div
-    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
   >
     {#each $messagesStore as message, i}
       {#if showDate(message.time)}
@@ -224,6 +285,7 @@
               <div
                 style={`border-bottom-color:${getColor(message.name)}`}
                 class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+                  !message.targetMessageReply &&
                   needHideHeader(message.name, message.time, i)
                     ? "tw-hidden"
                     : ""
@@ -250,12 +312,61 @@
                 <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                   {message.body}
                 </p>
-                <div class="action tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left" 
-                  on:click={() => selectMessage(message)}
+                {#if message.targetMessageReact}
+                  <div class="emojis">
+                    {#each [...message.targetMessageReact.keys()] as emojiStr}
+                      {#if message.targetMessageReact.get(emojiStr)}
+                        <span
+                          class={mucRoom.haveSelected(message.id, emojiStr)
+                            ? "active"
+                            : ""}
+                          on:click={() =>
+                            mucRoom.sendReactMessage(emojiStr, message)}
+                        >
+                          {emojiStr}
+                          {message.targetMessageReact.get(emojiStr)}
+                        </span>
+                      {/if}
+                    {/each}
+                  </div>
+                {/if}
+                <div
+                  class="action tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                 >
-                  <CornerDownLeftIcon size="17"/>
+                  <div on:click={() => selectMessage(message)}>
+                    <CornerDownLeftIcon size="17" />
+                  </div>
+                  <div on:click={() => reactMessage(message)}>
+                    <SmileIcon size="17" />
+                  </div>
+                  <!-- TODO dropdown-->
+                  <div>
+                    <MoreHorizontalIcon size="17" />
+                  </div>
                 </div>
               </div>
+
+              <!-- Reply message -->
+              {#if message.targetMessageReply}
+                <div
+                  class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left"
+                >
+                  <div class="icon-replied">
+                    <CornerLeftUpIcon size="14" />
+                  </div>
+                  <p
+                    class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words"
+                  >
+                    {message.targetMessageReply.senderName}
+                    {$LL.said()}
+                  </p>
+                  <p
+                    class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words"
+                  >
+                    {message.targetMessageReply.body}
+                  </p>
+                </div>
+              {/if}
             </div>
           </div>
           {#if message.error}
@@ -372,13 +483,10 @@
 </div>
 
 <style lang="scss">
-  .messageList {
-    display: flex;
-    justify-content: flex-end;
-    overflow: scroll;
-    height: auto;
-    min-height: 100vh;
+  .wa-messages-list {
+    padding-bottom: 60px;
   }
+
   .wa-error-message {
     position: relative;
     .wa-dropdown-menu {
@@ -399,19 +507,53 @@
       }
     }
   }
-  .message{
+
+  .message-replied {
+    opacity: 0.6;
+    margin-left: 20px;
     position: relative;
-    .action{
+    .icon-replied {
+      position: absolute;
+      left: -15px;
+      top: 0px;
+    }
+    p {
+      margin-left: 4px;
+    }
+    p:nth-child(1) {
+      font-style: italic;
+    }
+  }
+  .message {
+    position: relative;
+    .action {
       display: none;
       position: absolute;
       right: -16px;
-      top: 4px;
+      top: -10px;
       padding: 2px;
       cursor: pointer;
+      flex-direction: column;
     }
-    &:hover{
-      .action{
+    &:hover {
+      .action {
+        display: flex;
+      }
+    }
+    .emojis {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      span {
         display: block;
+        &.active {
+          background-color: #56eaff4f;
+          border: solid 1px #56eaff;
+        }
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 2px;
+        margin: 1px;
       }
     }
   }

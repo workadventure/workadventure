@@ -68,6 +68,7 @@ const en_US: BaseTranslation = {
     },
     notFound: "No emojis found",
   },
+  said: "said:",
 };
 
 export default en_US;

@@ -164,3 +164,4 @@ export const chatInputFocusStore = writable(false);
 export const chatPeerConnectionInProgress = writable<boolean>(false);
 
 export const selectedMessageToReply = writable<Message | null>(null);
+export const selectedMessageToReact = writable<Message | null>(null);
