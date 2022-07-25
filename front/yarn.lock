@@ -612,8 +612,13 @@
   integrity sha512-zKVyTt6rELvPXYwcVPTJcPFtY0AckN5A7xWuc7owBqR0FdtuDYhE9MZZUi6IY1kZUQFSXV1B3UOOIyLkVHYd2w==
 
 "@workadventure/tailwind@link:../libs/tailwind":
-  version "0.0.0"
-  uid ""
+  version "1.0.0"
+  dependencies:
+    "@16bits/nes.css" "^2.3.2"
+    "@fontsource/press-start-2p" "^4.3.0"
+    "@tailwindcss/forms" "^0.5.0"
+    postcss "^8.4.14"
+    tailwindcss "^3.1.5"
 
 "@workadventure/tiled-map-type-guard@^2.0.4":
   version "2.0.5"
@@ -3054,9 +3059,10 @@ svelte-preprocess@^4.10.6:
     sorcery "^0.10.0"
     strip-indent "^3.0.0"
 
-svelte@^3.38.2, svelte@^3.48.0:
-  version "3.48.0"
-  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.48.0.tgz#f98c866d45e155bad8e1e88f15f9c03cd28753d3"
+svelte@^3.38.2, svelte@^3.49.0:
+  version "3.49.0"
+  resolved "https://registry.yarnpkg.com/svelte/-/svelte-3.49.0.tgz#5baee3c672306de1070c3b7888fc2204e36a4029"
+  integrity sha512-+lmjic1pApJWDfPCpUUTc1m8azDqYCG1JN9YEngrx/hUyIcFJo6VZhj0A1Ai0wqoHcEIuQy+e9tk+4uDgdtsFA==
 
 tabbable@^4.0.0:
   version "4.0.0"
