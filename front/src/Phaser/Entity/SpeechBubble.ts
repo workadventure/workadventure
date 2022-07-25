@@ -6,7 +6,7 @@ export class SpeechBubble {
     private bubble: Phaser.GameObjects.Graphics;
     private content: Phaser.GameObjects.Text;
 
-    constructor(scene: Scene, player: Character, text: string = "") {
+    constructor(scene: Scene, player: Character, text = "") {
         const bubbleHeight = 50;
         const bubblePadding = 10;
         const bubbleWidth = bubblePadding * 2 + text.length * 10;

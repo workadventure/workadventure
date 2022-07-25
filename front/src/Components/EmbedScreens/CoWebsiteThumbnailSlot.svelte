@@ -78,8 +78,8 @@
         return false;
     }
 
-    let isHighlight: boolean = false;
-    let isMain: boolean = false;
+    let isHighlight = false;
+    let isMain = false;
     $: {
         isMain =
             $mainState === iframeStates.opened &&

@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const audio: NonNullable<Translation["audio"]> = {
+const audio: DeepPartial<Translation["audio"]> = {
     manager: {
         reduce: "说话时降低音乐音量",
         allow: "播放声音",

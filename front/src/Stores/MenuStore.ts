@@ -12,13 +12,29 @@ export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
 export const profileAvailable = writable(true);
+export const profileInPorgress = writable(true);
 
+let timeOut: Timeout | null = null;
 menuVisiblilityStore.subscribe((value) => {
     if (userIsConnected && value && IDENTITY_URL != null) {
-        axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
-            profileAvailable.set(false);
-        });
+        if (timeOut) {
+            clearTimeout(timeOut);
+        }
+        profileInPorgress.set(true);
+        timeOut = setTimeout(() => {
+            axios
+                .get(getMeUrl())
+                .then((data) => {
+                    profileAvailable.set(true);
+                    profileInPorgress.set(false);
+                    return data;
+                })
+                .catch((err) => {
+                    console.info("I'm not connected", err);
+                    profileAvailable.set(false);
+                    profileInPorgress.set(false);
+                });
+        }, 1000);
     }
 });
 
@@ -52,7 +68,7 @@ export enum SubMenusInterface {
 
 type MenuKeys = keyof Translation["menu"]["sub"];
 
-interface TranslatedMenu {
+export interface TranslatedMenu {
     type: "translated";
     key: MenuKeys;
 }
@@ -67,8 +83,13 @@ interface ScriptingMenu {
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
 
+export const inviteMenu: MenuItem = {
+    type: "translated",
+    key: SubMenusInterface.invite,
+};
+
 function createSubMenusStore() {
-    const { subscribe, update } = writable<MenuItem[]>([
+    const { subscribe, update, set } = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
@@ -87,16 +108,14 @@ function createSubMenusStore() {
         },
         {
             type: "translated",
-            key: SubMenusInterface.invite,
-        },
-        {
-            type: "translated",
             key: SubMenusInterface.aboutRoom,
         },
+        inviteMenu,
     ]);
 
     return {
         subscribe,
+        set,
         addTranslatedMenu(menuCommand: MenuKeys) {
             update((menuList) => {
                 if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
@@ -192,3 +211,23 @@ export function getProfileUrl() {
 export function getMeUrl() {
     return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
 }
+
+export const inviteUserActivated = writable(true);
+
+inviteUserActivated.subscribe((value) => {
+    //update menu tab
+    const valuesSubMenusStore = get(subMenusStore);
+    if (!valuesSubMenusStore) {
+        return;
+    }
+    const indexInviteMenu = valuesSubMenusStore.findIndex(
+        (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+    );
+    if (value && indexInviteMenu === -1) {
+        valuesSubMenusStore.push(inviteMenu);
+        subMenusStore.set(valuesSubMenusStore);
+    } else if (!value && indexInviteMenu !== -1) {
+        valuesSubMenusStore.splice(indexInviteMenu, 1);
+        subMenusStore.set(valuesSubMenusStore);
+    }
+});

@@ -28,7 +28,7 @@ class LocalUserStore {
     localStorage.setItem(playUriKey, data.playUri);
   }
 
-  getUserData(): UserData | null {
+  getUserData(): UserData {
     return {
       uuid: localStorage.getItem(uuidKey) || "",
       name: localStorage.getItem(nameKey) || "",

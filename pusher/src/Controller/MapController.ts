@@ -7,7 +7,7 @@ import { InvalidTokenError } from "./InvalidTokenError";
 
 export class MapController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
-    routes() {
+    routes(): void {
         /**
          * @openapi
          * /map:
@@ -105,7 +105,7 @@ export class MapController extends BaseHttpController {
                 return;
             }
 
-            (async () => {
+            (async (): Promise<void> => {
                 try {
                     let mapDetails = await adminService.fetchMapDetails(
                         query.playUri as string,

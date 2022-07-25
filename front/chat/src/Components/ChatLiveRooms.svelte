@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
   import { ChevronUpIcon } from "svelte-feather-icons";
-  import ChatLineRoom from "./ChatLineRoom.svelte";
+  import ChatLiveRoom from "./ChatLiveRoom.svelte";
   import { createEventDispatcher } from "svelte";
   import { MucRoom } from "../Xmpp/MucRoom";
   const dispatch = createEventDispatcher();
@@ -43,8 +43,8 @@
     {#if showLives}
       <div transition:fly={{ y: -30, duration: 100 }}>
         {#each liveRooms as liveRoom}
-          <ChatLineRoom
-            mucRoom={liveRoom}
+          <ChatLiveRoom
+            {liveRoom}
             {searchValue}
             meStore={liveRoom.getMeStore()}
             usersListStore={liveRoom.getPresenceStore()}

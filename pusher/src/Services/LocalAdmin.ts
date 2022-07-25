@@ -25,7 +25,9 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
+            //@ts-ignore
             mucRooms: [{ name: "Default", url: playUri, type: "default" }],
+            activatedInviteUser: true,
         };
     }
 
@@ -75,7 +77,7 @@ class LocalAdmin implements AdminInterface {
         reporterUserUuid: string,
         roomUrl: string,
         locale?: string
-    ) {
+    ): Promise<unknown> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 

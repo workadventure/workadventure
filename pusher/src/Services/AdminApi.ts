@@ -17,7 +17,6 @@ export interface AdminBannedData {
 }
 
 export const isFetchMemberDataByUuidResponse = z.object({
-    // @ts-ignore
     email: extendApi(z.string(), {
         description: "The email of the fetched user, it can be an email, an uuid or undefined.",
         example: "example@workadventu.re",
@@ -57,6 +56,9 @@ export const isFetchMemberDataByUuidResponse = z.object({
     }),
     mucRooms: extendApi(z.nullable(z.array(isMucRoomDefinition)), {
         description: "The MUC room is a room of message",
+    }),
+    activatedInviteUser: extendApi(z.optional(z.nullable(z.boolean())), {
+        description: "Button invite is activated in the action bar",
     }),
 });
 
@@ -303,7 +305,7 @@ class AdminApi implements AdminInterface {
         reporterUserUuid: string,
         roomUrl: string,
         locale?: string
-    ) {
+    ): Promise<unknown> {
         /**
          * @openapi
          * /api/report:

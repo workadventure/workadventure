@@ -1,5 +1,5 @@
+import merge from "ts-deepmerge";
 import en_US from "../en-US";
-import type { Translation } from "../i18n-types";
 import audio from "./audio";
 import camera from "./camera";
 import chat from "./chat";
@@ -14,9 +14,9 @@ import warning from "./warning";
 import woka from "./woka";
 import trigger from "./trigger";
 import muc from "./muc";
+import notification from "./notification";
 
-const fr_FR: Translation = {
-    ...(en_US as Translation),
+const fr_FR = merge(en_US, {
     audio,
     camera,
     chat,
@@ -31,6 +31,7 @@ const fr_FR: Translation = {
     emoji,
     trigger,
     muc,
-};
+    notification,
+});
 
 export default fr_FR;

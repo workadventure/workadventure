@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const follow: NonNullable<Translation["follow"]> = {
+const follow: DeepPartial<Translation["follow"]> = {
     interactStatus: {
         following: "跟随 {leader}",
         waitingFollowers: "等待跟随者确认",

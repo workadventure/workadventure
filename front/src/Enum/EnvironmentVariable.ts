@@ -13,9 +13,10 @@ const TURN_USER: string = getEnvConfig("TURN_USER") || "";
 const TURN_PASSWORD: string = getEnvConfig("TURN_PASSWORD") || "";
 const JITSI_URL: string | undefined = getEnvConfig("JITSI_URL") === "" ? undefined : getEnvConfig("JITSI_URL");
 const JITSI_PRIVATE_MODE: boolean = getEnvConfig("JITSI_PRIVATE_MODE") == "true";
+const ENABLE_FEATURE_MAP_EDITOR: boolean = getEnvConfig("ENABLE_FEATURE_MAP_EDITOR") == "true";
 const POSITION_DELAY = 200; // Wait 200ms between sending position events
 const MAX_EXTRAPOLATION_TIME = 100; // Extrapolate a maximum of 250ms if no new movement is sent by the player
-export const MAX_USERNAME_LENGTH = parseInt(getEnvConfig("MAX_USERNAME_LENGTH") || "") || 8;
+export const MAX_USERNAME_LENGTH = parseInt(getEnvConfig("MAX_USERNAME_LENGTH") || "") || 10;
 export const MAX_PER_GROUP = parseInt(getEnvConfig("MAX_PER_GROUP") || "4");
 export const DISPLAY_TERMS_OF_USE = getEnvConfig("DISPLAY_TERMS_OF_USE") == "true";
 export const NODE_ENV = getEnvConfig("NODE_ENV") || "development";
@@ -44,5 +45,6 @@ export {
     TURN_PASSWORD,
     JITSI_URL,
     JITSI_PRIVATE_MODE,
+    ENABLE_FEATURE_MAP_EDITOR,
     FALLBACK_LOCALE,
 };

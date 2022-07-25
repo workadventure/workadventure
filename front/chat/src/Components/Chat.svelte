@@ -1,12 +1,7 @@
 <script lang="ts">
-  //import { fly } from "svelte/transition";
-  //import ChatMessageForm from "./ChatMessageForm.svelte";
   import { afterUpdate, beforeUpdate, onMount } from "svelte";
   import { HtmlUtils } from "../Utils/HtmlUtils";
-  //import { SettingsIcon, ArrowLeftIcon } from "svelte-feather-icons";
-  //import ChatForum from "./ChatForum.svelte";
   import { connectionStore } from "../Stores/ConnectionStore";
-  //import LL from "../i18n/i18n-svelte";
   import Loader from "./Loader.svelte";
   import {
     mucRoomsStore,
@@ -20,10 +15,14 @@
   import { locale } from "../i18n/i18n-svelte";
   import ChatLiveRooms from "./ChatLiveRooms.svelte";
   import { activeThreadStore } from "../Stores/ActiveThreadStore";
-  //import {get} from "svelte/store";
   import ChatActiveThread from "./ChatActiveThread.svelte";
-  import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
-  import ChatForums from "./ChatForums.svelte";
+  import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
+  import Timeline from "./Timeline/Timeline.svelte";
+  import {
+    timelineMessagesToSee,
+    timelineOpenedStore,
+  } from "../Stores/ChatStore";
+  import { Unsubscriber, derived } from "svelte/store";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
@@ -34,26 +33,7 @@
   let showUsers = true;
   let showLives = true;
   let showForums = true;
-
-  /*
-    let forums = [
-        {
-            name: "Inside Workadventu.re",
-            activeUsers: 5,
-            unreads: 1,
-        },
-        {
-            name: "Random",
-            activeUsers: 12,
-            unreads: 0,
-        },
-        {
-            name: "World makers",
-            activeUsers: 4,
-            unreads: 5,
-        },
-    ];
-     */
+  let activeThreadTimeLine = false;
 
   beforeUpdate(() => {
     autoscroll =
@@ -61,11 +41,40 @@
       listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
   });
 
-  onMount(() => {
+  let defaultMucRoom: MucRoom | undefined = undefined;
+  let subscribers = new Array<Unsubscriber>();
+
+  $: totalMessagesToSee = derived(
+    [
+      ...[...$mucRoomsStore].map((mucRoom) => mucRoom.getCountMessagesToSee()),
+      timelineMessagesToSee,
+    ],
+    ($totalMessagesToSee) =>
+      $totalMessagesToSee.reduce((sum, number) => sum + number, 0)
+  );
+
+  onMount(async () => {
     if (!$locale) {
-      localeDetector();
+      await localeDetector();
     }
     listDom.scrollTo(0, listDom.scrollHeight);
+    subscribers.push(
+      mucRoomsStore.subscribe(() => {
+        try {
+          defaultMucRoom = mucRoomsStore.getDefaultRoom();
+        } catch (e: unknown) {
+          console.log(e);
+        }
+      })
+    );
+    subscribers.push(
+      totalMessagesToSee.subscribe((total) => {
+        window.parent.postMessage(
+          { type: "chatTotalMessagesToSee", data: total },
+          "*"
+        );
+      })
+    );
   });
 
   afterUpdate(() => {
@@ -73,13 +82,16 @@
   });
 
   function onClick(event: MouseEvent) {
-    if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
+    if (
+      handleFormBlur &&
+      HtmlUtils.isClickedOutside(event, chatWindowElement)
+    ) {
       handleFormBlur.blur();
     }
   }
 
-  function handleActiveThread(event: any) {
-    activeThreadStore.set(event.detail);
+  function handleActiveThread(event: unknown) {
+    activeThreadStore.set((event as { detail: MucRoom | undefined }).detail);
   }
   function handleShowUsers() {
     showUsers = !showUsers;
@@ -88,7 +100,7 @@
     showLives = !showLives;
   }
   function handleShowForums() {
-    showForums = !showForums;
+      showForums = !showForums;
   }
 
   function closeChat() {
@@ -101,38 +113,7 @@
     }
   }
 
-  const defaultRoom = (): MucRoom => {
-    const defaultMucRoom = [...$mucRoomsStore].find(
-      (mucRoom) => mucRoom.type === "default"
-    );
-    if (!defaultMucRoom) {
-      throw new Error("No default MucRoom");
-    }
-    return defaultMucRoom;
-  };
-
-  function handleGoTo(mucRoom: MucRoom | undefined, event: GoTo) {
-    if (mucRoom) {
-      mucRoom.goTo(event.type, event.playUri, event.type);
-    }
-  }
-  function handleRankUp(mucRoom: MucRoom | undefined, event: RankUp) {
-    if (mucRoom) {
-      mucRoom.rankUp(event.jid);
-    }
-  }
-  function handleRankDown(mucRoom: MucRoom | undefined, event: RankDown) {
-    if (mucRoom) {
-      mucRoom.rankDown(event.jid);
-    }
-  }
-  function handleBan(mucRoom: MucRoom | undefined, event: Ban) {
-    if (mucRoom) {
-      mucRoom.ban(event.user, event.name, event.playUri);
-    }
-  }
-
-  console.info("Chat fully loaded");
+  console.log("Chat fully loaded");
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
@@ -141,20 +122,32 @@
   <section class="tw-p-0 tw-m-0" bind:this={listDom}>
     {#if !$connectionStore || !$xmppServerConnectionStatusStore}
       <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
-    {:else if $activeThreadStore}
+    {:else if activeThreadTimeLine}
+      <ChatActiveThreadTimeLine
+        on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)}
+      />
+    {:else if $activeThreadStore !== undefined && defaultMucRoom}
       <ChatActiveThread
-        messagesStore={$activeThreadStore.getMessagesStore()}
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
-        on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
-        on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
-        on:rankDown={(event) =>
-          handleRankDown($activeThreadStore, event.detail)}
-        on:ban={(event) => handleBan($activeThreadStore, event.detail)}
+        on:goTo={(event) =>
+          defaultMucRoom?.goTo(
+            event.detail.type,
+            event.detail.playUri,
+            event.detail.uuid
+          )}
+        on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+        on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+        on:ban={(event) =>
+          defaultMucRoom?.ban(
+            event.detail.user,
+            event.detail.name,
+            event.detail.playUri
+          )}
       />
     {:else}
-      <div>
+      <div class="wa-message-bg">
         <!-- searchbar -->
         <div
           class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid"
@@ -164,32 +157,35 @@
               class="wa-searchbar tw-block tw-text-white tw-w-full placeholder:tw-text-sm tw-rounded-3xl tw-px-3 tw-py-1 tw-border-light-purple tw-border tw-border-solid tw-bg-transparent"
               placeholder={$LL.search()}
               bind:value={searchValue}
+              on:input={() => timelineOpenedStore.set(false)}
             />
           </div>
         </div>
         <!-- chat users -->
-        <UsersList
-          usersListStore={defaultRoom().getPresenceStore()}
-          meStore={defaultRoom().getMeStore()}
-          {showUsers}
-          searchValue={searchValue.toLocaleLowerCase()}
-          on:activeThread={handleActiveThread}
-          on:showUsers={handleShowUsers}
-          on:goTo={(event) =>
-            defaultRoom().goTo(
-              event.detail.type,
-              event.detail.playUri,
-              event.detail.uuid
-            )}
-          on:rankUp={(event) => defaultRoom().rankUp(event.detail.jid)}
-          on:rankDown={(event) => defaultRoom().rankDown(event.detail.jid)}
-          on:ban={(event) =>
-            defaultRoom().ban(
-              event.detail.user,
-              event.detail.name,
-              event.detail.playUri
-            )}
-        />
+        {#if defaultMucRoom !== undefined}
+          <UsersList
+            {showUsers}
+            usersListStore={defaultMucRoom?.getPresenceStore()}
+            meStore={defaultMucRoom?.getMeStore()}
+            searchValue={searchValue.toLocaleLowerCase()}
+            on:activeThread={handleActiveThread}
+            on:showUsers={handleShowUsers}
+            on:goTo={(event) =>
+              defaultMucRoom?.goTo(
+                event.detail.type,
+                event.detail.playUri,
+                event.detail.uuid
+              )}
+            on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+            on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+            on:ban={(event) =>
+              defaultMucRoom?.ban(
+                event.detail.user,
+                event.detail.name,
+                event.detail.playUri
+              )}
+          />
+        {/if}
 
         <ChatLiveRooms
           {showLives}
@@ -203,54 +199,21 @@
           )}
         />
 
-        <ChatForums
-          {showForums}
-          searchValue={searchValue.toLocaleLowerCase()}
-          on:activeThread={handleActiveThread}
-          on:showForums={handleShowForums}
-          forums={[...$mucRoomsStore].filter(
+          <ChatForums
+                  {showForums}
+                  searchValue={searchValue.toLocaleLowerCase()}
+                  on:activeThread={handleActiveThread}
+                  on:showForums={handleShowForums}
+                  forums={[...$mucRoomsStore].filter(
             (mucRoom) =>
               mucRoom.type === "forum" &&
               mucRoom.name.toLowerCase().includes(searchValue)
           )}
+          />
+
+        <Timeline
+          on:activeThreadTimeLine={() => (activeThreadTimeLine = true)}
         />
-
-        <!-- forum list
-
-					<div class="tw-border-b tw-border-solid tw-border-transparent tw-border-b-light-purple">
-						<div class="tw-p-3 tw-flex tw-items-center">
-							{#if forumListUnreads()}
-						<span
-								class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-						>
-							{forumListUnreads()}
-						</span>
-							{/if}
-							<p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Forums</p>
-							<button
-									class="tw-text-lighter-purple"
-									on:click={() => {
-							showForums = !showForums;
-						}}
-							>
-								<ChevronUpIcon class={`tw-transform tw-transition ${showForums ? "" : "tw-rotate-180"}`} />
-							</button>
-						</div>
-						{#if showForums}
-							<div class="tw-mt-3">
-								{#each forums as forum}
-									<ChatForum {forum} {openForum} />
-								{/each}
-							</div>
-							<div class="tw-px-4 tw-mb-6 tw-flex tw-justify-end">
-								<button
-										class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-								>See more…</button
-								>
-							</div>
-						{/if}
-					</div>
-					-->
       </div>
     {/if}
   </section>
@@ -258,15 +221,8 @@
 
 <style lang="scss">
   aside.chatWindow {
-    z-index: 1000;
     pointer-events: auto;
-    position: absolute;
-    top: 0;
-    left: 0;
-    min-height: 100vh;
-    width: 100%;
-    min-width: 350px;
-    background: rgba(#1b1b29, 0.9);
+    //background: rgba(27, 27, 41, 0.79);
     color: whitesmoke;
     display: flex;
     flex-direction: column;

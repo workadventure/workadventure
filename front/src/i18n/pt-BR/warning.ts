@@ -1,9 +1,10 @@
-import type { BaseTranslation } from "../i18n-types";
+import type { Translation } from "../i18n-types";
 import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
+import { DeepPartial } from "../../Utils/DeepPartial";
 
 const upgradeLink = ADMIN_URL + "/pricing";
 
-const warning: BaseTranslation = {
+const warning: DeepPartial<Translation["warning"]> = {
     title: "Aviso!",
     content: `Este mundo está perto do seu limite!. Você pode atualizar sua capacidade <a href="${upgradeLink}" target="_blank">aqui</a>`,
     limit: "Este mundo está perto do seu limite!",

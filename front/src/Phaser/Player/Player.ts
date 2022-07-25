@@ -27,7 +27,7 @@ export class Player extends Character {
         companion: string | null,
         companionTexturePromise?: CancelablePromise<string>
     ) {
-        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise);
+        super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
     }
@@ -84,7 +84,7 @@ export class Player extends Character {
         });
     }
 
-    public finishFollowingPath(cancelled: boolean = false): void {
+    public finishFollowingPath(cancelled = false): void {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });

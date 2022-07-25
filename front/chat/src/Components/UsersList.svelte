@@ -6,14 +6,13 @@
   import { fly } from "svelte/transition";
   import LL from "../i18n/i18n-svelte";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
-  const dispatch =
-    createEventDispatcher<{
-      goTo: GoTo;
-      rankUp: RankUp;
-      rankDown: RankDown;
-      ban: Ban;
-      showUsers: undefined;
-    }>();
+  const dispatch = createEventDispatcher<{
+    goTo: GoTo;
+    rankUp: RankUp;
+    rankDown: RankDown;
+    ban: Ban;
+    showUsers: undefined;
+  }>();
 
   export let usersListStore: UsersStore;
   export let meStore: MeStore;
@@ -27,6 +26,16 @@
     return user;
     //dispatch('activeThread', user);
   }
+
+  function showInviteMenu() {
+    window.parent.postMessage({ type: "closeChat" }, "*");
+    window.parent.postMessage({ type: "openInviteMenu" }, "*");
+  }
+
+  $: usersFiltered = [...$usersListStore]
+    .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
+    .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
+    .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
 </script>
 
 <div>
@@ -58,19 +67,18 @@
     {#if showUsers}
       <div transition:fly={{ y: -30, duration: 100 }}>
         {#if [...$usersListStore].length === 0}
-          <p>
-            This room is empty, copy this link to invite colleague or friend!
-          </p>
-          <button type="button" class="nes-btn is-primary" on:click={null}
-            >test</button
-          >
+          <div class="tw-px-5 tw-mb-2">
+            <p>{$LL.roomEmpty()}</p>
+            <button
+              type="button"
+              class="light tw-m-auto tw-cursor-pointer"
+              on:click={showInviteMenu}
+            >
+              {$LL.invite()}
+            </button>
+          </div>
         {:else}
-          {#each [...$usersListStore]
-            .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
-            .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
-            .filter(([, user]) => user.name
-                .toLocaleLowerCase()
-                .includes(searchValue)) as [jid, user]}
+          {#each usersFiltered as [jid, user]}
             <ChatUser
               {openChat}
               {user}
@@ -86,13 +94,14 @@
         {/if}
         {#if [...$usersListStore].length > maxUsersMinimized}
           <div
-            class="tw-px-4 tw-mb-6  tw-flex tw-justify-end"
+            class="tw-px-2 tw-mb-1  tw-flex tw-justify-end"
             on:click={() => (minimizeUser = !minimizeUser)}
           >
             <button
               class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
             >
-              See {minimizeUser ? "more" : "less"}…
+              {$LL.see()}
+              {minimizeUser ? $LL.less() : $LL.more()} …
             </button>
           </div>
         {/if}

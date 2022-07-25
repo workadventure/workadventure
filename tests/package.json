@@ -1,10 +1,11 @@
 {
   "devDependencies": {
-    "@playwright/test": "~1.21.0",
+    "@playwright/test": "~1.23.4",
     "@types/dockerode": "^3.3.0",
     "axios": "^0.24.0",
     "dockerode": "^3.3.1",
-    "dotenv-cli": "^5.0.0"
+    "dotenv-cli": "^5.0.0",
+    "@workadventure/iframe-api-typings": "^1.11.2"
   },
   "scripts": {
     "test": "dotenv -e ../.env -- playwright test",

@@ -1,13 +1,11 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const en_US: BaseTranslation = {
-  // TODO: your translations go here
-  HI: "Hi {name:string}! Please leave a star if you like this project: https://github.com/ivanhofer/typesafe-i18n",
   users: "Users",
   userList: {
     disconnected: "Disconnected",
-    isHere: "Is on this map !",
-    isOverThere: "Is on an another map !",
+    isHere: "Is on thi map !",
+    isOverThere: "Is on another map !",
     teleport: "Teleport",
     search: "Just look it up!",
     walkTo: "Walk to",
@@ -16,6 +14,8 @@ const en_US: BaseTranslation = {
   reconnecting: "Connection to presence server ...",
   waitingData: "Waiting user data ...",
   search: "Search for user, message, channel, etc.",
+  invite: "Invite",
+  roomEmpty: "This room is empty, invite a colleague or friend to join you!",
   userOnline: "user online",
   usersOnline: "users online",
   open: "Open",
@@ -29,7 +29,45 @@ const en_US: BaseTranslation = {
   rankUp: "Promote",
   rankDown: "Retrograde",
   reinit: "Re initialize",
-  CONNECTING: "test",
+  enterText: "Enter a message ...",
+  timeLine: {
+    title: "Your Timeline",
+    open: "Open your time line history!",
+    description: "WorkAdventure Timeline",
+    incoming: " join the discussion",
+    outcoming: " quit the discussion",
+  },
+  form: {
+    placeholder: "Enter your message...",
+    typing: " typing...",
+  },
+  notification: {
+    discussion: "wants to discuss with you",
+    message: "sends you a message",
+  },
+  see: "See",
+  less: "less",
+  more: "more",
+  sendBack: "Send back",
+  delete: "Delete",
+  emoji: {
+    icon: "Icon to open or close emoji selected popup",
+    search: "Search emojis...",
+    categories: {
+      recents: "Recent Emojis",
+      smileys: "Smileys & Emotion",
+      people: "People & Body",
+      animals: "Animals & Nature",
+      food: "Food & Drink",
+      activities: "Activities",
+      travel: "Travel & Places",
+      objects: "Objects",
+      symbols: "Symbols",
+      flags: "Flags",
+      custom: "Custom",
+    },
+    notFound: "No emojis found",
+  },
 };
 
 export default en_US;

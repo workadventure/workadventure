@@ -1,0 +1,14 @@
+//@import "fonts";
+//@import "tailwind";
+@import '@workadventure/tailwind/style/index.scss';
+
+.emoji-picker__overlay{
+    background: none!important;
+}
+.emoji-picker__wrapper{
+    bottom: 50px!important;
+    top: auto!important;
+    .emoji-picker{
+        border: none!important;
+    }
+}

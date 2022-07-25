@@ -69,6 +69,23 @@ export const isIframeEventWrapper = z.union([
         data: isChatEvent,
     }),
     z.object({
+        type: z.literal("openChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("closeChat"),
+        data: z.undefined(),
+    }),
+    /* @deprecated with new service chat messagerie */
+    z.object({
+        type: z.literal("addPersonnalMessage"),
+        data: z.string(),
+    }),
+    z.object({
+        type: z.literal("newChatMessageWritingStatus"),
+        data: z.number(),
+    }),
+    z.object({
         type: z.literal("cameraFollowPlayer"),
         data: isCameraFollowPlayerEvent,
     }),
@@ -91,6 +108,30 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("goToPage"),
         data: isGoToPageEvent,
+    }),
+    z.object({
+        type: z.literal("turnOffMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("turnOffWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreWebcam"),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("disablePlayerControls"),
@@ -177,11 +218,16 @@ export const isIframeEventWrapper = z.union([
         data: isAreaEvent,
     }),
     z.object({
-        type: z.literal("closeChat"),
-    }),
-    z.object({
         type: z.literal("askPosition"),
         data: isAskPositionEvent,
+    }),
+    z.object({
+        type: z.literal("openInviteMenu"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("chatTotalMessagesToSee"),
+        data: z.number(),
     }),
 ]);
 

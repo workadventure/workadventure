@@ -33,6 +33,7 @@ export function queryWorkadventure<T extends keyof IframeQueryMap>(
         );
 
         answerPromises.set(queryNumber, {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             resolve,
             reject,

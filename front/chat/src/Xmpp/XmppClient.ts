@@ -58,8 +58,10 @@ export class XmppClient {
     });
 
     connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
+      console.log("xmppConnectionStatusChangeMessageStream change");
       switch (status) {
         case Status.DISCONNECTED: {
+          console.log("XmppServerDisconnected");
           xmppServerConnectionStatusStore.set(false);
           mucRoomsStore.reset();
           break;
@@ -158,7 +160,6 @@ export class XmppClient {
     this.rooms.delete(roomUrl.toString());
 
     mucRoomsStore.removeMucRoom(room);
-
     const activeThread = get(activeThreadStore);
     if (activeThread && activeThread.getUrl() === roomUrl.toString()) {
       activeThreadStore.reset();

@@ -6,6 +6,7 @@
         menuVisiblilityStore,
         userIsConnected,
         profileAvailable,
+        profileInPorgress,
         getProfileUrl,
     } from "../../Stores/MenuStore";
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
@@ -70,6 +71,7 @@
                 on:click={openEditNameScene}
             >
                 <img
+                    draggable="false"
                     src={btnProfileSubMenuIdentity}
                     alt={$LL.menu.profile.edit.name()}
                     width="26px"
@@ -103,6 +105,7 @@
                 on:click={openEnableCameraScene}
             >
                 <img
+                    draggable="false"
                     src={btnProfileSubMenuCamera}
                     alt={$LL.menu.profile.edit.camera()}
                     width="26px"
@@ -116,20 +119,22 @@
 
     <div class="content">
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
-            {#if $userIsConnected && $profileAvailable}
-                {#if PROFILE_URL != undefined}
+            {#if $userIsConnected && ($profileAvailable || $profileInPorgress)}
+                {#if $profileInPorgress}
+                    <div class="connecting-spinner" />
+                {:else if $profileAvailable && PROFILE_URL != undefined}
                     <iframe
                         title="profile"
                         src={getProfileUrl()}
-                        class="tw-w-4/5 tw-h-screen tw-border-1 tw-border-solid tw-border-light-blue"
+                        class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
                     />
+                    <button
+                        type="button"
+                        class="btn outline resizing-width tw-justify-center"
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
+                    >
                 {/if}
-                <button
-                    type="button"
-                    class="btn outline resizing-width tw-justify-center"
-                    on:click={() => analyticsClient.logout()}
-                    on:click={logOut}>{$LL.menu.profile.logout()}</button
-                >
             {:else}
                 <a
                     type="button"
@@ -146,4 +151,8 @@
 
 <style lang="scss">
     @import "../../../style/breakpoints.scss";
+    .connecting-spinner {
+        left: 50%;
+        top: 60%;
+    }
 </style>

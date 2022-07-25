@@ -42,7 +42,6 @@ const isMapThirdPartyData = z.object({
 });
 
 export const isMapDetailsData = z.object({
-    // @ts-ignore
     mapUrl: extendApi(z.string(), {
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",

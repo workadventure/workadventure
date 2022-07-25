@@ -1,5 +1,5 @@
 import { expect, test, chromium } from '@playwright/test';
-import fs from 'fs';
+import * as fs from 'fs';
 import {
   rebootBack,
   rebootPusher,
@@ -9,7 +9,7 @@ import {
   stopRedis,
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
-import { assertLogMessage } from './utils/log';
+import {assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.setTimeout(180000);
@@ -138,6 +138,8 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
+    startRecordLogs(page);
+
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
@@ -181,6 +183,8 @@ test.describe('Variables', () => {
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
             ]
     ).toBe(2);
+
+    await page2.close();
   });
 });
 

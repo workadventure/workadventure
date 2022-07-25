@@ -50,6 +50,7 @@ interface UpgradeFailedInvalidData {
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { XmppClient } from "../Services/XmppClient";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
@@ -61,13 +62,13 @@ interface UpgradeFailedErrorData {
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketChatController {
-    private nextUserId: number = 1;
+    private nextUserId = 1;
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
     }
 
-    ioConnection() {
+    ioConnection(): void {
         this.app.ws("/chat", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
@@ -76,6 +77,7 @@ export class IoSocketChatController {
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
             //idleTimeout: 10,
             upgrade: (res, req, context) => {
+                // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
                 (async () => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };

@@ -1,4 +1,4 @@
-import { get, Writable, writable } from "svelte/store";
+import { get } from "svelte/store";
 import { connectionManager } from "../../Connexion/ConnectionManager";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import type { Room } from "../../Connexion/Room";
@@ -10,6 +10,7 @@ import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -23,14 +24,12 @@ export class GameManager {
     private currentGameSceneName: string | null = null;
     // Note: this scenePlugin is the scenePlugin of the EntryScene. We should always provide a key in methods called on this scenePlugin.
     private scenePlugin!: Phaser.Scenes.ScenePlugin;
-    private isInitStore: Writable<boolean>;
 
     constructor() {
         this.playerName = localUserStore.getName();
         this.characterLayers = localUserStore.getCharacterLayers();
         this.companion = localUserStore.getCompanion();
         this.cameraSetup = localUserStore.getCameraSetup();
-        this.isInitStore = writable<boolean>(false);
     }
 
     public async init(scenePlugin: Phaser.Scenes.ScenePlugin): Promise<string> {
@@ -122,7 +121,6 @@ export class GameManager {
     public gameSceneIsCreated(scene: GameScene) {
         this.currentGameSceneName = scene.scene.key;
         menuIconVisiblilityStore.set(true);
-        this.isInitStore.set(true);
     }
 
     /**
@@ -131,6 +129,8 @@ export class GameManager {
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
+        gameSceneIsLoadedStore.set(false);
+
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);
@@ -160,10 +160,6 @@ export class GameManager {
 
     public get currentStartedRoom() {
         return this.startRoom;
-    }
-
-    public getInitStore() {
-        return this.isInitStore;
     }
 }
 

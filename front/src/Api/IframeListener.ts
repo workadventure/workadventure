@@ -37,8 +37,9 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import { chatVisibilityStore } from "../Stores/ChatStore";
+import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
+import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -58,6 +59,36 @@ class IframeListener {
 
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
+
+    private readonly _openChatStream: Subject<void> = new Subject();
+    public readonly openChatStream = this._openChatStream.asObservable();
+
+    private readonly _closeChatStream: Subject<void> = new Subject();
+    public readonly closeChatStream = this._closeChatStream.asObservable();
+
+    private readonly _turnOffMicrophoneStream: Subject<void> = new Subject();
+    public readonly turnOffMicrophoneStream = this._turnOffMicrophoneStream.asObservable();
+
+    private readonly _turnOffWebcamStream: Subject<void> = new Subject();
+    public readonly turnOffWebcamStream = this._turnOffWebcamStream.asObservable();
+
+    private readonly _disableMicrophoneStream: Subject<void> = new Subject();
+    public readonly disableMicrophoneStream = this._disableMicrophoneStream.asObservable();
+
+    private readonly _restoreMicrophoneStream: Subject<void> = new Subject();
+    public readonly restoreMicrophoneStream = this._restoreMicrophoneStream.asObservable();
+
+    private readonly _disableWebcamStream: Subject<void> = new Subject();
+    public readonly disableWebcamStream = this._disableWebcamStream.asObservable();
+
+    private readonly _restoreWebcamStream: Subject<void> = new Subject();
+    public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
+
+    private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
+    public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
+
+    private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
+    public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
@@ -134,10 +165,19 @@ class IframeListener {
     private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
     public readonly askPositionStream = this._askPositionStream.asObservable();
 
+    private readonly _openInviteMenuStream: Subject<void> = new Subject();
+    public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
+
+    private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
+    public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
     private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
-    private sendPlayerMove: boolean = false;
+
+    private chatIframe: HTMLIFrameElement | null = null;
+
+    private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
     private answerers: {
@@ -147,7 +187,7 @@ class IframeListener {
     init() {
         window.addEventListener(
             "message",
-            (message: MessageEvent<unknown>) => {
+            (message: MessageEvent) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
@@ -201,7 +241,7 @@ class IframeListener {
 
                     const errorHandler = (reason: unknown) => {
                         console.error("An error occurred while responding to an iFrame query.", reason);
-                        let reasonMsg: string = "";
+                        let reasonMsg = "";
                         if (reason instanceof Error) {
                             reasonMsg = reason.message;
                         } else if (typeof reason === "object") {
@@ -264,6 +304,14 @@ class IframeListener {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
                         scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "openChat") {
+                        this._openChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "closeChat") {
+                        this._closeChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "addPersonnalMessage") {
+                        this._addPersonnalMessageStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "newChatMessageWritingStatus") {
+                        this._newChatMessageWritingStatusStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -284,6 +332,18 @@ class IframeListener {
                         this._disablePlayerControlStream.next();
                     } else if (iframeEvent.type === "restorePlayerControls") {
                         this._enablePlayerControlStream.next();
+                    } else if (iframeEvent.type === "turnOffMicrophone") {
+                        this._turnOffMicrophoneStream.next();
+                    } else if (iframeEvent.type === "turnOffWebcam") {
+                        this._turnOffWebcamStream.next();
+                    } else if (iframeEvent.type === "disableMicrophone") {
+                        this._disableMicrophoneStream.next();
+                    } else if (iframeEvent.type === "restoreMicrophone") {
+                        this._restoreMicrophoneStream.next();
+                    } else if (iframeEvent.type === "disableWebcam") {
+                        this._disableWebcamStream.next();
+                    } else if (iframeEvent.type === "restoreWebcam") {
+                        this._restoreWebcamStream.next();
                     } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
                         this._disablePlayerProximityMeetingStream.next();
                     } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
@@ -324,11 +384,12 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
-                    } else if (iframeEvent.type == "closeChat") {
-                        chatVisibilityStore.set(false);
-                        window.focus();
                     } else if (iframeEvent.type == "askPosition") {
                         this._askPositionStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "openInviteMenu") {
+                        this._openInviteMenuStream.next();
+                    } else if (iframeEvent.type == "chatTotalMessagesToSee") {
+                        this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -354,7 +415,7 @@ class IframeListener {
         this.iframes.delete(iframe);
     }
 
-    registerScript(scriptUrl: string, enableModuleMode: boolean = true): Promise<void> {
+    registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
         return new Promise<void>((resolve) => {
             console.info("Loading map related script at ", scriptUrl);
 
@@ -560,6 +621,66 @@ class IframeListener {
                 uuid,
             },
         });
+    }
+
+    //TODO delete with chat XMPP integration for the discussion circle
+    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "updateWritingStatusChatList",
+            data: list,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendWritingStatusToChatIframe Error => ", err);
+        }
+    }
+
+    sendMessageToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "addChatMessage",
+            data: chatMessage,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendMessageToChatIframe Error => ", err);
+        }
+    }
+
+    sendComingUserToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "comingUser",
+            data: chatMessage,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendComingUserToChatIframe Error => ", err);
+        }
+    }
+    sendPeerConnexionStatusToChatIframe(status: boolean) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "peerConexionStatus",
+            data: status,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendPeerConnexionStatusToChatIframe Error => ", err);
+        }
     }
 
     /**

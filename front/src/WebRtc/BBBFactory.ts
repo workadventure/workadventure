@@ -2,7 +2,7 @@ import { coWebsiteManager } from "./CoWebsiteManager";
 import { BBBCoWebsite } from "./CoWebsite/BBBCoWebsite";
 
 class BBBFactory {
-    private stopped: boolean = false;
+    private stopped = false;
 
     public start(clientURL: string) {
         // Check if the meeting was stopped before we received the event

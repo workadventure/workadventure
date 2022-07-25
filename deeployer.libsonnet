@@ -117,6 +117,17 @@
         "PUSHER_URL": "//pusher-"+url
       }
     },
+    "map-storage": {
+           "image": "thecodingmachine/workadventure-map-storage:"+tag,
+           "host": {
+             "url": "map-storage-"+url,
+             "containerPort": 3000
+           },
+           "ports": [3000],
+           "env": {
+             "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+           }
+         },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
            "host": {

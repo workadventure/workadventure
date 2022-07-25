@@ -5,7 +5,7 @@ import { Metadata } from "grpc";
 
 export class PingController extends BaseHttpController {
     // Returns a map mapping map name to file name of the map
-    routes() {
+    routes(): void {
         /**
          * @openapi
          * /ping:
@@ -53,7 +53,7 @@ export class PingController extends BaseHttpController {
          *
          */
         this.app.get("/ping-backs", (req, res) => {
-            (async () => {
+            (async (): Promise<void> => {
                 const clients = await apiClientRepository.getAllClients();
 
                 const promises: Promise<PingMessage>[] = [];

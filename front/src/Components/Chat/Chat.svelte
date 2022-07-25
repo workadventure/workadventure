@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, get, Unsubscriber, writable } from "svelte/store";
+    import { derived, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
@@ -93,8 +93,10 @@
         );
         subscribeListeners.push(
             chatVisibilityStore.subscribe(() => {
-                if (get(gameManager.getInitStore())) {
-                    //gameManager.getCurrentGameScene()?.onResize();
+                try {
+                    gameManager.getCurrentGameScene()?.onResize();
+                } catch (err) {
+                    console.info("gameManager doesn't exist!", err);
                 }
             })
         );
@@ -131,11 +133,12 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div id="chatWindow" class:show={$chatVisibilityStore} class="screen-blocker">
+<div id="chatWindow" class:show={$chatVisibilityStore}>
     {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
     <iframe
+        id="chatWorkAdventure"
         bind:this={chatIframe}
-        sandbox="allow-scripts"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
         title="WorkAdventureChat"
         src={CHAT_URL}
         class="tw-border-0"
@@ -172,7 +175,9 @@
         <p class="system-text">{$LL.chat.intro()}</p>
         <ul>
             {#each $chatMessagesStore as message, i}
-                <li><ChatElement {message} line={i} /></li>
+                <li>
+                    <ChatElement {message} line={i} />
+                </li>
             {/each}
         </ul>
     </section>
@@ -182,6 +187,8 @@
 </aside>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
     p.close-icon {
         position: absolute;
         padding: 4px;
@@ -211,9 +218,8 @@
         position: absolute;
         top: 0;
         left: 0;
-        height: 100vh;
-        width: 30vw;
-        min-width: 350px;
+        height: 95%;
+        width: 95%;
         background: rgb(5, 31, 51, 0.9);
         color: whitesmoke;
         display: flex;
@@ -260,6 +266,11 @@
                 height: auto;
             }
         }
+
+        .messageForm {
+            flex: 0 70px;
+            padding-top: 15px;
+        }
     }
 
     div.center {
@@ -268,6 +279,20 @@
 
     div.reconnecting {
         margin-top: 3rem;
+    }
+
+    @include media-breakpoint-up(xxl) {
+        aside.chatWindow {
+            height: 100vh;
+            width: 30vw;
+        }
+    }
+
+    @include media-breakpoint-up(sm) {
+        aside.chatWindow {
+            height: calc(99vh - 50px);
+            width: 95vw;
+        }
     }
 </style>
 -->
@@ -279,13 +304,17 @@
         top: 0;
         left: -100%;
         height: 100vh;
-        width: 30vw;
+        width: 28vw;
         min-width: 250px;
-        transition: all 0.1s ease-in-out;
+        transition: all 0.2s ease-in-out;
         pointer-events: none;
+        visibility: hidden;
+        //display: none;
         &.show {
             left: 0;
             pointer-events: auto;
+            visibility: visible;
+            //display: block;
         }
         iframe {
             width: 100%;
@@ -296,12 +325,12 @@
             padding: 0 7px 2px 6px;
             min-height: fit-content;
             position: absolute;
-            right: -20px;
+            right: -21px;
             z-index: -1;
             font-size: 20px;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
-            background: #181824;
+            background: rgba(27, 27, 41, 0.95);
         }
     }
 </style>

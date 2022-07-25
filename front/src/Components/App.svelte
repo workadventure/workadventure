@@ -4,9 +4,11 @@
     import { errorScreenStore } from "../Stores/ErrorScreenStore";
     import { loginSceneVisibleStore } from "../Stores/LoginSceneStore";
     import { enableCameraSceneVisibilityStore } from "../Stores/MediaStore";
-    import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+    import {
+        selectCharacterSceneVisibleStore,
+        selectCharacterCustomizeSceneVisibleStore,
+    } from "../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
-    import Chat from "./Chat/Chat.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
@@ -14,6 +16,8 @@
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
+    import Chat from "./Chat/Chat.svelte";
+    import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
 
     export let game: Game;
 </script>
@@ -42,7 +46,7 @@
     <div class="scrollable">
         <EnableCameraScene {game} />
     </div>
-{:else}
+{:else if $gameSceneIsLoadedStore && !$selectCharacterCustomizeSceneVisibleStore}
     <Chat />
     <MainLayout />
 {/if}

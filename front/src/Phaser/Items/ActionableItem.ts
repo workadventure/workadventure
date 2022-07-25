@@ -11,7 +11,7 @@ type EventCallback = (state: unknown, parameters: unknown) => void;
 
 export class ActionableItem implements ActivatableInterface {
     private readonly activationRadiusSquared: number;
-    private isSelectable: boolean = false;
+    private isSelectable = false;
     private callbacks: Map<string, Array<EventCallback>> = new Map<string, Array<EventCallback>>();
 
     public constructor(

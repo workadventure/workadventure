@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { MucRoom } from "../Xmpp/MucRoom";
 
 /**
@@ -26,6 +26,15 @@ function createMucRoomsStore() {
     },
     reset() {
       set(new Set<MucRoom>());
+    },
+    getDefaultRoom(): MucRoom {
+      const defaultMucRoom = [...get(mucRoomsStore).values()].find(
+        (mucRoom) => mucRoom.type === "default"
+      );
+      if (!defaultMucRoom) {
+        throw new Error("No default MUC room");
+      }
+      return defaultMucRoom;
     },
   };
 }

@@ -8,24 +8,26 @@
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
-  import { MeStore, User } from "../Xmpp/MucRoom";
+  import { defaultColor, defaultWoka, MeStore, User } from "../Xmpp/MucRoom";
   import walk from "../../public/static/images/walk.svg";
   import teleport from "../../public/static/images/teleport.svg";
   import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
+  import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
-  const dispatch =
-    createEventDispatcher<{
-      goTo: GoTo;
-      rankUp: RankUp;
-      rankDown: RankDown;
-      ban: Ban;
-    }>();
+  const dispatch = createEventDispatcher<{
+    goTo: GoTo;
+    rankUp: RankUp;
+    rankDown: RankDown;
+    ban: Ban;
+  }>();
 
   export let user: User;
   export let openChat: Function;
   export let searchValue: string = "";
   export let meStore: MeStore;
   export let jid: string;
+
+  $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
   let chatMenuActive = false;
   let openChatUserMenu = () => {
@@ -47,6 +49,33 @@
     dispatch("ban", { user, name, playUri });
   }
 
+  function findUserInDefault(name: string): User | undefined {
+    const userData = [...$presenseStore].find(([, user]) => user.name === name);
+    let user = undefined;
+    if (userData) {
+      [, user] = userData;
+    }
+    return user;
+  }
+
+  function getWoka(name: string) {
+    const user = findUserInDefault(name);
+    if (user) {
+      return user.woka;
+    } else {
+      return defaultWoka;
+    }
+  }
+
+  function getColor(name: string) {
+    const user = findUserInDefault(name);
+    if (user) {
+      return user.color;
+    } else {
+      return defaultColor;
+    }
+  }
+
   $: chunks = highlightWords({
     text: user.name.match(/\[\d*]/)
       ? user.name.substring(0, user.name.search(/\[\d*]/))
@@ -62,11 +91,11 @@
 >
   <div
     class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
-    style={`background-color: ${user.color}`}
+    style={`background-color: ${getColor(user.name)}`}
     on:click|stopPropagation={() => openChat(user)}
   >
     <div class="wa-container">
-      <img class="tw-w-full" src={user.woka} alt="Avatar" />
+      <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
     </div>
     {#if user.active}
       <span
