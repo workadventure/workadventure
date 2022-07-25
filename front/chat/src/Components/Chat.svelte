@@ -16,7 +16,6 @@
   import ChatLiveRooms from "./ChatLiveRooms.svelte";
   import { activeThreadStore } from "../Stores/ActiveThreadStore";
   import ChatActiveThread from "./ChatActiveThread.svelte";
-  import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
   import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
   import Timeline from "./Timeline/Timeline.svelte";
   import {
