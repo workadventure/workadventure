@@ -216,26 +216,6 @@ export class MucRoom {
         { type: "goToPage", data: { url: `${playUri}#moveToUser=${uuid}` } },
         "*"
       );
-      /*
-            Axios.get(`${PUSHER_URL}/room/access`, { params: { token: get(userStore).authToken, playUri, uuid: get(userStore).uuid } })
-                .then((_) => {
-                    window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
-                })
-                .catch((error) => {
-                    console.log("Cant teleport", error);
-                    /*
-                    layoutManagerActionStore.addAction({
-                        uuid: "cantTeleport",
-                        type: "warning",
-                        message: get(LL).warning.accessDenied.teleport(),
-                        callback: () => {
-                            layoutManagerActionStore.removeAction("cantTeleport");
-                        },
-                        userInputManager: undefined,
-                    });
-                    this.resetTeleportStore();
-                });
-            */
     } else if (type === "user") {
       window.parent.postMessage(
         { type: "askPosition", data: { uuid, playUri } },
@@ -568,7 +548,6 @@ export class MucRoom {
         action,
       })
     );
-    console.log("this.jid", jid(this.jid));
     this.connection.emitXmlMessage(messageReacted);
 
     this.messageReactStore.update((reactMessages) => {

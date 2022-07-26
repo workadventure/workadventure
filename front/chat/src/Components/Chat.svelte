@@ -1,7 +1,6 @@
 <script lang="ts">
   import { afterUpdate, beforeUpdate, onMount } from "svelte";
   import { HtmlUtils } from "../Utils/HtmlUtils";
-  import { connectionStore } from "../Stores/ConnectionStore";
   import Loader from "./Loader.svelte";
   import {
     mucRoomsStore,
@@ -23,6 +22,7 @@
     timelineOpenedStore,
   } from "../Stores/ChatStore";
   import { Unsubscriber, derived } from "svelte/store";
+  import { connectionManager } from "../Connection/ChatConnectionManager";
 
   let listDom: HTMLElement;
   let chatWindowElement: HTMLElement;
@@ -62,7 +62,7 @@
         try {
           defaultMucRoom = mucRoomsStore.getDefaultRoom();
         } catch (e: unknown) {
-          console.log(e);
+          console.error("Error get default room =>", e);
         }
       })
     );
@@ -113,18 +113,18 @@
     try {
       defaultMucRoom = mucRoomsStore.getDefaultRoom();
     } catch (e: unknown) {
-      console.log(e);
+      console.error("Error get default room =>", e);
     }
   });
 
-  console.log("Chat fully loaded");
+  console.info("Chat fully loaded");
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:click={onClick} />
 
 <aside class="chatWindow" bind:this={chatWindowElement}>
   <section class="tw-p-0 tw-m-0" bind:this={listDom}>
-    {#if !$connectionStore || !$xmppServerConnectionStatusStore}
+    {#if !connectionManager.connection || !$xmppServerConnectionStatusStore}
       <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
     {:else if activeThreadTimeLine}
       <ChatActiveThreadTimeLine
