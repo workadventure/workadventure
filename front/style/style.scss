@@ -47,7 +47,10 @@ body .message-info.warning {
     &.hightlighted {
         @apply tw-pointer-events-auto;
         .nametag-webcam-container,
-        .woka-webcam-container {
+        .woka-webcam-container,
+        .voice-meter-webcam-container,
+        .report-ban-container
+        {
             @apply tw-h-[32vw] tw-w-[57vw];
         }
 
@@ -85,58 +88,58 @@ body .message-info.warning {
         }
     }
 
-    button.report {
-        display: block;
-        cursor: url("./images/cursor_pointer.png"), pointer;
-        background: none;
-        background-color: rgba(0, 0, 0, 0);
-        border: none;
-        background-color: black;
-        border-radius: 15px;
-        position: absolute;
-        width: 0px;
-        height: 35px;
-        right: 5px;
-        bottom: 5px;
-        padding: 0px;
-        overflow: hidden;
-        z-index: 2;
-        transition: all 0.5s ease;
+    //button.report {
+    //    display: block;
+    //    cursor: url("./images/cursor_pointer.png"), pointer;
+    //    background: none;
+    //    background-color: rgba(0, 0, 0, 0);
+    //    border: none;
+    //    background-color: black;
+    //    border-radius: 15px;
+    //    position: absolute;
+    //    //width: 0px;
+    //    height: 35px;
+    //    right: 5px;
+    //    bottom: 5px;
+    //    padding: 0px;
+    //    overflow: hidden;
+    //    z-index: 2;
+    //    transition: all 0.5s ease;
+    //
+    //    img {
+    //        position: absolute;
+    //        display: block;
+    //        bottom: 5px;
+    //        left: 5px;
+    //        margin: 0;
+    //        padding: 0;
+    //        cursor: url("./images/cursor_pointer.png"), pointer;
+    //        width: 25px;
+    //        height: 25px;
+    //    }
+    //
+    //    span {
+    //        position: absolute;
+    //        bottom: 6px;
+    //        left: 36px;
+    //        color: white;
+    //        font-size: 16px;
+    //        cursor: url("./images/cursor_pointer.png"), pointer;
+    //    }
+    //
+    //    img.active {
+    //        display: block !important;
+    //    }
+    //}
 
-        img {
-            position: absolute;
-            display: block;
-            bottom: 5px;
-            left: 5px;
-            margin: 0;
-            padding: 0;
-            cursor: url("./images/cursor_pointer.png"), pointer;
-            width: 25px;
-            height: 25px;
-        }
-
-        span {
-            position: absolute;
-            bottom: 6px;
-            left: 36px;
-            color: white;
-            font-size: 16px;
-            cursor: url("./images/cursor_pointer.png"), pointer;
-        }
-
-        img.active {
-            display: block !important;
-        }
-    }
-
-    &:hover button.report {
-        width: 35px;
-        padding: 10px;
-
-        &:hover {
-            width: 160px;
-        }
-    }
+    //&:hover button.report {
+    //    width: 35px;
+    //    padding: 10px;
+    //
+    //    &:hover {
+    //        width: 160px;
+    //    }
+    //}
 }
 
 .sound-progress {

@@ -8,6 +8,7 @@
     import { onMount } from "svelte";
     import { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import BanReportBox from "./BanReportBox.svelte";
 
     let videoContainer: HTMLDivElement;
     export let peer: VideoPeer;
@@ -53,5 +54,6 @@
             >{name}</span
         >
         <SoundMeterWidget volume={$volumeStore} classcss="tw-relative tw-mr-0 tw-ml-auto" />
+        <BanReportBox peer={peer}/>
     </div>
 </div>

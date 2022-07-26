@@ -1,19 +1,16 @@
 <script lang="ts">
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import microphoneCloseImg from "../images/microphone-close.svg";
-    import reportImg from "./images/report.svg";
-    import blockSignImg from "./images/blockSign.svg";
     import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { fade, fly } from "svelte/transition";
 
     import Woka from "../Woka/Woka.svelte";
     import { onMount } from "svelte";
     import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
+    import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
 
@@ -39,10 +36,6 @@
             type: "streamable",
             embed: peer as unknown as Streamable,
         };
-    }
-
-    function noDrag() {
-        return false;
     }
 
     const resizeObserver = new ResizeObserver(() => {
@@ -111,6 +104,11 @@ tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-4
                 <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" />
             </div>
         {/if}
+        <div class="report-ban-container tw-z-[600] tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
+        tw-absolute
+">
+            <BanReportBox peer={peer}/>
+        </div>
     </div>
 </div>
 
