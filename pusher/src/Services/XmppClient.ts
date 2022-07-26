@@ -142,7 +142,7 @@ export class XmppClient {
 
                 res(xmpp);
             });
-            xmpp.on("status", async (status: string) => {
+            xmpp.on("status", (status: string) => {
                 console.error("XmppClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });

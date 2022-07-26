@@ -14,7 +14,6 @@ import {
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
-import { get } from "svelte/store";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
