@@ -157,11 +157,20 @@
         usersListStore={$activeThreadStore.getPresenceStore()}
         meStore={$activeThreadStore.getMeStore()}
         activeThread={$activeThreadStore}
-        on:goTo={(event) => handleGoTo($activeThreadStore, event.detail)}
-        on:rankUp={(event) => handleRankUp($activeThreadStore, event.detail)}
-        on:rankDown={(event) =>
-          handleRankDown($activeThreadStore, event.detail)}
-        on:ban={(event) => handleBan($activeThreadStore, event.detail)}
+        on:goTo={(event) =>
+          defaultMucRoom?.goTo(
+            event.detail.type,
+            event.detail.playUri,
+            event.detail.uuid
+          )}
+        on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
+        on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+        on:ban={(event) =>
+          defaultMucRoom?.ban(
+            event.detail.user,
+            event.detail.name,
+            event.detail.playUri
+          )}
       />
     {:else}
       <div class="wa-message-bg">
