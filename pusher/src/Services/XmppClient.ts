@@ -69,22 +69,24 @@ export class XmppClient {
                 roomId: this.clientSocket.roomId,
             });
 
-            xmpp.on("error", (err: string) => {
+            xmpp.on("error", (err: unknown) => {
                 console.error("XmppClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 //rej(err);
+                xmpp.stop();
+                this.close();
             });
 
             xmpp.on("offline", () => {
                 status = "disconnected";
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
-                if (this.timeout) {
+                /*if (this.timeout) {
                     clearTimeout(this.timeout);
                 }
                 this.timeout = setTimeout(() => {
                     this.createClient(res, rej);
-                }, 10000);
+                }, 10000);*/
             });
 
             xmpp.on("disconnect", () => {
@@ -232,16 +234,16 @@ export class XmppClient {
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
-                if (this.timeout) {
+                /*if (this.timeout) {
                     clearTimeout(this.timeout);
                     this.timeout = undefined;
-                }
+                }*/
             });
         }).catch((err) => {
             console.error("> Connecting from xmppClient => error: ", err);
-            if (this.timeout) {
+            /*if(this.timeout){
                 clearTimeout(this.timeout);
-            }
+            }*/
             return this.close().then(() => {
                 return this.start();
             });

@@ -109,6 +109,14 @@
     }
   }
 
+  mucRoomsStore.subscribe(() => {
+    try {
+      defaultMucRoom = mucRoomsStore.getDefaultRoom();
+    } catch (e: unknown) {
+      console.log(e);
+    }
+  });
+
   console.log("Chat fully loaded");
 </script>
 

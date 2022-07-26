@@ -43,6 +43,25 @@ export type Teleport = {
 };
 export type TeleportStore = Readable<Teleport>;
 
+type ReplyMessage = {
+  id: string;
+  senderName: string;
+  body: string;
+};
+
+enum reactAction {
+  add = 1,
+  delete = -1,
+}
+
+type ReactMessage = {
+  id: string;
+  message: string;
+  from: string;
+  emoji: string;
+  operation: number;
+};
+
 export type Message = {
   body: string;
   name: string;
@@ -50,6 +69,10 @@ export type Message = {
   id: string;
   delivered: boolean;
   error: boolean;
+  from: string;
+  type: messageType;
+  targetMessageReply?: ReplyMessage;
+  targetMessageReact?: Map<string, number>;
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -59,6 +82,12 @@ export type Me = {
 };
 
 export type MeStore = Readable<Me>;
+
+enum messageType {
+  message = 1,
+  reply,
+  react,
+}
 
 const _VERBOSE = true;
 export const defaultWoka =
@@ -79,6 +108,7 @@ export class MucRoom {
   private presenceStore: Writable<UserList>;
   private teleportStore: Writable<Teleport>;
   private messageStore: Writable<Message[]>;
+  private messageReactStore: Writable<Map<string, ReactMessage[]>>;
   private meStore: Writable<Me>;
   private nickCount = 0;
   private composingTimeOut: Timeout | undefined;
@@ -95,10 +125,41 @@ export class MucRoom {
   ) {
     this.presenceStore = writable<UserList>(new Map<string, User>());
     this.messageStore = writable<Message[]>(new Array(0));
+    this.messageReactStore = writable<Map<string, ReactMessage[]>>(
+      new Map<string, ReactMessage[]>()
+    );
     this.teleportStore = writable<Teleport>({ state: false, to: null });
     this.meStore = writable<Me>({ isAdmin: false });
     this.lastMessageSeen = new Date();
     this.countMessagesToSee = writable<number>(0);
+
+    //refrech react message
+    this.messageReactStore.subscribe((reacts) => {
+      this.messageStore.update((messages) => {
+        messages.forEach((message, index) => {
+          if (!reacts.has(message.id)) return;
+
+          const reactsByMessage = reacts.get(message.id);
+          message.targetMessageReact = reactsByMessage?.reduce(
+            (list: Map<string, number>, reactMessage) => {
+              if (list.has(reactMessage.emoji)) {
+                const nb =
+                  (list.get(reactMessage.emoji) as number) +
+                  reactMessage.operation * 1;
+                list.set(reactMessage.emoji, nb);
+              } else {
+                list.set(reactMessage.emoji, reactMessage.operation * 1);
+              }
+              return list;
+            },
+            new Map<string, number>()
+          );
+
+          messages[index] = message;
+        });
+        return messages;
+      });
+    });
   }
 
   public getPlayerName() {
@@ -405,10 +466,130 @@ export class MucRoom {
         id: idMessage,
         delivered: false,
         error: false,
+        from: this.jid,
+        type: messageType.message,
       });
       return messages;
     });
 
+    this.manageResendMessage();
+  }
+
+  public replyMessage(text: string, messageReply: Message) {
+    const idMessage = uuidv4();
+    const messageReplying = xml(
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, text),
+      xml("reply", {
+        to: messageReply.from,
+        id: messageReply.id,
+        xmlns: "urn:xmpp:reply:0",
+        senderName: messageReply.name,
+        body: messageReply.body,
+      })
+    );
+    this.connection.emitXmlMessage(messageReplying);
+
+    this.messageStore.update((messages) => {
+      messages.push({
+        name: this.getPlayerName(),
+        body: text,
+        time: new Date(),
+        id: idMessage,
+        delivered: false,
+        error: false,
+        from: this.jid,
+        type: messageType.reply,
+        targetMessageReply: {
+          id: messageReply.id,
+          senderName: messageReply.name,
+          body: messageReply.body,
+        },
+      });
+      return messages;
+    });
+
+    this.manageResendMessage();
+  }
+
+  public haveSelected(messageId: string, emojiStr: string) {
+    const messages = get(this.messageReactStore).get(messageId);
+    if (!messages) return false;
+
+    return messages.reduce((value, message) => {
+      if (
+        message.emoji == emojiStr &&
+        jid(message.from).getLocal() == jid(this.jid).getLocal()
+      ) {
+        value = message.operation == reactAction.add ? true : false;
+      }
+      return value;
+    }, false);
+  }
+
+  public sendReactMessage(emoji: string, messageReact: Message) {
+    //define action, delete or not
+    let action = reactAction.add;
+    if (this.haveSelected(messageReact.id, emoji)) {
+      action = reactAction.delete;
+    }
+
+    const idMessage = uuidv4();
+    const newReactMessage = {
+      id: idMessage,
+      message: messageReact.id,
+      from: this.jid,
+      emoji,
+      operation: action,
+    };
+
+    const messageReacted = xml(
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, emoji),
+      xml("reaction", {
+        to: messageReact.from,
+        from: this.jid,
+        id: messageReact.id,
+        xmlns: "urn:xmpp:reaction:0",
+        reaction: emoji,
+        action,
+      })
+    );
+    console.log("this.jid", jid(this.jid));
+    this.connection.emitXmlMessage(messageReacted);
+
+    this.messageReactStore.update((reactMessages) => {
+      //create or get list of react message
+      let newReactMessages = new Array<ReactMessage>();
+      if (reactMessages.has(newReactMessage.message)) {
+        newReactMessages = reactMessages.get(
+          newReactMessage.message
+        ) as ReactMessage[];
+      }
+      //check if already exist
+      if (!newReactMessages.find((react) => react.id === newReactMessage.id)) {
+        newReactMessages.push(newReactMessage);
+        reactMessages.set(newReactMessage.message, newReactMessages);
+      }
+      return reactMessages;
+    });
+
+    this.manageResendMessage();
+  }
+
+  private manageResendMessage() {
     this.lastMessageSeen = new Date();
     this.countMessagesToSee.set(0);
 
@@ -553,30 +734,71 @@ export class MucRoom {
           delay = new Date();
         }
         const body = xml.getChildText("body") ?? "";
-        this.messageStore.update((messages) => {
-          if (messages.find((message) => message.id === idMessage)) {
-            this.countMessagesToSee.set(0);
-            this.lastMessageSeen = new Date();
-            messages = messages.map((message) =>
-              message.id === idMessage
-                ? { ...message, delivered: true }
-                : message
-            );
-          } else {
-            if (delay > this.lastMessageSeen) {
-              this.countMessagesToSee.update((last) => last + 1);
+
+        if (xml.getChild("reaction") != undefined) {
+          //define action, delete or not
+          const newReactMessage = {
+            id: idMessage,
+            message: xml.getChild("reaction")?.getAttr("id"),
+            from: xml.getChild("reaction")?.getAttr("from"),
+            emoji: body,
+            operation: xml.getChild("reaction")?.getAttr("action"),
+          };
+
+          //update list of message
+          this.messageReactStore.update((reactMessages) => {
+            //create or get list of react message
+            let newReactMessages = new Array<ReactMessage>();
+            if (reactMessages.has(newReactMessage.message)) {
+              newReactMessages = reactMessages.get(
+                newReactMessage.message
+              ) as ReactMessage[];
             }
-            messages.push({
-              name,
-              body,
-              time: delay,
-              id: idMessage,
-              delivered: true,
-              error: false,
-            });
-          }
-          return messages;
-        });
+            //check if already exist
+            if (
+              !newReactMessages.find((react) => react.id === newReactMessage.id)
+            ) {
+              newReactMessages.push(newReactMessage);
+              reactMessages.set(newReactMessage.message, newReactMessages);
+            }
+            return reactMessages;
+          });
+        } else {
+          this.messageStore.update((messages) => {
+            if (messages.find((message) => message.id === idMessage)) {
+              this.countMessagesToSee.set(0);
+              this.lastMessageSeen = new Date();
+              messages = messages.map((message) =>
+                message.id === idMessage
+                  ? { ...message, delivered: true }
+                  : message
+              );
+            } else {
+              if (delay > this.lastMessageSeen) {
+                this.countMessagesToSee.update((last) => last + 1);
+              }
+              const message: Message = {
+                name,
+                body,
+                time: delay,
+                id: idMessage,
+                delivered: true,
+                error: false,
+                from: from.toString(),
+                type: xml.getChild("reply")
+                  ? messageType.message
+                  : messageType.reply,
+              };
+              if (xml.getChild("reply") != undefined) {
+                message.targetMessageReply = {
+                  ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                };
+              }
+              messages.push(message);
+            }
+            return messages;
+          });
+        }
         handledMessage = true;
       } else {
         const { jid } = this.getUserDataByName(name);
