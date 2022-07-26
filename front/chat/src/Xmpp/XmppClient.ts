@@ -11,6 +11,7 @@ import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/
 import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
+import { connectionManager } from "../Connection/ChatConnectionManager";
 
 export class XmppClient {
   private jid: string | undefined;
@@ -58,19 +59,34 @@ export class XmppClient {
     });
 
     connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
-      console.log("xmppConnectionStatusChangeMessageStream change");
+      console.info(
+        "xmppConnectionStatusChangeMessageStream change => status",
+        status
+      );
       switch (status) {
         case Status.DISCONNECTED: {
-          console.log("XmppServerDisconnected");
+          //if connection manager is not closed or be closing,
+          //continue with the same WebSocket and wait information from server
+          if (!connectionManager.isClose) {
+            break;
+          }
+
+          //close reset mucroom, close connection and try to restart
           xmppServerConnectionStatusStore.set(false);
           mucRoomsStore.reset();
+          connectionManager.closeAndRestart();
           break;
         }
         case Status.UNRECOGNIZED: {
-          throw new Error("Unexpected status received");
+          throw new Error(
+            "xmppConnectionStatusChangeMessageStream => Unexpected status received"
+          );
         }
         default: {
-          console.log("XmppServerConnected");
+          console.info(
+            "xmppConnectionStatusChangeMessageStream => Xmpp server connected => status",
+            status
+          );
           //const _exhaustiveCheck: never = status;
         }
       }

@@ -3,8 +3,6 @@ import {
   isIframeEventWrapper,
 } from "./Event/IframeEvent";
 import { userStore } from "./Stores/LocalUserStore";
-import { ChatConnection } from "./Connection/ChatConnection";
-import { connectionStore } from "./Stores/ConnectionStore";
 import {
   chatMessagesStore,
   ChatMessageTypes,
@@ -16,9 +14,9 @@ import {
 } from "./Stores/ChatStore";
 import { setCurrentLocale } from "./i18n/locales";
 import { Locales } from "./i18n/i18n-types";
-import { get } from "svelte/store";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
+import { connectionManager } from "./Connection/ChatConnectionManager";
 
 class IframeListener {
   init() {
@@ -35,12 +33,10 @@ class IframeListener {
           switch (iframeEvent.type) {
             case "userData": {
               userStore.set(iframeEvent.data);
-              connectionStore.set(
-                new ChatConnection(
-                  iframeEvent.data.authToken ?? "",
-                  iframeEvent.data.playUri,
-                  iframeEvent.data.uuid
-                )
+              connectionManager.init(
+                iframeEvent.data.playUri,
+                iframeEvent.data.uuid,
+                iframeEvent.data.authToken
               );
               break;
             }
@@ -51,7 +47,10 @@ class IframeListener {
               break;
             }
             case "joinMuc": {
-              get(connectionStore)
+              if (!connectionManager.connection) {
+                connectionManager.start();
+              }
+              connectionManager.connectionOrFaile
                 .getXmppClient()
                 ?.joinMuc(
                   iframeEvent.data.name,
@@ -61,7 +60,10 @@ class IframeListener {
               break;
             }
             case "leaveMuc": {
-              get(connectionStore)
+              if (!connectionManager.connection) {
+                connectionManager.start();
+              }
+              connectionManager.connectionOrFaile
                 .getXmppClient()
                 ?.leaveMuc(iframeEvent.data.url);
               break;

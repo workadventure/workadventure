@@ -130,10 +130,9 @@ export class ChatConnection implements ChatConnection {
           }
         }
       };
-      //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      console.log("Error");
-      throw new Error("Error");
+    } catch (err) {
+      console.error("ChatConnection => err =>", err);
+      throw new Error(`Error: ${err}`);
     }
   }
 
@@ -174,6 +173,17 @@ export class ChatConnection implements ChatConnection {
 
   public getXmppClient(): XmppClient | null {
     return this.xmppClient;
+  }
+
+  public close() {
+    this.socket.close();
+  }
+
+  get isClose() {
+    return (
+      this.socket.readyState === WebSocket.CLOSED ||
+      this.socket.readyState === WebSocket.CLOSING
+    );
   }
 }
 

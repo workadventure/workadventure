@@ -78,6 +78,7 @@ export class XmppClient {
             });
 
             xmpp.on("offline", () => {
+                console.error("XmppClient => offline => status", status);
                 status = "disconnected";
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
@@ -90,6 +91,7 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
+                console.error("XmppClient => disconnect => status", status);
                 if (status !== "disconnected") {
                     status = "disconnected";
 
@@ -140,7 +142,8 @@ export class XmppClient {
 
                 res(xmpp);
             });
-            xmpp.on("status", async (status: string) => {
+            xmpp.on("status", (status: string) => {
+                console.error("XmppClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
