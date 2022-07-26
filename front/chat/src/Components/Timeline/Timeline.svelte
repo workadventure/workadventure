@@ -6,6 +6,7 @@
   import {
     chatPeerConnectionInProgress,
     timelineOpenedStore,
+    timelineMessagesToSee,
   } from "../../Stores/ChatStore";
 
   const dispatch = createEventDispatcher();

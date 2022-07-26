@@ -29,8 +29,6 @@
     selectedMessageToReply,
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
-  } from "svelte-feather-icons";
-  import { Unsubscriber } from "svelte/store";
 
   export let mucRoom: MucRoom;
 
