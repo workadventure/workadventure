@@ -1,12 +1,16 @@
 <script lang="ts">
+  import { fly } from "svelte/transition";
   import { SendIcon, SmileIcon } from "svelte-feather-icons";
-  import { ChatStates, MucRoom } from "../Xmpp/MucRoom";
-  import LL from "../i18n/i18n-svelte";
+  import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
+  import LL, { locale } from "../i18n/i18n-svelte";
   import { createEventDispatcher, onMount } from "svelte";
   import { EmojiButton } from "@joeattardi/emoji-button";
-  import {SingleRoom} from "../Xmpp/SingleRoom";
+  import { selectedMessageToReply } from "../Stores/ChatStore";
+  import { UserData } from "../Messages/JsonMessages/ChatData";
+  import { userStore } from "../Stores/LocalUserStore";
+  import { mucRoomsStore } from "../Stores/MucRoomsStore";
 
-  export let room: MucRoom | SingleRoom;
+  export let mucRoom: MucRoom;
 
   const dispatch = createEventDispatcher();
 
@@ -16,6 +20,10 @@
 
   let emojiOpened = false;
   let newMessageText = "";
+
+  export const defaultColor = "#626262";
+
+  $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
   function onFocus() {}
   function onBlur() {}
@@ -28,10 +36,52 @@
   function sendMessage() {
     if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
       return;
-    if(room instanceof MucRoom){
-      room.updateComposingState(ChatStates.PAUSED);
+    if ($selectedMessageToReply) {
+      sendReplyMessage();
+      return false;
     }
-    room.sendMessage(newMessageText);
+    mucRoom.updateComposingState(ChatStates.PAUSED);
+    mucRoom.sendMessage(newMessageText);
+    newMessageText = "";
+    dispatch("scrollDown");
+    return false;
+  }
+
+  function isMe(name: string) {
+    return name === mucRoom.getPlayerName();
+  }
+
+  function findUserInDefault(name: string): User | UserData | undefined {
+    if (isMe(name)) {
+      return $userStore;
+    }
+    const userData = [...$presenseStore].find(([, user]) => user.name === name);
+    let user = undefined;
+    if (userData) {
+      [, user] = userData;
+    }
+    return user;
+  }
+
+  function getColor(name: string) {
+    const user = findUserInDefault(name);
+    if (user) {
+      return user.color;
+    } else {
+      return defaultColor;
+    }
+  }
+
+  function sendReplyMessage() {
+    if (
+      !$selectedMessageToReply ||
+      !newMessageText ||
+      newMessageText.replace(/\s/g, "").length === 0
+    )
+      return;
+    mucRoom.updateComposingState(ChatStates.PAUSED);
+    mucRoom.replyMessage(newMessageText, $selectedMessageToReply);
+    selectedMessageToReply.set(null);
     newMessageText = "";
     dispatch("scrollDown");
     return false;
@@ -86,6 +136,47 @@
 </script>
 
 <div class="wa-message-form">
+  {#if $selectedMessageToReply}
+    <div
+      class="replyMessage"
+      on:click={() => selectedMessageToReply.set(null)}
+      transition:fly={{
+        x: isMe($selectedMessageToReply.name) ? 10 : -10,
+        delay: 100,
+        duration: 200,
+      }}
+    >
+      <div
+        style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
+        class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+          isMe($selectedMessageToReply.name)
+            ? "tw-flex-row-reverse"
+            : "tw-flex-row"
+        }`}
+      >
+        <span
+          class={`tw-text-lighter-purple ${
+            isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"
+          }`}
+          >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
+        >
+        <span class="tw-text-xxxs"
+          >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}</span
+        >
+      </div>
+      <div
+        class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+      >
+        <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+          {$selectedMessageToReply.body}
+        </p>
+      </div>
+    </div>
+  {/if}
+
   <div class="emote-menu-container">
     <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
   </div>
@@ -116,9 +207,7 @@
           }}
           on:keypress={() => {
             adjustHeight();
-            if(room instanceof MucRoom){
-              room.updateComposingState(ChatStates.COMPOSING);
-             }
+            mucRoom.updateComposingState(ChatStates.COMPOSING);
             return true;
           }}
           rows="1"
@@ -147,11 +236,35 @@
 </div>
 
 <style lang="scss">
+  .replyMessage {
+    padding: 0 20px;
+    margin: 0;
+    position: relative;
+
+    &::after {
+      content: "x";
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      color: white;
+      font-size: 12px;
+      position: absolute;
+      top: 0;
+      right: 4px;
+      border: solid 1px white;
+      text-align: center;
+      border-radius: 99%;
+    }
+
+    .message {
+      opacity: 0.5;
+    }
+  }
+
   form {
     display: flex;
     padding-left: 4px;
     padding-right: 4px;
-
     // button {
     //     background-color: #254560;
     //     border-bottom-right-radius: 4px;

@@ -25,6 +25,7 @@ export type User = {
   unreads: boolean;
   isAdmin: boolean;
   chatState: string;
+  isMe: boolean;
 };
 
 export const ChatStates = {
@@ -43,6 +44,25 @@ export type Teleport = {
 };
 export type TeleportStore = Readable<Teleport>;
 
+type ReplyMessage = {
+  id: string;
+  senderName: string;
+  body: string;
+};
+
+enum reactAction {
+  add = 1,
+  delete = -1,
+}
+
+type ReactMessage = {
+  id: string;
+  message: string;
+  from: string;
+  emoji: string;
+  operation: number;
+};
+
 export type Message = {
   body: string;
   name: string;
@@ -50,6 +70,10 @@ export type Message = {
   id: string;
   delivered: boolean;
   error: boolean;
+  from: string;
+  type: messageType;
+  targetMessageReply?: ReplyMessage;
+  targetMessageReact?: Map<string, number>;
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -59,6 +83,12 @@ export type Me = {
 };
 
 export type MeStore = Readable<Me>;
+
+enum messageType {
+  message = 1,
+  reply,
+  react,
+}
 
 const _VERBOSE = true;
 export const defaultWoka =
@@ -79,6 +109,7 @@ export class MucRoom {
   private presenceStore: Writable<UserList>;
   private teleportStore: Writable<Teleport>;
   private messageStore: Writable<Message[]>;
+  private messageReactStore: Writable<Map<string, ReactMessage[]>>;
   private meStore: Writable<Me>;
   private nickCount = 0;
   private composingTimeOut: Timeout | undefined;
@@ -95,10 +126,41 @@ export class MucRoom {
   ) {
     this.presenceStore = writable<UserList>(new Map<string, User>());
     this.messageStore = writable<Message[]>(new Array(0));
+    this.messageReactStore = writable<Map<string, ReactMessage[]>>(
+      new Map<string, ReactMessage[]>()
+    );
     this.teleportStore = writable<Teleport>({ state: false, to: null });
     this.meStore = writable<Me>({ isAdmin: false });
     this.lastMessageSeen = new Date();
     this.countMessagesToSee = writable<number>(0);
+
+    //refrech react message
+    this.messageReactStore.subscribe((reacts) => {
+      this.messageStore.update((messages) => {
+        messages.forEach((message, index) => {
+          if (!reacts.has(message.id)) return;
+
+          const reactsByMessage = reacts.get(message.id);
+          message.targetMessageReact = reactsByMessage?.reduce(
+            (list: Map<string, number>, reactMessage) => {
+              if (list.has(reactMessage.emoji)) {
+                const nb =
+                  (list.get(reactMessage.emoji) as number) +
+                  reactMessage.operation * 1;
+                list.set(reactMessage.emoji, nb);
+              } else {
+                list.set(reactMessage.emoji, reactMessage.operation * 1);
+              }
+              return list;
+            },
+            new Map<string, number>()
+          );
+
+          messages[index] = message;
+        });
+        return messages;
+      });
+    });
   }
 
   public getPlayerName() {
@@ -200,7 +262,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messageMucListAllUsers);
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Get all subscribers sent");
+    if (_VERBOSE) console.warn("[XMPP]", "Get all subscribers sent");
   }
 
   private sendPresence() {
@@ -232,7 +294,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messagePresence);
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Presence sent", get(userStore).uuid);
+    if (_VERBOSE) console.warn("[XMPP]", "Presence sent", get(userStore).uuid);
   }
 
   private sendSubscribe() {
@@ -261,7 +323,7 @@ export class MucRoom {
     );
     this.connection.emitXmlMessage(messageMucSubscribe);
     if (_VERBOSE)
-      console.warn("[XMPP]", "[MR]", "Subscribe sent", messageMucSubscribe.toString());
+      console.warn("[XMPP]", "Subscribe sent", messageMucSubscribe.toString());
   }
 
   public rankUp(userJID: string | JID) {
@@ -296,7 +358,7 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Affiliation sent");
+    if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
     this.connection.emitXmlMessage(messageMucAffiliateUser);
   }
 
@@ -309,7 +371,7 @@ export class MucRoom {
       name,
       "Test message de ban"
     );
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Ban user message sent");
+    if (_VERBOSE) console.warn("[XMPP]", ">> Ban user message sent");
   }
 
   public reInitialize() {
@@ -344,7 +406,7 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", ">> Destroy room sent");
+    if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
     this.connection.emitXmlMessage(messageMucDestroy);
   }
 
@@ -362,7 +424,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(messageMucSubscribe);
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Disconnect sent");
+    if (_VERBOSE) console.warn("[XMPP]", "Disconnect sent");
     return messageMucSubscribe;
   }
 
@@ -380,7 +442,7 @@ export class MucRoom {
       })
     );
     this.connection.emitXmlMessage(chatState);
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Chat state sent");
+    if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
   }
 
   public sendMessage(text: string) {
@@ -405,10 +467,130 @@ export class MucRoom {
         id: idMessage,
         delivered: false,
         error: false,
+        from: this.jid,
+        type: messageType.message,
       });
       return messages;
     });
 
+    this.manageResendMessage();
+  }
+
+  public replyMessage(text: string, messageReply: Message) {
+    const idMessage = uuidv4();
+    const messageReplying = xml(
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, text),
+      xml("reply", {
+        to: messageReply.from,
+        id: messageReply.id,
+        xmlns: "urn:xmpp:reply:0",
+        senderName: messageReply.name,
+        body: messageReply.body,
+      })
+    );
+    this.connection.emitXmlMessage(messageReplying);
+
+    this.messageStore.update((messages) => {
+      messages.push({
+        name: this.getPlayerName(),
+        body: text,
+        time: new Date(),
+        id: idMessage,
+        delivered: false,
+        error: false,
+        from: this.jid,
+        type: messageType.reply,
+        targetMessageReply: {
+          id: messageReply.id,
+          senderName: messageReply.name,
+          body: messageReply.body,
+        },
+      });
+      return messages;
+    });
+
+    this.manageResendMessage();
+  }
+
+  public haveSelected(messageId: string, emojiStr: string) {
+    const messages = get(this.messageReactStore).get(messageId);
+    if (!messages) return false;
+
+    return messages.reduce((value, message) => {
+      if (
+        message.emoji == emojiStr &&
+        jid(message.from).getLocal() == jid(this.jid).getLocal()
+      ) {
+        value = message.operation == reactAction.add ? true : false;
+      }
+      return value;
+    }, false);
+  }
+
+  public sendReactMessage(emoji: string, messageReact: Message) {
+    //define action, delete or not
+    let action = reactAction.add;
+    if (this.haveSelected(messageReact.id, emoji)) {
+      action = reactAction.delete;
+    }
+
+    const idMessage = uuidv4();
+    const newReactMessage = {
+      id: idMessage,
+      message: messageReact.id,
+      from: this.jid,
+      emoji,
+      operation: action,
+    };
+
+    const messageReacted = xml(
+      "message",
+      {
+        type: "groupchat",
+        to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+        from: this.jid,
+        id: idMessage,
+      },
+      xml("body", {}, emoji),
+      xml("reaction", {
+        to: messageReact.from,
+        from: this.jid,
+        id: messageReact.id,
+        xmlns: "urn:xmpp:reaction:0",
+        reaction: emoji,
+        action,
+      })
+    );
+    console.log("this.jid", jid(this.jid));
+    this.connection.emitXmlMessage(messageReacted);
+
+    this.messageReactStore.update((reactMessages) => {
+      //create or get list of react message
+      let newReactMessages = new Array<ReactMessage>();
+      if (reactMessages.has(newReactMessage.message)) {
+        newReactMessages = reactMessages.get(
+          newReactMessage.message
+        ) as ReactMessage[];
+      }
+      //check if already exist
+      if (!newReactMessages.find((react) => react.id === newReactMessage.id)) {
+        newReactMessages.push(newReactMessage);
+        reactMessages.set(newReactMessage.message, newReactMessages);
+      }
+      return reactMessages;
+    });
+
+    this.manageResendMessage();
+  }
+
+  private manageResendMessage() {
     this.lastMessageSeen = new Date();
     this.countMessagesToSee.set(0);
 
@@ -423,12 +605,12 @@ export class MucRoom {
         return messages;
       });
     }, 10_000);
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "Message sent");
+    if (_VERBOSE) console.warn("[XMPP]", "Message sent");
   }
 
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
-    if (_VERBOSE) console.warn("[XMPP]", "[MR]", "<< Message received", xml.getName());
+    if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
 
     if (xml.getAttr("type") === "error") {
       if (
@@ -521,10 +703,7 @@ export class MucRoom {
       } else {
         const subscription = xml.getChild("subscribe");
         if (subscription) {
-          const jid =
-            subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
           const nick = subscription.getAttr("nick");
-          this.updateUser(jid, nick, playUri);
           if (nick === this.getPlayerName()) {
             this.sendPresence();
             this.requestAllSubscribers();
@@ -553,30 +732,71 @@ export class MucRoom {
           delay = new Date();
         }
         const body = xml.getChildText("body") ?? "";
-        this.messageStore.update((messages) => {
-          if (messages.find((message) => message.id === idMessage)) {
-            this.countMessagesToSee.set(0);
-            this.lastMessageSeen = new Date();
-            messages = messages.map((message) =>
-              message.id === idMessage
-                ? { ...message, delivered: true }
-                : message
-            );
-          } else {
-            if (delay > this.lastMessageSeen) {
-              this.countMessagesToSee.update((last) => last + 1);
+
+        if (xml.getChild("reaction") != undefined) {
+          //define action, delete or not
+          const newReactMessage = {
+            id: idMessage,
+            message: xml.getChild("reaction")?.getAttr("id"),
+            from: xml.getChild("reaction")?.getAttr("from"),
+            emoji: body,
+            operation: xml.getChild("reaction")?.getAttr("action"),
+          };
+
+          //update list of message
+          this.messageReactStore.update((reactMessages) => {
+            //create or get list of react message
+            let newReactMessages = new Array<ReactMessage>();
+            if (reactMessages.has(newReactMessage.message)) {
+              newReactMessages = reactMessages.get(
+                newReactMessage.message
+              ) as ReactMessage[];
             }
-            messages.push({
-              name,
-              body,
-              time: delay,
-              id: idMessage,
-              delivered: true,
-              error: false,
-            });
-          }
-          return messages;
-        });
+            //check if already exist
+            if (
+              !newReactMessages.find((react) => react.id === newReactMessage.id)
+            ) {
+              newReactMessages.push(newReactMessage);
+              reactMessages.set(newReactMessage.message, newReactMessages);
+            }
+            return reactMessages;
+          });
+        } else {
+          this.messageStore.update((messages) => {
+            if (messages.find((message) => message.id === idMessage)) {
+              this.countMessagesToSee.set(0);
+              this.lastMessageSeen = new Date();
+              messages = messages.map((message) =>
+                message.id === idMessage
+                  ? { ...message, delivered: true }
+                  : message
+              );
+            } else {
+              if (delay > this.lastMessageSeen) {
+                this.countMessagesToSee.update((last) => last + 1);
+              }
+              const message: Message = {
+                name,
+                body,
+                time: delay,
+                id: idMessage,
+                delivered: true,
+                error: false,
+                from: from.toString(),
+                type: xml.getChild("reply")
+                  ? messageType.message
+                  : messageType.reply,
+              };
+              if (xml.getChild("reply") != undefined) {
+                message.targetMessageReply = {
+                  ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                };
+              }
+              messages.push(message);
+            }
+            return messages;
+          });
+        }
         handledMessage = true;
       } else {
         const { jid } = this.getUserDataByName(name);
@@ -598,8 +818,8 @@ export class MucRoom {
     }
 
     if (!handledMessage) {
-      console.warn("[XMPP]", "[MR]", "Unhandled message targeted at the room: ", xml.toString());
-      console.warn("[XMPP]", "[MR]", "Message name : ", xml.getName());
+      console.warn("Unhandled message targeted at the room: ", xml.toString());
+      console.warn("Message name : ", xml.getName());
     }
   }
 
@@ -656,38 +876,35 @@ export class MucRoom {
     isAdmin: boolean | null = null,
     chatState: string | null = null
   ) {
+    let isMe = false;
     const user = get(userStore);
-    if (
-      (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) +
-        "@ejabberd" !==
-        jid &&
-      nick !== this.getPlayerName()
-    ) {
-      this.presenceStore.update((list) => {
-        list.set(jid.toString(), {
-          name: nick ?? this.getCurrentName(jid),
-          playUri: playUri ?? this.getCurrentPlayUri(jid),
-          uuid: uuid ?? this.getCurrentUuid(jid),
-          status: status ?? this.getCurrentStatus(jid),
-          isInSameMap:
-            (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
-          active:
-            (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
-          color: color ?? this.getCurrentColor(jid),
-          woka: woka ?? this.getCurrentWoka(jid),
-          unreads: false,
-          isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
-          chatState: chatState ?? this.getCurrentChatState(jid),
-        });
-        numberPresenceUserStore.set(list.size);
-        return list;
-      });
-    } else {
+    //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
+    if (nick === this.getPlayerName()) {
+      isMe = true;
       this.meStore.update((me) => {
         me.isAdmin = isAdmin ?? this.getMeIsAdmin();
         return me;
       });
     }
+    this.presenceStore.update((list) => {
+      list.set(jid.toString(), {
+        name: nick ?? this.getCurrentName(jid),
+        playUri: playUri ?? this.getCurrentPlayUri(jid),
+        uuid: uuid ?? this.getCurrentUuid(jid),
+        status: status ?? this.getCurrentStatus(jid),
+        isInSameMap: (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
+        active:
+          (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
+        color: color ?? this.getCurrentColor(jid),
+        woka: woka ?? this.getCurrentWoka(jid),
+        unreads: false,
+        isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
+        chatState: chatState ?? this.getCurrentChatState(jid),
+        isMe,
+      });
+      numberPresenceUserStore.set(list.size);
+      return list;
+    });
   }
 
   private deleteUser(jid: string | JID) {

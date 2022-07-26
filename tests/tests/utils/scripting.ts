@@ -50,6 +50,7 @@ export async function getScriptFrame(page: Page) : Promise<Frame> {
 
 async function getFrameWithNoTitle(page: Page) : Promise<Frame | undefined> {
     for (const frame of page.frames()) {
+        await frame.waitForLoadState("domcontentloaded");
         const title = await frame.title();
         if (title === '') {
             return frame;

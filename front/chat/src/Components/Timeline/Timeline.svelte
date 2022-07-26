@@ -5,8 +5,8 @@
   import LL from "../../i18n/i18n-svelte";
   import {
     chatPeerConnectionInProgress,
-    timelineMessagesToSee,
     timelineOpenedStore,
+    timelineMessagesToSee
   } from "../../Stores/ChatStore";
 
   const dispatch = createEventDispatcher();

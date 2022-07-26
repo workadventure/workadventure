@@ -4,7 +4,8 @@
     MoreHorizontalIcon,
     ShieldOffIcon,
     ShieldIcon,
-    SlashIcon, EyeIcon,
+    SlashIcon,
+      EyeIcon
   } from "svelte-feather-icons";
   import LL from "../i18n/i18n-svelte";
   import { createEventDispatcher } from "svelte";
@@ -129,7 +130,9 @@
       {/if}
     </h1>
     <p class="tw-text-xs tw-mb-0 tw-font-condensed">
-      {#if user.active}
+      {#if user.isMe}
+        {$LL.you()}
+      {:else if user.active}
         {user.isInSameMap ? $LL.userList.isHere() : $LL.userList.isOverThere()}
       {:else}
         {$LL.userList.disconnected()}
@@ -145,6 +148,7 @@
     </span>
   {/if}
 
+  {#if user.active && !user.isMe}
     <div class="wa-dropdown">
       <button
         class="tw-text-light-purple focus:outline-none tw-m-0"
@@ -157,12 +161,6 @@
         class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`}
         on:mouseleave={closeChatUserMenu}
       >
-        <span
-                class="wa-dropdown-item tw-text-white"
-                on:click|stopPropagation={() => openChat(jid, user)}
-        ><EyeIcon size="13" /> {$LL.see()}</span
-        >
-        {#if user.active}
         {#if user.isInSameMap}
           <span
             class="wa-dropdown-item"
@@ -212,9 +210,9 @@
             >
           {/if}
         {/if}
-        {/if}
         <!--<span class="wa-dropdown-item" on:click|stopPropagation={() => openChat(user)}> Open Chat </span>
                 <div class="wa-dropdown-item">Delete chat</div>-->
       </div>
     </div>
+  {/if}
 </div>
