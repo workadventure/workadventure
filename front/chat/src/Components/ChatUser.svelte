@@ -129,7 +129,9 @@
       {/if}
     </h1>
     <p class="tw-text-xs tw-mb-0 tw-font-condensed">
-      {#if user.active}
+      {#if user.isMe}
+        {$LL.you()}
+      {:else if user.active}
         {user.isInSameMap ? $LL.userList.isHere() : $LL.userList.isOverThere()}
       {:else}
         {$LL.userList.disconnected()}
@@ -145,7 +147,7 @@
     </span>
   {/if}
 
-  {#if user.active}
+  {#if user.active && !user.isMe}
     <div class="wa-dropdown">
       <button
         class="tw-text-light-purple focus:outline-none tw-m-0"

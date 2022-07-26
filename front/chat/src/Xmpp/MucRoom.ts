@@ -25,6 +25,7 @@ export type User = {
   unreads: boolean;
   isAdmin: boolean;
   chatState: string;
+  isMe: boolean;
 };
 
 export const ChatStates = {
@@ -702,10 +703,7 @@ export class MucRoom {
       } else {
         const subscription = xml.getChild("subscribe");
         if (subscription) {
-          const jid =
-            subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
           const nick = subscription.getAttr("nick");
-          this.updateUser(jid, nick, playUri);
           if (nick === this.getPlayerName()) {
             this.sendPresence();
             this.requestAllSubscribers();
@@ -878,38 +876,35 @@ export class MucRoom {
     isAdmin: boolean | null = null,
     chatState: string | null = null
   ) {
+    let isMe = false;
     const user = get(userStore);
-    if (
-      (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) +
-        "@ejabberd" !==
-        jid &&
-      nick !== this.getPlayerName()
-    ) {
-      this.presenceStore.update((list) => {
-        list.set(jid.toString(), {
-          name: nick ?? this.getCurrentName(jid),
-          playUri: playUri ?? this.getCurrentPlayUri(jid),
-          uuid: uuid ?? this.getCurrentUuid(jid),
-          status: status ?? this.getCurrentStatus(jid),
-          isInSameMap:
-            (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
-          active:
-            (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
-          color: color ?? this.getCurrentColor(jid),
-          woka: woka ?? this.getCurrentWoka(jid),
-          unreads: false,
-          isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
-          chatState: chatState ?? this.getCurrentChatState(jid),
-        });
-        numberPresenceUserStore.set(list.size);
-        return list;
-      });
-    } else {
+    //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
+    if (nick === this.getPlayerName()) {
+      isMe = true;
       this.meStore.update((me) => {
         me.isAdmin = isAdmin ?? this.getMeIsAdmin();
         return me;
       });
     }
+    this.presenceStore.update((list) => {
+      list.set(jid.toString(), {
+        name: nick ?? this.getCurrentName(jid),
+        playUri: playUri ?? this.getCurrentPlayUri(jid),
+        uuid: uuid ?? this.getCurrentUuid(jid),
+        status: status ?? this.getCurrentStatus(jid),
+        isInSameMap: (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
+        active:
+          (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
+        color: color ?? this.getCurrentColor(jid),
+        woka: woka ?? this.getCurrentWoka(jid),
+        unreads: false,
+        isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
+        chatState: chatState ?? this.getCurrentChatState(jid),
+        isMe,
+      });
+      numberPresenceUserStore.set(list.size);
+      return list;
+    });
   }
 
   private deleteUser(jid: string | JID) {
