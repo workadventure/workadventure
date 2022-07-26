@@ -12,13 +12,29 @@ export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
 export const profileAvailable = writable(true);
+export const profileInPorgress = writable(true);
 
+let timeOut: Timeout | null = null;
 menuVisiblilityStore.subscribe((value) => {
     if (userIsConnected && value && IDENTITY_URL != null) {
-        axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
-            profileAvailable.set(false);
-        });
+        if (timeOut) {
+            clearTimeout(timeOut);
+        }
+        profileInPorgress.set(true);
+        timeOut = setTimeout(() => {
+            axios
+                .get(getMeUrl())
+                .then((data) => {
+                    profileAvailable.set(true);
+                    profileInPorgress.set(false);
+                    return data;
+                })
+                .catch((err) => {
+                    console.info("I'm not connected", err);
+                    profileAvailable.set(false);
+                    profileInPorgress.set(false);
+                });
+        }, 1000);
     }
 });
 

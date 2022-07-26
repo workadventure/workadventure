@@ -49,53 +49,18 @@ import {
     QueryMessage,
     AnswerMessage,
     JoinBBBMeetingAnswer,
-    XmppSettingsMessage,
-    XmppConnectionStatusChangeMessage_Status,
     MoveToPositionMessage as MoveToPositionMessageProto,
     EditMapMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { Subject, BehaviorSubject } from "rxjs";
+import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import ElementExt from "../Xmpp/Lib/ElementExt";
-import { Parser } from "@xmpp/xml";
-import { mucRoomsStore } from "../Stores/MucRoomsStore";
 import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
 
-const parse = (data: string): ElementExt | null => {
-    const p = new Parser();
-
-    let result: ElementExt | null = null;
-    let error = null;
-
-    p.on("start", (el) => {
-        result = el;
-    });
-    p.on("element", (el) => {
-        if (!result) {
-            return;
-        }
-        result.append(el);
-    });
-    p.on("error", (err) => {
-        error = err;
-    });
-
-    p.write(data);
-    p.end(data);
-
-    if (error) {
-        throw error;
-    } else {
-        return result;
-    }
-};
-
-// Number of milliseconds after which we consider the server has timed out (if we did not receive a ping)
-const pingTimeout = 20000;
+const manualPingDelay = 20000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -180,18 +145,6 @@ export class RoomConnection implements RoomConnection {
 
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
-
-    private readonly _xmppMessageStream = new Subject<ElementExt>();
-    public readonly xmppMessageStream = this._xmppMessageStream.asObservable();
-
-    // We use a BehaviorSubject for this stream. This will be re-emited to new subscribers in case the connection is established before the settings are listened to.
-    private readonly _xmppSettingsMessageStream = new BehaviorSubject<XmppSettingsMessage | undefined>(undefined);
-    public readonly xmppSettingsMessageStream = this._xmppSettingsMessageStream.asObservable();
-
-    // Question: should this not be a BehaviorSubject?
-    private readonly _xmppConnectionStatusChangeMessageStream = new Subject<XmppConnectionStatusChangeMessage_Status>();
-    public readonly xmppConnectionStatusChangeMessageStream =
-        this._xmppConnectionStatusChangeMessageStream.asObservable();
 
     private readonly _connectionErrorStream = new Subject<CloseEvent>();
     public readonly connectionErrorStream = this._connectionErrorStream.asObservable();
@@ -375,18 +328,9 @@ export class RoomConnection implements RoomConnection {
                                 this._editMapMessageStream.next(message);
                                 break;
                             }
-                            case "xmppMessage": {
-                                const elementExtParsed = parse(subMessage.xmppMessage.stanza);
-
-                                if (elementExtParsed == undefined) {
-                                    console.error("xmppMessage  => data is undefined => ", elementExtParsed);
-                                    break;
-                                }
-                                this._xmppMessageStream.next(elementExtParsed);
-                                break;
-                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                //@ts-ignore
                                 const _exhaustiveCheck: never = subMessage;
                             }
                         }
@@ -562,16 +506,6 @@ export class RoomConnection implements RoomConnection {
                     }
                     break;
                 }
-                case "xmppSettingsMessage": {
-                    this._xmppSettingsMessageStream.next(message.xmppSettingsMessage);
-                    break;
-                }
-                case "xmppConnectionStatusChangeMessage": {
-                    this._xmppConnectionStatusChangeMessageStream.next(
-                        message.xmppConnectionStatusChangeMessage.status
-                    );
-                    break;
-                }
                 case "errorMessage": {
                     this._errorMessageStream.next(message.errorMessage);
                     console.error("An error occurred server side: " + message.errorMessage.message);
@@ -600,9 +534,6 @@ export class RoomConnection implements RoomConnection {
                                 message.moveToPositionMessage.position.y
                             );
                         gameManager.getCurrentGameScene().moveTo(tileIndex);
-                        get(mucRoomsStore).forEach((mucRoom) => {
-                            mucRoom.resetTeleportStore();
-                        });
                     }
                     this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
@@ -626,6 +557,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                    //@ts-ignore
                     const _exhaustiveCheck: never = message;
                 }
             }
@@ -640,7 +572,7 @@ export class RoomConnection implements RoomConnection {
         this.timeout = setTimeout(() => {
             console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
             this.socket.close();
-        }, pingTimeout);
+        }, manualPingDelay);
     }
 
     private sendPong(): void {
@@ -1059,19 +991,6 @@ export class RoomConnection implements RoomConnection {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }
-
-        this.socket.send(bytes);
-    }
-
-    public emitXmlMessage(xml: ElementExt): void {
-        const bytes = ClientToServerMessageTsProto.encode({
-            message: {
-                $case: "xmppMessage",
-                xmppMessage: {
-                    stanza: xml.toString(),
-                },
-            },
-        }).finish();
 
         this.socket.send(bytes);
     }

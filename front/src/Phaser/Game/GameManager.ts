@@ -10,6 +10,7 @@ import { LoginSceneName } from "../Login/LoginScene";
 import { SelectCharacterSceneName } from "../Login/SelectCharacterScene";
 import { GameScene } from "./GameScene";
 import { EmptySceneName } from "../Login/EmptyScene";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 
 /**
  * This class should be responsible for any scene starting/stopping
@@ -128,6 +129,8 @@ export class GameManager {
      */
     leaveGame(targetSceneName: string, sceneClass: Phaser.Scene): void {
         if (this.currentGameSceneName === null) throw new Error("No current scene id set!");
+        gameSceneIsLoadedStore.set(false);
+
         const gameScene: GameScene = this.scenePlugin.get(this.currentGameSceneName) as GameScene;
         gameScene.cleanupClosingScene();
         gameScene.createSuccessorGameScene(false, false);

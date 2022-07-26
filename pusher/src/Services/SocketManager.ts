@@ -42,6 +42,7 @@ import {
     XmppMessage,
     AskPositionMessage,
     EditMapMessage,
+    BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -243,6 +244,7 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
                     if (client.xmppClient) {
+                        console.log("Trying disconnecting from xmppClient");
                         client.xmppClient.close();
                     }
                 })
@@ -710,6 +712,7 @@ export class SocketManager implements ZoneEventListener {
             );
         }
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+        console.log("XMPP Message sent");
     }
 
     handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
@@ -717,6 +720,30 @@ export class SocketManager implements ZoneEventListener {
         pusherToBackMessage.setAskpositionmessage(askPositionMessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleBanUserByUuidMessage(client: ExSocketInterface, banUserByUuidMessage: BanUserByUuidMessage) {
+        try {
+            adminService
+                .banUserByUuid(
+                    banUserByUuidMessage.getUuidtoban(),
+                    banUserByUuidMessage.getPlayuri(),
+                    banUserByUuidMessage.getName(),
+                    banUserByUuidMessage.getMessage(),
+                    banUserByUuidMessage.getByuseremail()
+                )
+                .then(() => {
+                    this.emitBan(
+                        banUserByUuidMessage.getUuidtoban(),
+                        banUserByUuidMessage.getMessage(),
+                        "banned",
+                        banUserByUuidMessage.getPlayuri()
+                    );
+                });
+        } catch (e) {
+            console.error('An error occurred on "handleBanUserByUuidMessage"');
+            console.error(e);
+        }
     }
 }
 

@@ -51,6 +51,9 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
     import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+    import { iframeListener } from "../../Api/IframeListener";
+    import { onDestroy, onMount } from "svelte";
+    import { Unsubscriber, writable } from "svelte/store";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -110,6 +113,10 @@
     }
 
     function toggleChat() {
+        if (!$chatVisibilityStore) {
+            menuVisiblilityStore.set(false);
+            activeSubMenuStore.set(0);
+        }
         chatVisibilityStore.set(!$chatVisibilityStore);
     }
 
@@ -214,6 +221,7 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
+        chatVisibilityStore.set(false);
     }
 
     function showMenu() {
@@ -231,6 +239,7 @@
         }
         activeSubMenuStore.set(indexInviteMenu);
         menuVisiblilityStore.set(true);
+        chatVisibilityStore.set(false);
     }
 
     function register() {
@@ -240,6 +249,16 @@
     function noDrag() {
         return false;
     }
+
+    let subscribers = new Array<Unsubscriber>();
+    let totalMessagesToSee = writable<number>(0);
+    onMount(() => {
+        iframeListener.chatTotalMessagesToSeeStream.subscribe((total) => totalMessagesToSee.set(total));
+    });
+
+    onDestroy(() => {
+        return subscribers.map((subscriber) => subscriber());
+    });
 
     const isMobile = isMediaBreakpointUp("md");
 </script>
@@ -401,10 +420,18 @@
                     {/if}
                 {/if}
 
-                <div on:click={() => analyticsClient.openedChat()} on:click={toggleChat} class="bottom-action-button">
+                <div
+                    on:click={() => analyticsClient.openedChat()}
+                    on:click={toggleChat}
+                    class="bottom-action-button tw-relative"
+                >
                     <button class:border-top-light={$chatVisibilityStore}>
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
+                    {#if $totalMessagesToSee > 0}<span
+                            class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
+                            >{$totalMessagesToSee}</span
+                        >{/if}
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">

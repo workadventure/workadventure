@@ -45,6 +45,7 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -55,16 +56,41 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
+      DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
       OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
+      CHAT_URL: //chat.workadventure.localhost
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
+
+  chat:
+    image: thecodingmachine/nodejs:16
+    container_name: chat
+    command: yarn run start
+    environment:
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
+      PUSHER_URL: //pusher.workadventure.localhost
+    volumes:
+      - ./front/chat:/usr/src/app
+      - ./libs:/usr/src/libs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=8080"
+      - "traefik.http.routers.chat-ssl.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
     image: thecodingmachine/nodejs:16

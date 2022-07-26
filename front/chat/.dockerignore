@@ -1,0 +1,4 @@
+/node_modules/
+/dist/bundle.js
+/yarn-error.log
+/Dockerfile
