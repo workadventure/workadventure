@@ -430,7 +430,6 @@ export class MucRoom {
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
     if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
-    if (_VERBOSE) console.warn("[XMPP]", xml.toString());
 
     if (xml.getAttr("type") === "error") {
       if (
@@ -523,9 +522,7 @@ export class MucRoom {
       } else {
         const subscription = xml.getChild("subscribe");
         if (subscription) {
-          //const jid = subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
           const nick = subscription.getAttr("nick");
-          //this.updateUser(jid, nick, playUri);
           if (nick === this.getPlayerName()) {
             this.sendPresence();
             this.requestAllSubscribers();
@@ -659,7 +656,6 @@ export class MucRoom {
   ) {
     let isMe = false;
     const user = get(userStore);
-    console.log("'", jid.toString(), "'");
     //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
     if (nick === this.getPlayerName()) {
       isMe = true;
