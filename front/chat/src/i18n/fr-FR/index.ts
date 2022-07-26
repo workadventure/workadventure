@@ -71,6 +71,8 @@ const fr_FR: Translation = {
     notFound: "Aucun emoji trouvé",
   },
   said: "dit :",
+  reply: "Répondre",
+  react: "Réagir",
 };
 
 export default fr_FR;
