@@ -20,6 +20,7 @@ const en_US: BaseTranslation = {
   usersOnline: "users online",
   open: "Open",
   me: "Me",
+  you: "You",
   ban: {
     title: "Banish",
     content:

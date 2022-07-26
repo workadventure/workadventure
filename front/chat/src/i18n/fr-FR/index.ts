@@ -21,6 +21,7 @@ const fr_FR: Translation = {
   usersOnline: "utilisateurs en ligne",
   open: "Ouvrir",
   me: "Moi",
+  you: "Vous",
   ban: {
     title: "Bannir",
     content:
