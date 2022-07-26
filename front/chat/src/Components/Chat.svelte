@@ -118,27 +118,6 @@
     }
   });
 
-  function handleGoTo(mucRoom: MucRoom | undefined, event: GoTo) {
-    if (mucRoom) {
-      mucRoom.goTo(event.type, event.playUri, event.type);
-    }
-  }
-  function handleRankUp(mucRoom: MucRoom | undefined, event: RankUp) {
-    if (mucRoom) {
-      mucRoom.rankUp(event.jid);
-    }
-  }
-  function handleRankDown(mucRoom: MucRoom | undefined, event: RankDown) {
-    if (mucRoom) {
-      mucRoom.rankDown(event.jid);
-    }
-  }
-  function handleBan(mucRoom: MucRoom | undefined, event: Ban) {
-    if (mucRoom) {
-      mucRoom.ban(event.user, event.name, event.playUri);
-    }
-  }
-
   console.log("Chat fully loaded");
 </script>
 
