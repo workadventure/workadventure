@@ -20,7 +20,10 @@
     class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
     transition:fly={{ y: -30, duration: 100 }}
   >
-    <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+    <div
+      class="tw-px-4 tw-py-1 tw-flex tw-items-center tw-cursor-pointer"
+      on:click|stopPropagation={() => dispatch("showLives")}
+    >
       <span
         class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
       >
@@ -29,10 +32,7 @@
       <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
         Live zones
       </p>
-      <button
-        class="tw-text-lighter-purple"
-        on:click={() => dispatch("showLives")}
-      >
+      <button class="tw-text-lighter-purple">
         <ChevronUpIcon
           class={`tw-transform tw-transition ${
             showLives ? "" : "tw-rotate-180"
