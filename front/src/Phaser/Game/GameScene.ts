@@ -1314,7 +1314,7 @@ ${escapedMessage}
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
-                openCoWebsite.closable ?? true
+                openCoWebsite.closable
             );
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
