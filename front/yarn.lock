@@ -611,7 +611,7 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.0.1.tgz#549ce746c163d0869a61cfdabafe625a13ab5d0f"
   integrity sha512-zKVyTt6rELvPXYwcVPTJcPFtY0AckN5A7xWuc7owBqR0FdtuDYhE9MZZUi6IY1kZUQFSXV1B3UOOIyLkVHYd2w==
 
-"@workadventure/map-editor-commands@link:../libs/map-editor-commands":
+"@workadventure/map-editor-types@link:../libs/map-editor-types":
   version "0.0.0"
   uid ""
 

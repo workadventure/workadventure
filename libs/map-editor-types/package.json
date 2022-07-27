@@ -1,5 +1,5 @@
 {
-  "name": "@workadventure/map-editor-commands",
+  "name": "@workadventure/map-editor-types",
   "version": "1.0.0",
   "description": "Map Editor commands types",
   "main": "src/index.js",
@@ -8,6 +8,9 @@
   },
   "author": "WorkAdventure",
   "license": "ISC",
+  "dependencies": {
+    "@workadventure/tiled-map-type-guard": "^2.0.4"
+  },
   "files": [
     "src"
   ]

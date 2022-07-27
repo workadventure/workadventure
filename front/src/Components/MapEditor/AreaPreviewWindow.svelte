@@ -3,9 +3,9 @@
     import { onDestroy } from "svelte";
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
-    import { ITiledMapRectangleObject } from "../../Phaser/Game/GameMap";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CommandType } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;
@@ -14,11 +14,9 @@
     const gameScene = gameManager.getCurrentGameScene();
 
     mapEditorSelectedAreaPreviewStoreUnsubscriber = mapEditorSelectedAreaPreviewStore.subscribe((preview) => {
-        console.log("AREA PREVIEW STORE UPDATE");
         areaPreview = preview;
         if (preview) {
             areaData = { ...preview.getConfig() };
-            // areaData = preview.getConfig();
         }
     });
 
@@ -33,13 +31,12 @@
     }
 
     function updatePreview() {
-        if (!areaData || !areaPreview) {
+        if (!areaData) {
             return;
         }
-        console.log(areaPreview.getConfig().x);
         gameScene
             .getMapEditorModeManager()
-            .executeCommand(CommandType.UpdateAreaCommand, { areaPreview, config: areaData });
+            .executeCommand(CommandType.UpdateAreaCommand, { config: areaData });
     }
 
     onDestroy(() => {

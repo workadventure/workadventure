@@ -50,7 +50,7 @@
     "@ungap/structured-clone": "^1.0.1",
     "@workadventure/tiled-map-type-guard": "^2.0.4",
     "@workadventure/tailwind": "link:../libs/tailwind",
-    "@workadventure/map-editor-commands": "link:../libs/map-editor-commands",
+    "@workadventure/map-editor-types": "link:../libs/map-editor-types",
     "@xmpp/component": "^0.13.1",
     "@xmpp/jid": "^0.13.1",
     "@xmpp/xml": "^0.13.1",

@@ -12,6 +12,7 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { PathTileType } from "../../Utils/PathfindingManager";
+import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,
@@ -33,7 +34,6 @@ export enum AreaType {
     Static = "Static",
     Dynamic = "Dynamic",
 }
-export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.

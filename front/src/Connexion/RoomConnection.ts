@@ -58,7 +58,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
-import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
+import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 
 const manualPingDelay = 20000;
 
