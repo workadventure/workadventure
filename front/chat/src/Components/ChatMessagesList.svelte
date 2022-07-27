@@ -29,11 +29,13 @@
     selectedMessageToReply,
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  import {SingleRoom} from "../Xmpp/SingleRoom";
+  import UsersList from "./UsersList.svelte";
 
-  export let mucRoom: MucRoom;
+  export let room: MucRoom | SingleRoom;
 
-  $: unreads = mucRoom.getCountMessagesToSee();
-  $: messagesStore = mucRoom.getMessagesStore();
+  $: unreads = room.getCountMessagesToSee();
+  $: messagesStore = room.getMessagesStore();
 
   let lastDate: Date;
   let isScrolledDown = false;
@@ -62,7 +64,7 @@
     }
   }
   function isMe(name: string) {
-    return name === mucRoom.getPlayerName();
+    return name === room.getPlayerName();
   }
 
   function findUserInDefault(name: string): User | UserData | undefined {
@@ -96,14 +98,18 @@
   }
 
   export const scrollDown = () => {
-    setTimeout(() => {
-      messagesList.scroll(0, messagesList.scrollHeight);
-    }, 0);
+    if(messagesList) {
+      setTimeout(() => {
+        if(messagesList){
+          messagesList.scroll(0, messagesList.scrollHeight);
+        }
+      }, 0);
+    }
   };
 
   const scrollDownAndRead = () => {
-    mucRoom.lastMessageSeen = new Date();
-    mucRoom.getCountMessagesToSee().set(0);
+    room.lastMessageSeen = new Date();
+    room.getCountMessagesToSee().set(0);
     scrollDown();
   };
 
@@ -117,8 +123,8 @@
     ) {
       isScrolledDown = true;
       if ($unreads > 0) {
-        mucRoom.lastMessageSeen = new Date();
-        mucRoom.getCountMessagesToSee().set(0);
+        room.lastMessageSeen = new Date();
+        room.getCountMessagesToSee().set(0);
       }
     } else {
       isScrolledDown = false;
@@ -139,7 +145,7 @@
     messagesList.addEventListener("scroll", scrollEvent);
 
     subscribers.push(
-      mucRoom.getMessagesStore().subscribe(() => {
+      room.getMessagesStore().subscribe(() => {
         if (isScrolledDown) {
           scrollDownAndRead();
         }
@@ -152,7 +158,7 @@
     } else {
       const message = [...$messagesStore]
         .reverse()
-        .find((message) => message.time < mucRoom.lastMessageSeen);
+        .find((message) => message.time < room.lastMessageSeen);
       if (message) {
         const messageElement = document.getElementById(`message_${message.id}`);
         if (messageElement) {
@@ -204,7 +210,7 @@
       if (!$selectedMessageToReact) {
         return;
       }
-      mucRoom.sendReactMessage(emoji, $selectedMessageToReact);
+      room.sendReactMessage(emoji, $selectedMessageToReact);
       selectedMessageToReact.set(null);
     });
     picker.on("hidden", () => {
@@ -217,7 +223,7 @@
     subscribers.forEach((subscriber) => subscriber());
   });
 
-  $: usersStore = mucRoom.getPresenceStore();
+  $: usersStore = room instanceof MucRoom?room.getPresenceStore():null;
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
@@ -330,11 +336,11 @@
                     {#each [...message.targetMessageReact.keys()] as emojiStr}
                       {#if message.targetMessageReact.get(emojiStr)}
                         <span
-                          class={mucRoom.haveSelected(message.id, emojiStr)
+                          class={room.haveSelected(message.id, emojiStr)
                             ? "active"
                             : ""}
                           on:click={() =>
-                            mucRoom.sendReactMessage(emojiStr, message)}
+                            room.sendReactMessage(emojiStr, message)}
                         >
                           {emojiStr}
                           {message.targetMessageReact.get(emojiStr)}
@@ -429,7 +435,7 @@
                 <span
                   class="wa-dropdown-item"
                   on:click={() =>
-                    mucRoom.sendBack(message.id) &&
+                    room.sendBack(message.id) &&
                     document
                       .getElementById(`error_${message.id}`)
                       ?.classList.add("tw-invisible")}
@@ -440,7 +446,7 @@
                 <span
                   class="wa-dropdown-item tw-text-pop-red"
                   on:click={() =>
-                    mucRoom.deleteMessage(message.id) &&
+                    room.deleteMessage(message.id) &&
                     document
                       .getElementById(`error_${message.id}`)
                       ?.classList.add("tw-invisible")}
@@ -454,6 +460,7 @@
         </div>
       </div>
     {/each}
+    {#if $usersStore instanceof UsersList}
     {#each [...$usersStore].filter(([, userFilter]) => userFilter.chatState === ChatStates.COMPOSING) as [nb, user]}
       <div class={`tw-mt-2`} id={`user-line-${nb}`}>
         <div class={`tw-flex tw-justify-start`}>
@@ -494,6 +501,7 @@
         </div>
       </div>
     {/each}
+      {/if}
     {#if $unreads > 0}
       <div
         class="tw-w-full tw-fixed tw-left-0 tw-bottom-14 tw-animate-bounce tw-cursor-pointer"

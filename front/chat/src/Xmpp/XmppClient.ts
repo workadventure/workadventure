@@ -13,7 +13,7 @@ import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
 
 export class XmppClient {
-  private jid: string | undefined;
+  public jid: string | undefined;
   private conferenceDomain: string | undefined;
   private subscriptions = new Map<string, Subject<ElementExt>>();
   private rooms = new Map<string, MucRoom>();

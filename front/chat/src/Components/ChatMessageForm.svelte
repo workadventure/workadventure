@@ -9,8 +9,9 @@
   import { UserData } from "../Messages/JsonMessages/ChatData";
   import { userStore } from "../Stores/LocalUserStore";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
+  import {SingleRoom} from "../Xmpp/SingleRoom";
 
-  export let mucRoom: MucRoom;
+  export let room: MucRoom | SingleRoom;
 
   const dispatch = createEventDispatcher();
 
@@ -40,15 +41,17 @@
       sendReplyMessage();
       return false;
     }
-    mucRoom.updateComposingState(ChatStates.PAUSED);
-    mucRoom.sendMessage(newMessageText);
+    if(room instanceof MucRoom){
+      room.updateComposingState(ChatStates.PAUSED);
+    }
+    room.sendMessage(newMessageText);
     newMessageText = "";
     dispatch("scrollDown");
     return false;
   }
 
   function isMe(name: string) {
-    return name === mucRoom.getPlayerName();
+    return name === room.getPlayerName();
   }
 
   function findUserInDefault(name: string): User | UserData | undefined {
@@ -79,8 +82,10 @@
       newMessageText.replace(/\s/g, "").length === 0
     )
       return;
-    mucRoom.updateComposingState(ChatStates.PAUSED);
-    mucRoom.replyMessage(newMessageText, $selectedMessageToReply);
+    if(room instanceof MucRoom) {
+      room.updateComposingState(ChatStates.PAUSED);
+    }
+    room.replyMessage(newMessageText, $selectedMessageToReply);
     selectedMessageToReply.set(null);
     newMessageText = "";
     dispatch("scrollDown");
@@ -207,7 +212,9 @@
           }}
           on:keypress={() => {
             adjustHeight();
-            mucRoom.updateComposingState(ChatStates.COMPOSING);
+            if(room instanceof MucRoom){
+              room.updateComposingState(ChatStates.COMPOSING);
+            }
             return true;
           }}
           rows="1"
