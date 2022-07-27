@@ -29,6 +29,7 @@
     selectedMessageToReply,
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  import { HtmlUtils } from "../Utils/HtmlUtils";
 
   export let mucRoom: MucRoom;
 
@@ -217,6 +218,11 @@
     subscribers.forEach((subscriber) => subscriber());
   });
 
+  const chatStyleLink = "text-decoration: underline;";
+  function urlifyText(text: string): string {
+    return HtmlUtils.urlify(text, chatStyleLink);
+  }
+
   $: usersStore = mucRoom.getPresenceStore();
 </script>
 
@@ -323,7 +329,7 @@
                 class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
               >
                 <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-                  {message.body}
+                  {@html urlifyText(message.body)}
                 </p>
                 {#if message.targetMessageReact}
                   <div class="emojis">
