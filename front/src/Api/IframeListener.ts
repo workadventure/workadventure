@@ -426,6 +426,7 @@ class IframeListener {
             // We are putting a sandbox on this script because it will run in the same domain as the main website.
             iframe.sandbox.add("allow-scripts");
             iframe.sandbox.add("allow-top-navigation-by-user-activation");
+            iframe.sandbox.add("allow-same-origin");
 
             //iframe.src = "data:text/html;charset=utf-8," + escape(html);
             iframe.srcdoc =

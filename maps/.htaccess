@@ -1,1 +1,3 @@
-Header set Access-Control-Allow-Origin "*"
+Header add Access-Control-Allow-Origin "http://play.workadventure.localhost"
+Header add Access-Control-Allow-Methods: "GET,POST,OPTIONS,DELETE,PUT"
+Header add Access-Control-Allow-Headers: "*"
