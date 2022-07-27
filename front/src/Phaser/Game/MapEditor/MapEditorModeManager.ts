@@ -7,6 +7,8 @@ import { Command } from "./Commands/Command";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import { MapEditorTool } from "./Tools/MapEditorTool";
 
+import { example, MyExampleType } from "@workadventure/map-editor-commands"
+
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
 }
@@ -67,6 +69,13 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
+
+        console.log(example());
+
+        const dd: MyExampleType = {
+            example: "ddd",
+            type: "eee",
+        }
     }
 
     public executeCommand(type: CommandType, payload: CommandPayload): void {

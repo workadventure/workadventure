@@ -201,6 +201,7 @@ services:
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
     volumes:
       - ./map-storage:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
