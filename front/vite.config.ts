@@ -27,8 +27,6 @@ export default defineConfig({
                 "UPLOADER_URL",
                 "ADMIN_URL",
                 "CONTACT_URL",
-                "PROFILE_URL",
-                "IDENTITY_URL",
                 "ICON_URL",
                 "DEBUG_MODE",
                 "STUN_SERVER",
@@ -47,6 +45,7 @@ export default defineConfig({
                 "NODE_ENV",
                 "DISABLE_ANONYMOUS",
                 "OPID_LOGIN_SCREEN_PROVIDER",
+                "OPID_PROFILE_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
                 "CHAT_URL"
             ],
