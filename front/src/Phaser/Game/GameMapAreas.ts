@@ -256,7 +256,7 @@ export class GameMapAreas {
 
     private getAreasOnPosition(
         position?: { x: number; y: number },
-        offsetY: number = 0,
+        offsetY = 0,
         areaType?: AreaType
     ): ITiledMapRectangleObject[] {
         if (!position) {
