@@ -204,6 +204,12 @@
         &::-webkit-scrollbar {
             display: none;
         }
+        p a{
+            @apply tw-text-light-blue;
+            &:hover {
+                opacity: 0.8;
+            }
+        }
     }
 
     .wa-message-bg {
