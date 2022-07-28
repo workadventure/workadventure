@@ -1,3 +1,5 @@
+import {ICON_URL} from "../Enum/EnvironmentVariable";
+
 export class HtmlUtils {
   public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
     const elem = document.getElementById(id);
@@ -51,13 +53,19 @@ export class HtmlUtils {
     return text
       .replace(urlRegex, (url: string) => {
         url = HtmlUtils.htmlDecode(url);
+        const linkWrapper = document.createElement("span");
+        linkWrapper.classList.add('nice-a')
+        const favicon = document.createElement("img");
+        favicon.src = `${ICON_URL}/icon?url=${url}&size=64..96..256&fallback_icon_color=14304c`;
         const link = document.createElement("a");
         link.href = url;
         link.target = "_blank";
-        const text = document.createTextNode(url);
+        const text = document.createTextNode(url.replace('http://', '').replace('https://', ''));
         link.appendChild(text);
         link.setAttribute("style", style);
-        return link.outerHTML;
+        link.prepend(favicon);
+        linkWrapper.appendChild(link);
+        return linkWrapper.outerHTML;
       })
       .replace(emojiRegex, (emoji: string) => {
         emoji = HtmlUtils.htmlDecode(emoji);

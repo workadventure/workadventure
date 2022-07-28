@@ -23,6 +23,7 @@ export default defineConfig({
             variables: [
                 "PUSHER_URL",
                 "FALLBACK_LOCALE",
+                "ICON_URL"
             ],
         }),
         pluginRewriteAll(),

@@ -79,6 +79,8 @@ services:
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
+      ICON_URL: http://icon.workadventure.localhost
+      EJABBERD_DOMAIN: ejabberd
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs

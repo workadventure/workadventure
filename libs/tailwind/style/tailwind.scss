@@ -204,10 +204,22 @@
         &::-webkit-scrollbar {
             display: none;
         }
-        p a{
-            @apply tw-text-light-blue;
-            &:hover {
-                opacity: 0.8;
+
+        p span.nice-a{
+            @apply tw-whitespace-pre-line tw-break-words;
+            max-width: 100%;
+            a {
+                img{
+                    @apply tw-mr-1;
+                    max-width: 20px;
+                    max-height: 20px;
+                    display: inline-block;
+                }
+                @apply tw-text-light-blue;
+                max-width: calc(100% - 25px - 0.25rem);
+                &:hover {
+                    opacity: 0.8;
+                }
             }
         }
     }
