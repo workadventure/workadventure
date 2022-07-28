@@ -2546,7 +2546,7 @@ ${escapedMessage}
         return this.activatablesManager;
     }
 
-    public isMapEditorEnabled() {
-        return ENABLE_FEATURE_MAP_EDITOR;
+    public isMapEditorEnabled(): boolean {
+        return ENABLE_FEATURE_MAP_EDITOR && connectionManager.currentRoom?.canEditMap === true;
     }
 }

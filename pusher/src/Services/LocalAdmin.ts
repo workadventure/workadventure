@@ -42,9 +42,11 @@ class LocalAdmin implements AdminInterface {
         }
 
         let mapUrl = "";
+        let canEdit = false;
         let match = /\/~\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (match) {
             mapUrl = roomUrl.protocol + "//" + "localhost:3000/" + match[1];
+            canEdit = true;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
             if (!match) {
@@ -55,6 +57,7 @@ class LocalAdmin implements AdminInterface {
 
         return Promise.resolve({
             mapUrl,
+            canEdit,
             authenticationMandatory: DISABLE_ANONYMOUS,
             contactPage: null,
             mucRooms: null,

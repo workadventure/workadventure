@@ -591,9 +591,11 @@ export class GameRoom {
             const roomUrlObj = new URL(roomUrl);
 
             let mapUrl = "";
+            let canEdit = false;
             const match = /\/~\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
             if (match) {
                 mapUrl = "http://localhost:3000/maps/map.json";
+                canEdit = true;
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
                 if (!match) {
@@ -605,6 +607,7 @@ export class GameRoom {
             }
             return {
                 mapUrl,
+                canEdit,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,

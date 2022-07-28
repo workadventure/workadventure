@@ -41,7 +41,7 @@ export class AreaEditorTool extends MapEditorTool {
                     const data = message.message.modifyAreaMessage;
                     this.areaPreviews
                         .find((area) => area.getConfig().id === data.id)
-                        ?.updatePreview(data as ITiledMapRectangleObject, false);
+                        ?.updatePreview(data as ITiledMapRectangleObject);
                     this.scene.getGameMap().updateAreaById(data.id, AreaType.Static, data);
                     this.scene.markDirty();
                 }
