@@ -40,7 +40,8 @@ export class User implements Movable {
         public readonly characterLayers: CharacterLayer[],
         public readonly companion?: CompanionMessage,
         private outlineColor?: number,
-        private voiceIndicatorShown?: boolean
+        private voiceIndicatorShown?: boolean,
+        public readonly activatedInviteUser?: boolean
     ) {
         this.listenedZones = new Set<Zone>();
 

@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const report: NonNullable<Translation["report"]> = {
+const report: DeepPartial<Translation["report"]> = {
     block: {
         title: "Bloquer",
         content: "Bloquer toute communication en provenance et à destination de {userName}. Cela peut être annulé.",

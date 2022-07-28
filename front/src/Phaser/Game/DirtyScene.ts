@@ -9,10 +9,10 @@ import { SKIP_RENDER_OPTIMIZATIONS } from "../../Enum/EnvironmentVariable";
  * A scene that can track its dirty/pristine state.
  */
 export abstract class DirtyScene extends ResizableScene {
-    private isAlreadyTracking: boolean = false;
-    protected dirty: boolean = true;
-    private objectListChanged: boolean = true;
-    private physicsEnabled: boolean = false;
+    private isAlreadyTracking = false;
+    protected dirty = true;
+    private objectListChanged = true;
+    private physicsEnabled = false;
 
     /**
      * Track all objects added to the scene and adds a callback each time an animation is added.

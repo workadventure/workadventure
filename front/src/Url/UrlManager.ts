@@ -84,6 +84,10 @@ class UrlManager {
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
     }
+
+    getPlayUri(): string {
+        return document.location.toString();
+    }
 }
 
 export const urlManager = new UrlManager();

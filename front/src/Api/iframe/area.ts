@@ -1,6 +1,6 @@
 import { Subject } from "rxjs";
 import { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
-import { CreateAreaEvent, ModifyAreaEvent } from "../Events/CreateAreaEvent";
+import { CreateAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
 import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
@@ -24,6 +24,13 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         }),
     ];
 
+    /**
+     * Create a new Area object (currently limited to rectangular shapes).
+     * {@link https://workadventu.re/map-building/api-room.md#create-area | Website documentation}
+     *
+     * @param {{name: string, x: number, y: number, width: number, height: number}} createAreaEvent Define the name, position and size of the area
+     * @returns {Area} Area object
+     */
     create(createAreaEvent: CreateAreaEvent): Area {
         void queryWorkadventure({
             type: "createArea",
@@ -32,6 +39,13 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return new Area(createAreaEvent);
     }
 
+    /**
+     * Get an existing Area object.
+     * {@link https://workadventu.re/map-building/api-room.md#get-an-area | Website documentation}
+     *
+     * @param {string} name Name of the area searched
+     * @returns {Area} Area found
+     */
     async get(name: string): Promise<Area> {
         const areaEvent = await queryWorkadventure({
             type: "getArea",
@@ -41,6 +55,13 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return new Area(areaEvent);
     }
 
+    /**
+     * Delete Area by it's name.
+     * {@link https://workadventu.re/map-building/api-room.md#delete-area | Website documentation}
+     *
+     * @param {string} name Area name
+     * @returns {Promise<void>} Promise resolved when the removing is finished
+     */
     async delete(name: string): Promise<void> {
         await queryWorkadventure({
             type: "deleteArea",
@@ -50,13 +71,13 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         leaveAreaStreams.delete(name);
     }
 
-    modify(modifyAreaEvent: ModifyAreaEvent): void {
-        void queryWorkadventure({
-            type: "modifyArea",
-            data: modifyAreaEvent,
-        });
-    }
-
+    /**
+     * Listens to the position of the current user. The event is triggered when the user enters a given area.
+     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     *
+     * @param {string} areaName Area name
+     * @returns {Subject<void>} An observable fired when someone enters the area
+     */
     onEnter(areaName: string): Subject<void> {
         let subject = enterAreaStreams.get(areaName);
         if (subject === undefined) {
@@ -67,6 +88,13 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
         return subject;
     }
 
+    /**
+     * Listens to the position of the current user. The event is triggered when the user leaves a given area.
+     * {@link https://workadventu.re/map-building/api-room.md#detecting-when-the-user-entersleaves-an-area | Website documentation}
+     *
+     * @param {string} areaName Area name
+     * @returns {Subject<void>} An observable fired when someone leaves the area
+     */
     onLeave(areaName: string): Subject<void> {
         let subject = leaveAreaStreams.get(areaName);
         if (subject === undefined) {

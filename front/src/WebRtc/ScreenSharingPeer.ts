@@ -15,9 +15,9 @@ export class ScreenSharingPeer extends Peer {
     /**
      * Whether this connection is currently receiving a video stream from a remote user.
      */
-    private isReceivingStream: boolean = false;
-    public toClose: boolean = false;
-    public _connected: boolean = false;
+    private isReceivingStream = false;
+    public toClose = false;
+    public _connected = false;
     public readonly userId: number;
     public readonly uniqueId: string;
     public readonly streamStore: Readable<MediaStream | null>;

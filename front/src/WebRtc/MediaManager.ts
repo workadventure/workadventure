@@ -7,7 +7,13 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
+import {
+    myCameraApiBlockedStore,
+    myCameraStore,
+    myMicrophoneBlockedStore,
+    myMicrophoneStore,
+    proximityMeetingStore,
+} from "../Stores/MyCameraStoreVisibility";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -81,12 +87,32 @@ export class MediaManager {
             });
     }
 
-    public showMyCamera(): void {
-        myCameraVisibilityStore.set(true);
+    public enableMyCamera(): void {
+        if (!get(myCameraApiBlockedStore)) {
+            myCameraStore.set(true);
+        }
     }
 
-    public hideMyCamera(): void {
-        myCameraVisibilityStore.set(false);
+    public disableMyCamera(): void {
+        myCameraStore.set(false);
+    }
+
+    public enableMyMicrophone(): void {
+        if (!get(myMicrophoneBlockedStore)) {
+            myMicrophoneStore.set(true);
+        }
+    }
+
+    public disableMyMicrophone(): void {
+        myMicrophoneStore.set(false);
+    }
+
+    public enableProximityMeeting(): void {
+        proximityMeetingStore.set(true);
+    }
+
+    public disableProximityMeeting(): void {
+        proximityMeetingStore.set(false);
     }
 
     private getScreenSharingId(userId: string): string {
@@ -190,9 +216,9 @@ export class MediaManager {
 
         if (this.hasNotification()) {
             const options = {
-                icon: "/resources/logos/logo-WA-min.png",
-                image: "/resources/logos/logo-WA-min.png",
-                badge: "/resources/logos/logo-WA-min.png",
+                icon: "/static/images/logo-WA-min.png",
+                image: "/static/images/logo-WA-min.png",
+                badge: "/static/images/logo-WA-min.png",
             };
             switch (notificationType) {
                 case NotificationType.discussion:
@@ -215,7 +241,6 @@ export class MediaManager {
             (elementAudioNewMessageNotification as HTMLAudioElement)
                 .play()
                 .then(() => {
-                    console.log("elementAudioNewMessageNotification => played");
                     this.canPlayNotificationMessage = false;
                     return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
                 })

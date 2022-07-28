@@ -4,15 +4,15 @@ import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import CancelablePromise from "cancelable-promise";
 import Texture = Phaser.Textures.Texture;
 
-const TextName: string = "Loading...";
+const TextName = "Loading...";
 
-const loadingBarHeight: number = 16;
-const padding: number = 5;
+const loadingBarHeight = 16;
+const padding = 5;
 
 export class Loader {
     private progressContainer!: Phaser.GameObjects.Graphics;
     private progress!: Phaser.GameObjects.Graphics;
-    private progressAmount: number = 0;
+    private progressAmount = 0;
     private logo: Phaser.GameObjects.Image | undefined;
     private logoPoweredBy: Phaser.GameObjects.Image | undefined;
     private poweredByLogo: Phaser.GameObjects.Image | undefined;

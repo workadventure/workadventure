@@ -19,10 +19,10 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    XmppMessage,
     AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
+    PingMessage,
     EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
@@ -77,6 +77,7 @@ interface UpgradeData {
         left: number;
     };
     mucRooms: Array<MucRoomDefinitionInterface> | undefined;
+    activatedInviteUser: boolean | undefined;
 }
 
 interface UpgradeFailedInvalidData {
@@ -87,6 +88,7 @@ interface UpgradeFailedInvalidData {
 }
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+//eslint-disable-next-line @typescript-eslint/no-var-requires
 const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
@@ -97,8 +99,13 @@ interface UpgradeFailedErrorData {
 
 type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
+// Maximum time to wait for a pong answer to a ping before closing connection.
+// Note: PONG_TIMEOUT must be less than PING_INTERVAL
+const PONG_TIMEOUT = 10000;
+const PING_INTERVAL = 15000;
+
 export class IoSocketController {
-    private nextUserId: number = 1;
+    private nextUserId = 1;
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -107,7 +114,7 @@ export class IoSocketController {
         }
     }
 
-    adminRoomSocket() {
+    adminRoomSocket(): void {
         this.app.ws("/admin/rooms", {
             upgrade: (res, req, context) => {
                 const websocketKey = req.getHeader("sec-websocket-key");
@@ -235,16 +242,15 @@ export class IoSocketController {
         });
     }
 
-    ioConnection() {
+    ioConnection(): void {
         this.app.ws("/room", {
             /* Options */
             //compression: uWS.SHARED_COMPRESSOR,
             idleTimeout: SOCKET_IDLE_TIMER,
             maxPayloadLength: 16 * 1024 * 1024,
             maxBackpressure: 65536, // Maximum 64kB of data in the buffer.
-            //idleTimeout: 10,
             upgrade: (res, req, context) => {
-                (async () => {
+                (async (): Promise<void> => {
                     /* Keep track of abortions */
                     const upgradeAborted = { aborted: false };
 
@@ -352,6 +358,7 @@ export class IoSocketController {
                             jabberId: null,
                             jabberPassword: null,
                             mucRooms: [],
+                            activatedInviteUser: true,
                         };
 
                         let characterLayerObjs: WokaDetail[];
@@ -458,6 +465,7 @@ export class IoSocketController {
                                 jabberId: userData.jabberId,
                                 jabberPassword: userData.jabberPassword,
                                 mucRooms: userData.mucRooms,
+                                activatedInviteUser: userData.activatedInviteUser,
                                 position: {
                                     x: x,
                                     y: y,
@@ -555,6 +563,26 @@ export class IoSocketController {
                         }
                     });
                 }
+
+                const pingMessage = new PingMessage();
+                const pingSubMessage = new SubMessage();
+                pingSubMessage.setPingmessage(pingMessage);
+
+                client.pingIntervalId = setInterval(() => {
+                    client.emitInBatch(pingSubMessage);
+
+                    if (client.pongTimeoutId) {
+                        console.warn("Warning, emitting a new ping message before previous pong message was received.");
+                        client.resetPongTimeout();
+                    }
+
+                    client.pongTimeoutId = setTimeout(() => {
+                        console.log("Connexion lost with user ", client.userUuid);
+                        client.close();
+                    }, PONG_TIMEOUT);
+                }, PING_INTERVAL);
+
+                client.resetPongTimeout();
             },
             message: (ws, arrayBuffer): void => {
                 const client = ws as ExSocketInterface;
@@ -611,10 +639,10 @@ export class IoSocketController {
                         client,
                         message.getLockgrouppromptmessage() as LockGroupPromptMessage
                     );
+                } else if (message.hasPingmessage()) {
+                    client.resetPongTimeout();
                 } else if (message.hasEditmapmessage()) {
                     socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
-                } else if (message.hasXmppmessage()) {
-                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,
@@ -637,6 +665,13 @@ export class IoSocketController {
                 } catch (e) {
                     console.error('An error occurred on "disconnect"');
                     console.error(e);
+                } finally {
+                    if (Client.pingIntervalId) {
+                        clearInterval(Client.pingIntervalId);
+                    }
+                    if (Client.pongTimeoutId) {
+                        clearTimeout(Client.pongTimeoutId);
+                    }
                 }
             },
         });
@@ -655,6 +690,12 @@ export class IoSocketController {
         client.emitInBatch = (payload: SubMessage): void => {
             emitInBatch(client, payload);
         };
+        client.resetPongTimeout = (): void => {
+            if (client.pongTimeoutId) {
+                clearTimeout(client.pongTimeoutId);
+                client.pongTimeoutId = undefined;
+            }
+        };
         client.disconnecting = false;
 
         client.messages = ws.messages;
@@ -670,6 +711,7 @@ export class IoSocketController {
         client.jabberId = ws.jabberId;
         client.jabberPassword = ws.jabberPassword;
         client.mucRooms = ws.mucRooms;
+        client.activatedInviteUser = ws.activatedInviteUser;
         return client;
     }
 }

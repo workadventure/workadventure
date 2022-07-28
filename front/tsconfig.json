@@ -29,6 +29,7 @@
     "node_modules",
     "dist",
     "public/iframe_api.js",
-    "packages/iframe-api-typings"
+    "packages/iframe-api-typings",
+    "chat"
   ]
 }

@@ -7,10 +7,10 @@ import { ITiledMap } from "@workadventure/tiled-map-type-guard";
 import { STORE_VARIABLES_FOR_LOCAL_MAPS } from "../Enum/EnvironmentVariable";
 
 class MapFetcher {
-    async fetchMap(mapUrl: string): Promise<ITiledMap> {
+    async fetchMap(mapUrl: string, canLoadLocalUrl = false): Promise<ITiledMap> {
         // Before trying to make the query, let's verify the map is actually on the open internet (and not a local test map)
 
-        if ((await this.isLocalUrl(mapUrl)) && !STORE_VARIABLES_FOR_LOCAL_MAPS) {
+        if ((await this.isLocalUrl(mapUrl)) && !STORE_VARIABLES_FOR_LOCAL_MAPS && !canLoadLocalUrl) {
             throw new LocalUrlError('URL for map "' + mapUrl + '" targets a local map');
         }
 

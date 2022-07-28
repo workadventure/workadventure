@@ -68,6 +68,15 @@ export class SimplePeer {
 
         this.userId = Connection.getUserId();
         this.initialise();
+
+        blackListManager.onBlockStream.subscribe((userUuid) => {
+            const user = playersStore.getPlayerByUuid(userUuid);
+            if (!user) {
+                return;
+            }
+
+            this.closeConnection(user.userId);
+        });
     }
 
     /**
@@ -92,7 +101,8 @@ export class SimplePeer {
             )
         );
 
-        mediaManager.showMyCamera();
+        mediaManager.enableMyCamera();
+        mediaManager.enableMyMicrophone();
 
         //receive message start
         this.rxJsUnsubscribers.push(
@@ -125,6 +135,9 @@ export class SimplePeer {
      * create peer connection to bind users
      */
     private createPeerConnection(user: UserSimplePeerInterface): VideoPeer | null {
+        const uuid = playersStore.getPlayerById(user.userId)?.userUuid || "";
+        if (blackListManager.isBlackListed(uuid)) return null;
+
         const peerConnection = this.PeerConnectionArray.get(user.userId);
         if (peerConnection) {
             if (peerConnection.destroyed) {
@@ -214,6 +227,10 @@ export class SimplePeer {
 
         screenSharingPeerStore.pushNewPeer(peer);
         return peer;
+    }
+
+    public blockedFromRemotePlayer(userId: number) {
+        this.closeConnection(userId);
     }
 
     /**

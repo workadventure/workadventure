@@ -72,7 +72,15 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
 import { jitsiParticipantsCountStore, userIsAdminStore, userIsJitsiDominantSpeakerStore } from "../../Stores/GameStore";
-import { contactPageStore } from "../../Stores/MenuStore";
+import {
+    activeSubMenuStore,
+    contactPageStore,
+    MenuItem,
+    menuVisiblilityStore,
+    SubMenusInterface,
+    subMenusStore,
+    TranslatedMenu,
+} from "../../Stores/MenuStore";
 import type { WasCameraUpdatedEvent } from "../../Api/Events/WasCameraUpdatedEvent";
 import { audioManagerFileStore } from "../../Stores/AudioManagerStore";
 import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
@@ -91,8 +99,12 @@ import { MapStore } from "../../Stores/Utils/MapStore";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import LL, { locale } from "../../i18n/i18n-svelte";
-import { availabilityStatusStore, denyProximityMeetingStore, localVolumeStore } from "../../Stores/MediaStore";
-import { XmppClient } from "../../Xmpp/XmppClient";
+import {
+    availabilityStatusStore,
+    localVolumeStore,
+    requestedCameraState,
+    requestedMicrophoneState,
+} from "../../Stores/MediaStore";
 import { hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connexion/AxiosUtils";
 import { StringUtils } from "../../Utils/StringUtils";
 import { startLayerNamesStore } from "../../Stores/StartLayerNamesStore";
@@ -103,11 +115,20 @@ import CancelablePromise from "cancelable-promise";
 import { Deferred } from "ts-deferred";
 import { SuperLoaderPlugin } from "../Services/SuperLoaderPlugin";
 import { DEPTH_BUBBLE_CHAT_SPRITE } from "./DepthIndexes";
-import { ErrorScreenMessage, PlayerDetailsUpdatedMessage } from "../../Messages/ts-proto-generated/protos/messages";
+import {
+    AvailabilityStatus,
+    ErrorScreenMessage,
+    PlayerDetailsUpdatedMessage,
+} from "../../Messages/ts-proto-generated/protos/messages";
 import { uiWebsiteManager } from "./UI/UIWebsiteManager";
 import { embedScreenLayoutStore, highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
 import { MapEditorModeManager } from "./MapEditor/MapEditorModeManager";
-import { chatVisibilityStore } from "../../Stores/ChatStore";
+import { AskPositionEvent } from "../../Api/Events/AskPositionEvent";
+import {
+    chatVisibilityStore,
+    _newChatMessageSubject,
+    _newChatMessageWritingStatusSubject,
+} from "../../Stores/ChatStore";
 import structuredClone from "@ungap/structured-clone";
 import {
     ITiledMap,
@@ -117,6 +138,8 @@ import {
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
 import { AreaType } from "./GameMapAreas";
+import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -225,13 +248,13 @@ export class GameScene extends DirtyScene {
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
-    private mapTransitioning: boolean = false; //used to prevent transitions happening at the same time.
+    private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private cameraManager!: CameraManager;
     private mapEditorModeManager!: MapEditorModeManager;
     private pathfindingManager!: PathfindingManager;
     private activatablesManager!: ActivatablesManager;
-    private preloading: boolean = true;
+    private preloading = true;
     private startPositionCalculator!: StartPositionCalculator;
     private sharedVariablesManager!: SharedVariablesManager;
     private objectsByType = new Map<string, ITiledMapObject[]>();
@@ -239,14 +262,13 @@ export class GameScene extends DirtyScene {
     private areaManager!: DynamicAreaManager;
     private loader: Loader;
     private lastCameraEvent: WasCameraUpdatedEvent | undefined;
-    private firstCameraUpdateSent: boolean = false;
+    private firstCameraUpdateSent = false;
     private currentPlayerGroupId?: number;
-    private showVoiceIndicatorChangeMessageSent: boolean = false;
-    private jitsiDominantSpeaker: boolean = false;
-    private jitsiParticipantsCount: number = 0;
-    private cleanupDone: boolean = false;
+    private showVoiceIndicatorChangeMessageSent = false;
+    private jitsiDominantSpeaker = false;
+    private jitsiParticipantsCount = 0;
+    private cleanupDone = false;
     public readonly superLoad: SuperLoaderPlugin;
-    private xmppClient!: XmppClient;
 
     constructor(private room: Room, MapUrlFile: string, customKey?: string | undefined) {
         super({
@@ -848,7 +870,16 @@ export class GameScene extends DirtyScene {
                 });
 
                 // When connection is performed, let's connect SimplePeer
-                this.simplePeer = new SimplePeer(this.connection);
+                //eslint-disable-next-line @typescript-eslint/no-this-alias
+                const me = this;
+                this.events.once("render", () => {
+                    if (me.connection) {
+                        this.simplePeer = new SimplePeer(me.connection);
+                    } else {
+                        console.warn("Connection to peers not started!");
+                    }
+                });
+
                 userMessageManager.setReceiveBanListener(this.bannedUser.bind(this));
 
                 this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedEvent) => {
@@ -906,13 +937,12 @@ export class GameScene extends DirtyScene {
                 //     });
                 // });
 
-                // Connect to XMPP
-                this.xmppClient = new XmppClient(this.connection);
-
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
             })
             .catch((e) => console.error(e));
+
+        gameSceneIsLoadedStore.set(true);
     }
 
     private subscribeToStores(): void {
@@ -954,6 +984,9 @@ export class GameScene extends DirtyScene {
         this.availabilityStatusStoreUnsubscriber = availabilityStatusStore.subscribe((availabilityStatus) => {
             this.connection?.emitPlayerStatusChange(availabilityStatus);
             this.CurrentPlayer.setAvailabilityStatus(availabilityStatus);
+            if (availabilityStatus === AvailabilityStatus.SILENT) {
+                this.CurrentPlayer.showTalkIcon(false, true);
+            }
         });
 
         this.emoteUnsubscriber = emoteStore.subscribe((emote) => {
@@ -1003,6 +1036,7 @@ export class GameScene extends DirtyScene {
                 if (!this.localVolumeStoreUnsubscriber) {
                     this.localVolumeStoreUnsubscriber = localVolumeStore.subscribe((volume) => {
                         if (volume === undefined) {
+                            this.CurrentPlayer.showTalkIcon(false, true);
                             return;
                         }
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
@@ -1183,6 +1217,59 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
+            iframeListener.turnOffMicrophoneStream.subscribe(() => {
+                requestedMicrophoneState.disableMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.turnOffWebcamStream.subscribe(() => {
+                requestedCameraState.disableWebcam();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableMicrophoneStream.subscribe(() => {
+                myMicrophoneBlockedStore.set(true);
+                mediaManager.disableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreMicrophoneStream.subscribe(() => {
+                myMicrophoneBlockedStore.set(false);
+                mediaManager.enableMyMicrophone();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.disableWebcamStream.subscribe(() => {
+                myCameraApiBlockedStore.set(true);
+                mediaManager.disableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.restoreWebcamStream.subscribe(() => {
+                myCameraApiBlockedStore.set(false);
+                mediaManager.enableMyCamera();
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.addPersonnalMessageStream.subscribe((text) => {
+                iframeListener.sendUserInputChat(text);
+                _newChatMessageSubject.next(text);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.newChatMessageWritingStatusStream.subscribe((status) => {
+                _newChatMessageWritingStatusSubject.next(status);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
             iframeListener.disablePlayerControlStream.subscribe(() => {
                 this.userInputManager.disableControls();
             })
@@ -1196,15 +1283,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(true);
-                this.disableMediaBehaviors();
+                mediaManager.disableProximityMeeting();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.enablePlayerProximityMeetingStream.subscribe(() => {
-                denyProximityMeetingStore.set(false);
-                this.enableMediaBehaviors();
+                mediaManager.enableProximityMeeting();
             })
         );
 
@@ -1236,6 +1321,34 @@ ${escapedMessage}
             iframeListener.stopSoundStream.subscribe((stopSoundEvent) => {
                 const url = new URL(stopSoundEvent.url, this.MapUrlFile);
                 soundManager.stopSound(this.sound, url.toString());
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.askPositionStream.subscribe((event: AskPositionEvent) => {
+                this.connection?.emitAskPosition(event.uuid, event.playUri);
+            })
+        );
+
+        this.iframeSubscriptionList.push(
+            iframeListener.openInviteMenuStream.subscribe(() => {
+                const indexInviteMenu = get(subMenusStore).findIndex(
+                    (menu: MenuItem) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+                );
+                if (indexInviteMenu === -1) {
+                    console.error(
+                        `Menu key: ${SubMenusInterface.invite} was not founded in subMenusStore: `,
+                        get(subMenusStore)
+                    );
+                    return;
+                }
+                if (get(menuVisiblilityStore) && get(activeSubMenuStore) === indexInviteMenu) {
+                    menuVisiblilityStore.set(false);
+                    activeSubMenuStore.set(0);
+                    return;
+                }
+                activeSubMenuStore.set(indexInviteMenu);
+                menuVisiblilityStore.set(true);
             })
         );
 
@@ -1367,7 +1480,7 @@ ${escapedMessage}
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
-                openCoWebsite.closable ?? true
+                openCoWebsite.closable
             );
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
@@ -1668,9 +1781,14 @@ ${escapedMessage}
         });
     }
 
+    public getSimplePeer() {
+        return this.simplePeer;
+    }
+
     public cleanupClosingScene(): void {
-        // make sure we restart CameraControls
-        this.disableMediaBehaviors();
+        // make sure we restart own medias
+        mediaManager.disableMyCamera();
+        mediaManager.disableMyMicrophone();
         // stop playing audio, close any open website, stop any open Jitsi, unsubscribe
         coWebsiteManager.cleanup();
         // Stop the script, if any
@@ -1683,7 +1801,6 @@ ${escapedMessage}
 
         audioManagerFileStore.unloadAudio();
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
-        this.xmppClient?.close();
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
@@ -1895,21 +2012,6 @@ ${escapedMessage}
                 this.companion,
                 this.companion !== null ? lazyLoadCompanionResource(this.load, this.companion) : undefined
             );
-            this.CurrentPlayer.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
-                if ((pointer.event.target as Element)?.localName !== "canvas") {
-                    return;
-                }
-                if (pointer.wasTouch && (pointer.event as TouchEvent).touches.length > 1) {
-                    return; //we don't want the menu to open when pinching on a touch screen.
-                }
-
-                // toggle EmoteMenu
-                if (get(emoteMenuStore)) {
-                    emoteMenuStore.closeEmoteMenu();
-                } else {
-                    emoteMenuStore.openEmoteMenu();
-                }
-            });
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(0x365dff);
             });
@@ -1918,7 +2020,6 @@ ${escapedMessage}
             });
             this.CurrentPlayer.on(requestEmoteEventName, (emoteKey: string) => {
                 this.connection?.emitEmoteEvent(emoteKey);
-                analyticsClient.launchEmote(emoteKey);
             });
         } catch (err) {
             if (err instanceof TextureError) {
@@ -2272,7 +2373,7 @@ ${escapedMessage}
             character.setApiOutlineColor(message.details?.outlineColor);
         }
         if (message.details?.showVoiceIndicator !== undefined) {
-            character.showTalkIcon(message.details?.showVoiceIndicator);
+            character.showTalkIcon(message.details?.showVoiceIndicator, !message.details?.showVoiceIndicator);
         }
         if (message.details?.availabilityStatus !== undefined) {
             character.setAvailabilityStatus(message.details?.availabilityStatus);
@@ -2316,22 +2417,14 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant: boolean = false): void {
+    private reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
-            this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+            if (this.cameraManager != undefined) {
+                this.cameraManager.updateCameraOffset(get(biggestAvailableAreaStore), instant);
+            }
         });
-    }
-
-    public enableMediaBehaviors() {
-        if (!get(denyProximityMeetingStore)) {
-            mediaManager.showMyCamera();
-        }
-    }
-
-    public disableMediaBehaviors() {
-        mediaManager.hideMyCamera();
     }
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
@@ -2359,13 +2452,17 @@ ${escapedMessage}
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)
     private bannedUser() {
+        errorScreenStore.setError(
+            ErrorScreenMessage.fromPartial({
+                type: "error",
+                code: "USER_BANNED",
+                title: "BANNED",
+                subtitle: "You were banned from WorkAdventure",
+                details: "If you want more information, you may contact us at: hello@workadventu.re",
+            })
+        );
         this.cleanupClosingScene();
         this.userInputManager.disableControls();
-        this.scene.start(ErrorSceneName, {
-            title: "Banned",
-            subTitle: "You were banned from WorkAdventure",
-            message: "If you want more information, you may contact us at: hello@workadventu.re",
-        });
     }
 
     //todo: put this into an 'orchestrator' scene (EntryScene?)

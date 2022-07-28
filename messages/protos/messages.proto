@@ -132,9 +132,10 @@ message ClientToServerMessage {
     FollowAbortMessage followAbortMessage = 17;
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
-    XmppMessage xmppMessage = 21;
-    AskPositionMessage askPositionMessage = 22;
-    EditMapMessage editMapMessage = 23;
+    PingMessage pingMessage = 21;
+    //XmppMessage xmppMessage = 22;
+    AskPositionMessage askPositionMessage = 23;
+    EditMapMessage editMapMessage = 24;
   }
 }
 
@@ -238,8 +239,9 @@ message SubMessage {
     VariableMessage variableMessage = 8;
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
-    XmppMessage xmppMessage = 11;
-    EditMapMessage editMapMessage = 12;
+    PingMessage pingMessage = 11;
+    //XmppMessage xmppMessage = 12;
+    EditMapMessage editMapMessage = 13;
   }
 }
 
@@ -319,6 +321,7 @@ message RoomJoinedMessage {
   string userRoomToken = 7;
   // We send the current skin of the current player.
   repeated CharacterLayerMessage characterLayer = 8;
+  bool activatedInviteUser = 9;
 }
 
 message WebRtcStartMessage {
@@ -377,33 +380,9 @@ message BanUserMessage{
   string message = 2;
 }
 
-message MucRoomDefinitionMessage {
-  string url = 1;
-  string name = 2;
-}
-
-message XmppSettingsMessage{
-  string jid = 1;
-  string conferenceDomain = 2;
-  repeated MucRoomDefinitionMessage rooms = 3;
-}
-
 message AskPositionMessage{
   string userIdentifier = 1;
   string playUri = 2;
-}
-
-
-/**
- * Status of the connection to the XMPP server.
- * In case something goes wrong with the XMPP server, we are notified here.
- */
-message XmppConnectionStatusChangeMessage{
-  enum Status {
-    DISCONNECTED = 0;
-  }
-
-  Status status = 1;
 }
 
 /**
@@ -435,8 +414,8 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
-    XmppSettingsMessage xmppSettingsMessage = 29;
-    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    //XmppSettingsMessage xmppSettingsMessage = 29;
+    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
     MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
@@ -456,6 +435,7 @@ message JoinRoomMessage {
   string visitCardUrl = 9;
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
+  bool activatedInviteUser = 12;
 }
 
 message UserJoinedZoneMessage {
@@ -650,6 +630,68 @@ message RoomsList {
 message EmptyMessage {
 
 }
+
+
+
+/*******************************************************µ************************
+ * Start Chat Messages
+ ********************************************************************************/
+message IframeToPusherMessage{
+  oneof message {
+    XmppMessage xmppMessage = 1;
+    BanUserByUuidMessage banUserByUuidMessage = 2;
+  }
+}
+message PusherToIframeMessage{
+  oneof message {
+    XmppSettingsMessage xmppSettingsMessage = 1;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
+    XmppMessage xmppMessage = 3;
+  }
+}
+
+message MucRoomDefinitionMessage {
+  string url = 1;
+  string name = 2;
+  string type = 3;
+}
+
+message XmppSettingsMessage{
+  string jid = 1;
+  string conferenceDomain = 2;
+  repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+message XmppConnectionStatusChangeMessage{
+  enum Status {
+    DISCONNECTED = 0;
+  }
+
+  Status status = 1;
+}
+
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
+}
+/*********************************************************************************
+ * End Chat Messages
+ *********************************************************************************/
+
+
+
+
+
+
+
 
 /**
  * Service handled by the "back". Pusher servers connect to this service.

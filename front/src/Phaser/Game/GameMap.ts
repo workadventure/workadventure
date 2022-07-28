@@ -159,7 +159,7 @@ export class GameMap {
         return [];
     }
 
-    public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache: boolean = true): number[][] {
+    public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): number[][] {
         // initialize collision grid to write on
         if (this.map.height === undefined || this.map.width === undefined) {
             return [];

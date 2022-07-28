@@ -23,6 +23,7 @@ import { Button } from "../Components/Ui/Button";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { IconButton, IconButtonConfig, IconButtonEvent } from "../Components/Ui/IconButton";
+import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -110,6 +111,8 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bindEventHandlers();
 
+        selectCharacterCustomizeSceneVisibleStore.set(true);
+
         this.refreshPlayerCurrentOutfit();
         this.onResize();
     }
@@ -127,6 +130,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public nextSceneToCamera() {
+        selectCharacterCustomizeSceneVisibleStore.set(false);
+
         const layers: string[] = [];
         let i = 0;
         for (const layerItem of this.selectedLayers) {
@@ -147,6 +152,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public backToPreviousScene() {
+        selectCharacterCustomizeSceneVisibleStore.set(false);
+
         this.scene.stop(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
     }
@@ -592,7 +599,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         return this.layers[categoryIndex][this.selectedLayers[categoryIndex]].id;
     }
 
-    private selectNextGridItem(previous: boolean = false): void {
+    private selectNextGridItem(previous = false): void {
         if (!this.selectedBodyPartType) {
             return;
         }
@@ -610,7 +617,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         }
     }
 
-    private selectNextCategory(previous: boolean = false): void {
+    private selectNextCategory(previous = false): void {
         if (!this.selectedBodyPartType) {
             this.selectBodyPartType(CustomWokaBodyPart.Body);
             return;
@@ -636,7 +643,7 @@ export class CustomizeScene extends AbstractCharacterScene {
         );
     }
 
-    private centerGridOnItem(item: WokaBodyPartSlot, duration: number = 500): void {
+    private centerGridOnItem(item: WokaBodyPartSlot, duration = 500): void {
         void this.bodyPartsDraggableGrid.centerOnItem(
             this.bodyPartsDraggableGrid.getAllItems().indexOf(item),
             duration

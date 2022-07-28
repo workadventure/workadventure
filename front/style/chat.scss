@@ -1,0 +1,17 @@
+#chat-aside{
+  left: 0;
+  top: 0;
+  width: 28vw;
+  height: 100vh;
+  display: flex;
+  transform: translateX(-100%);
+  position: fixed;
+  z-index: 820;
+  transition: transform 0.5s;
+  background-color: rgba(10, 9, 9, 0.8);
+}
+
+#chat-aside.opened{
+  visibility: visible;
+  transform: translateX(0);
+}

@@ -20,6 +20,7 @@ import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
 import { AvailabilityStatus } from "../../Messages/ts-proto-generated/protos/messages";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 
 const playerNameY = -25;
 const interactiveRadius = 35;
@@ -60,7 +61,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: CancelablePromise<string>
+        companionTexturePromise?: CancelablePromise<string>,
+        userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -80,6 +82,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
+                    if (userId != undefined) {
+                        currentPlayerWokaStore.set(htmlImageElementSrc);
+                    }
                 });
             })
             .catch(() => {
@@ -167,7 +172,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
     }
 
-    public setClickable(clickable: boolean = true): void {
+    public setClickable(clickable = true): void {
         if (this.clickable === clickable) {
             return;
         }
@@ -232,11 +237,11 @@ export abstract class Character extends Container implements OutlineableInterfac
         });
     }
 
-    public showTalkIcon(show: boolean = true, forceClose: boolean = false): void {
+    public showTalkIcon(show = true, forceClose = false): void {
         this.talkIcon.show(show, forceClose);
     }
 
-    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant: boolean = false): void {
+    public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
         this.statusDot.setAvailabilityStatus(availabilityStatus, instant);
     }
 

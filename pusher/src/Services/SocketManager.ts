@@ -42,6 +42,7 @@ import {
     XmppMessage,
     AskPositionMessage,
     EditMapMessage,
+    BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -160,7 +161,7 @@ export class SocketManager implements ZoneEventListener {
         adminRoomStream.write(message);
     }
 
-    leaveAdminRoom(socket: ExAdminSocketInterface) {
+    leaveAdminRoom(socket: ExAdminSocketInterface): void {
         if (socket.adminConnection) {
             socket.adminConnection.end();
         }
@@ -186,6 +187,9 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.setVisitcardurl(client.visitCardUrl);
             }
             joinRoomMessage.setCompanion(client.companion);
+            joinRoomMessage.setActivatedinviteuser(
+                client.activatedInviteUser != undefined ? client.activatedInviteUser : true
+            );
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
@@ -240,6 +244,7 @@ export class SocketManager implements ZoneEventListener {
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
                     if (client.xmppClient) {
+                        console.log("Trying disconnecting from xmppClient");
                         client.xmppClient.close();
                     }
                 })
@@ -270,14 +275,18 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    private closeWebsocketConnection(client: ExSocketInterface | ExAdminSocketInterface, code: number, reason: string) {
+    private closeWebsocketConnection(
+        client: ExSocketInterface | ExAdminSocketInterface,
+        code: number,
+        reason: string
+    ): void {
         client.disconnecting = true;
         //this.leaveRoom(client);
         //client.close();
         client.end(code, reason);
     }
 
-    handleViewport(client: ExSocketInterface, viewport: ViewportMessage.AsObject) {
+    handleViewport(client: ExSocketInterface, viewport: ViewportMessage.AsObject): void {
         try {
             client.viewport = viewport;
 
@@ -293,7 +302,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage) {
+    handleUserMovesMessage(client: ExSocketInterface, userMovesMessage: UserMovesMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setUsermovesmessage(userMovesMessage);
 
@@ -363,28 +372,28 @@ export class SocketManager implements ZoneEventListener {
     }
 
     // Useless now, will be useful again if we allow editing details in game
-    handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage) {
+    handleSetPlayerDetails(client: ExSocketInterface, playerDetailsMessage: SetPlayerDetailsMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setSetplayerdetailsmessage(playerDetailsMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage) {
+    handleItemEvent(client: ExSocketInterface, itemEventMessage: ItemEventMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setItemeventmessage(itemEventMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
 
-    handleVariableEvent(client: ExSocketInterface, variableMessage: VariableMessage) {
+    handleVariableEvent(client: ExSocketInterface, variableMessage: VariableMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setVariablemessage(variableMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
 
-    async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage) {
+    async handleReportMessage(client: ExSocketInterface, reportPlayerMessage: ReportPlayerMessage): Promise<void> {
         try {
             await adminService.reportPlayer(
                 "en",
@@ -413,7 +422,7 @@ export class SocketManager implements ZoneEventListener {
         socket.backConnection.write(pusherToBackMessage);
     }
 
-    leaveRoom(socket: ExSocketInterface) {
+    leaveRoom(socket: ExSocketInterface): void {
         // leave previous room and world
         try {
             if (socket.roomId) {
@@ -477,14 +486,14 @@ export class SocketManager implements ZoneEventListener {
         return this.rooms;
     }
 
-    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage) {
+    public handleQueryMessage(client: ExSocketInterface, queryMessage: QueryMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setQuerymessage(queryMessage);
 
         client.backConnection.write(pusherToBackMessage);
     }
 
-    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string) {
+    public async emitSendUserMessage(userUuid: string, message: string, type: string, roomId: string): Promise<void> {
         /*const client = this.searchClientByUuid(userUuid);
         if(client) {
             const adminMessage = new SendUserMessage();
@@ -509,7 +518,7 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public async emitBan(userUuid: string, message: string, type: string, roomId: string) {
+    public async emitBan(userUuid: string, message: string, type: string, roomId: string): Promise<void> {
         /*const client = this.searchClientByUuid(userUuid);
         if(client) {
             const banUserMessage = new BanUserMessage();
@@ -579,7 +588,7 @@ export class SocketManager implements ZoneEventListener {
         emitInBatch(listener, subMessage);
     }
 
-    public emitWorldFullMessage(client: compressors.WebSocket) {
+    public emitWorldFullMessage(client: compressors.WebSocket): void {
         const errorMessage = new WorldFullMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -590,7 +599,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitTokenExpiredMessage(client: compressors.WebSocket) {
+    public emitTokenExpiredMessage(client: compressors.WebSocket): void {
         const errorMessage = new TokenExpiredMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -601,7 +610,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitInvalidTextureMessage(client: compressors.WebSocket) {
+    public emitInvalidTextureMessage(client: compressors.WebSocket): void {
         const errorMessage = new InvalidTextureMessage();
 
         const serverToClientMessage = new ServerToClientMessage();
@@ -612,7 +621,7 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string) {
+    public emitConnexionErrorMessage(client: compressors.WebSocket, message: string): void {
         const errorMessage = new WorldConnexionMessage();
         errorMessage.setMessage(message);
 
@@ -622,7 +631,7 @@ export class SocketManager implements ZoneEventListener {
         client.send(serverToClientMessage.serializeBinary().buffer, true);
     }
 
-    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData) {
+    public emitErrorScreenMessage(client: compressors.WebSocket, errorApi: ErrorApiData): void {
         const errorMessage = new ErrorScreenMessage();
         errorMessage.setType(errorApi.type);
         if (errorApi.type == "retry" || errorApi.type == "error" || errorApi.type == "unauthorized") {
@@ -659,7 +668,7 @@ export class SocketManager implements ZoneEventListener {
         //TODO check right of user in admin
     }
 
-    handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage) {
+    handleEmotePromptMessage(client: ExSocketInterface, emoteEventmessage: EmotePromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setEmotepromptmessage(emoteEventmessage);
 
@@ -696,20 +705,45 @@ export class SocketManager implements ZoneEventListener {
         }
     }
 
-    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage) {
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage): void {
         if (client.xmppClient === undefined) {
             throw new Error(
                 "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
             );
         }
         client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+        console.log("XMPP Message sent");
     }
 
-    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage) {
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setAskpositionmessage(askPositionMessage);
 
         client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleBanUserByUuidMessage(client: ExSocketInterface, banUserByUuidMessage: BanUserByUuidMessage) {
+        try {
+            adminService
+                .banUserByUuid(
+                    banUserByUuidMessage.getUuidtoban(),
+                    banUserByUuidMessage.getPlayuri(),
+                    banUserByUuidMessage.getName(),
+                    banUserByUuidMessage.getMessage(),
+                    banUserByUuidMessage.getByuseremail()
+                )
+                .then(() => {
+                    this.emitBan(
+                        banUserByUuidMessage.getUuidtoban(),
+                        banUserByUuidMessage.getMessage(),
+                        "banned",
+                        banUserByUuidMessage.getPlayuri()
+                    );
+                });
+        } catch (e) {
+            console.error('An error occurred on "handleBanUserByUuidMessage"');
+            console.error(e);
+        }
     }
 }
 

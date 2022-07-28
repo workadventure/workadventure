@@ -15,6 +15,7 @@ import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
 import { PusherRoom } from "../../Model/PusherRoom";
 import { XmppClient } from "../../Services/XmppClient";
+import { MucRoomDefinitionInterface } from "../../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export type BackConnection = ClientDuplexStream<PusherToBackMessage, ServerToClientMessage>;
 
@@ -44,9 +45,16 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     backConnection: BackConnection;
     listenedZones: Set<Zone>;
     userRoomToken: string | undefined;
+    // The ID of the timer that sends ping requests.
+    // Ping requests are sent from the server because the setTimeout on the browser is unreliable when the tab is hidden.
+    pingIntervalId: NodeJS.Timeout | undefined;
+    // When this timeout triggers, no pong has been received.
+    pongTimeoutId: NodeJS.Timeout | undefined;
+    resetPongTimeout: () => void;
     pusherRoom: PusherRoom | undefined;
     xmppClient: XmppClient | undefined;
     jabberId: string;
     jabberPassword: string;
-    mucRooms: Array<Array<string>>;
+    activatedInviteUser: boolean | undefined;
+    mucRooms: Array<MucRoomDefinitionInterface>;
 }

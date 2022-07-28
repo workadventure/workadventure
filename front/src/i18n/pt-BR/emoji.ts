@@ -1,6 +1,7 @@
-import type { BaseTranslation } from "../i18n-types";
+import { DeepPartial } from "../../Utils/DeepPartial";
+import type { Translation } from "../i18n-types";
 
-const emoji: BaseTranslation = {
+const emoji: DeepPartial<Translation["emoji"]> = {
     search: "Pesquisar emojis...",
     categories: {
         recents: "Emojis recentes",
