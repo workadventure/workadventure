@@ -1,5 +1,4 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
-import { v4 as uuidv4 } from "uuid";
 import { Emoji } from "../Stores/EmoteStore";
 
 const playerNameKey = "playerName";
@@ -20,10 +19,7 @@ const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
-const state = "state";
-const nonce = "nonce";
 const notification = "notificationPermission";
-const code = "code";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
@@ -223,47 +219,6 @@ class LocalUserStore {
 
     getNotification(): string | null {
         return localStorage.getItem(notification);
-    }
-
-    generateState(): string {
-        const newState = uuidv4();
-        localStorage.setItem(state, newState);
-        return newState;
-    }
-
-    verifyState(value: string): boolean {
-        const oldValue = localStorage.getItem(state);
-        if (!oldValue) {
-            localStorage.setItem(state, value);
-            return true;
-        }
-        return oldValue === value;
-    }
-
-    setState(value: string) {
-        localStorage.setItem(state, value);
-    }
-
-    getState(): string | null {
-        return localStorage.getItem(state);
-    }
-
-    generateNonce(): string {
-        const newNonce = uuidv4();
-        localStorage.setItem(nonce, newNonce);
-        return newNonce;
-    }
-
-    getNonce(): string | null {
-        return localStorage.getItem(nonce);
-    }
-
-    setCode(value: string): void {
-        localStorage.setItem(code, value);
-    }
-
-    getCode(): string | null {
-        return localStorage.getItem(code);
     }
 
     setCameraSetup(cameraId: string) {
