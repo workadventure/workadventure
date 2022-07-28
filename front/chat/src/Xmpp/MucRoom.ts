@@ -10,6 +10,7 @@ import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { UserData } from "../Messages/JsonMessages/ChatData";
+import {mediaManager} from "../Media/MediaManager";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -753,6 +754,7 @@ export class MucRoom {
             } else {
               if (delay > this.lastMessageSeen) {
                 this.countMessagesToSee.update((last) => last + 1);
+                mediaManager.playNewMessageNotification();
               }
               const message: Message = {
                 name,
