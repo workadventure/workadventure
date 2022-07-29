@@ -10,6 +10,7 @@ import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { UserData } from "../Messages/JsonMessages/ChatData";
+import {UploaderManager, uploaderManager} from "../Services/UploaderManager";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -425,6 +426,29 @@ export class MucRoom {
     if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
   }
 
+  public sendRequestUploadFile(file: File) {
+    /*
+    const chatState = xml(
+        "iq",
+        {
+          type: "get",
+          to: jid(this.roomJid.local, this.roomJid.domain).toString(),
+          from: this.jid,
+          id: uuidv4(),
+        },
+        xml("request", {
+          xmlns: "urn:xmpp:http:upload:0",
+          filename: file.name,
+          size: file.size,
+          'content-type': "image/png"
+        })
+    );
+    this.connection.emitXmlMessage(chatState);
+     */
+    if (_VERBOSE) console.warn("[XMPP]", "File uploaded");
+    return uploaderManager.write(file);
+  }
+
   public sendMessage(text: string) {
     const idMessage = uuidv4();
     const message = xml(
@@ -779,7 +803,7 @@ export class MucRoom {
         handledMessage = true;
       } else {
         const { jid } = this.getUserDataByName(name);
-        if (jid) {
+        if (jid !== null) {
           this.updateUser(
             jid,
             null,

@@ -23,8 +23,16 @@ export default defineConfig({
             variables: [
                 "PUSHER_URL",
                 "FALLBACK_LOCALE",
+                "AWS_BUCKET",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+                "AWS_DEFAULT_REGION",
+                "AWS_ENDPOINT"
             ],
         }),
         pluginRewriteAll(),
     ],
+    define: {
+        "global": {},
+    },
 });

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
-  import { SendIcon, SmileIcon } from "svelte-feather-icons";
+  import { SendIcon, SmileIcon, PaperclipIcon, LoaderIcon, Trash2Icon, CheckIcon, XIcon } from "svelte-feather-icons";
   import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { createEventDispatcher, onMount } from "svelte";
@@ -20,6 +20,8 @@
 
   let emojiOpened = false;
   let newMessageText = "";
+  let files;
+  let fileUploadState = null;
 
   export const defaultColor = "#626262";
 
@@ -74,9 +76,9 @@
 
   function sendReplyMessage() {
     if (
-      !$selectedMessageToReply ||
-      !newMessageText ||
-      newMessageText.replace(/\s/g, "").length === 0
+            !$selectedMessageToReply ||
+            !newMessageText ||
+            newMessageText.replace(/\s/g, "").length === 0
     )
       return;
     mucRoom.updateComposingState(ChatStates.PAUSED);
@@ -90,6 +92,19 @@
   function openEmoji() {
     picker.showPicker(emojiContainer);
     emojiOpened = true;
+  }
+
+  function handleFile() {
+    if (files && files.length > 0) {
+      mucRoom.sendRequestUploadFile(files[0])
+              .then((result) => {
+                fileUploadState = !!result;
+              }).catch(() => {});
+    }
+  }
+
+  $: if(files && fileUploadState !== true){
+    handleFile();
   }
 
   onMount(() => {
@@ -138,37 +153,37 @@
 <div class="wa-message-form">
   {#if $selectedMessageToReply}
     <div
-      class="replyMessage"
-      on:click={() => selectedMessageToReply.set(null)}
-      transition:fly={{
+            class="replyMessage"
+            on:click={() => selectedMessageToReply.set(null)}
+            transition:fly={{
         x: isMe($selectedMessageToReply.name) ? 10 : -10,
         delay: 100,
         duration: 200,
       }}
     >
       <div
-        style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-        class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+              style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
+              class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
           isMe($selectedMessageToReply.name)
             ? "tw-flex-row-reverse"
             : "tw-flex-row"
         }`}
       >
         <span
-          class={`tw-text-lighter-purple ${
+                class={`tw-text-lighter-purple ${
             isMe($selectedMessageToReply.name) ? "tw-ml-2" : "tw-mr-2"
           }`}
-          >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
+        >{#if isMe($selectedMessageToReply.name)}{$LL.me()}{:else}{$selectedMessageToReply.name}{/if}</span
         >
         <span class="tw-text-xxxs"
-          >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}</span
+        >{$selectedMessageToReply.time.toLocaleTimeString($locale, {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}</span
         >
       </div>
       <div
-        class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+              class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
       >
         <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
           {$selectedMessageToReply.body}
@@ -183,15 +198,36 @@
 
   <form on:submit|preventDefault={sendMessage}>
     <div class="tw-w-full tw-p-2">
+      {#if files}
+        {#each files as file}
+          <div class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1">
+            <div style="max-width: 92%;" class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center">
+              {#if fileUploadState === null}
+                <LoaderIcon size="14" class="tw-animate-spin" />
+              {:else if fileUploadState === true}
+                <CheckIcon size="14" class="tw-text-pop-green" />
+              {:else if fileUploadState === false}
+                <XIcon size="14" class="tw-text-pop-red" />
+              {/if}
+              <span style="max-width: 92%;" class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap">
+                {file.name}
+              </span>
+            </div>
+            <button on:click={() => {files = null;}} class={`tw-pr-0 tw-mr-0 ${fileUploadState === null?'tw-opacity-1':''}`}>
+              <Trash2Icon size="14"/>
+            </button>
+          </div>
+        {/each}
+      {/if}
       <div class="tw-flex tw-items-center tw-relative">
         <textarea
-          type="text"
-          bind:this={textarea}
-          bind:value={newMessageText}
-          placeholder={$LL.enterText()}
-          on:focus={onFocus}
-          on:blur={onBlur}
-          on:keydown={(key) => {
+                type="text"
+                bind:this={textarea}
+                bind:value={newMessageText}
+                placeholder={$LL.enterText()}
+                on:focus={onFocus}
+                on:blur={onBlur}
+                on:keydown={(key) => {
             if (
               (key.key === "Enter" && key.shiftKey) ||
               ["Backspace", "Delete"].includes(key.key)
@@ -205,28 +241,36 @@
             }
             return true;
           }}
-          on:keypress={() => {
+                on:keypress={() => {
             adjustHeight();
             mucRoom.updateComposingState(ChatStates.COMPOSING);
             return true;
           }}
-          rows="1"
-          style="margin-bottom: 0;"
+                rows="1"
+                style="margin-bottom: 0;"
         />
 
         <button
-          class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
+                class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
             emojiOpened ? "tw-text-light-blue" : ""
           }`}
-          on:click|preventDefault|stopPropagation={openEmoji}
+                on:click|preventDefault|stopPropagation={openEmoji}
         >
           <SmileIcon size="17" />
         </button>
-
+        {#if !files}
+          <input type="file"
+                 id="file"
+                 name="file"
+                 class="tw-hidden"
+                 bind:files
+          >
+          <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+        {/if}
         <button
-          type="submit"
-          class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
-          on:click={sendMessage}
+                type="submit"
+                class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                on:click={sendMessage}
         >
           <SendIcon size="17" />
         </button>
