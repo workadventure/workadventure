@@ -394,7 +394,7 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    createSpontaneousDiscussion(): void {
+    addNewParticipant(): void {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_spontaneous_discussion");

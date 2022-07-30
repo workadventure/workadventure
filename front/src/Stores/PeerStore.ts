@@ -16,7 +16,7 @@ function createPeerStore() {
                 users.set(peer.userId, peer);
 
                 //send post hog notification
-                analyticsClient.createSpontaneousDiscussion();
+                analyticsClient.addNewParticipant();
 
                 return users;
             });
