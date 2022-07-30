@@ -393,5 +393,13 @@ class AnalyticsClient {
             })
             .catch((e) => console.error(e));
     }
+
+    addNewParticipant(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_spontaneous_discussion");
+            })
+            .catch((e) => console.error(e));
+    }
 }
 export const analyticsClient = new AnalyticsClient();
