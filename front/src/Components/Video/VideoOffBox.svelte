@@ -39,7 +39,7 @@
 </script>
 
 <div
-    class="video-container"
+    class="video-container video-off"
     class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
@@ -49,11 +49,14 @@
         class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center"
     >
         <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-        <span
-            class="tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic tw-px-2 tw-break-words tw-overflow-y-auto tw-max-h-10"
+        <span class="tw-font-semibold tw-text-xxs tw-not-italic tw-px-2 tw-break-words tw-overflow-y-auto tw-max-h-10"
             >{name}</span
         >
-        <SoundMeterWidget volume={$volumeStore} classcss="tw-relative tw-mr-0 tw-ml-auto" />
-        <BanReportBox peer={peer}/>
+        <SoundMeterWidget volume={$volumeStore} classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform" />
+        <div
+            class="report-ban-container-cam-off tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96 tw-h-10 tw-absolute tw-justify-end tw-items-center tw-transition-all tw-opacity-0"
+        >
+            <BanReportBox {peer} />
+        </div>
     </div>
 </div>

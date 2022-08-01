@@ -49,13 +49,24 @@ body .message-info.warning {
         .nametag-webcam-container,
         .woka-webcam-container,
         .voice-meter-webcam-container,
-        .report-ban-container
-        {
-            @apply tw-h-[32vw] tw-w-[57vw];
+        .report-ban-container {
+            @apply tw-h-[32vw] md:tw-w-[58vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[70vw];
         }
 
         .nametag-screenshare-container {
             @apply tw-h-[41vw] tw-w-[57vw];
+        }
+    }
+
+    &:hover {
+        .report-ban-container {
+            @apply -tw-translate-x-2 tw-opacity-100;
+        }
+        .report-ban-container-cam-off {
+            @apply -tw-translate-x-[1.37rem] tw-opacity-100;
+        }
+        .voice-meter-cam-off {
+            @apply -tw-translate-x-8;
         }
     }
 }
@@ -87,59 +98,6 @@ body .message-info.warning {
             cursor: url("./images/cursor_normal.png"), pointer;
         }
     }
-
-    //button.report {
-    //    display: block;
-    //    cursor: url("./images/cursor_pointer.png"), pointer;
-    //    background: none;
-    //    background-color: rgba(0, 0, 0, 0);
-    //    border: none;
-    //    background-color: black;
-    //    border-radius: 15px;
-    //    position: absolute;
-    //    //width: 0px;
-    //    height: 35px;
-    //    right: 5px;
-    //    bottom: 5px;
-    //    padding: 0px;
-    //    overflow: hidden;
-    //    z-index: 2;
-    //    transition: all 0.5s ease;
-    //
-    //    img {
-    //        position: absolute;
-    //        display: block;
-    //        bottom: 5px;
-    //        left: 5px;
-    //        margin: 0;
-    //        padding: 0;
-    //        cursor: url("./images/cursor_pointer.png"), pointer;
-    //        width: 25px;
-    //        height: 25px;
-    //    }
-    //
-    //    span {
-    //        position: absolute;
-    //        bottom: 6px;
-    //        left: 36px;
-    //        color: white;
-    //        font-size: 16px;
-    //        cursor: url("./images/cursor_pointer.png"), pointer;
-    //    }
-    //
-    //    img.active {
-    //        display: block !important;
-    //    }
-    //}
-
-    //&:hover button.report {
-    //    width: 35px;
-    //    padding: 10px;
-    //
-    //    &:hover {
-    //        width: 160px;
-    //    }
-    //}
 }
 
 .sound-progress {

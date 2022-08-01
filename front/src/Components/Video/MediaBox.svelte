@@ -14,7 +14,6 @@
     export let mozaicFullWidth = false;
     export let mozaicQuarter = false;
 
-    //let peer: VideoPeer;
     let peer = streamable;
     let constraintStore = peer.constraintsStore;
 </script>
@@ -33,7 +32,7 @@
             class:mozaic-quarter={mozaicQuarter}
         >
             <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
-                <VideoOffBox peer={streamable} clickable={isClickable} />
+                <VideoOffBox peer={streamable} clickable={false} />
             </div>
         </div>
     {:else}
@@ -101,44 +100,44 @@
             margin-top: 2%;
             margin-bottom: 2%;
         }
-
-        &.mozaic-solo {
-            max-height: inherit !important;
-            width: 90% !important;
-        }
-
-        &.mozaic-full-width {
-            width: 95%;
-            max-width: 95%;
-            margin-left: 3%;
-            margin-right: 3%;
-            margin-top: auto;
-            margin-bottom: auto;
-            max-height: 95%;
-
-            &:hover {
-                margin-top: auto;
-                margin-bottom: auto;
-            }
-        }
-
-        &.mozaic-quarter {
-            width: 95%;
-            max-width: 95%;
-            margin-top: auto;
-            margin-bottom: auto;
-            max-height: 95%;
-
-            &:hover {
-                margin-top: auto;
-                margin-bottom: auto;
-            }
-        }
-
-        &.nes-container.is-rounded {
-            border-image-outset: 1;
-        }
-
+    //
+    //    &.mozaic-solo {
+    //        max-height: inherit !important;
+    //        width: 90% !important;
+    //    }
+    //
+    //    &.mozaic-full-width {
+    //        width: 95%;
+    //        max-width: 95%;
+    //        margin-left: 3%;
+    //        margin-right: 3%;
+    //        margin-top: auto;
+    //        margin-bottom: auto;
+    //        max-height: 95%;
+    //
+    //        &:hover {
+    //            margin-top: auto;
+    //            margin-bottom: auto;
+    //        }
+    //    }
+    //
+    //    &.mozaic-quarter {
+    //        width: 95%;
+    //        max-width: 95%;
+    //        margin-top: auto;
+    //        margin-bottom: auto;
+    //        max-height: 95%;
+    //
+    //        &:hover {
+    //            margin-top: auto;
+    //            margin-bottom: auto;
+    //        }
+    //    }
+    //
+    //    &.nes-container.is-rounded {
+    //        border-image-outset: 1;
+    //    }
+    //
         &.clickable {
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         }
