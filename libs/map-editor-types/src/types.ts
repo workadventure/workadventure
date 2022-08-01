@@ -7,4 +7,9 @@ export enum CommandType {
     UpdateAreaCommand = "UpdateAreaCommand",
 }
 
+export enum AreaType {
+    Static = "Static",
+    Dynamic = "Dynamic",
+}
+
 export type CommandPayload = UpdateAreaCommandPayload;

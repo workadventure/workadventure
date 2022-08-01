@@ -4,8 +4,7 @@
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { CommandType } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
-    import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+    import { CommandType, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;

@@ -1,6 +1,5 @@
 import { GameMap } from '../../../../../front/src/Phaser/Game/GameMap';
-import { AreaType } from '../../../../../front/src/Phaser/Game/GameMapAreas';
-import { CommandPayload, CommandType, ITiledMapRectangleObject } from '../../types';
+import { AreaType, CommandPayload, CommandType, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 
 export interface UpdateAreaCommandPayload {
