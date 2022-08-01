@@ -10,7 +10,7 @@ import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import {UploaderManager, uploaderManager} from "../Services/UploaderManager";
+import {UploadedFile, uploaderManager} from "../Services/UploaderManager";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -426,7 +426,7 @@ export class MucRoom {
     if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
   }
 
-  public sendRequestUploadFile(file: File) {
+  public sendRequestUploadFile(files: FileList): Promise<UploadedFile[]|false> {
     /*
     const chatState = xml(
         "iq",
@@ -446,7 +446,12 @@ export class MucRoom {
     this.connection.emitXmlMessage(chatState);
      */
     if (_VERBOSE) console.warn("[XMPP]", "File uploaded");
-    return uploaderManager.write(file);
+    return uploaderManager.write(files);
+  }
+
+  public sendRequestDeleteUploadedFile(file: UploadedFile){
+    if (_VERBOSE) console.warn("[XMPP]", "File uploaded");
+    return uploaderManager.delete(file.id);
   }
 
   public sendMessage(text: string) {

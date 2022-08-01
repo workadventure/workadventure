@@ -46,7 +46,6 @@
     "@workadventure/tailwind": "link:../libs/tailwind",
     "@xmpp/client": "^0.13.0",
     "@xmpp/debug": "^0.13.0",
-    "aws-sdk": "^2.1184.0",
     "axios": "^0.21.2",
     "buffer": "^6.0.3",
     "cancelable-promise": "^4.2.1",

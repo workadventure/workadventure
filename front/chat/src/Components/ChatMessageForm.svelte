@@ -1,14 +1,15 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
-  import { SendIcon, SmileIcon, PaperclipIcon, LoaderIcon, Trash2Icon, CheckIcon, XIcon } from "svelte-feather-icons";
+  import { SendIcon, SmileIcon, PaperclipIcon, LoaderIcon, Trash2Icon, CheckIcon } from "svelte-feather-icons";
   import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { createEventDispatcher, onMount } from "svelte";
   import { EmojiButton } from "@joeattardi/emoji-button";
-  import { selectedMessageToReply } from "../Stores/ChatStore";
+  import { selectedMessageToReply, filesUploadStore } from "../Stores/ChatStore";
   import { UserData } from "../Messages/JsonMessages/ChatData";
   import { userStore } from "../Stores/LocalUserStore";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
+  import { FileExt, UploadedFile } from "../Services/UploaderManager";
 
   export let mucRoom: MucRoom;
 
@@ -20,8 +21,6 @@
 
   let emojiOpened = false;
   let newMessageText = "";
-  let files;
-  let fileUploadState = null;
 
   export const defaultColor = "#626262";
 
@@ -94,17 +93,55 @@
     emojiOpened = true;
   }
 
-  function handleFile() {
-    if (files && files.length > 0) {
-      mucRoom.sendRequestUploadFile(files[0])
-              .then((result) => {
-                fileUploadState = !!result;
-              }).catch(() => {});
+  function handleInputFile(event: Event){
+
+    const files = (<HTMLInputElement>event.target).files;
+    console.log('handleInputFile => files', files, files?.length);
+    if (!files || files.length === 0) {
+      console.info('No files uploaded');
+      return;
     }
+    
+    //initialise file in the state of uploded file
+    filesUploadStore.update((list) => {
+      for(const file of files){
+        const fileExt = (file as FileExt);
+        fileExt.isUploaded = false;
+        list.set(file.name, fileExt);
+      }
+      return list;
+    });
+
+    //send request to upload file(s)
+    mucRoom.sendRequestUploadFile(files)
+    .then((results) => {
+      console.log('sendRequestUploadFile => ', results);
+      if(results == false){
+        throw "Error message uploaded";
+      }
+
+      filesUploadStore.update((list) => {
+        console.log('results => ', results);
+        for(const result of results){
+          console.log('result => ', result);
+          list.set(result.name, result);
+        }
+        return list;
+      });
+    })
+    .catch(() => {});
   }
 
-  $: if(files && fileUploadState !== true){
-    handleFile();
+  function handlerDeleteUploadedFile(file: File|UploadedFile){
+    if(file instanceof File){
+      //TODO manage promise listener to delete file
+    }else{
+      //mucRoom.sendRequestDeleteUploadedFile(file);
+    }
+    filesUploadStore.update((list) => {
+      list.delete(file.name);
+      return list;
+    });
   }
 
   onMount(() => {
@@ -198,27 +235,23 @@
 
   <form on:submit|preventDefault={sendMessage}>
     <div class="tw-w-full tw-p-2">
-      {#if files}
-        {#each files as file}
-          <div class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1">
-            <div style="max-width: 92%;" class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center">
-              {#if fileUploadState === null}
-                <LoaderIcon size="14" class="tw-animate-spin" />
-              {:else if fileUploadState === true}
-                <CheckIcon size="14" class="tw-text-pop-green" />
-              {:else if fileUploadState === false}
-                <XIcon size="14" class="tw-text-pop-red" />
-              {/if}
-              <span style="max-width: 92%;" class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap">
-                {file.name}
-              </span>
-            </div>
-            <button on:click={() => {files = null;}} class={`tw-pr-0 tw-mr-0 ${fileUploadState === null?'tw-opacity-1':''}`}>
-              <Trash2Icon size="14"/>
-            </button>
+      {#each [...$filesUploadStore.values()] as fileUploaded}
+        <div class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1">
+          <div style="max-width: 92%;" class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center">
+            {#if fileUploaded.isUploaded}
+              <CheckIcon size="14" class="tw-text-pop-green" />
+            {:else}
+              <LoaderIcon size="14" class="tw-animate-spin" />
+            {/if}
+            <span style="max-width: 92%;" class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap">
+              {fileUploaded.name}
+            </span>
           </div>
-        {/each}
-      {/if}
+          <button on:click={() => {handlerDeleteUploadedFile(fileUploaded)}} class="tw-pr-0 tw-mr-0">
+            <Trash2Icon size="14"/>
+          </button>
+        </div>
+      {/each}
       <div class="tw-flex tw-items-center tw-relative">
         <textarea
                 type="text"
@@ -258,15 +291,14 @@
         >
           <SmileIcon size="17" />
         </button>
-        {#if !files}
-          <input type="file"
-                 id="file"
-                 name="file"
-                 class="tw-hidden"
-                 bind:files
-          >
-          <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
-        {/if}
+        <input type="file"
+                id="file"
+                name="file"
+                class="tw-hidden"
+                on:input={handleInputFile}
+                multiple
+                >
+        <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
         <button
                 type="submit"
                 class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"

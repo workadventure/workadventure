@@ -4,7 +4,7 @@ import {v4} from "uuid";
 import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {Readable} from 'stream'
-import AWS, {S3} from "aws-sdk";
+import { uploaderService } from "../Service/UploaderService";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -12,30 +12,21 @@ interface UploadedFileBuffer {
 }
 
 export class FileController extends BaseController {
+    //TODO migrate in upload file service
     private uploadedFileBuffers: Map<string, UploadedFileBuffer> = new Map<string, UploadedFileBuffer>();
-    private s3: S3|null = null;
 
     constructor(private App : App) {
         super();
         this.App = App;
+
         this.uploadAudioMessage();
         this.downloadAudioMessage();
+        this.downloadFile();
         this.uploadFile();
+        this.deleteUploadedFile();
 
         // Cleanup every 1 minute
         setInterval(this.cleanup.bind(this), 60000);
-
-        if(process.env.AWS_BUCKET != undefined && process.env.AWS_BUCKET != ""){
-            // Set the region 
-            AWS.config.update({
-                accessKeyId: (process.env.AWS_ACCESS_KEY_ID as string),
-                secretAccessKey: (process.env.AWS_SECRET_ACCESS_KEY as string),
-                region: (process.env.AWS_DEFAULT_REGION as string)
-            });
-
-            // Create S3 service object
-            this.s3 = new AWS.S3({apiVersion: '2006-03-01'});
-        }
     }
 
     /**
@@ -101,8 +92,8 @@ export class FileController extends BaseController {
                     }));
 
                 } catch (e) {
-                    console.log("An error happened", e)
-                    res.writeStatus(e.status || "500 Internal Server Error");
+                    console.error("An error happened", e)
+                    res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     res.end('An error happened');
                 }
@@ -174,6 +165,79 @@ export class FileController extends BaseController {
         });
     }
 
+    downloadFile(){
+        this.App.options("/download-file/*", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+
+            res.end();
+        });
+
+        this.App.get("/download-file/:id", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                res.onAborted(() => {
+                    console.warn('download file request was aborted');
+                })
+
+                const id = req.getParameter(0);
+                try{
+                    const fileBuffer = await uploaderService.get(id);
+                    if (fileBuffer == undefined) {
+                        res.writeStatus("404 Not found");
+                        this.addCorsHeaders(res);
+                        res.end("Cannot find file");
+                        return;
+                    }
+
+                    const readable = new Readable()
+                    readable._read = () => {} // _read is required but you can noop it
+                    readable.push(fileBuffer);
+                    readable.push(null);
+
+                    const size = fileBuffer.byteLength;
+
+                    res.writeStatus("200 OK");
+                    //TODO manage type with the extension of file
+                    //res.writeHeader("Content-Type", "image/png");
+
+                    return readable.on('data', buffer => {
+                        const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+                            lastOffset = res.getWriteOffset();
+
+                        // First try
+                        const [ok, done] = res.tryEnd(chunk, size);
+
+                        if (done) {
+                            readable.destroy();
+                        } else if (!ok) {
+                            // pause because backpressure
+                            readable.pause();
+
+                            // Save unsent chunk for later
+                            res.ab = chunk;
+                            res.abOffset = lastOffset;
+
+                            // Register async handlers for drainage
+                            res.onWritable(offset => {
+                                const [ok, done] = res.tryEnd(res.ab.slice(offset - res.abOffset), size);
+                                if (done) {
+                                    readable.destroy();
+                                } else if (ok) {
+                                    readable.resume();
+                                }
+                                return ok;
+                            });
+                        }
+                    });
+                }catch(err){
+                    console.error("deleteUploadedFile => An error happened", err)
+                    res.writeStatus("500 Internal Server Error");
+                    this.addCorsHeaders(res);
+                    return res.end('An error happened');
+                }
+            })();
+        });
+    }
+
     uploadFile(){
         this.App.options("/upload-file", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
@@ -187,68 +251,72 @@ export class FileController extends BaseController {
                 })
 
                 try {
-                    let fileName: string | null = null;
-                    const chunks: Buffer[] = [];
+                    const chunksByFile: Map<string, Buffer> = new Map<string, Buffer>();
                     const params = await res.formData({
                         onFile: (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
-                            fileName = filename;
                             (async () => {
                                 console.log('READING FILE', filename, encoding, mimetype);
                                 
+                                const chunks: Buffer[] = [];
                                 for await (const chunk of file) {
                                     if (!(chunk instanceof Buffer)) {
                                         throw new Error('Unexpected chunk');
                                     }
                                     chunks.push(chunk)
+                                    chunksByFile.set(filename, Buffer.concat(chunks));
                                 }
                             })();
                         }
                     });
 
-                    if(fileName == undefined){
+                    if(params == undefined || chunksByFile.size === 0){
                         throw new Error('no file name');
                     }
                     
-                    let Location = null;
-                    if(this.s3 != undefined){
-                        const tab = (fileName as string).split('.');
-                        const fileUuid = `${v4()}.${tab[tab.length -1]}`;
-                        const uploadParams: S3.Types.PutObjectRequest = {
-                            Bucket: `${(process.env.AWS_BUCKET as string)}`, 
-                            Key: fileUuid, 
-                            Body: Buffer.concat(chunks)
-                        };
-
-                        //upload file in data
-                        const uploadedFile = await this.s3.upload(uploadParams,  (err, data)  => {
-                            if (err || !data) {
-                                throw err;
-                            }
-                            return data;
-                        }).promise();
-                        Location = uploadedFile.Location;
-                    }else{
-                        const audioMessageId = v4();
-                        Location = `${process.env.UPLOADER_URL}/download-audio-message/${audioMessageId}`;
-                        this.uploadedFileBuffers.set(audioMessageId, {
-                            buffer: Buffer.concat(chunks),
-                            expireDate: undefined
-                        });
+                    const uploadedFile: {name: string, id: string, location: string}[] = [];
+                    for(const [fileName, buffer] of chunksByFile){
+                        const {Location, Key} = await uploaderService.uploadFile(fileName, buffer);
+                        uploadedFile.push({name: fileName, id: Key, location: Location});
                     }
 
-                    if(Location == undefined){
+                    if(uploadedFile.length === 0){
                         throw new Error('Error upload file');
                     }
 
                     res.writeStatus("200 OK");
                     this.addCorsHeaders(res);
-                    return res.end(JSON.stringify({
-                        message: "ok",
-                        location: Location
-                    }));
+                    return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
-                    console.log("An error happened", err)
-                    res.writeStatus(err.status || "500 Internal Server Error");
+                    console.error("An error happened", err)
+                    res.writeStatus("500 Internal Server Error");
+                    this.addCorsHeaders(res);
+                    return res.end('An error happened');
+                }
+            })();
+        });
+    }
+
+    deleteUploadedFile(){
+        this.App.options("/upload-file/:fileId", (res: HttpResponse, req: HttpRequest) => {
+            this.addCorsHeaders(res);
+            res.end();
+        });
+
+        this.App.del("/upload-file/:fileId", (res: HttpResponse, req: HttpRequest) => {
+            (async () => {
+                res.onAborted(() => {
+                    console.warn('delete upload file request was aborted');
+                });
+
+                const fileId = decodeURI(req.getParameter(0));
+                try{
+                    await uploaderService.deleteFileById(fileId);
+                    res.writeStatus("200 OK");
+                    this.addCorsHeaders(res);
+                    return res.end(JSON.stringify({message: "ok", id: fileId}));
+                }catch(err){
+                    console.error("deleteUploadedFile => An error happened", err)
+                    res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     return res.end('An error happened');
                 }

@@ -1,58 +1,52 @@
-import {
-    AWS_ACCESS_KEY_ID,
-    AWS_BUCKET,
-    AWS_DEFAULT_REGION,
-    AWS_ENDPOINT,
-    AWS_SECRET_ACCESS_KEY
-} from "../Enum/EnvironmentVariable";
-import {S3} from "aws-sdk";
+import Axios from "axios";
+import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
+
+export interface FileExt extends File{
+    isUploaded: boolean
+}
+
+export interface UploadedFileInterface{
+    name: string, 
+    id: string, 
+    location: string,
+    isUploaded: boolean
+}
+
+export class UploadedFile implements UploadedFileInterface{
+    public isUploaded: boolean
+    constructor(public name: string, public id: string, public location: string){
+        this.isUploaded = true;
+    }
+}
 
 export class UploaderManager{
-    private client: S3 | undefined;
-
-    private readonly bucketName = AWS_BUCKET ?? "";
     constructor() {
-        if(AWS_ACCESS_KEY_ID && AWS_SECRET_ACCESS_KEY && AWS_DEFAULT_REGION && AWS_ENDPOINT && AWS_BUCKET){
-            this.client = new S3({
-                accessKeyId: AWS_ACCESS_KEY_ID,
-                secretAccessKey: AWS_SECRET_ACCESS_KEY,
-                region: AWS_DEFAULT_REGION,
-                endpoint: AWS_ENDPOINT
-            });
+    }
+
+    public async write(files: FileList): Promise<UploadedFile[]|false> {
+        const formData = new FormData();
+        for(const file of files){
+            formData.append(file.name, file);
+        }
+        try{
+            const result = await Axios.post(`${UPLOADER_URL}/upload-file`, formData);
+            return result.data.reduce((list: UploadedFile[], file: UploadedFile) => {
+                list.push(new UploadedFile(file.name, file.id, file.location));
+                return list;
+            }, []);
+        }catch(err){
+            //TODO manage error from uploader server
+            console.error('Error push file', err);
+            return false;
         }
     }
 
-    private generateRandomString = () => {
-        const chars =
-            "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
-        const randomArray = Array.from(
-            { length: 20 },
-            () => chars[Math.floor(Math.random() * chars.length)]
-        );
-        return randomArray.join("");
-    };
-
-    private generateFileKey(file: File): string {
-        const fileName = file.name.split('.');
-        const ext = fileName.pop();
-        return `${this.generateRandomString()}-${Date.now()}.${ext}`;
-    }
-
-    public async write(file: File): Promise<string|boolean> {
-        const fileKey = this.generateFileKey(file);
-        if (this.client) {
-            const upload = this.client.putObject({
-                Bucket: this.bucketName,
-                Key: fileKey,
-                Body: file,
-                ContentType: file.type
-            }).promise();
-            return await upload.then(() => `${this.bucketName}/${fileKey}`).catch(() => false);
-        } else {
-            //TODO Save file to local server if AWS is not configured
+    public async delete(fileId: string) {
+        try{
+            await Axios.delete(`${UPLOADER_URL}/upload-file/${fileId}`);
+        }catch(err){
+            console.error('Delete uploaded file error: ', err);
         }
-
-        return `${this.bucketName}/${fileKey}`;
     }
 }
 

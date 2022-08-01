@@ -79,6 +79,7 @@ services:
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
+      UPLOADER_URL: //uploader.workadventure.localhost
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs
@@ -217,9 +218,12 @@ services:
       AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
       AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
       AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
-      AWS_BUCKET: "$AWS_BUCKET/upload/chat"
+      AWS_BUCKET: "$AWS_BUCKET"
       AWS_URL: "$AWS_URL"
       AWS_ENDPOINT: "$AWS_ENDPOINT"
+      #REDIS
+      REDIS_HOST: "$UPLOADER_REDIS_HOST"
+      REDIS_PORT: "$UPLOADER_REDIS_PORT"
     volumes:
       - ./uploader:/usr/src/app
     labels:

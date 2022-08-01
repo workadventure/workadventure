@@ -4,6 +4,7 @@ import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { Message } from "../Xmpp/MucRoom";
+import { FileExt, UploadedFile } from "../Services/UploaderManager";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -172,3 +173,5 @@ export const timelineMessagesToSee = derived(
       (message) => message.date > $lastTimelineMessageRead
     ).length
 );
+
+export const filesUploadStore = writable<Map<string, UploadedFile|FileExt>>(new Map<string, UploadedFile|FileExt>());
