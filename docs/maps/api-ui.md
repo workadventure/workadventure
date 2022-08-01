@@ -5,7 +5,7 @@
 
 In order to open a popup window, you must first define the position of the popup on your map.
 
-You can position this popup by using a "rectangle" object in Tiled that you will place on an "object" layer.
+You can position this popup by using a "rectangle" object in Tiled that you will place on the special object layer "floorLayer".
 
 <div class="row">
     <div class="col">
