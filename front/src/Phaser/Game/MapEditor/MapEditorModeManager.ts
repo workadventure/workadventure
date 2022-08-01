@@ -67,13 +67,14 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
+        this.subscribeToGameMapEvents();
     }
 
     public executeCommand(type: CommandType, payload: CommandPayload): void {
         let command: Command;
         switch (type) {
             case CommandType.UpdateAreaCommand: {
-                command = new UpdateAreaCommand(this.scene, this.editorTools.get(EditorToolName.AreaEditor) as AreaEditorTool, payload);
+                command = new UpdateAreaCommand(this.scene, payload);
                 command.execute();
                 // this should not be called with every change. Use some sort of debounce
                 this.scene.connection?.emitMapEditorModifyArea(payload.config);
@@ -122,6 +123,7 @@ export class MapEditorModeManager {
 
     public destroy(): void {
         this.unsubscribeFromStores();
+        this.unsubscribeFromGameMapEvents();
         this.pointerDownUnsubscriber();
     }
 
@@ -137,14 +139,10 @@ export class MapEditorModeManager {
             }
             case "r": {
                 this.redoCommand();
-                console.log(`Commands size: ${this.commandsHistory.length}`);
-                console.log(`INDEX: ${this.currentCommandIndex}`);
                 break;
             }
             case "u": {
                 this.undoCommand();
-                console.log(`Commands size: ${this.commandsHistory.length}`);
-                console.log(`INDEX: ${this.currentCommandIndex}`);
                 break;
             }
             default: {
@@ -153,8 +151,8 @@ export class MapEditorModeManager {
         }
     }
 
-    public subscribeToStreams(connection: RoomConnection): void {
-        this.editorTools.forEach((tool) => tool.subscribeToStreams(connection));
+    public subscribeToRoomConnection(connection: RoomConnection): void {
+        this.editorTools.forEach((tool) => tool.subscribeToRoomConnection(connection));
     }
 
     private equipTool(tool?: EditorToolName): void {
@@ -215,6 +213,14 @@ export class MapEditorModeManager {
         this.pointerDownUnsubscriber = mapEditorModeDragCameraPointerDownStore.subscribe((pointerDown) => {
             this.pointerDown = pointerDown;
         });
+    }
+
+    private subscribeToGameMapEvents(): void {
+        this.editorTools.forEach((tool) => tool.subscribeToGameMapEvents(this.scene.getGameMap()));
+    }
+
+    private unsubscribeFromGameMapEvents(): void {
+        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapEvents());
     }
 
     private unsubscribeFromStores(): void {

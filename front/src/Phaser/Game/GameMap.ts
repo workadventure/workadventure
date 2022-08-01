@@ -71,6 +71,7 @@ export class GameMap {
      * Firing on map change, containing newest collision grid array
      */
     private mapChangedSubject = new Subject<number[][]>();
+    private areaUpdatedSubject = new Subject<ITiledMapRectangleObject>();
 
     private readonly defaultTileSize = 32;
 
@@ -491,10 +492,12 @@ export class GameMap {
 
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
         this.gameMapAreas.updateAreaByName(name, type, this.position, config);
+        this.areaUpdatedSubject.next(this.gameMapAreas.getAreaByName(name, AreaType.Static));
     }
 
     public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
         this.gameMapAreas.updateAreaById(id, type, this.position, config);
+        this.areaUpdatedSubject.next(this.gameMapAreas.getArea(id, AreaType.Static));
     }
 
     public deleteAreaByName(name: string, type: AreaType): void {
@@ -694,5 +697,9 @@ export class GameMap {
 
     public getMapChangedObservable(): Observable<number[][]> {
         return this.mapChangedSubject.asObservable();
+    }
+
+    public getAreaUpdatedObservable(): Observable<ITiledMapRectangleObject> {
+        return this.areaUpdatedSubject.asObservable();
     }
 }

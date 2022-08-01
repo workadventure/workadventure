@@ -1,7 +1,9 @@
 import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+import { Subscription } from 'rxjs';
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
+import { GameMap } from '../../GameMap';
 import { AreaType } from "../../GameMapAreas";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
@@ -15,6 +17,8 @@ export class AreaEditorTool extends MapEditorTool {
      * Visual representations of map Areas objects
      */
     private areaPreviews: AreaPreview[];
+
+    private gameMapAreaUpdateSubscription!: Subscription;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -34,7 +38,11 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    public subscribeToStreams(connection: RoomConnection): void {
+    public destroy(): void {
+        this.gameMapAreaUpdateSubscription.unsubscribe();
+    }
+
+    public subscribeToRoomConnection(connection: RoomConnection): void {
         connection.editMapMessageStream.subscribe((message) => {
             switch (message.message?.$case) {
                 case "modifyAreaMessage": {
@@ -46,6 +54,13 @@ export class AreaEditorTool extends MapEditorTool {
                     this.scene.markDirty();
                 }
             }
+        });
+    }
+
+    public subscribeToGameMapEvents(gameMap: GameMap): void {
+        this.gameMapAreaUpdateSubscription = gameMap.getAreaUpdatedObservable().subscribe((areaConfig: ITiledMapRectangleObject) => {
+            this.updateAreaPreview(areaConfig);
+            this.scene.markDirty();
         });
     }
     
