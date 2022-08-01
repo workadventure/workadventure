@@ -63,6 +63,10 @@ export class AreaEditorTool extends MapEditorTool {
             this.scene.markDirty();
         });
     }
+
+    public unsubscribeFromGameMapEvents(): void {
+        this.gameMapAreaUpdateSubscription.unsubscribe();
+    }
     
     public updateAreaPreview(config: ITiledMapRectangleObject): void {
         const areaPreview = this.getAreaPreview(config.id);

@@ -1,21 +1,16 @@
+import { CommandPayload, CommandType } from '@workadventure/map-editor-types';
+import { UpdateAreaCommand } from '@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand';
+import { Command } from '@workadventure/map-editor-types/src/Commands/Command';
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
 import { GameScene } from "../GameScene";
-import { UpdateAreaCommand, UpdateAreaCommandPayload } from "./Commands/Area/UpdateAreaCommand";
-import { Command } from "./Commands/Command";
 import { AreaEditorTool } from "./Tools/AreaEditorTool";
 import { MapEditorTool } from "./Tools/MapEditorTool";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
 }
-
-export enum CommandType {
-    UpdateAreaCommand = "UpdateAreaCommand",
-}
-
-export type CommandPayload = UpdateAreaCommandPayload;
 
 export class MapEditorModeManager {
     private scene: GameScene;
@@ -74,7 +69,7 @@ export class MapEditorModeManager {
         let command: Command;
         switch (type) {
             case CommandType.UpdateAreaCommand: {
-                command = new UpdateAreaCommand(this.scene, payload);
+                command = new UpdateAreaCommand(this.scene.getGameMap(), payload);
                 command.execute();
                 // this should not be called with every change. Use some sort of debounce
                 this.scene.connection?.emitMapEditorModifyArea(payload.config);
