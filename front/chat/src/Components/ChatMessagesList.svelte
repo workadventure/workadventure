@@ -29,6 +29,7 @@
     selectedMessageToReply,
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  import { HtmlUtils } from "../Utils/HtmlUtils";
 
   export let mucRoom: MucRoom;
 
@@ -217,6 +218,11 @@
     subscribers.forEach((subscriber) => subscriber());
   });
 
+  const chatStyleLink = "text-decoration: underline;";
+  function urlifyText(text: string): string {
+    return HtmlUtils.urlify(text, chatStyleLink);
+  }
+
   $: usersStore = mucRoom.getPresenceStore();
 </script>
 
@@ -323,7 +329,7 @@
                 class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
               >
                 <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-                  {message.body}
+                  {@html urlifyText(message.body)}
                 </p>
                 {#if message.targetMessageReact}
                   <div class="emojis">
@@ -344,17 +350,38 @@
                   </div>
                 {/if}
                 <div
-                  class="action tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                  class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                 >
-                  <div on:click={() => selectMessage(message)}>
+                  <div class="action" on:click={() => selectMessage(message)}>
                     <CornerDownLeftIcon size="17" />
                   </div>
-                  <div on:click={() => reactMessage(message)}>
+                  <div class="action" on:click={() => reactMessage(message)}>
                     <SmileIcon size="17" />
                   </div>
                   <!-- TODO dropdown-->
-                  <div>
+                  <div class="action more-option">
                     <MoreHorizontalIcon size="17" />
+
+                    <div class="wa-dropdown-menu tw-invisible">
+                      <span
+                        class="wa-dropdown-item"
+                        on:click={() => selectMessage(message)}
+                      >
+                        <CornerDownLeftIcon size="13" class="tw-mr-1" />
+                        {$LL.reply()}
+                      </span>
+                      <span
+                        class="wa-dropdown-item"
+                        on:click={() => reactMessage(message)}
+                      >
+                        <SmileIcon size="13" class="tw-mr-1" />
+                        {$LL.react()}
+                      </span>
+                      <span class="wa-dropdown-item tw-text-pop-red">
+                        <Trash2Icon size="13" class="tw-mr-1" />
+                        {$LL.delete()} (comming soon)
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -510,7 +537,6 @@
         height: 0;
         border-top: 6px solid transparent;
         border-bottom: 6px solid transparent;
-
         border-left: 4px solid #4d4b67;
         content: "";
         position: absolute;
@@ -538,18 +564,55 @@
   }
   .message {
     position: relative;
-    .action {
+    .actions {
       display: none;
       position: absolute;
       right: -16px;
       top: -10px;
-      padding: 2px;
+      padding: 0px;
       cursor: pointer;
       flex-direction: column;
+      border-radius: 0.25rem;
+      border-width: 1px;
+      border-style: solid;
+      --tw-border-opacity: 1;
+      border-color: rgb(77 75 103 / var(--tw-border-opacity));
+      background-color: rgb(27 27 41 / 0.95);
+      font-size: 0.75rem;
+      line-height: 1rem;
+      font-weight: 500;
+      color: rgb(255 255 255 / var(--tw-text-opacity));
+      --tw-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+        0 4px 6px -4px rgb(0 0 0 / 0.1);
+      --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color),
+        0 4px 6px -4px var(--tw-shadow-color);
+      box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
+        var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+      z-index: 1;
+
+      div.action {
+        padding: 2px;
+        border-radius: 0.15rem;
+        &:hover {
+          --tw-bg-opacity: 1;
+          background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+        }
+      }
     }
     &:hover {
-      .action {
+      .actions {
         display: flex;
+      }
+    }
+    .more-option {
+      position: relative;
+      .wa-dropdown-menu {
+        right: -2px;
+      }
+      &:hover {
+        .wa-dropdown-menu {
+          visibility: visible;
+        }
       }
     }
     .emojis {

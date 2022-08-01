@@ -21,6 +21,7 @@ const fr_FR: Translation = {
   usersOnline: "utilisateurs en ligne",
   open: "Ouvrir",
   me: "Moi",
+  you: "Vous",
   ban: {
     title: "Bannir",
     content:
@@ -70,6 +71,8 @@ const fr_FR: Translation = {
     notFound: "Aucun emoji trouvé",
   },
   said: "dit :",
+  reply: "Répondre",
+  react: "Réagir",
 };
 
 export default fr_FR;

@@ -25,6 +25,7 @@ export type User = {
   unreads: boolean;
   isAdmin: boolean;
   chatState: string;
+  isMe: boolean;
 };
 
 export const ChatStates = {
@@ -215,26 +216,6 @@ export class MucRoom {
         { type: "goToPage", data: { url: `${playUri}#moveToUser=${uuid}` } },
         "*"
       );
-      /*
-            Axios.get(`${PUSHER_URL}/room/access`, { params: { token: get(userStore).authToken, playUri, uuid: get(userStore).uuid } })
-                .then((_) => {
-                    window.parent.postMessage({type: 'goToPage', data: {url: `${playUri}#moveToUser=${uuid}`}}, '*');
-                })
-                .catch((error) => {
-                    console.log("Cant teleport", error);
-                    /*
-                    layoutManagerActionStore.addAction({
-                        uuid: "cantTeleport",
-                        type: "warning",
-                        message: get(LL).warning.accessDenied.teleport(),
-                        callback: () => {
-                            layoutManagerActionStore.removeAction("cantTeleport");
-                        },
-                        userInputManager: undefined,
-                    });
-                    this.resetTeleportStore();
-                });
-            */
     } else if (type === "user") {
       window.parent.postMessage(
         { type: "askPosition", data: { uuid, playUri } },
@@ -567,7 +548,6 @@ export class MucRoom {
         action,
       })
     );
-    console.log("this.jid", jid(this.jid));
     this.connection.emitXmlMessage(messageReacted);
 
     this.messageReactStore.update((reactMessages) => {
@@ -702,10 +682,7 @@ export class MucRoom {
       } else {
         const subscription = xml.getChild("subscribe");
         if (subscription) {
-          const jid =
-            subscription.getAttr("nick").split("@ejabberd")[0] + "@ejabberd";
           const nick = subscription.getAttr("nick");
-          this.updateUser(jid, nick, playUri);
           if (nick === this.getPlayerName()) {
             this.sendPresence();
             this.requestAllSubscribers();
@@ -878,38 +855,35 @@ export class MucRoom {
     isAdmin: boolean | null = null,
     chatState: string | null = null
   ) {
+    let isMe = false;
     const user = get(userStore);
-    if (
-      (MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) +
-        "@ejabberd" !==
-        jid &&
-      nick !== this.getPlayerName()
-    ) {
-      this.presenceStore.update((list) => {
-        list.set(jid.toString(), {
-          name: nick ?? this.getCurrentName(jid),
-          playUri: playUri ?? this.getCurrentPlayUri(jid),
-          uuid: uuid ?? this.getCurrentUuid(jid),
-          status: status ?? this.getCurrentStatus(jid),
-          isInSameMap:
-            (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
-          active:
-            (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
-          color: color ?? this.getCurrentColor(jid),
-          woka: woka ?? this.getCurrentWoka(jid),
-          unreads: false,
-          isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
-          chatState: chatState ?? this.getCurrentChatState(jid),
-        });
-        numberPresenceUserStore.set(list.size);
-        return list;
-      });
-    } else {
+    //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
+    if (nick === this.getPlayerName()) {
+      isMe = true;
       this.meStore.update((me) => {
         me.isAdmin = isAdmin ?? this.getMeIsAdmin();
         return me;
       });
     }
+    this.presenceStore.update((list) => {
+      list.set(jid.toString(), {
+        name: nick ?? this.getCurrentName(jid),
+        playUri: playUri ?? this.getCurrentPlayUri(jid),
+        uuid: uuid ?? this.getCurrentUuid(jid),
+        status: status ?? this.getCurrentStatus(jid),
+        isInSameMap: (playUri ?? this.getCurrentPlayUri(jid)) === user.playUri,
+        active:
+          (status ?? this.getCurrentStatus(jid)) === USER_STATUS_AVAILABLE,
+        color: color ?? this.getCurrentColor(jid),
+        woka: woka ?? this.getCurrentWoka(jid),
+        unreads: false,
+        isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
+        chatState: chatState ?? this.getCurrentChatState(jid),
+        isMe,
+      });
+      numberPresenceUserStore.set(list.size);
+      return list;
+    });
   }
 
   private deleteUser(jid: string | JID) {

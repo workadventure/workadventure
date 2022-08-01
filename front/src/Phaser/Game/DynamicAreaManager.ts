@@ -1,7 +1,8 @@
 import { Subscription } from "rxjs";
 import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import { AreaType, GameMap } from "./GameMap";
+import { GameMap } from "./GameMap";
+import { AreaType } from "./GameMapAreas";
 
 export class DynamicAreaManager {
     private readonly gameMap: GameMap;

@@ -37,7 +37,7 @@ import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { AreaType, GameMap } from "./GameMap";
+import { GameMap } from "./GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -137,6 +137,7 @@ import {
     ITiledMapProperty,
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
+import { AreaType } from "./GameMapAreas";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
 export interface GameSceneInitInterface {
@@ -208,6 +209,9 @@ export class GameScene extends DirtyScene {
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
     private createPromiseDeferred: Deferred<void>;
     private iframeSubscriptionList!: Array<Subscription>;
+    private gameMapChangedSubscription!: Subscription;
+    private messageSubscription: Subscription | null = null;
+
     private peerStoreUnsubscriber!: Unsubscriber;
     private emoteUnsubscriber!: Unsubscriber;
     private emoteMenuUnsubscriber!: Unsubscriber;
@@ -241,7 +245,6 @@ export class GameScene extends DirtyScene {
     private playerName!: string;
     private characterLayers!: string[];
     private companion!: string | null;
-    private messageSubscription: Subscription | null = null;
     private popUpElements: Map<number, DOMElement> = new Map<number, Phaser.GameObjects.DOMElement>();
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
@@ -628,6 +631,8 @@ export class GameScene extends DirtyScene {
             this.gameMap.getCollisionGrid(undefined, false),
             this.gameMap.getTileDimensions()
         );
+
+        this.subscribeToGameMapChanged();
 
         //notify game manager can to create currentUser in map
         this.createCurrentPlayer();
@@ -1439,13 +1444,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, true);
+                this.gameMap.setLayerVisibility(layerEvent.name, true);
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
-                this.setLayerVisibility(layerEvent.name, false);
+                this.gameMap.setLayerVisibility(layerEvent.name, false);
             })
         );
 
@@ -1476,7 +1481,7 @@ ${escapedMessage}
                 openCoWebsite.allowApi,
                 openCoWebsite.allowPolicy,
                 openCoWebsite.widthPercent,
-                openCoWebsite.closable ?? true
+                openCoWebsite.closable
             );
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, openCoWebsite.position);
@@ -1554,7 +1559,6 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
-                this.markDirty();
             })
         );
         iframeListener.registerAnswerer("loadTileset", (eventTileset) => {
@@ -1603,6 +1607,8 @@ ${escapedMessage}
                             }
                             //Create a new GameMap with the changed file
                             this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+                            // Unsubscribe if needed and subscribe to GameMapChanged event again
+                            this.subscribeToGameMapChanged();
                             //Destroy the colliders of the old tilemapLayer
                             this.physics.add.world.colliders.destroy();
                             //Create new colliders with the new GameMap
@@ -1711,33 +1717,6 @@ ${escapedMessage}
         this.gameMap.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }
 
-    private setLayerVisibility(layerName: string, visible: boolean): void {
-        const phaserLayer = this.gameMap.findPhaserLayer(layerName);
-        let collisionGrid: number[][] = [];
-        if (phaserLayer != undefined) {
-            phaserLayer.setVisible(visible);
-            phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            collisionGrid = this.gameMap.getCollisionGrid(phaserLayer);
-        } else {
-            const phaserLayers = this.gameMap.findPhaserLayers(layerName + "/");
-            if (phaserLayers.length === 0) {
-                console.warn(
-                    'Could not find layer with name that contains "' +
-                        layerName +
-                        '" when calling WA.hideLayer / WA.showLayer'
-                );
-                return;
-            }
-            for (let i = 0; i < phaserLayers.length; i++) {
-                phaserLayers[i].setVisible(visible);
-                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
-            }
-            collisionGrid = this.gameMap.getCollisionGrid(undefined, false);
-        }
-        this.pathfindingManager.setCollisionGrid(collisionGrid);
-        this.markDirty();
-    }
-
     public getMapDirUrl(): string {
         return this.MapUrlFile.substring(0, this.MapUrlFile.lastIndexOf("/"));
     }
@@ -1826,7 +1805,6 @@ ${escapedMessage}
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
         this.simplePeer?.unregister();
-        this.messageSubscription?.unsubscribe();
         this.userInputManager?.destroy();
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
@@ -1865,6 +1843,8 @@ ${escapedMessage}
         for (const iframeEvents of this.iframeSubscriptionList) {
             iframeEvents.unsubscribe();
         }
+        this.gameMapChangedSubscription.unsubscribe();
+        this.messageSubscription?.unsubscribe();
         this.cleanupDone = true;
     }
 
@@ -2266,6 +2246,25 @@ ${escapedMessage}
             this.connection?.emitPlayerShowVoiceIndicator(true);
             this.showVoiceIndicatorChangeMessageSent = true;
         }
+    }
+
+    private subscribeToGameMapChanged(): void {
+        this.gameMapChangedSubscription?.unsubscribe();
+        this.gameMapChangedSubscription = this.gameMap.getMapChangedObservable().subscribe((collisionGrid) => {
+            this.pathfindingManager.setCollisionGrid(collisionGrid);
+            this.markDirty();
+            const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
+            if (playerDestination) {
+                const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                const endTileIndex = this.getGameMap().getTileIndexAt(playerDestination.x, playerDestination.y);
+                this.pathfindingManager
+                    .findPath(startTileIndex, endTileIndex)
+                    .then((path) => {
+                        this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                    })
+                    .catch((reason) => console.warn(reason));
+            }
+        });
     }
 
     private doRemovePlayer(userId: number) {

@@ -1,5 +1,5 @@
 import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
-import { AreaType } from '../../../GameMap';
+import { AreaType } from '../../../GameMapAreas';
 import { GameScene } from '../../../GameScene';
 import { CommandPayload, CommandType } from '../../MapEditorModeManager';
 import { AreaEditorTool } from '../../Tools/AreaEditorTool';

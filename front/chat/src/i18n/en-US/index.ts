@@ -20,6 +20,7 @@ const en_US: BaseTranslation = {
   usersOnline: "users online",
   open: "Open",
   me: "Me",
+  you: "You",
   ban: {
     title: "Banish",
     content:
@@ -69,6 +70,8 @@ const en_US: BaseTranslation = {
     notFound: "No emojis found",
   },
   said: "said:",
+  reply: "Reply",
+  react: "React",
 };
 
 export default en_US;

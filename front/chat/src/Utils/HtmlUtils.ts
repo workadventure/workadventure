@@ -44,17 +44,28 @@ export class HtmlUtils {
 
   public static urlify(text: string, style: string = ""): string {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const emojiRegex = /\p{Extended_Pictographic}/u;
+
     text = HtmlUtils.escapeHtml(text);
-    return text.replace(urlRegex, (url: string) => {
-      url = HtmlUtils.htmlDecode(url);
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      const text = document.createTextNode(url);
-      link.appendChild(text);
-      link.setAttribute("style", style);
-      return link.outerHTML;
-    });
+
+    return text
+      .replace(urlRegex, (url: string) => {
+        url = HtmlUtils.htmlDecode(url);
+        const link = document.createElement("a");
+        link.href = url;
+        link.target = "_blank";
+        const text = document.createTextNode(url);
+        link.appendChild(text);
+        link.setAttribute("style", style);
+        return link.outerHTML;
+      })
+      .replace(emojiRegex, (emoji: string) => {
+        emoji = HtmlUtils.htmlDecode(emoji);
+        const span = document.createElement("span");
+        span.style.fontSize = "1rem";
+        span.append(emoji);
+        return span.outerHTML;
+      });
   }
 
   private static htmlDecode(input: string): string {
