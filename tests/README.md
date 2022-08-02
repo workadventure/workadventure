@@ -1,6 +1,6 @@
 # End-to-end tests
 
-This directory contains automated end to end tests.
+This directory contains automated end-to-end tests made with [Playwright](https://playwright.dev/).
 
 ## Installation
 

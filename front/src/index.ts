@@ -1,3 +1,5 @@
+console.log("BEFORE IMPORT");
+
 import "phaser";
 import GameConfig = Phaser.Types.Core.GameConfig;
 import "../style/index.scss";
@@ -10,19 +12,19 @@ import { SelectCompanionScene } from "./Phaser/Login/SelectCompanionScene";
 import { EnableCameraScene } from "./Phaser/Login/EnableCameraScene";
 import { CustomizeScene } from "./Phaser/Login/CustomizeScene";
 import WebFontLoaderPlugin from "phaser3-rex-plugins/plugins/webfontloader-plugin.js";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 import { EntryScene } from "./Phaser/Login/EntryScene";
 import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
-import { desktopApi } from "./Api/desktop/index";
+import { desktopApi } from "./Api/desktop";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
 import App from "./Components/App.svelte";
 import { HtmlUtils } from "./WebRtc/HtmlUtils";
 import WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
+import { DeviceUtils } from "./Utils/DeviceUtils";
 
 const { width, height } = coWebsiteManager.getGameSize();
 const valueGameQuality = localUserStore.getGameQualityValue();
@@ -121,19 +123,22 @@ const config: GameConfig = {
             debug: DEBUG_MODE,
         },
     },
-    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power and we want to save battery
+    // Instruct systems with 2 GPU to choose the low power one. We don't need that extra power, and we want to save battery
     powerPreference: "low-power",
     callbacks: {
         postBoot: (game) => {
             // Install rexOutlinePipeline only if the renderer is WebGL.
             const renderer = game.renderer;
-            if (renderer instanceof WebGLRenderer) {
+            if (renderer instanceof WebGLRenderer && Object.prototype.hasOwnProperty.call(window, "BigInt64Array")) {
+                const OutlinePipelinePlugin = require("phaser3-rex-plugins/plugins/outlinepipeline-plugin.js");
                 game.plugins.install("rexOutlinePipeline", OutlinePipelinePlugin, true);
             }
         },
     },
 };
 
+// Start Phaser
+console.log("Start Phaser");
 const game = new Game(config);
 
 waScaleManager.setGame(game);
@@ -161,6 +166,19 @@ coWebsiteManager.onResize.subscribe(() => {
 iframeListener.init();
 desktopApi.init();
 
+console.log("DeviceUtils.getDevice()", DeviceUtils.getDevice());
+console.log("DeviceUtils.getOS()", DeviceUtils.getOS());
+console.log("DeviceUtils.getBrowser()", DeviceUtils.getBrowser());
+console.log("DeviceUtils.getVersion()", DeviceUtils.getVersion());
+console.log("checking compatibilities...");
+if (!DeviceUtils.isCompatible()) {
+    console.log("device is not compatible");
+    alert(DeviceUtils.getMessage());
+}
+console.log("[DONE]");
+
+console.log("Start Svelte");
+// Start Svelte
 const app = new App({
     target: HtmlUtils.getElementByIdOrFail("game-overlay"),
     props: {
