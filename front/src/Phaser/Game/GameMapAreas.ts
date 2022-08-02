@@ -1,5 +1,5 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { MathUtils } from "../../Utils/MathUtils";
+import { MathUtils } from '@workadventure/math-utils';
 import { GameMap } from "./GameMap";
 
 export type areaChangeCallback = (

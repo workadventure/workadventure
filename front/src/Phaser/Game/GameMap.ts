@@ -2,7 +2,6 @@ import { flattenGroupLayersMap } from "../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
 import { GameMapProperties } from "./GameMapProperties";
-import { MathUtils } from "../../Utils/MathUtils";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -15,6 +14,7 @@ import { PathTileType } from "../../Utils/PathfindingManager";
 import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 import { areaChangeCallback, AreaType, GameMapAreas } from "./GameMapAreas";
 import { Observable, Subject } from "rxjs";
+import { MathUtils } from '@workadventure/math-utils';
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,

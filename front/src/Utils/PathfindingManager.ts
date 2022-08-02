@@ -1,5 +1,5 @@
+import { MathUtils } from '@workadventure/math-utils';
 import * as EasyStar from "easystarjs";
-import { MathUtils } from "./MathUtils";
 
 export enum PathTileType {
     Walkable = 0,

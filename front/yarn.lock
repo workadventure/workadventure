@@ -615,6 +615,10 @@
   version "0.0.0"
   uid ""
 
+"@workadventure/math-utils@link:../libs/math-utils":
+  version "0.0.0"
+  uid ""
+
 "@workadventure/tailwind@link:../libs/tailwind":
   version "0.0.0"
   uid ""

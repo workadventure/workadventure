@@ -1,6 +1,6 @@
+import { MathUtils } from '@workadventure/math-utils';
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import { MathUtils } from "../../Utils/MathUtils";
 import { GameMap } from "./GameMap";
 import { AreaType } from "./GameMapAreas";
 import { GameMapProperties } from "./GameMapProperties";
