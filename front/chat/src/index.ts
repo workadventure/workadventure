@@ -7,7 +7,7 @@ import { iframeListener } from "./IframeListener";
 iframeListener.init();
 
 const app = new App({
-  target: HtmlUtils.getElementByIdOrFail("main-container"),
+    target: HtmlUtils.getElementByIdOrFail("main-container"),
 });
 
 export default app;

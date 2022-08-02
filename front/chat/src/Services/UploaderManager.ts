@@ -1,54 +1,43 @@
 import Axios from "axios";
 import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
+import { UploadedFile } from "./FileMessageManager";
 
-export interface FileExt extends File{
-    isUploaded: boolean
-}
-
-export interface UploadedFileInterface{
-    name: string, 
-    id: string, 
-    location: string,
-    isUploaded: boolean
-}
-
-export class UploadedFile implements UploadedFileInterface{
-    public isUploaded: boolean
-    constructor(public name: string, public id: string, public location: string){
-        this.isUploaded = true;
-    }
-}
-
-export class UploaderManager{
-    constructor() {
-    }
-
-    public async write(files: FileList): Promise<UploadedFile[]|false> {
+export class UploaderManager {
+    public async write(files: FileList): Promise<UploadedFile[] | false> {
         const formData = new FormData();
-        for(const file of files){
+        for (const file of files) {
             formData.append(file.name, file);
         }
-        try{
+        try {
             const result = await Axios.post(`${UPLOADER_URL}/upload-file`, formData);
             return result.data.reduce((list: UploadedFile[], file: UploadedFile) => {
-                list.push(new UploadedFile(file.name, file.id, file.location));
+                list.push(
+                    new UploadedFile(
+                        file.name,
+                        file.id,
+                        file.location,
+                        file.lastModified,
+                        file.webkitRelativePath,
+                        file.size,
+                        file.type
+                    )
+                );
                 return list;
             }, []);
-        }catch(err){
+        } catch (err) {
             //TODO manage error from uploader server
-            console.error('Error push file', err);
+            console.error("Error push file", err);
             return false;
         }
     }
 
     public async delete(fileId: string) {
-        try{
+        try {
             await Axios.delete(`${UPLOADER_URL}/upload-file/${fileId}`);
-        }catch(err){
-            console.error('Delete uploaded file error: ', err);
+        } catch (err) {
+            console.error("Delete uploaded file error: ", err);
         }
     }
 }
-
 
 export const uploaderManager = new UploaderManager();

@@ -37,11 +37,13 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
+    "@types/mime-types": "^2.1.1",
     "@types/redis": "^4.0.11",
     "aws-sdk": "^2.1185.0",
     "busboy": "^0.3.1",
     "debug": "^4.3.1",
     "jsonwebtoken": "^8.5.1",
+    "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",

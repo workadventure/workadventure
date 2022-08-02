@@ -5,6 +5,7 @@ import {HttpRequest, HttpResponse} from "uWebSockets.js";
 import {BaseController} from "./BaseController";
 import {Readable} from 'stream'
 import { uploaderService } from "../Service/UploaderService";
+import { mimeTypeManager } from "../Service/MimeType";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -166,13 +167,13 @@ export class FileController extends BaseController {
     }
 
     downloadFile(){
-        this.App.options("/download-file/*", (res: HttpResponse, req: HttpRequest) => {
+        this.App.options("/upload-file/*", (res: HttpResponse, req: HttpRequest) => {
             this.addCorsHeaders(res);
 
             res.end();
         });
 
-        this.App.get("/download-file/:id", (res: HttpResponse, req: HttpRequest) => {
+        this.App.get("/upload-file/:id", (res: HttpResponse, req: HttpRequest) => {
             (async () => {
                 res.onAborted(() => {
                     console.warn('download file request was aborted');
@@ -197,7 +198,10 @@ export class FileController extends BaseController {
 
                     res.writeStatus("200 OK");
                     //TODO manage type with the extension of file
-                    //res.writeHeader("Content-Type", "image/png");
+                    const memeType = mimeTypeManager.getMimeTypeByFileName(id); 
+                    if(memeType !== false){
+                        res.writeHeader("Content-Type", memeType);
+                    }
 
                     return readable.on('data', buffer => {
                         const chunk = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),

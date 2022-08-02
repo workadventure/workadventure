@@ -2,6 +2,7 @@ import AWS, {S3} from "aws-sdk";
 import { ManagedUpload } from "aws-sdk/clients/s3";
 import {v4} from "uuid";
 import { createClient, commandOptions } from "redis";
+import { mimeTypeManager } from "./MimeType";
 
 class UploaderService{
     private s3: S3|null = null;
@@ -36,14 +37,23 @@ class UploaderService{
     }
 
     async uploadFile(fileName: string, chunks: Buffer): Promise<ManagedUpload.SendData>{
-        const tab = (fileName as string).split('.');
+        const tab = (fileName).split('.');
         const fileUuid = `${v4()}.${tab[tab.length -1]}`;
         if(this.s3 != undefined){
-            const uploadParams: S3.Types.PutObjectRequest = {
+            let uploadParams: S3.Types.PutObjectRequest = {
                 Bucket: `${(process.env.AWS_BUCKET as string)}`, 
                 Key: fileUuid, 
-                Body: chunks
+                Body: chunks,
+                ACL: 'public-read'
             };
+
+            const mimeType = mimeTypeManager.getMimeTypeByFileName(fileName);
+            if(mimeType !== false){
+                uploadParams = {
+                    ...uploadParams,
+                    ContentType: mimeType,
+                };
+            }
 
             //upload file in data
             const uploadedFile = await this.s3.upload(uploadParams,  (err, data)  => {
