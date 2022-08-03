@@ -130,6 +130,10 @@
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
            }
          },
+    "uploaderredis":{
+      "image": "redis:7",
+      "ports": [6379],
+    },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
            "host": {
@@ -145,10 +149,10 @@
              "AWS_DEFAULT_REGION": if std.objectHas(env, 'AWS_DEFAULT_REGION') then env.AWS_DEFAULT_REGION else "",
              "AWS_BUCKET": if std.objectHas(env, 'AWS_BUCKET') then env.AWS_BUCKET else "",
              "AWS_URL": if std.objectHas(env, 'AWS_URL') then env.AWS_URL else "",
-             "AWS_ENDPOINT": if std.objectHas(env, 'AWS_ENDPOINT') then env.AWS_ENDPOINT else ""
+             "AWS_ENDPOINT": if std.objectHas(env, 'AWS_ENDPOINT') then env.AWS_ENDPOINT else "",
              #REDIS
-             "REDIS_HOST": if std.objectHas(env, 'UPLOADER_REDIS_HOST') then env.UPLOADER_REDIS_HOST else ""
-             "REDIS_PORT": if std.objectHas(env, 'UPLOADER_REDIS_PORT') then env.UPLOADER_REDIS_PORT else ""
+             "REDIS_HOST": "uploaderredis",
+             "REDIS_PORT": "6379",
            }
          },
     "maps": {
