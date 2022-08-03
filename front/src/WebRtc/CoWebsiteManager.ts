@@ -743,7 +743,6 @@ class CoWebsiteManager {
     }
 
     public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
-        console.trace('closeCoWebsite');
         if (get(coWebsites).length === 1) {
             this.fire();
         }
