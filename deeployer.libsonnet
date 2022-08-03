@@ -114,7 +114,9 @@
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//pusher-"+url
+        "PUSHER_URL": "//pusher-"+url,
+        "UPLOADER_URL": "//uploader-"+url,
+        "EMBEDLY_KEY": env.EMBEDLY_KEY,
       }
     },
     "map-storage": {
