@@ -2,6 +2,7 @@ import axios from "axios";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
 
+const webLinkCaches = new Map();
 export class WebLink {
     private link: string;
 
@@ -27,7 +28,7 @@ export class WebLink {
         provider_name?: string,
         author_name?: string
     ): string {
-        const div = document.createElement("div") ;
+        const div = document.createElement("div");
         div.classList.add("content-card", "tw-rounded-lg");
         div.style.border = "solid 1px rgb(77 75 103)";
         div.style.padding = "4px";
@@ -41,7 +42,7 @@ export class WebLink {
         div.appendChild(link);
 
         if (imageUrl != undefined) {
-            const image = document.createElement("img") ;
+            const image = document.createElement("img");
             image.src = HtmlUtils.htmlDecode(imageUrl);
             image.setAttribute("width", "100%");
             image.setAttribute("height", "auto");
@@ -50,14 +51,14 @@ export class WebLink {
         }
 
         if (title != undefined) {
-            const titleElement = document.createElement("p") ;
+            const titleElement = document.createElement("p");
             titleElement.append(HtmlUtils.htmlDecode(title));
             titleElement.classList.add("tw-mt-1");
             div.appendChild(titleElement);
         }
 
         if (description != undefined) {
-            const descriptionElement = document.createElement("p") ;
+            const descriptionElement = document.createElement("p");
             descriptionElement.append(HtmlUtils.htmlDecode(description).substring(0, 100) + "...");
             descriptionElement.classList.add("tw-text-light-purple-alt", "tw-mt-1", "tw-m-0", "tw-text-xxs");
             div.appendChild(descriptionElement);
@@ -68,7 +69,7 @@ export class WebLink {
             provider.style.fontWeight = "bold";
             provider.append(provider_name);
 
-            const origin = document.createElement("p") ;
+            const origin = document.createElement("p");
             origin.append(provider);
             if (author_name) {
                 origin.append(` - ${author_name}`);
@@ -96,11 +97,17 @@ export class WebLink {
         return (async () => {
             if (EMBEDLY_KEY != undefined) {
                 try {
-                    const result = await axios.get(
-                        `https://api.embedly.com/1/oembed?url=${encodeURI(this.link)}&key=${EMBEDLY_KEY}`
-                    );
-                    console.log("result", result);
-                    if (!result.data) {
+                    const url = `https://api.embedly.com/1/oembed?url=${encodeURI(this.link)}&key=${EMBEDLY_KEY}`;
+
+                    let result = null;
+                    if (webLinkCaches.has(url)) {
+                        result = webLinkCaches.get(url);
+                    } else {
+                        result = await axios.get(url);
+                        webLinkCaches.set(url, result);
+                    }
+
+                    if (result == undefined || result.data == undefined) {
                         throw new Error(`Error get embed data from webiste: ${this.link}`);
                     }
 
