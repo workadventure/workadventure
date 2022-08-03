@@ -100,44 +100,6 @@
             margin-top: 2%;
             margin-bottom: 2%;
         }
-    //
-    //    &.mozaic-solo {
-    //        max-height: inherit !important;
-    //        width: 90% !important;
-    //    }
-    //
-    //    &.mozaic-full-width {
-    //        width: 95%;
-    //        max-width: 95%;
-    //        margin-left: 3%;
-    //        margin-right: 3%;
-    //        margin-top: auto;
-    //        margin-bottom: auto;
-    //        max-height: 95%;
-    //
-    //        &:hover {
-    //            margin-top: auto;
-    //            margin-bottom: auto;
-    //        }
-    //    }
-    //
-    //    &.mozaic-quarter {
-    //        width: 95%;
-    //        max-width: 95%;
-    //        margin-top: auto;
-    //        margin-bottom: auto;
-    //        max-height: 95%;
-    //
-    //        &:hover {
-    //            margin-top: auto;
-    //            margin-bottom: auto;
-    //        }
-    //    }
-    //
-    //    &.nes-container.is-rounded {
-    //        border-image-outset: 1;
-    //    }
-    //
         &.clickable {
             cursor: url("../../../style/images/cursor_pointer.png"), pointer;
         }

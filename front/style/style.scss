@@ -50,7 +50,7 @@ body .message-info.warning {
         .woka-webcam-container,
         .voice-meter-webcam-container,
         .report-ban-container {
-            @apply tw-h-[32vw] md:tw-w-[58vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[70vw];
+            @apply tw-h-[32vw] md:tw-w-[58vw] lg:tw-w-[63vw] xl:tw-w-[66vw] 2xl:tw-w-[67vw];
         }
 
         .nametag-screenshare-container {
@@ -98,50 +98,6 @@ body .message-info.warning {
             cursor: url("./images/cursor_normal.png"), pointer;
         }
     }
-}
-
-.sound-progress {
-    display: none;
-    position: absolute;
-    right: 14px;
-    top: calc(50% - 5px);
-}
-
-.sound-progress.active {
-    display: table-column;
-}
-
-.sound-progress span {
-    position: absolute;
-    color: black;
-    background-color: #00000020;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-}
-
-.sound-progress span.active {
-    background-color: #00c3ff66;
-}
-
-.sound-progress span:nth-child(1) {
-    top: calc(50% + 20px);
-}
-
-.sound-progress span:nth-child(2) {
-    top: calc(50% + 10px);
-}
-
-.sound-progress span:nth-child(3) {
-    top: calc(50% - 0px);
-}
-
-.sound-progress span:nth-child(4) {
-    top: calc(50% - 10px);
-}
-
-.sound-progress span:nth-child(5) {
-    top: calc(50% - 20px);
 }
 
 /* Spinner */

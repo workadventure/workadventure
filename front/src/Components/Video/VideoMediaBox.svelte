@@ -23,10 +23,6 @@
     let statusStore = peer.statusStore;
     let constraintStore = peer.constraintsStore;
 
-    function openReport(peer: VideoPeer): void {
-        showReportScreenStore.set({ userId: peer.userId, userName: peer.userName });
-    }
-
     let embedScreen: EmbedScreen;
     let videoContainer: HTMLDivElement;
     let minimized = isMediaBreakpointOnly("md");
@@ -113,6 +109,7 @@ tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-4
 </div>
 
 <style lang="scss">
+  //Higlighted and hovered styles are defined in style/style.css (look for 'media-container')
     video.no-video {
         visibility: collapse;
     }

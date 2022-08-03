@@ -7,8 +7,8 @@
     export let placeholderSrc: string;
     export let customWidth: string;
     export let customHeight: string;
-    export let width: string = "62px";
-    export let height: string = "62px";
+    let width = "62px";
+    let height = "62px";
 
     const gameScene = gameManager.getCurrentGameScene();
     let playerWokaPictureStore;

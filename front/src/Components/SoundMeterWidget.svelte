@@ -1,7 +1,7 @@
 <script lang="ts">
     export let volume = 0;
     let display = true;
-    export let classcss;
+    export let classcss: string;
 </script>
 
 <div

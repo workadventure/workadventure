@@ -60,7 +60,8 @@ tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
 </div>
 
 <style lang="scss">
-    .video-container {
+  //Higlighted and hovered styles are defined in style/style.css (look for 'media-container')
+  .video-container {
         i {
             white-space: nowrap;
             span {
