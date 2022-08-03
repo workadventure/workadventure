@@ -1,5 +1,5 @@
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
-import { GameMap } from '../../GameMap';
+import { GameMap } from '../../GameMap/GameMap';
 
 export abstract class MapEditorTool {
     public abstract clear(): void;

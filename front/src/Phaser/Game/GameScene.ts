@@ -37,7 +37,7 @@ import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { GameMap } from "./GameMap";
+import { GameMap } from "./GameMap/GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -137,9 +137,10 @@ import {
     ITiledMapProperty,
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
-import { AreaType } from "./GameMapAreas";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
+import { AreaType } from '@workadventure/map-editor-types';
+import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -238,7 +239,7 @@ export class GameScene extends DirtyScene {
         oldY: -1000,
     };
 
-    private gameMap!: GameMap;
+    private gameMapFrontWrapper!: GameMapFrontWrapper;
     private actionableItems: Map<number, ActionableItem> = new Map<number, ActionableItem>();
     public userInputManager!: UserInputManager;
     private isReconnecting: boolean | undefined = undefined;
@@ -544,8 +545,8 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
-        for (const layer of this.gameMap.flatLayers) {
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile, this.Map, this.Terrains));
+        for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
                 if (exitSceneUrl !== undefined) {
@@ -594,14 +595,15 @@ export class GameScene extends DirtyScene {
             }
         }
 
-        this.gameMap.exitUrls.forEach((exitUrl) => {
+        this.gameMapFrontWrapper.getExitUrls().forEach((exitUrl) => {
             this.loadNextGameFromExitUrl(exitUrl).catch((e) => console.error(e));
         });
 
-        this.areaManager = new DynamicAreaManager(this.gameMap);
+        // TODO: Dynamic areas should be exclusively managed on the front side
+        this.areaManager = new DynamicAreaManager(this.gameMapFrontWrapper);
 
         this.startPositionCalculator = new StartPositionCalculator(
-            this.gameMap,
+            this.gameMapFrontWrapper,
             this.mapFile,
             this.initPosition,
             urlManager.getStartPositionNameFromUrl()
@@ -628,8 +630,8 @@ export class GameScene extends DirtyScene {
 
         this.pathfindingManager = new PathfindingManager(
             this,
-            this.gameMap.getCollisionGrid(undefined, false),
-            this.gameMap.getTileDimensions()
+            this.gameMapFrontWrapper.getCollisionGrid(undefined, false),
+            this.gameMapFrontWrapper.getTileDimensions()
         );
 
         this.subscribeToGameMapChanged();
@@ -716,7 +718,7 @@ export class GameScene extends DirtyScene {
 
         this.reposition();
 
-        new GameMapPropertiesListener(this, this.gameMap).register();
+        new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
 
         if (!this.room.isDisconnected()) {
             this.scene.sleep();
@@ -890,7 +892,7 @@ export class GameScene extends DirtyScene {
                 // Set up variables manager
                 this.sharedVariablesManager = new SharedVariablesManager(
                     this.connection,
-                    this.gameMap,
+                    this.gameMapFrontWrapper,
                     onConnect.room.variables
                 );
 
@@ -903,40 +905,34 @@ export class GameScene extends DirtyScene {
                 //this.scene.stop(ReconnectingSceneName);
 
                 //init user position and play trigger to check layers properties
-                this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
 
                 // Init layer change listener
-                this.gameMap.onEnterLayer((layers) => {
+                this.gameMapFrontWrapper.onEnterLayer((layers) => {
                     layers.forEach((layer) => {
                         iframeListener.sendEnterLayerEvent(layer.name);
                     });
                 });
 
-                this.gameMap.onLeaveLayer((layers) => {
+                this.gameMapFrontWrapper.onLeaveLayer((layers) => {
                     layers.forEach((layer) => {
                         iframeListener.sendLeaveLayerEvent(layer.name);
                     });
                 });
 
-                this.gameMap.onEnterArea((areas) => {
+                this.gameMapFrontWrapper.onEnterArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendEnterAreaEvent(area.name);
                     });
                 });
 
-                this.gameMap.onLeaveArea((areas) => {
+                this.gameMapFrontWrapper.onLeaveArea((areas) => {
                     areas.forEach((area) => {
                         iframeListener.sendLeaveAreaEvent(area.name);
                     });
                 });
 
                 this.emoteManager = new EmoteManager(this, this.connection);
-
-                // this.gameMap.onLeaveLayer((layers) => {
-                //     layers.forEach((layer) => {
-                //         iframeListener.sendLeaveLayerEvent(layer.name);
-                //     });
-                // });
 
                 // Get position from UUID only after the connection to the pusher is established
                 this.tryMovePlayerWithMoveToUserParameter();
@@ -1444,13 +1440,13 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.showLayerStream.subscribe((layerEvent) => {
-                this.gameMap.setLayerVisibility(layerEvent.name, true);
+                this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, true);
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.hideLayerStream.subscribe((layerEvent) => {
-                this.gameMap.setLayerVisibility(layerEvent.name, false);
+                this.gameMapFrontWrapper.setLayerVisibility(layerEvent.name, false);
             })
         );
 
@@ -1533,7 +1529,7 @@ ${escapedMessage}
 
         iframeListener.registerAnswerer("getMapData", () => {
             return {
-                data: this.gameMap.getMap(),
+                data: this.gameMapFrontWrapper.getMap(),
             };
         });
 
@@ -1557,7 +1553,7 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.setTilesStream.subscribe((eventTiles) => {
                 for (const eventTile of eventTiles) {
-                    this.gameMap.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
+                    this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
             })
         );
@@ -1606,7 +1602,7 @@ ${escapedMessage}
                                 layer.tilemapLayer.destroy(false);
                             }
                             //Create a new GameMap with the changed file
-                            this.gameMap = new GameMap(this.mapFile, this.Map, this.Terrains);
+                            this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile, this.Map, this.Terrains));
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
                             //Destroy the colliders of the old tilemapLayer
@@ -1614,7 +1610,7 @@ ${escapedMessage}
                             //Create new colliders with the new GameMap
                             this.createCollisionWithPlayer();
                             //Create new trigger with the new GameMap
-                            new GameMapPropertiesListener(this, this.gameMap).register();
+                            new GameMapPropertiesListener(this, this.gameMapFrontWrapper).register();
                             resolve(newFirstgid);
                         });
                     });
@@ -1705,7 +1701,7 @@ ${escapedMessage}
         if (propertyName === GameMapProperties.EXIT_URL && typeof propertyValue === "string") {
             this.loadNextGameFromExitUrl(propertyValue).catch((e) => console.error(e));
         }
-        this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
+        this.gameMapFrontWrapper.setLayerProperty(layerName, propertyName, propertyValue);
     }
 
     private setAreaProperty(
@@ -1714,7 +1710,7 @@ ${escapedMessage}
         propertyName: string,
         propertyValue: string | number | boolean | undefined
     ): void {
-        this.gameMap.setAreaProperty(areaName, areaType, propertyName, propertyValue);
+        this.gameMapFrontWrapper.setAreaProperty(areaName, areaType, propertyName, propertyValue);
     }
 
     public getMapDirUrl(): string {
@@ -1725,7 +1721,7 @@ ${escapedMessage}
         if (this.mapTransitioning) return;
         this.mapTransitioning = true;
 
-        this.gameMap.triggerExitCallbacks();
+        this.gameMapFrontWrapper.triggerExitCallbacks();
 
         let targetRoom: Room;
         try {
@@ -1770,8 +1766,8 @@ ${escapedMessage}
             this.CurrentPlayer.y = this.startPositionCalculator.startPosition.y;
             this.CurrentPlayer.finishFollowingPath(true);
             // clear properties in case we are moved on the same layer / area in order to trigger them
-            this.gameMap.clearCurrentProperties();
-            this.gameMap.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
+            this.gameMapFrontWrapper.clearCurrentProperties();
+            this.gameMapFrontWrapper.setPosition(this.CurrentPlayer.x, this.CurrentPlayer.y);
             setTimeout(() => (this.mapTransitioning = false), 500);
         }
     }
@@ -1868,13 +1864,13 @@ ${escapedMessage}
                 let endPos;
                 const posFromParam = StringUtils.parsePointFromParam(moveToParam);
                 if (posFromParam) {
-                    endPos = this.gameMap.getTileIndexAt(posFromParam.x, posFromParam.y);
+                    endPos = this.gameMapFrontWrapper.getTileIndexAt(posFromParam.x, posFromParam.y);
                 } else {
-                    const destinationObject = this.gameMap.getObjectWithName(moveToParam);
+                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
                     if (destinationObject) {
-                        endPos = this.gameMap.getTileIndexAt(destinationObject.x, destinationObject.y);
+                        endPos = this.gameMapFrontWrapper.getTileIndexAt(destinationObject.x, destinationObject.y);
                     } else {
-                        endPos = this.gameMap.getRandomPositionFromLayer(moveToParam);
+                        endPos = this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam);
                     }
                 }
 
@@ -1897,7 +1893,7 @@ ${escapedMessage}
 
     public moveTo(position: { x: number; y: number }) {
         this.pathfindingManager
-            .findPath(this.gameMap.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
+            .findPath(this.gameMapFrontWrapper.getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y), position)
             .then((path) => {
                 if (path && path.length > 0) {
                     this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
@@ -1964,7 +1960,7 @@ ${escapedMessage}
     private handleCurrentPlayerHasMovedEvent(event: HasPlayerMovedEvent): void {
         //listen event to share position of user
         this.pushPlayerPosition(event);
-        this.gameMap.setPosition(event.x, event.y);
+        this.gameMapFrontWrapper.setPosition(event.x, event.y);
         this.activatablesManager.updateActivatableObjectsDistances([
             ...Array.from(this.MapPlayersByKey.values()),
             ...this.actionableItems.values(),
@@ -1974,7 +1970,7 @@ ${escapedMessage}
 
     private createCollisionWithPlayer() {
         //add collision layer
-        for (const phaserLayer of this.gameMap.phaserLayers) {
+        for (const phaserLayer of this.gameMapFrontWrapper.getPhaserLayers()) {
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });
@@ -2250,7 +2246,7 @@ ${escapedMessage}
 
     private subscribeToGameMapChanged(): void {
         this.gameMapChangedSubscription?.unsubscribe();
-        this.gameMapChangedSubscription = this.gameMap.getMapChangedObservable().subscribe((collisionGrid) => {
+        this.gameMapChangedSubscription = this.gameMapFrontWrapper.getMapChangedObservable().subscribe((collisionGrid) => {
             this.pathfindingManager.setCollisionGrid(collisionGrid);
             this.markDirty();
             const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
@@ -2429,7 +2425,7 @@ ${escapedMessage}
     }
 
     public initialiseJitsi(coWebsite: JitsiCoWebsite, roomName: string, jwt?: string): void {
-        const allProps = this.gameMap.getCurrentProperties();
+        const allProps = this.gameMapFrontWrapper.getCurrentProperties();
         const jitsiConfig = this.safeParseJSONstring(
             allProps.get(GameMapProperties.JITSI_CONFIG) as string | undefined,
             GameMapProperties.JITSI_CONFIG
@@ -2526,7 +2522,7 @@ ${escapedMessage}
     }
 
     public getGameMap(): GameMap {
-        return this.gameMap;
+        return this.gameMapFrontWrapper.getGameMap();
     }
 
     public getCameraManager(): CameraManager {

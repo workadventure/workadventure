@@ -1,8 +1,8 @@
+import { AreaType } from '@workadventure/map-editor-types';
 import { MathUtils } from '@workadventure/math-utils';
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import { GameMap } from "./GameMap";
-import { AreaType } from "./GameMapAreas";
+import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
 import { GameMapProperties } from "./GameMapProperties";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
@@ -12,7 +12,7 @@ export class StartPositionCalculator {
     private readonly DEFAULT_START_NAME = "start";
 
     constructor(
-        private readonly gameMap: GameMap,
+        private readonly gameMapFrontWrapper: GameMapFrontWrapper,
         private readonly mapFile: ITiledMap,
         private readonly initPosition?: PositionInterface,
         startPositionName?: string
@@ -23,7 +23,7 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const obj of [...this.gameMap.flatLayers, ...this.gameMap.getAreas(AreaType.Static)]) {
+        for (const obj of [...this.gameMapFrontWrapper.getFlatLayers(), ...this.gameMapFrontWrapper.getAreas(AreaType.Static)]) {
             if (obj.name === "start") {
                 names.push(obj.name);
                 continue;
@@ -72,10 +72,10 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromArea(startPositionName: string, needStartProperty = false): boolean {
-        const area = this.gameMap.getAreaByName(startPositionName, AreaType.Static);
+        const area = this.gameMapFrontWrapper.getAreaByName(startPositionName, AreaType.Static);
         if (area) {
             if (needStartProperty) {
-                if (!(this.gameMap.getObjectProperty(area, "start") === true)) {
+                if (!(this.gameMapFrontWrapper.getObjectProperty(area, "start") === true)) {
                     return false;
                 }
             }
@@ -88,7 +88,7 @@ export class StartPositionCalculator {
     private initPositionFromLayerName(startPositionName?: string): boolean {
         let foundLayer: ITiledMapLayer | null = null;
 
-        const tileLayers = this.gameMap.flatLayers.filter((layer) => layer.type === "tilelayer");
+        const tileLayers = this.gameMapFrontWrapper.getFlatLayers().filter((layer) => layer.type === "tilelayer");
 
         if (startPositionName !== undefined) {
             for (const layer of tileLayers) {
@@ -110,7 +110,7 @@ export class StartPositionCalculator {
             }
         }
         if (foundLayer) {
-            const startPosition = this.gameMap.getRandomPositionFromLayer(foundLayer.name);
+            const startPosition = this.gameMapFrontWrapper.getRandomPositionFromLayer(foundLayer.name);
             this.startPosition = {
                 x: startPosition.x * (this.mapFile.tilewidth ?? 0) + (this.mapFile.tilewidth ?? 0) / 2,
                 y: startPosition.y * (this.mapFile.tileheight ?? 0) + (this.mapFile.tileheight ?? 0) / 2,
@@ -121,11 +121,11 @@ export class StartPositionCalculator {
     }
 
     private initPositionFromTile(): boolean {
-        if (!this.gameMap.hasStartTile) {
+        if (!this.gameMapFrontWrapper.hasStartTile()) {
             return false;
         }
-        const layer = (this.gameMap.findLayer(this.startPositionName) ||
-            this.gameMap.findLayer(this.DEFAULT_START_NAME)) as ITiledMapTileLayer | undefined;
+        const layer = (this.gameMapFrontWrapper.findLayer(this.startPositionName) ||
+            this.gameMapFrontWrapper.findLayer(this.DEFAULT_START_NAME)) as ITiledMapTileLayer | undefined;
         if (!layer) {
             return false;
         }
@@ -141,7 +141,7 @@ export class StartPositionCalculator {
             const y = Math.floor(key / layer.width);
             const x = key % layer.width;
 
-            const properties = this.gameMap.getPropertiesForIndex(objectKey);
+            const properties = this.gameMapFrontWrapper.getPropertiesForIndex(objectKey);
             if (
                 !properties.length ||
                 !properties.some((property) => property.name == "start" && property.value == this.startPositionName)
@@ -163,11 +163,11 @@ export class StartPositionCalculator {
     }
 
     private isStartObject(obj: ITiledMapLayer | ITiledMapObject): boolean {
-        if (this.gameMap.getObjectProperty(obj, GameMapProperties.START) == true) {
+        if (this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START) == true) {
             return true;
         }
         // legacy reasons
-        return this.gameMap.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
+        return this.gameMapFrontWrapper.getObjectProperty(obj, GameMapProperties.START_LAYER) == true;
     }
 
     public getStartPositionName(): string {

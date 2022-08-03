@@ -1,7 +1,7 @@
-import { flattenGroupLayersMap } from "../Map/LayersFlattener";
+import { flattenGroupLayersMap } from "../../Map/LayersFlattener";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
-import { DEPTH_OVERLAY_INDEX } from "./DepthIndexes";
-import { GameMapProperties } from "./GameMapProperties";
+import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
+import { GameMapProperties } from "../GameMapProperties";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -10,7 +10,7 @@ import {
     ITiledMapTileLayer,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { PathTileType } from "../../Utils/PathfindingManager";
+import { PathTileType } from "../../../Utils/PathfindingManager";
 import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 import { areaChangeCallback, AreaType, GameMapAreas } from "./GameMapAreas";
 import { Observable, Subject } from "rxjs";

@@ -1,4 +1,4 @@
-import { GameMap } from '../../../../../front/src/Phaser/Game/GameMap';
+import { GameMap } from '../../../../../front/src/Phaser/Game/GameMap/GameMap';
 import { AreaType, CommandPayload, CommandType, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 

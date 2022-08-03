@@ -1,10 +1,9 @@
-import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+import { AreaType, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 import { Subscription } from 'rxjs';
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { GameMap } from '../../GameMap';
-import { AreaType } from "../../GameMapAreas";
+import { GameMap } from '../../GameMap/GameMap';
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
