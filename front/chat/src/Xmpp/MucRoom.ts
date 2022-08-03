@@ -454,7 +454,6 @@ export class MucRoom {
                           }
                         : undefined,
             });
-            console.log("sendMessage => push => messages", messages);
             return messages;
         });
 
@@ -705,10 +704,6 @@ export class MucRoom {
 
                                 //get file of reply message
                                 if (xml.getChild("reply")?.getChild("files") != undefined) {
-                                    console.log(
-                                        'xml.getChild("reply")?.getChild("files")',
-                                        xml.getChild("reply")?.getChild("files")
-                                    );
                                     message.targetMessageReply.files = fileMessageManager.getFilesListFromXml(
                                         xml.getChild("reply")?.getChild("files") as Element
                                     );
@@ -722,7 +717,6 @@ export class MucRoom {
                                 );
                             }
 
-                            console.log("on => message", message);
                             messages.push(message);
                         }
                         return messages;
