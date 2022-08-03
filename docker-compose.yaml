@@ -80,6 +80,7 @@ services:
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
       UPLOADER_URL: //uploader.workadventure.localhost
+      EMBEDLY_KEY: $EMBEDLY_KEY
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs

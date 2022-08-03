@@ -62,6 +62,7 @@ services:
     environment:
       - PUSHER_URL=//${PUSHER_HOST}
       - UPLOADER_URL=//${UPLOADER_HOST}
+      - EMBEDLY_KEY=${EMBEDLY_KEY}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"

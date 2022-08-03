@@ -20,7 +20,7 @@
     import { selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
-    import File from "./File/File.svelte";
+    import File from "./Content/File.svelte";
 
     export let mucRoom: MucRoom;
 

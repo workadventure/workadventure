@@ -17,7 +17,7 @@ import { audioManagerFileStore, audioManagerVisibilityStore } from "../../Stores
 import { iframeListener } from "../../Api/IframeListener";
 import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
-import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
+import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 
@@ -354,6 +354,9 @@ export class GameMapPropertiesListener {
             coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
 
             loadCoWebsiteFunction(coWebsite);
+
+            //user in a zone with cowebsite opened or pressed SPACE to enter is a zone
+            inOpenWebsite.set(true);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || websiteTriggerProperty === ON_ACTION_TRIGGER_BUTTON) {
@@ -381,6 +384,9 @@ export class GameMapPropertiesListener {
             coWebsiteOpen.coWebsite = coWebsite;
 
             coWebsiteManager.addCoWebsiteToStore(coWebsite, websitePositionProperty);
+
+            //user in zone to open cowesite with only icone
+            inOpenWebsite.set(true);
         }
 
         if (!websiteTriggerProperty) {
@@ -446,6 +452,8 @@ export class GameMapPropertiesListener {
         }
 
         this.coWebsitesOpenByPlace.delete(place);
+
+        inOpenWebsite.set(false);
 
         if (!websiteTriggerProperty) {
             return;

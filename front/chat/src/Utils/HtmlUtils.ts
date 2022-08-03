@@ -50,10 +50,7 @@ export class HtmlUtils {
         if (webLinks != undefined && webLinks.length > 0) {
             for (const webLinkStr of webLinks) {
                 const webLink = new WebLink(webLinkStr);
-                const promise = webLink.htmLrenderer().then((value) => {
-                    if (value === false) {
-                        return null;
-                    }
+                const promise = webLink.contentWebsiteRenderer.then((value) => {
                     return {
                         search: webLinkStr,
                         html: value,

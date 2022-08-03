@@ -61,6 +61,7 @@ services:
     environment:
       PUSHER_URL: /pusher
       UPLOADER_URL: /uploader
+      EMBEDLY_KEY: $EMBEDLY_KEY
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
