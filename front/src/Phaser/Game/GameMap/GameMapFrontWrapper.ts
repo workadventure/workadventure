@@ -64,7 +64,31 @@ export class GameMapFrontWrapper {
      * This will trigger events if properties are changing.
      */
     public setPosition(x: number, y: number) {
-        this.gameMap.setPosition(x, y);
+        const map = this.getMap();
+        if (!map.width || !map.height) {
+            return;
+        }
+        this.oldPosition = this.position;
+        this.position = { x, y };
+        const areasChanged = this.gameMap.getGameMapAreas().triggerAreasChange(this.oldPosition, this.position);
+        if (areasChanged) {
+            this.triggerAllProperties();
+        }
+
+        this.oldKey = this.key;
+
+        const xMap = Math.floor(x / (map.tilewidth ?? this.gameMap.getDefaultTileSize()));
+        const yMap = Math.floor(y / (map.tileheight ?? this.gameMap.getDefaultTileSize()));
+        const key = xMap + yMap * map.width;
+
+        if (key === this.key) {
+            return;
+        }
+
+        this.key = key;
+
+        this.triggerAllProperties();
+        this.triggerLayersChange();
     }
 
     public getCurrentProperties(): Map<string, string | boolean | number> {
@@ -90,14 +114,14 @@ export class GameMapFrontWrapper {
      * Registers a callback called when the user moves inside another layer.
      */
     public onEnterLayer(callback: layerChangeCallback) {
-        this.gameMap.onEnterLayer(callback);
+        this.enterLayerCallbacks.push(callback);
     }
 
     /**
      * Registers a callback called when the user moves outside another layer.
      */
     public onLeaveLayer(callback: layerChangeCallback) {
-        this.gameMap.onLeaveLayer(callback);
+        this.leaveLayerCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -129,7 +153,14 @@ export class GameMapFrontWrapper {
         propertyName: string,
         propertyValue: string | number | undefined | boolean
     ) {
-        this.gameMap.setLayerProperty(layerName, propertyName, propertyValue);
+        const layer = this.findLayer(layerName);
+        if (layer === undefined) {
+            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
+            return;
+        }
+        this.gameMap.setProperty(layer, propertyName, propertyValue);
+        this.triggerAllProperties();
+        this.triggerLayersChange();
     }
 
     /**
@@ -174,7 +205,7 @@ export class GameMapFrontWrapper {
         propertyName: string,
         propertyValue: string | number | undefined | boolean
     ): void {
-        this.gameMap.setAreaProperty(areaName, areaType, propertyName, propertyValue);
+        this.gameMap.setAreaProperty(areaName, areaType, propertyName, propertyValue, this.position, this.oldPosition, this.key);
     }
 
     public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
@@ -182,7 +213,7 @@ export class GameMapFrontWrapper {
     }
 
     public addArea(area: ITiledMapRectangleObject, type: AreaType): void {
-        this.gameMap.addArea(area, type);
+        this.gameMap.addArea(area, type, this.position);
     }
 
     public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
@@ -202,27 +233,27 @@ export class GameMapFrontWrapper {
     }
 
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
-        this.gameMap.updateAreaByName(name, type, config);
+        this.gameMap.updateAreaByName(name, type, config, this.position);
     }
 
     public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
-        this.gameMap.updateAreaById(id, type, config);
+        this.gameMap.updateAreaById(id, type, config, this.position);
     }
 
     public deleteAreaByName(name: string, type: AreaType): void {
-        this.gameMap.deleteAreaByName(name, type);
+        this.gameMap.deleteAreaByName(name, type, this.position);
     }
 
     public deleteAreaById(id: number, type: AreaType): void {
-        this.gameMap.deleteAreaById(id, type);
+        this.gameMap.deleteAreaById(id, type, this.position);
     }
 
     public isPlayerInsideArea(id: number, type: AreaType): boolean {
-        return this.gameMap.isPlayerInsideArea(id, type);
+        return this.gameMap.isPlayerInsideArea(id, type, this.position);
     }
 
     public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
-        return this.gameMap.isPlayerInsideAreaByName(name, type);
+        return this.gameMap.isPlayerInsideAreaByName(name, type, this.position);
     }
 
     public getMapChangedObservable(): Observable<number[][]> {
@@ -251,5 +282,111 @@ export class GameMapFrontWrapper {
 
     public getGameMap(): GameMap {
         return this.gameMap;
+    }
+
+    private triggerAllProperties(): void {
+        const newProps = this.getProperties(this.key ?? 0);
+        const oldProps = this.lastProperties;
+        this.lastProperties = newProps;
+
+        // Let's compare the 2 maps:
+        // First new properties vs oldProperties
+        for (const [newPropName, newPropValue] of newProps.entries()) {
+            const oldPropValue = oldProps.get(newPropName);
+            if (oldPropValue !== newPropValue) {
+                this.trigger(newPropName, oldPropValue, newPropValue, newProps);
+            }
+        }
+
+        for (const [oldPropName, oldPropValue] of oldProps.entries()) {
+            if (!newProps.has(oldPropName)) {
+                // We found a property that disappeared
+                this.trigger(oldPropName, oldPropValue, undefined, newProps);
+            }
+        }
+    }
+
+    private getProperties(key: number): Map<string, string | boolean | number> {
+        const properties = this.gameMap.getGameMapAreas().getProperties(this.position);
+
+        for (const layer of this.getFlatLayers()) {
+            if (layer.type !== "tilelayer") {
+                continue;
+            }
+
+            let tileIndex: number | undefined = undefined;
+            if (layer.data) {
+                const tiles = layer.data as number[];
+                if (tiles[key] == 0) {
+                    continue;
+                }
+                tileIndex = tiles[key];
+            }
+
+            // There is a tile in this layer, let's embed the properties
+            if (layer.properties !== undefined) {
+                for (const layerProperty of layer.properties) {
+                    if (layerProperty.value === undefined) {
+                        continue;
+                    }
+                    properties.set(layerProperty.name, layerProperty.value as string | number | boolean);
+                }
+            }
+
+            if (tileIndex) {
+                this.gameMap.getTileProperty(tileIndex).forEach((property) => {
+                    if (property.value) {
+                        properties.set(property.name, property.value as string | number | boolean);
+                    } else if (properties.has(property.name)) {
+                        properties.delete(property.name);
+                    }
+                });
+            }
+        }
+
+        return properties;
+    }
+
+    private trigger(
+        propName: string,
+        oldValue: string | number | boolean | undefined,
+        newValue: string | number | boolean | undefined,
+        allProps: Map<string, string | boolean | number>
+    ) {
+        const callbacksArray = this.propertiesChangeCallbacks.get(propName);
+        if (callbacksArray !== undefined) {
+            for (const callback of callbacksArray) {
+                callback(newValue, oldValue, allProps);
+            }
+        }
+    }
+
+    private triggerLayersChange(): void {
+        const layersByOldKey = this.oldKey ? this.gameMap.getLayersByKey(this.oldKey) : [];
+        const layersByNewKey = this.key ? this.gameMap.getLayersByKey(this.key) : [];
+
+        const enterLayers = new Set(layersByNewKey);
+        const leaveLayers = new Set(layersByOldKey);
+
+        enterLayers.forEach((layer) => {
+            if (leaveLayers.has(layer)) {
+                leaveLayers.delete(layer);
+                enterLayers.delete(layer);
+            }
+        });
+
+        if (enterLayers.size > 0) {
+            const layerArray = Array.from(enterLayers);
+            for (const callback of this.enterLayerCallbacks) {
+                callback(layerArray, layersByNewKey);
+            }
+        }
+
+        if (leaveLayers.size > 0) {
+            const layerArray = Array.from(leaveLayers);
+            for (const callback of this.leaveLayerCallbacks) {
+                callback(layerArray, layersByNewKey);
+            }
+        }
     }
 }

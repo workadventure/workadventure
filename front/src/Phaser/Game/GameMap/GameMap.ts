@@ -36,28 +36,9 @@ export class GameMap {
      * Component responsible for holding gameMap Areas related logic
      */
     private gameMapAreas: GameMapAreas;
-    /**
-     * oldKey is the index of the previous tile.
-     */
-    private oldKey: number | undefined;
-    /**
-     * key is the index of the current tile.
-     */
-    private key: number | undefined;
-    /**
-     * oldPosition is the previous position of the player.
-     */
-    private oldPosition: { x: number; y: number } | undefined;
-    /**
-     * position is the current position of the player.
-     */
-    private position: { x: number; y: number } | undefined;
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
-
-    private enterLayerCallbacks = Array<layerChangeCallback>();
-    private leaveLayerCallbacks = Array<layerChangeCallback>();
 
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
@@ -218,37 +199,6 @@ export class GameMap {
         };
     }
 
-    /**
-     * Sets the position of the current player (in pixels)
-     * This will trigger events if properties are changing.
-     */
-    public setPosition(x: number, y: number) {
-        if (!this.map.width || !this.map.height) {
-            return;
-        }
-        this.oldPosition = this.position;
-        this.position = { x, y };
-        const areasChanged = this.gameMapAreas.triggerAreasChange(this.oldPosition, this.position);
-        if (areasChanged) {
-            this.triggerAllProperties();
-        }
-
-        this.oldKey = this.key;
-
-        const xMap = Math.floor(x / (this.map.tilewidth ?? this.defaultTileSize));
-        const yMap = Math.floor(y / (this.map.tileheight ?? this.defaultTileSize));
-        const key = xMap + yMap * this.map.width;
-
-        if (key === this.key) {
-            return;
-        }
-
-        this.key = key;
-
-        this.triggerAllProperties();
-        this.triggerLayersChange();
-    }
-
     public getCurrentProperties(): Map<string, string | boolean | number> {
         return this.lastProperties;
     }
@@ -271,20 +221,6 @@ export class GameMap {
             this.propertiesChangeCallbacks.set(propName, callbacksArray);
         }
         callbacksArray.push(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves inside another layer.
-     */
-    public onEnterLayer(callback: layerChangeCallback) {
-        this.enterLayerCallbacks.push(callback);
-    }
-
-    /**
-     * Registers a callback called when the user moves outside another layer.
-     */
-    public onLeaveLayer(callback: layerChangeCallback) {
-        this.leaveLayerCallbacks.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -335,22 +271,7 @@ export class GameMap {
         }
     }
 
-    public setLayerProperty(
-        layerName: string,
-        propertyName: string,
-        propertyValue: string | number | undefined | boolean
-    ) {
-        const layer = this.findLayer(layerName);
-        if (layer === undefined) {
-            console.warn('Could not find layer "' + layerName + '" when calling setProperty');
-            return;
-        }
-        this.setProperty(layer, propertyName, propertyValue);
-        this.triggerAllProperties();
-        this.triggerLayersChange();
-    }
-
-    private setProperty(
+    public setProperty(
         holder: { properties?: ITiledMapProperty[] },
         propertyName: string,
         propertyValue: string | number | undefined | boolean
@@ -454,7 +375,10 @@ export class GameMap {
         areaName: string,
         areaType: AreaType,
         propertyName: string,
-        propertyValue: string | number | undefined | boolean
+        propertyValue: string | number | undefined | boolean,
+        position: { x: number, y: number } | undefined,
+        oldPosition: { x: number, y: number } | undefined,
+        key: number | undefined,
     ) {
         const area = this.getAreaByName(areaName, areaType);
         if (area === undefined) {
@@ -462,16 +386,16 @@ export class GameMap {
             return;
         }
         this.setProperty(area, propertyName, propertyValue);
-        this.triggerAllProperties();
-        this.gameMapAreas.triggerAreasChange(this.oldPosition, this.position);
+        this.triggerAllProperties(position, key);
+        this.gameMapAreas.triggerAreasChange(oldPosition, position);
     }
 
     public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
         return this.gameMapAreas.getAreas(areaType);
     }
 
-    public addArea(area: ITiledMapRectangleObject, type: AreaType): void {
-        this.gameMapAreas.addArea(area, type, this.position);
+    public addArea(area: ITiledMapRectangleObject, type: AreaType, position: { x: number, y: number } | undefined,): void {
+        this.gameMapAreas.addArea(area, type, position);
     }
 
     public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
@@ -490,38 +414,45 @@ export class GameMap {
         return this.gameMapAreas.getArea(id, type);
     }
 
-    public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
-        this.gameMapAreas.updateAreaByName(name, type, this.position, config);
+    public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>, position: { x: number, y: number } | undefined): void {
+        this.gameMapAreas.updateAreaByName(name, type, position, config);
         this.areaUpdatedSubject.next(this.gameMapAreas.getAreaByName(name, AreaType.Static));
     }
 
-    public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
-        this.gameMapAreas.updateAreaById(id, type, this.position, config);
+    public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>, position: { x: number, y: number } | undefined): void {
+        this.gameMapAreas.updateAreaById(id, type, position, config);
         this.areaUpdatedSubject.next(this.gameMapAreas.getArea(id, AreaType.Static));
     }
 
-    public deleteAreaByName(name: string, type: AreaType): void {
-        this.gameMapAreas.deleteAreaByName(name, type, this.position);
+    public deleteAreaByName(name: string, type: AreaType, position: { x: number, y: number } | undefined): void {
+        this.gameMapAreas.deleteAreaByName(name, type, position);
     }
 
-    public deleteAreaById(id: number, type: AreaType): void {
-        this.gameMapAreas.deleteAreaById(id, type, this.position);
+    public deleteAreaById(id: number, type: AreaType, position: { x: number, y: number } | undefined): void {
+        this.gameMapAreas.deleteAreaById(id, type, position);
     }
 
-    public isPlayerInsideArea(id: number, type: AreaType): boolean {
-        return this.gameMapAreas.isPlayerInsideArea(id, type, this.position);
+    public isPlayerInsideArea(id: number, type: AreaType, position: { x: number, y: number } | undefined): boolean {
+        return this.gameMapAreas.isPlayerInsideArea(id, type, position);
     }
 
-    public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
-        return this.gameMapAreas.isPlayerInsideAreaByName(name, type, this.position);
+    public isPlayerInsideAreaByName(name: string, type: AreaType, position: { x: number, y: number } | undefined): boolean {
+        return this.gameMapAreas.isPlayerInsideAreaByName(name, type, position);
     }
 
-    private getLayersByKey(key: number): Array<ITiledMapLayer> {
+    public getTileProperty(index: number): Array<ITiledMapProperty> {
+        if (this.tileSetPropertyMap[index]) {
+            return this.tileSetPropertyMap[index];
+        }
+        return [];
+    }
+
+    public getLayersByKey(key: number): Array<ITiledMapLayer> {
         return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
-    private triggerAllProperties(): void {
-        const newProps = this.getProperties(this.key ?? 0);
+    private triggerAllProperties(position: { x: number, y: number} | undefined, key: number | undefined): void {
+        const newProps = this.getProperties(key ?? 0, position);
         const oldProps = this.lastProperties;
         this.lastProperties = newProps;
 
@@ -563,37 +494,8 @@ export class GameMap {
         );
     }
 
-    private triggerLayersChange(): void {
-        const layersByOldKey = this.oldKey ? this.getLayersByKey(this.oldKey) : [];
-        const layersByNewKey = this.key ? this.getLayersByKey(this.key) : [];
-
-        const enterLayers = new Set(layersByNewKey);
-        const leaveLayers = new Set(layersByOldKey);
-
-        enterLayers.forEach((layer) => {
-            if (leaveLayers.has(layer)) {
-                leaveLayers.delete(layer);
-                enterLayers.delete(layer);
-            }
-        });
-
-        if (enterLayers.size > 0) {
-            const layerArray = Array.from(enterLayers);
-            for (const callback of this.enterLayerCallbacks) {
-                callback(layerArray, layersByNewKey);
-            }
-        }
-
-        if (leaveLayers.size > 0) {
-            const layerArray = Array.from(leaveLayers);
-            for (const callback of this.leaveLayerCallbacks) {
-                callback(layerArray, layersByNewKey);
-            }
-        }
-    }
-
-    private getProperties(key: number): Map<string, string | boolean | number> {
-        const properties = this.gameMapAreas.getProperties(this.position);
+    private getProperties(key: number, position: { x: number, y: number} | undefined): Map<string, string | boolean | number> {
+        const properties = this.gameMapAreas.getProperties(position);
 
         for (const layer of this.flatLayers) {
             if (layer.type !== "tilelayer") {
@@ -631,13 +533,6 @@ export class GameMap {
         }
 
         return properties;
-    }
-
-    private getTileProperty(index: number): Array<ITiledMapProperty> {
-        if (this.tileSetPropertyMap[index]) {
-            return this.tileSetPropertyMap[index];
-        }
-        return [];
     }
 
     private trigger(
@@ -701,5 +596,13 @@ export class GameMap {
 
     public getAreaUpdatedObservable(): Observable<ITiledMapRectangleObject> {
         return this.areaUpdatedSubject.asObservable();
+    }
+
+    public getDefaultTileSize(): number {
+        return this.defaultTileSize;
+    }
+
+    public getGameMapAreas(): GameMapAreas {
+        return this.gameMapAreas;
     }
 }
