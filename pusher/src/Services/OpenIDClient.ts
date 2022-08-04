@@ -7,6 +7,7 @@ import {
     OPID_USERNAME_CLAIM,
     OPID_LOCALE_CLAIM,
     OPID_SCOPE,
+    OPID_PROMPT,
 } from "../Enum/EnvironmentVariable";
 
 class OpenIDClient {
@@ -33,7 +34,7 @@ class OpenIDClient {
             }
             return client.authorizationUrl({
                 scope: OPID_SCOPE,
-                prompt: "login",
+                prompt: OPID_PROMPT,
                 state: state,
                 nonce: nonce,
                 playUri: playUri,
