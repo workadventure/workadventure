@@ -10,7 +10,6 @@ import {
     ITiledMapTileLayer,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { PathTileType } from "../../../Utils/PathfindingManager";
 import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 import { areaChangeCallback, AreaType, GameMapAreas } from "./GameMapAreas";
 import { Observable, Subject } from "rxjs";
@@ -37,8 +36,6 @@ export class GameMap {
      */
     private gameMapAreas: GameMapAreas;
 
-    private lastProperties = new Map<string, string | boolean | number>();
-    private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
 
     private readonly map: ITiledMap;
     private tileNameMap = new Map<string, number>();
@@ -48,15 +45,7 @@ export class GameMap {
     public readonly tiledObjects: ITiledMapObject[];
     public readonly phaserLayers: TilemapLayer[] = [];
 
-    /**
-     * Firing on map change, containing newest collision grid array
-     */
-    private mapChangedSubject = new Subject<number[][]>();
-    private areaUpdatedSubject = new Subject<ITiledMapRectangleObject>();
-
     private readonly defaultTileSize = 32;
-
-    private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
     public exitUrls: Array<string> = [];
 
@@ -109,80 +98,11 @@ export class GameMap {
         }
     }
 
-    public setLayerVisibility(layerName: string, visible: boolean): void {
-        const phaserLayer = this.findPhaserLayer(layerName);
-        let collisionGrid: number[][] = [];
-        if (phaserLayer != undefined) {
-            phaserLayer.setVisible(visible);
-            phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            collisionGrid = this.getCollisionGrid(phaserLayer);
-        } else {
-            const phaserLayers = this.findPhaserLayers(layerName + "/");
-            if (phaserLayers.length === 0) {
-                console.warn(
-                    'Could not find layer with name that contains "' +
-                        layerName +
-                        '" when calling WA.hideLayer / WA.showLayer'
-                );
-                return;
-            }
-            for (let i = 0; i < phaserLayers.length; i++) {
-                phaserLayers[i].setVisible(visible);
-                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
-            }
-            collisionGrid = this.getCollisionGrid(undefined, false);
-        }
-        this.mapChangedSubject.next(collisionGrid);
-    }
-
     public getPropertiesForIndex(index: number): Array<ITiledMapProperty> {
         if (this.tileSetPropertyMap[index]) {
             return this.tileSetPropertyMap[index];
         }
         return [];
-    }
-
-    public getCollisionGrid(modifiedLayer?: TilemapLayer, useCache = true): number[][] {
-        // initialize collision grid to write on
-        if (this.map.height === undefined || this.map.width === undefined) {
-            return [];
-        }
-        const grid: number[][] = Array.from(Array(this.map.height), (_) =>
-            Array(this.map.width).fill(PathTileType.Walkable)
-        );
-        if (modifiedLayer) {
-            // recalculate cache for certain layer if needed
-            this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
-        }
-        // go through all tilemap layers on map. Maintain order
-        for (const layer of this.phaserLayers) {
-            if (!layer.visible) {
-                continue;
-            }
-            if (!useCache) {
-                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
-            }
-            const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);
-            if (!cachedLayer) {
-                // no cache, calculate collision grid for this layer
-                this.perLayerCollisionGridCache.set(layer.layerIndex, this.getLayerCollisionGrid(layer));
-            } else {
-                for (let y = 0; y < this.map.height; y += 1) {
-                    for (let x = 0; x < this.map.width; x += 1) {
-                        // currently no case where we can make tile non-collidable with collidable object beneath, skip position
-                        if (grid[y][x] === PathTileType.Exit && cachedLayer[y][x] === PathTileType.Collider) {
-                            grid[y][x] = cachedLayer[y][x];
-                            continue;
-                        }
-                        if (grid[y][x] !== PathTileType.Walkable) {
-                            continue;
-                        }
-                        grid[y][x] = cachedLayer[y][x];
-                    }
-                }
-            }
-        }
-        return grid;
     }
 
     public getTileDimensions(): { width: number; height: number } {
@@ -199,28 +119,8 @@ export class GameMap {
         };
     }
 
-    public getCurrentProperties(): Map<string, string | boolean | number> {
-        return this.lastProperties;
-    }
-
-    public clearCurrentProperties(): void {
-        return this.lastProperties.clear();
-    }
-
     public getMap(): ITiledMap {
         return this.map;
-    }
-
-    /**
-     * Registers a callback called when the user moves to a tile where the property propName is different from the last tile the user was on.
-     */
-    public onPropertyChange(propName: string, callback: PropertyChangeCallback) {
-        let callbacksArray = this.propertiesChangeCallbacks.get(propName);
-        if (callbacksArray === undefined) {
-            callbacksArray = new Array<PropertyChangeCallback>();
-            this.propertiesChangeCallbacks.set(propName, callbacksArray);
-        }
-        callbacksArray.push(callback);
     }
 
     public findLayer(layerName: string): ITiledMapLayer | undefined {
@@ -246,29 +146,11 @@ export class GameMap {
         }
     }
 
-    public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
-        const phaserLayer = this.findPhaserLayer(layer);
-        if (phaserLayer) {
-            if (tile === null) {
-                phaserLayer.putTileAt(-1, x, y);
-            } else {
-                const tileIndex = this.getIndexForTileType(tile);
-                if (tileIndex === undefined) {
-                    console.error("The tile '" + tile + "' that you want to place doesn't exist.");
-                    return;
-                }
-                this.putTileInFlatLayer(tileIndex, x, y, layer);
-                const phaserTile = phaserLayer.putTileAt(tileIndex, x, y);
-                for (const property of this.getTileProperty(tileIndex)) {
-                    if (property.name === GameMapProperties.COLLIDES && property.value) {
-                        phaserTile.setCollision(true);
-                    }
-                }
-            }
-            this.mapChangedSubject.next(this.getCollisionGrid(phaserLayer));
-        } else {
-            console.error("The layer '" + layer + "' does not exist (or is not a tilelaye).");
+    public getIndexForTileType(tile: string | number): number | undefined {
+        if (typeof tile == "number") {
+            return tile;
         }
+        return this.tileNameMap.get(tile);
     }
 
     public setProperty(
@@ -298,17 +180,6 @@ export class GameMap {
             holder.properties.splice(index, 1);
         }
         property.value = propertyValue;
-    }
-
-    /**
-     * Trigger all the callbacks (used when exiting a map)
-     */
-    public triggerExitCallbacks(): void {
-        const emptyProps = new Map<string, string | boolean | number>();
-        for (const [oldPropName, oldPropValue] of this.lastProperties.entries()) {
-            // We found a property that disappeared
-            this.trigger(oldPropName, oldPropValue, undefined, emptyProps);
-        }
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
@@ -364,82 +235,6 @@ export class GameMap {
         this.gameMapAreas.onEnterArea(callback);
     }
 
-    /**
-     * Registers a callback called when the user moves outside another area.
-     */
-    public onLeaveArea(callback: areaChangeCallback) {
-        this.gameMapAreas.onLeaveArea(callback);
-    }
-
-    public setAreaProperty(
-        areaName: string,
-        areaType: AreaType,
-        propertyName: string,
-        propertyValue: string | number | undefined | boolean,
-        position: { x: number, y: number } | undefined,
-        oldPosition: { x: number, y: number } | undefined,
-        key: number | undefined,
-    ) {
-        const area = this.getAreaByName(areaName, areaType);
-        if (area === undefined) {
-            console.warn('Could not find area "' + areaName + '" when calling setProperty');
-            return;
-        }
-        this.setProperty(area, propertyName, propertyValue);
-        this.triggerAllProperties(position, key);
-        this.gameMapAreas.triggerAreasChange(oldPosition, position);
-    }
-
-    public getAreas(areaType: AreaType): ITiledMapRectangleObject[] {
-        return this.gameMapAreas.getAreas(areaType);
-    }
-
-    public addArea(area: ITiledMapRectangleObject, type: AreaType, position: { x: number, y: number } | undefined,): void {
-        this.gameMapAreas.addArea(area, type, position);
-    }
-
-    public triggerSpecificAreaOnEnter(area: ITiledMapRectangleObject): void {
-        this.gameMapAreas.triggerSpecificAreaOnEnter(area);
-    }
-
-    public triggerSpecificAreaOnLeave(area: ITiledMapRectangleObject): void {
-        this.gameMapAreas.triggerSpecificAreaOnLeave(area);
-    }
-
-    public getAreaByName(name: string, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.gameMapAreas.getAreaByName(name, type);
-    }
-
-    public getArea(id: number, type: AreaType): ITiledMapRectangleObject | undefined {
-        return this.gameMapAreas.getArea(id, type);
-    }
-
-    public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>, position: { x: number, y: number } | undefined): void {
-        this.gameMapAreas.updateAreaByName(name, type, position, config);
-        this.areaUpdatedSubject.next(this.gameMapAreas.getAreaByName(name, AreaType.Static));
-    }
-
-    public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>, position: { x: number, y: number } | undefined): void {
-        this.gameMapAreas.updateAreaById(id, type, position, config);
-        this.areaUpdatedSubject.next(this.gameMapAreas.getArea(id, AreaType.Static));
-    }
-
-    public deleteAreaByName(name: string, type: AreaType, position: { x: number, y: number } | undefined): void {
-        this.gameMapAreas.deleteAreaByName(name, type, position);
-    }
-
-    public deleteAreaById(id: number, type: AreaType, position: { x: number, y: number } | undefined): void {
-        this.gameMapAreas.deleteAreaById(id, type, position);
-    }
-
-    public isPlayerInsideArea(id: number, type: AreaType, position: { x: number, y: number } | undefined): boolean {
-        return this.gameMapAreas.isPlayerInsideArea(id, type, position);
-    }
-
-    public isPlayerInsideAreaByName(name: string, type: AreaType, position: { x: number, y: number } | undefined): boolean {
-        return this.gameMapAreas.isPlayerInsideAreaByName(name, type, position);
-    }
-
     public getTileProperty(index: number): Array<ITiledMapProperty> {
         if (this.tileSetPropertyMap[index]) {
             return this.tileSetPropertyMap[index];
@@ -447,109 +242,7 @@ export class GameMap {
         return [];
     }
 
-    public getLayersByKey(key: number): Array<ITiledMapLayer> {
-        return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
-    }
-
-    private triggerAllProperties(position: { x: number, y: number} | undefined, key: number | undefined): void {
-        const newProps = this.getProperties(key ?? 0, position);
-        const oldProps = this.lastProperties;
-        this.lastProperties = newProps;
-
-        // Let's compare the 2 maps:
-        // First new properties vs oldProperties
-        for (const [newPropName, newPropValue] of newProps.entries()) {
-            const oldPropValue = oldProps.get(newPropName);
-            if (oldPropValue !== newPropValue) {
-                this.trigger(newPropName, oldPropValue, newPropValue, newProps);
-            }
-        }
-
-        for (const [oldPropName, oldPropValue] of oldProps.entries()) {
-            if (!newProps.has(oldPropName)) {
-                // We found a property that disappeared
-                this.trigger(oldPropName, oldPropValue, undefined, newProps);
-            }
-        }
-    }
-
-    private getLayerCollisionGrid(layer: TilemapLayer): (1 | 2 | 0)[][] {
-        let isExitLayer = false;
-        for (const property of layer.layer.properties as { [key: string]: string | number | boolean }[]) {
-            if (property.name && property.name === "exitUrl") {
-                isExitLayer = true;
-                break;
-            }
-        }
-        return layer.layer.data.map((row) =>
-            row.map((tile) =>
-                tile.properties?.[GameMapProperties.COLLIDES]
-                    ? 1
-                    : isExitLayer ||
-                      tile.properties[GameMapProperties.EXIT_URL] ||
-                      tile.properties[GameMapProperties.EXIT_SCENE_URL]
-                    ? 2
-                    : 0
-            )
-        );
-    }
-
-    private getProperties(key: number, position: { x: number, y: number} | undefined): Map<string, string | boolean | number> {
-        const properties = this.gameMapAreas.getProperties(position);
-
-        for (const layer of this.flatLayers) {
-            if (layer.type !== "tilelayer") {
-                continue;
-            }
-
-            let tileIndex: number | undefined = undefined;
-            if (layer.data) {
-                const tiles = layer.data as number[];
-                if (tiles[key] == 0) {
-                    continue;
-                }
-                tileIndex = tiles[key];
-            }
-
-            // There is a tile in this layer, let's embed the properties
-            if (layer.properties !== undefined) {
-                for (const layerProperty of layer.properties) {
-                    if (layerProperty.value === undefined) {
-                        continue;
-                    }
-                    properties.set(layerProperty.name, layerProperty.value as string | number | boolean);
-                }
-            }
-
-            if (tileIndex) {
-                this.tileSetPropertyMap[tileIndex]?.forEach((property) => {
-                    if (property.value) {
-                        properties.set(property.name, property.value as string | number | boolean);
-                    } else if (properties.has(property.name)) {
-                        properties.delete(property.name);
-                    }
-                });
-            }
-        }
-
-        return properties;
-    }
-
-    private trigger(
-        propName: string,
-        oldValue: string | number | boolean | undefined,
-        newValue: string | number | boolean | undefined,
-        allProps: Map<string, string | boolean | number>
-    ) {
-        const callbacksArray = this.propertiesChangeCallbacks.get(propName);
-        if (callbacksArray !== undefined) {
-            for (const callback of callbacksArray) {
-                callback(newValue, oldValue, allProps);
-            }
-        }
-    }
-
-    private putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
+    public putTileInFlatLayer(index: number, x: number, y: number, layer: string): void {
         const fLayer = this.findLayer(layer);
         if (fLayer == undefined) {
             console.error("The layer '" + layer + "' that you want to change doesn't exist.");
@@ -570,11 +263,8 @@ export class GameMap {
         fLayer.data[x + y * fLayer.width] = index;
     }
 
-    private getIndexForTileType(tile: string | number): number | undefined {
-        if (typeof tile == "number") {
-            return tile;
-        }
-        return this.tileNameMap.get(tile);
+    public getLayersByKey(key: number): Array<ITiledMapLayer> {
+        return this.flatLayers.filter((flatLayer) => flatLayer.type === "tilelayer" && flatLayer.data[key] !== 0);
     }
 
     private static getObjectsFromLayers(layers: ITiledMapLayer[]): ITiledMapObject[] {
@@ -588,14 +278,6 @@ export class GameMap {
         }
 
         return objects;
-    }
-
-    public getMapChangedObservable(): Observable<number[][]> {
-        return this.mapChangedSubject.asObservable();
-    }
-
-    public getAreaUpdatedObservable(): Observable<ITiledMapRectangleObject> {
-        return this.areaUpdatedSubject.asObservable();
     }
 
     public getDefaultTileSize(): number {

@@ -211,7 +211,7 @@ export class MapEditorModeManager {
     }
 
     private subscribeToGameMapEvents(): void {
-        this.editorTools.forEach((tool) => tool.subscribeToGameMapEvents(this.scene.getGameMap()));
+        this.editorTools.forEach((tool) => tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper()));
     }
 
     private unsubscribeFromGameMapEvents(): void {

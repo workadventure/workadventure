@@ -125,7 +125,7 @@ export class GameMapAreas {
             ) !== -1
         );
     }
-
+    // TODO: Remove the need of passing by player position. Resolve any callbacks from FrontWrapper perspective!
     public updateAreaByName(
         name: string,
         type: AreaType,

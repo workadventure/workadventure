@@ -2525,6 +2525,10 @@ ${escapedMessage}
         return this.gameMapFrontWrapper.getGameMap();
     }
 
+    public getGameMapFrontWrapper(): GameMapFrontWrapper {
+        return this.gameMapFrontWrapper;
+    }
+
     public getCameraManager(): CameraManager {
         return this.cameraManager;
     }

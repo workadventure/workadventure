@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { GameMap } from '../../GameMap/GameMap';
+import { GameMapFrontWrapper } from '../../GameMap/GameMapFrontWrapper';
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
@@ -49,15 +49,15 @@ export class AreaEditorTool extends MapEditorTool {
                     this.areaPreviews
                         .find((area) => area.getConfig().id === data.id)
                         ?.updatePreview(data as ITiledMapRectangleObject);
-                    this.scene.getGameMap().updateAreaById(data.id, AreaType.Static, data);
+                    this.scene.getGameMapFrontWrapper().updateAreaById(data.id, AreaType.Static, data);
                     this.scene.markDirty();
                 }
             }
         });
     }
 
-    public subscribeToGameMapEvents(gameMap: GameMap): void {
-        this.gameMapAreaUpdateSubscription = gameMap.getAreaUpdatedObservable().subscribe((areaConfig: ITiledMapRectangleObject) => {
+    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
+        this.gameMapAreaUpdateSubscription = gameMapFrontWrapper.getAreaUpdatedObservable().subscribe((areaConfig: ITiledMapRectangleObject) => {
             this.updateAreaPreview(areaConfig);
             this.scene.markDirty();
         });
@@ -87,7 +87,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private createAreaPreviews(): AreaPreview[] {
         this.areaPreviews = [];
-        const areaConfigs = this.scene.getGameMap().getAreas(AreaType.Static);
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
         for (const config of areaConfigs) {
             const areaPreview = new AreaPreview(this.scene, { ...config });
