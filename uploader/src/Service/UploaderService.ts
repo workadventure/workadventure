@@ -36,9 +36,8 @@ class UploaderService{
         }
     }
 
-    async uploadFile(fileName: string, chunks: Buffer): Promise<ManagedUpload.SendData>{
-        const tab = (fileName).split('.');
-        const fileUuid = `${v4()}.${tab[tab.length -1]}`;
+    async uploadFile(fileName: string, chunks: Buffer, mimeType?: string): Promise<ManagedUpload.SendData>{
+        const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
         if(this.s3 != undefined){
             let uploadParams: S3.Types.PutObjectRequest = {
                 Bucket: `${(process.env.AWS_BUCKET as string)}`, 
@@ -47,8 +46,7 @@ class UploaderService{
                 ACL: 'public-read'
             };
 
-            const mimeType = mimeTypeManager.getMimeTypeByFileName(fileName);
-            if(mimeType !== false){
+            if(mimeType !== undefined){
                 uploadParams = {
                     ...uploadParams,
                     ContentType: mimeType,

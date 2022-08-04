@@ -3,7 +3,7 @@ import { UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import { UploadedFile } from "./FileMessageManager";
 
 export class UploaderManager {
-    public async write(files: FileList): Promise<UploadedFile[] | false> {
+    public async write(files: FileList): Promise<UploadedFile[]> {
         const formData = new FormData();
         for (const file of files) {
             formData.append(file.name, file);
@@ -27,7 +27,7 @@ export class UploaderManager {
         } catch (err) {
             //TODO manage error from uploader server
             console.error("Error push file", err);
-            return false;
+            throw err;
         }
     }
 

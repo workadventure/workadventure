@@ -57,7 +57,9 @@
             <div class="information">
                 <p class="tw-m-0">{file.name}</p>
                 <p class="tw-text-light-purple-alt tw-mt-1 tw-m-0 tw-text-xxs">
-                    {file.size ?? "0"}kb - {file.lastModified ?? new Date().toLocaleDateString()}
+                    {file.size ?? "0"}kb - {file.lastModified
+                        ? new Date(file.lastModified).toLocaleDateString()
+                        : new Date().toLocaleDateString()}
                 </p>
             </div>
         </div>

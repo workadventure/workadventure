@@ -20,6 +20,7 @@ export interface UploadedFileInterface {
 
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
+    public errorMessage?: string;
     constructor(
         public name: string,
         public id: string,
@@ -70,6 +71,7 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
 
 export interface FileExt extends File {
     uploadState: uploadingState;
+    errorMessage?: string;
 }
 
 class FileMessageManager {
@@ -89,11 +91,6 @@ class FileMessageManager {
 
         try {
             const results = await uploaderManager.write(files);
-            console.log("sendFiles => results", results);
-
-            if (results === false) {
-                throw new Error("Error upload message");
-            }
 
             //update state of message
             filesUploadStore.update((list) => {
@@ -102,16 +99,17 @@ class FileMessageManager {
                 }
                 return list;
             });
-        } catch (err) {
-            console.error("sendFiles => ", err);
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            console.error("sendFiles => ", err, err.response);
 
             //add error state in message
             filesUploadStore.update((list) => {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
+                    file.errorMessage = err.response?.data?.message;
                     list.set(file.name, file);
                 }
-                console.log("list", list);
                 return list;
             });
         }

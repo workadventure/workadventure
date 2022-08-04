@@ -62,7 +62,7 @@ export class WebLink {
         //use in HtmlMessage to copy the link of iframe
         linkCopy.setAttribute("data-function", linkFunction.copyLink);
 
-        const div = document.createElement("div") ;
+        const div = document.createElement("div");
         div.append(iframe);
         div.append(linkOpenCowebsite);
         div.append(linkCopy);

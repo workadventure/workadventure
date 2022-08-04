@@ -6,6 +6,7 @@ import {BaseController} from "./BaseController";
 import {Readable} from 'stream'
 import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
+import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -260,7 +261,6 @@ export class FileController extends BaseController {
                         onFile: (fieldname: string, file: NodeJS.ReadableStream, filename: string, encoding: string, mimetype: string) => {
                             (async () => {
                                 console.log('READING FILE', filename, encoding, mimetype);
-                                
                                 const chunks: Buffer[] = [];
                                 for await (const chunk of file) {
                                     if (!(chunk instanceof Buffer)) {
@@ -277,10 +277,25 @@ export class FileController extends BaseController {
                         throw new Error('no file name');
                     }
                     
-                    const uploadedFile: {name: string, id: string, location: string}[] = [];
+                    const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        const {Location, Key} = await uploaderService.uploadFile(fileName, buffer);
-                        uploadedFile.push({name: fileName, id: Key, location: Location});
+                        if(buffer.byteLength > 1048){
+                            throw new ByteLenghtBufferException(`The file ${fileName} is too big`);
+                        }
+                        const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
+                        const {Location, Key} = await uploaderService.uploadFile(
+                            fileName, 
+                            buffer, 
+                            mimeType
+                        );
+                        uploadedFile.push({
+                            name: fileName, 
+                            id: Key, 
+                            location: Location,
+                            size: buffer.byteLength,
+                            lastModified: new Date(),
+                            type: mimeType
+                        });
                     }
 
                     if(uploadedFile.length === 0){
@@ -291,7 +306,15 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
-                    console.error("An error happened", err)
+                    console.error("An error happened", err);
+                    if( err instanceof ByteLenghtBufferException){
+                        res.writeStatus("413 Request Entity Too Large");
+                        this.addCorsHeaders(res);
+                        res.writeHeader('Content-Type', 'application/json');
+                        return res.end(JSON.stringify({
+                            message: err.message
+                        }));
+                    }
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     return res.end('An error happened');

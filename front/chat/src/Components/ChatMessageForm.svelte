@@ -97,7 +97,6 @@
 
     function handleInputFile(event: Event) {
         const files = (<HTMLInputElement>event.target).files;
-        console.log("handleInputFile => files", files, files?.length);
         if (!files || files.length === 0) {
             console.info("No files uploaded");
             filesUploadStore.set(new Map());
@@ -214,15 +213,25 @@
         <div class="tw-w-full tw-p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
                 <div
-                    class="tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                    class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
                 >
-                    <div style="max-width: 92%;" class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center">
+                    {#if fileUploaded.errorMessage != undefined}
+                        <div
+                            class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                        >
+                            <p class="tw-m-0">{fileUploaded.errorMessage}</p>
+                        </div>
+                    {/if}
+                    <div
+                        style="max-width: 92%; display: flex; flex-wrap: nowrap;"
+                        class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center"
+                    >
                         {#if fileUploaded.uploadState === uploadingState.finish}
                             <CheckIcon size="14" class="tw-text-pop-green" />
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
                                 class="alert-upload tw-cursor-pointer"
-                                on:click|stopPropagation={() => {
+                                on:click|preventDefault|stopPropagation={() => {
                                     resend();
                                 }}
                             >
@@ -231,15 +240,12 @@
                         {:else}
                             <LoaderIcon size="14" class="tw-animate-spin" />
                         {/if}
-                        <span
-                            style="max-width: 92%;"
-                            class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap"
-                        >
+                        <span class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap">
                             {fileUploaded.name}
                         </span>
                     </div>
                     <button
-                        on:click={() => {
+                        on:click|preventDefault|stopPropagation={() => {
                             handlerDeleteUploadedFile(fileUploaded);
                         }}
                         class="tw-pr-0 tw-mr-0"
@@ -340,6 +346,25 @@
         .alert-upload {
             --tw-text-opacity: 1;
             color: rgb(255 71 90 / var(--tw-text-opacity));
+        }
+        .upload-file {
+            position: relative;
+            display: flex;
+            flex-wrap: nowrap;
+            .error-hover {
+                display: none;
+                position: absolute;
+                color: red;
+                left: 0;
+                top: -32px;
+                width: 100%;
+                min-height: 30px;
+            }
+            &:hover {
+                .error-hover {
+                    display: flex;
+                }
+            }
         }
     }
 </style>
