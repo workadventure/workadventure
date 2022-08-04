@@ -116,7 +116,7 @@
       "env": {
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "EMBEDLY_KEY": env.EMBEDLY_KEY,
+        "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
       }
     },
     "map-storage": {

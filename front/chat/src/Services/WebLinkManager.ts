@@ -95,7 +95,7 @@ export class WebLink {
     }
     get contentWebsiteRenderer(): Promise<string> {
         return (async () => {
-            if (EMBEDLY_KEY != undefined) {
+            if (EMBEDLY_KEY != undefined && EMBEDLY_KEY !== "") {
                 try {
                     const url = `https://api.embedly.com/1/oembed?url=${encodeURI(this.link)}&key=${EMBEDLY_KEY}`;
 
