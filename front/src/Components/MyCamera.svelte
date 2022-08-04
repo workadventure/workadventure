@@ -5,6 +5,7 @@
     import {onDestroy, onMount} from "svelte";
     import {srcObject} from "./Video/utils";
     import LL from "../i18n/i18n-svelte";
+    import {fly} from "svelte/transition";
 
     let stream: MediaStream | null;
 
@@ -37,17 +38,17 @@
     });
 </script>
 
-<div class="tw-transition-transform tw-duration-700"
-        class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
-        bind:this={cameraContainer}
+<div class="tw-transition-all tw-duration-[2000ms]"
+     class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
+     bind:this={cameraContainer}
 >
     {#if $silentStore}
-        <div class="is-silent">{$LL.camera.my.silentZone()}</div>
+        <div class="tw-flex tw-bg-dark-purple/95 tw-rounded tw-text-light-blue tw-p-1 tw-border-solid tw-border-light-blue tw-justify-center tw-h-10 tw-m-auto lg:tw-h-12 tw-items-center  tw-align-middle tw-absolute tw-right-0 tw-left-0 lg:tw-bottom-3 lg:tw-right-3 lg:tw-left-auto tw-text-center tw-w-64">{$LL.camera.my.silentZone()}</div>
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <div class="my-webcam-container tw-flex tw-h-24 tw-w-44 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
     tw-absolute tw-m-auto tw-left-auto tw-right-2 tw-bottom-24 md:tw-bottom-4 tw-z-[250] tw-bg-dark-blue/50 tw-rounded
 ">
-            <video class="tw-flex tw-h-full tw-max-w-full tw-rounded tw-m-auto" use:srcObject={stream} autoplay muted
+            <video class="tw-flex tw-h-full tw-max-w-full tw-m-auto" use:srcObject={stream} autoplay muted
                    playsinline/>
         </div>
         <div class="tw-flex tw-h-24 tw-w-44 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96 tw-absolute
@@ -60,10 +61,9 @@
 
 <style lang="scss">
   @import "../../style/breakpoints.scss";
-  
-  .is-silent {
-    font-size: 2em;
-    color: white;
-    padding: 40px 20px;
+
+  .hide{
+    transform: translateX(200%);
+    opacity: 0;
   }
 </style>
