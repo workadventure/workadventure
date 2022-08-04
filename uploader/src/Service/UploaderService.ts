@@ -72,7 +72,7 @@ class UploaderService{
             }
             return new Promise((solve, rej) => {
                 solve({ Key:fileUuid, 
-                    Location: `${process.env.UPLOADER_URL}/download-file/${fileUuid}`,
+                    Location: `${process.env.UPLOADER_URL}/upload-file/${fileUuid}`,
                     Bucket: "",
                     ETag: ""
                 });

@@ -1,8 +1,16 @@
 import axios from "axios";
 import { EMBEDLY_KEY } from "../Enum/EnvironmentVariable";
 import { HtmlUtils } from "../Utils/HtmlUtils";
+import { v4 as uuidv4 } from "uuid";
+import LL from "../i18n/i18n-svelte";
+import { get } from "svelte/store";
 
 const webLinkCaches = new Map();
+
+export enum linkFunction {
+    openCowebsite = "open-cowebsite",
+    copyLink = "copy-link",
+}
 export class WebLink {
     private link: string;
 
@@ -10,6 +18,7 @@ export class WebLink {
         this.link = HtmlUtils.htmlDecode(link);
     }
     private rendererFromHtml(html: string): string {
+        const elementId = uuidv4();
         const virtualDom = new DOMParser().parseFromString(html, "text/html");
         const iframe = virtualDom.getElementsByTagName("iframe").item(0);
         if (iframe == undefined) {
@@ -18,7 +27,47 @@ export class WebLink {
         iframe.width = "100%";
         iframe.height = "100%";
         iframe.allowFullscreen = true;
-        return iframe.outerHTML;
+        iframe.id = elementId;
+
+        const linkOpenCowebsite = document.createElement("p");
+        linkOpenCowebsite.append(get(LL).file.openCoWebsite());
+        linkOpenCowebsite.classList.add(
+            "iframe-openwebsite",
+            "tw-text-light-purple-alt",
+            "tw-mt-1",
+            "tw-m-0",
+            "tw-text-xxs",
+            "tw-cursor-pointer"
+        );
+        linkOpenCowebsite.style.fontWeight = "bold";
+        linkOpenCowebsite.setAttribute("data-iframe-id", elementId);
+        linkOpenCowebsite.setAttribute("data-embed-link", iframe.src);
+        linkOpenCowebsite.setAttribute("data-allow", iframe.allow);
+        //use in HtmlMessage to open the iframe in co-website
+        linkOpenCowebsite.setAttribute("data-function", linkFunction.openCowebsite);
+
+        const linkCopy = document.createElement("p");
+        linkCopy.append(get(LL).file.copy());
+        linkCopy.classList.add(
+            "iframe-openwebsite",
+            "tw-text-light-purple-alt",
+            "tw-mt-1",
+            "tw-m-0",
+            "tw-text-xxs",
+            "tw-cursor-pointer"
+        );
+        linkCopy.style.fontWeight = "bold";
+        linkCopy.setAttribute("data-iframe-id", elementId);
+        linkCopy.setAttribute("data-embed-link", iframe.src);
+        //use in HtmlMessage to copy the link of iframe
+        linkCopy.setAttribute("data-function", linkFunction.copyLink);
+
+        const div = document.createElement("div") ;
+        div.append(iframe);
+        div.append(linkOpenCowebsite);
+        div.append(linkCopy);
+
+        return div.outerHTML;
     }
     private cardRenderer(
         title: string,

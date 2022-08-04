@@ -21,6 +21,7 @@
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import File from "./Content/File.svelte";
+    import HtmlMessage from "./Content/HtmlMessage.svelte";
 
     export let mucRoom: MucRoom;
 
@@ -283,13 +284,12 @@
                                 >
                             </div>
                             <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
-                                <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-                                    {#await HtmlUtils.urlify(message.body)}
-                                        <p>...waiting</p>
-                                    {:then body}
-                                        {@html body}
-                                    {/await}
-                                </p>
+                                {#await HtmlUtils.urlify(message.body)}
+                                    <p>...waiting</p>
+                                {:then html}
+                                    <HtmlMessage {html} />
+                                {/await}
+
                                 {#if message.files && message.files.length > 0}
                                     {#each message.files as file}
                                         <!-- File message -->

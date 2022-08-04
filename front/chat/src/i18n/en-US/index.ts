@@ -75,6 +75,7 @@ const en_US: BaseTranslation = {
         fileContentNoEmbed: "Content invailable for viewing. Please doawnload it",
         download: "download",
         openCoWebsite: "Open in co-website",
+        copy: "copy the link",
     },
 };
 

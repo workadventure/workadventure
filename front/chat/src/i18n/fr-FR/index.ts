@@ -75,6 +75,7 @@ const fr_FR: Translation = {
         fileContentNoEmbed: "Le contenue n'est pas lisible sur le navigateur. Vous pouvez télécharger le document",
         download: "Téléchargement",
         openCoWebsite: "Ouvrire en co-website",
+        copy: "Copier le lien",
     },
 };
 
