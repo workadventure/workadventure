@@ -1,7 +1,8 @@
 <script lang="ts">
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+
     import type { VideoPeer } from "../../WebRtc/VideoPeer";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
     import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./utils";
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
@@ -69,47 +70,40 @@
         />
 
         <div
-            class="nametag-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
-tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
-  tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
+            class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
   "
         >
             <i class="tw-flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
-                    class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 lg:tw-py-1 tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic tw-max-h-8 tw-overflow-auto tw-break-words tw-max-w-full"
+                    class="nametag-text tw-rounded-tr-lg tw-pr-3 tw-pl-5 tw-h-3 tw-max-h-8 tw-overflow-auto tw-max-w-full "
                     >{name}</span
                 >
             </i>
         </div>
         <div
-            class="woka-webcam-container tw-flex tw-flex-col tw-absolute tw-justify-end
-  tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48 tw-pb-2
-  "
+            class="woka-webcam-container container-end video-on-responsive-height tw-pb-1"
         >
             <div class="tw-flex{($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
-                <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
+                <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
             </div>
         </div>
         {#if $constraintStore && $constraintStore.audio !== false}
             <div
-                class="voice-meter-webcam-container tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2
-    tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96
-  "
+                class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
             >
                 <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" />
             </div>
         {/if}
-        <div class="report-ban-container tw-z-[600] tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
-        tw-absolute
-">
-            <BanReportBox peer={peer}/>
+        <div
+            class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
+            tw-translate-x-3 tw-transition-all tw-opacity-0">
+            <BanReportBox {peer} />
         </div>
     </div>
 </div>
 
 <style lang="scss">
-  //Higlighted and hovered styles are defined in style/style.css (look for 'media-container')
     video.no-video {
         visibility: collapse;
     }

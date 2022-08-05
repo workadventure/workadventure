@@ -1,13 +1,15 @@
 <script lang="ts">
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
-    import { getColorByString, getTextColorByBackgroundColor } from "./utils";
+    import {VideoPeer} from "../../WebRtc/VideoPeer";
+    import {getColorByString, getTextColorByBackgroundColor} from "./utils";
     import Woka from "../Woka/Woka.svelte";
-    import { isMediaBreakpointOnly } from "../../Utils/BreakpointsUtils";
-    import { Streamable } from "../../Stores/StreamableCollectionStore";
-    import { onMount } from "svelte";
-    import { EmbedScreen } from "../../Stores/EmbedScreensStore";
-    import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
+    import {isMediaBreakpointOnly} from "../../Utils/BreakpointsUtils";
+    import {Streamable} from "../../Stores/StreamableCollectionStore";
+    import {onMount} from "svelte";
+    import {EmbedScreen} from "../../Stores/EmbedScreensStore";
+    import {highlightedEmbedScreen} from "../../Stores/EmbedScreensStore";
     import BanReportBox from "./BanReportBox.svelte";
 
     let videoContainer: HTMLDivElement;
@@ -39,24 +41,27 @@
 </script>
 
 <div
-    class="video-container video-off"
-    class:no-clikable={!clickable}
-    bind:this={videoContainer}
-    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+        class="video-container video-off"
+        class:no-clikable={!clickable}
+        bind:this={videoContainer}
+        on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        style="background-color: {backGroundColor}; color: {textColor}"
-        class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center"
+            style="background-color: {backGroundColor}; color: {textColor}"
+            class="tw-w-full tw-rounded tw-px-3 tw-flex tw-flex-row tw-items-center"
     >
-        <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px" />
-        <span class="tw-font-semibold tw-text-xxs tw-not-italic tw-px-2 tw-break-words tw-overflow-y-auto tw-max-h-10"
-            >{name}</span
+        <Woka userId={peer.userId} placeholderSrc={""} customHeight="32px" customWidth="32px"/>
+        <span
+                class="nametag-text tw-px-2 tw-overflow-y-auto tw-max-h-10"
+        >{name}</span
         >
-        <SoundMeterWidget volume={$volumeStore} classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform" />
+        <SoundMeterWidget volume={$volumeStore}
+                          classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"/>
         <div
-            class="report-ban-container-cam-off tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96 tw-h-10 tw-absolute tw-justify-end tw-items-center tw-transition-all tw-opacity-0"
+
+                class="tw-flex report-ban-container-cam-off media-box-camera-off-size-all tw-opacity-0 tw-h-10"
         >
-            <BanReportBox {peer} />
+            <BanReportBox {peer}/>
         </div>
     </div>
 </div>

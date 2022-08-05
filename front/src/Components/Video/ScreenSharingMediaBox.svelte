@@ -1,10 +1,13 @@
 <script lang="ts">
+    //STYLE: Classes factorizing tailwind's ones are defined in video-ui.scss
+
     import { highlightedEmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import type { Streamable } from "../../Stores/StreamableCollectionStore";
 
     import type { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import { getColorByString, srcObject, getTextColorByBackgroundColor } from "./utils";
+    import BanReportBox from "./BanReportBox.svelte";
 
     export let clickable = false;
 
@@ -42,25 +45,26 @@
             class="tw-h-full tw-max-w-full tw-mx-auto tw-rounded"
         />
         <div
-            class="nametag-screenshare-container tw-flex tw-flex-col tw-absolute tw-justify-end
-tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96
-tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48
-"
+            class="nametag-screenshare-container container-end tw-flex media-box-camera-on-size video-on-responsive-height"
             on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
         >
             <i class="flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
-                    class="tw-rounded-tr-lg tw-pr-3 tw-pl-8 lg:tw-py-1 tw-font-semibold tw-text-sm lg:tw-text-base tw-not-italic"
+                    class="nametag-text tw-rounded-tr-lg tw-pr-3 tw-pl-5 tw-h-3 tw-max-h-8 tw-overflow-auto tw-max-w-full"
                     >{name}</span
                 >
             </i>
         </div>
     {/if}
+    <div
+        class="report-ban-container tw-flex video-on-responsive-height media-box-camera-on-position
+        tw-z-[600] tw-flex tw-h-32 2xl:tw-h-48 2xl:tw-w-96 tw-translate-x-3 tw-transition-all tw-opacity-0">
+        <BanReportBox {peer} />
+    </div>
 </div>
 
 <style lang="scss">
-  //Higlighted and hovered styles are defined in style/style.css (look for 'media-container')
   .video-container {
         i {
             white-space: nowrap;

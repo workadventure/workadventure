@@ -1,11 +1,12 @@
 <script lang="ts">
-    import { VideoPeer } from "../../WebRtc/VideoPeer";
+    import {VideoPeer} from "../../WebRtc/VideoPeer";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
-    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
+    import {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import type { Streamable } from "../../Stores/StreamableCollectionStore";
+    import type {Streamable} from "../../Stores/StreamableCollectionStore";
     import VideoOffBox from "./VideoOffBox.svelte";
+    import "../../../style/wa-theme/video-ui.scss"; //Classes factorizing tailwind's ones are defined here
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -14,8 +15,7 @@
     export let mozaicFullWidth = false;
     export let mozaicQuarter = false;
 
-    let peer = streamable;
-    let constraintStore = peer.constraintsStore;
+    let constraintStore = streamable.constraintsStore;
 </script>
 
 {#if streamable instanceof VideoPeer}
@@ -23,8 +23,8 @@
         <div
             class="media-container {isHightlighted
                 ? 'hightlighted tw-max-w-sm tw-mx-auto'
-                : 'tw-flex tw-m-auto tw-flex tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96 tw-h-10'}
-     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+                : 'tw-flex tw-m-auto tw-flex media-box-camera-off-size tw-h-10'}
+     media-box-shape-color tw-pointer-events-auto tw-p-0
 "
             class:clickable={isClickable}
             class:mozaic-solo={mozaicSolo}
@@ -39,8 +39,8 @@
         <div
             class="media-container {isHightlighted
                 ? 'hightlighted tw-mr-6'
-                : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
-     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+                : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
 "
             class:clickable={isClickable}
             class:mozaic-solo={mozaicSolo}
@@ -56,15 +56,15 @@
     <div
         class="media-container {isHightlighted
             ? 'hightlighted tw-mr-6'
-            : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
-     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+            : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
 "
         class:clickable={isClickable}
         class:mozaic-solo={mozaicSolo}
         class:mozaic-full-width={mozaicFullWidth}
         class:mozaic-quarter={mozaicQuarter}
     >
-        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'}   tw-w-full tw-h-full tw-flex">
+        <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
         </div>
     </div>
@@ -72,8 +72,8 @@
     <div
         class="media-container {isHightlighted
             ? 'hightlighted tw-mr-6'
-            : 'tw-flex tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96'}
-     tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded
+            : 'tw-flex media-box-camera-on-size'}
+     media-box-shape-color
 "
         class:clickable={isClickable}
         class:mozaic-solo={mozaicSolo}
@@ -92,9 +92,6 @@
     .media-container {
         transition: margin-left 0.2s, margin-right 0.2s, margin-bottom 0.2s, margin-top 0.2s, max-height 0.2s,
             max-width 0.2s;
-        pointer-events: auto;
-
-        padding: 0;
 
         &:hover {
             margin-top: 2%;
