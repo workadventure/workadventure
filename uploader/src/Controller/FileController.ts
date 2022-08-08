@@ -279,7 +279,7 @@ export class FileController extends BaseController {
                     
                     const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        if(buffer.byteLength > 1048){
+                        if(buffer.byteLength > 1048576){
                             throw new ByteLenghtBufferException(`The file ${fileName} is too big`);
                         }
                         const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
