@@ -81,9 +81,7 @@
                 >
             </i>
         </div>
-        <div
-            class="woka-webcam-container container-end video-on-responsive-height tw-pb-1"
-        >
+        <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1">
             <div class="tw-flex{($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
                 <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
             </div>
@@ -97,7 +95,8 @@
         {/if}
         <div
             class="report-ban-container tw-flex tw-z-[600] media-box-camera-on-size media-box-camera-on-position
-            tw-translate-x-3 tw-transition-all tw-opacity-0">
+            tw-translate-x-3 tw-transition-all tw-opacity-0"
+        >
             <BanReportBox {peer} />
         </div>
     </div>

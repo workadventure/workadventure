@@ -7,7 +7,8 @@
 </script>
 
 <div
-    class="tw-flex tw-justify-between tw-w-10 tw-h-10 md:tw-w-5 md:tw-w-5 lg:tw-w-10 lg:tw-h-10 tw-items-center {classcss ?? ''}"
+    class="tw-flex tw-justify-between tw-w-10 tw-h-10 md:tw-w-5 md:tw-w-5 lg:tw-w-10 lg:tw-h-10 tw-items-center {classcss ??
+        ''}"
     class:active={display}
 >
     <div

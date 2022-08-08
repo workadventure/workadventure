@@ -59,13 +59,14 @@
     {/if}
     <div
         class="report-ban-container tw-flex video-on-responsive-height media-box-camera-on-position
-        tw-z-[600] tw-flex tw-h-32 2xl:tw-h-48 2xl:tw-w-96 tw-translate-x-3 tw-transition-all tw-opacity-0">
+        tw-z-[600] tw-flex tw-h-32 2xl:tw-h-48 2xl:tw-w-96 tw-translate-x-3 tw-transition-all tw-opacity-0"
+    >
         <BanReportBox {peer} />
     </div>
 </div>
 
 <style lang="scss">
-  .video-container {
+    .video-container {
         i {
             white-space: nowrap;
             span {

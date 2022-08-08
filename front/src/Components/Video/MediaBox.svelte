@@ -1,12 +1,14 @@
 <script lang="ts">
-    import {VideoPeer} from "../../WebRtc/VideoPeer";
+    import { VideoPeer } from "../../WebRtc/VideoPeer";
     import VideoMediaBox from "./VideoMediaBox.svelte";
     import ScreenSharingMediaBox from "./ScreenSharingMediaBox.svelte";
-    import {ScreenSharingPeer} from "../../WebRtc/ScreenSharingPeer";
+    import { ScreenSharingPeer } from "../../WebRtc/ScreenSharingPeer";
     import LocalStreamMediaBox from "./LocalStreamMediaBox.svelte";
-    import type {Streamable} from "../../Stores/StreamableCollectionStore";
+    import type { Streamable } from "../../Stores/StreamableCollectionStore";
     import VideoOffBox from "./VideoOffBox.svelte";
     import "../../../style/wa-theme/video-ui.scss"; //Classes factorizing tailwind's ones are defined here
+    import { ObtainedMediaStreamConstraints } from "../../Stores/MediaStore";
+    import { Readable } from "svelte/store";
 
     export let streamable: Streamable;
     export let isHightlighted = false;
@@ -15,7 +17,10 @@
     export let mozaicFullWidth = false;
     export let mozaicQuarter = false;
 
-    let constraintStore = streamable.constraintsStore;
+    let constraintStore: Readable<ObtainedMediaStreamConstraints | null>;
+    if (streamable instanceof VideoPeer) {
+        constraintStore = streamable.constraintsStore;
+    }
 </script>
 
 {#if streamable instanceof VideoPeer}
@@ -37,9 +42,7 @@
         </div>
     {:else}
         <div
-            class="media-container {isHightlighted
-                ? 'hightlighted tw-mr-6'
-                : 'tw-flex media-box-camera-on-size'}
+            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
             class:clickable={isClickable}
@@ -54,9 +57,7 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted
-            ? 'hightlighted tw-mr-6'
-            : 'tw-flex media-box-camera-on-size'}
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
         class:clickable={isClickable}
@@ -70,9 +71,7 @@
     </div>
 {:else}
     <div
-        class="media-container {isHightlighted
-            ? 'hightlighted tw-mr-6'
-            : 'tw-flex media-box-camera-on-size'}
+        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
         class:clickable={isClickable}
