@@ -15,7 +15,12 @@
   @apply tw-m-0 tw-p-0 tw-bg-dark-blue/50 tw-rounded;
 }
 
+.report-ban-container-cam-off{
+  @apply tw-items-center;
+}
+
 .media-container {
+
   &.hightlighted {
     @apply tw-pointer-events-auto;
     .nametag-webcam-container,
@@ -36,11 +41,11 @@
     }
 
     .report-ban-container-cam-off {
-      @apply -tw-translate-x-[1.37rem] tw-opacity-100;
+      @apply -tw-translate-x-[1.37rem] tw-opacity-100 md:-tw-translate-x-1 xl:-tw-translate-x-[1.37rem];
     }
 
     .voice-meter-cam-off {
-      @apply -tw-translate-x-8;
+      @apply -tw-translate-x-8 md:-tw-translate-x-1 xl:-tw-translate-x-8;
     }
   }
 }
