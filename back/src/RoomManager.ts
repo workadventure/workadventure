@@ -4,6 +4,7 @@ import {
     AdminMessage,
     AdminPusherToBackMessage,
     AdminRoomMessage,
+    AskPositionMessage,
     BanMessage,
     BanUserMessage,
     BatchToPusherMessage,
@@ -30,6 +31,7 @@ import {
     RoomsList,
     PingMessage,
     QueryMessage,
+    EditMapMessage,
 } from "./Messages/generated/messages_pb";
 import { sendUnaryData, ServerDuplexStream, ServerUnaryCall, ServerWritableStream } from "grpc";
 import { socketManager } from "./Services/SocketManager";
@@ -141,6 +143,12 @@ const roomManager: IRoomManagerServer = {
                                 user,
                                 message.getLockgrouppromptmessage() as LockGroupPromptMessage
                             );
+                        } else if (message.hasEditmapmessage()) {
+                            socketManager.handleEditMapMessage(
+                                room,
+                                user,
+                                message.getEditmapmessage() as EditMapMessage
+                            );
                         } else if (message.hasSendusermessage()) {
                             const sendUserMessage = message.getSendusermessage();
                             socketManager.handleSendUserMessage(user, sendUserMessage as SendUserMessage);
@@ -153,6 +161,12 @@ const roomManager: IRoomManagerServer = {
                                 room,
                                 user,
                                 setPlayerDetailsMessage as SetPlayerDetailsMessage
+                            );
+                        } else if (message.hasAskpositionmessage()) {
+                            socketManager.handleAskPositionMessage(
+                                room,
+                                user,
+                                message.getAskpositionmessage() as AskPositionMessage
                             );
                         } else {
                             throw new Error("Unhandled message type");

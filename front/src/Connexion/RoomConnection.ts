@@ -18,7 +18,12 @@ import { adminMessagesService } from "./AdminMessagesService";
 import { connectionManager } from "./ConnectionManager";
 import { get } from "svelte/store";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
-import { menuIconVisiblilityStore, menuVisiblilityStore, warningContainerStore } from "../Stores/MenuStore";
+import {
+    inviteUserActivated,
+    menuIconVisiblilityStore,
+    menuVisiblilityStore,
+    warningContainerStore,
+} from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
     ServerToClientMessage as ServerToClientMessageTsProto,
@@ -44,6 +49,8 @@ import {
     QueryMessage,
     AnswerMessage,
     JoinBBBMeetingAnswer,
+    MoveToPositionMessage as MoveToPositionMessageProto,
+    EditMapMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -51,9 +58,9 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
+import { ITiledMapRectangleObject } from "../Phaser/Game/GameMap";
 
-// Number of milliseconds after which we consider the server has timed out (if we did not receive a ping)
-const pingTimeout = 20000;
+const manualPingDelay = 20000;
 
 export class RoomConnection implements RoomConnection {
     private readonly socket: WebSocket;
@@ -133,6 +140,9 @@ export class RoomConnection implements RoomConnection {
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
 
+    private readonly _editMapMessageStream = new Subject<EditMapMessage>();
+    public readonly editMapMessageStream = this._editMapMessageStream.asObservable();
+
     private readonly _playerDetailsUpdatedMessageStream = new Subject<PlayerDetailsUpdatedMessageTsProto>();
     public readonly playerDetailsUpdatedMessageStream = this._playerDetailsUpdatedMessageStream.asObservable();
 
@@ -141,6 +151,9 @@ export class RoomConnection implements RoomConnection {
 
     // If this timeout triggers, we consider the connection is lost (no ping received)
     private timeout: ReturnType<typeof setInterval> | undefined = undefined;
+
+    private readonly _moveToPositionMessageStream = new Subject<MoveToPositionMessageProto>();
+    public readonly moveToPositionMessageStream = this._moveToPositionMessageStream.asObservable();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public static setWebsocketFactory(websocketFactory: (url: string) => any): void {
@@ -310,8 +323,14 @@ export class RoomConnection implements RoomConnection {
                                 this.sendPong();
                                 break;
                             }
+                            case "editMapMessage": {
+                                const message = subMessage.editMapMessage;
+                                this._editMapMessageStream.next(message);
+                                break;
+                            }
                             default: {
                                 // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                                //@ts-ignore
                                 const _exhaustiveCheck: never = subMessage;
                             }
                         }
@@ -345,6 +364,12 @@ export class RoomConnection implements RoomConnection {
                     this.userId = roomJoinedMessage.currentUserId;
                     this.tags = roomJoinedMessage.tag;
                     this._userRoomToken = roomJoinedMessage.userRoomToken;
+                    //define if there is invite user option activated
+                    inviteUserActivated.set(
+                        roomJoinedMessage.activatedInviteUser != undefined
+                            ? roomJoinedMessage.activatedInviteUser
+                            : true
+                    );
 
                     // If one of the URLs sent to us does not exist, let's go to the Woka selection screen.
                     if (
@@ -499,6 +524,20 @@ export class RoomConnection implements RoomConnection {
                     }
                     break;
                 }
+                case "moveToPositionMessage": {
+                    if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
+                        const tileIndex = gameManager
+                            .getCurrentGameScene()
+                            .getGameMap()
+                            .getTileIndexAt(
+                                message.moveToPositionMessage.position.x,
+                                message.moveToPositionMessage.position.y
+                            );
+                        gameManager.getCurrentGameScene().moveTo(tileIndex);
+                    }
+                    this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                    break;
+                }
                 case "answerMessage": {
                     const queryId = message.answerMessage.id;
                     const query = this.queries.get(queryId);
@@ -518,6 +557,7 @@ export class RoomConnection implements RoomConnection {
                 }
                 default: {
                     // Security check: if we forget a "case", the line below will catch the error at compile-time.
+                    //@ts-ignore
                     const _exhaustiveCheck: never = message;
                 }
             }
@@ -532,7 +572,7 @@ export class RoomConnection implements RoomConnection {
         this.timeout = setTimeout(() => {
             console.warn("Timeout detected server-side. Is your connexion down? Closing connexion.");
             this.socket.close();
-        }, pingTimeout);
+        }, manualPingDelay);
     }
 
     private sendPong(): void {
@@ -909,6 +949,26 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
+    public emitMapEditorModifyArea(config: ITiledMapRectangleObject): void {
+        this.send({
+            message: {
+                $case: "editMapMessage",
+                editMapMessage: {
+                    message: {
+                        $case: "modifyAreaMessage",
+                        modifyAreaMessage: {
+                            id: config.id,
+                            x: config.x,
+                            y: config.y,
+                            width: config.width,
+                            height: config.height,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
     public getAllTags(): string[] {
         return this.tags;
     }
@@ -931,6 +991,20 @@ export class RoomConnection implements RoomConnection {
             console.warn("Trying to send a message to the server, but the connection is closed. Message: ", message);
             return;
         }
+
+        this.socket.send(bytes);
+    }
+
+    public emitAskPosition(uuid: string, playUri: string) {
+        const bytes = ClientToServerMessageTsProto.encode({
+            message: {
+                $case: "askPositionMessage",
+                askPositionMessage: {
+                    userIdentifier: uuid,
+                    playUri,
+                },
+            },
+        }).finish();
 
         this.socket.send(bytes);
     }

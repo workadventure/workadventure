@@ -7,7 +7,13 @@ import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStor
 export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
-import { myCameraVisibilityStore } from "../Stores/MyCameraStoreVisibility";
+import {
+    myCameraApiBlockedStore,
+    myCameraStore,
+    myMicrophoneBlockedStore,
+    myMicrophoneStore,
+    proximityMeetingStore,
+} from "../Stores/MyCameraStoreVisibility";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -15,11 +21,22 @@ import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { localeDetector } from "../i18n/locales";
 
+export enum NotificationType {
+    discussion = 1,
+    message,
+}
+
+//TODO add parameter to manage time to send notification
+const TIME_NOTIFYING_MILLISECOND = 10000;
+
 export class MediaManager {
     startScreenSharingCallBacks: Set<StartScreenSharingCallback> = new Set<StartScreenSharingCallback>();
     stopScreenSharingCallBacks: Set<StopScreenSharingCallback> = new Set<StopScreenSharingCallback>();
 
     private userInputManager?: UserInputManager;
+
+    private canSendNotification = true;
+    private canPlayNotificationMessage = true;
 
     constructor() {
         localeDetector()
@@ -70,12 +87,32 @@ export class MediaManager {
             });
     }
 
-    public showMyCamera(): void {
-        myCameraVisibilityStore.set(true);
+    public enableMyCamera(): void {
+        if (!get(myCameraApiBlockedStore)) {
+            myCameraStore.set(true);
+        }
     }
 
-    public hideMyCamera(): void {
-        myCameraVisibilityStore.set(false);
+    public disableMyCamera(): void {
+        myCameraStore.set(false);
+    }
+
+    public enableMyMicrophone(): void {
+        if (!get(myMicrophoneBlockedStore)) {
+            myMicrophoneStore.set(true);
+        }
+    }
+
+    public disableMyMicrophone(): void {
+        myMicrophoneStore.set(false);
+    }
+
+    public enableProximityMeeting(): void {
+        proximityMeetingStore.set(true);
+    }
+
+    public disableProximityMeeting(): void {
+        proximityMeetingStore.set(false);
     }
 
     private getScreenSharingId(userId: string): string {
@@ -157,7 +194,7 @@ export class MediaManager {
     }
 
     public hasNotification(): boolean {
-        if (Notification.permission === "granted") {
+        if (this.canSendNotification && Notification.permission === "granted") {
             return localUserStore.getNotification() === "granted";
         } else {
             return false;
@@ -172,19 +209,42 @@ export class MediaManager {
         }
     }
 
-    public createNotification(userName: string) {
+    public createNotification(userName: string, notificationType: NotificationType) {
         if (document.hasFocus()) {
             return;
         }
 
         if (this.hasNotification()) {
-            const title = `${userName} wants to discuss with you`;
             const options = {
                 icon: "/static/images/logo-WA-min.png",
                 image: "/static/images/logo-WA-min.png",
                 badge: "/static/images/logo-WA-min.png",
             };
-            new Notification(title, options);
+            switch (notificationType) {
+                case NotificationType.discussion:
+                    new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
+                    break;
+                case NotificationType.message:
+                    new Notification(`${userName} ${get(LL).notification.message()}`, options);
+                    break;
+            }
+            this.canSendNotification = false;
+            setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
+        }
+    }
+
+    public playNewMessageNotification() {
+        //play notification message
+        const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
+        if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {
+            (elementAudioNewMessageNotification as HTMLAudioElement).volume = 0.2;
+            (elementAudioNewMessageNotification as HTMLAudioElement)
+                .play()
+                .then(() => {
+                    this.canPlayNotificationMessage = false;
+                    return setTimeout(() => (this.canPlayNotificationMessage = true), TIME_NOTIFYING_MILLISECOND);
+                })
+                .catch((err) => console.error("Trying to play notification message error: ", err));
         }
     }
 }

@@ -30,6 +30,16 @@ export class MathUtils {
         return value >= min && value <= max;
     }
 
+    public static randomPositionFromRect(
+        rectangle: { x: number; y: number; width: number; height: number },
+        margin = 0
+    ): { x: number; y: number } {
+        return {
+            x: this.randomFrom(rectangle.x + margin, rectangle.x + rectangle.width - margin),
+            y: this.randomFrom(rectangle.y + margin, rectangle.y + rectangle.height - margin),
+        };
+    }
+
     public static distanceBetween(p1: { x: number; y: number }, p2: { x: number; y: number }, squared = true): number {
         const distance = Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2);
         return squared ? Math.sqrt(distance) : distance;
@@ -37,5 +47,9 @@ export class MathUtils {
 
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
+    }
+
+    public static randomFrom(min: number, max: number): number {
+        return Math.floor(Math.random() * (max - min + 1) + min);
     }
 }

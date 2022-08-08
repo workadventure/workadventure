@@ -1,8 +1,8 @@
 import { writable } from "svelte/store";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import type { RoomConnection } from "../Connexion/RoomConnection";
-import { getRandomColor } from "../WebRtc/ColorGenerator";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
+import { getColorByString } from "../Components/Video/utils";
 
 let idCount = 0;
 
@@ -30,7 +30,7 @@ function createPlayersStore() {
                         companion: message.companion,
                         userUuid: message.userUuid,
                         availabilityStatus: message.availabilityStatus,
-                        color: getRandomColor(),
+                        color: getColorByString(message.name),
                     });
                     return users;
                 });
@@ -44,6 +44,15 @@ function createPlayersStore() {
         },
         getPlayerById(userId: number): PlayerInterface | undefined {
             return players.get(userId);
+        },
+        getPlayerByUuid(userUuid: string): PlayerInterface | undefined {
+            for (const user of players.values()) {
+                if (userUuid === user.userUuid) {
+                    return user;
+                }
+            }
+
+            return undefined;
         },
         addFacticePlayer(name: string): number {
             let userId: number | null = null;
@@ -61,7 +70,7 @@ function createPlayersStore() {
                     companion: null,
                     availabilityStatus: AvailabilityStatus.ONLINE,
                     userUuid: "dummy",
-                    color: getRandomColor(),
+                    color: getColorByString(name),
                 });
                 return users;
             });

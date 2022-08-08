@@ -69,15 +69,21 @@
               "ENABLE_OPENAPI_ENDPOINT": "true",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
+              # Admin
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
+              # Opid client
               "OPID_CLIENT_ID": "auth-code-client",
-              "OPID_CLIENT_SECRET": "mySecretHydraWA2022",
+              "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
               "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
+              # Ejabberd
+              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
+              "EJABBERD_URI": "adminxmpp-"+url,
+              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
             } else {})
           },
     "front": {
@@ -98,8 +104,30 @@
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
         "ICON_URL": "//icon-"+url,
+        "CHAT_URL": "//chat-"+url
       }
     },
+    "chat": {
+      "image": "thecodingmachine/workadventure-chat:"+tag,
+      "host": {
+        "url": "chat-"+url,
+      },
+      "ports": [80],
+      "env": {
+        "PUSHER_URL": "//pusher-"+url
+      }
+    },
+    "map-storage": {
+           "image": "thecodingmachine/workadventure-map-storage:"+tag,
+           "host": {
+             "url": "map-storage-"+url,
+             "containerPort": 3000
+           },
+           "ports": [3000],
+           "env": {
+             "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
+           }
+         },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
            "host": {

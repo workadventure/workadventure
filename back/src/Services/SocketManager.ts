@@ -44,6 +44,9 @@ import {
     WebRtcStartMessage,
     WorldFullWarningMessage,
     Zone as ProtoZone,
+    AskPositionMessage,
+    MoveToPositionMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -129,6 +132,9 @@ export class SocketManager {
         }
 
         roomJoinedMessage.setCurrentuserid(user.id);
+        roomJoinedMessage.setActivatedinviteuser(
+            user.activatedInviteUser != undefined ? user.activatedInviteUser : true
+        );
 
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
@@ -1045,6 +1051,15 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
+    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
+        if (message.hasModifyareamessage()) {
+            const msg = message.getModifyareamessage();
+            if (msg) {
+                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+            }
+        }
+    }
+
     getAllRooms(): RoomsList {
         const roomsList = new RoomsList();
 
@@ -1057,6 +1072,26 @@ export class SocketManager {
         }
 
         return roomsList;
+    }
+
+    handleAskPositionMessage(room: GameRoom, user: User, askPositionMessage: AskPositionMessage) {
+        const moveToPositionMessage = new MoveToPositionMessage();
+
+        if (room) {
+            const userToJoin = room.getUserByUuid(askPositionMessage.getUseridentifier());
+            const position = userToJoin?.getPosition();
+            if (position) {
+                moveToPositionMessage.setPosition(ProtobufUtils.toPositionMessage(position));
+
+                const clientMessage = new ServerToClientMessage();
+                clientMessage.setMovetopositionmessage(moveToPositionMessage);
+                user.socket.write(clientMessage);
+            }
+
+            if (room.isEmpty()) {
+                // TODO delete room;
+            }
+        }
     }
 }
 

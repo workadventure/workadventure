@@ -58,30 +58,29 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
-<div class="report-menu-main nes-container is-rounded">
-    <section class="report-menu-title">
+<div
+    class="report-menu-main
+    tw-text-center tw-absolute tw-left-0 tw-right-0 tw-bg-dark-purple/95 tw-rounded tw-text-white tw-p-3 tw-pointer-events-auto
+    md:tw-top-14 tw-w-full md:tw-w-1/2 tw-m-auto tw-z-[650]"
+>
+    <section>
+        <button type="button" class="close-window" on:click|preventDefault={close}>&times</button>
         <h2>{$LL.report.moderate.title({ userName })}</h2>
-        <section class="justify-center">
-            <button type="button" class="nes-btn" on:click|preventDefault={close}>X</button>
-        </section>
     </section>
-    <section class="report-menu-action {disableReport ? 'hidden' : ''}">
-        <section class="justify-center">
-            <button
-                type="button"
-                class="nes-btn {blockActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateBlock}>{$LL.report.moderate.block()}</button
+    <section class="report-menu-action {disableReport ? 'tw-hidden' : ''}">
+        <section class="tw-flex tw-justify-center">
+            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateBlock}
+                >{$LL.report.moderate.block()}</button
             >
         </section>
-        <section class="justify-center">
-            <button
-                type="button"
-                class="nes-btn {reportActive ? 'is-disabled' : ''}"
-                on:click|preventDefault={activateReport}>{$LL.report.moderate.report()}</button
+        <section class="tw-flex tw-justify-center">
+            <button type="button" class={reportActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
+                >{$LL.report.moderate.report()}</button
             >
         </section>
     </section>
-    <section class="report-menu-content">
+
+    <section>
         {#if blockActive}
             <BlockSubMenu {userUUID} {userName} />
         {:else if reportActive}
@@ -91,54 +90,3 @@
         {/if}
     </section>
 </div>
-
-<style lang="scss">
-    .nes-container {
-        padding: 5px;
-    }
-
-    section.justify-center {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    div.report-menu-main {
-        font-family: "Press Start 2P";
-        pointer-events: auto;
-        background-color: #333333;
-        color: whitesmoke;
-        z-index: 650;
-        position: absolute;
-        height: 70vh;
-        width: 50vw;
-        top: 4%;
-
-        left: 0;
-        right: 0;
-        margin-left: auto;
-        margin-right: auto;
-
-        section.report-menu-title {
-            display: grid;
-            grid-template-columns: calc(100% - 45px) 40px;
-            margin-bottom: 20px;
-
-            h2 {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-        }
-
-        section.report-menu-action {
-            display: grid;
-            grid-template-columns: 50% 50%;
-            margin-bottom: 20px;
-        }
-
-        section.report-menu-action.hidden {
-            display: none;
-        }
-    }
-</style>

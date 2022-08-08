@@ -83,7 +83,64 @@ WA.room.setProperty("wikiLayer", "openWebsite", "https://www.wikipedia.org/");
 ```
 
 ### Working with area objects
-You can use Tiled objects of special type `area` to hold various properties, instead of layers. They too can be modified with scripting API.
+You can use Tiled objects of special class `area` to hold various properties, instead of layers. They, too, can be modified with scripting API.
+
+### Create Area
+
+```ts
+WA.room.area.create(area: {
+    name: string,   // Name of the area (must be unique)
+    x: number,      // X position
+    y: number,      // Y position
+    width: number,  // Width size
+    height: number, // Height size
+}): Area;
+```
+
+You can create new Area object (currently limited to rectangular shapes).
+
+Example:
+```ts
+const area = WA.room.area.create({
+    name: 'MyNewArea',
+    x: 100,
+    y: 100,
+    width: 320,
+    height: 320,
+});
+```
+
+### Get an Area
+```ts
+WA.room.area.get(name: string): Promise<Area>;
+```
+
+It is possible to get an existing Area object.
+
+```ts
+const area = await WA.room.area.get('MyNewArea');
+```
+
+### Modify Area
+
+It is possible to modify already existing Area object (currently limited to x, y, width, height).
+
+```ts
+const area = await WA.room.area.get('MyNewArea');
+if (area) {
+    area.x = 150;
+    area.y = 150;
+}
+```
+
+### Delete Area
+
+You can delete Area if it has a name.
+
+```ts
+WA.room.area.delete('MyNewArea');
+```
+
 ### Detecting when the user enters/leaves an area
 
 ```ts
@@ -106,40 +163,6 @@ WA.room.area.onLeave("myArea").subscribe(() => {
   WA.chat.sendChatMessage("Goodbye!", "Mr Robot");
   myAreaSubscriber.unsubscribe();
 });
-```
-
-### Create Area
-
-You can create new Area object (currently limited to rectangular shapes):
-
-```ts
-const area = WA.room.area.create({
-    name: 'MyNewArea',
-    x: 100,
-    y: 100,
-    width: 320,
-    height: 320,
-});
-```
-
-### Modify Area
-
-It is possible to modify already existing Area object (currently limited to x, y, width, height):
-
-```ts
-const area = await WA.room.area.get('MyNewArea');
-if (area) {
-    area.x = 150;
-    area.y = 150;
-}
-```
-
-### Delete Area
-
-You can delete Area if it has a name:
-
-```ts
-WA.room.area.delete('MyNewArea');
 ```
 
 ### Set/Create properties in an Area object

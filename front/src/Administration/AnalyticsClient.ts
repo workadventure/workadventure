@@ -1,4 +1,5 @@
 import { POSTHOG_API_KEY, POSTHOG_URL } from "../Enum/EnvironmentVariable";
+import { Emoji } from "../Stores/EmoteStore";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare let window: any;
 
@@ -57,10 +58,18 @@ class AnalyticsClient {
             .catch((e) => console.error(e));
     }
 
-    launchEmote(emote: string): void {
+    launchEmote(emote: Emoji): void {
         this.posthogPromise
             ?.then((posthog) => {
-                posthog.capture("wa-emote-launch", { emote });
+                posthog.capture("wa-emote-launch", { ...emote });
+            })
+            .catch((e) => console.error(e));
+    }
+
+    editEmote(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa-emote-edit");
             })
             .catch((e) => console.error(e));
     }
@@ -390,6 +399,14 @@ class AnalyticsClient {
         this.posthogPromise
             ?.then((posthog) => {
                 posthog.capture("wa_wokascene_custom");
+            })
+            .catch((e) => console.error(e));
+    }
+
+    layoutPresentChange(): void {
+        this.posthogPromise
+            ?.then((posthog) => {
+                posthog.capture("wa_layout_present");
             })
             .catch((e) => console.error(e));
     }

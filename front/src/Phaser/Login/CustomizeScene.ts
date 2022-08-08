@@ -23,6 +23,7 @@ import { Button } from "../Components/Ui/Button";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
 import { TexturesHelper } from "../Helpers/TexturesHelper";
 import { IconButton, IconButtonConfig, IconButtonEvent } from "../Components/Ui/IconButton";
+import { selectCharacterCustomizeSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 
 export const CustomizeSceneName = "CustomizeScene";
 
@@ -110,6 +111,8 @@ export class CustomizeScene extends AbstractCharacterScene {
 
         this.bindEventHandlers();
 
+        selectCharacterCustomizeSceneVisibleStore.set(true);
+
         this.refreshPlayerCurrentOutfit();
         this.onResize();
     }
@@ -127,6 +130,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public nextSceneToCamera() {
+        selectCharacterCustomizeSceneVisibleStore.set(false);
+
         const layers: string[] = [];
         let i = 0;
         for (const layerItem of this.selectedLayers) {
@@ -147,6 +152,8 @@ export class CustomizeScene extends AbstractCharacterScene {
     }
 
     public backToPreviousScene() {
+        selectCharacterCustomizeSceneVisibleStore.set(false);
+
         this.scene.stop(CustomizeSceneName);
         this.scene.run(SelectCharacterSceneName);
     }

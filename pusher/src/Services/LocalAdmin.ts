@@ -2,30 +2,33 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { GameRoomPolicyTypes } from "../Model/PusherRoom";
 import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
+import { localWokaService } from "./LocalWokaService";
 
 /**
  * A local class mocking a real admin if no admin is configured.
  */
 class LocalAdmin implements AdminInterface {
-    fetchMemberDataByUuid(
+    async fetchMemberDataByUuid(
         userIdentifier: string,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
         locale?: string
     ): Promise<FetchMemberDataByUuidResponse> {
-        return Promise.resolve({
+        return {
             email: userIdentifier,
             userUuid: userIdentifier,
             tags: [],
             messages: [],
             visitCardUrl: null,
-            textures: [],
+            textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-        });
+            //@ts-ignore
+            mucRooms: [{ name: "Default", url: playUri, type: "default" }],
+            activatedInviteUser: true,
+        };
     }
 
     fetchMapDetails(playUri: string, authToken?: string, locale?: string): Promise<MapDetailsData | RoomRedirect> {
@@ -40,18 +43,16 @@ class LocalAdmin implements AdminInterface {
 
         const match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (!match) {
-            throw new Error("URL format is not good");
+            throw new Error("URL format is not good : " + roomUrl.pathname);
         }
 
         const mapUrl = roomUrl.protocol + "//" + match[1];
 
         return Promise.resolve({
             mapUrl,
-            policy_type: GameRoomPolicyTypes.ANONYMOUS_POLICY,
-            tags: [],
             authenticationMandatory: DISABLE_ANONYMOUS,
-            roomSlug: null,
             contactPage: null,
+            mucRooms: null,
             group: null,
             iframeAuthentication: null,
             miniLogo: null,
@@ -99,6 +100,16 @@ class LocalAdmin implements AdminInterface {
     }
 
     async logoutOauth(token: string): Promise<void> {
+        return Promise.reject(new Error("No admin backoffice set!"));
+    }
+
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 }

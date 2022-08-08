@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menú",
     icon: {
         open: {
@@ -8,6 +9,9 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Mostrar invitación",
             register: "Registro",
             chat: "Abrir chat",
+            userlist: "Lista de usuarios",
+            openEmoji: "Abrir emoji emergente seleccionado",
+            closeEmoji: "Cerrar el menú de emojis",
         },
     },
     visitCard: {

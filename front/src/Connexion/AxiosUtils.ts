@@ -25,21 +25,37 @@ axiosWithRetry.defaults.raxConfig = {
     // retry attempts have been made
     onRetryAttempt: (err) => {
         const cfg = rax.getConfig(err);
-        console.log(err);
-        console.log(cfg);
-        console.log(`Retry attempt #${cfg?.currentRetryAttempt} on URL '${err.config.url}'`);
-        errorStore.addErrorMessage(get(LL).error.connectionRetry.unableConnect(), {
-            closable: false,
-            id: "axios_retry",
-        });
+        console.log(`Retry attempt #${cfg?.currentRetryAttempt} on URL '${err.config.url}':`, err.message, cfg);
+        showConnectionIssueMessage();
     },
 };
 
-axiosWithRetry.interceptors.response.use((res) => {
-    if (res.status < 400) {
-        errorStore.clearMessageById("axios_retry");
+axiosWithRetry.interceptors.response.use(
+    (res) => {
+        hideConnectionIssueMessage();
+        return res;
+    },
+    (error) => {
+        // Do not clear error message if the status code is being retried.
+        for (const [low, high] of axiosWithRetry.defaults.raxConfig?.statusCodesToRetry ?? []) {
+            if (error.status >= low && error.status <= high) {
+                return Promise.reject(error);
+            }
+        }
+        hideConnectionIssueMessage();
+        return Promise.reject(error);
     }
-    return res;
-});
+);
+
+export function showConnectionIssueMessage() {
+    errorStore.addErrorMessage(get(LL).error.connectionRetry.unableConnect(), {
+        closable: false,
+        id: "axios_retry",
+    });
+}
+
+export function hideConnectionIssueMessage() {
+    errorStore.clearMessageById("axios_retry");
+}
 
 rax.attach(axiosWithRetry);

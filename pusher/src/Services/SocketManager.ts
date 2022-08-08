@@ -39,6 +39,10 @@ import {
     InvalidTextureMessage,
     ErrorScreenMessage,
     QueryMessage,
+    XmppMessage,
+    AskPositionMessage,
+    EditMapMessage,
+    BanUserByUuidMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -183,6 +187,9 @@ export class SocketManager implements ZoneEventListener {
                 joinRoomMessage.setVisitcardurl(client.visitCardUrl);
             }
             joinRoomMessage.setCompanion(client.companion);
+            joinRoomMessage.setActivatedinviteuser(
+                client.activatedInviteUser != undefined ? client.activatedInviteUser : true
+            );
 
             for (const characterLayer of client.characterLayers) {
                 const characterLayerMessage = new CharacterLayerMessage();
@@ -236,6 +243,10 @@ export class SocketManager implements ZoneEventListener {
                         );
                         this.closeWebsocketConnection(client, 1011, "Connection lost to back server");
                     }
+                    if (client.xmppClient) {
+                        console.log("Trying disconnecting from xmppClient");
+                        client.xmppClient.close();
+                    }
                 })
                 .on("error", (err: Error) => {
                     console.error(
@@ -256,6 +267,7 @@ export class SocketManager implements ZoneEventListener {
             streamToPusher.write(pusherToBackMessage);
 
             const pusherRoom = await this.getOrCreateRoom(client.roomId);
+            pusherRoom.mucRooms = client.mucRooms;
             pusherRoom.join(client);
         } catch (e) {
             console.error('An error occurred on "join_room" event');
@@ -326,6 +338,12 @@ export class SocketManager implements ZoneEventListener {
     handleLockGroup(client: ExSocketInterface, message: LockGroupPromptMessage): void {
         const pusherToBackMessage = new PusherToBackMessage();
         pusherToBackMessage.setLockgrouppromptmessage(message);
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setEditmapmessage(message);
         client.backConnection.write(pusherToBackMessage);
     }
 
@@ -422,6 +440,10 @@ export class SocketManager implements ZoneEventListener {
                     //user leave previous room
                     //Client.leave(Client.roomId);
                 } finally {
+                    if (socket.xmppClient) {
+                        console.log("leaveRoom => close");
+                        socket.xmppClient.close();
+                    }
                     //delete Client.roomId;
                     clientEventsEmitter.emitClientLeave(socket.userUuid, socket.roomId);
                     debug("User ", socket.name, " left: ", socket.userUuid);
@@ -680,6 +702,47 @@ export class SocketManager implements ZoneEventListener {
             apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;
             });
+        }
+    }
+
+    handleXmppMessage(client: ExSocketInterface, xmppMessage: XmppMessage): void {
+        if (client.xmppClient === undefined) {
+            throw new Error(
+                "Trying to send a message from client to server but the XMPP connection is not established yet! There is a race condition."
+            );
+        }
+        client.xmppClient.send(xmppMessage.getStanza()).catch((e) => console.error(e));
+        console.log("XMPP Message sent");
+    }
+
+    handleAskPositionMessage(client: ExSocketInterface, askPositionMessage: AskPositionMessage): void {
+        const pusherToBackMessage = new PusherToBackMessage();
+        pusherToBackMessage.setAskpositionmessage(askPositionMessage);
+
+        client.backConnection.write(pusherToBackMessage);
+    }
+
+    handleBanUserByUuidMessage(client: ExSocketInterface, banUserByUuidMessage: BanUserByUuidMessage) {
+        try {
+            adminService
+                .banUserByUuid(
+                    banUserByUuidMessage.getUuidtoban(),
+                    banUserByUuidMessage.getPlayuri(),
+                    banUserByUuidMessage.getName(),
+                    banUserByUuidMessage.getMessage(),
+                    banUserByUuidMessage.getByuseremail()
+                )
+                .then(() => {
+                    this.emitBan(
+                        banUserByUuidMessage.getUuidtoban(),
+                        banUserByUuidMessage.getMessage(),
+                        "banned",
+                        banUserByUuidMessage.getPlayuri()
+                    );
+                });
+        } catch (e) {
+            console.error('An error occurred on "handleBanUserByUuidMessage"');
+            console.error(e);
         }
     }
 }

@@ -8,7 +8,6 @@
     left: 0;
     top: 0;
     width: 100%;
-    height: 50%;
     display: flex;
     flex-direction: column-reverse;
 
@@ -57,7 +56,7 @@
         flex-direction: row-reverse;
         margin-left: auto;
         margin-bottom: 0;
-        justify-content: end;
+        justify-content: flex-end;
       }
 
       #cowebsite-fullscreen {

@@ -328,12 +328,12 @@
     "@typescript-eslint/types" "5.8.0"
     eslint-visitor-keys "^3.0.0"
 
-"@workadventure/tiled-map-type-guard@^1.0.3":
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-1.0.3.tgz#62c2061cacbe1360b84162af0b7e4639ed8bfa7e"
-  integrity sha512-pUMxBBZHYAFkpnGWZAVAE8+M+Wn9UtzqZhXvBBBbB1gEakHIka7ahdTGfh0DgRaWrVszVXOP3tf49Dhdmn9pDg==
+"@workadventure/tiled-map-type-guard@^2.0.4":
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-2.0.5.tgz#e4158770fd1b046cb211343da4e7bb7926112e6d"
+  integrity sha512-6qQ5B224nVwfZEwUT2jMFY1uR4czg4wvHB6FU6UEA9TmE7qK0MCph7aqedWifLRkq/Q+9ntAKFmvV6rqfweBcA==
   dependencies:
-    generic-type-guard "^3.4.1"
+    zod "^3.17.3"
 
 abbrev@1:
   version "1.1.1"
@@ -1085,11 +1085,6 @@ gauge@^3.0.0:
     string-width "^4.2.3"
     strip-ansi "^6.0.1"
     wide-align "^1.1.2"
-
-generic-type-guard@^3.4.1:
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/generic-type-guard/-/generic-type-guard-3.5.0.tgz#39de9f8fceee65d79e7540959f0e7b23210c07b6"
-  integrity sha512-OpgXv/sbRobhFboaSyN/Tsh97Sxt5pcfLLxCiYZgYIIWFFp+kn2EzAXiaQZKEVRlq1rOE/zh8cYhJXEwplbJiQ==
 
 get-own-enumerable-property-symbols@^3.0.0:
   version "3.0.2"
@@ -2420,3 +2415,8 @@ zod@^3.14.3:
   version "3.14.3"
   resolved "https://registry.yarnpkg.com/zod/-/zod-3.14.3.tgz#60e86341c05883c281fe96a0e79acea48a09f123"
   integrity sha512-OzwRCSXB1+/8F6w6HkYHdbuWysYWnAF4fkRgKDcSFc54CE+Sv0rHXKfeNUReGCrHukm1LNpi6AYeXotznhYJbQ==
+
+zod@^3.17.3:
+  version "3.17.3"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.17.3.tgz#86abbc670ff0063a4588d85a4dcc917d6e4af2ba"
+  integrity sha512-4oKP5zvG6GGbMlqBkI5FESOAweldEhSOZ6LI6cG+JzUT7ofj1ZOC0PJudpQOpT1iqOFpYYtX5Pw0+o403y4bcg==
