@@ -1,6 +1,7 @@
 import { readable, writable } from "svelte/store";
 import type { VideoPeer } from "../WebRtc/VideoPeer";
 import type { ScreenSharingPeer } from "../WebRtc/ScreenSharingPeer";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 /**
  * A store that contains the list of (video) peers we are connected to.
@@ -13,6 +14,10 @@ function createPeerStore() {
         pushNewPeer(peer: VideoPeer) {
             update((users) => {
                 users.set(peer.userId, peer);
+
+                //send post hog notification
+                analyticsClient.addNewParticipant();
+
                 return users;
             });
         },
