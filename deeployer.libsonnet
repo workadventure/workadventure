@@ -66,6 +66,7 @@
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
+              "PUSHER_URL": "https://pusher-"+url,
               "ENABLE_OPENAPI_ENDPOINT": "true",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
@@ -77,7 +78,6 @@
               "OPID_CLIENT_ID": "auth-code-client",
               "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-              "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
               "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
               # Ejabberd
