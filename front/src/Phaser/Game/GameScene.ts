@@ -138,7 +138,7 @@ import {
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
-import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
+import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -1239,14 +1239,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disableWebcamStream.subscribe(() => {
-                myCameraApiBlockedStore.set(true);
+                myCameraBlockedStore.set(true);
                 mediaManager.disableMyCamera();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.restoreWebcamStream.subscribe(() => {
-                myCameraApiBlockedStore.set(false);
+                myCameraBlockedStore.set(false);
                 mediaManager.enableMyCamera();
             })
         );

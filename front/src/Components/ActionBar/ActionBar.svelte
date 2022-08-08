@@ -24,7 +24,7 @@
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
-    import { proximityMeetingStore } from "../../Stores/MyCameraStoreVisibility";
+    import { proximityMeetingStore } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
         menuVisiblilityStore,
@@ -48,7 +48,7 @@
     import { ADMIN_URL } from "../../Enum/EnvironmentVariable";
     import { limitMapStore } from "../../Stores/GameStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
-    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
+    import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
