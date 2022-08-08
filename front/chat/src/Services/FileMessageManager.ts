@@ -50,22 +50,25 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
         if (!this.extension) {
             return false;
         }
-        return ["png", "jpef", "gif", "svg"].includes(this.extension);
+        return FileMessageManager.isImage(this.extension);
     }
     get isVideo() {
         if (!this.extension) {
             return false;
         }
-        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(this.extension);
+        return FileMessageManager.isVideo(this.extension);
     }
     get isSound() {
         if (!this.extension) {
             return false;
         }
-        return ["mp3", "wav"].includes(this.extension);
+        return FileMessageManager.isVideo(this.extension);
     }
     get extension() {
-        return this.location.split(".").pop()?.toLowerCase();
+        if (this.location == undefined) {
+            return undefined;
+        }
+        return FileMessageManager.getExtension(this.location);
     }
 }
 
@@ -74,7 +77,7 @@ export interface FileExt extends File {
     errorMessage?: string;
 }
 
-class FileMessageManager {
+export class FileMessageManager {
     //upload and send files messages
     async sendFiles(files: FileList) {
         //initialise file in the state of uploded file
@@ -163,6 +166,19 @@ class FileMessageManager {
 
     public reset() {
         filesUploadStore.set(new Map());
+    }
+
+    public static isImage(extension: string) {
+        return ["png", "jpef", "gif", "svg"].includes(extension);
+    }
+    public static isVideo(extension: string) {
+        return ["mov", "mp4", "m4v", "avi", "mov", "ogg", "webm"].includes(extension);
+    }
+    public static isSound(extension: string) {
+        return ["mp3", "wav"].includes(extension);
+    }
+    public static getExtension(location: string) {
+        return location.split(".").pop()?.toLowerCase();
     }
 }
 

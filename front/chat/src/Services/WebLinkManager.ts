@@ -4,6 +4,7 @@ import { HtmlUtils } from "../Utils/HtmlUtils";
 import { v4 as uuidv4 } from "uuid";
 import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
+import { FileMessageManager } from "./FileMessageManager";
 
 const webLinkCaches = new Map();
 
@@ -69,29 +70,77 @@ export class WebLink {
 
         return div.outerHTML;
     }
+    private imageRendererHtml(id: string, name: string) {
+        const image = document.createElement("img") ;
+        image.setAttribute("width", "100%");
+        image.setAttribute("height", "100%");
+        image.alt = name;
+        image.classList.add("tw-mt-2");
+        image.id = id;
+        image.src = this.link;
+
+        return image.outerHTML;
+    }
+    private videoRendererHtml(id: string, name: string, extension: string) {
+        const video = document.createElement("video") ;
+        video.setAttribute("width", "100%");
+        video.setAttribute("height", "100%");
+        video.setAttribute("alt", name);
+        video.classList.add("tw-mt-2");
+        video.id = id;
+        video.controls = true;
+
+        const source = document.createElement("source") ;
+        source.src = this.link;
+        source.type = `video/${extension}`;
+
+        const track = document.createElement("track") ;
+        track.kind = "captions";
+        track.srclang = "en";
+        track.label = "english_captions";
+
+        video.append("Sorry, your browser doesn't support <code>embedded</code> videos.");
+        video.appendChild(track);
+        video.appendChild(source);
+
+        return video.outerHTML;
+    }
+    private audioRendererHtml(id: string, name: string) {
+        const audio = document.createElement("video") as HTMLAudioElement;
+        audio.setAttribute("width", "100%");
+        audio.setAttribute("height", "100%");
+        audio.setAttribute("alt", name);
+        audio.classList.add("tw-mt-2");
+        audio.id = id;
+        audio.controls = true;
+        audio.src = this.link;
+
+        audio.append("Your browser does not support the <code>audio</code> element.");
+
+        return audio.outerHTML;
+    }
     private cardRenderer(
         title: string,
-        url: string,
         description?: string,
         imageUrl?: string,
         provider_name?: string,
         author_name?: string
     ): string {
-        const div = document.createElement("div");
+        const div = document.createElement("div") ;
         div.classList.add("content-card", "tw-rounded-lg");
         div.style.border = "solid 1px rgb(77 75 103)";
         div.style.padding = "4px";
         div.style.overflow = "hidden";
+        div.appendChild(this.getHyperLinkHTMLElement());
 
-        const link = document.createElement("a");
-        link.href = HtmlUtils.htmlDecode(url);
+        const link = document.createElement("a") ;
+        link.href = this.link;
         link.target = "_blank";
         link.style.color = "white";
-        link.appendChild(document.createTextNode(url));
         div.appendChild(link);
 
         if (imageUrl != undefined) {
-            const image = document.createElement("img");
+            const image = document.createElement("img") ;
             image.src = HtmlUtils.htmlDecode(imageUrl);
             image.setAttribute("width", "100%");
             image.setAttribute("height", "auto");
@@ -100,26 +149,26 @@ export class WebLink {
         }
 
         if (title != undefined) {
-            const titleElement = document.createElement("p");
+            const titleElement = document.createElement("p") ;
             titleElement.append(HtmlUtils.htmlDecode(title));
             titleElement.classList.add("tw-mt-1");
             div.appendChild(titleElement);
         }
 
         if (description != undefined) {
-            const descriptionElement = document.createElement("p");
-            descriptionElement.append(HtmlUtils.htmlDecode(description).substring(0, 100) + "...");
+            const descriptionElement = document.createElement("p") ;
+            descriptionElement.append(HtmlUtils.htmlDecode(description.substring(0, 100) + "..."));
             descriptionElement.classList.add("tw-text-light-purple-alt", "tw-mt-1", "tw-m-0", "tw-text-xxs");
             div.appendChild(descriptionElement);
         }
 
         if (provider_name != undefined) {
-            const provider = document.createElement("span");
+            const provider = document.createElement("span") ;
             provider.style.fontWeight = "bold";
             provider.append(provider_name);
 
-            const origin = document.createElement("p");
-            origin.append(provider);
+            const origin = document.createElement("p") ;
+            origin.appendChild(provider);
             if (author_name) {
                 origin.append(` - ${author_name}`);
             }
@@ -129,18 +178,16 @@ export class WebLink {
 
         return div.outerHTML;
     }
-    private getHyperLinkHtml(): string {
-        const url = this.link;
+    private getHyperLinkHTMLElement(): HTMLAnchorElement {
         const link = document.createElement("a");
-        link.href = url;
+        link.href = this.link;
         link.target = "_blank";
         link.style.color = "white";
         link.classList.add("embedly-card");
         link.setAttribute("data-card-width", "100%");
         link.setAttribute("data-card-theme", "dark");
-        const text = document.createTextNode(url);
-        link.appendChild(text);
-        return link.outerHTML;
+        link.append(this.link);
+        return link;
     }
     get contentWebsiteRenderer(): Promise<string> {
         return (async () => {
@@ -163,17 +210,42 @@ export class WebLink {
                     const data = result.data;
                     if (data.html) {
                         return this.rendererFromHtml(data.html);
+                    } else if (data.type === "photo") {
+                        return (
+                            this.getHyperLinkHTMLElement().outerHTML +
+                            this.imageRendererHtml(uuidv4(), data.provider_name)
+                        );
                     } else {
-                        const { title, description, thumbnail_url, url, provider_name, author_name } = data;
-                        return this.cardRenderer(title, url, description, thumbnail_url, provider_name, author_name);
+                        const extension = FileMessageManager.getExtension(data.url);
+                        if (extension != undefined && FileMessageManager.isImage(extension)) {
+                            return (
+                                this.getHyperLinkHTMLElement().outerHTML +
+                                this.imageRendererHtml(uuidv4(), data.provider_name)
+                            );
+                        }
+                        if (extension != undefined && FileMessageManager.isVideo(extension)) {
+                            return (
+                                this.getHyperLinkHTMLElement().outerHTML +
+                                this.videoRendererHtml(uuidv4(), data.provider_name, extension)
+                            );
+                        }
+                        if (extension != undefined && FileMessageManager.isSound(extension)) {
+                            return (
+                                this.getHyperLinkHTMLElement().outerHTML +
+                                this.audioRendererHtml(uuidv4(), data.provider_name)
+                            );
+                        }
+
+                        const { title, description, thumbnail_url, provider_name, author_name } = data;
+                        return this.cardRenderer(title, description, thumbnail_url, provider_name, author_name);
                     }
                 } catch (err) {
                     console.error(err);
                     console.error("Error get data from website: ", this.link);
-                    return this.getHyperLinkHtml();
+                    return this.getHyperLinkHTMLElement().outerHTML;
                 }
             } else {
-                return this.getHyperLinkHtml();
+                return this.getHyperLinkHTMLElement().outerHTML;
             }
         })();
     }
