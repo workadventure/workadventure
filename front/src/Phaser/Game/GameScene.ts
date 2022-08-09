@@ -47,7 +47,6 @@ import { StartPositionCalculator } from "./StartPositionCalculator";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { GameMapPropertiesListener } from "./GameMapPropertiesListener";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { GameMapProperties } from "./GameMapProperties";
 import { PathfindingManager } from "../../Utils/PathfindingManager";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type {
@@ -139,7 +138,7 @@ import {
 } from "@workadventure/tiled-map-type-guard";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
-import { AreaType } from '@workadventure/map-editor-types';
+import { AreaType, GameMapProperties } from '@workadventure/map-editor-types';
 import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
 export interface GameSceneInitInterface {
     reconnecting: boolean;
@@ -545,7 +544,7 @@ export class GameScene extends DirtyScene {
         this.embeddedWebsiteManager = new EmbeddedWebsiteManager(this);
 
         //add layer on map
-        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile, this.Map, this.Terrains));
+        this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
         for (const layer of this.gameMapFrontWrapper.getFlatLayers()) {
             if (layer.type === "tilelayer") {
                 const exitSceneUrl = this.getExitSceneUrl(layer);
@@ -1602,7 +1601,7 @@ ${escapedMessage}
                                 layer.tilemapLayer.destroy(false);
                             }
                             //Create a new GameMap with the changed file
-                            this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile, this.Map, this.Terrains));
+                            this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
                             //Destroy the colliders of the old tilemapLayer
@@ -1970,7 +1969,7 @@ ${escapedMessage}
 
     private createCollisionWithPlayer() {
         //add collision layer
-        for (const phaserLayer of this.gameMapFrontWrapper.getPhaserLayers()) {
+        for (const phaserLayer of this.gameMapFrontWrapper.phaserLayers) {
             this.physics.add.collider(this.CurrentPlayer, phaserLayer, (object1: GameObject, object2: GameObject) => {
                 //this.CurrentPlayer.say("Collision with layer : "+ (object2 as Tile).layer.name)
             });

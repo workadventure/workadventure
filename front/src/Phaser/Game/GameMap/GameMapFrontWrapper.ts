@@ -1,11 +1,12 @@
-import { AreaType, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
-import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty } from '@workadventure/tiled-map-type-guard';
+import { AreaType, GameMapProperties, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty, ITiledMapTileLayer } from '@workadventure/tiled-map-type-guard';
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { Observable, Subject } from 'rxjs';
 import { GameMap, layerChangeCallback, PropertyChangeCallback } from './GameMap';
-import { areaChangeCallback } from './GameMapAreas';
-import { GameMapProperties } from '../GameMapProperties';
+import { AreaChangeCallback } from './GameMapAreas';
 import { PathTileType } from '../../../Utils/PathfindingManager';
+import { MathUtils } from '@workadventure/math-utils';
+import { DEPTH_OVERLAY_INDEX } from '../DepthIndexes';
 
 export class GameMapFrontWrapper {
 
@@ -25,6 +26,8 @@ export class GameMapFrontWrapper {
      */
     private position: { x: number; y: number } | undefined;
 
+    public readonly phaserLayers: TilemapLayer[] = [];
+
     private perLayerCollisionGridCache: Map<number, (0 | 2 | 1)[][]> = new Map<number, (0 | 2 | 1)[][]>();
 
     private lastProperties = new Map<string, string | boolean | number>();
@@ -39,8 +42,26 @@ export class GameMapFrontWrapper {
     private mapChangedSubject = new Subject<number[][]>();
     private areaUpdatedSubject = new Subject<ITiledMapRectangleObject>();
 
-    constructor(gameMap: GameMap) {
+    constructor(gameMap: GameMap, phaserMap: Phaser.Tilemaps.Tilemap, terrains: Array<Phaser.Tilemaps.Tileset>) {
         this.gameMap = gameMap;
+
+        let depth = -2;
+        for (const layer of this.gameMap.flatLayers) {
+            if (layer.type === "tilelayer") {
+                this.phaserLayers.push(
+                    phaserMap
+                        .createLayer(layer.name, terrains, (layer.x || 0) * 32, (layer.y || 0) * 32)
+                        .setDepth(depth)
+                        .setScrollFactor(layer.parallaxx ?? 1, layer.parallaxy ?? 1)
+                        .setAlpha(layer.opacity)
+                        .setVisible(layer.visible)
+                        .setSize(layer.width, layer.height)
+                );
+            }
+            if (layer.type === "objectgroup" && layer.name === "floorLayer") {
+                depth = DEPTH_OVERLAY_INDEX;
+            }
+        }
     }
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
@@ -87,7 +108,7 @@ export class GameMapFrontWrapper {
             this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));
         }
         // go through all tilemap layers on map. Maintain order
-        for (const layer of this.gameMap.phaserLayers) {
+        for (const layer of this.phaserLayers) {
             if (!layer.visible) {
                 continue;
             }
@@ -204,15 +225,17 @@ export class GameMapFrontWrapper {
     }
 
     public findPhaserLayer(layerName: string): TilemapLayer | undefined {
-        return this.gameMap.findPhaserLayer(layerName);
+        return this.phaserLayers.find((layer) => layer.layer.name === layerName);
     }
 
     public findPhaserLayers(groupName: string): TilemapLayer[] {
-        return this.gameMap.findPhaserLayers(groupName);
+        return this.phaserLayers.filter((l) => l.layer.name.includes(groupName));
     }
 
     public addTerrain(terrain: Phaser.Tilemaps.Tileset): void {
-        this.gameMap.addTerrain(terrain);
+        for (const phaserLayer of this.phaserLayers) {
+            phaserLayer.tileset.push(terrain);
+        }
     }
 
     public putTile(tile: string | number | null, x: number, y: number, layer: string): void {
@@ -267,7 +290,28 @@ export class GameMapFrontWrapper {
     }
 
     public getRandomPositionFromLayer(layerName: string): { x: number; y: number } {
-        return this.gameMap.getRandomPositionFromLayer(layerName);
+        const layer = this.findLayer(layerName) as ITiledMapTileLayer;
+        if (!layer) {
+            throw new Error(`No layer "${layerName}" was found`);
+        }
+        const tiles = layer.data;
+        if (!tiles) {
+            throw new Error(`No tiles in "${layerName}" were found`);
+        }
+        if (typeof tiles === "string") {
+            throw new Error("The content of a JSON map must be filled as a JSON array, not as a string");
+        }
+        const possiblePositions: { x: number; y: number }[] = [];
+        tiles.forEach((objectKey: number, key: number) => {
+            if (objectKey === 0) {
+                return;
+            }
+            possiblePositions.push({ x: key % layer.width, y: Math.floor(key / layer.width) });
+        });
+        if (possiblePositions.length > 0) {
+            return MathUtils.randomFromArray(possiblePositions);
+        }
+        throw new Error("No possible position found");
     }
 
     public getObjectProperty(
@@ -284,14 +328,14 @@ export class GameMapFrontWrapper {
     /**
      * Registers a callback called when the user moves inside another area.
      */
-    public onEnterArea(callback: areaChangeCallback) {
+    public onEnterArea(callback: AreaChangeCallback) {
         this.gameMap.onEnterArea(callback);
     }
 
     /**
      * Registers a callback called when the user moves outside another area.
      */
-    public onLeaveArea(callback: areaChangeCallback) {
+    public onLeaveArea(callback: AreaChangeCallback) {
         this.gameMap.getGameMapAreas().onLeaveArea(callback);
     }
 
@@ -383,10 +427,6 @@ export class GameMapFrontWrapper {
 
     public getExitUrls(): Array<string> {
         return this.gameMap.exitUrls;
-    }
-
-    public getPhaserLayers(): TilemapLayer[] {
-        return this.gameMap.phaserLayers;
     }
 
     public hasStartTile(): boolean {

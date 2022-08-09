@@ -6,7 +6,8 @@ import {
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
 import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
-import { GameMapProperties, flattenGroupLayersMap } from '@workadventure/map-editor-types';
+import { GameMapProperties } from '../types';
+import { flattenGroupLayersMap } from './LayersFlattener';
 
 export type PropertyChangeCallback = (
     newValue: string | number | boolean | undefined,

@@ -5,7 +5,6 @@ import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
@@ -20,6 +19,7 @@ import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
+import { GameMapProperties } from '@workadventure/map-editor-types';
 
 interface OpenCoWebsite {
     actionId: string;
