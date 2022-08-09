@@ -406,7 +406,9 @@ class ConnectionManager {
         }
 
         //user connected, set connected store for menu at true
-        userIsConnected.set(true);
+        if (localUserStore.isLogged()) {
+            userIsConnected.set(true);
+        }
     }
 
     get currentRoom() {
