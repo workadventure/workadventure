@@ -136,9 +136,9 @@ import {
     ITiledMapTileset,
 } from "@workadventure/tiled-map-type-guard";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
-import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
-import { AreaType, GameMap, GameMapProperties } from '@workadventure/map-editor-types';
-import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
+import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
+import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor-types";
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export interface GameSceneInitInterface {
     reconnecting: boolean;
     initPosition?: PointInterface;
@@ -1239,14 +1239,14 @@ ${escapedMessage}
 
         this.iframeSubscriptionList.push(
             iframeListener.disableWebcamStream.subscribe(() => {
-                myCameraApiBlockedStore.set(true);
+                myCameraBlockedStore.set(true);
                 mediaManager.disableMyCamera();
             })
         );
 
         this.iframeSubscriptionList.push(
             iframeListener.restoreWebcamStream.subscribe(() => {
-                myCameraApiBlockedStore.set(false);
+                myCameraBlockedStore.set(false);
                 mediaManager.enableMyCamera();
             })
         );
@@ -1600,7 +1600,11 @@ ${escapedMessage}
                                 layer.tilemapLayer.destroy(false);
                             }
                             //Create a new GameMap with the changed file
-                            this.gameMapFrontWrapper = new GameMapFrontWrapper(new GameMap(this.mapFile), this.Map, this.Terrains);
+                            this.gameMapFrontWrapper = new GameMapFrontWrapper(
+                                new GameMap(this.mapFile),
+                                this.Map,
+                                this.Terrains
+                            );
                             // Unsubscribe if needed and subscribe to GameMapChanged event again
                             this.subscribeToGameMapChanged();
                             //Destroy the colliders of the old tilemapLayer
@@ -2244,21 +2248,23 @@ ${escapedMessage}
 
     private subscribeToGameMapChanged(): void {
         this.gameMapChangedSubscription?.unsubscribe();
-        this.gameMapChangedSubscription = this.gameMapFrontWrapper.getMapChangedObservable().subscribe((collisionGrid) => {
-            this.pathfindingManager.setCollisionGrid(collisionGrid);
-            this.markDirty();
-            const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
-            if (playerDestination) {
-                const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
-                const endTileIndex = this.getGameMap().getTileIndexAt(playerDestination.x, playerDestination.y);
-                this.pathfindingManager
-                    .findPath(startTileIndex, endTileIndex)
-                    .then((path) => {
-                        this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
-                    })
-                    .catch((reason) => console.warn(reason));
-            }
-        });
+        this.gameMapChangedSubscription = this.gameMapFrontWrapper
+            .getMapChangedObservable()
+            .subscribe((collisionGrid) => {
+                this.pathfindingManager.setCollisionGrid(collisionGrid);
+                this.markDirty();
+                const playerDestination = this.CurrentPlayer.getCurrentPathDestinationPoint();
+                if (playerDestination) {
+                    const startTileIndex = this.getGameMap().getTileIndexAt(this.CurrentPlayer.x, this.CurrentPlayer.y);
+                    const endTileIndex = this.getGameMap().getTileIndexAt(playerDestination.x, playerDestination.y);
+                    this.pathfindingManager
+                        .findPath(startTileIndex, endTileIndex)
+                        .then((path) => {
+                            this.CurrentPlayer.setPathToFollow(path).catch((reason) => console.warn(reason));
+                        })
+                        .catch((reason) => console.warn(reason));
+                }
+            });
     }
 
     private doRemovePlayer(userId: number) {

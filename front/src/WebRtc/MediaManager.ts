@@ -8,12 +8,12 @@ export type StartScreenSharingCallback = (media: MediaStream) => void;
 export type StopScreenSharingCallback = (media: MediaStream) => void;
 
 import {
-    myCameraApiBlockedStore,
+    myCameraBlockedStore,
     myCameraStore,
     myMicrophoneBlockedStore,
     myMicrophoneStore,
     proximityMeetingStore,
-} from "../Stores/MyCameraStoreVisibility";
+} from "../Stores/MyMediaStore";
 import { layoutManagerActionStore } from "../Stores/LayoutManagerStore";
 import { MediaStreamConstraintsError } from "../Stores/Errors/MediaStreamConstraintsError";
 import { localUserStore } from "../Connexion/LocalUserStore";
@@ -46,7 +46,7 @@ export class MediaManager {
             .finally(() => {
                 localStreamStore.subscribe((result) => {
                     if (result.type === "error") {
-                        if (result.error.name !== MediaStreamConstraintsError.NAME) {
+                        if (result.error.name !== MediaStreamConstraintsError.NAME && get(myCameraStore)) {
                             layoutManagerActionStore.addAction({
                                 uuid: "cameraAccessDenied",
                                 type: "warning",
@@ -88,7 +88,7 @@ export class MediaManager {
     }
 
     public enableMyCamera(): void {
-        if (!get(myCameraApiBlockedStore)) {
+        if (!get(myCameraBlockedStore)) {
             myCameraStore.set(true);
         }
     }
