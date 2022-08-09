@@ -10,9 +10,7 @@ import {
     ITiledMapTileLayer,
     upgradeMapToNewest,
 } from "@workadventure/tiled-map-type-guard";
-import { ITiledMapRectangleObject } from '@workadventure/map-editor-types';
-import { areaChangeCallback, AreaType, GameMapAreas } from "./GameMapAreas";
-import { Observable, Subject } from "rxjs";
+import { areaChangeCallback, GameMapAreas } from "./GameMapAreas";
 import { MathUtils } from '@workadventure/math-utils';
 
 export type PropertyChangeCallback = (

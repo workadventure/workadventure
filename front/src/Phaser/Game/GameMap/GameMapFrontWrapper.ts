@@ -336,13 +336,21 @@ export class GameMapFrontWrapper {
     }
 
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
-        this.gameMap.getGameMapAreas().updateAreaByName(name, type, this.position, config);
-        this.areaUpdatedSubject.next(this.gameMap.getGameMapAreas().getAreaByName(name, AreaType.Static));
+        const gameMapAreas = this.gameMap.getGameMapAreas();
+        const area = gameMapAreas.updateAreaByName(name, type, config);
+        if (area && gameMapAreas.isPlayerInsideAreaByName(name, type, this.position)) {
+            gameMapAreas.triggerSpecificAreaOnEnter(area);
+        }
+        this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name, AreaType.Static));
     }
 
     public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
-        this.gameMap.getGameMapAreas().updateAreaById(id, type, this.position, config);
-        this.areaUpdatedSubject.next(this.gameMap.getGameMapAreas().getArea(id, AreaType.Static));
+        const gameMapAreas = this.gameMap.getGameMapAreas();
+        const area = gameMapAreas.updateAreaById(id, type, config);
+        if (area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
+            this.triggerSpecificAreaOnEnter(area);
+        }
+        this.areaUpdatedSubject.next(gameMapAreas.getArea(id, AreaType.Static));
     }
 
     public deleteAreaByName(name: string, type: AreaType): void {

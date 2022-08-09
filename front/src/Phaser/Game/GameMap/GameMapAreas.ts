@@ -129,35 +129,27 @@ export class GameMapAreas {
     public updateAreaByName(
         name: string,
         type: AreaType,
-        position: { x: number; y: number } | undefined,
         config: Partial<ITiledMapObject>
-    ): void {
+    ): ITiledMapRectangleObject | undefined {
         const area = this.getAreaByName(name, type);
         if (!area) {
             return;
         }
         this.updateArea(area, config);
-
-        if (this.isPlayerInsideAreaByName(name, type, position)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
+        return area;
     }
 
     public updateAreaById(
         id: number,
         type: AreaType,
-        position: { x: number; y: number } | undefined,
         config: Partial<ITiledMapRectangleObject>
-    ): void {
+    ): ITiledMapRectangleObject | undefined {
         const area = this.getArea(id, type);
         if (!area) {
             return;
         }
         this.updateArea(area, config);
-
-        if (this.isPlayerInsideArea(id, type, position)) {
-            this.triggerSpecificAreaOnEnter(area);
-        }
+        return area;
     }
 
     public updateArea(area: ITiledMapRectangleObject, config: Partial<ITiledMapObject>): void {
