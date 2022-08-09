@@ -44,10 +44,10 @@ export default defineConfig({
                 "POSTHOG_URL",
                 "NODE_ENV",
                 "DISABLE_ANONYMOUS",
-                "OPID_LOGIN_SCREEN_PROVIDER",
+                "ENABLE_OPENID",
                 "OPID_PROFILE_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
-                "CHAT_URL"
+                "CHAT_URL",
             ],
         }),
         pluginRewriteAll(),

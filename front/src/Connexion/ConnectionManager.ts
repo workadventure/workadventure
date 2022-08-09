@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -46,7 +46,7 @@ class ConnectionManager {
     /**
      * TODO fix me to be move in game manager
      *
-     * Returns the URL that we need to redirect to to load the OpenID screen, or "null" if no redirection needs to happen.
+     * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
      */
     public loadOpenIDScreen(): URL | null {
         localUserStore.setAuthToken(null);
@@ -54,7 +54,7 @@ class ConnectionManager {
         // FIXME: remove this._currentRoom.iframeAuthentication
         // FIXME: remove this._currentRoom.iframeAuthentication
         // FIXME: remove this._currentRoom.iframeAuthentication
-        if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
+        if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }

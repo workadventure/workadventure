@@ -103,7 +103,8 @@
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
         "ICON_URL": "//icon-"+url,
-        "CHAT_URL": "//chat-"+url
+        "CHAT_URL": "//chat-"+url,
+        "ENABLE_OPENID": "1",
       }
     },
     "chat": {
