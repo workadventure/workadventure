@@ -19,6 +19,7 @@ import { Room } from "../../Connexion/Room";
 import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
+import { urlManager } from "../../Url/UrlManager";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -226,6 +227,18 @@ export class GameMapPropertiesListener {
             }
         });
 
+        // Muc zone
+        this.gameMap.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
+            const playUri = urlManager.getPlayUri() + "/";
+
+            if (oldValue !== undefined) {
+                iframeListener.sendLeaveMucEvent(playUri + oldValue);
+            }
+            if (newValue !== undefined) {
+                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live");
+            }
+        });
+
         this.gameMap.onEnterLayer((newLayers) => {
             this.onEnterPlaceHandler(newLayers);
         });
@@ -362,8 +375,7 @@ export class GameMapPropertiesListener {
                 new URL(openWebsiteProperty ?? "", this.scene.MapUrlFile),
                 allowApiProperty,
                 websitePolicyProperty,
-                websiteWidthProperty,
-                false
+                websiteWidthProperty
             );
 
             coWebsiteOpen.coWebsite = coWebsite;

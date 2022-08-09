@@ -3,6 +3,7 @@ import { PositionMessage_Direction } from "../Messages/ts-proto-generated/protos
 export interface MucRoomDefinitionInterface {
     name: string;
     url: string;
+    type: string;
 }
 
 export class ProtobufClientUtils {

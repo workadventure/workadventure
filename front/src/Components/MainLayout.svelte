@@ -3,7 +3,7 @@
     import { audioManagerVisibilityStore } from "../Stores/AudioManagerStore";
     import { embedScreenLayoutStore, hasEmbedScreen } from "../Stores/EmbedScreensStore";
     import { emoteMenuStore } from "../Stores/EmoteStore";
-    import { myCameraStore } from "../Stores/MyCameraStoreVisibility";
+    import { myCameraStore } from "../Stores/MyMediaStore";
     import { requestVisitCardsStore } from "../Stores/GameStore";
     import { helpCameraSettingsVisibleStore } from "../Stores/HelpCameraSettingsStore";
     import { layoutManagerActionVisibilityStore } from "../Stores/LayoutManagerStore";
@@ -41,7 +41,6 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
-    import "../../style/tailwind.scss";
 
     let mainLayout: HTMLDivElement;
 

@@ -15,6 +15,7 @@ import type CancelablePromise from "cancelable-promise";
 import { TalkIcon } from "../Components/TalkIcon";
 import { Deferred } from "ts-deferred";
 import { PlayerStatusDot } from "../Components/PlayerStatusDot";
+import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
 import { AvailabilityStatus, PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
 import Text = Phaser.GameObjects.Text;
 import Container = Phaser.GameObjects.Container;
@@ -61,7 +62,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         frame: string | number,
         isClickable: boolean,
         companion: string | null,
-        companionTexturePromise?: CancelablePromise<string>
+        companionTexturePromise?: CancelablePromise<string>,
+        userId?: string | null
     ) {
         super(scene, x, y /*, texture, frame*/);
         this.scene = scene;
@@ -81,6 +83,9 @@ export abstract class Character extends Container implements OutlineableInterfac
                 this.textureLoadedDeferred.resolve();
                 return this.getSnapshot().then((htmlImageElementSrc) => {
                     this._pictureStore.set(htmlImageElementSrc);
+                    if (userId != undefined) {
+                        currentPlayerWokaStore.set(htmlImageElementSrc);
+                    }
                 });
             })
             .catch(() => {

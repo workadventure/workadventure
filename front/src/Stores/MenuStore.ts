@@ -1,9 +1,8 @@
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../i18n/i18n-types";
-import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 
@@ -11,15 +10,9 @@ export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
-export const profileAvailable = writable(true);
 
-menuVisiblilityStore.subscribe((value) => {
-    if (userIsConnected && value && IDENTITY_URL != null) {
-        axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
-            profileAvailable.set(false);
-        });
-    }
+export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
+    return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
 });
 
 let warningContainerTimeout: Timeout | null = null;
@@ -189,11 +182,10 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
-}
-
-export function getMeUrl() {
-    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
+    return (
+        PUSHER_URL +
+        `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
+    );
 }
 
 export const inviteUserActivated = writable(true);

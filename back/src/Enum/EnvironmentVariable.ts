@@ -20,6 +20,10 @@ export const REDIS_PASSWORD = process.env.REDIS_PASSWORD || undefined;
 export const STORE_VARIABLES_FOR_LOCAL_MAPS = process.env.STORE_VARIABLES_FOR_LOCAL_MAPS === "true";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const MAP_STORAGE_URL = process.env.MAP_STORAGE_URL || "";
+export const EJABBERD_URI = process.env.EJABBERD_URI || "";
+export const EJABBERD_DOMAIN = process.env.EJABBERD_DOMAIN || "";
+export const EJABBERD_USER = process.env.EJABBERD_USER || "";
+export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || "";
 // The maximum time to leave of player variables for anonymous players (3 months by default).
 // Use "-1" for infinity.
 // 7776000 seconds = 3 months

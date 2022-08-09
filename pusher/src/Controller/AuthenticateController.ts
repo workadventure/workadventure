@@ -13,14 +13,15 @@ export class AuthenticateController extends BaseHttpController {
     routes(): void {
         this.roomAccess();
         this.openIDLogin();
+        this.me();
         this.openIDCallback();
+        this.logoutCallback();
         this.register();
         this.anonymLogin();
         this.profileCallback();
-        this.me();
     }
 
-    roomAccess(): void {
+    private roomAccess(): void {
         this.app.get("/room/access", (req, res) => {
             (async (): Promise<void> => {
                 try {
@@ -49,7 +50,7 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
-    openIDLogin(): void {
+    private openIDLogin(): void {
         /**
          * @openapi
          * /login-screen:
@@ -84,20 +85,19 @@ export class AuthenticateController extends BaseHttpController {
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/login-screen", async (req, res) => {
             try {
-                const { nonce, state, playUri, redirect } = parse(req.path_query);
-                if (!state || !nonce) {
-                    throw new Error("missing state and nonce URL parameters");
+                const { playUri, redirect } = parse(req.path_query);
+
+                if (typeof playUri !== "string") {
+                    throw new Error("Expecting playUri");
                 }
 
                 const loginUri = await openIDClient.authorizationUrl(
-                    state as string,
-                    nonce as string,
+                    res,
                     playUri as string | undefined,
                     redirect as string | undefined
                 );
-                res.status(302);
-                res.setHeader("Location", loginUri);
-                return res.send("");
+                res.cookie("playUri", playUri);
+                return res.redirect(loginUri);
             } catch (e) {
                 console.error("openIDLogin => e", e);
                 this.castErrorToResponse(e, res);
@@ -106,10 +106,10 @@ export class AuthenticateController extends BaseHttpController {
         });
     }
 
-    openIDCallback(): void {
+    private me(): void {
         /**
          * @openapi
-         * /login-callback:
+         * /me:
          *   get:
          *     description: TODO
          *     parameters:
@@ -184,102 +184,61 @@ export class AuthenticateController extends BaseHttpController {
          *                     example: TODO
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/login-callback", async (req, res) => {
+        this.app.get("/me", async (req, res) => {
             const IPAddress = req.header("x-forwarded-for");
-            const { code, nonce, token, playUri } = parse(req.path_query);
+            const { token, playUri } = parse(req.path_query);
             try {
-                //verify connected by token
-                if (token != undefined) {
-                    try {
-                        const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
-
-                        const isLogged = authTokenData.accessToken ? true : false;
-
-                        //Get user data from Admin Back Office
-                        //This is very important to create User Local in LocalStorage in WorkAdventure
-                        const resUserData = await adminService.fetchMemberDataByUuid(
-                            authTokenData.identifier,
-                            isLogged,
-                            playUri as string,
-                            IPAddress,
-                            [],
-                            req.header("accept-language")
-                        );
-
-                        if (authTokenData.accessToken == undefined) {
-                            //if not nonce and code, user connected in anonymous
-                            //get data with identifier and return token
-                            if (!code && !nonce) {
-                                return res.json({ ...resUserData, authToken: token });
-                            }
-                            console.error("Token cannot be checked on OpenId provider");
-                            res.status(500);
-                            res.send("User cannot to be connected on openid provider");
-                            return;
-                        }
-
-                        const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                        return res.json({
-                            ...resCheckTokenAuth,
-                            ...resUserData,
-                            authToken: token,
-                            username: authTokenData?.username,
-                            locale: authTokenData?.locale,
-                        });
-                    } catch (err) {
-                        if (Axios.isAxiosError(err)) {
-                            const errorType = isErrorApiData.safeParse(err?.response?.data);
-                            if (errorType.success) {
-                                res.sendStatus(err?.response?.status ?? 500);
-                                return res.json(errorType.data);
-                            }
-                        }
-                        console.info("User was not connected", err);
-                    }
+                if (token === undefined) {
+                    throw new Error("Missing token");
                 }
-
-                //user have not token created, check data on hydra and create token
-                let userInfo = null;
                 try {
-                    userInfo = await openIDClient.getUserInfo(code as string, nonce as string);
+                    const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
+
+                    const isLogged = authTokenData.accessToken ? true : false;
+
+                    //Get user data from Admin Back Office
+                    //This is very important to create User Local in LocalStorage in WorkAdventure
+                    const resUserData = await adminService.fetchMemberDataByUuid(
+                        authTokenData.identifier,
+                        isLogged,
+                        playUri as string,
+                        IPAddress,
+                        [],
+                        req.header("accept-language")
+                    );
+
+                    if (authTokenData.accessToken == undefined) {
+                        //if not nonce and code, user connected in anonymous
+                        //get data with identifier and return token
+                        return res.json({ ...resUserData, authToken: token });
+                    }
+
+                    const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
+                    return res.json({
+                        ...resCheckTokenAuth,
+                        ...resUserData,
+                        authToken: token,
+                        username: authTokenData?.username,
+                        locale: authTokenData?.locale,
+                    });
                 } catch (err) {
-                    //if no access on openid provider, return error
-                    console.error("User cannot to be connected on OpenId provider => ", err);
-                    res.status(500);
-                    res.send("User cannot to be connected on openid provider");
-                    return;
+                    if (Axios.isAxiosError(err)) {
+                        const errorType = isErrorApiData.safeParse(err?.response?.data);
+                        if (errorType.success) {
+                            res.sendStatus(err?.response?.status ?? 500);
+                            return res.json(errorType.data);
+                        }
+                    }
+                    return this.castErrorToResponse(err, res);
                 }
-                const email = userInfo.email || userInfo.sub;
-                if (!email) {
-                    throw new Error("No email in the response");
-                }
-                const authToken = jwtTokenManager.createAuthToken(
-                    email,
-                    userInfo?.access_token,
-                    userInfo?.username,
-                    userInfo?.locale
-                );
-
-                const isLogged = userInfo?.access_token ? true : false;
-
-                //Get user data from Admin Back Office
-                //This is very important to create User Local in LocalStorage in WorkAdventure
-                const data = await adminService.fetchMemberDataByUuid(
-                    email,
-                    isLogged,
-                    playUri as string,
-                    IPAddress,
-                    [],
-                    req.header("accept-language")
-                );
-
-                return res.json({ ...data, authToken, username: userInfo?.username, locale: userInfo?.locale });
             } catch (e) {
                 console.error("openIDCallback => ERROR", e);
                 return this.castErrorToResponse(e, res);
             }
         });
+    }
 
+    private logoutCallback(): void {
         /**
          * @openapi
          * /logout-callback:
@@ -311,6 +270,66 @@ export class AuthenticateController extends BaseHttpController {
             }
 
             return res.status(200).send("");
+        });
+    }
+
+    private openIDCallback(): void {
+        /**
+         * @openapi
+         * /openid-callback:
+         *   get:
+         *     description: This endpoint is meant to be called by the OpenID provider after the OpenID provider handles a login attempt. The OpenID provider redirects the browser to this endpoint.
+         *     parameters:
+         *      - name: "code"
+         *        in: "query"
+         *        description: "A unique code to be exchanged for an authentication token"
+         *        required: false
+         *        type: "string"
+         *      - name: "nonce"
+         *        in: "query"
+         *        description: "todo"
+         *        required: false
+         *        type: "string"
+         *     responses:
+         *       302:
+         *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
+         */
+        //eslint-disable-next-line @typescript-eslint/no-misused-promises
+        this.app.get("/openid-callback", async (req, res) => {
+            const playUri = (req.cookies as Record<string, string>).playUri;
+            try {
+                if (!playUri) {
+                    throw new Error("Missing playUri in cookies");
+                }
+                //user have not token created, check data on hydra and create token
+                let userInfo = null;
+                try {
+                    userInfo = await openIDClient.getUserInfo(req, res);
+                } catch (err) {
+                    //if no access on openid provider, return error
+                    console.error("An error occurred while connecting to OpenID Provider => ", err);
+                    res.status(500);
+                    res.send("An error occurred while connecting to OpenID Provider");
+                    return;
+                }
+                const email = userInfo.email || userInfo.sub;
+                if (!email) {
+                    throw new Error("No email in the response");
+                }
+                const authToken = jwtTokenManager.createAuthToken(
+                    email,
+                    userInfo?.access_token,
+                    userInfo?.username,
+                    userInfo?.locale
+                );
+
+                res.clearCookie("playUri");
+                // FIXME: possibly redirect to Admin instead.
+                return res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+            } catch (e) {
+                console.error("openIDCallback => ERROR", e);
+                return this.castErrorToResponse(e, res);
+            }
         });
     }
 
@@ -455,7 +474,7 @@ export class AuthenticateController extends BaseHttpController {
      *       302:
      *         description: Redirects the user to the profile screen of the admin
      */
-    profileCallback(): void {
+    private profileCallback(): void {
         // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.app.get("/profile-callback", async (req, res) => {
             const { token, playUri } = parse(req.path_query);
@@ -534,5 +553,40 @@ export class AuthenticateController extends BaseHttpController {
                 }
             })();
         });
+    }
+
+    /**
+     *
+     * @param email
+     * @param playUri
+     * @param IPAddress
+     * @return
+     |object
+     * @private
+     */
+    private async getUserByUserIdentifier(
+        email: string,
+        playUri: string,
+        IPAddress: string
+    ): Promise<FetchMemberDataByUuidResponse | object> {
+        let data: FetchMemberDataByUuidResponse = {
+            email: email,
+            userUuid: email,
+            tags: [],
+            messages: [],
+            visitCardUrl: null,
+            textures: [],
+            userRoomToken: undefined,
+            jabberId: null,
+            jabberPassword: null,
+            mucRooms: [],
+            activatedInviteUser: true,
+        };
+        try {
+            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
+        } catch (err) {
+            console.error("openIDCallback => fetchMemberDataByUuid", err);
+        }
+        return data;
     }
 }

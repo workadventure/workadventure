@@ -37,7 +37,7 @@ npm run headed-test -- tests/[your_test_file.ts]
 Start WorkAdventure with:
 
 ```bash
-docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
+docker-compose -f docker-compose.yaml -f docker-compose-oidc.yml -f docker-compose.e2e.yml up -d --build
 ```
 
 Start the tests with:
@@ -52,4 +52,11 @@ End-to-end tests can take a while to run. To run only one test in one browser, u
 
 ```bash
 npm run test -- [name of the test file] --project=[chromium|firefox|webkit]
+```
+
+
+To run tests in "headed" mode, only for Chromium, run:
+
+```bash
+npm run test-headed-chrome -- [name of the test file]
 ```

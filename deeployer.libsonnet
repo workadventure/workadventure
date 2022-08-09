@@ -66,10 +66,12 @@
               "API_URL": "back1:50051,back2:50051",
               "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
               "FRONT_URL": "https://play-"+url,
+              "PUSHER_URL": "https://pusher-"+url,
               "ENABLE_OPENAPI_ENDPOINT": "true",
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
               # Admin
+              "ADMIN_URL": adminUrl,
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
@@ -77,8 +79,6 @@
               "OPID_CLIENT_ID": "auth-code-client",
               "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-              "OPID_CLIENT_REDIRECT_URL": "https://"+url+"/oauth/hydra",
-              "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
               # Ejabberd
               "EJABBERD_DOMAIN": "xmpp-admin-"+url,
@@ -95,7 +95,6 @@
       "env": {
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
         #POSTHOG
         "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
@@ -104,6 +103,21 @@
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
         "ICON_URL": "//icon-"+url,
+        "CHAT_URL": "//chat-"+url,
+      } + (if adminUrl != null then {
+         # Admin
+         "ADMIN_URL": "//"+url,
+         "ENABLE_OPENID": "1",
+       } else {})
+    },
+    "chat": {
+      "image": "thecodingmachine/workadventure-chat:"+tag,
+      "host": {
+        "url": "chat-"+url,
+      },
+      "ports": [80],
+      "env": {
+        "PUSHER_URL": "//pusher-"+url
       }
     },
     "map-storage": {

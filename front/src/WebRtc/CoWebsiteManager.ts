@@ -150,7 +150,7 @@ class CoWebsiteManager {
             }
 
             if (coWebsite.isClosable()) {
-                this.closeCoWebsite(coWebsite);
+                this.closeCoWebsite(coWebsite, false);
             } else {
                 this.unloadCoWebsite(coWebsite).catch((err) => {
                     console.error("Cannot unload co-website on click on close button", err);
@@ -616,9 +616,11 @@ class CoWebsiteManager {
         }
     }
 
-    private removeCoWebsiteFromStack(coWebsite: CoWebsite) {
+    private removeCoWebsiteFromStack(coWebsite: CoWebsite, withStack: boolean) {
         this.removeHighlightCoWebsite(coWebsite);
-        coWebsites.remove(coWebsite);
+        if (withStack) {
+            coWebsites.remove(coWebsite);
+        }
 
         if (get(coWebsites).length < 1) {
             this.closeMain();
@@ -708,7 +710,7 @@ class CoWebsiteManager {
             })
             .catch((err) => {
                 console.error("Error on co-website loading => ", err);
-                this.removeCoWebsiteFromStack(coWebsite);
+                this.removeCoWebsiteFromStack(coWebsite, true);
             });
 
         return coWebsiteLoading;
@@ -738,12 +740,12 @@ class CoWebsiteManager {
             });
     }
 
-    public closeCoWebsite(coWebsite: CoWebsite): void {
+    public closeCoWebsite(coWebsite: CoWebsite, withStack = true): void {
         if (get(coWebsites).length === 1) {
             this.fire();
         }
 
-        this.removeCoWebsiteFromStack(coWebsite);
+        this.removeCoWebsiteFromStack(coWebsite, withStack);
 
         const mainCoWebsite = this.getMainCoWebsite();
 

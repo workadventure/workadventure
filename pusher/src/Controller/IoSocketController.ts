@@ -19,7 +19,6 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
-    XmppMessage,
     AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
@@ -648,8 +647,6 @@ export class IoSocketController {
                     client.resetPongTimeout();
                 } else if (message.hasEditmapmessage()) {
                     socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
-                } else if (message.hasXmppmessage()) {
-                    socketManager.handleXmppMessage(client, message.getXmppmessage() as XmppMessage);
                 } else if (message.hasAskpositionmessage()) {
                     socketManager.handleAskPositionMessage(
                         client,

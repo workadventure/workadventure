@@ -14,7 +14,6 @@
     import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { PROFILE_URL } from "../../Enum/EnvironmentVariable";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
@@ -118,14 +117,14 @@
 
     <div class="content">
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
-            {#if $userIsConnected && $profileAvailable}
-                {#if PROFILE_URL != undefined}
-                    <iframe
-                        title="profile"
-                        src={getProfileUrl()}
-                        class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
-                    />
-                {/if}
+            {#if $profileAvailable}
+                <iframe
+                    title="profile"
+                    src={getProfileUrl()}
+                    class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
+                />
+            {/if}
+            {#if $userIsConnected}
                 <button
                     type="button"
                     class="btn outline resizing-width tw-justify-center"
@@ -145,7 +144,3 @@
         </section>
     </div>
 </div>
-
-<style lang="scss">
-    @import "../../../style/breakpoints.scss";
-</style>
