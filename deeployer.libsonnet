@@ -78,7 +78,6 @@
               "OPID_CLIENT_ID": "auth-code-client",
               "OPID_CLIENT_SECRET": env.ADMIN_API_TOKEN,
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
-              "OPID_LOGIN_SCREEN_PROVIDER": "https://pusher-"+url+"/login-screen",
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
               # Ejabberd
               "EJABBERD_DOMAIN": "xmpp-admin-"+url,

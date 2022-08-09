@@ -12,7 +12,6 @@ services:
       OPID_CLIENT_SECRET: authorization-code-client-secret
       OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
       OPID_CLIENT_REDIRECT_URL: http://pusher.workadventure.localhost/openid-callback
-      OPID_LOGIN_SCREEN_PROVIDER: http://pusher.workadventure.localhost/login-screen
 
   # A mock server to test OpenID connect connectivity
   oidc-server-mock:

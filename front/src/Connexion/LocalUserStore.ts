@@ -1,5 +1,6 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { Emoji } from "../Stores/EmoteStore";
+import { z } from "zod";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -27,7 +28,17 @@ const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
 
+const JwtAuthToken = z
+    .object({
+        accessToken: z.string().optional(),
+    })
+    .partial();
+
+type JwtAuthToken = z.infer<typeof JwtAuthToken>;
+
 class LocalUserStore {
+    private jwt: JwtAuthToken | undefined;
+
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
     }
@@ -206,11 +217,36 @@ class LocalUserStore {
     }
 
     setAuthToken(value: string | null) {
-        value ? localStorage.setItem(authToken, value) : localStorage.removeItem(authToken);
+        if (value !== null) {
+            localStorage.setItem(authToken, value);
+            this.jwt = JwtAuthToken.parse(LocalUserStore.parseJwt(value));
+        } else {
+            localStorage.removeItem(authToken);
+        }
     }
 
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    isLogged(): boolean {
+        return this.jwt?.accessToken !== undefined;
+    }
+
+    private static parseJwt(token: string) {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            window
+                .atob(base64)
+                .split("")
+                .map(function (c) {
+                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+        );
+
+        return JSON.parse(jsonPayload);
     }
 
     setNotification(value: string): void {
