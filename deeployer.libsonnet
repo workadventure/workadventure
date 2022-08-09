@@ -71,6 +71,7 @@
               "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
             } + (if adminUrl != null then {
               # Admin
+              "ADMIN_URL": adminUrl,
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
               "ADMIN_SOCKETS_TOKEN": env.ADMIN_SOCKETS_TOKEN,
@@ -94,7 +95,6 @@
       "env": {
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "ADMIN_URL": "//"+url,
         "JITSI_URL": env.JITSI_URL,
         #POSTHOG
         "POSTHOG_API_KEY": if namespace == "master" then env.POSTHOG_API_KEY else "",
@@ -104,8 +104,11 @@
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
         "ICON_URL": "//icon-"+url,
         "CHAT_URL": "//chat-"+url,
-        "ENABLE_OPENID": "1",
-      }
+      } + (if adminUrl != null then {
+         # Admin
+         "ADMIN_URL": "//"+url,
+         "ENABLE_OPENID": "1",
+       } else {})
     },
     "chat": {
       "image": "thecodingmachine/workadventure-chat:"+tag,
