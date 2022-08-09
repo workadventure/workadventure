@@ -57,13 +57,13 @@
         resizeObserver.observe(mainLayout);
 
         chatVisibilityStore.subscribe((value) => {
-            if(mainLayout == undefined) return;
-            if(value === true){
-                mainLayout.style.marginLeft = '30vw';
-                mainLayout.style.width = '70vw';
-            }else{
-                mainLayout.style.marginLeft = '0';
-                mainLayout.style.width = '100vw';
+            if (mainLayout == undefined) return;
+            if (value === true) {
+                mainLayout.style.marginLeft = "30vw";
+                mainLayout.style.width = "70vw";
+            } else {
+                mainLayout.style.marginLeft = "0";
+                mainLayout.style.width = "100vw";
             }
         });
     });
