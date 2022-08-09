@@ -2,7 +2,7 @@ version: "3.6"
 services:
   front:
     environment:
-      OPID_LOGIN_SCREEN_PROVIDER: http://pusher.workadventure.localhost/login-screen
+      ENABLE_OPENID: 1
 
   pusher:
     environment:

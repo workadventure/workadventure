@@ -58,7 +58,8 @@ services:
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
-      OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
+      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
+      ENABLE_OPENID: "$OPID_CLIENT_ID"
       OPID_PROFILE_SCREEN_PROVIDER: "$OPID_PROFILE_SCREEN_PROVIDER"
       CHAT_URL: //chat.workadventure.localhost
     command: yarn run start

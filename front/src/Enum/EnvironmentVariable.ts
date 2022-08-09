@@ -24,7 +24,9 @@ export const CONTACT_URL = getEnvConfig("CONTACT_URL") || undefined;
 export const POSTHOG_API_KEY: string = (getEnvConfig("POSTHOG_API_KEY") as string) || "";
 export const POSTHOG_URL = getEnvConfig("POSTHOG_URL") || undefined;
 export const DISABLE_ANONYMOUS: boolean = getEnvConfig("DISABLE_ANONYMOUS") === "true";
-export const OPID_LOGIN_SCREEN_PROVIDER = getEnvConfig("OPID_LOGIN_SCREEN_PROVIDER");
+const enableOpenID = getEnvConfig("ENABLE_OPENID");
+export const ENABLE_OPENID =
+    enableOpenID !== "" && enableOpenID != undefined && enableOpenID != "0" && enableOpenID.toLowerCase() !== "false";
 export const OPID_PROFILE_SCREEN_PROVIDER =
     getEnvConfig("OPID_PROFILE_SCREEN_PROVIDER") || (ADMIN_URL ? ADMIN_URL + "/profile" : undefined);
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
