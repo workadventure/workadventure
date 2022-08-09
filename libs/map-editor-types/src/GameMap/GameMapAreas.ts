@@ -1,16 +1,12 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { MathUtils } from '@workadventure/math-utils';
 import { GameMap } from "./GameMap";
+import { AreaType } from '../types';
 
 export type AreaChangeCallback = (
     areasChangedByAction: Array<ITiledMapObject>,
     allAreasOnNewPosition: Array<ITiledMapObject>
 ) => void;
-
-export enum AreaType {
-    Static = "Static",
-    Dynamic = "Dynamic",
-}
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
 

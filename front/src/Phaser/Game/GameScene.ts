@@ -37,7 +37,6 @@ import { PlayerAnimationDirections } from "../Player/Animation";
 import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Player";
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
-import { GameMap } from "./GameMap/GameMap";
 import { PlayerMovement } from "./PlayerMovement";
 import { PlayersPositionInterpolator } from "./PlayersPositionInterpolator";
 import { DirtyScene } from "./DirtyScene";
@@ -138,7 +137,7 @@ import {
 } from "@workadventure/tiled-map-type-guard";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraApiBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyCameraStoreVisibility";
-import { AreaType, GameMapProperties } from '@workadventure/map-editor-types';
+import { AreaType, GameMap, GameMapProperties } from '@workadventure/map-editor-types';
 import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
 export interface GameSceneInitInterface {
     reconnecting: boolean;

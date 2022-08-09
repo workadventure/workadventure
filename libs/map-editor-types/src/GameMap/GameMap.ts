@@ -9,20 +9,10 @@ import { AreaChangeCallback, GameMapAreas } from "./GameMapAreas";
 import { GameMapProperties } from '../types';
 import { flattenGroupLayersMap } from './LayersFlattener';
 
-export type PropertyChangeCallback = (
-    newValue: string | number | boolean | undefined,
-    oldValue: string | number | boolean | undefined,
-    allProps: Map<string, string | boolean | number>
-) => void;
 
-export type layerChangeCallback = (
-    layersChangedByAction: Array<ITiledMapLayer>,
-    allLayersOnNewPosition: Array<ITiledMapLayer>
-) => void;
 
 /**
  * A wrapper around a ITiledMap interface to provide additional capabilities.
- * It is used to handle layer properties.
  */
 export class GameMap {
     /**

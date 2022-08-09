@@ -1,12 +1,21 @@
-import { AreaType, GameMapProperties, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+import { AreaChangeCallback, AreaType, GameMap, GameMapProperties, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty, ITiledMapTileLayer } from '@workadventure/tiled-map-type-guard';
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { Observable, Subject } from 'rxjs';
-import { GameMap, layerChangeCallback, PropertyChangeCallback } from './GameMap';
-import { AreaChangeCallback } from './GameMapAreas';
 import { PathTileType } from '../../../Utils/PathfindingManager';
 import { MathUtils } from '@workadventure/math-utils';
 import { DEPTH_OVERLAY_INDEX } from '../DepthIndexes';
+
+export type LayerChangeCallback = (
+    layersChangedByAction: Array<ITiledMapLayer>,
+    allLayersOnNewPosition: Array<ITiledMapLayer>
+) => void;
+
+export type PropertyChangeCallback = (
+    newValue: string | number | boolean | undefined,
+    oldValue: string | number | boolean | undefined,
+    allProps: Map<string, string | boolean | number>
+) => void;
 
 export class GameMapFrontWrapper {
 
@@ -33,8 +42,8 @@ export class GameMapFrontWrapper {
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
 
-    private enterLayerCallbacks = Array<layerChangeCallback>();
-    private leaveLayerCallbacks = Array<layerChangeCallback>();
+    private enterLayerCallbacks = Array<LayerChangeCallback>();
+    private leaveLayerCallbacks = Array<LayerChangeCallback>();
 
     /**
      * Firing on map change, containing newest collision grid array
@@ -205,14 +214,14 @@ export class GameMapFrontWrapper {
     /**
      * Registers a callback called when the user moves inside another layer.
      */
-    public onEnterLayer(callback: layerChangeCallback) {
+    public onEnterLayer(callback: LayerChangeCallback) {
         this.enterLayerCallbacks.push(callback);
     }
 
     /**
      * Registers a callback called when the user moves outside another layer.
      */
-    public onLeaveLayer(callback: layerChangeCallback) {
+    public onLeaveLayer(callback: LayerChangeCallback) {
         this.leaveLayerCallbacks.push(callback);
     }
 
