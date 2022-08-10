@@ -6,7 +6,6 @@
         menuVisiblilityStore,
         userIsConnected,
         profileAvailable,
-        profileInPorgress,
         getProfileUrl,
     } from "../../Stores/MenuStore";
     import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
@@ -15,7 +14,6 @@
     import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { PROFILE_URL } from "../../Enum/EnvironmentVariable";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
@@ -25,6 +23,7 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -119,40 +118,32 @@
 
     <div class="content">
         <section class="centered-column tw-w-full tw-m-auto resizing-text">
-            {#if $userIsConnected && ($profileAvailable || $profileInPorgress)}
-                {#if $profileInPorgress}
-                    <div class="connecting-spinner" />
-                {:else if $profileAvailable && PROFILE_URL != undefined}
-                    <iframe
-                        title="profile"
-                        src={getProfileUrl()}
-                        class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
-                    />
+            {#if $profileAvailable}
+                <iframe
+                    title="profile"
+                    src={getProfileUrl()}
+                    class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
+                />
+            {/if}
+            {#if ENABLE_OPENID}
+                {#if $userIsConnected}
                     <button
                         type="button"
                         class="btn outline resizing-width tw-justify-center"
                         on:click={() => analyticsClient.logout()}
                         on:click={logOut}>{$LL.menu.profile.logout()}</button
                     >
+                {:else}
+                    <a
+                        type="button"
+                        class="btn light resizing-width tw-justify-center"
+                        href="/login"
+                        on:click={() => analyticsClient.login()}
+                    >
+                        {$LL.menu.profile.login()}</a
+                    >
                 {/if}
-            {:else}
-                <a
-                    type="button"
-                    class="btn light resizing-width tw-justify-center"
-                    href="/login"
-                    on:click={() => analyticsClient.login()}
-                >
-                    {$LL.menu.profile.login()}</a
-                >
             {/if}
         </section>
     </div>
 </div>
-
-<style lang="scss">
-    @import "../../../style/breakpoints.scss";
-    .connecting-spinner {
-        left: 50%;
-        top: 60%;
-    }
-</style>

@@ -1,0 +1,27 @@
+[
+  {
+    "ClientId": "authorization-code-client-id",
+    "ClientSecrets": ["authorization-code-client-secret"],
+    "Description": "Client for authorization code flow",
+    "AllowedGrantTypes": ["authorization_code"],
+    "AllowAccessTokensViaBrowser": true,
+    "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
+    "RequirePkce": false,
+    "AllowedScopes": ["openid", "profile", "email", "some-custom-identity", "some-app-scope-1"],
+    "IdentityTokenLifetime": 3600,
+    "AccessTokenLifetime": 3600,
+    "RequireClientSecret": false
+  },
+  {
+    "ClientId": "authorization-code-with-pkce-client-id",
+    "ClientSecrets": ["authorization-code-with-pkce-client-secret"],
+    "Description": "Client for authorization code flow",
+    "AllowedGrantTypes": ["authorization_code"],
+    "AllowAccessTokensViaBrowser": true,
+    "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
+    "AllowedScopes": ["openid", "profile", "email", "some-custom-identity", "some-app-scope-1"],
+    "IdentityTokenLifetime": 3600,
+    "AccessTokenLifetime": 3600,
+    "RequireClientSecret": false
+  }
+]

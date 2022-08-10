@@ -27,6 +27,7 @@ services:
           - 'play.workadventure.localhost'
           - 'pusher.workadventure.localhost'
           - 'maps.workadventure.localhost'
+          - 'oidc.workadventure.localhost'
           - 'map-storage.workadventure.localhost'
 
   front:
@@ -59,7 +60,9 @@ services:
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
-      OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
+      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
+      ENABLE_OPENID: "$OPID_CLIENT_ID"
+      OPID_PROFILE_SCREEN_PROVIDER: "$OPID_PROFILE_SCREEN_PROVIDER"
       CHAT_URL: //chat.workadventure.localhost
     command: yarn run start
     volumes:
@@ -110,6 +113,7 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       API_URL: back:50051
       FRONT_URL: http://play.workadventure.localhost
+      PUSHER_URL: http://pusher.workadventure.localhost
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
@@ -267,6 +271,79 @@ services:
       - "traefik.http.routers.xmpp.rule=Host(`xmpp-admin.workadventure.localhost`)"
       - "traefik.http.routers.xmpp.entryPoints=web"
       - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+
+  # A mock server to test OpenID connect connectivity
+  oidc-server-mock:
+    image: ghcr.io/soluto/oidc-server-mock:0.7.0
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SERVER_OPTIONS_INLINE: |
+        {
+          "AccessTokenJwtType": "JWT",
+          "Discovery": {
+            "ShowKeySet": true
+          },
+          "Authentication": {
+            "CookieSameSiteMode": "Lax",
+            "CheckSessionCookieSameSiteMode": "Lax"
+          }
+        }
+      LOGIN_OPTIONS_INLINE: |
+        {
+          "AllowRememberLogin": false
+        }
+      LOGOUT_OPTIONS_INLINE: |
+        {
+          "AutomaticRedirectAfterSignOut": true
+        }
+      API_SCOPES_INLINE: |
+        - Name: some-app-scope-1
+        - Name: some-app-scope-2
+      API_RESOURCES_INLINE: |
+        - Name: some-app
+          Scopes:
+            - some-app-scope-1
+            - some-app-scope-2
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"User1",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Sam Tailor"
+              },
+              {
+                "Type": "email",
+                "Value": "sam.tailor@gmail.com"
+              },
+              {
+                "Type": "some-api-resource-claim",
+                "Value": "Sam's Api Resource Custom Claim"
+              },
+              {
+                "Type": "some-api-scope-claim",
+                "Value": "Sam's Api Scope Custom Claim"
+              },
+              {
+                "Type": "some-identity-resource-claim",
+                "Value": "Sam's Identity Resource Custom Claim"
+              }
+            ]
+          }
+        ]
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+    volumes:
+      - ./contrib/oidc-server-mock:/tmp/config:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
+      - "traefik.http.routers.oidc.entryPoints=web"
+    healthcheck:
+      #disable: true
+      timeout: 5s
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

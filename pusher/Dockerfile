@@ -11,7 +11,7 @@ COPY messages .
 RUN yarn run tag-version && yarn proto
 
 # typescript build
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
+FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
 COPY pusher/yarn.lock pusher/package.json ./
 RUN yarn install
