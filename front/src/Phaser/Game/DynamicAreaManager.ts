@@ -1,9 +1,8 @@
-import { AreaType } from '@workadventure/map-editor-types';
+import { AreaType } from "@workadventure/map-editor-types";
 import { Subscription } from "rxjs";
 import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";
-import { GameMap } from "./GameMap/GameMap";
-import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 
 export class DynamicAreaManager {
     private readonly gameMapFrontWrapper: GameMapFrontWrapper;
@@ -20,7 +19,10 @@ export class DynamicAreaManager {
                 throw new Error(`Could not find dynamic area with the name "${modifyAreaEvent.name}" in your map`);
             }
 
-            const insideBefore = this.gameMapFrontWrapper.isPlayerInsideAreaByName(modifyAreaEvent.name, AreaType.Dynamic);
+            const insideBefore = this.gameMapFrontWrapper.isPlayerInsideAreaByName(
+                modifyAreaEvent.name,
+                AreaType.Dynamic
+            );
 
             if (modifyAreaEvent.x !== undefined) {
                 area.x = modifyAreaEvent.x;
@@ -35,7 +37,10 @@ export class DynamicAreaManager {
                 area.height = modifyAreaEvent.height;
             }
 
-            const insideAfter = this.gameMapFrontWrapper.isPlayerInsideAreaByName(modifyAreaEvent.name, AreaType.Dynamic);
+            const insideAfter = this.gameMapFrontWrapper.isPlayerInsideAreaByName(
+                modifyAreaEvent.name,
+                AreaType.Dynamic
+            );
 
             if (insideBefore && !insideAfter) {
                 this.gameMapFrontWrapper.triggerSpecificAreaOnLeave(area);
