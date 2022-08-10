@@ -9,7 +9,8 @@
     const LoaderIcon = `...`;
     export let html: string;
 
-    function openCoWebsite(event: Event, link: HTMLElement) {
+    let coWebsiteOpeningInProgress = false;
+    function actionElement(event: Event, link: HTMLElement) {
         event.stopPropagation();
 
         const embedLink = link.getAttribute("data-embed-link");
@@ -22,12 +23,16 @@
         const cunction = link.getAttribute("data-function");
         switch (cunction) {
             case linkFunction.openCowebsite:
-                iframeListener.openCoWebsite(embedLink, true, iframeAllow ?? "allowfullscreen");
+                if(!coWebsiteOpeningInProgress){
+                    coWebsiteOpeningInProgress = true;
+                    iframeListener.openCoWebsite(embedLink, true, iframeAllow ?? "allowfullscreen");
+                }
 
                 //UX animation
                 appendIconInHtmlElement(link, LoaderIcon);
                 setTimeout(() => {
                     appendIconInHtmlElement(link, checkIcone);
+                    coWebsiteOpeningInProgress = false;
                 }, 1000);
                 break;
             case linkFunction.copyLink:
@@ -60,9 +65,9 @@
         if (elements == undefined || elements.length === 0) return;
         for (const element of elements) {
             if (remove) {
-                element.removeEventListener("click", (event) => openCoWebsite(event, element));
+                element.removeEventListener("click", (event) => actionElement(event, element));
             } else {
-                element.addEventListener("click", (event) => openCoWebsite(event, element));
+                element.addEventListener("click", (event) => actionElement(event, element));
             }
         }
     }

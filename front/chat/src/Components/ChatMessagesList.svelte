@@ -16,6 +16,8 @@
         SmileIcon,
         MoreHorizontalIcon,
         ArrowUpIcon,
+        CopyIcon,
+LoaderIcon,
     } from "svelte-feather-icons";
     import { Unsubscriber } from "svelte/store";
     import { selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
@@ -129,6 +131,10 @@
         //open emoji dropdown
         setTimeout(() => picker.showPicker(emojiContainer), 100);
         selectedMessageToReact.set(message);
+    }
+
+    function copyMessage(message: Message){
+        navigator.clipboard.writeText(message.body);
     }
 
     onMount(() => {
@@ -309,18 +315,20 @@
                                 {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
                                     <p class="tw-italic">{$LL.messageDeleted()}</p>
                                 {:else}
-                                    {#await HtmlUtils.urlify(message.body)}
-                                        <p>...waiting</p>
-                                    {:then html}
-                                        <HtmlMessage {html} />
-                                    {/await}
+                                    <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
+                                        {#await HtmlUtils.urlify(message.body)}
+                                            <p>...waiting</p>
+                                        {:then html}
+                                            <HtmlMessage {html} />
+                                        {/await}
 
-                                    {#if message.files && message.files.length > 0}
-                                        {#each message.files as file}
-                                            <!-- File message -->
-                                            <File {file} />
-                                        {/each}
-                                    {/if}
+                                        {#if message.files && message.files.length > 0}
+                                            {#each message.files as file}
+                                                <!-- File message -->
+                                                <File {file} />
+                                            {/each}
+                                        {/if}
+                                    </div>
                                     {#if message.targetMessageReact}
                                         <div class="emojis">
                                             {#each [...message.targetMessageReact.keys()] as emojiStr}
@@ -360,7 +368,10 @@
                                                     <SmileIcon size="13" class="tw-mr-1" />
                                                     {$LL.react()}
                                                 </span>
-
+                                                <span class="wa-dropdown-item" on:click={() => copyMessage(message)}>
+                                                    <CopyIcon size="13" class="tw-mr-1" />
+                                                    {$LL.copy()}
+                                                </span>
                                                 <span
                                                     class="wa-dropdown-item tw-text-pop-red"
                                                     on:click={() => mucRoom.removeMessage(message.id)}
