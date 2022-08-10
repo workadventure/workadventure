@@ -45,7 +45,7 @@ class LocalAdmin implements AdminInterface {
         let canEdit = false;
         let match = /\/~\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (match) {
-            mapUrl = roomUrl.protocol + "//" + "localhost:3000/" + match[1];
+            mapUrl = roomUrl.protocol + "//" + "map-storage.workadventure.localhost/" + match[1];
             canEdit = true;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);

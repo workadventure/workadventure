@@ -594,7 +594,7 @@ export class GameRoom {
             let canEdit = false;
             const match = /\/~\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
             if (match) {
-                mapUrl = "http://localhost:3000/maps/map.json";
+                mapUrl = roomUrlObj.protocol + "//" + "map-storage.workadventure.localhost/" + match[1];
                 canEdit = true;
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);

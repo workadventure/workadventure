@@ -192,8 +192,6 @@ services:
     image: thecodingmachine/nodejs:16
     command: yarn start:dev
     #command: yarn run profile
-    ports:
-      - 3000:3000
     environment:
       DEBUG: "*"
       STARTUP_COMMAND_1: yarn install
