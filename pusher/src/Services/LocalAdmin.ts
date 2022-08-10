@@ -43,7 +43,7 @@ class LocalAdmin implements AdminInterface {
 
         let mapUrl = "";
         let canEdit = false;
-        let match = /\/~\/[^/]+\/(.+)/.exec(roomUrl.pathname);
+        let match = /\/~\/(.+)/.exec(roomUrl.pathname);
         if (match) {
             mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
             canEdit = true;

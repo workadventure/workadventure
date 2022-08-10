@@ -593,7 +593,7 @@ export class GameRoom {
 
             let mapUrl = "";
             let canEdit = false;
-            const match = /\/~\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+            const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
             if (match) {
                 mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
                 canEdit = true;
