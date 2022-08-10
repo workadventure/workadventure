@@ -27,6 +27,7 @@ services:
           - 'play.workadventure.localhost'
           - 'pusher.workadventure.localhost'
           - 'maps.workadventure.localhost'
+          - 'map-storage.workadventure.localhost'
 
   front:
     image: thecodingmachine/nodejs:16
