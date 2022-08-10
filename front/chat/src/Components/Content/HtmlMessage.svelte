@@ -23,7 +23,7 @@
         const cunction = link.getAttribute("data-function");
         switch (cunction) {
             case linkFunction.openCowebsite:
-                if(!coWebsiteOpeningInProgress){
+                if (!coWebsiteOpeningInProgress) {
                     coWebsiteOpeningInProgress = true;
                     iframeListener.openCoWebsite(embedLink, true, iframeAllow ?? "allowfullscreen");
                 }

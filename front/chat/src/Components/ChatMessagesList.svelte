@@ -17,7 +17,6 @@
         MoreHorizontalIcon,
         ArrowUpIcon,
         CopyIcon,
-LoaderIcon,
     } from "svelte-feather-icons";
     import { Unsubscriber } from "svelte/store";
     import { selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
@@ -133,8 +132,10 @@ LoaderIcon,
         selectedMessageToReact.set(message);
     }
 
-    function copyMessage(message: Message){
-        navigator.clipboard.writeText(message.body);
+    function copyMessage(message: Message) {
+        navigator.clipboard.writeText(message.body).catch((err) => {
+            console.error("error copy message => ", err);
+        });
     }
 
     onMount(() => {
