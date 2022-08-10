@@ -22,7 +22,7 @@
     CornerLeftUpIcon,
     SmileIcon,
     MoreHorizontalIcon,
-    ArrowUpIcon,
+    ArrowUpIcon
   } from "svelte-feather-icons";
   import { Unsubscriber } from "svelte/store";
   import {
@@ -129,11 +129,12 @@
       isScrolledDown = false;
     }
 
-    if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
-      //Pull to refresh ...
-      mucRoom.retrieveLastMessages();
-    }
-    lastScrollPosition = document.body.scrollTop;
+      if((document.body.scrollTop >= 0) && (lastScrollPosition < 0))
+      {
+        //Pull to refresh ...
+        mucRoom.retrieveLastMessages();
+      }
+      lastScrollPosition = document.body.scrollTop;
   }
 
   function selectMessage(message: Message) {
@@ -601,7 +602,7 @@
       font-style: italic;
     }
   }
-  p {
+  p{
     margin-bottom: 0 !important;
   }
   .message {
