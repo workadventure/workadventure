@@ -80,6 +80,6 @@
     });
 </script>
 
-<p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+<p class="message tw-mb-0 tw-whitespace-normal tw-break-words">
     {@html html}
 </p>

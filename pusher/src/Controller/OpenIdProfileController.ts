@@ -16,6 +16,7 @@ export class OpenIdProfileController extends BaseHttpController {
                 if (!resCheckTokenAuth.sub) {
                     throw new Error("Email was not found");
                 }
+                res.setHeader("Content-Type", "text/html");
                 res.send(
                     this.buildHtml(
                         OPID_CLIENT_ISSUER,
