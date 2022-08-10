@@ -119,7 +119,7 @@
       "env": {
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
-        "EMBEDLY_KEY": if std.objectHas(env, 'EMBEDLY_KEY') then env.EMBEDLY_KEY else "",
+        "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
       }
     },
     "map-storage": {
