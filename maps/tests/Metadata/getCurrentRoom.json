@@ -19,7 +19,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
          "height":10,
@@ -31,7 +31,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "data":[33, 34, 34, 34, 34, 34, 34, 34, 34, 35, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 41, 42, 42, 42, 42, 42, 42, 42, 42, 43, 49, 50, 50, 50, 50, 50, 50, 50, 50, 51],
          "height":10,
@@ -43,7 +43,7 @@
          "width":10,
          "x":0,
          "y":0
-        }, 
+        },
         {
          "draworder":"topdown",
          "id":5,
@@ -58,7 +58,7 @@
                     {
                      "fontfamily":"Sans Serif",
                      "pixelsize":9,
-                     "text":"Test : \nOpen the console.\n\nResult : \nYou should see a console.log() of the following attributes : \n\t- id : ID of the current room\n\t- mapUrl : url of the JSON file of the map\n\t- Player name\n           - Player ID\n           - Player tags\n\nAnd also:\n\t- map : data of the JSON file of the map\n\n",
+                     "text":"Test : \nOpen the console.\n\nResult : \nYou should see a console.log() of the following attributes : \n\t- id : ID of the current room\n\t- mapUrl : url of the JSON file of the map\n\t- Player name\n           - Player ID\n           - Player tags\n           - Metadata\n\\nAnd also:\n\t- map : data of the JSON file of the map\n\n",
                      "wrap":true
                     },
                  "type":"",
@@ -106,7 +106,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":1,
                  "properties":[
@@ -115,7 +115,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":2,
                  "properties":[
@@ -124,7 +124,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":3,
                  "properties":[
@@ -133,7 +133,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":4,
                  "properties":[
@@ -142,7 +142,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":8,
                  "properties":[
@@ -151,7 +151,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":9,
                  "properties":[
@@ -160,7 +160,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":10,
                  "properties":[
@@ -169,7 +169,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":11,
                  "properties":[
@@ -178,7 +178,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":12,
                  "properties":[
@@ -187,7 +187,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":16,
                  "properties":[
@@ -196,7 +196,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":17,
                  "properties":[
@@ -205,7 +205,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":18,
                  "properties":[
@@ -214,7 +214,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":19,
                  "properties":[
@@ -223,7 +223,7 @@
                          "type":"bool",
                          "value":true
                         }]
-                }, 
+                },
                 {
                  "id":20,
                  "properties":[
@@ -234,7 +234,7 @@
                         }]
                 }],
          "tilewidth":32
-        }, 
+        },
         {
          "columns":8,
          "firstgid":65,

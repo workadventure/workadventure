@@ -55,7 +55,7 @@ export const isErrorApiRetryData = extendApi(
             description: "The URL of the image displayed just under the logo in the waiting screen.",
             example: "https://example.com/wait.png",
         }),
-        buttonTitle: extendApi(z.optional(z.nullable(z.string())), {
+        buttonTitle: extendApi(z.string().nullable().optional(), {
             description:
                 "If this is not defined the button and the parameter canRetryManual is set to true, the button will be not displayed at all.",
             example: "Retry",
@@ -112,7 +112,7 @@ export const isErrorApiUnauthorizedData = extendApi(
             description: "The URL of the image displayed just under the logo in the error screen.",
             example: "https://example.com/error.png",
         }),
-        buttonTitle: extendApi(z.optional(z.nullable(z.string())), {
+        buttonTitle: extendApi(z.string().nullable().optional(), {
             description: "If this is not defined the button to logout will be not displayed.",
             example: "Log out",
         }),
