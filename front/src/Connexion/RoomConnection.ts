@@ -51,10 +51,8 @@ import {
     ViewportMessage as ViewportMessageTsProto,
     WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
     WorldConnexionMessage,
-    XmppConnectionStatusChangeMessage_Status,
-    XmppSettingsMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
-import { BehaviorSubject, Subject } from "rxjs";
+import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
 import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";

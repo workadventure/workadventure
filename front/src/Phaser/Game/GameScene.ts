@@ -867,7 +867,7 @@ export class GameScene extends DirtyScene {
                     this.gameMap,
                     onConnect.room.variables
                 );
-                let playerVariables : Map<string, unknown> = onConnect.room.playerVariables;
+                const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
                 // FIXME: NOT ENOUGH!
                 // FIXME: NOT ENOUGH!

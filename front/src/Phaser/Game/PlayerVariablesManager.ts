@@ -3,7 +3,7 @@ import { iframeListener } from "../../Api/IframeListener";
 import { SetPlayerVariableEvent } from "../../Api/Events/SetPlayerVariableEvent";
 import { IframeEventDispatcher } from "./IframeEventDispatcher";
 import { SetPlayerVariableMessage } from "../../Messages/ts-proto-generated/protos/messages";
-import {localUserStore} from "../../Connexion/LocalUserStore";
+import { localUserStore } from "../../Connexion/LocalUserStore";
 
 /**
  * Stores variables and provides a bridge between scripts and the pusher server.
