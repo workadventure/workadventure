@@ -28,6 +28,7 @@ services:
           - 'pusher.workadventure.localhost'
           - 'maps.workadventure.localhost'
           - 'oidc.workadventure.localhost'
+          - 'map-storage.workadventure.localhost'
 
   front:
     image: thecodingmachine/nodejs:16
@@ -47,6 +48,7 @@ services:
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
+      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -81,6 +83,7 @@ services:
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
+      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
     volumes:
       - ./front/chat:/usr/src/app
@@ -120,6 +123,7 @@ services:
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
@@ -182,6 +186,7 @@ services:
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       MAP_STORAGE_URL: "map-storage:50053"
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -203,6 +208,7 @@ services:
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
     volumes:
       - ./map-storage:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"

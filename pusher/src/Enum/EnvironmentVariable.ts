@@ -11,6 +11,7 @@ export const SOCKET_IDLE_TIMER = parseInt(process.env.SOCKET_IDLE_TIMER as strin
 
 export const FRONT_URL = process.env.FRONT_URL || "http://localhost";
 export const PUSHER_URL = process.env.PUSHER_URL || "";
+export const PUBLIC_MAP_STORAGE_URL = process.env.PUBLIC_MAP_STORAGE_URL || "";
 export const OPID_CLIENT_ID = process.env.OPID_CLIENT_ID || "";
 export const OPID_CLIENT_SECRET = process.env.OPID_CLIENT_SECRET || "";
 export const OPID_CLIENT_ISSUER = process.env.OPID_CLIENT_ISSUER || "";
