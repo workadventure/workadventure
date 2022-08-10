@@ -769,5 +769,9 @@
         .translate-right {
             transform: translateX(0);
         }
+
+        .move-menu {
+            transform: translateX(-3rem);
+        }
     }
 </style>

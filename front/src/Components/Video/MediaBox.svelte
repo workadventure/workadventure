@@ -26,15 +26,15 @@
 {#if streamable instanceof VideoPeer}
     {#if $constraintStore && !$constraintStore.video}
         <div
-            class="media-container {isHightlighted
+                class="media-container {isHightlighted
                 ? 'hightlighted tw-max-w-sm tw-mx-auto'
                 : 'tw-flex tw-m-auto tw-flex media-box-camera-off-size tw-h-10'}
      media-box-shape-color tw-pointer-events-auto tw-p-0
 "
-            class:clickable={isClickable}
-            class:mozaic-solo={mozaicSolo}
-            class:mozaic-full-width={mozaicFullWidth}
-            class:mozaic-quarter={mozaicQuarter}
+                class:clickable={isClickable}
+                class:mozaic-solo={mozaicSolo}
+                class:mozaic-full-width={mozaicFullWidth}
+                class:mozaic-quarter={mozaicQuarter}
         >
             <div class="{isHightlighted ? 'tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
                 <VideoOffBox peer={streamable} clickable={false} />
@@ -42,13 +42,13 @@
         </div>
     {:else}
         <div
-            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+                class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
-            class:clickable={isClickable}
-            class:mozaic-solo={mozaicSolo}
-            class:mozaic-full-width={mozaicFullWidth}
-            class:mozaic-quarter={mozaicQuarter}
+                class:clickable={isClickable}
+                class:mozaic-solo={mozaicSolo}
+                class:mozaic-full-width={mozaicFullWidth}
+                class:mozaic-quarter={mozaicQuarter}
         >
             <div class="{isHightlighted ? 'tw-h-[32vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-flex">
                 <VideoMediaBox peer={streamable} clickable={isClickable} />
@@ -57,13 +57,13 @@
     {/if}
 {:else if streamable instanceof ScreenSharingPeer}
     <div
-        class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
+            class="media-container {isHightlighted ? 'hightlighted tw-mr-6' : 'tw-flex media-box-camera-on-size'}
      media-box-shape-color
 "
-        class:clickable={isClickable}
-        class:mozaic-solo={mozaicSolo}
-        class:mozaic-full-width={mozaicFullWidth}
-        class:mozaic-quarter={mozaicQuarter}
+            class:clickable={isClickable}
+            class:mozaic-solo={mozaicSolo}
+            class:mozaic-full-width={mozaicFullWidth}
+            class:mozaic-quarter={mozaicQuarter}
     >
         <div class="{isHightlighted ? 'tw-h-[41vw] tw-mr-6' : 'tw-mx-auto'} tw-w-full tw-h-full tw-flex">
             <ScreenSharingMediaBox peer={streamable} clickable={isClickable} />
