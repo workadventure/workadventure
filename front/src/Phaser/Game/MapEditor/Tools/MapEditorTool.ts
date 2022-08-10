@@ -1,5 +1,5 @@
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
-import { GameMapFrontWrapper } from '../../GameMap/GameMapFrontWrapper';
+import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 
 export abstract class MapEditorTool {
     public abstract clear(): void;

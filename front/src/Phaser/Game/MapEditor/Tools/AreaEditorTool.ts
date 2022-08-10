@@ -1,9 +1,9 @@
-import { AreaType, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
-import { Subscription } from 'rxjs';
+import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { Subscription } from "rxjs";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { GameMapFrontWrapper } from '../../GameMap/GameMapFrontWrapper';
+import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
@@ -57,16 +57,18 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
-        this.gameMapAreaUpdateSubscription = gameMapFrontWrapper.getAreaUpdatedObservable().subscribe((areaConfig: ITiledMapRectangleObject) => {
-            this.updateAreaPreview(areaConfig);
-            this.scene.markDirty();
-        });
+        this.gameMapAreaUpdateSubscription = gameMapFrontWrapper
+            .getAreaUpdatedObservable()
+            .subscribe((areaConfig: ITiledMapRectangleObject) => {
+                this.updateAreaPreview(areaConfig);
+                this.scene.markDirty();
+            });
     }
 
     public unsubscribeFromGameMapEvents(): void {
         this.gameMapAreaUpdateSubscription.unsubscribe();
     }
-    
+
     public updateAreaPreview(config: ITiledMapRectangleObject): void {
         const areaPreview = this.getAreaPreview(config.id);
         if (!areaPreview) {
@@ -82,7 +84,7 @@ export class AreaEditorTool extends MapEditorTool {
     }
 
     private getAreaPreview(id: number): AreaPreview | undefined {
-        return this.areaPreviews.find(area => area.getId() === id);
+        return this.areaPreviews.find((area) => area.getId() === id);
     }
 
     private createAreaPreviews(): AreaPreview[] {

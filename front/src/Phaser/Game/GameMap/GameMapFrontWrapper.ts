@@ -1,10 +1,22 @@
-import { AreaChangeCallback, AreaType, GameMap, GameMapProperties, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
-import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapProperty, ITiledMapTileLayer } from '@workadventure/tiled-map-type-guard';
+import {
+    AreaChangeCallback,
+    AreaType,
+    GameMap,
+    GameMapProperties,
+    ITiledMapRectangleObject,
+} from "@workadventure/map-editor-types";
+import {
+    ITiledMap,
+    ITiledMapLayer,
+    ITiledMapObject,
+    ITiledMapProperty,
+    ITiledMapTileLayer,
+} from "@workadventure/tiled-map-type-guard";
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
-import { Observable, Subject } from 'rxjs';
-import { PathTileType } from '../../../Utils/PathfindingManager';
-import { MathUtils } from '@workadventure/math-utils';
-import { DEPTH_OVERLAY_INDEX } from '../DepthIndexes';
+import { Observable, Subject } from "rxjs";
+import { PathTileType } from "../../../Utils/PathfindingManager";
+import { MathUtils } from "@workadventure/math-utils";
+import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 
 export type LayerChangeCallback = (
     layersChangedByAction: Array<ITiledMapLayer>,
@@ -18,7 +30,6 @@ export type PropertyChangeCallback = (
 ) => void;
 
 export class GameMapFrontWrapper {
-
     private gameMap: GameMap;
 
     private oldKey: number | undefined;
@@ -85,8 +96,8 @@ export class GameMapFrontWrapper {
             if (phaserLayers.length === 0) {
                 console.warn(
                     'Could not find layer with name that contains "' +
-                    layerName +
-                    '" when calling WA.hideLayer / WA.showLayer'
+                        layerName +
+                        '" when calling WA.hideLayer / WA.showLayer'
                 );
                 return;
             }
@@ -109,9 +120,7 @@ export class GameMapFrontWrapper {
         if (map.height === undefined || map.width === undefined) {
             return [];
         }
-        const grid: number[][] = Array.from(Array(map.height), (_) =>
-            Array(map.width).fill(PathTileType.Walkable)
-        );
+        const grid: number[][] = Array.from(Array(map.height), (_) => Array(map.width).fill(PathTileType.Walkable));
         if (modifiedLayer) {
             // recalculate cache for certain layer if needed
             this.perLayerCollisionGridCache.set(modifiedLayer.layerIndex, this.getLayerCollisionGrid(modifiedLayer));

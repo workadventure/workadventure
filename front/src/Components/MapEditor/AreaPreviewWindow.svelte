@@ -4,7 +4,7 @@
     import { Unsubscriber } from "svelte/store";
     import { AreaPreview } from "../../Phaser/Components/MapEditor/AreaPreview";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { CommandType, ITiledMapRectangleObject } from '@workadventure/map-editor-types';
+    import { CommandType, ITiledMapRectangleObject } from "@workadventure/map-editor-types";
 
     let areaPreview: AreaPreview | undefined;
     let areaData: ITiledMapRectangleObject | undefined;
@@ -33,9 +33,7 @@
         if (!areaData) {
             return;
         }
-        gameScene
-            .getMapEditorModeManager()
-            .executeCommand(CommandType.UpdateAreaCommand, { config: areaData });
+        gameScene.getMapEditorModeManager().executeCommand(CommandType.UpdateAreaCommand, { config: areaData });
     }
 
     onDestroy(() => {

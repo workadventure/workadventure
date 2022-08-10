@@ -1,8 +1,8 @@
-import { AreaType, GameMapProperties } from '@workadventure/map-editor-types';
-import { MathUtils } from '@workadventure/math-utils';
+import { AreaType, GameMapProperties } from "@workadventure/map-editor-types";
+import { MathUtils } from "@workadventure/math-utils";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
-import { GameMapFrontWrapper } from './GameMap/GameMapFrontWrapper';
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export class StartPositionCalculator {
     public startPosition!: PositionInterface;
 
@@ -22,7 +22,10 @@ export class StartPositionCalculator {
 
     public getStartPositionNames(): string[] {
         const names: string[] = [];
-        for (const obj of [...this.gameMapFrontWrapper.getFlatLayers(), ...this.gameMapFrontWrapper.getAreas(AreaType.Static)]) {
+        for (const obj of [
+            ...this.gameMapFrontWrapper.getFlatLayers(),
+            ...this.gameMapFrontWrapper.getAreas(AreaType.Static),
+        ]) {
             if (obj.name === "start") {
                 names.push(obj.name);
                 continue;

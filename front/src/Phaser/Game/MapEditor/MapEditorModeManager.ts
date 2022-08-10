@@ -1,6 +1,6 @@
-import { CommandPayload, CommandType } from '@workadventure/map-editor-types';
-import { UpdateAreaCommand } from '@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand';
-import { Command } from '@workadventure/map-editor-types/src/Commands/Command';
+import { CommandPayload, CommandType } from "@workadventure/map-editor-types";
+import { UpdateAreaCommand } from "@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand";
+import { Command } from "@workadventure/map-editor-types/src/Commands/Command";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
@@ -211,7 +211,9 @@ export class MapEditorModeManager {
     }
 
     private subscribeToGameMapEvents(): void {
-        this.editorTools.forEach((tool) => tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper()));
+        this.editorTools.forEach((tool) =>
+            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
+        );
     }
 
     private unsubscribeFromGameMapEvents(): void {
