@@ -23,6 +23,7 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -124,22 +125,24 @@
                     class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
                 />
             {/if}
-            {#if $userIsConnected}
-                <button
-                    type="button"
-                    class="btn outline resizing-width tw-justify-center"
-                    on:click={() => analyticsClient.logout()}
-                    on:click={logOut}>{$LL.menu.profile.logout()}</button
-                >
-            {:else}
-                <a
-                    type="button"
-                    class="btn light resizing-width tw-justify-center"
-                    href="/login"
-                    on:click={() => analyticsClient.login()}
-                >
-                    {$LL.menu.profile.login()}</a
-                >
+            {#if ENABLE_OPENID}
+                {#if $userIsConnected}
+                    <button
+                        type="button"
+                        class="btn outline resizing-width tw-justify-center"
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
+                    >
+                {:else}
+                    <a
+                        type="button"
+                        class="btn light resizing-width tw-justify-center"
+                        href="/login"
+                        on:click={() => analyticsClient.login()}
+                    >
+                        {$LL.menu.profile.login()}</a
+                    >
+                {/if}
             {/if}
         </section>
     </div>
