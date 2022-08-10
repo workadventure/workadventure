@@ -109,11 +109,14 @@ export const defaultUserData: UserData = {
     woka: defaultWoka,
 };
 
+export type DeleteMessageStore = Readable<string[]>;
+
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
     private messageStore: Writable<Message[]>;
     private messageReactStore: Writable<Map<string, ReactMessage[]>>;
+    private deletedMessagesStore: Writable<string[]>;
     private meStore: Writable<Me>;
     private nickCount = 0;
     private composingTimeOut: Timeout | undefined;
@@ -132,6 +135,7 @@ export class MucRoom {
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.messageStore = writable<Message[]>(new Array(0));
+        this.deletedMessagesStore = writable<string[]>(new Array(0));
         this.messageReactStore = writable<Map<string, ReactMessage[]>>(new Map<string, ReactMessage[]>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
         this.meStore = writable<Me>({ isAdmin: false });
@@ -760,9 +764,11 @@ export class MucRoom {
                         return reactMessages;
                     });
                 } else if (xml.getChildByAttr("xmlns", "urn:xmpp:message-delete:0")?.getName() === "remove") {
-                    this.messageStore.update((messages) =>
-                        messages.filter((message) => message.id !== xml.getChild("remove")?.getAttr("origin_id"))
-                    );
+                    this.deletedMessagesStore.update((deletedMessages) => [
+                        ...deletedMessages,
+                        xml.getChild("remove")?.getAttr("origin_id"),
+                    ]);
+                    //this.messageStore.update((messages) => messages.filter((message) => message.id !== xml.getChild("remove")?.getAttr("origin_id")));
                 } else {
                     this.messageStore.update((messages) => {
                         if (messages.find((message) => message.id === idMessage)) {
@@ -989,6 +995,10 @@ export class MucRoom {
 
     public getMessagesStore(): MessagesStore {
         return this.messageStore;
+    }
+
+    public getDeletedMessagesStore(): DeleteMessageStore {
+        return this.deletedMessagesStore;
     }
 
     public getMeStore(): MeStore {

@@ -52,6 +52,7 @@ const fr_FR: Translation = {
     more: "plus",
     sendBack: "Renvoyer",
     delete: "Supprimer",
+    messageDeleted: "Ce message a été supprimé.",
     emoji: {
         icon: "Icone pour ouvrir ou fermer la selection d'emoji",
         search: "Chercher un emoji...",
