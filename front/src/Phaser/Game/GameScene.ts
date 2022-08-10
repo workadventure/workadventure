@@ -869,19 +869,41 @@ export class GameScene extends DirtyScene {
                 );
                 const playerVariables: Map<string, unknown> = onConnect.room.playerVariables;
                 // If the user is not logged, we initialize the variables with variables from the local storage
-                // FIXME: NOT ENOUGH!
-                // FIXME: NOT ENOUGH!
-                // FIXME: NOT ENOUGH!
-                // FIXME: we need to send variables that we have stored locally to the server!
-                // FIXME: the server will send back the list of variables.
-                // FIXME: SO WE NEED TO SEND VARIABLES FROM localUserStore.getAllUserProperties()
-                /*if (!localUserStore.getAuthToken()) {
-                    playerVariables = new Map({ ...localUserStore.getAllUserProperties(), ...playerVariables });
-                }*/
+                if (!localUserStore.isLogged()) {
+                    if (this.room.group) {
+                        for (const [key, { isPublic, value }] of localUserStore.getAllUserProperties(this.room.group).entries()) {
+                            if (isPublic) {
+                                this.connection?.emitPlayerSetVariable({
+                                    key,
+                                    value,
+                                    persist: false,
+                                    public: true,
+                                    scope: "world"
+                                });
+                            }
+                            playerVariables.set(key, value);
+                        }
+                    }
+
+                    for (const [key, { isPublic, value }] of localUserStore.getAllUserProperties(this.room.id).entries()) {
+                        if (isPublic) {
+                            this.connection?.emitPlayerSetVariable({
+                                key,
+                                value,
+                                persist: false,
+                                public: true,
+                                scope: "room"
+                            });
+                        }
+                        playerVariables.set(key, value);
+                    }
+                }
                 this.playerVariablesManager = new PlayerVariablesManager(
                     this.connection,
                     this.playersEventDispatcher,
-                    playerVariables
+                    playerVariables,
+                    this.room.id,
+                    this.room.group,
                 );
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);

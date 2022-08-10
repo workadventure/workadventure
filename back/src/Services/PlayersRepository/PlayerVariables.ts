@@ -6,7 +6,7 @@ import {
     PlayersVariablesRepositoryInterface,
     VariableWithScope,
 } from "./PlayersVariablesRepositoryInterface";
-import { ANONYMOUS_PLAYER_VARIABLES_MAX_TTL, LOGGED_PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
+import { PLAYER_VARIABLES_MAX_TTL } from "../../Enum/EnvironmentVariable";
 
 export class PlayerVariables {
     private roomVariables!: Map<string, VariableWithScope>;
@@ -77,37 +77,31 @@ export class PlayerVariables {
 
         const expire = ttl === undefined ? undefined : new Date().getTime() + ttl * 1000;
 
-        if (this.maxExpireRoom !== undefined) {
-            if (expire === undefined) {
-                this.maxExpireRoom = undefined;
-            } else {
-                this.maxExpireRoom = Math.max(this.maxExpireRoom, expire);
-            }
-        }
-
         this.roomVariables.set(key, {
             value,
             isPublic,
         });
         this.allVariables = undefined;
-        if (persist) {
+        if (persist && this.isLogged) {
+            if (this.maxExpireRoom !== undefined) {
+                if (expire === undefined) {
+                    this.maxExpireRoom = undefined;
+                } else {
+                    this.maxExpireRoom = Math.max(this.maxExpireRoom, expire);
+                }
+            }
+
             await this.repository.saveVariable(this.roomKey, key, value, isPublic, expire, this.maxExpireRoom);
         }
     }
 
     private restrictTtlAccordingToLimits(ttl: number | undefined): number | undefined {
         // Let's limit the maximum time of the TTL according to the settings.
-        if (this.isLogged && LOGGED_PLAYER_VARIABLES_MAX_TTL >= 0) {
+        if (PLAYER_VARIABLES_MAX_TTL >= 0) {
             if (ttl === undefined) {
-                return LOGGED_PLAYER_VARIABLES_MAX_TTL;
+                return PLAYER_VARIABLES_MAX_TTL;
             } else {
-                return Math.max(ttl, LOGGED_PLAYER_VARIABLES_MAX_TTL);
-            }
-        } else if (!this.isLogged && ANONYMOUS_PLAYER_VARIABLES_MAX_TTL >= 0) {
-            if (ttl === undefined) {
-                return ANONYMOUS_PLAYER_VARIABLES_MAX_TTL;
-            } else {
-                return Math.max(ttl, LOGGED_PLAYER_VARIABLES_MAX_TTL);
+                return Math.max(ttl, PLAYER_VARIABLES_MAX_TTL);
             }
         }
 
@@ -130,20 +124,20 @@ export class PlayerVariables {
 
         const expire = ttl === undefined ? undefined : new Date().getTime() + ttl * 1000;
 
-        if (this.maxExpireWorld !== undefined) {
-            if (expire === undefined) {
-                this.maxExpireWorld = undefined;
-            } else {
-                this.maxExpireWorld = Math.max(this.maxExpireWorld, expire);
-            }
-        }
-
         this.worldVariables.set(key, {
             value,
             isPublic,
         });
         this.allVariables = undefined;
-        if (persist) {
+        if (persist && this.isLogged) {
+            if (this.maxExpireWorld !== undefined) {
+                if (expire === undefined) {
+                    this.maxExpireWorld = undefined;
+                } else {
+                    this.maxExpireWorld = Math.max(this.maxExpireWorld, expire);
+                }
+            }
+
             await this.repository.saveVariable(this.worldKey, key, value, isPublic, expire, this.maxExpireWorld);
         }
     }

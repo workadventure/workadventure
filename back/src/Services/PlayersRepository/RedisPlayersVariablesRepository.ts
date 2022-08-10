@@ -19,23 +19,6 @@ import { RedisClient } from "../RedisClient";
 export class RedisPlayersVariablesRepository implements PlayersVariablesRepositoryInterface {
     constructor(private redisClient: RedisClient) {}
 
-    // FIXME: SCAN TAKES O(N). BAAAAAD!
-    // So we need to use HSET... maybe store TTL inside?
-    // This means scanning regularly to remove old keys?
-    /*private async scanAll(pattern: string) {
-        const found = [];
-        let cursor = '0';
-
-        do {
-            const reply = await this.scan(cursor, 'MATCH', pattern);
-
-            cursor = reply[0];
-            found.push(...reply[1]);
-        } while (cursor !== '0');
-
-        return found;
-    }*/
-
     /**
      * Load all variables for a user in a room / world.
      */

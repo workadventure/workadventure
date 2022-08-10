@@ -12,7 +12,9 @@ export class PlayerVariablesManager {
     constructor(
         private roomConnection: RoomConnection,
         private eventDispatcher: IframeEventDispatcher,
-        private _variables: Map<string, unknown>
+        private _variables: Map<string, unknown>,
+        private roomId: string,
+        private worldId: string | undefined,
     ) {
         iframeListener.registerAnswerer("setPlayerVariable", (event, source) => {
             this.setVariable(event, source);
@@ -36,13 +38,20 @@ export class PlayerVariablesManager {
         this._variables.set(key, event.value);
 
         // If we are not logged
-        if (localUserStore.getAuthToken() === null) {
-            // FIXME: save TTL too!
-            // FIXME: save TTL too!
-            // FIXME: save TTL too!
-            // FIXME: save public / private!
-            // FIXME: user properties are relative to room or to world!!!
-            localUserStore.setUserProperty(event.key, event.value);
+        if (localUserStore.isLogged() === false && event.persist) {
+            let context: string;
+            if (event.scope === 'room') {
+                context = this.roomId;
+            } else if (this.worldId) {
+                context = this.worldId;
+            } else {
+                context = this.roomId;
+            }
+            let expire: number | undefined;
+            if (event.ttl) {
+                expire = new Date().getTime() + event.ttl * 1000;
+            }
+            localUserStore.setUserProperty(event.key, event.value, context, event.public, expire);
         }
 
         // Dispatch to the room connection.

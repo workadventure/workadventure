@@ -3,6 +3,7 @@ import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
+import {oidcLogin, oidcLogout} from "./utils/oidc";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page }) => {
@@ -93,13 +94,7 @@ test.describe('API WA.players', () => {
     await page2.close();
   });
 
-  test('Test variable persistence.', async ({ page }) => {
-    await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
-    );
-
-    await login(page, "Alice");
-
+  const runPersistenceTest = async (page: Page) => {
     await evaluateScript(page, async () => {
 
 
@@ -230,6 +225,31 @@ test.describe('API WA.players', () => {
 
     await page2.close();
 
+  };
+
+
+  test('Test variable persistence for anonymous users.', async ({ page }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    await runPersistenceTest(page);
+  });
+
+  test('Test variable persistence for logged users.', async ({ page }) => {
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, "Alice");
+
+    await oidcLogin(page);
+
+    await runPersistenceTest(page);
+
+    await oidcLogout(page);
   });
 
 

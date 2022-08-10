@@ -24,14 +24,10 @@ export const EJABBERD_URI = process.env.EJABBERD_URI || "";
 export const EJABBERD_DOMAIN = process.env.EJABBERD_DOMAIN || "";
 export const EJABBERD_USER = process.env.EJABBERD_USER || "";
 export const EJABBERD_PASSWORD = process.env.EJABBERD_PASSWORD || "";
-// The maximum time to leave of player variables for anonymous players (3 months by default).
+// The maximum time to live of player variables for logged players, expressed in seconds (no limit by default).
 // Use "-1" for infinity.
-// 7776000 seconds = 3 months
-export const ANONYMOUS_PLAYER_VARIABLES_MAX_TTL =
-    parseInt(process.env.ANONYMOUS_PLAYER_VARIABLES_MAX_TTL || "7776000") || 7776000;
-// The maximum time to leave of player variables for logged players (no limit by default).
-// Use "-1" for infinity.
-export const LOGGED_PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.LOGGED_PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
+// Note that anonymous players don't have any TTL limit because their data is stored in local storage, not in Redis database.
+export const PLAYER_VARIABLES_MAX_TTL = parseInt(process.env.PLAYER_VARIABLES_MAX_TTL || "-1") || -1;
 
 export {
     MINIMUM_DISTANCE,

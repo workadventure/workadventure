@@ -104,8 +104,7 @@ services:
       - STORE_VARIABLES_FOR_LOCAL_MAPS
       - REDIS_HOST=redis
       - PROMETHEUS_AUTHORIZATION_TOKEN
-      - ANONYMOUS_PLAYER_VARIABLES_MAX_TTL
-      - LOGGED_PLAYER_VARIABLES_MAX_TTL
+      - PLAYER_VARIABLES_MAX_TTL
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"

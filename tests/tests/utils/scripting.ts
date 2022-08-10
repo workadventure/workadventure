@@ -47,7 +47,7 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
         }
     });*/
 
-    return (await getScriptFrame(page, title ?? "")).evaluate<R, Arg>(pageFunction, arg);
+    return frame.evaluate<R, Arg>(pageFunction, arg);
 }
 
 export async function getScriptFrame(page: Page, title: string) : Promise<Frame> {
