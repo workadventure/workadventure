@@ -2,7 +2,7 @@ import { AdminBannedData, FetchMemberDataByUuidResponse } from "./AdminApi";
 import { AdminInterface } from "./AdminInterface";
 import { MapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { RoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
-import { DISABLE_ANONYMOUS, START_ROOM_URL } from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS, PUBLIC_MAP_STORAGE_URL, START_ROOM_URL } from "../Enum/EnvironmentVariable";
 import { AdminApiData } from "../Messages/JsonMessages/AdminApiData";
 import { localWokaService } from "./LocalWokaService";
 
@@ -45,7 +45,7 @@ class LocalAdmin implements AdminInterface {
         let canEdit = false;
         let match = /\/~\/[^/]+\/(.+)/.exec(roomUrl.pathname);
         if (match) {
-            mapUrl = roomUrl.protocol + "//" + "map-storage.workadventure.localhost/" + match[1];
+            mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
             canEdit = true;
         } else {
             match = /\/_\/[^/]+\/(.+)/.exec(roomUrl.pathname);

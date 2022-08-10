@@ -37,6 +37,7 @@ import {
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
+    PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
 } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
@@ -594,7 +595,7 @@ export class GameRoom {
             let canEdit = false;
             const match = /\/~\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
             if (match) {
-                mapUrl = roomUrlObj.protocol + "//" + "map-storage.workadventure.localhost/" + match[1];
+                mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
                 canEdit = true;
             } else {
                 const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);

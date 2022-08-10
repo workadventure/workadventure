@@ -119,6 +119,7 @@ services:
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
       # Only used if you set up a JWT authentication mechanism in Ejabberd
@@ -181,6 +182,7 @@ services:
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       MAP_STORAGE_URL: "map-storage:50053"
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
     volumes:
       - ./back:/usr/src/app
     labels:
