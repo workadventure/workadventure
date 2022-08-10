@@ -107,6 +107,7 @@
         "SECRET_JITSI_KEY": env.SECRET_JITSI_KEY,
         "TURN_SERVER": "turn:coturn.workadventu.re:443,turns:coturn.workadventu.re:443",
         "JITSI_PRIVATE_MODE": if env.SECRET_JITSI_KEY != '' then "true" else "false",
+        "ENABLE_FEATURE_MAP_EDITOR":"true",
         "ICON_URL": "//icon-"+url,
         "CHAT_URL": "//chat-"+url,
       } + (if adminUrl != null then {
