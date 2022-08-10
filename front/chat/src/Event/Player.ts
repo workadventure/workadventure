@@ -1,19 +1,19 @@
 import { z } from "zod";
 
 export const isPlayer = z.object({
-  userId: z.optional(z.number()),
-  name: z.optional(z.string()),
-  characterLayers: z.object({
-    id: z.optional(z.string()),
-    img: z.optional(z.string()),
-    level: z.optional(z.number()),
-  }),
-  visitCardUrl: z.optional(z.string()),
-  companion: z.optional(z.string()),
-  userUuid: z.optional(z.number()),
-  availabilityStatus: z.optional(z.string()),
-  color: z.optional(z.string()),
-  outlineColor: z.optional(z.string()),
+    userId: z.optional(z.number()),
+    name: z.optional(z.string()),
+    characterLayers: z.object({
+        id: z.optional(z.string()),
+        img: z.optional(z.string()),
+        level: z.optional(z.number()),
+    }),
+    visitCardUrl: z.optional(z.string()),
+    companion: z.optional(z.string()),
+    userUuid: z.optional(z.number()),
+    availabilityStatus: z.optional(z.string()),
+    color: z.optional(z.string()),
+    outlineColor: z.optional(z.string()),
 });
 
 /**
