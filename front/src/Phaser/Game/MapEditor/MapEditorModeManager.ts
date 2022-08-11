@@ -76,6 +76,7 @@ export class MapEditorModeManager {
                 break;
             }
             default: {
+                const _exhaustiveCheck: never = commandConfig.type;
                 return;
             }
         }
