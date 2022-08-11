@@ -40,7 +40,7 @@
 
     .nametag-screenshare-container,
     {
-      @apply tw-h-[41vw] tw-w-[65vw];
+      @apply tw-h-[41.25vw] tw-w-[65vw];
     }
 
     .report-ban-screenshare-container{
@@ -146,7 +146,7 @@
 
 //* NAMETAGS */
 .nametag-text {
-  @apply tw-font-semibold tw-text-xxs tw-not-italic tw-break-words tw-leading-3;
+  @apply tw-font-semibold tw-text-xs tw-leading-[0.875rem] tw-not-italic tw-break-words;
 }
 
 .nametag-shape {

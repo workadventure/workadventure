@@ -77,7 +77,7 @@
             <i class="tw-flex">
                 <span
                         style="background-color: {backGroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-3 tw-max-h-8"
+                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8"
                 >{name}</span
                 >
             </i>
