@@ -109,6 +109,7 @@ class ConnectionManager {
             /** @deprecated */
             throw new Error("This endpoint is deprecated");
         }
+
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();

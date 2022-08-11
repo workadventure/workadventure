@@ -37,6 +37,7 @@ import {
     ENABLE_FEATURE_MAP_EDITOR,
     JITSI_ISS,
     JITSI_URL,
+    PUBLIC_MAP_STORAGE_URL,
     SECRET_JITSI_KEY,
 } from "../Enum/EnvironmentVariable";
 import { LocalUrlError } from "../Services/LocalUrlError";
@@ -601,16 +602,24 @@ export class GameRoom implements BrothersFinder {
         if (!ADMIN_API_URL) {
             const roomUrlObj = new URL(roomUrl);
 
-            const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
-            if (!match) {
-                console.error("Unexpected room URL", roomUrl);
-                throw new Error('Unexpected room URL "' + roomUrl + '"');
+            let mapUrl = "";
+            let canEdit = false;
+            const match = /\/~\/(.+)/.exec(roomUrlObj.pathname);
+            if (match) {
+                mapUrl = `${PUBLIC_MAP_STORAGE_URL}/${match[1]}`;
+                canEdit = true;
+            } else {
+                const match = /\/_\/[^/]+\/(.+)/.exec(roomUrlObj.pathname);
+                if (!match) {
+                    console.error("Unexpected room URL", roomUrl);
+                    throw new Error('Unexpected room URL "' + roomUrl + '"');
+                }
+
+                mapUrl = roomUrlObj.protocol + "//" + match[1];
             }
-
-            const mapUrl = roomUrlObj.protocol + "//" + match[1];
-
             return {
                 mapUrl,
+                canEdit,
                 authenticationMandatory: null,
                 group: null,
                 mucRooms: null,
