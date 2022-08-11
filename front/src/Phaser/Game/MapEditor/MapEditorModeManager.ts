@@ -1,4 +1,4 @@
-import { CommandPayload, CommandType } from "@workadventure/map-editor-types";
+import { CommandConfig } from "@workadventure/map-editor-types";
 import { UpdateAreaCommand } from "@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand";
 import { Command } from "@workadventure/map-editor-types/src/Commands/Command";
 import { Unsubscriber } from "svelte/store";
@@ -65,21 +65,21 @@ export class MapEditorModeManager {
         this.subscribeToGameMapEvents();
     }
 
-    public executeCommand(type: CommandType, payload: CommandPayload): void {
+    public executeCommand(commandConfig: CommandConfig): void {
         let command: Command;
-        switch (type) {
-            case CommandType.UpdateAreaCommand: {
-                command = new UpdateAreaCommand(this.scene.getGameMap(), payload);
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
                 command.execute();
                 // this should not be called with every change. Use some sort of debounce
-                this.scene.connection?.emitMapEditorModifyArea(payload.config);
+                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
                 break;
             }
             default: {
                 return;
             }
         }
-        this.emitMapEditorUpdate(type, payload);
+        this.emitMapEditorUpdate(commandConfig);
         // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
         if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
             this.commandsHistory.splice(this.currentCommandIndex + 1);
@@ -92,9 +92,9 @@ export class MapEditorModeManager {
         if (this.commandsHistory.length === 0 || this.currentCommandIndex === -1) {
             return;
         }
-        const [type, payload] = this.commandsHistory[this.currentCommandIndex].undo();
+        const command = this.commandsHistory[this.currentCommandIndex].undo();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(type, payload);
+        this.emitMapEditorUpdate(command);
         this.currentCommandIndex -= 1;
     }
 
@@ -102,9 +102,9 @@ export class MapEditorModeManager {
         if (this.commandsHistory.length === 0 || this.currentCommandIndex === this.commandsHistory.length - 1) {
             return;
         }
-        const [type, payload] = this.commandsHistory[this.currentCommandIndex + 1].execute();
+        const command = this.commandsHistory[this.currentCommandIndex + 1].execute();
         // this should not be called with every change. Use some sort of debounce
-        this.emitMapEditorUpdate(type, payload);
+        this.emitMapEditorUpdate(command);
         this.currentCommandIndex += 1;
     }
 
@@ -162,10 +162,10 @@ export class MapEditorModeManager {
         }
     }
 
-    private emitMapEditorUpdate(commandType: CommandType, payload: CommandPayload): void {
-        switch (commandType) {
-            case CommandType.UpdateAreaCommand: {
-                this.scene.connection?.emitMapEditorModifyArea(payload.config);
+    private emitMapEditorUpdate(commandConfig: CommandConfig): void {
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
                 break;
             }
             default: {

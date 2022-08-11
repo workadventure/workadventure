@@ -1,9 +1,10 @@
 import { GameMap } from '../../GameMap/GameMap';
-import { AreaType, CommandPayload, CommandType, ITiledMapRectangleObject } from '../../types';
+import { AreaType, CommandConfig, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 
-export interface UpdateAreaCommandPayload {
-    config: ITiledMapRectangleObject;
+export interface UpdateAreaCommandConfig {
+    type: "UpdateAreaCommand";
+    areaObjectConfig: ITiledMapRectangleObject;
 }
 
 export class UpdateAreaCommand extends Command {
@@ -13,24 +14,24 @@ export class UpdateAreaCommand extends Command {
     // TODO: Get GameMap as a Phaserless type from the lib
     private gameMap: GameMap;
     
-    constructor(gameMap: GameMap, payload: UpdateAreaCommandPayload) {
+    constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {
         super();
         this.gameMap = gameMap;
-        const oldConfig = gameMap.getGameMapAreas().getArea(payload.config.id, AreaType.Static);
+        const oldConfig = gameMap.getGameMapAreas().getArea(config.areaObjectConfig.id, AreaType.Static);
         if (!oldConfig) {
             throw new Error('Trying to update a non existing Area!');
         }
-        this.newConfig = { ...payload.config };
+        this.newConfig = { ...config.areaObjectConfig };
         this.oldConfig = { ...oldConfig };
     }
 
-    public execute(): [CommandType, CommandPayload] {
+    public execute(): UpdateAreaCommandConfig {
         this.gameMap.getGameMapAreas().updateAreaById(this.newConfig.id, AreaType.Static, this.newConfig);
-        return [CommandType.UpdateAreaCommand, { config: this.newConfig }];
+        return { type: 'UpdateAreaCommand', areaObjectConfig: this.newConfig };
     }
 
-    public undo(): [CommandType, CommandPayload] {
+    public undo(): UpdateAreaCommandConfig {
         this.gameMap.getGameMapAreas().updateAreaById(this.oldConfig.id, AreaType.Static, this.oldConfig);
-        return [CommandType.UpdateAreaCommand, { config: this.oldConfig }];
+        return { type: 'UpdateAreaCommand', areaObjectConfig: this.oldConfig };
     }
 }

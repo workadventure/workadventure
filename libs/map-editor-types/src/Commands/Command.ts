@@ -1,8 +1,8 @@
-import { CommandPayload, CommandType } from '../types';
+import { CommandPayload, CommandConfig } from '../types';
 
 export abstract class Command {
     constructor() {}
 
-    public abstract execute(): [CommandType, CommandPayload];
-    public abstract undo(): [CommandType, CommandPayload];
+    public abstract execute(): CommandConfig;
+    public abstract undo(): CommandConfig;
 }
