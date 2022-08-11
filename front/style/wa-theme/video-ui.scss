@@ -152,3 +152,10 @@
 .nametag-shape {
   @apply tw-rounded-tr-lg tw-rounded-bl tw-overflow-auto tw-max-w-full;
 }
+
+//* MY CAMERA */
+.my-webcam-container,
+.voice-meter-my-container {
+  @apply tw-flex tw-h-24 tw-w-44 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
+  @apply tw-absolute tw-m-auto tw-left-auto tw-right-2 md:tw-right-[2vw] lg:tw-right-[4vw] xl:tw-right-[5vw] 2xl:tw-right-[9vw] tw-bottom-24 lg:tw-bottom-2;
+}
