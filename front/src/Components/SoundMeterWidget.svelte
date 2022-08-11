@@ -4,6 +4,18 @@
     export let volume = 0;
     let display = true;
     export let classcss: string;
+    export let barColor = "white";
+
+    let barClass: string;
+
+    if(barColor && barColor === "blue"){
+        barClass = "tw-bg-light-blue"
+    }else if(barColor && barColor === "black"){
+        barClass = "tw-bg-black"
+    }
+    else {
+        barClass = "tw-bg-white"
+    }
 </script>
 
 <div
@@ -12,7 +24,7 @@
     class:active={display}
 >
     <div
-        class=" tw-h-1/5 voice-meter-bar"
+        class=" tw-h-1/5 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-[0.3]={volume >= 35 && volume < 50}
         class:tw-scale-y-75={volume >= 50 && volume < 65}
@@ -21,7 +33,7 @@
         class:tw-scale-y-135={volume > 95}
     />
     <div
-        class="tw-h-1/2 voice-meter-bar"
+        class="tw-h-1/2 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-35={volume >= 35 && volume < 50}
         class:tw-scale-y-95={volume >= 50 && volume < 65}
@@ -30,7 +42,7 @@
         class:tw-scale-y-135={volume > 80}
     />
     <div
-        class="tw-h-2/5 voice-meter-bar"
+        class="tw-h-2/5 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-75={volume >= 35 && volume < 50}
         class:tw-scale-y-80={volume >= 50 && volume < 65}
@@ -39,7 +51,7 @@
         class:tw-scale-y-135={volume > 95}
     />
     <div
-        class="tw-h-3/5 voice-meter-bar"
+        class="tw-h-3/5 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-[0.4]={volume >= 35 && volume < 50}
         class:tw-scale-y-80={volume >= 50 && volume < 65}
@@ -48,7 +60,7 @@
         class:tw-scale-y-135={volume > 95}
     />
     <div
-        class="tw-h-3/5 voice-meter-bar"
+        class="tw-h-3/5 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-35={volume >= 35 && volume < 50}
         class:tw-scale-y-75={volume >= 50 && volume < 65}
@@ -57,7 +69,7 @@
         class:tw-scale-y-135={volume > 95}
     />
     <div
-        class="tw-h-1/2 voice-meter-bar"
+        class="tw-h-1/2 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-[0.4]={volume >= 35 && volume < 50}
         class:tw-scale-y-80={volume >= 50 && volume < 65}
@@ -66,7 +78,7 @@
         class:tw-scale-y-135={volume > 95}
     />
     <div
-        class="tw-h-1/5 voice-meter-bar"
+        class="tw-h-1/5 voice-meter-bar {barClass}"
         class:scale-y-min={volume < 35}
         class:tw-scale-y-35={volume >= 35 && volume < 50}
         class:tw-scale-y-95={volume >= 50 && volume < 65}

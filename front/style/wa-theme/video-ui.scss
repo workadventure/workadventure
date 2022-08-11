@@ -101,8 +101,8 @@
   width: 3rem;
   height: 3rem;
   border-radius: 50%;
-  border: 6px solid #fff;
-  border-color: #fff transparent #fff transparent;
+  border: 6px solid theme('colors.light-blue');
+  border-color: theme('colors.light-blue') transparent theme('colors.light-blue') transparent;
   animation: connecting-spinner 1.2s linear infinite;
 }
 
@@ -141,10 +141,14 @@
 
 //* VOICE METER */
 .voice-meter-bar {
-  @apply tw-rounded tw-flex tw-w-1 md:tw-w-0.5 lg:tw-w-1 tw-bg-white tw-drop-shadow-lg tw-transition-transform;
+  @apply tw-rounded tw-flex tw-w-1 md:tw-w-0.5 lg:tw-w-1 tw-drop-shadow-lg tw-transition-transform;
 }
 
 //* NAMETAGS */
 .nametag-text {
   @apply tw-font-semibold tw-text-xxs tw-not-italic tw-break-words tw-leading-3;
+}
+
+.nametag-shape {
+  @apply tw-rounded-tr-lg tw-rounded-bl tw-overflow-auto tw-max-w-full;
 }

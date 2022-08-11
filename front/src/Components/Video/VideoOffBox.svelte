@@ -57,6 +57,7 @@
             <SoundMeterWidget
                     volume={$volumeStore}
                     classcss="voice-meter-cam-off tw-relative tw-mr-0 tw-ml-auto tw-translate-x-0 tw-transition-transform"
+                    barColor={textColor}
             />
         {:else}
             <img

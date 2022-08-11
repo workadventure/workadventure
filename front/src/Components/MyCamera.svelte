@@ -58,7 +58,7 @@
 "
         >
             <video
-                class="tw-flex tw-h-full tw-max-w-full tw-m-auto"
+                class="tw-flex tw-h-full tw-max-w-full tw-m-auto tw-rounded"
                 use:srcObject={stream}
                 autoplay
                 muted
@@ -70,7 +70,7 @@
         tw-m-auto tw-left-auto tw-right-2 tw-bottom-24 md:tw-bottom-4 tw-justify-end tw-z-[251] tw-pr-2
 "
         >
-            <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" />
+            <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue"/>
         </div>
     {/if}
 </div>

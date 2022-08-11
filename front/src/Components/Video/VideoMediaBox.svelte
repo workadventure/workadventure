@@ -12,7 +12,7 @@
     import {onMount} from "svelte";
     import {isMediaBreakpointOnly} from "../../Utils/BreakpointsUtils";
     import BanReportBox from "./BanReportBox.svelte";
-    import microphoneOffImg from "../images/microphone-off.png";
+    import microphoneOffImg from "../images/microphone-off-blue.png";
 
     export let clickable = false;
 
@@ -77,7 +77,7 @@
             <i class="tw-flex">
                 <span
                         style="background-color: {backGroundColor}; color: {textColor};"
-                        class="nametag-text tw-rounded-tr-lg tw-pr-3 tw-pl-5 tw-h-3 tw-max-h-8 tw-overflow-auto tw-max-w-full "
+                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-3 tw-max-h-8"
                 >{name}</span
                 >
             </i>
@@ -91,7 +91,7 @@
             <div
                     class="voice-meter-webcam-container media-box-camera-off-size tw-flex tw-flex-col tw-absolute tw-items-end tw-pr-2"
             >
-                <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute"/>
+                <SoundMeterWidget volume={$volumeStore} classcss="tw-absolute" barColor="blue"/>
             </div>
         {:else}
             <div
