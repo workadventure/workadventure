@@ -205,12 +205,10 @@ Persisted variables can have a **Time to live** (TTL):
 The TTL (expressed in seconds) is the time after which the stored value will be destroyed.
 TTL cannot be set on transient variables.
 
-// TODO: make sure we emit an error if we try to set a TTL on a non persisted variable.
-
 {.alert.alert-info}
 Depending on the server you are using, the server might itself decide of a maximum TTL for
-player variables. So far, WorkAdventure SAAS version has no maximum TTL set.
-
+player variables. So far, WorkAdventure SAAS version has no maximum TTL set. However, please note you should
+probably not use player variables for sensitive / important information.
 
 **Scope:**
 
@@ -221,26 +219,53 @@ A player variable can have 2 scopes:
   of this world.
 
 
-
-// TODO: STORE VARIABLES LOCALLY FOR ANONYMOUS PLAYERS
 {.alert.alert-info}
-In the future, player-related variables will be stored on the WorkAdventure server if the current player is logged.
+Player variables can be stored in 2 different places. If the player is logged, the player variables are stored on
+the WorkAdventure server. If the player is not logged, the player variables are stored in local storage (so in the
+player's browser).
 
 
-### Setting a property
-A player property can be set simply by assigning a value.
+### Setting a player variable
+A player variable can be set simply by assigning a value.
 
 Example:
 ```javascript
-WA.player.state.toto = "value" //will set the "toto" key to "value"
+WA.player.state.foo = "value" //will set the "foo" key to "value". By default, variable is transient and private.
 ```
 
-### Reading a variable 
+If you want to set some options, you will need to use the `saveVariable` function:
+
+```typescript
+WA.player.state.saveVariable(
+    key: string,
+    value: unknown,
+    options?: {
+        public?: boolean;
+        persist?: boolean;
+        ttl?: number;
+        scope?: "world" | "room";
+    }
+): Promise<void>;
+```
+
+For instance, setting a variable shared with other players, that is accessible from any rooms of the current world
+with a time to live of one day:
+
+```javascript
+WA.player.state.saveVariable("foo", "value", {
+  public: true,
+  persist: true,
+  ttl: 24 * 3600,
+  scope: "world",
+});
+```
+
+### Reading a player variable 
 A player variable can be read by calling its key from the player's state. 
 
 Example:
 ```javascript
-WA.player.state.toto //will retrieve the variable
+WA.player.state.foo //will retrieve the variable
 ```
 
 ### Listening to a player variable change

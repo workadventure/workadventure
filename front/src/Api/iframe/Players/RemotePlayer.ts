@@ -5,16 +5,37 @@ import { PlayerPosition } from "../../Events/PlayerPosition";
 export const remotePlayers = new Map<number, RemotePlayer>();
 
 export interface RemotePlayerInterface {
+    /**
+     * A unique ID for this player. Each character on the map has a unique ID
+     */
     readonly id: number;
+    /**
+     * The displayed name for this player
+     */
     readonly name: string;
+    /**
+     * A unique ID for the user. Unlike the "id", 2 characters can have the same UUID if they belong to the same user
+     * (i.e. if the same user logged twice using 2 different tabs)
+     */
     readonly uuid: string;
     /*get availabilityStatus();*/
+
+    /**
+     * The color of the outline around the player's name
+     */
     readonly outlineColor: number | undefined;
+
+    /**
+     * The position of the current player, expressed in game pixels, relative to the top - left of the map.
+     */
     readonly position: PlayerPosition;
     /**
      * A stream updated with the position of this current player.
      */
     readonly position$: Observable<PlayerPosition>;
+    /**
+     * An object storing players variables
+     */
     readonly state: ReadOnlyState;
 }
 

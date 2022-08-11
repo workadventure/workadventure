@@ -26,6 +26,13 @@ export class WorkadventurePlayerStateCommands extends AbstractWorkadventureState
             scope?: "world" | "room";
         }
     ): Promise<void> {
+        if (options && options.ttl !== undefined && !options.persist) {
+            throw new Error("A variable that has a ttl set must be persisted with 'persist = true'");
+        }
+        if (options && options.scope === "world" && !options.persist) {
+            throw new Error("A variable that has a 'world' scope must be persisted with 'persist = true'");
+        }
+
         this.variables.set(key, value);
         return queryWorkadventure({
             type: "setPlayerVariable",

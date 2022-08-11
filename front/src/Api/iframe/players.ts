@@ -99,7 +99,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * ```ts
      * await WA.players.enableTracking({
      *     trackPlayers: true, // Required to use "onPlayerEnters", "onPlayerLeaves", "list" and "get"
-     *     trackMovement: true, // Required to get the player position and use "onPlayersMove"
+     *     trackMovement: true, // Required to get the player position and use "onPlayerMoves"
      * })
      * ```
      *
@@ -190,13 +190,13 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * Usage:
      *
      * ```
-     * WA.players.onPlayersMove.subscribe(({ player, newPosition, oldPosition }) => { doStuff(); });
+     * WA.players.onPlayerMoves.subscribe(({ player, newPosition, oldPosition }) => { doStuff(); });
      * ```
      */
-    public get onPlayersMove(): Observable<RemotePlayerMoved> {
+    public get onPlayerMoves(): Observable<RemotePlayerMoved> {
         if (!this.trackingMovement) {
             throw new Error(
-                "Cannot call WA.players.onPlayersMove(). You forgot to call WA.players.enableTracking() first."
+                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.enableTracking() first."
             );
         }
         return playersMovedStream;

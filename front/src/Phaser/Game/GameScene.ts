@@ -913,7 +913,7 @@ export class GameScene extends DirtyScene {
                     this.playersEventDispatcher,
                     playerVariables,
                     this.room.id,
-                    this.room.group
+                    this.room.group ?? undefined
                 );
 
                 this.connectionAnswerPromiseDeferred.resolve(onConnect.room);

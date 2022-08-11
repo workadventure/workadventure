@@ -38,7 +38,7 @@
                     document.getElementById("events").innerText += "User left: " + remotePlayer.name + "\n";
                 });
 
-                WA.players.onPlayersMove.subscribe(({ player, newPosition, oldPosition }) => {
+                WA.players.onPlayerMoves.subscribe(({ player, newPosition, oldPosition }) => {
                     document.getElementById("events").innerText += `User : ${player.name} moved from (${oldPosition.x}, ${oldPosition.y}) to (${newPosition.x}, ${newPosition.y})\n`;
                 });
 
