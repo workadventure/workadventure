@@ -1,4 +1,4 @@
-import { CommandPayload, CommandConfig } from '../types';
+import { CommandConfig } from '../types';
 
 export abstract class Command {
     constructor() {}
