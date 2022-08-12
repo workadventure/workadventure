@@ -126,6 +126,9 @@ export class RemotePlayer implements RemotePlayerInterface {
 
     public destroy() {
         this._position$.complete();
+        for (const subject of this._variablesSubjects.values()) {
+            subject.complete();
+        }
     }
 
     public setVariable(name: string, value: unknown): void {

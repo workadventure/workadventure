@@ -295,41 +295,44 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/openid-callback", async (req, res) => {
-            const playUri = (req.cookies as Record<string, string>).playUri;
-            try {
-                if (!playUri) {
-                    throw new Error("Missing playUri in cookies");
-                }
-                //user have not token created, check data on hydra and create token
-                let userInfo = null;
+        this.app.get("/openid-callback", (req, res) => {
+            (async (): Promise<void> => {
+                const playUri = (req.cookies as Record<string, string>).playUri;
                 try {
-                    userInfo = await openIDClient.getUserInfo(req, res);
-                } catch (err) {
-                    //if no access on openid provider, return error
-                    console.error("An error occurred while connecting to OpenID Provider => ", err);
-                    res.status(500);
-                    res.send("An error occurred while connecting to OpenID Provider");
-                    return;
-                }
-                const email = userInfo.email || userInfo.sub;
-                if (!email) {
-                    throw new Error("No email in the response");
-                }
-                const authToken = jwtTokenManager.createAuthToken(
-                    email,
-                    userInfo?.access_token,
-                    userInfo?.username,
-                    userInfo?.locale
-                );
+                    if (!playUri) {
+                        throw new Error("Missing playUri in cookies");
+                    }
+                    //user have not token created, check data on hydra and create token
+                    let userInfo = null;
+                    try {
+                        userInfo = await openIDClient.getUserInfo(req, res);
+                    } catch (err) {
+                        //if no access on openid provider, return error
+                        console.error("An error occurred while connecting to OpenID Provider => ", err);
+                        res.status(500);
+                        res.send("An error occurred while connecting to OpenID Provider");
+                        return;
+                    }
+                    const email = userInfo.email || userInfo.sub;
+                    if (!email) {
+                        throw new Error("No email in the response");
+                    }
+                    const authToken = jwtTokenManager.createAuthToken(
+                        email,
+                        userInfo?.access_token,
+                        userInfo?.username,
+                        userInfo?.locale
+                    );
 
-                res.clearCookie("playUri");
-                // FIXME: possibly redirect to Admin instead.
-                return res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
-            } catch (e) {
-                console.error("openIDCallback => ERROR", e);
-                return this.castErrorToResponse(e, res);
-            }
+                    res.clearCookie("playUri");
+                    // FIXME: possibly redirect to Admin instead.
+                    res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+                    return;
+                } catch (e) {
+                    console.error("openIDCallback => ERROR", e);
+                    return this.castErrorToResponse(e, res);
+                }
+            })().catch((e) => console.error(e));
         });
     }
 
