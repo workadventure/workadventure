@@ -152,13 +152,16 @@
         navigator.clipboard
             .writeText(message.body)
             .then(() => {
-                e.target.classList.add("tw-text-pop-green");
-                const originalText = e.target.innerHTML;
-                e.target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
-                setTimeout(() => {
-                    e.target.innerHTML = originalText;
-                    e.target.classList.remove("tw-text-pop-green");
-                }, 2_000);
+                const target = e.target as HTMLElement;
+                if(target) {
+                    target.classList.add("tw-text-pop-green");
+                    const originalText = target.innerHTML;
+                    target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
+                    setTimeout(() => {
+                        target.innerHTML = originalText;
+                        target.classList.remove("tw-text-pop-green");
+                    }, 2_000);
+                }
             })
             .catch((err) => {
                 console.error("error copy message => ", err);
@@ -398,7 +401,7 @@
                                                 on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
                                             >
                                                 {emojiStr}
-                                                {#if message.targetMessageReact.get(emojiStr) > 1}
+                                                {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
                                                     {message.targetMessageReact.get(emojiStr)}
                                                 {/if}
                                             </span>
@@ -411,7 +414,7 @@
                             {#if message.targetMessageReply}
                                 <div
                                     class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
-                                    on:click={() => scrollToMessageId(message.targetMessageReply.id)}
+                                    on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? '')}
                                 >
                                     <div class="icon-replied">
                                         <CornerLeftUpIcon size="14" />
