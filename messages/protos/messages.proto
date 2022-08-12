@@ -716,4 +716,5 @@ service RoomManager {
  */
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
+  rpc handleEditMapMessage(EditMapMessage) returns (EmptyMessage);
 }
