@@ -1,4 +1,6 @@
 // copy of Electron.SourcesOptions to avoid Electron dependency in front
+import {ipcRenderer} from "electron";
+
 export interface SourcesOptions {
     types: string[];
     thumbnailSize?: { height: number; width: number };
@@ -18,4 +20,7 @@ export type WorkAdventureDesktopApi = {
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getDesktopCapturerSources: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
+    webRtcReceived: (name: string) => void;
+    connectToOverlay: (messagePort: MessagePort) => void;
+    streamVideo: (mediaStream: MediaStream) => void;
 };

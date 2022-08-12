@@ -3,11 +3,20 @@ import { svelte } from "@sveltejs/vite-plugin-svelte";
 import WindiCSS from "vite-plugin-windicss";
 import { svelteSVG } from "rollup-plugin-svelte-svg";
 import path from "path";
+import { fileURLToPath, URL } from "url";
 
 export default defineConfig({
     resolve: {
         alias: {
             "~": `${path.resolve(__dirname, "src")}/`,
+        },
+    },
+    build: {
+        rollupOptions: {
+            input: {
+                main: fileURLToPath(new URL('./index.html', import.meta.url)),
+                overlay: fileURLToPath(new URL('./overlay.html', import.meta.url)),
+            },
         },
     },
     plugins: [

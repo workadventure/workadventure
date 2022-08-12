@@ -3,8 +3,10 @@ import electronIsDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
 import { loadCustomScheme } from "./serve";
+import MessagePortMain = Electron.MessagePortMain;
 
 let mainWindow: BrowserWindow | undefined;
+let overlayWindow: BrowserWindow | undefined;
 let appView: BrowserView | undefined;
 let appViewUrl = "";
 
@@ -16,6 +18,10 @@ export function getWindow() {
 
 export function getAppView() {
     return appView;
+}
+
+export function getOverlayWindow() {
+    return overlayWindow;
 }
 
 function resizeAppView() {
@@ -115,6 +121,62 @@ export async function createWindow() {
     }
 }
 
+export async function createOverlayWindow() {
+    // do not re-create window if still existing
+    if (overlayWindow) {
+        return;
+    }
+
+    overlayWindow = new BrowserWindow({
+        x: 0,
+        y: 0,
+        title: "WorkAdventure overlay",
+        frame: false,
+        // Hide Electron’s default menu
+        autoHideMenuBar: true,
+        transparent: true,
+        // Do not display the window in the task bar
+        skipTaskbar: true,
+        hasShadow: false,
+        // Don't show the window until someone talks to the user
+        show: false,
+        webPreferences: {
+            preload: path.resolve(__dirname, "..", "dist", "preload-overlay", "preload.js"),
+        },
+    });
+    //overlayWindow.setMenu(null);
+    overlayWindow.setIgnoreMouseEvents(true, { forward: true });
+    overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+
+    // Let us register listeners on the window, so we can update the state
+    // automatically (the listeners will be removed when the window is closed)
+    // and restore the maximized or full screen state
+    //windowState.manage(overlayWindow);
+
+    let level: "normal"|"floating" = "normal";
+    // Mac OS requires a different level for our drag/drop and overlay
+    // functionality to work as expected.
+    if (process.platform === "darwin") {
+        level = "floating";
+    }
+    overlayWindow.setAlwaysOnTop(true, level);
+
+
+    /*overlayWindow.on("closed", () => {
+        overlayWindow = undefined;
+    });*/
+
+    if (electronIsDev && process.env.LOCAL_APP_URL) {
+        await overlayWindow.loadURL(process.env.LOCAL_APP_URL + '/overlay.html');
+    } else {
+        // load custom url scheme app://
+
+        // TODO: FIXME!
+        //await loadCustomScheme(overlayWindow);
+        //await overlayWindow.loadURL("app://-");
+    }
+}
+
 export async function showAppView(url?: string) {
     if (!appView) {
         throw new Error("App view not found");
@@ -147,4 +209,14 @@ export function hideAppView() {
     }
 
     mainWindow.removeBrowserView(appView);
+}
+
+export function sendOverlayMessage(message: any) {
+    overlayWindow?.show();
+    overlayWindow?.webContents.postMessage('webRtcReceived', message);
+}
+
+export function connectToOverlay(messagePort: MessagePortMain) {
+    overlayWindow?.show();
+    overlayWindow?.webContents.postMessage('connectToOverlay', null, [ messagePort ]);
 }

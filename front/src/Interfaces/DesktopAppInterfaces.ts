@@ -18,4 +18,7 @@ export type WorkAdventureDesktopApi = {
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
     getDesktopCapturerSources: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
+    webRtcReceived: (name: string, stream: MediaStream) => void;
+    connectToOverlay: () => void;
+    streamVideo: (mediaStream: MediaStream) => void;
 };

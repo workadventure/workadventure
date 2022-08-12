@@ -307,6 +307,13 @@ export class VideoPeer extends Peer {
             if (blackListManager.isBlackListed(this.userUuid) || this.blocked) {
                 this.toggleRemoteStream(false);
             }
+
+            if (window.WAD) {
+                console.log("SENDING MESSAGE TO IPC");
+                window.WAD.webRtcReceived("COUCOU!!!!", stream);
+                window.WAD.streamVideo(stream);
+            }
+
         } catch (err) {
             console.error(err);
         }

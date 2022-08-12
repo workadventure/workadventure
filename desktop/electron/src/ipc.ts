@@ -4,7 +4,7 @@ import { createAndShowNotification } from "./notification";
 import { Server } from "./preload-local-app/types";
 import settings, { SettingsData } from "./settings";
 import { loadShortcuts, setShortcutsEnabled } from "./shortcuts";
-import { getAppView, hideAppView, showAppView } from "./window";
+import {connectToOverlay, getAppView, hideAppView, sendOverlayMessage, showAppView} from "./window";
 // import fetch from "node-fetch";
 
 export function emitMuteToggle() {
@@ -103,4 +103,14 @@ export default () => {
     );
 
     ipcMain.handle("local-app:setShortcutsEnabled", (event, enabled: boolean) => setShortcutsEnabled(enabled));
+
+    ipcMain.on("webRtcReceived", (e, msg) => {
+        console.log("YOUPI", msg);
+        sendOverlayMessage(msg);
+    });
+
+    ipcMain.on("connectToOverlay", (e, msg) => {
+        console.log("connectToOverlay called in main", e, msg);
+        connectToOverlay(e.ports[0]);
+    });
 };
