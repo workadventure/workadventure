@@ -37,7 +37,7 @@ npm run headed-test -- tests/[your_test_file.ts]
 Start WorkAdventure with:
 
 ```bash
-docker-compose -f docker-compose.yaml -f docker-compose-oidc.yml -f docker-compose.e2e.yml up -d --build
+docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d --build
 ```
 
 Start the tests with:

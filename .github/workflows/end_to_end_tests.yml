@@ -39,6 +39,9 @@ jobs:
       - name: Display containers state
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
         if: failure()
+      - name: Side-load docker-compose logs in the playwright report
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        if: failure()
       - uses: actions/upload-artifact@v2
         if: always()
         with:
