@@ -47,6 +47,7 @@
     "@nestjs/platform-express": "^8.0.0",
     "@nestjs/serve-static": "^3.0.0",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
+    "@workadventure/map-editor-types": "link:../libs/map-editor-types",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0"
