@@ -153,7 +153,7 @@
             .writeText(message.body)
             .then(() => {
                 const target = e.target as HTMLElement;
-                if(target) {
+                if (target) {
                     target.classList.add("tw-text-pop-green");
                     const originalText = target.innerHTML;
                     target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
@@ -414,7 +414,7 @@
                             {#if message.targetMessageReply}
                                 <div
                                     class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
-                                    on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? '')}
+                                    on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
                                 >
                                     <div class="icon-replied">
                                         <CornerLeftUpIcon size="14" />
