@@ -342,7 +342,7 @@ class LocalUserStore {
 
                         result.set(userKey, {
                             isPublic,
-                            value: JSON.parse(value)
+                            value: JSON.parse(value),
                         });
                     }
                 }
@@ -351,7 +351,13 @@ class LocalUserStore {
         return result;
     }
 
-    setUserProperty(name: string, value: unknown, context: string, isPublic: boolean, expire: number | undefined): void {
+    setUserProperty(
+        name: string,
+        value: unknown,
+        context: string,
+        isPublic: boolean,
+        expire: number | undefined
+    ): void {
         const storedValue =
             (expire !== undefined ? expire : "") + ":" + (isPublic ? "1" : "0") + ":" + JSON.stringify(value);
 

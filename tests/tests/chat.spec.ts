@@ -29,7 +29,7 @@ test.describe('Chat', () => {
 
     //await assertLogMessage(page2, 'Chat fully loaded');
 
-    await openChat(page);
+    await openChat(page2);
 
     await expect(page2.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
 
@@ -39,6 +39,7 @@ test.describe('Chat', () => {
 
 
 async function openChat(page: Page) {
-  await page.click('.bottom-action-bar .bottom-action-section:nth-of-type(1) .bottom-action-button:nth-of-type(3) button');
+  await page.click('button.chat-btn');
   await expect(await inViewport("#chatWindow", page)).toBeTruthy();
+  await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
 }

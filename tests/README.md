@@ -60,3 +60,9 @@ To run tests in "headed" mode, only for Chromium, run:
 ```bash
 npm run test-headed-chrome -- [name of the test file]
 ```
+
+Alternatively, to run a test in "headed" mode, only for Firefox, run:
+
+```bash
+npm run test-headed-firefox -- [name of the test file]
+```

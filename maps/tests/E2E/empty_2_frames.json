@@ -103,6 +103,11 @@
          "name":"script",
          "type":"string",
          "value":"empty.js"
+        }, 
+        {
+         "name":"scriptDisableModuleSupport",
+         "type":"bool",
+         "value":true
         }],
  "renderorder":"right-down",
  "tiledversion":"1.8.4",

@@ -425,7 +425,7 @@
                     on:click={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
-                    <button class:border-top-light={$chatVisibilityStore}>
+                    <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
                     {#if $totalMessagesToSee > 0}<span

@@ -1,8 +1,8 @@
 import "jasmine";
 
-describe("urlify()", () => {
-    // FIXME: we need to add PhantomJS to have a good mock for "document".
-    /*it("should transform an url into a link", () => {
+//describe("urlify()", () => {
+// FIXME: we need to add PhantomJS to have a good mock for "document".
+/*it("should transform an url into a link", () => {
         const text = HtmlUtils.urlify('foo https://google.com bar');
         expect(text).toEqual('foo <a href="https://google.com" target="_blank" style=":visited {color: white}">https://google.com</a> bar');
     });
@@ -16,4 +16,4 @@ describe("urlify()", () => {
         const text = HtmlUtils.urlify('<h1>boo</h1>');
         expect(text).toEqual('&lt;h1&gt;boo&lt;/h1&gt;');
     });*/
-});
+//});

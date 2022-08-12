@@ -41,6 +41,7 @@ describe("PositionNotifier", () => {
         const user1 = await User.create(
             1,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 500,
@@ -63,6 +64,7 @@ describe("PositionNotifier", () => {
         const user2 = await User.create(
             2,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: -9999,
@@ -155,6 +157,7 @@ describe("PositionNotifier", () => {
         const user1 = await User.create(
             1,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 500,
@@ -177,6 +180,7 @@ describe("PositionNotifier", () => {
         const user2 = await User.create(
             2,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 0,

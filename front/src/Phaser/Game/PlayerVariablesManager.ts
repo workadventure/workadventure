@@ -14,7 +14,7 @@ export class PlayerVariablesManager {
         private eventDispatcher: IframeEventDispatcher,
         private _variables: Map<string, unknown>,
         private roomId: string,
-        private worldId: string | undefined,
+        private worldId: string | undefined
     ) {
         iframeListener.registerAnswerer("setPlayerVariable", (event, source) => {
             this.setVariable(event, source);
@@ -40,7 +40,7 @@ export class PlayerVariablesManager {
         // If we are not logged
         if (localUserStore.isLogged() === false && event.persist) {
             let context: string;
-            if (event.scope === 'room') {
+            if (event.scope === "room") {
                 context = this.roomId;
             } else if (this.worldId) {
                 context = this.worldId;
