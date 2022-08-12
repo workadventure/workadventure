@@ -65,7 +65,8 @@ export class HtmlUtils {
                 const iteamReplaced: string[] = [];
                 for (const item of data) {
                     if (item == undefined || iteamReplaced.includes(item.search)) continue;
-                    const regex = new RegExp(item.search, "g");
+                    const regexStr = item.search.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+                    const regex = new RegExp(regexStr, "g");
                     iteamReplaced.push(item.search);
                     text = text.replace(regex, item.html);
                 }
