@@ -75,6 +75,7 @@ const fr_FR: Translation = {
     reply: "Répondre",
     react: "Réagir",
     copy: "Copier",
+    copied: "Copié !",
     file: {
         fileContentNoEmbed: "Le contenue n'est pas lisible sur le navigateur. Vous pouvez télécharger le document",
         download: "Téléchargement",

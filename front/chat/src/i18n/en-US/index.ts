@@ -75,6 +75,7 @@ const en_US: BaseTranslation = {
     reply: "Reply",
     react: "React",
     copy: "Copy",
+    copied: "Copied !",
     file: {
         fileContentNoEmbed: "Content invailable for viewing. Please doawnload it",
         download: "download",

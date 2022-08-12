@@ -18,7 +18,7 @@
         ArrowUpIcon,
         CopyIcon,
     } from "svelte-feather-icons";
-    import { Unsubscriber } from "svelte/store";
+    import { get, Unsubscriber } from "svelte/store";
     import { selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
@@ -148,10 +148,21 @@
         selectedMessageToReact.set(message);
     }
 
-    function copyMessage(message: Message) {
-        navigator.clipboard.writeText(message.body).catch((err) => {
-            console.error("error copy message => ", err);
-        });
+    function copyMessage(e: Event, message: Message) {
+        navigator.clipboard
+            .writeText(message.body)
+            .then(() => {
+                e.target.classList.add("tw-text-pop-green");
+                const originalText = e.target.innerHTML;
+                e.target.innerHTML = originalText.replace(get(LL).copy(), get(LL).copied());
+                setTimeout(() => {
+                    e.target.innerHTML = originalText;
+                    e.target.classList.remove("tw-text-pop-green");
+                }, 2_000);
+            })
+            .catch((err) => {
+                console.error("error copy message => ", err);
+            });
     }
 
     onMount(() => {
@@ -330,30 +341,13 @@
                                         {:then html}
                                             <HtmlMessage {html} />
                                         {/await}
-
-                                        {#if message.files && message.files.length > 0}
-                                            {#each message.files as file}
-                                                <!-- File message -->
-                                                <File {file} />
-                                            {/each}
-                                        {/if}
                                     </div>
-                                    {#if message.targetMessageReact}
-                                        <div class="emojis">
-                                            {#each [...message.targetMessageReact.keys()] as emojiStr}
-                                                {#if message.targetMessageReact.get(emojiStr)}
-                                                    <span
-                                                        class={mucRoom.haveSelected(message.id, emojiStr)
-                                                            ? "active"
-                                                            : ""}
-                                                        on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
-                                                    >
-                                                        {emojiStr}
-                                                        {message.targetMessageReact.get(emojiStr)}
-                                                    </span>
-                                                {/if}
-                                            {/each}
-                                        </div>
+
+                                    {#if message.files && message.files.length > 0}
+                                        {#each message.files as file}
+                                            <!-- File message -->
+                                            <File {file} />
+                                        {/each}
                                     {/if}
                                     <div
                                         class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
@@ -364,14 +358,6 @@
                                         <div class="action" on:click={() => reactMessage(message)}>
                                             <SmileIcon size="17" />
                                         </div>
-                                        <div
-                                            class="action tw-text-pop-red"
-                                            on:click={() => mucRoom.removeMessage(message.id)}
-                                        >
-                                            <Trash2Icon size="17" />
-                                        </div>
-
-                                        <!--
                                         <div class="action more-option">
                                             <MoreHorizontalIcon size="17" />
 
@@ -384,7 +370,10 @@
                                                     <SmileIcon size="13" class="tw-mr-1" />
                                                     {$LL.react()}
                                                 </span>
-                                                <span class="wa-dropdown-item" on:click={() => copyMessage(message)}>
+                                                <span
+                                                    class="wa-dropdown-item"
+                                                    on:click={(e) => copyMessage(e, message)}
+                                                >
                                                     <CopyIcon size="13" class="tw-mr-1" />
                                                     {$LL.copy()}
                                                 </span>
@@ -397,7 +386,6 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        -->
                                     </div>
                                 {/if}
                             </div>
