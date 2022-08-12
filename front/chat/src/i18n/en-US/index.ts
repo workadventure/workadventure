@@ -71,7 +71,7 @@ const en_US: BaseTranslation = {
         },
         notFound: "No emojis found",
     },
-    said: "said:",
+    said: "said :",
     reply: "Reply",
     react: "React",
     file: {

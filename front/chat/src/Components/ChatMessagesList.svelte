@@ -121,6 +121,22 @@
         lastScrollPosition = document.body.scrollTop;
     }
 
+    function scrollToMessageId(messageId: string) {
+        const messageElement = document.getElementById(`message_${messageId}`);
+        if (messageElement) {
+            messageElement.classList.add("selected");
+            setTimeout(() => {
+                messageElement.classList.remove("selected");
+            }, 500);
+            setTimeout(() => {
+                messagesList.scroll(
+                    0,
+                    messageElement.offsetTop - messagesList.clientHeight + messageElement.clientHeight + 10
+                );
+            }, 0);
+        }
+    }
+
     function selectMessage(message: Message) {
         selectedMessageToReply.set(message);
     }
@@ -147,15 +163,7 @@
         } else {
             const message = [...$messagesStore].reverse().find((message) => message.time < mucRoom.lastMessageSeen);
             if (message) {
-                const messageElement = document.getElementById(`message_${message.id}`);
-                if (messageElement) {
-                    setTimeout(() => {
-                        messagesList.scroll(
-                            0,
-                            messageElement.offsetTop - messagesList.clientHeight + messageElement.clientHeight + 10
-                        );
-                    }, 0);
-                }
+                scrollToMessageId(message.id);
             }
         }
         picker = new EmojiButton({
@@ -321,23 +329,6 @@
                                             <File {file} />
                                         {/each}
                                     {/if}
-                                    {#if message.targetMessageReact}
-                                        <div class="emojis">
-                                            {#each [...message.targetMessageReact.keys()] as emojiStr}
-                                                {#if message.targetMessageReact.get(emojiStr)}
-                                                    <span
-                                                        class={mucRoom.haveSelected(message.id, emojiStr)
-                                                            ? "active"
-                                                            : ""}
-                                                        on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
-                                                    >
-                                                        {emojiStr}
-                                                        {message.targetMessageReact.get(emojiStr)}
-                                                    </span>
-                                                {/if}
-                                            {/each}
-                                        </div>
-                                    {/if}
                                     <div
                                         class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                     >
@@ -347,7 +338,14 @@
                                         <div class="action" on:click={() => reactMessage(message)}>
                                             <SmileIcon size="17" />
                                         </div>
+                                        <div
+                                            class="action tw-text-pop-red"
+                                            on:click={() => mucRoom.removeMessage(message.id)}
+                                        >
+                                            <Trash2Icon size="17" />
+                                        </div>
 
+                                        <!--
                                         <div class="action more-option">
                                             <MoreHorizontalIcon size="17" />
 
@@ -370,14 +368,33 @@
                                                 </span>
                                             </div>
                                         </div>
+                                        -->
                                     </div>
                                 {/if}
                             </div>
+                            {#if message.targetMessageReact}
+                                <div class="emojis">
+                                    {#each [...message.targetMessageReact.keys()] as emojiStr}
+                                        {#if message.targetMessageReact.get(emojiStr)}
+                                            <span
+                                                class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
+                                                on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
+                                            >
+                                                {emojiStr}
+                                                {#if message.targetMessageReact.get(emojiStr) > 1}
+                                                    {message.targetMessageReact.get(emojiStr)}
+                                                {/if}
+                                            </span>
+                                        {/if}
+                                    {/each}
+                                </div>
+                            {/if}
 
                             <!-- Reply message -->
                             {#if message.targetMessageReply}
                                 <div
-                                    class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left"
+                                    class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                    on:click={() => scrollToMessageId(message.targetMessageReply.id)}
                                 >
                                     <div class="icon-replied">
                                         <CornerLeftUpIcon size="14" />
@@ -527,14 +544,14 @@
         opacity: 0.6;
         margin-left: 20px;
         position: relative;
+        margin-bottom: 0;
+        margin-top: 4px;
         .icon-replied {
             position: absolute;
             left: -15px;
             top: 0px;
         }
-        p {
-            margin-left: 4px;
-        }
+
         p:nth-child(1) {
             font-style: italic;
         }
@@ -542,13 +559,25 @@
     p {
         margin-bottom: 0 !important;
     }
+    .selected .message::after {
+        @apply tw-animate-ping tw-rounded-lg tw-px-3 tw-py-2;
+        content: " ";
+        width: 100%;
+        height: 100%;
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+        border: solid 0.5px white;
+    }
     .message {
+        background-color: rgba(15, 31, 45, 0.9);
         position: relative;
         .actions {
             display: none;
             position: absolute;
             right: -16px;
-            top: -10px;
+            top: calc(50% - 34px);
             padding: 0px;
             cursor: pointer;
             flex-direction: column;
@@ -566,6 +595,7 @@
             --tw-shadow-colored: 0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);
             box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
             z-index: 1;
+            transition: all 0.2s ease-out;
 
             div.action {
                 padding: 2px;
@@ -577,6 +607,7 @@
             }
         }
         &:hover {
+            background-color: rgba(15, 31, 45, 1);
             .actions {
                 display: flex;
             }
@@ -592,23 +623,27 @@
                 }
             }
         }
-        .emojis {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 4px;
-            span {
-                display: block;
-                background-color: #c3c3c345;
-                border: solid 1px #c3c3c3;
-                &.active {
-                    background-color: #56eaff4f;
-                    border: solid 1px #56eaff;
-                }
-                border-radius: 4px;
-                cursor: pointer;
-                padding: 2px;
-                margin: 1px;
+    }
+    .emojis {
+        display: flex;
+        flex-wrap: wrap;
+        margin-top: -8px;
+        position: relative;
+        flex-direction: row-reverse;
+        margin-right: -5px;
+        span {
+            @apply tw-text-xxs tw-rounded-3xl;
+            line-height: 0.75rem;
+            display: block;
+            background-color: #c3c3c345;
+            border: solid 1px #c3c3c3;
+            &.active {
+                background-color: #56eaff4f;
+                border: solid 1px #56eaff;
             }
+            cursor: pointer;
+            padding: 2px 3px;
+            margin: 0.5px;
         }
     }
 </style>

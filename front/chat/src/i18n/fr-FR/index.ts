@@ -71,7 +71,7 @@ const fr_FR: Translation = {
         },
         notFound: "Aucun emoji trouvé",
     },
-    said: "dit :",
+    said: "a dit :",
     reply: "Répondre",
     react: "Réagir",
     file: {

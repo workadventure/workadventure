@@ -8,6 +8,7 @@
         Trash2Icon,
         CheckIcon,
         AlertCircleIcon,
+        XCircleIcon,
     } from "svelte-feather-icons";
     import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
@@ -183,7 +184,7 @@
         >
             <div
                 style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-                class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+                class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
                     isMe($selectedMessageToReply.name) ? "tw-flex-row-reverse" : "tw-flex-row"
                 }`}
             >
@@ -197,10 +198,15 @@
                     })}</span
                 >
             </div>
-            <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
-                <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-                    {$selectedMessageToReply.body}
-                </p>
+            <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
+                <div class="tw-w-11/12 message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                    <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+                        {$selectedMessageToReply.body}
+                    </p>
+                </div>
+                <div class="close">
+                    <XCircleIcon size="17" />
+                </div>
             </div>
         </div>
     {/if}
@@ -310,8 +316,15 @@
         margin: 0;
         position: relative;
 
+        .close {
+            @apply tw-text-lighter-purple;
+            &:hover {
+                @apply tw-text-pop-red;
+            }
+        }
+
         &::after {
-            content: "x";
+            //content: "x";
             width: 20px;
             height: 20px;
             cursor: pointer;
@@ -326,7 +339,14 @@
         }
 
         .message {
-            opacity: 0.5;
+            opacity: 1;
+        }
+
+        &:hover {
+            @apply tw-cursor-pointer;
+            .close {
+                @apply tw-text-pop-red;
+            }
         }
     }
 
