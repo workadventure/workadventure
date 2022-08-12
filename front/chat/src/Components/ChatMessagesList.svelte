@@ -580,7 +580,9 @@
         margin-bottom: 0 !important;
     }
     .selected .message::after {
-        @apply tw-animate-ping tw-rounded-lg tw-px-3 tw-py-2;
+        @apply tw-animate-ping;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
         content: " ";
         width: 100%;
         height: 100%;
@@ -652,7 +654,8 @@
         flex-direction: row-reverse;
         margin-right: -5px;
         span {
-            @apply tw-text-xxs tw-rounded-3xl;
+            font-size: 0.65rem;
+            border-radius: 1.5rem;
             line-height: 0.75rem;
             display: block;
             background-color: #c3c3c345;
