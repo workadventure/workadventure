@@ -317,9 +317,9 @@
         position: relative;
 
         .close {
-            @apply tw-text-lighter-purple;
+            color: rgb(146 142 187);
             &:hover {
-                @apply tw-text-pop-red;
+                color: rgb(255 71 90);
             }
         }
 
@@ -343,9 +343,9 @@
         }
 
         &:hover {
-            @apply tw-cursor-pointer;
+            cursor: pointer;
             .close {
-                @apply tw-text-pop-red;
+                color: rgb(255 71 90);
             }
         }
     }
