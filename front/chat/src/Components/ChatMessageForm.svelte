@@ -122,6 +122,7 @@
             return;
         }
         fileMessageManager.sendFiles(files).catch(() => {});
+        (<HTMLInputElement>event.target).value = "";
     }
 
     function handlerDeleteUploadedFile(file: File | UploadedFile) {

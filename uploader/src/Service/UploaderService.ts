@@ -8,31 +8,37 @@ class UploaderService{
     private s3: S3|null = null;
     //@ts-ignore
     private redisClient?;
-    private uploadedFileBuffers?: Map<string, Buffer>;
 
     constructor(){
         //TODO create provider with interface injected in this constructor
-        if(process.env.AWS_BUCKET != undefined && process.env.AWS_BUCKET != ""){
+        if(
+            process.env.AWS_BUCKET != undefined && process.env.AWS_BUCKET != ""
+            && process.env.AWS_ACCESS_KEY_ID != undefined && process.env.AWS_ACCESS_KEY_ID != ""
+            && process.env.AWS_SECRET_ACCESS_KEY != undefined && process.env.AWS_SECRET_ACCESS_KEY != ""
+            && process.env.AWS_DEFAULT_REGION != undefined && process.env.AWS_DEFAULT_REGION != ""
+        ){
             // Set the region 
             AWS.config.update({
-                accessKeyId: (process.env.AWS_ACCESS_KEY_ID as string),
-                secretAccessKey: (process.env.AWS_SECRET_ACCESS_KEY as string),
-                region: (process.env.AWS_DEFAULT_REGION as string)
+                accessKeyId: (process.env.AWS_ACCESS_KEY_ID),
+                secretAccessKey: (process.env.AWS_SECRET_ACCESS_KEY),
+                region: (process.env.AWS_DEFAULT_REGION)
             });
 
             // Create S3 service object
             this.s3 = new AWS.S3({apiVersion: '2006-03-01'});
-        }else if(process.env.REDIS_HOST != undefined 
-                    && process.env.REDIS_HOST != "" 
-                    && process.env.REDIS_PORT != undefined 
-                    && process.env.REDIS_PORT != ""){
+        }
+
+        if(
+            process.env.REDIS_HOST != undefined 
+            && process.env.REDIS_HOST != "" 
+            && process.env.REDIS_PORT != undefined 
+            && process.env.REDIS_PORT != ""
+        ){
             this.redisClient = createClient({
                 url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
             });
             this.redisClient.on('error', (err: unknown) => console.error('Redis Client Error', err));
             this.redisClient.connect();
-        }else{
-            this.uploadedFileBuffers = new Map<string, Buffer>();
         }
     }
 
@@ -62,12 +68,10 @@ class UploaderService{
             }).promise();
             return {...uploadedFile, Key: fileUuid};
         }else{
-            if(this.redisClient != undefined){
-                await this.redisClient.set(fileUuid, chunks);
+            if(this.redisClient == undefined){
+                throw new Error("S3 and Redis for upload file are not defined");
             }
-            if(this.uploadedFileBuffers != undefined){
-                this.uploadedFileBuffers?.set(fileUuid, chunks);
-            }
+            await this.redisClient.set(fileUuid, chunks);
             return new Promise((solve, rej) => {
                 solve({ Key:fileUuid, 
                     Location: `${process.env.UPLOADER_URL}/upload-file/${fileUuid}`,
@@ -78,6 +82,16 @@ class UploaderService{
         }
     }
 
+    uploadTempFile(audioMessageId: string, buffer: Buffer, expireSecond: number){
+        if(this.redisClient == undefined){
+            throw new Error("Redis is not defined");
+        }
+        return Promise.all([
+            this.redisClient.set(audioMessageId, buffer),
+            this.redisClient.expire(audioMessageId, expireSecond)
+        ]);
+    }
+
     async deleteFileById(fileId: string){
         if(this.s3 != undefined){
             const deleteParams: S3.Types.DeleteObjectRequest = {
@@ -85,30 +99,24 @@ class UploaderService{
                 Key: fileId
             };
             await this.s3.deleteObject(deleteParams).promise();
-        }
-
-        if(this.redisClient != undefined){
-            await this.redisClient.del(fileId)
-        }
-
-        if(this.uploadedFileBuffers != undefined){
-            this.uploadedFileBuffers?.delete(fileId);
+        }else{
+            await this.redisClient?.del(fileId)
         }
     }
 
-    async get(fileId: string): Promise<Buffer|undefined>{
-        if(this.redisClient != undefined){
-            //@ts-ignore
-            return await this.redisClient?.get(commandOptions({ returnBuffers: true }), fileId);
+    get(fileId: string): Promise<Buffer|undefined>{
+        if(this.redisClient == undefined){
+            throw new Error("Redis is not defined");
         }
+        //@ts-ignore
+        return this.redisClient.get(commandOptions({ returnBuffers: true }), fileId);
+    }
 
-        if(this.uploadedFileBuffers != undefined){
-            return new Promise((resolve, rej) => {
-                resolve(this.uploadedFileBuffers?.get(fileId));
-            });
+    getTemp(fileId: string){
+        if(this.redisClient == undefined){
+            throw new Error("Redis is not defined");
         }
-
-        throw "Uploader cannot get data";
+        return this.redisClient.get(commandOptions({ returnBuffers: true }), fileId);
     }
 }
 

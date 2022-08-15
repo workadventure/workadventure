@@ -12,9 +12,10 @@
 
     let gameScene = gameManager.getCurrentGameScene();
     let fileInput: HTMLInputElement;
-    let fileName: string;
+    let fileName: string | undefined;
     let fileSize: string;
     let errorFile: boolean;
+    let errorUpload: boolean;
 
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
@@ -32,15 +33,22 @@
 
             const fd = new FormData();
             fd.append("file", selectedFile);
-            const res = await gameScene.connection?.uploadAudio(fd);
+            try {
+                const res = await gameScene.connection?.uploadAudio(fd);
 
-            const audioGlobalMessage: PlayGlobalMessageInterface = {
-                content: (res as { path: string }).path,
-                type: AUDIO_TYPE,
-                broadcastToWorld: broadcast,
-            };
-            inputAudio.value = "";
-            gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
+                const audioGlobalMessage: PlayGlobalMessageInterface = {
+                    content: (res as { path: string }).path,
+                    type: AUDIO_TYPE,
+                    broadcastToWorld: broadcast,
+                };
+                inputAudio.value = "";
+                fileName = undefined;
+                gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
+                errorUpload = false;
+            } catch (err) {
+                console.error(err);
+                errorUpload = true;
+            }
         },
     };
 
@@ -58,6 +66,7 @@
         fileName = file.name;
         fileSize = getFileSize(file.size);
         errorFile = false;
+        errorUpload = false;
     }
 
     function getFileSize(number: number) {
@@ -89,6 +98,9 @@
     {#if errorFile}
         <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
+    {#if errorUpload}
+        <p class="err">{$LL.menu.globalAudio.errorUpload()}</p>
+    {/if}
     <input
         class="tw-hidden"
         type="file"
@@ -99,3 +111,9 @@
         }}
     />
 </section>
+
+<style lang="scss">
+    p.err {
+        color: red;
+    }
+</style>

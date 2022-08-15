@@ -92,6 +92,8 @@ const menu: DeepPartial<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Datei hochladen",
         error: "Keine Datei ausgewählt. Du musst vor dem Versenden eine Datei hochladen.",
+        errorUpload:
+            "Fehler beim Hochladen der Datei. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an den Administrator.",
     },
     contact: {
         gettingStarted: {

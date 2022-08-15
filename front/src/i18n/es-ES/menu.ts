@@ -94,6 +94,8 @@ const menu: DeepPartial<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Suba un archivo",
         error: "Ningún archivo seleccionado. Tiene que subir un archivo antes de enviarlo.",
+        errorUpload:
+            "Error al cargar el archivo. Por favor revise su archivo y vuelva a intentarlo. Si el problema persiste, póngase en contacto con el administrador.",
     },
     contact: {
         gettingStarted: {

@@ -62,7 +62,7 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
         if (!this.extension) {
             return false;
         }
-        return FileMessageManager.isVideo(this.extension);
+        return FileMessageManager.isSound(this.extension);
     }
     get extension() {
         if (this.location == undefined) {
