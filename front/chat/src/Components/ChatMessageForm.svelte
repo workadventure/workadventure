@@ -19,6 +19,7 @@
         filesUploadStore,
         hasErrorUploadingFile,
         hasInProgressUploadingFile,
+        mentionsUserStore,
     } from "../Stores/ChatStore";
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
@@ -35,8 +36,10 @@
 
     let emojiOpened = false;
     let newMessageText = "";
+    let usersSearching: User[] = [];
 
     export const defaultColor = "#626262";
+    const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
     $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
@@ -153,6 +156,30 @@
         }
     }
 
+    function analyseText() {
+        const values = newMessageText.match(regexUserTag);
+        if (values != undefined) {
+            const userNameSearching = (values.pop() as string).substring(1);
+            usersSearching = [...$presenseStore.values()].reduce((values: User[], user) => {
+                if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
+                    return values;
+                }
+                values.push(user);
+                return values;
+            }, []);
+        } else {
+            usersSearching = [];
+        }
+    }
+
+    function addUserTag(user: User) {
+        const values = newMessageText.match(regexUserTag) as string[];
+        newMessageText = newMessageText.replace(values.pop() as string, `@${user.name} `);
+        $mentionsUserStore.add(user);
+        usersSearching = [];
+        textarea.focus();
+    }
+
     onMount(() => {
         picker = new EmojiButton({
             styleProperties: {
@@ -240,6 +267,20 @@
         <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
     </div>
 
+    {#if usersSearching.length > 0}
+        <div class="wa-dropdown-menu">
+            {#each usersSearching as user}
+                <span
+                    class="wa-dropdown-item user-tag"
+                    on:click|stopPropagation|preventDefault={() => addUserTag(user)}
+                >
+                    <img src={user.woka} alt={`Woka svg of user: ${user.name}`} />
+                    {user.name}
+                </span>
+            {/each}
+        </div>
+    {/if}
+
     <form on:submit|preventDefault={sendMessage}>
         <div class="tw-w-full tw-p-2">
             {#each [...$filesUploadStore.values()] as fileUploaded}
@@ -291,6 +332,7 @@
                     bind:this={textarea}
                     bind:value={newMessageText}
                     placeholder={$LL.enterText()}
+                    on:input={analyseText}
                     on:focus={onFocus}
                     on:blur={onBlur}
                     on:keydown={(key) => {
@@ -378,6 +420,21 @@
             cursor: pointer;
             .close {
                 color: rgb(255 71 90);
+            }
+        }
+    }
+
+    .wa-dropdown-menu {
+        margin: 0 0 0 10px;
+        position: relative;
+        width: fit-content;
+        min-width: auto;
+
+        .wa-dropdown-item.user-tag {
+            &:active,
+            &:focus {
+                --tw-bg-opacity: 1;
+                background-color: rgb(77 75 103 / var(--tw-bg-opacity));
             }
         }
     }

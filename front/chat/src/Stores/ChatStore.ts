@@ -4,7 +4,7 @@ import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
-import { Message } from "../Xmpp/MucRoom";
+import { Message, User } from "../Xmpp/MucRoom";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -147,6 +147,7 @@ export const chatInputFocusStore = writable(false);
 
 export const chatPeerConnectionInProgress = writable<boolean>(false);
 
+export const mentionsUserStore = writable<Set<User>>(new Set<User>());
 export const selectedMessageToReply = writable<Message | null>(null);
 export const selectedMessageToReact = writable<Message | null>(null);
 export const timelineMessagesToSee = derived(

@@ -342,7 +342,7 @@
                                         {#await HtmlUtils.urlify(message.body)}
                                             <p>...waiting</p>
                                         {:then html}
-                                            <HtmlMessage {html} />
+                                            <HtmlMessage {html} {message} />
                                         {/await}
                                     </div>
 

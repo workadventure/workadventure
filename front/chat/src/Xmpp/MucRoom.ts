@@ -10,7 +10,7 @@ import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { filesUploadStore } from "../Stores/ChatStore";
+import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { fileMessageManager, UploadedFile } from "../Services/FileMessageManager";
 
 export const USER_STATUS_AVAILABLE = "available";
@@ -28,6 +28,7 @@ export type User = {
     isAdmin: boolean;
     chatState: string;
     isMe: boolean;
+    jid: string;
 };
 
 export const ChatStates = {
@@ -78,6 +79,7 @@ export type Message = {
     targetMessageReply?: ReplyMessage;
     targetMessageReact?: Map<string, number>;
     files?: UploadedFile[];
+    mentions?: User[];
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
@@ -511,6 +513,26 @@ export class MucRoom {
             message.append(fileMessageManager.getXmlFileAttr);
         }
 
+        if (get(mentionsUserStore).size > 0) {
+            message.append(
+                [...get(mentionsUserStore).values()].reduce((xmlValue, user) => {
+                    xmlValue.append(
+                        xml(
+                            "mention",
+                            {
+                                from: this.jid,
+                                to: user.jid,
+                                name: user.name,
+                                user,
+                            } //TODO change it to use an XMPP implementation of mention
+                        )
+                    );
+                    return xmlValue;
+                }, xml("mentions"))
+            );
+            //TODO send notification
+        }
+
         this.connection.emitXmlMessage(message);
 
         this.messageStore.update((messages) => {
@@ -533,12 +555,14 @@ export class MucRoom {
                               files: messageReply.files,
                           }
                         : undefined,
+                mentions: [...get(mentionsUserStore).values()],
             });
             return messages;
         });
 
         //clear list of file uploaded
         fileMessageManager.reset();
+        mentionsUserStore.set(new Set<User>());
 
         this.manageResendMessage();
     }
@@ -813,6 +837,23 @@ export class MucRoom {
                                 );
                             }
 
+                            //get list of mentions
+                            if (xml.getChild("mentions")) {
+                                xml.getChild("mentions")
+                                    ?.getChildElements()
+                                    .forEach((value) => {
+                                        if (message.mentions == undefined) {
+                                            message.mentions = [];
+                                        }
+                                        const uuid = value.getAttr("to");
+                                        if (get(this.presenceStore).has(uuid)) {
+                                            message.mentions.push(get(this.presenceStore).get(uuid) as User);
+                                        } else if (value.getAttr("user")) {
+                                            message.mentions.push(value.getAttr("user") as User);
+                                        }
+                                    });
+                            }
+
                             messages.push(message);
                         }
                         return messages;
@@ -936,6 +977,7 @@ export class MucRoom {
                 isAdmin: isAdmin ?? this.getCurrentIsAdmin(jid),
                 chatState: chatState ?? this.getCurrentChatState(jid),
                 isMe,
+                jid: jid.toString(),
             });
             numberPresenceUserStore.set(list.size);
             return list;

@@ -15,6 +15,14 @@
 
 .message{
     p{
+        min-height: 20px;
         margin: 0;
+        .mention{
+            margin: 0 2px;
+            padding: 0px 4px;
+            background-color: black;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
     }
 }
