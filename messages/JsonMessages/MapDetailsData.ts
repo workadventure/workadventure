@@ -76,6 +76,11 @@ export const isMapDetailsData = z.object({
         description: 'Whether the "report" feature is enabled or not on this room',
         example: true,
     }),
+    // Whether the "report" feature is enabled or not on this room
+    canEdit: extendApi(z.optional(z.boolean()), {
+        description: 'Whether the "map editor" feature is enabled or not on this room',
+        example: true,
+    }),
     loadingCowebsiteLogo: extendApi(z.optional(z.nullable(z.string())), {
         description: "The URL of the image to be used on the cowebsite loading page",
         example: "https://example.com/logo.gif",

@@ -11,6 +11,7 @@
     import followImg from "../images/follow.png";
     import lockOpenImg from "../images/lock-opened.png";
     import lockCloseImg from "../images/lock-closed.png";
+    import logoRegister from "../images/logo-register-pixel.png";
     import screenshareOn from "../images/screenshare-on.png";
     import screenshareOff from "../images/screenshare-off.png";
     import emojiPickOn from "../images/emoji-on.png";
@@ -49,6 +50,7 @@
     import { limitMapStore } from "../../Stores/GameStore";
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
+    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
@@ -120,6 +122,10 @@
 
     function toggleEmojiPicker() {
         $emoteMenuSubStore == true ? emoteMenuSubStore.closeEmoteMenu() : emoteMenuSubStore.openEmoteMenu();
+    }
+
+    function toggleMapEditorMode() {
+        mapEditorModeStore.switchMode(!$mapEditorModeStore);
     }
 
     function clickEmoji(selected?: number) {
@@ -458,6 +464,17 @@
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
                 </div>
+                {#if gameManager.getCurrentGameScene().isMapEditorEnabled()}
+                    <div
+                        on:dragstart|preventDefault={noDrag}
+                        on:click={toggleMapEditorMode}
+                        class="bottom-action-button"
+                    >
+                        <button id="mapEditorIcon" class:border-top-light={$menuVisiblilityStore}>
+                            <img draggable="false" src={logoRegister} style="padding: 2px" alt="toggle-map-editor" />
+                        </button>
+                    </div>
+                {/if}
             </div>
 
             {#if $limitMapStore}

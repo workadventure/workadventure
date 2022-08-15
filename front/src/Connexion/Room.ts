@@ -23,6 +23,7 @@ export class Room {
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
+    private _canEditMap = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
@@ -123,6 +124,7 @@ export class Room {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
@@ -215,6 +217,10 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
+    }
+
+    get canEditMap(): boolean {
+        return this._canEditMap;
     }
 
     get loadingCowebsiteLogo(): string | undefined {

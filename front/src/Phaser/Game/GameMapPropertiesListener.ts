@@ -1,12 +1,10 @@
 import type { GameScene } from "./GameScene";
-import type { GameMap } from "./GameMap";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { coWebsiteManager } from "../../WebRtc/CoWebsiteManager";
 import { layoutManagerActionStore } from "../../Stores/LayoutManagerStore";
 import { localUserStore } from "../../Connexion/LocalUserStore";
 import { get } from "svelte/store";
 import { ON_ACTION_TRIGGER_BUTTON, ON_ICON_TRIGGER_BUTTON } from "../../WebRtc/LayoutManager";
-import { GameMapProperties } from "./GameMapProperties";
 import type { CoWebsite } from "../../WebRtc/CoWebsite/CoWesbite";
 import { SimpleCoWebsite } from "../../WebRtc/CoWebsite/SimpleCoWebsite";
 import { jitsiFactory } from "../../WebRtc/JitsiFactory";
@@ -21,6 +19,8 @@ import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stor
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { chatZoneLiveStore } from "../../Stores/ChatStore";
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import { GameMapProperties } from "@workadventure/map-editor-types";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -43,11 +43,11 @@ export class GameMapPropertiesListener {
     private coWebsitesOpenByPlace = new Map<ITiledPlace, OpenCoWebsite>();
     private coWebsitesActionTriggerByPlace = new Map<ITiledPlace, string>();
 
-    constructor(private scene: GameScene, private gameMap: GameMap) {}
+    constructor(private scene: GameScene, private gameMapFrontWrapper: GameMapFrontWrapper) {}
 
     register() {
         // Website on new tab
-        this.gameMap.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.OPEN_TAB, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("openTab");
             }
@@ -73,7 +73,7 @@ export class GameMapPropertiesListener {
         });
 
         // Jitsi room
-        this.gameMap.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.JITSI_ROOM, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("jitsi");
                 coWebsiteManager.getCoWebsites().forEach((coWebsite) => {
@@ -139,7 +139,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.BBB_MEETING, (newValue, oldValue, allProps) => {
             if (newValue === undefined) {
                 layoutManagerActionStore.removeAction("bbbMeeting");
                 inBbbStore.set(false);
@@ -163,7 +163,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.EXIT_SCENE_URL, (newValue) => {
             if (newValue) {
                 this.scene
                     .onMapExit(
@@ -181,7 +181,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.EXIT_URL, (newValue) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.EXIT_URL, (newValue) => {
             if (newValue) {
                 this.scene
                     .onMapExit(Room.getRoomPathFromExitUrl(newValue as string, window.location.toString()))
@@ -193,7 +193,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.SILENT, (newValue) => {
             if (newValue === undefined || newValue === false || newValue === "") {
                 silentStore.set(false);
             } else {
@@ -201,7 +201,7 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO, (newValue, oldValue, allProps) => {
             const volume = allProps.get(GameMapProperties.AUDIO_VOLUME) as number | undefined;
             const loop = allProps.get(GameMapProperties.AUDIO_LOOP) as boolean | undefined;
             newValue === undefined
@@ -211,7 +211,7 @@ export class GameMapPropertiesListener {
         });
 
         // TODO: This legacy property should be removed at some point
-        this.gameMap.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.PLAY_AUDIO_LOOP, (newValue) => {
             newValue === undefined
                 ? audioManagerFileStore.unloadAudio()
                 : audioManagerFileStore.playAudio(newValue, this.scene.getMapDirUrl(), undefined, true);
@@ -219,7 +219,7 @@ export class GameMapPropertiesListener {
         });
 
         // TODO: Legacy functionnality replace by layer change
-        this.gameMap.onPropertyChange(GameMapProperties.ZONE, (newValue, oldValue) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.ZONE, (newValue, oldValue) => {
             if (oldValue) {
                 iframeListener.sendLeaveEvent(oldValue as string);
             }
@@ -229,7 +229,7 @@ export class GameMapPropertiesListener {
         });
 
         // Muc zone
-        this.gameMap.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
+        this.gameMapFrontWrapper.onPropertyChange(GameMapProperties.CHAT_NAME, (newValue, oldValue, allProps) => {
             const playUri = urlManager.getPlayUri() + "/";
 
             if (oldValue !== undefined) {
@@ -242,19 +242,19 @@ export class GameMapPropertiesListener {
             }
         });
 
-        this.gameMap.onEnterLayer((newLayers) => {
+        this.gameMapFrontWrapper.onEnterLayer((newLayers) => {
             this.onEnterPlaceHandler(newLayers);
         });
 
-        this.gameMap.onLeaveLayer((oldLayers) => {
+        this.gameMapFrontWrapper.onLeaveLayer((oldLayers) => {
             this.onLeavePlaceHandler(oldLayers);
         });
 
-        this.gameMap.onEnterArea((newAreas) => {
+        this.gameMapFrontWrapper.onEnterArea((newAreas) => {
             this.onEnterPlaceHandler(newAreas);
         });
 
-        this.gameMap.onLeaveArea((oldAreas) => {
+        this.gameMapFrontWrapper.onLeaveArea((oldAreas) => {
             this.onLeavePlaceHandler(oldAreas);
         });
     }

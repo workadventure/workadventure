@@ -259,6 +259,21 @@ services:
       - "traefik.http.routers.icon-ssl.tls=true"
       - "traefik.http.routers.icon-ssl.service=icon"
 
+  # map-storage:
+  #   image: thecodingmachine/workadventure-map-storage:${VERSION}
+  #   environment:
+  #     PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.map-storage.rule=Host(`${MAP_STORAGE_HOST}`)"
+  #     - "traefik.http.routers.map-storage.entryPoints=web"
+  #     - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
+  #     - "traefik.http.routers.map-storage-ssl.rule=Host(`${MAP_STORAGE_HOST}`)"
+  #     - "traefik.http.routers.map-storage-ssl.entryPoints=websecure"
+  #     - "traefik.http.routers.map-storage-ssl.service=map-storage"
+  #     - "traefik.http.routers.map-storage-ssl.tls=true"
+  #     - "traefik.http.routers.map-storage-ssl.tls.certresolver=myresolver"
+
 #  coturn:
 #    image: coturn/coturn:4.5.2
 #    command:
