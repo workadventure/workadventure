@@ -139,6 +139,7 @@
     },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
+           "replicas": 2,
            "host": {
              "url": "uploader-"+url,
              "containerPort": 8080
