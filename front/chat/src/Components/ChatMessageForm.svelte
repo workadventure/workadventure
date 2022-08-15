@@ -14,7 +14,12 @@
     import LL, { locale } from "../i18n/i18n-svelte";
     import { createEventDispatcher, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
-    import { selectedMessageToReply, filesUploadStore } from "../Stores/ChatStore";
+    import {
+        selectedMessageToReply,
+        filesUploadStore,
+        hasErrorUploadingFile,
+        hasInProgressUploadingFile,
+    } from "../Stores/ChatStore";
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
@@ -44,7 +49,18 @@
     }
 
     function sendMessage() {
-        if ($filesUploadStore.size === 0 && (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)) return;
+        if ($hasInProgressUploadingFile) {
+            return;
+        }
+        if ($hasErrorUploadingFile) {
+            showErrorMessages();
+            return;
+        }
+        if (
+            fileMessageManager.files.length === 0 &&
+            (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+        )
+            return;
         if ($selectedMessageToReply) {
             sendReplyMessage();
             return false;
@@ -99,7 +115,6 @@
     function handleInputFile(event: Event) {
         const files = (<HTMLInputElement>event.target).files;
         if (!files || files.length === 0) {
-            console.info("No files uploaded");
             filesUploadStore.set(new Map());
             return;
         }
@@ -126,6 +141,16 @@
             return;
         }
         fileMessageManager.sendFiles(files).catch(() => {});
+    }
+
+    function showErrorMessages() {
+        if ($hasInProgressUploadingFile || !$hasErrorUploadingFile) {
+            return;
+        }
+        const elements = document.getElementsByClassName("error-hover") as HTMLCollectionOf<HTMLElement>;
+        for (const element of elements) {
+            element.style.display = "flex";
+        }
     }
 
     onMount(() => {
@@ -301,9 +326,16 @@
                 <button
                     type="submit"
                     class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                    on:mouseover={showErrorMessages}
                     on:click={sendMessage}
                 >
-                    <SendIcon size="17" />
+                    {#if $hasErrorUploadingFile}
+                        <AlertCircleIcon size="17" />
+                    {:else if $hasInProgressUploadingFile}
+                        <LoaderIcon size="17" />
+                    {:else}
+                        <SendIcon size="17" />
+                    {/if}
                 </button>
             </div>
         </div>

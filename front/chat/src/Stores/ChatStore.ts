@@ -3,7 +3,7 @@ import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { FileExt, UploadedFile } from "../Services/FileMessageManager";
+import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message } from "../Xmpp/MucRoom";
 
 const _newChatMessageSubject = new Subject<string>();
@@ -157,4 +157,16 @@ export const timelineMessagesToSee = derived(
 
 export const filesUploadStore = writable<Map<string, UploadedFile | FileExt>>(
     new Map<string, UploadedFile | FileExt>()
+);
+export const hasErrorUploadingFile = derived([filesUploadStore], ([$filesUploadStore]) =>
+    [...$filesUploadStore.values()].reduce(
+        (value, file) => (file.uploadState === uploadingState.error ? true : value),
+        false
+    )
+);
+export const hasInProgressUploadingFile = derived([filesUploadStore], ([$filesUploadStore]) =>
+    [...$filesUploadStore.values()].reduce(
+        (value, file) => (file.uploadState === uploadingState.inprogress ? true : value),
+        false
+    )
 );
