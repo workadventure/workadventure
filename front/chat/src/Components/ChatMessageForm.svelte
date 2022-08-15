@@ -370,12 +370,13 @@
                     type="submit"
                     class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
                     on:mouseover={showErrorMessages}
+                    on:focus={showErrorMessages}
                     on:click={sendMessage}
                 >
                     {#if $hasErrorUploadingFile}
                         <AlertCircleIcon size="17" />
                     {:else if $hasInProgressUploadingFile}
-                        <LoaderIcon size="17" />
+                        <LoaderIcon size="17" class="tw-animate-spin" />
                     {:else}
                         <SendIcon size="17" />
                     {/if}

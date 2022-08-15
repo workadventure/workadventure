@@ -72,7 +72,7 @@
         </span>
         <span class="action wa-dropdown-item" on:click={download}>
             {#if loadingDownload === true}
-                <LoaderIcon size="14" />
+                <LoaderIcon size="14" class="tw-animate-spin" />
             {:else}
                 <DownloadCloudIcon size="14" />
             {/if}

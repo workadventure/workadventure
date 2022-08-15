@@ -26,3 +26,11 @@
         }
     }
 }
+
+.selected {
+    .message{
+        &::after{
+            @apply tw-animate-ping;
+        }
+    }
+}

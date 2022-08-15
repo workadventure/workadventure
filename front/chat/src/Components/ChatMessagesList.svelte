@@ -580,7 +580,6 @@
         margin-bottom: 0 !important;
     }
     .selected .message::after {
-        @apply tw-animate-ping;
         border-radius: 0.5rem;
         padding: 0.5rem 0.75rem;
         content: " ";

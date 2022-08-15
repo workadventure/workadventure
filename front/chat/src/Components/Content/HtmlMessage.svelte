@@ -57,7 +57,7 @@
     function appendIconInHtmlElement(link: HTMLElement, icon: string) {
         const element = document.createElement("span");
         element.innerHTML = icon;
-        element.classList.add("tw-ml-1");
+        element.classList.add("tw-ml-1", "tw-animate-spin");
         if (link.lastChild != undefined && link.childNodes.length > 1) {
             link.removeChild(link.lastChild);
         }
