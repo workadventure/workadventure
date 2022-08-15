@@ -20,6 +20,7 @@ import LL from "../../i18n/i18n-svelte";
 import { inJitsiStore, inBbbStore, silentStore, inOpenWebsite } from "../../Stores/MediaStore";
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
+import { chatZoneLiveStore } from "../../Stores/ChatStore";
 
 interface OpenCoWebsite {
     actionId: string;
@@ -233,9 +234,11 @@ export class GameMapPropertiesListener {
 
             if (oldValue !== undefined) {
                 iframeListener.sendLeaveMucEvent(playUri + oldValue);
+                chatZoneLiveStore.set(false);
             }
             if (newValue !== undefined) {
                 iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live");
+                chatZoneLiveStore.set(true);
             }
         });
 
