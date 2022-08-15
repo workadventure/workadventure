@@ -14,7 +14,7 @@ npx playwright install --with-deps
 Start WorkAdventure with:
 
 ```bash
-docker-compose up -d
+docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
 ```
 
 Wait 2-3 minutes for the environment to start, then:

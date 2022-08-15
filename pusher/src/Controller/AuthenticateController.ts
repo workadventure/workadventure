@@ -3,7 +3,7 @@ import { BaseHttpController } from "./BaseHttpController";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
+import {DISABLE_ANONYMOUS, FRONT_URL} from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
@@ -93,10 +93,12 @@ export class AuthenticateController extends BaseHttpController {
 
                 const loginUri = await openIDClient.authorizationUrl(
                     res,
-                    playUri as string | undefined,
                     redirect as string | undefined
                 );
-                res.cookie("playUri", playUri);
+                res.cookie("playUri", playUri as string, undefined, {
+                    httpOnly: true,
+                });
+
                 return res.redirect(loginUri);
             } catch (e) {
                 console.error("openIDLogin => e", e);
