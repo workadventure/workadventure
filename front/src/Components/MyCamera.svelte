@@ -53,7 +53,8 @@
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <div
             transition:fly={{ x: 100, duration: 2000 }}
-            class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
+            class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all"
+        >
             <video
                 class="tw-flex tw-h-full tw-max-w-full tw-m-auto tw-rounded"
                 use:srcObject={stream}
@@ -63,7 +64,7 @@
             />
         </div>
         <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2">
-            <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue"/>
+            <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
         </div>
     {/if}
 </div>

@@ -28,8 +28,9 @@
     }
 </script>
 
-<div class="video-container screen-sharing screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
-     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
+<div
+    class="video-container screen-sharing screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
+    on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $statusStore === "connecting"}
         <div class="connecting-spinner" />
@@ -51,8 +52,7 @@
             <i class="flex">
                 <span
                     style="background-color: {backGroundColor}; color: {textColor};"
-                    class="nametag-text nametag-shape tw-pr-3 tw-pl-2 tw-h-3 tw-max-h-8"
-                    >{name}</span
+                    class="nametag-text nametag-shape tw-pr-3 tw-pl-2 tw-h-3 tw-max-h-8">{name}</span
                 >
             </i>
         </div>
