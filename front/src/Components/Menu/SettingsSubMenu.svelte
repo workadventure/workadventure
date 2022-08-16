@@ -12,7 +12,8 @@
     import infoImg from "../images/info.svg";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
-    let notification: boolean = localUserStore.getNotification() === "granted";
+    let notification: boolean = localUserStore.getNotification();
+    let chatSounds: boolean = localUserStore.getChatSounds();
     let forceCowebsiteTrigger: boolean = localUserStore.getForceCowebsiteTrigger();
     let ignoreFollowRequests: boolean = localUserStore.getIgnoreFollowRequests();
     let decreaseAudioPlayerVolumeWhileTalking: boolean = localUserStore.getDecreaseAudioPlayerVolumeWhileTalking();
@@ -80,19 +81,23 @@
 
     function changeNotification() {
         if (Notification.permission === "granted") {
-            localUserStore.setNotification(notification ? "granted" : "denied");
+            localUserStore.setNotification(notification ? true : false);
         } else {
             Notification.requestPermission()
                 .then((response) => {
                     if (response === "granted") {
-                        localUserStore.setNotification(notification ? "granted" : "denied");
+                        localUserStore.setNotification(notification ? true : false);
                     } else {
-                        localUserStore.setNotification("denied");
+                        localUserStore.setNotification(false);
                         notification = false;
                     }
                 })
                 .catch((e) => console.error(e));
         }
+    }
+
+    function changeChatSounds() {
+        localUserStore.setChatSounds(chatSounds);
     }
 
     function changeForceCowebsiteTrigger() {
@@ -205,6 +210,10 @@
         <label>
             <input type="checkbox" bind:checked={notification} on:change={changeNotification} />
             <span>{$LL.menu.settings.notifications()}</span>
+        </label>
+        <label>
+            <input type="checkbox" bind:checked={chatSounds} on:change={changeChatSounds} />
+            <span>{$LL.menu.settings.chatSounds()}</span>
         </label>
         <label>
             <input type="checkbox" bind:checked={forceCowebsiteTrigger} on:change={changeForceCowebsiteTrigger} />

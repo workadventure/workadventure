@@ -174,3 +174,6 @@ export const timelineMessagesToSee = derived(
       (message) => message.date > $lastTimelineMessageRead
     ).length
 );
+
+export const chatSoundsStore = writable<boolean>(true);
+export const chatNotificationsStore = writable<boolean>(true);

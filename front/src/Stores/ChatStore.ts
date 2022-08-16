@@ -7,6 +7,14 @@ import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { peerStore } from "./PeerStore";
 
 export const chatVisibilityStore = writable(false);
+chatVisibilityStore.subscribe((visibility) => {
+    try {
+        iframeListener.sendChatVisibilityToChatIframe(visibility);
+    } catch (err) {
+        console.error(err);
+    }
+});
+
 export const chatInputFocusStore = writable(false);
 
 export const _newChatMessageSubject = new Subject<string>();

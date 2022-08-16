@@ -757,8 +757,8 @@ export class MucRoom {
               if (delay > this.lastMessageSeen) {
                 this.countMessagesToSee.update((last) => last + 1);
                 if (
-                  !get(chatVisibilityStore) &&
-                  get(activeThreadStore) !== this
+                  !get(chatVisibilityStore) ||
+                  (get(chatVisibilityStore) && get(activeThreadStore) !== this)
                 ) {
                   mediaManager.playNewMessageNotification();
                 }

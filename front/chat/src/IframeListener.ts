@@ -6,7 +6,9 @@ import { userStore } from "./Stores/LocalUserStore";
 import {
   chatMessagesStore,
   ChatMessageTypes,
+  chatNotificationsStore,
   chatPeerConnectionInProgress,
+  chatSoundsStore,
   newChatMessageSubject,
   newChatMessageWritingStatusSubject,
   timelineOpenedStore,
@@ -18,6 +20,7 @@ import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
+import { mediaManager } from "./Media/MediaManager";
 
 class IframeListener {
   init() {
@@ -120,6 +123,11 @@ class IframeListener {
             }
             case "chatVisibility": {
               chatVisibilityStore.set(iframeEvent.data.visibility);
+              break;
+            }
+            case "settings": {
+              chatSoundsStore.set(iframeEvent.data.chatSounds);
+              chatNotificationsStore.set(iframeEvent.data.notification);
               break;
             }
           }

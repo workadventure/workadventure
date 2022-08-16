@@ -73,6 +73,7 @@ const menu: BaseTranslation = {
         },
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        chatSounds: "Sounds of chat",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
     },

@@ -43,6 +43,8 @@ import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isAskPositionEvent } from "./AskPositionEvent";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
+import { isSettingsEvent } from "./SettingsEvent";
+import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -233,6 +235,7 @@ export const isIframeEventWrapper = z.union([
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
 
+// @ts-ignore
 export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("userInputChat"),
@@ -301,6 +304,14 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("joinMuc"),
         data: isJoinMucEvent,
+    }),
+    z.object({
+        type: z.literal("settings"),
+        data: isSettingsEvent,
+    }),
+    z.object({
+        type: z.literal("chatVisibility"),
+        data: isChatVisibilityEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;

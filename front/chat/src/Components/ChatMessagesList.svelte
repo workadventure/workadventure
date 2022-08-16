@@ -25,6 +25,7 @@
   } from "svelte-feather-icons";
   import { Unsubscriber } from "svelte/store";
   import {
+    chatVisibilityStore,
     selectedMessageToReact,
     selectedMessageToReply,
   } from "../Stores/ChatStore";
@@ -141,7 +142,7 @@
 
     subscribers.push(
       mucRoom.getMessagesStore().subscribe(() => {
-        if (isScrolledDown) {
+        if (isScrolledDown && $chatVisibilityStore) {
           scrollDownAndRead();
         }
       })

@@ -5,6 +5,7 @@ import { isLocale } from "./Locale";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
 import { isChatVisibility } from "./ChatVisibility";
+import { isSettings } from "./Settings";
 
 export const isIframeEventWrapper = z.union([
   z.object({
@@ -30,6 +31,10 @@ export const isIframeEventWrapper = z.union([
   z.object({
     type: z.literal("chatVisibility"),
     data: isChatVisibility,
+  }),
+  z.object({
+    type: z.literal("settings"),
+    data: isSettings,
   }),
 
   //TODO delete with chat XMPP integration for the discussion circle

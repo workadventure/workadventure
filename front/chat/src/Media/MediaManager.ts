@@ -1,5 +1,6 @@
 import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
+import { chatNotificationsStore, chatSoundsStore } from "../Stores/ChatStore";
 
 export enum NotificationType {
   discussion = 1,
@@ -21,7 +22,7 @@ class MediaManager {
     userName: string,
     notificationType: NotificationType
   ) {
-    if (document.hasFocus()) {
+    if (document.hasFocus() || !get(chatNotificationsStore)) {
       return;
     }
 
@@ -54,6 +55,11 @@ class MediaManager {
   }
 
   public playNewMessageNotification() {
+    // Sounds disabled
+    if (!get(chatSoundsStore)) {
+      return;
+    }
+
     //play notification message
     const elementAudioNewMessageNotification =
       document.getElementById("newMessageSound");

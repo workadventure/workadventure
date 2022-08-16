@@ -40,6 +40,8 @@ import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
 import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { SettingsEvent } from "./Events/SettingsEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -621,6 +623,37 @@ class IframeListener {
                 uuid,
             },
         });
+    }
+
+    sendChatVisibilityToChatIframe(visibility: boolean) {
+        const message = {
+            type: "chatVisibility",
+            data: {
+                visibility,
+            },
+        } as IframeResponseEvent;
+        this.postMessageToChat(message);
+    }
+    sendSettingsToChatIframe() {
+        const message = {
+            type: "settings",
+            data: {
+                notification: localUserStore.getNotification(),
+                chatSounds: localUserStore.getChatSounds(),
+            },
+        } as IframeResponseEvent;
+        this.postMessageToChat(message);
+    }
+
+    postMessageToChat(message: IframeResponseEvent) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("postMessageToChat Error => ", err);
+        }
     }
 
     //TODO delete with chat XMPP integration for the discussion circle

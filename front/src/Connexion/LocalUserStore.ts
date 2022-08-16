@@ -1,6 +1,7 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
+import { iframeListener } from "../Api/IframeListener";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -21,6 +22,7 @@ const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTal
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const chatSounds = "chatSounds";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
@@ -249,12 +251,22 @@ class LocalUserStore {
         return JSON.parse(jsonPayload);
     }
 
-    setNotification(value: string): void {
-        localStorage.setItem(notification, value);
+    setNotification(value: boolean): void {
+        localStorage.setItem(notification, value.toString());
+        iframeListener.sendSettingsToChatIframe();
     }
 
-    getNotification(): string | null {
-        return localStorage.getItem(notification);
+    getNotification(): boolean {
+        return localStorage.getItem(notification) === "true";
+    }
+
+    setChatSounds(value: boolean): void {
+        localStorage.setItem(chatSounds, value.toString());
+        iframeListener.sendSettingsToChatIframe();
+    }
+
+    getChatSounds(): boolean {
+        return localStorage.getItem(chatSounds) !== "false";
     }
 
     setCameraSetup(cameraId: string) {
