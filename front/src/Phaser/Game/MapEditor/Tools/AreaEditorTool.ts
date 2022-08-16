@@ -1,7 +1,9 @@
+import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { Subscription } from "rxjs";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
 import { AreaPreview, AreaPreviewEvent } from "../../../Components/MapEditor/AreaPreview";
-import { AreaType, ITiledMapRectangleObject } from "../../GameMap";
+import { GameMapFrontWrapper } from "../../GameMap/GameMapFrontWrapper";
 import { GameScene } from "../../GameScene";
 import { MapEditorModeManager } from "../MapEditorModeManager";
 import { MapEditorTool } from "./MapEditorTool";
@@ -14,6 +16,8 @@ export class AreaEditorTool extends MapEditorTool {
      * Visual representations of map Areas objects
      */
     private areaPreviews: AreaPreview[];
+
+    private gameMapAreaUpdateSubscription!: Subscription;
 
     constructor(mapEditorModeManager: MapEditorModeManager) {
         super();
@@ -33,24 +37,59 @@ export class AreaEditorTool extends MapEditorTool {
         this.scene.markDirty();
     }
 
-    public subscribeToStreams(connection: RoomConnection): void {
+    public destroy(): void {
+        this.gameMapAreaUpdateSubscription.unsubscribe();
+    }
+
+    public subscribeToRoomConnection(connection: RoomConnection): void {
         connection.editMapMessageStream.subscribe((message) => {
             switch (message.message?.$case) {
                 case "modifyAreaMessage": {
                     const data = message.message.modifyAreaMessage;
                     this.areaPreviews
                         .find((area) => area.getConfig().id === data.id)
-                        ?.updateArea(data as ITiledMapRectangleObject, false);
-                    this.scene.getGameMap().updateAreaById(data.id, AreaType.Static, data);
+                        ?.updatePreview(data as ITiledMapRectangleObject);
+                    this.scene.getGameMapFrontWrapper().updateAreaById(data.id, AreaType.Static, data);
                     this.scene.markDirty();
                 }
             }
         });
     }
 
+    public subscribeToGameMapFrontWrapperEvents(gameMapFrontWrapper: GameMapFrontWrapper): void {
+        this.gameMapAreaUpdateSubscription = gameMapFrontWrapper
+            .getAreaUpdatedObservable()
+            .subscribe((areaConfig: ITiledMapRectangleObject) => {
+                this.updateAreaPreview(areaConfig);
+                this.scene.markDirty();
+            });
+    }
+
+    public unsubscribeFromGameMapEvents(): void {
+        this.gameMapAreaUpdateSubscription.unsubscribe();
+    }
+
+    public updateAreaPreview(config: ITiledMapRectangleObject): void {
+        const areaPreview = this.getAreaPreview(config.id);
+        if (!areaPreview) {
+            return;
+        }
+        areaPreview.updatePreview(config);
+        // HACK: A way to update AreaPreviewWindow component values after performin undo / redo operations
+        mapEditorSelectedAreaPreviewStore.set(areaPreview);
+    }
+
+    public getAreaPreviewConfig(id: number): ITiledMapRectangleObject | undefined {
+        return this.getAreaPreview(id)?.getConfig();
+    }
+
+    private getAreaPreview(id: number): AreaPreview | undefined {
+        return this.areaPreviews.find((area) => area.getId() === id);
+    }
+
     private createAreaPreviews(): AreaPreview[] {
         this.areaPreviews = [];
-        const areaConfigs = this.scene.getGameMap().getAreas(AreaType.Static);
+        const areaConfigs = this.scene.getGameMapFrontWrapper().getAreas(AreaType.Static);
 
         for (const config of areaConfigs) {
             const areaPreview = new AreaPreview(this.scene, { ...config });
@@ -66,14 +105,6 @@ export class AreaEditorTool extends MapEditorTool {
     private bindAreaPreviewEventHandlers(areaPreview: AreaPreview): void {
         areaPreview.on(AreaPreviewEvent.Clicked, () => {
             mapEditorSelectedAreaPreviewStore.set(areaPreview);
-        });
-        areaPreview.on(AreaPreviewEvent.Updated, (config: ITiledMapRectangleObject) => {
-            // EDIT AFTER MESSAGE FROM BACK FOR NOW. MAKE IT INSTANT IF USER MADE THE CHANGES THOUGH
-
-            // this.scene.getGameMap().setArea(config.name, AreaType.Static, config);
-            // this.scene.markDirty();
-
-            this.scene.connection?.emitMapEditorModifyArea(config);
         });
     }
 

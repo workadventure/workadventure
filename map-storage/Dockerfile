@@ -11,7 +11,7 @@
 #RUN yarn proto
 
 # typescript build
-FROM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
+FROM --platform=$BUILDPLATFORM node:16.15-buster-slim@sha256:9ad2f889d4a15ef94e40ac75e95c28daa34073dbc25d7b1e619caacc6b83623c as builder
 WORKDIR /usr/src
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN yarn install
@@ -27,6 +27,7 @@ COPY map-storage/yarn.lock map-storage/package.json ./
 ENV NODE_ENV=production
 RUN yarn install --production
 COPY --from=builder /usr/src/dist /usr/src/dist
+COPY --from=builder /usr/src/public /usr/src/public
 
 USER node
 CMD ["yarn", "run", "start:prod"]

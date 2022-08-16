@@ -1,6 +1,6 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
-import { v4 as uuidv4 } from "uuid";
 import { Emoji } from "../Stores/EmoteStore";
+import { z } from "zod";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -20,10 +20,7 @@ const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
-const state = "state";
-const nonce = "nonce";
 const notification = "notificationPermission";
-const code = "code";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
@@ -31,7 +28,17 @@ const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
 const emojiFavorite = "emojiFavorite";
 
+const JwtAuthToken = z
+    .object({
+        accessToken: z.string().optional(),
+    })
+    .partial();
+
+type JwtAuthToken = z.infer<typeof JwtAuthToken>;
+
 class LocalUserStore {
+    private jwt: JwtAuthToken | undefined;
+
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
     }
@@ -210,11 +217,36 @@ class LocalUserStore {
     }
 
     setAuthToken(value: string | null) {
-        value ? localStorage.setItem(authToken, value) : localStorage.removeItem(authToken);
+        if (value !== null) {
+            localStorage.setItem(authToken, value);
+            this.jwt = JwtAuthToken.parse(LocalUserStore.parseJwt(value));
+        } else {
+            localStorage.removeItem(authToken);
+        }
     }
 
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
+    }
+
+    isLogged(): boolean {
+        return this.jwt?.accessToken !== undefined;
+    }
+
+    private static parseJwt(token: string) {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            window
+                .atob(base64)
+                .split("")
+                .map(function (c) {
+                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+        );
+
+        return JSON.parse(jsonPayload);
     }
 
     setNotification(value: string): void {
@@ -223,47 +255,6 @@ class LocalUserStore {
 
     getNotification(): string | null {
         return localStorage.getItem(notification);
-    }
-
-    generateState(): string {
-        const newState = uuidv4();
-        localStorage.setItem(state, newState);
-        return newState;
-    }
-
-    verifyState(value: string): boolean {
-        const oldValue = localStorage.getItem(state);
-        if (!oldValue) {
-            localStorage.setItem(state, value);
-            return true;
-        }
-        return oldValue === value;
-    }
-
-    setState(value: string) {
-        localStorage.setItem(state, value);
-    }
-
-    getState(): string | null {
-        return localStorage.getItem(state);
-    }
-
-    generateNonce(): string {
-        const newNonce = uuidv4();
-        localStorage.setItem(nonce, newNonce);
-        return newNonce;
-    }
-
-    getNonce(): string | null {
-        return localStorage.getItem(nonce);
-    }
-
-    setCode(value: string): void {
-        localStorage.setItem(code, value);
-    }
-
-    getCode(): string | null {
-        return localStorage.getItem(code);
     }
 
     setCameraSetup(cameraId: string) {

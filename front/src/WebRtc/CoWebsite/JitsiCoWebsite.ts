@@ -1,5 +1,5 @@
 import CancelablePromise from "cancelable-promise";
-import { inExternalServiceStore } from "../../Stores/MyCameraStoreVisibility";
+import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { jitsiFactory } from "../JitsiFactory";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 

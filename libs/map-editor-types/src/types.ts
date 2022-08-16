@@ -1,3 +1,15 @@
+import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
+
+export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
+
+export type CommandConfig = UpdateAreaCommandConfig;
+
+export enum AreaType {
+    Static = "Static",
+    Dynamic = "Dynamic",
+}
+
 export enum GameMapProperties {
     ALLOW_API = "allowApi",
     AUDIO_LOOP = "audioLoop",
