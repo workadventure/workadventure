@@ -23,7 +23,9 @@ test.describe('API WA.players', () => {
     await login(page2, 'Bob');
 
     const events = getCoWebsiteIframe(page).locator('#events');
-    await expect(events).toContainText('New user: Bob');
+    await expect(events).toContainText('New user: Bob', {
+      timeout: 10000
+    });
 
     await getCoWebsiteIframe(page).locator('#listCurrentPlayers').click();
     const list = getCoWebsiteIframe(page).locator('#list');
