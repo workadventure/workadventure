@@ -12,10 +12,14 @@ export class MapsManager {
         const inMemoryGameMap = this.loadedMaps.get(path);
         if (inMemoryGameMap) {
             console.log("SERVE MAP FROM MEMORY");
-            return inMemoryGameMap.getMap();
+            console.log(inMemoryGameMap);
+            // return inMemoryGameMap.getMap();
         }
         console.log("SERVE MAP FROM FILE");
         const file = await readFile(`./public${path}`, "utf-8");
-        return JSON.parse(file);
+        const map = JSON.parse(file);
+        const gameMap = new GameMap(map);
+        this.loadedMaps.set(path, map);
+        return map;
     }
 }
