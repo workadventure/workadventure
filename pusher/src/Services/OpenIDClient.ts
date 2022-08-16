@@ -7,6 +7,7 @@ import {
     OPID_USERNAME_CLAIM,
     OPID_LOCALE_CLAIM,
     OPID_SCOPE,
+    OPID_PROMPT,
     SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
 import Response from "hyper-express/types/components/http/Response";
@@ -79,7 +80,7 @@ class OpenIDClient {
 
             return client.authorizationUrl({
                 scope: OPID_SCOPE,
-                prompt: "login",
+                prompt: OPID_PROMPT,
                 state: state,
                 //nonce: nonce,
                 playUri: playUri,

@@ -69,6 +69,7 @@ services:
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
       - EJABBERD_DOMAIN=ejabberd
+      - OPID_PROMPT=login
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
     labels:
