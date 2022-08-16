@@ -1,5 +1,5 @@
 import type CancelablePromise from "cancelable-promise";
-import { inExternalServiceStore } from "../../Stores/MyCameraStoreVisibility";
+import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
