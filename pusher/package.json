@@ -6,8 +6,8 @@
   "scripts": {
     "tsc": "tsc && cp -rf ./data ./dist/",
     "dev": "ts-node-dev --exit-child --respawn ./server.ts",
-    "prod": "tsc && cp -rf ./data ./dist/ && node --max-old-space-size=4096 ./dist/server.js",
-    "runprod": "node --max-old-space-size=4096 ./dist/server.js",
+    "prod": "tsc && cp -rf ./data ./dist/ && node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
+    "runprod": "node -r source-map-support/register --max-old-space-size=4096 ./dist/server.js",
     "profile": "tsc && node --prof ./dist/server.js",
     "test": "ts-node node_modules/jasmine/bin/jasmine --config=jasmine.json",
     "lint": "DEBUG= node_modules/.bin/eslint src/ . --ext .ts",
@@ -57,6 +57,7 @@
     "prom-client": "^12.0.0",
     "qs": "^6.10.3",
     "query-string": "^6.13.3",
+    "source-map-support": "^0.5.21",
     "swagger-jsdoc": "^6.1.0",
     "swagger-ui-dist": "^4.5.1",
     "uuidv4": "^6.0.7",

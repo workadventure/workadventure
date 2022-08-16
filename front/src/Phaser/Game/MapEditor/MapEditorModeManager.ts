@@ -1,3 +1,6 @@
+import { CommandConfig } from "@workadventure/map-editor-types";
+import { UpdateAreaCommand } from "@workadventure/map-editor-types/src/Commands/Area/UpdateAreaCommand";
+import { Command } from "@workadventure/map-editor-types/src/Commands/Command";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";
@@ -32,11 +35,23 @@ export class MapEditorModeManager {
      */
     private activeTool?: EditorToolName;
 
+    /**
+     * We are making use of CommandPattern to implement an Undo-Redo mechanism
+     */
+    private commandsHistory: Command[];
+    /**
+     * Which command was called most recently
+     */
+    private currentCommandIndex: number;
+
     private mapEditorModeUnsubscriber!: Unsubscriber;
     private pointerDownUnsubscriber!: Unsubscriber;
 
     constructor(scene: GameScene) {
         this.scene = scene;
+
+        this.commandsHistory = [];
+        this.currentCommandIndex = -1;
 
         this.active = false;
         this.pointerDown = false;
@@ -47,6 +62,51 @@ export class MapEditorModeManager {
         this.activeTool = undefined;
 
         this.subscribeToStores();
+        this.subscribeToGameMapEvents();
+    }
+
+    public executeCommand(commandConfig: CommandConfig): void {
+        let command: Command;
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
+                command.execute();
+                // this should not be called with every change. Use some sort of debounce
+                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = commandConfig.type;
+                return;
+            }
+        }
+        this.emitMapEditorUpdate(commandConfig);
+        // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
+        if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
+            this.commandsHistory.splice(this.currentCommandIndex + 1);
+        }
+        this.commandsHistory.push(command);
+        this.currentCommandIndex += 1;
+    }
+
+    public undoCommand(): void {
+        if (this.commandsHistory.length === 0 || this.currentCommandIndex === -1) {
+            return;
+        }
+        const command = this.commandsHistory[this.currentCommandIndex].undo();
+        // this should not be called with every change. Use some sort of debounce
+        this.emitMapEditorUpdate(command);
+        this.currentCommandIndex -= 1;
+    }
+
+    public redoCommand(): void {
+        if (this.commandsHistory.length === 0 || this.currentCommandIndex === this.commandsHistory.length - 1) {
+            return;
+        }
+        const command = this.commandsHistory[this.currentCommandIndex + 1].execute();
+        // this should not be called with every change. Use some sort of debounce
+        this.emitMapEditorUpdate(command);
+        this.currentCommandIndex += 1;
     }
 
     public isActive(): boolean {
@@ -59,6 +119,7 @@ export class MapEditorModeManager {
 
     public destroy(): void {
         this.unsubscribeFromStores();
+        this.unsubscribeFromGameMapEvents();
         this.pointerDownUnsubscriber();
     }
 
@@ -72,14 +133,22 @@ export class MapEditorModeManager {
                 this.equipTool(EditorToolName.AreaEditor);
                 break;
             }
+            case "r": {
+                this.redoCommand();
+                break;
+            }
+            case "u": {
+                this.undoCommand();
+                break;
+            }
             default: {
                 break;
             }
         }
     }
 
-    public subscribeToStreams(connection: RoomConnection): void {
-        this.editorTools.forEach((tool) => tool.subscribeToStreams(connection));
+    public subscribeToRoomConnection(connection: RoomConnection): void {
+        this.editorTools.forEach((tool) => tool.subscribeToRoomConnection(connection));
     }
 
     private equipTool(tool?: EditorToolName): void {
@@ -91,6 +160,18 @@ export class MapEditorModeManager {
 
         if (tool !== undefined) {
             this.activateTool();
+        }
+    }
+
+    private emitMapEditorUpdate(commandConfig: CommandConfig): void {
+        switch (commandConfig.type) {
+            case "UpdateAreaCommand": {
+                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
+                break;
+            }
+            default: {
+                break;
+            }
         }
     }
 
@@ -128,6 +209,16 @@ export class MapEditorModeManager {
         this.pointerDownUnsubscriber = mapEditorModeDragCameraPointerDownStore.subscribe((pointerDown) => {
             this.pointerDown = pointerDown;
         });
+    }
+
+    private subscribeToGameMapEvents(): void {
+        this.editorTools.forEach((tool) =>
+            tool.subscribeToGameMapFrontWrapperEvents(this.scene.getGameMapFrontWrapper())
+        );
+    }
+
+    private unsubscribeFromGameMapEvents(): void {
+        this.editorTools.forEach((tool) => tool.unsubscribeFromGameMapEvents());
     }
 
     private unsubscribeFromStores(): void {

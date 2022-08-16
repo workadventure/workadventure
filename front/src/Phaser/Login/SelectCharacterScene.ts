@@ -22,7 +22,7 @@ import { DraggableGrid } from "@home-based-studio/phaser3-utils";
 import { WokaSlot } from "../Components/SelectWoka/WokaSlot";
 import { DraggableGridEvent } from "@home-based-studio/phaser3-utils/lib/utils/gui/containers/grids/DraggableGrid";
 import { wokaList } from "../../Messages/JsonMessages/PlayerTextures";
-import { myCameraStore, myMicrophoneStore } from "../../Stores/MyCameraStoreVisibility";
+import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 
 //todo: put this constants in a dedicated file
 export const SelectCharacterSceneName = "SelectCharacterScene";

@@ -1,4 +1,4 @@
-import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
@@ -16,13 +16,14 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
+    private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
     private _mapUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
+    private _canEditMap = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
@@ -117,12 +118,13 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
@@ -215,6 +217,10 @@ export class Room {
 
     get canReport(): boolean {
         return this._canReport;
+    }
+
+    get canEditMap(): boolean {
+        return this._canEditMap;
     }
 
     get loadingCowebsiteLogo(): string | undefined {
