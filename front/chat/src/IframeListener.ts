@@ -17,6 +17,7 @@ import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
+import { chatVisibilityStore } from "./Stores/ChatStore";
 
 class IframeListener {
   init() {
@@ -115,6 +116,10 @@ class IframeListener {
               if (iframeEvent.data) {
                 timelineOpenedStore.set(true);
               }
+              break;
+            }
+            case "chatVisibility": {
+              chatVisibilityStore.set(iframeEvent.data.visibility);
               break;
             }
           }

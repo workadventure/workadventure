@@ -5,5 +5,4 @@ const PUSHER_URL =
 const FALLBACK_LOCALE = getEnvConfig("FALLBACK_LOCALE") || undefined;
 const ICON_URL = getEnvConfig("ICON_URL") || undefined;
 
-
 export { PUSHER_URL, FALLBACK_LOCALE, ICON_URL };

@@ -10,7 +10,9 @@ import { userStore } from "../Stores/LocalUserStore";
 import { get } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import {mediaManager} from "../Media/MediaManager";
+import { mediaManager } from "../Media/MediaManager";
+import { chatVisibilityStore } from "../Stores/ChatStore";
+import { activeThreadStore } from "../Stores/ActiveThreadStore";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -754,7 +756,12 @@ export class MucRoom {
             } else {
               if (delay > this.lastMessageSeen) {
                 this.countMessagesToSee.update((last) => last + 1);
-                mediaManager.playNewMessageNotification();
+                if (
+                  !get(chatVisibilityStore) &&
+                  get(activeThreadStore) !== this
+                ) {
+                  mediaManager.playNewMessageNotification();
+                }
               }
               const message: Message = {
                 name,

@@ -123,7 +123,8 @@
       },
       "ports": [80],
       "env": {
-        "PUSHER_URL": "//pusher-"+url
+        "PUSHER_URL": "//pusher-"+url,
+        "ICON_URL": "//icon-"+url
       }
     },
     "map-storage": {

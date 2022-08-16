@@ -151,6 +151,8 @@ function createChatSubMenuVisibilityStore() {
 }
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 
+export const chatVisibilityStore = writable<boolean>(false);
+
 export const timelineOpenedStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
