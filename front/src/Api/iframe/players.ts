@@ -97,22 +97,22 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * Start the tracking players. You need to call this method before being able to listen to players positions.
      *
      * ```ts
-     * await WA.players.enableTracking({
-     *     trackPlayers: true, // Required to use "onPlayerEnters", "onPlayerLeaves", "list" and "get"
-     *     trackMovement: true, // Required to get the player position and use "onPlayerMoves"
+     * await WA.players.configureTracking({
+     *     players: true, // Required to use "onPlayerEnters", "onPlayerLeaves", "list" and "get"
+     *     movement: true, // Required to get the player position and use "onPlayerMoves"
      * })
      * ```
      *
      * @param options
      */
-    public async enableTracking(options?: { trackPlayers?: boolean; trackMovement?: boolean }): Promise<void> {
-        this.trackingPlayers = options?.trackPlayers ?? true;
-        this.trackingMovement = options?.trackMovement ?? true;
+    public async configureTracking(options?: { players?: boolean; movement?: boolean }): Promise<void> {
+        this.trackingPlayers = options?.players ?? true;
+        this.trackingMovement = options?.movement ?? true;
         const remotePlayersData = await queryWorkadventure({
             type: "enablePlayersTracking",
             data: {
-                trackPlayers: this.trackingPlayers,
-                trackMovement: this.trackingMovement,
+                players: this.trackingPlayers,
+                movement: this.trackingMovement,
             },
         });
 
@@ -156,7 +156,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerEnters(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.enableTracking() first."
+                "Cannot call WA.players.onPlayerEnters(). You forgot to call WA.players.configureTracking() first."
             );
         }
         return newRemotePlayersStream;
@@ -177,7 +177,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerLeaves(): Observable<RemotePlayerInterface> {
         if (!this.trackingPlayers) {
             throw new Error(
-                "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.enableTracking() first."
+                "Cannot call WA.players.onPlayerLeaves(). You forgot to call WA.players.configureTracking() first."
             );
         }
         return removeRemotePlayersStream;
@@ -196,7 +196,7 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
     public get onPlayerMoves(): Observable<RemotePlayerMoved> {
         if (!this.trackingMovement) {
             throw new Error(
-                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.enableTracking() first."
+                "Cannot call WA.players.onPlayerMoves(). You forgot to call WA.players.configureTracking() first."
             );
         }
         return playersMovedStream;

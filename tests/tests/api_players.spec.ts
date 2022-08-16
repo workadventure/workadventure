@@ -48,7 +48,7 @@ test.describe('API WA.players', () => {
     await expect(list).not.toContainText('Bob');
   });
 
-  test('exception if we forget to call WA.players.enableTracking', async ({ page }) => {
+  test('exception if we forget to call WA.players.configureTracking', async ({ page }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players_no_init.json'
     );
@@ -83,7 +83,7 @@ test.describe('API WA.players', () => {
 
     const myvar = await evaluateScript(page2, async () => {
       await WA.onInit();
-      await WA.players.enableTracking();
+      await WA.players.configureTracking();
 
       for (const player of WA.players.list()) {
         return player.state.myvar;
@@ -166,7 +166,7 @@ test.describe('API WA.players', () => {
     const readRemotePlayerVariable = async (name: string, targetPage: Page): Promise<unknown> => {
       return await evaluateScript(targetPage, async (name: string) => {
         await WA.onInit();
-        await WA.players.enableTracking();
+        await WA.players.configureTracking();
 
         for (const player of WA.players.list()) {
           return player.state[name];
@@ -335,7 +335,7 @@ test.describe('API WA.players', () => {
 
     await evaluateScript(page2, async () => {
       await WA.onInit();
-      await WA.players.enableTracking();
+      await WA.players.configureTracking();
 
       WA.player.state.onVariableChange('should_be_notified').subscribe(() => {
         console.log('NOTIFICATION RECEIVED FOR should_be_notified VARIABLE CHANGE');
@@ -366,7 +366,7 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(2000);
 
     await expect(gotExpectedNotification).toBe(true);
     await expect(gotUnexpectedNotification).toBe(false);

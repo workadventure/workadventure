@@ -3,7 +3,7 @@ import { BaseHttpController } from "./BaseHttpController";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
-import {DISABLE_ANONYMOUS, FRONT_URL} from "../Enum/EnvironmentVariable";
+import { DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { RegisterData } from "../Messages/JsonMessages/RegisterData";
 import { adminService } from "../Services/AdminService";
 import Axios from "axios";
@@ -91,11 +91,8 @@ export class AuthenticateController extends BaseHttpController {
                     throw new Error("Expecting playUri");
                 }
 
-                const loginUri = await openIDClient.authorizationUrl(
-                    res,
-                    redirect as string | undefined
-                );
-                res.cookie("playUri", playUri as string, undefined, {
+                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined);
+                res.cookie("playUri", playUri, undefined, {
                     httpOnly: true,
                 });
 

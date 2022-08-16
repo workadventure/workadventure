@@ -14,7 +14,7 @@
 
             WA.onInit().then(async () => {
                 console.log('After WA init');
-                await WA.players.enableTracking();
+                await WA.players.configureTracking();
 
                 for (const remotePlayer of WA.players.list()) {
                     remotePlayer.state.onVariableChange("testVariable").subscribe((value) => {

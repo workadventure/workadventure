@@ -1582,21 +1582,18 @@ ${escapedMessage}
                 throw new Error('Missing source in "enablePlayersTracking" query. This should never happen.');
             }
 
-            if (
-                enablePlayersTrackingEvent.trackMovement === true &&
-                enablePlayersTrackingEvent.trackPlayers === false
-            ) {
-                throw new Error("Cannot enable trackMovement without enabling trackPlayers first");
+            if (enablePlayersTrackingEvent.movement === true && enablePlayersTrackingEvent.players === false) {
+                throw new Error("Cannot enable movement without enabling players first");
             }
 
             let sendPlayers = false;
 
-            if (enablePlayersTrackingEvent.trackPlayers) {
+            if (enablePlayersTrackingEvent.players) {
                 sendPlayers = this.playersEventDispatcher.addIframe(source);
             } else {
                 this.playersEventDispatcher.removeIframe(source);
             }
-            if (enablePlayersTrackingEvent.trackMovement) {
+            if (enablePlayersTrackingEvent.movement) {
                 this.playersMovementEventDispatcher.addIframe(source);
             } else {
                 this.playersMovementEventDispatcher.removeIframe(source);
@@ -1604,7 +1601,7 @@ ${escapedMessage}
 
             const addPlayerEvents: AddPlayerEvent[] = [];
             if (sendPlayers) {
-                if (enablePlayersTrackingEvent.trackPlayers) {
+                if (enablePlayersTrackingEvent.players) {
                     for (const player of this.remotePlayersRepository.getPlayers()) {
                         addPlayerEvents.push(RemotePlayersRepository.toIframeAddPlayerEvent(player));
                     }

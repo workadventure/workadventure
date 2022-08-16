@@ -7,19 +7,19 @@ Functions in the `WA.players` namespace can be used to listen to nearby users.
 
 By default, your script will not receive data from the nearby users. This is done for performance reasons.
 
-If you want to start listening to other users, the very first step is to call the `WA.players.enableTracking` method.
+If you want to start listening to other users, the very first step is to call the `WA.players.configureTracking` method.
 
 ```typescript
-WA.players.enableTracking();
+await WA.players.configureTracking();
 ```
 
 By default, this will track players entering / leaving the "nearby zone", track players movement and track players variable.
 You can opt-out from tracking player movement (that can be resource intensive if there are hundreds of players) by using:
 
 ```typescript
-WA.players.enableTracking({
-  trackPlayers: true,
-  trackMovement: false,
+await WA.players.configureTracking({
+  players: true,
+  movement: false,
 });
 ```
 
@@ -41,7 +41,7 @@ WA.players.list(): IterableIterator<RemotePlayerInterface>
 
 **Example:**
 ```javascript
-await WA.players.enableTracking();
+await WA.players.configureTracking();
 const players = WA.players.list();
 for (const player of players) {
     console.log(`Player ${player.name} is near you`);
@@ -108,7 +108,7 @@ WA.players.get(id: number): RemotePlayerInterface | undefined;
 
 **Example:**
 ```javascript
-await WA.players.enableTracking();
+await WA.players.configureTracking();
 const player = WA.players.get(1);
 if (player !== undefined) {
     console.log(`Player 1 name is ${player.name}`);
@@ -137,7 +137,7 @@ an object on which you can add subscriptions using the `subscribe` method.
 **Example:**
 
 ```typescript
-await WA.players.enableTracking();
+await WA.players.configureTracking();
 WA.players.onPlayerEnters().subscribe((player: RemotePlayerInterface) => {
     console.log(`Player ${player.name} entered your nearby zone`);
 });
@@ -178,7 +178,7 @@ interface RemotePlayerMoved {
 **Example:**
 
 ```typescript
-await WA.players.enableTracking();
+await WA.players.configureTracking();
 WA.players.onPlayerMoves().subscribe((event: RemotePlayerMoved) => {
     const player = event.player;
     const oldPosition = event.oldPosition;
@@ -203,7 +203,7 @@ Variables in `RemotePlayer.state` are read-only.
 
 **Example:**
 ```javascript
-await WA.players.enableTracking();
+await WA.players.configureTracking();
 const players = WA.players.list();
 for (const player of players) {
     console.log(`Player ${player.name} score is ${player.state.score}`);

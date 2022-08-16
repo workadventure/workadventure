@@ -168,9 +168,7 @@ WA.player.onPlayerMove(console.log);
 
 ## Player specific variables
 
-Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser. Any value that is serializable in JSON can be stored.
-
-Any value that is serializable in JSON can be stored.
+Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser. Any value that is serializable to JSON can be stored.
 
 Each variable can be stored and fetched in a variety of ways.
 
@@ -203,7 +201,7 @@ A player variable can be **persisted** or **transient**
 Persisted variables can have a **Time to live** (TTL):
 
 The TTL (expressed in seconds) is the time after which the stored value will be destroyed.
-TTL cannot be set on transient variables.
+TTL can be set on persisted variables only. It cannot be set on transient variables.
 
 {.alert.alert-info}
 Depending on the server you are using, the server might itself decide of a maximum TTL for

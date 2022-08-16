@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const isEnablePlayersTrackingEvent = z.object({
-    trackPlayers: z.boolean(),
-    trackMovement: z.boolean(),
+    players: z.boolean(),
+    movement: z.boolean(),
 });
 
 /**
