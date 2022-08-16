@@ -4,6 +4,7 @@ import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
+import {BrowserTooOldError} from "../../front/src/Stores/Errors/BrowserTooOldError";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page }) => {
@@ -94,7 +95,7 @@ test.describe('API WA.players', () => {
     await page2.close();
   });
 
-  const runPersistenceTest = async (page: Page) => {
+  const runPersistenceTest = async (page: Page, browser: Browser) => {
     await evaluateScript(page, async () => {
 
 
@@ -119,25 +120,25 @@ test.describe('API WA.players', () => {
 
       await WA.onInit();
 
-      WA.player.state.saveVariable('non_public_persisted', 'non_public_persisted', {
+      await WA.player.state.saveVariable('non_public_persisted', 'non_public_persisted', {
         public: false,
         persist: true,
         scope: "room",
       });
 
-      WA.player.state.saveVariable('public_persisted', 'public_persisted', {
+      await WA.player.state.saveVariable('public_persisted', 'public_persisted', {
         public: true,
         persist: true,
         scope: "room",
       });
 
-      WA.player.state.saveVariable('non_public_non_persisted', 'non_public_non_persisted', {
+      await WA.player.state.saveVariable('non_public_non_persisted', 'non_public_non_persisted', {
         public: false,
         persist: false,
         scope: "room",
       });
 
-      WA.player.state.saveVariable('public_non_persisted', 'public_non_persisted', {
+      await WA.player.state.saveVariable('public_non_persisted', 'public_non_persisted', {
         public: true,
         persist: false,
         scope: "room",
@@ -153,8 +154,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const browser2 = await chromium.launch();
+    const page2 = await browser2.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
@@ -199,6 +200,11 @@ test.describe('API WA.players', () => {
     }));*/
 
     // Let's reload the first page to test the refresh
+    if (browser.browserType().name() === "webkit") {
+      // Skip this test for webkit because there is a bug in page.reload().
+      // See https://github.com/microsoft/playwright/issues/16147
+      return;
+    }
     await page.reload();
 
     // Let's wait for page to be reloaded
@@ -228,17 +234,17 @@ test.describe('API WA.players', () => {
   };
 
 
-  test('Test variable persistence for anonymous users.', async ({ page }) => {
+  test('Test variable persistence for anonymous users.', async ({ page, browser }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
     await login(page, "Alice");
 
-    await runPersistenceTest(page);
+    await runPersistenceTest(page, browser);
   });
 
-  test('Test variable persistence for logged users.', async ({ page }) => {
+  test('Test variable persistence for logged users.', async ({ page, browser }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -247,7 +253,7 @@ test.describe('API WA.players', () => {
 
     await oidcLogin(page);
 
-    await runPersistenceTest(page);
+    await runPersistenceTest(page, browser);
 
     await oidcLogout(page);
   });
@@ -345,13 +351,13 @@ test.describe('API WA.players', () => {
     await evaluateScript(page, async () => {
       await WA.onInit();
 
-      WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
+      await WA.player.state.saveVariable('should_be_notified', 'should_be_notified', {
         public: false,
         persist: true,
         scope: "room",
       });
 
-      WA.player.state.saveVariable('should_not_be_notified', 'should_not_be_notified', {
+      await WA.player.state.saveVariable('should_not_be_notified', 'should_not_be_notified', {
         public: false,
         persist: false,
         scope: "room",
