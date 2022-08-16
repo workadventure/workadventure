@@ -1,6 +1,5 @@
 import { v4 } from "uuid";
 import { BaseHttpController } from "./BaseHttpController";
-import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { AuthTokenData, jwtTokenManager } from "../Services/JWTTokenManager";
 import { parse } from "query-string";
 import { openIDClient } from "../Services/OpenIDClient";
@@ -24,16 +23,23 @@ export class AuthenticateController extends BaseHttpController {
 
     private roomAccess(): void {
         this.app.get("/room/access", (req, res) => {
-            // eslint-disable-next-line @typescript-eslint/no-misused-promises,@typescript-eslint/explicit-function-return-type
-            (async () => {
+            (async (): Promise<void> => {
                 try {
-                    const { uuid, playUri } = parse(req.path_query);
+                    const { uuid, playUri, token } = parse(req.path_query);
                     if (!uuid || !playUri) {
                         throw new Error("Missing uuid and playUri parameters.");
                     }
-                    return res.json(
-                        await adminService.fetchMemberDataByUuid(uuid as string, playUri as string, req.ip, [])
+                    const isLogged = token ? true : false;
+                    res.json(
+                        await adminService.fetchMemberDataByUuid(
+                            uuid as string,
+                            isLogged,
+                            playUri as string,
+                            req.ip,
+                            []
+                        )
                     );
+                    return;
                 } catch (e) {
                     console.warn(e);
                 }
@@ -85,12 +91,11 @@ export class AuthenticateController extends BaseHttpController {
                     throw new Error("Expecting playUri");
                 }
 
-                const loginUri = await openIDClient.authorizationUrl(
-                    res,
-                    playUri as string | undefined,
-                    redirect as string | undefined
-                );
-                res.cookie("playUri", playUri);
+                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined);
+                res.cookie("playUri", playUri, undefined, {
+                    httpOnly: true,
+                });
+
                 return res.redirect(loginUri);
             } catch (e) {
                 console.error("openIDLogin => e", e);
@@ -188,10 +193,13 @@ export class AuthenticateController extends BaseHttpController {
                 try {
                     const authTokenData: AuthTokenData = jwtTokenManager.verifyJWTToken(token as string, false);
 
+                    const isLogged = authTokenData.accessToken ? true : false;
+
                     //Get user data from Admin Back Office
                     //This is very important to create User Local in LocalStorage in WorkAdventure
                     const resUserData = await adminService.fetchMemberDataByUuid(
                         authTokenData.identifier,
+                        isLogged,
                         playUri as string,
                         IPAddress,
                         [],
@@ -286,41 +294,44 @@ export class AuthenticateController extends BaseHttpController {
          *         description: Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)
          */
         //eslint-disable-next-line @typescript-eslint/no-misused-promises
-        this.app.get("/openid-callback", async (req, res) => {
-            const playUri = (req.cookies as Record<string, string>).playUri;
-            try {
-                if (!playUri) {
-                    throw new Error("Missing playUri in cookies");
-                }
-                //user have not token created, check data on hydra and create token
-                let userInfo = null;
+        this.app.get("/openid-callback", (req, res) => {
+            (async (): Promise<void> => {
+                const playUri = (req.cookies as Record<string, string>).playUri;
                 try {
-                    userInfo = await openIDClient.getUserInfo(req, res);
-                } catch (err) {
-                    //if no access on openid provider, return error
-                    console.error("An error occurred while connecting to OpenID Provider => ", err);
-                    res.status(500);
-                    res.send("An error occurred while connecting to OpenID Provider");
-                    return;
-                }
-                const email = userInfo.email || userInfo.sub;
-                if (!email) {
-                    throw new Error("No email in the response");
-                }
-                const authToken = jwtTokenManager.createAuthToken(
-                    email,
-                    userInfo?.access_token,
-                    userInfo?.username,
-                    userInfo?.locale
-                );
+                    if (!playUri) {
+                        throw new Error("Missing playUri in cookies");
+                    }
+                    //user have not token created, check data on hydra and create token
+                    let userInfo = null;
+                    try {
+                        userInfo = await openIDClient.getUserInfo(req, res);
+                    } catch (err) {
+                        //if no access on openid provider, return error
+                        console.error("An error occurred while connecting to OpenID Provider => ", err);
+                        res.status(500);
+                        res.send("An error occurred while connecting to OpenID Provider");
+                        return;
+                    }
+                    const email = userInfo.email || userInfo.sub;
+                    if (!email) {
+                        throw new Error("No email in the response");
+                    }
+                    const authToken = jwtTokenManager.createAuthToken(
+                        email,
+                        userInfo?.access_token,
+                        userInfo?.username,
+                        userInfo?.locale
+                    );
 
-                res.clearCookie("playUri");
-                // FIXME: possibly redirect to Admin instead.
-                return res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
-            } catch (e) {
-                console.error("openIDCallback => ERROR", e);
-                return this.castErrorToResponse(e, res);
-            }
+                    res.clearCookie("playUri");
+                    // FIXME: possibly redirect to Admin instead.
+                    res.redirect(playUri + "?token=" + encodeURIComponent(authToken));
+                    return;
+                } catch (e) {
+                    console.error("openIDCallback => ERROR", e);
+                    return this.castErrorToResponse(e, res);
+                }
+            })().catch((e) => console.error(e));
         });
     }
 
@@ -497,40 +508,5 @@ export class AuthenticateController extends BaseHttpController {
                 this.castErrorToResponse(error, res);
             }
         });
-    }
-
-    /**
-     *
-     * @param email
-     * @param playUri
-     * @param IPAddress
-     * @return
-     |object
-     * @private
-     */
-    private async getUserByUserIdentifier(
-        email: string,
-        playUri: string,
-        IPAddress: string
-    ): Promise<FetchMemberDataByUuidResponse | object> {
-        let data: FetchMemberDataByUuidResponse = {
-            email: email,
-            userUuid: email,
-            tags: [],
-            messages: [],
-            visitCardUrl: null,
-            textures: [],
-            userRoomToken: undefined,
-            jabberId: null,
-            jabberPassword: null,
-            mucRooms: [],
-            activatedInviteUser: true,
-        };
-        try {
-            data = await adminService.fetchMemberDataByUuid(email, playUri, IPAddress, []);
-        } catch (err) {
-            console.error("openIDCallback => fetchMemberDataByUuid", err);
-        }
-        return data;
     }
 }

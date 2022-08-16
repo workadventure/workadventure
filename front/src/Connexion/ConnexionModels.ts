@@ -1,41 +1,24 @@
 import type { SignalData } from "simple-peer";
 import type { RoomConnection } from "./RoomConnection";
 import type { BodyResourceDescriptionInterface } from "../Phaser/Entity/PlayerTextures";
-import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
-
-export interface PointInterface {
-    x: number;
-    y: number;
-    direction: "up" | "down" | "left" | "right"; // TODO: modify this to the enum from ts-proto
-    moving: boolean;
-}
-
-export interface MessageUserPositionInterface {
-    userId: number;
-    name: string;
-    characterLayers: BodyResourceDescriptionInterface[];
-    position: PointInterface;
-    availabilityStatus: AvailabilityStatus;
-    visitCardUrl: string | null;
-    companion: string | null;
-    userUuid: string;
-}
+import { AvailabilityStatus, PositionMessage } from "../Messages/ts-proto-generated/protos/messages";
 
 export interface MessageUserMovedInterface {
     userId: number;
-    position: PointInterface;
+    position: PositionMessage;
 }
 
 export interface MessageUserJoined {
     userId: number;
     name: string;
     characterLayers: BodyResourceDescriptionInterface[];
-    position: PointInterface;
+    position: PositionMessage;
     availabilityStatus: AvailabilityStatus;
     visitCardUrl: string | null;
     companion: string | null;
     userUuid: string;
     outlineColor: number | undefined;
+    variables: Map<string, unknown>;
 }
 
 export interface PositionInterface {
@@ -85,6 +68,7 @@ export interface RoomJoinedMessageInterface {
     //groups: GroupCreatedUpdatedMessageInterface[],
     items: { [itemId: number]: unknown };
     variables: Map<string, unknown>;
+    playerVariables: Map<string, unknown>;
     characterLayers: BodyResourceDescriptionInterface[];
 }
 

@@ -2,8 +2,8 @@
  * This class is in charge of computing the position of all players.
  * Player movement is delayed by 200ms so position depends on ticks.
  */
-import type { HasPlayerMovedEvent } from "../../Api/Events/HasPlayerMovedEvent";
 import type { PlayerMovement } from "./PlayerMovement";
+import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 
 export class PlayersPositionInterpolator {
     playerMovements: Map<number, PlayerMovement> = new Map<number, PlayerMovement>();
@@ -16,8 +16,8 @@ export class PlayersPositionInterpolator {
         this.playerMovements.delete(userId);
     }
 
-    getUpdatedPositions(tick: number): Map<number, HasPlayerMovedEvent> {
-        const positions = new Map<number, HasPlayerMovedEvent>();
+    getUpdatedPositions(tick: number): Map<number, HasPlayerMovedInterface> {
+        const positions = new Map<number, HasPlayerMovedInterface>();
         this.playerMovements.forEach((playerMovement: PlayerMovement, userId: number) => {
             if (playerMovement.isOutdated(tick)) {
                 //console.log("outdated")

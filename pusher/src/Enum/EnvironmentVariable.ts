@@ -30,6 +30,13 @@ export const EJABBERD_DOMAIN: string = process.env.EJABBERD_DOMAIN || "";
 export const EJABBERD_URI: string = process.env.EJABBERD_URI || "";
 export const EJABBERD_JWT_SECRET: string = process.env.EJABBERD_JWT_SECRET || "";
 
+const debugErrorMessages = process.env.DEBUG_ERROR_MESSAGES;
+export const DEBUG_ERROR_MESSAGES =
+    debugErrorMessages !== "" &&
+    debugErrorMessages != undefined &&
+    debugErrorMessages != "0" &&
+    debugErrorMessages.toLowerCase() !== "false";
+
 // If set to the string "true", the /openapi route will return the OpenAPI definition and the swagger-ui/ route will display the documentation
 export const ENABLE_OPENAPI_ENDPOINT = process.env.ENABLE_OPENAPI_ENDPOINT === "true";
 

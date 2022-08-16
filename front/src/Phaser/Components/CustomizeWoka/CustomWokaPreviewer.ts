@@ -1,5 +1,7 @@
 import { Easing } from "../../../types";
-import { getPlayerAnimations, PlayerAnimationDirections, PlayerAnimationTypes } from "../../Player/Animation";
+import { getPlayerAnimations, PlayerAnimationTypes } from "../../Player/Animation";
+import { PositionMessage_Direction } from "../../../Messages/ts-proto-generated/protos/messages";
+import { ProtobufClientUtils } from "../../../Network/ProtobufClientUtils";
 
 export enum CustomWokaBodyPart {
     Body = "Body",
@@ -32,7 +34,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     private sprites: Record<CustomWokaBodyPart, Phaser.GameObjects.Sprite>;
     private turnIcon: Phaser.GameObjects.Image;
 
-    private animationDirection: PlayerAnimationDirections = PlayerAnimationDirections.Down;
+    private animationDirection: PositionMessage_Direction = PositionMessage_Direction.DOWN;
     private moving = true;
 
     private turnIconTween?: Phaser.Tweens.Tween;
@@ -89,7 +91,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         this.animate();
     }
 
-    public changeAnimation(direction: PlayerAnimationDirections, moving: boolean): void {
+    public changeAnimation(direction: PositionMessage_Direction, moving: boolean): void {
         this.animationDirection = direction;
         this.moving = moving;
     }
@@ -118,14 +120,14 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
         return this.moving;
     }
 
-    public getAnimationDirection(): PlayerAnimationDirections {
+    public getAnimationDirection(): PositionMessage_Direction {
         return this.animationDirection;
     }
 
     private bindEventHandlers(): void {
         this.on(Phaser.Input.Events.POINTER_UP, () => {
             const direction = this.getNextAnimationDirection();
-            const moving = direction === PlayerAnimationDirections.Down ? !this.moving : this.moving;
+            const moving = direction === PositionMessage_Direction.DOWN ? !this.moving : this.moving;
             this.changeAnimation(direction, moving);
 
             this.turnIconTween?.stop();
@@ -147,6 +149,7 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
     }
 
     private animate(): void {
+        const animationDirectionStr = ProtobufClientUtils.toDirectionString(this.animationDirection);
         for (const bodyPartKey in this.sprites) {
             const sprite = this.sprites[bodyPartKey as CustomWokaBodyPart];
             if (!sprite.anims) {
@@ -157,27 +160,26 @@ export class CustomWokaPreviewer extends Phaser.GameObjects.Container {
             if (textureKey === "__MISSING") {
                 continue;
             }
-            if (
-                this.moving &&
-                (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== this.animationDirection)
-            ) {
-                sprite.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Walk, true);
+            if (this.moving && (!sprite.anims.currentAnim || sprite.anims.currentAnim.key !== animationDirectionStr)) {
+                sprite.play(textureKey + "-" + animationDirectionStr + "-" + PlayerAnimationTypes.Walk, true);
             } else if (!this.moving) {
-                sprite.anims.play(textureKey + "-" + this.animationDirection + "-" + PlayerAnimationTypes.Idle, true);
+                sprite.anims.play(textureKey + "-" + animationDirectionStr + "-" + PlayerAnimationTypes.Idle, true);
             }
         }
     }
 
-    private getNextAnimationDirection(): PlayerAnimationDirections {
+    private getNextAnimationDirection(): PositionMessage_Direction {
         switch (this.animationDirection) {
-            case PlayerAnimationDirections.Down:
-                return PlayerAnimationDirections.Left;
-            case PlayerAnimationDirections.Left:
-                return PlayerAnimationDirections.Up;
-            case PlayerAnimationDirections.Up:
-                return PlayerAnimationDirections.Right;
-            case PlayerAnimationDirections.Right:
-                return PlayerAnimationDirections.Down;
+            case PositionMessage_Direction.DOWN:
+                return PositionMessage_Direction.LEFT;
+            case PositionMessage_Direction.LEFT:
+                return PositionMessage_Direction.UP;
+            case PositionMessage_Direction.UP:
+                return PositionMessage_Direction.RIGHT;
+            case PositionMessage_Direction.RIGHT:
+                return PositionMessage_Direction.DOWN;
+            case PositionMessage_Direction.UNRECOGNIZED:
+                throw new Error("Unexpected value");
         }
     }
 }

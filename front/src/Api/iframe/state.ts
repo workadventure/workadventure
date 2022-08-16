@@ -1,53 +1,22 @@
-import { Observable, Subject } from "rxjs";
-
-import { IframeApiContribution, queryWorkadventure } from "./IframeApiContribution";
+import { queryWorkadventure } from "./IframeApiContribution";
 import { apiCallback } from "./registeredCallbacks";
-import { SetVariableEvent } from "../Events/SetVariableEvent";
+import { AbstractWorkadventureStateCommands } from "./AbstractState";
 
-export class WorkadventureStateCommands extends IframeApiContribution<WorkadventureStateCommands> {
-    private setVariableResolvers = new Subject<SetVariableEvent>();
-    private variables = new Map<string, unknown>();
-    private variableSubscribers = new Map<string, Subject<unknown>>();
-
-    constructor(private target: "global" | "player") {
+export class WorkadventureStateCommands extends AbstractWorkadventureStateCommands {
+    public constructor() {
         super();
-
-        this.setVariableResolvers.subscribe((event) => {
-            // const oldValue = this.variables.get(event.key);
-            // If we are setting the same value, no need to do anything.
-            // No need to do this check since it is already performed in SharedVariablesManager
-            /*if (JSON.stringify(oldValue) === JSON.stringify(event.value)) {
-                return;
-            }*/
-
-            this.variables.set(event.key, event.value);
-            const subject = this.variableSubscribers.get(event.key);
-            if (subject !== undefined) {
-                subject.next(event.value);
-            }
-        });
     }
 
     callbacks = [
         apiCallback({
             type: "setVariable",
             callback: (payloadData) => {
-                if (payloadData.target === this.target) {
-                    this.setVariableResolvers.next(payloadData);
-                }
+                console.error("GOT MESSAGE setVariable FOR Global state");
+                console.error(payloadData);
+                this.setVariableResolvers.next(payloadData);
             },
         }),
     ];
-
-    // TODO: see how we can remove this method from types exposed to WA.state object
-    initVariables(_variables: Map<string, unknown>): void {
-        for (const [name, value] of _variables.entries()) {
-            // In case the user already decided to put values in the variables (before onInit), let's make sure onInit does not override this.
-            if (!this.variables.has(name)) {
-                this.variables.set(name, value);
-            }
-        }
-    }
 
     saveVariable(key: string, value: unknown): Promise<void> {
         this.variables.set(key, value);
@@ -56,31 +25,14 @@ export class WorkadventureStateCommands extends IframeApiContribution<Workadvent
             data: {
                 key,
                 value,
-                target: this.target,
             },
         });
     }
-
-    loadVariable(key: string): unknown {
-        return this.variables.get(key);
-    }
-
-    hasVariable(key: string): boolean {
-        return this.variables.has(key);
-    }
-
-    onVariableChange(key: string): Observable<unknown> {
-        let subject = this.variableSubscribers.get(key);
-        if (subject === undefined) {
-            subject = new Subject<unknown>();
-            this.variableSubscribers.set(key, subject);
-        }
-        return subject.asObservable();
-    }
 }
 
-export function createState(target: "global" | "player"): WorkadventureStateCommands & { [key: string]: unknown } {
-    return new Proxy(new WorkadventureStateCommands(target), {
+// TODO: rework this function to be able to create a WorkadventurePlayerStateCommands too! (something like: "wrapInProxy")
+export function createState(): WorkadventureStateCommands & { [key: string]: unknown } {
+    return new Proxy(new WorkadventureStateCommands(), {
         get(target: WorkadventureStateCommands, p: PropertyKey, receiver: unknown): unknown {
             if (p in target) {
                 return Reflect.get(target, p, receiver);

@@ -2,14 +2,13 @@ import { requestVisitCardsStore } from "../../Stores/GameStore";
 import { ActionsMenuAction, ActionsMenuData, actionsMenuStore } from "../../Stores/ActionsMenuStore";
 import { Character } from "../Entity/Character";
 import type { GameScene } from "../Game/GameScene";
-import type { PointInterface } from "../../Connexion/ConnexionModels";
-import type { PlayerAnimationDirections } from "../Player/Animation";
 import { get, Unsubscriber } from "svelte/store";
 import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import type CancelablePromise from "cancelable-promise";
 import LL from "../../i18n/i18n-svelte";
 import { blackListManager } from "../../WebRtc/BlackListManager";
 import { showReportScreenStore } from "../../Stores/ShowReportScreenStore";
+import { PositionMessage, PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
 
 export enum RemotePlayerEvent {
     Clicked = "Clicked",
@@ -35,7 +34,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         y: number,
         name: string,
         texturesPromise: CancelablePromise<string[]>,
-        direction: PlayerAnimationDirections,
+        direction: PositionMessage_Direction,
         moving: boolean,
         visitCardUrl: string | null,
         companion: string | null,
@@ -57,15 +56,15 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         this.bindEventHandlers();
     }
 
-    public updatePosition(position: PointInterface): void {
-        this.playAnimation(position.direction as PlayerAnimationDirections, position.moving);
+    public updatePosition(position: PositionMessage): void {
+        this.playAnimation(position.direction, position.moving);
         this.setX(position.x);
         this.setY(position.y);
 
         this.setDepth(position.y); //this is to make sure the perspective (player models closer the bottom of the screen will appear in front of models nearer the top of the screen).
 
         if (this.companion) {
-            this.companion.setTarget(position.x, position.y, position.direction as PlayerAnimationDirections);
+            this.companion.setTarget(position.x, position.y, position.direction);
         }
     }
 
