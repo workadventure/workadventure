@@ -20,7 +20,6 @@ import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
-import { mediaManager } from "./Media/MediaManager";
 
 class IframeListener {
   init() {

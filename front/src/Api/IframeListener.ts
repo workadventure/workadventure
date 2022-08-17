@@ -676,12 +676,12 @@ class IframeListener {
         } as IframeResponseEvent;
         this.postMessageToChat(message);
     }
-    sendSettingsToChatIframe() {
+    sendSettingsToChatIframe(notification: boolean, chatSounds: boolean) {
         const message = {
             type: "settings",
             data: {
-                notification: localUserStore.getNotification(),
-                chatSounds: localUserStore.getChatSounds(),
+                notification,
+                chatSounds,
             },
         } as IframeResponseEvent;
         this.postMessageToChat(message);

@@ -258,7 +258,7 @@ class LocalUserStore {
 
     setNotification(value: boolean): void {
         localStorage.setItem(notification, value.toString());
-        iframeListener.sendSettingsToChatIframe();
+        iframeListener.sendSettingsToChatIframe(this.getNotification(), this.getChatSounds());
     }
 
     getNotification(): boolean {
@@ -267,7 +267,7 @@ class LocalUserStore {
 
     setChatSounds(value: boolean): void {
         localStorage.setItem(chatSounds, value.toString());
-        iframeListener.sendSettingsToChatIframe();
+        iframeListener.sendSettingsToChatIframe(this.getNotification(), this.getChatSounds());
     }
 
     getChatSounds(): boolean {
