@@ -20,6 +20,7 @@ import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
+import {NotificationType} from "./Media/MediaManager";
 
 class IframeListener {
   init() {
@@ -133,6 +134,20 @@ class IframeListener {
         }
       }
     });
+  }
+
+  sendNotificationToFront(
+      userName: string,
+      notificationType: NotificationType,
+      forum: null | string
+  ){
+    window.parent.postMessage(
+        {
+          type: "notification",
+          data: {userName, notificationType, forum},
+        },
+        "*"
+    );
   }
 }
 

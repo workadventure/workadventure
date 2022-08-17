@@ -44,7 +44,8 @@ const en_US: BaseTranslation = {
   },
   notification: {
     discussion: "wants to discuss with you",
-    message: "sends you a message",
+    message: "sends a message",
+    forum: "on the forum",
   },
   see: "See",
   less: "less",

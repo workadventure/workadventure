@@ -108,7 +108,8 @@ access_rules:
   configure:
     allow: admin
   muc_create:
-    allow: local
+    - allow: local
+    - deny: blocked
   pubsub_createnode:
     allow: local
   trusted_network:
@@ -138,7 +139,7 @@ api_permissions:
       - "!start"
   "public commands":
     who:
-      ip: 127.0.0.1/8
+      - ip: 127.0.0.1/8
     what:
       - status
       - connected_users_number
@@ -201,6 +202,8 @@ modules:
     default: never
   mod_mqtt: {}
   mod_muc:
+    hosts:
+      - conference.ejabberd
     access:
       - allow
     access_admin:
@@ -211,7 +214,9 @@ modules:
       - allow
     default_room_options:
       allow_subscription: true  # enable MucSub
-      mam: false
+      mam: true
+      persistent: true
+      anonymous: false
   mod_muc_admin: {}
   mod_offline:
     access_max_user_messages: max_user_offline_messages
@@ -231,7 +236,10 @@ modules:
       storage:bookmarks:
         access_model: whitelist
   mod_push: {}
-  mod_push_keepalive: {}
+  mod_push_keepalive:
+    resume_timeout: 72
+    wake_on_start: false
+    wake_on_timeout: true
   mod_register:
     ## Only accept registration requests from the "trusted"
     ## network (see access_rules section above).
@@ -241,16 +249,20 @@ modules:
     ip_access: trusted_network
   mod_roster:
     versioning: true
+    store_current_id: false
   mod_sip: {}
   mod_s2s_dialback: {}
   mod_shared_roster: {}
   mod_stream_mgmt:
+    ack_timeout: infinity
     resend_on_timeout: if_offline
   mod_vcard: {}
   mod_vcard_xupdate: {}
   mod_version:
     show_os: false
 
+websocket_ping_interval: 300
+websocket_timeout: 900
 ### Local Variables:
 ### mode: yaml
 ### End:

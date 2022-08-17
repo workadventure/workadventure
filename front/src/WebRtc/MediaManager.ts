@@ -209,7 +209,7 @@ export class MediaManager {
         }
     }
 
-    public createNotification(userName: string, notificationType: NotificationType) {
+    public createNotification(userName: string, notificationType: NotificationType, forum: string | null = null) {
         if (document.hasFocus()) {
             return;
         }
@@ -225,7 +225,7 @@ export class MediaManager {
                     new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
                     break;
                 case NotificationType.message:
-                    new Notification(`${userName} ${get(LL).notification.message()}`, options);
+                    new Notification(`${userName} ${get(LL).notification.message()} ${forum !== null && get(LL).notification.forum()+' '+forum}`, options);
                     break;
             }
             this.canSendNotification = false;

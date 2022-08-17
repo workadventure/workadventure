@@ -31,6 +31,8 @@ test.describe('Chat', () => {
 
     await openChat(page2);
 
+    await page2.pause();
+
     await expect(page2.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
 
     await page2.close();

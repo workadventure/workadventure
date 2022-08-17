@@ -138,7 +138,7 @@
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals"
         title="WorkAdventureChat"
         src={CHAT_URL}
         class="tw-border-0"

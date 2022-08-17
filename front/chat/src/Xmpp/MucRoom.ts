@@ -1,18 +1,17 @@
-import type { ChatConnection } from "../Connection/ChatConnection";
+import type {ChatConnection} from "../Connection/ChatConnection";
 import xml from "@xmpp/xml";
-import jid, { JID } from "@xmpp/jid";
-import type { Readable, Writable } from "svelte/store";
-import { writable } from "svelte/store";
+import jid, {JID} from "@xmpp/jid";
+import type {Readable, Writable} from "svelte/store";
+import {get, writable} from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
-import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
-import { v4 as uuidv4 } from "uuid";
-import { userStore } from "../Stores/LocalUserStore";
-import { get } from "svelte/store";
+import {numberPresenceUserStore} from "../Stores/MucRoomsStore";
+import {v4 as uuidv4} from "uuid";
+import {userStore} from "../Stores/LocalUserStore";
+import {UserData} from "../Messages/JsonMessages/ChatData";
+import {mediaManager, NotificationType} from "../Media/MediaManager";
+import {chatVisibilityStore} from "../Stores/ChatStore";
+import {activeThreadStore} from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
-import { UserData } from "../Messages/JsonMessages/ChatData";
-import { mediaManager } from "../Media/MediaManager";
-import { chatVisibilityStore } from "../Stores/ChatStore";
-import { activeThreadStore } from "../Stores/ActiveThreadStore";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -627,7 +626,11 @@ export class MucRoom {
       const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
       if (x) {
-        const jid = x.getChild("item")?.getAttr("jid")?.split("/")[0];
+        let userJID = x.getChild("item")?.getAttr("jid")?.split("/")[0];
+        if(!userJID){
+          userJID = jid(xml.getAttr("to"));
+          userJID.setResource('');
+        }
         const playUri = xml.getChild("room")?.getAttr("playUri");
         const uuid = xml.getChild("user")?.getAttr("uuid");
         const color = xml.getChild("user")?.getAttr("color");
@@ -643,10 +646,10 @@ export class MucRoom {
             deleteSubscribeOnDisconnect === "true") ||
             affiliation === "outcast")
         ) {
-          this.deleteUser(jid.toString());
+          this.deleteUser(userJID.toString());
         } else {
           this.updateUser(
-            jid,
+              userJID,
             from.resource,
             playUri,
             uuid,
@@ -677,9 +680,11 @@ export class MucRoom {
       const playUri = xml.getChild("room")?.getAttr("playUri");
       if (subscriptions) {
         subscriptions.forEach((subscription) => {
-          const jid = subscription.getAttr("jid");
-          const nick = subscription.getAttr("nick");
-          this.updateUser(jid, nick, playUri);
+          const userJID = subscription.getAttr("jid");
+          if(userJID) {
+            const nick = subscription.getAttr("nick");
+            this.updateUser(userJID, nick, playUri);
+          }
         });
         handledMessage = true;
       } else {
@@ -761,6 +766,7 @@ export class MucRoom {
                   (get(chatVisibilityStore) && get(activeThreadStore) !== this)
                 ) {
                   mediaManager.playNewMessageNotification();
+                  mediaManager.createNotification(name, NotificationType.message, this.name);
                 }
               }
               const message: Message = {

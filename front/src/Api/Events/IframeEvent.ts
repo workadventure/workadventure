@@ -49,6 +49,7 @@ import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
+import {isNotificationEvent} from "./NotificationEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -235,6 +236,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("chatTotalMessagesToSee"),
         data: z.number(),
     }),
+    z.object({
+        type: z.literal("notification"),
+        data: isNotificationEvent,
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -335,6 +340,10 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("chatVisibility"),
         data: isChatVisibilityEvent,
+    }),
+    z.object({
+        type: z.literal("notification"),
+        data: isNotificationEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
