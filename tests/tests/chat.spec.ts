@@ -16,7 +16,6 @@ test.describe('Chat', () => {
 
     await openChat(page);
 
-    await page.waitForTimeout(5_000);
     await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
 
     const browser = await chromium.launch();
@@ -32,7 +31,6 @@ test.describe('Chat', () => {
 
     await openChat(page2);
 
-    await page2.waitForTimeout(5_000);
     await expect(page2.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
 
     await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Chat');
