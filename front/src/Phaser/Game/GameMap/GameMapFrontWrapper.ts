@@ -1,10 +1,4 @@
-import {
-    AreaChangeCallback,
-    AreaType,
-    GameMap,
-    GameMapProperties,
-    ITiledMapRectangleObject,
-} from "@workadventure/map-editor-types";
+import { AreaChangeCallback, AreaType, GameMap, GameMapProperties, ITiledMapRectangleObject } from "@map-editor-types";
 import {
     ITiledMap,
     ITiledMapLayer,
@@ -15,7 +9,7 @@ import {
 import TilemapLayer = Phaser.Tilemaps.TilemapLayer;
 import { Observable, Subject } from "rxjs";
 import { PathTileType } from "../../../Utils/PathfindingManager";
-import { MathUtils } from "@workadventure/math-utils";
+import { MathUtils } from "@math-utils";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 
 export type LayerChangeCallback = (

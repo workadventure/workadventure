@@ -1,8 +1,10 @@
 {
   "name": "@workadventure/math-utils",
   "version": "1.0.0",
+  "type": "commonjs",
   "description": "Useful math-related utility functions",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

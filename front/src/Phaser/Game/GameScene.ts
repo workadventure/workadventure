@@ -137,7 +137,7 @@ import {
 } from "@workadventure/tiled-map-type-guard";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor-types";
+import { AreaType, GameMap, GameMapProperties } from "@map-editor-types";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 export interface GameSceneInitInterface {
     reconnecting: boolean;

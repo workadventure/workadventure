@@ -19,7 +19,7 @@ import { inJitsiStore, inBbbStore, silentStore } from "../../Stores/MediaStore";
 import { ITiledMapProperty } from "@workadventure/tiled-map-type-guard";
 import { urlManager } from "../../Url/UrlManager";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
-import { GameMapProperties } from "@workadventure/map-editor-types";
+import { GameMapProperties } from "@map-editor-types";
 
 interface OpenCoWebsite {
     actionId: string;

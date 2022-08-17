@@ -18,7 +18,7 @@ export class MapsManager {
         console.log("SERVE MAP FROM FILE");
         const file = await readFile(`./public${path}`, "utf-8");
         const map = JSON.parse(file);
-        // const gameMap = new GameMap(map);
+        const gameMap = new GameMap(map);
         this.loadedMaps.set(path, map);
         return map;
     }

@@ -1,5 +1,5 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
-import { MathUtils } from '@workadventure/math-utils';
+import { MathUtils } from '@workadventure/math-utils/src/index';
 import { GameMap } from "./GameMap";
 import { AreaType, ITiledMapRectangleObject } from '../types';
 
