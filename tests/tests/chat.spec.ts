@@ -16,7 +16,7 @@ test.describe('Chat', () => {
 
     await openChat(page);
 
-    await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Users');
+    await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
 
     const browser = await chromium.launch();
     const page2 = await browser.newPage();
@@ -25,15 +25,15 @@ test.describe('Chat', () => {
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
-    await login(page2, 'Chapelier', 3);
+    await login(page2, 'Chat', 3);
 
     //await assertLogMessage(page2, 'Chat fully loaded');
 
     await openChat(page2);
 
-    await page2.pause();
-
     await expect(page2.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Alice');
+
+    await expect(page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow')).toContainText('Chat');
 
     await page2.close();
   });
