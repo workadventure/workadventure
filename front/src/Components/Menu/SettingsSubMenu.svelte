@@ -10,7 +10,7 @@
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     import infoImg from "../images/info.svg";
-    import {iframeListener} from "../../Api/IframeListener";
+    import { iframeListener } from "../../Api/IframeListener";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();

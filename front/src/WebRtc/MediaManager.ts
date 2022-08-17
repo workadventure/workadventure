@@ -195,7 +195,7 @@ export class MediaManager {
 
     public hasNotification(): boolean {
         if (this.canSendNotification && Notification.permission === "granted") {
-            return localUserStore.getNotification() === "granted";
+            return localUserStore.getNotification();
         } else {
             return false;
         }
