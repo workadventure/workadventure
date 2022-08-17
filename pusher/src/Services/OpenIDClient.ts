@@ -56,7 +56,7 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(res: Response, redirect?: string): Promise<string> {
+    public authorizationUrl(res: Response, redirect: string | undefined, playUri: string): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
@@ -83,6 +83,7 @@ class OpenIDClient {
                 prompt: OPID_PROMPT,
                 state: state,
                 //nonce: nonce,
+                playUri,
                 redirect: redirect,
 
                 code_challenge,

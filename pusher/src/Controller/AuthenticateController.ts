@@ -91,7 +91,7 @@ export class AuthenticateController extends BaseHttpController {
                     throw new Error("Expecting playUri");
                 }
 
-                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined);
+                const loginUri = await openIDClient.authorizationUrl(res, redirect as string | undefined, playUri);
                 res.cookie("playUri", playUri, undefined, {
                     httpOnly: true,
                 });
