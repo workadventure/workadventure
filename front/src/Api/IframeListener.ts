@@ -823,7 +823,7 @@ class IframeListener {
     }
 
     sendLeaveMucEvent(url: string) {
-        this.postMessage({
+        this.postMessageToChat({
             type: "leaveMuc",
             data: {
                 url,
@@ -832,7 +832,7 @@ class IframeListener {
     }
 
     sendJoinMucEvent(url: string, name: string, type: string) {
-        this.postMessage({
+        this.postMessageToChat({
             type: "joinMuc",
             data: {
                 url,
