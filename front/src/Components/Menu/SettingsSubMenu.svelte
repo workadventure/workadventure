@@ -10,6 +10,7 @@
     import { audioManagerVolumeStore } from "../../Stores/AudioManagerStore";
 
     import infoImg from "../images/info.svg";
+    import {iframeListener} from "../../Api/IframeListener";
 
     let fullscreen: boolean = localUserStore.getFullscreen();
     let notification: boolean = localUserStore.getNotification();
@@ -81,16 +82,18 @@
 
     function changeNotification() {
         if (Notification.permission === "granted") {
-            localUserStore.setNotification(notification ? true : false);
+            localUserStore.setNotification(notification);
+            iframeListener.sendSettingsToChatIframe();
         } else {
             Notification.requestPermission()
                 .then((response) => {
                     if (response === "granted") {
-                        localUserStore.setNotification(notification ? true : false);
+                        localUserStore.setNotification(notification);
                     } else {
                         localUserStore.setNotification(false);
                         notification = false;
                     }
+                    iframeListener.sendSettingsToChatIframe();
                 })
                 .catch((e) => console.error(e));
         }
@@ -98,6 +101,7 @@
 
     function changeChatSounds() {
         localUserStore.setChatSounds(chatSounds);
+        iframeListener.sendSettingsToChatIframe();
     }
 
     function changeForceCowebsiteTrigger() {

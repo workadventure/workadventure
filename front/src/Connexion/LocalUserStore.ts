@@ -1,7 +1,6 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
 import { Emoji } from "../Stores/EmoteStore";
 import { z } from "zod";
-import { iframeListener } from "../Api/IframeListener";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -258,7 +257,6 @@ class LocalUserStore {
 
     setNotification(value: boolean): void {
         localStorage.setItem(notification, value.toString());
-        iframeListener.sendSettingsToChatIframe(this.getNotification(), this.getChatSounds());
     }
 
     getNotification(): boolean {
@@ -267,7 +265,6 @@ class LocalUserStore {
 
     setChatSounds(value: boolean): void {
         localStorage.setItem(chatSounds, value.toString());
-        iframeListener.sendSettingsToChatIframe(this.getNotification(), this.getChatSounds());
     }
 
     getChatSounds(): boolean {
