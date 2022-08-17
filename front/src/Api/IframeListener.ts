@@ -43,7 +43,6 @@ import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEv
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 import { localUserStore } from "../Connexion/LocalUserStore";
-import { SettingsEvent } from "./Events/SettingsEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
