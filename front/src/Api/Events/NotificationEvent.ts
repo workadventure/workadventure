@@ -3,7 +3,7 @@ import { z } from "zod";
 export const isNotificationEvent = z.object({
     userName: z.string(),
     notificationType: z.number(),
-    forum: z.optional(z.nullable(z.string()))
+    forum: z.optional(z.nullable(z.string())),
 });
 
 /**

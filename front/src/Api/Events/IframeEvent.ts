@@ -49,7 +49,7 @@ import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
 import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
-import {isNotificationEvent} from "./NotificationEvent";
+import { isNotificationEvent } from "./NotificationEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;

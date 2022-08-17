@@ -1,11 +1,11 @@
-import {Subject} from "rxjs";
-import {HtmlUtils} from "../WebRtc/HtmlUtils";
-import type {EnterLeaveEvent} from "./Events/EnterLeaveEvent";
-import {OpenPopupEvent} from "./Events/OpenPopupEvent";
-import {OpenTabEvent} from "./Events/OpenTabEvent";
-import type {ButtonClickedEvent} from "./Events/ButtonClickedEvent";
-import {ClosePopupEvent} from "./Events/ClosePopupEvent";
-import {scriptUtils} from "./ScriptUtils";
+import { Subject } from "rxjs";
+import { HtmlUtils } from "../WebRtc/HtmlUtils";
+import type { EnterLeaveEvent } from "./Events/EnterLeaveEvent";
+import { OpenPopupEvent } from "./Events/OpenPopupEvent";
+import { OpenTabEvent } from "./Events/OpenTabEvent";
+import type { ButtonClickedEvent } from "./Events/ButtonClickedEvent";
+import { ClosePopupEvent } from "./Events/ClosePopupEvent";
+import { scriptUtils } from "./ScriptUtils";
 import {
     IframeErrorAnswerEvent,
     IframeQueryMap,
@@ -14,36 +14,36 @@ import {
     isIframeQueryWrapper,
     isLookingLikeIframeEventWrapper,
 } from "./Events/IframeEvent";
-import type {UserInputChatEvent} from "./Events/UserInputChatEvent";
-import {PlaySoundEvent} from "./Events/PlaySoundEvent";
-import {StopSoundEvent} from "./Events/StopSoundEvent";
-import {LoadSoundEvent} from "./Events/LoadSoundEvent";
-import {SetPropertyEvent} from "./Events/SetPropertyEvent";
-import {LayerEvent} from "./Events/LayerEvent";
-import {SetTilesEvent} from "./Events/SetTilesEvent";
-import type {SetVariableEvent} from "./Events/SetVariableEvent";
-import {ModifyEmbeddedWebsiteEvent} from "./Events/EmbeddedWebsiteEvent";
-import {handleMenuRegistrationEvent, handleMenuUnregisterEvent} from "../Stores/MenuStore";
-import type {ChangeLayerEvent} from "./Events/ChangeLayerEvent";
-import type {WasCameraUpdatedEvent} from "./Events/WasCameraUpdatedEvent";
-import type {ChangeAreaEvent} from "./Events/ChangeAreaEvent";
-import {CameraSetEvent} from "./Events/CameraSetEvent";
-import {CameraFollowPlayerEvent} from "./Events/CameraFollowPlayerEvent";
-import type {RemotePlayerClickedEvent} from "./Events/RemotePlayerClickedEvent";
-import {AddActionsMenuKeyToRemotePlayerEvent} from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
-import type {ActionsMenuActionClickedEvent} from "./Events/ActionsMenuActionClickedEvent";
-import {RemoveActionsMenuKeyFromRemotePlayerEvent} from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
-import {SetAreaPropertyEvent} from "./Events/SetAreaPropertyEvent";
-import {ModifyUIWebsiteEvent} from "./Events/ui/UIWebsite";
-import {ModifyAreaEvent} from "./Events/CreateAreaEvent";
-import {ChatMessage} from "../Stores/ChatStore";
-import {AskPositionEvent} from "./Events/AskPositionEvent";
-import {PlayerInterface} from "../Phaser/Game/PlayerInterface";
-import {SetSharedPlayerVariableEvent} from "./Events/SetSharedPlayerVariableEvent";
-import {ProtobufClientUtils} from "../Network/ProtobufClientUtils";
-import {HasPlayerMovedInterface} from "./Events/HasPlayerMovedInterface";
-import {localUserStore} from "../Connexion/LocalUserStore";
-import {mediaManager, NotificationType} from "../WebRtc/MediaManager";
+import type { UserInputChatEvent } from "./Events/UserInputChatEvent";
+import { PlaySoundEvent } from "./Events/PlaySoundEvent";
+import { StopSoundEvent } from "./Events/StopSoundEvent";
+import { LoadSoundEvent } from "./Events/LoadSoundEvent";
+import { SetPropertyEvent } from "./Events/SetPropertyEvent";
+import { LayerEvent } from "./Events/LayerEvent";
+import { SetTilesEvent } from "./Events/SetTilesEvent";
+import type { SetVariableEvent } from "./Events/SetVariableEvent";
+import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
+import { handleMenuRegistrationEvent, handleMenuUnregisterEvent } from "../Stores/MenuStore";
+import type { ChangeLayerEvent } from "./Events/ChangeLayerEvent";
+import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
+import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
+import { CameraSetEvent } from "./Events/CameraSetEvent";
+import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
+import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
+import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
+import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
+import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
+import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
+import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import { ChatMessage } from "../Stores/ChatStore";
+import { AskPositionEvent } from "./Events/AskPositionEvent";
+import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -398,8 +398,15 @@ class IframeListener {
                     } else if (iframeEvent.type == "chatTotalMessagesToSee") {
                         this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "notification") {
-                        const notificationType = iframeEvent.data.notificationType === 1 ? NotificationType.discussion : NotificationType.message;
-                        mediaManager.createNotification(iframeEvent.data.userName, notificationType, iframeEvent.data.forum);
+                        const notificationType =
+                            iframeEvent.data.notificationType === 1
+                                ? NotificationType.discussion
+                                : NotificationType.message;
+                        mediaManager.createNotification(
+                            iframeEvent.data.userName,
+                            notificationType,
+                            iframeEvent.data.forum
+                        );
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -684,7 +691,7 @@ class IframeListener {
             data: {
                 notification: localUserStore.getNotification(),
                 chatSounds: localUserStore.getChatSounds(),
-            }
+            },
         } as IframeResponseEvent);
     }
 

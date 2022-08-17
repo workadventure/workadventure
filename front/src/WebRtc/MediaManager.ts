@@ -225,7 +225,12 @@ export class MediaManager {
                     new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
                     break;
                 case NotificationType.message:
-                    new Notification(`${userName} ${get(LL).notification.message()} ${forum !== null && get(LL).notification.forum()+' '+forum}`, options);
+                    new Notification(
+                        `${userName} ${get(LL).notification.message()} ${
+                            forum !== null && get(LL).notification.forum() + " " + forum
+                        }`,
+                        options
+                    );
                     break;
             }
             this.canSendNotification = false;
