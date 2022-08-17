@@ -31,7 +31,7 @@ jobs:
       - name: Wait for environment to Start
         run: sleep 60
       - name: Run Playwright tests
-        run: npm run test-prod-like
+        run: npm run test-prod-like -- tests/chat.spec.ts
         working-directory: tests
       - name: Display docker-compose logs on failure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
