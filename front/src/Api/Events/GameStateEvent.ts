@@ -4,13 +4,14 @@ export const isGameStateEvent = z.object({
     roomId: z.string(),
     mapUrl: z.string(),
     nickname: z.string(),
-    language: z.optional(z.string()),
-    uuid: z.optional(z.string()),
-    startLayerName: z.optional(z.string()),
-    tags: z.array(z.string()),
+    language: z.string().optional(),
+    uuid: z.string().optional(),
+    startLayerName: z.string().optional(),
+    tags: z.string().array(),
     variables: z.unknown(), // Todo : Typing
     playerVariables: z.unknown(), // Todo : Typing
-    userRoomToken: z.optional(z.string()),
+    userRoomToken: z.string().optional(),
+    metadata: z.unknown().optional(),
 });
 
 /**

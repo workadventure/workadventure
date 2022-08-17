@@ -2,12 +2,12 @@ import { z } from "zod";
 
 export const isOpenCoWebsiteEvent = z.object({
     url: z.string(),
-    allowApi: z.optional(z.boolean()),
+    allowApi: z.boolean().optional(),
     allowPolicy: z.optional(z.string()),
     widthPercent: z.optional(z.number()),
     position: z.optional(z.number()),
-    closable: z.optional(z.boolean()),
-    lazy: z.optional(z.boolean()),
+    closable: z.boolean().optional(),
+    lazy: z.boolean().optional(),
 });
 
 export const isCoWebsite = z.object({
