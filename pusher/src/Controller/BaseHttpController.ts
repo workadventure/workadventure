@@ -2,6 +2,7 @@ import { Server } from "hyper-express";
 import Response from "hyper-express/types/components/http/Response";
 import axios from "axios";
 import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
+import { DEBUG_ERROR_MESSAGES } from "../Enum/EnvironmentVariable";
 
 export class BaseHttpController {
     constructor(protected app: Server) {
@@ -43,8 +44,17 @@ export class BaseHttpController {
             } else res.json(errorType.data);
             return;
         } else {
+            let errorMessage = "An error occurred";
+            if (DEBUG_ERROR_MESSAGES) {
+                if (e instanceof Error) {
+                    errorMessage += "\n" + e.message + "\n" + e.stack;
+                } else if (typeof e === "string") {
+                    errorMessage += "\n" + e;
+                }
+            }
+
             res.status(500);
-            res.send("An error occurred");
+            res.send(errorMessage);
             return;
         }
     }

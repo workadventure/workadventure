@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import {expect, Page} from '@playwright/test';
 
 export async function login(
   page: Page,
@@ -18,4 +18,6 @@ export async function login(
 
   await page.click('button.selectCharacterSceneFormSubmit');
   await page.click('button.letsgo');
+
+  await expect(page.locator("button#menuIcon")).toBeVisible();
 }

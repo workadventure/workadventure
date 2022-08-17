@@ -38,6 +38,11 @@ const JwtAuthToken = z
 
 type JwtAuthToken = z.infer<typeof JwtAuthToken>;
 
+interface PlayerVariable {
+    value: undefined;
+    isPublic: boolean;
+}
+
 class LocalUserStore {
     private jwt: JwtAuthToken | undefined;
 
@@ -302,16 +307,55 @@ class LocalUserStore {
         return localStorage.getItem(microphonePrivacySettings) === "true";
     }
 
-    getAllUserProperties(): Map<string, unknown> {
-        const result = new Map<string, string>();
+    getAllUserProperties(context: string): Map<string, PlayerVariable> {
+        const now = new Date().getTime();
+        const result = new Map<string, PlayerVariable>();
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key) {
-                if (key.startsWith(userProperties + "_")) {
-                    const value = localStorage.getItem(key);
-                    if (value) {
-                        const userKey = key.substr((userProperties + "_").length);
-                        result.set(userKey, JSON.parse(value));
+                if (key.startsWith(userProperties + "_" + context + "__|__")) {
+                    const storedValue = localStorage.getItem(key);
+                    if (storedValue) {
+                        const userKey = key.substring((userProperties + "_" + context + "__|__").length);
+
+                        const [expireStr, isPublicStr, value] = storedValue.split(":", 3);
+                        if (isPublicStr === undefined || value === undefined) {
+                            console.error(
+                                'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
+                                storedValue
+                            );
+                            continue;
+                        }
+                        let isPublic: boolean;
+                        if (isPublicStr === "0") {
+                            isPublic = false;
+                        } else if (isPublicStr === "1") {
+                            isPublic = true;
+                        } else {
+                            console.error('Invalid value stored in Redis for isPublic. Expecting "0" or "1"');
+                            continue;
+                        }
+                        let expire: number | undefined;
+                        if (expireStr === "") {
+                            expire = undefined;
+                        } else {
+                            expire = parseInt(expireStr);
+                            if (isNaN(expire)) {
+                                console.error("Invalid value stored in Redis. The TTL is not a number");
+                                continue;
+                            }
+
+                            // Let's check the TTL. If it is less than current date, let's remove the key.
+                            if (expire < now) {
+                                localStorage.removeItem(key);
+                                continue;
+                            }
+                        }
+
+                        result.set(userKey, {
+                            isPublic,
+                            value: JSON.parse(value),
+                        });
                     }
                 }
             }
@@ -319,8 +363,19 @@ class LocalUserStore {
         return result;
     }
 
-    setUserProperty(name: string, value: unknown): void {
-        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
+    setUserProperty(
+        name: string,
+        value: unknown,
+        context: string,
+        isPublic: boolean,
+        expire: number | undefined
+    ): void {
+        const storedValue =
+            (expire !== undefined ? expire : "") + ":" + (isPublic ? "1" : "0") + ":" + JSON.stringify(value);
+
+        const key = userProperties + "_" + context + "__|__" + name;
+
+        localStorage.setItem(key, storedValue);
     }
 
     setEmojiFavorite(value: Map<number, Emoji>) {

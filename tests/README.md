@@ -14,7 +14,7 @@ npx playwright install --with-deps
 Start WorkAdventure with:
 
 ```bash
-docker-compose up -d
+docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml up -d
 ```
 
 Wait 2-3 minutes for the environment to start, then:
@@ -25,12 +25,19 @@ Start the tests with:
 npm run test
 ```
 
+In development, if you want to run a specific test in "headed" mode (visible mode), with only Chromium, run:
+
+```bash
+npm run headed-test -- tests/[your_test_file.ts]
+```
+
+
 ## Run on production like environment
 
 Start WorkAdventure with:
 
 ```bash
-docker-compose -f docker-compose.yaml -f docker-compose-oidc.yml -f docker-compose.e2e.yml up -d --build
+docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d --build
 ```
 
 Start the tests with:
@@ -52,4 +59,10 @@ To run tests in "headed" mode, only for Chromium, run:
 
 ```bash
 npm run test-headed-chrome -- [name of the test file]
+```
+
+Alternatively, to run a test in "headed" mode, only for Firefox, run:
+
+```bash
+npm run test-headed-firefox -- [name of the test file]
 ```

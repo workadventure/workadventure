@@ -15,10 +15,10 @@ export function dockerCompose(command: string): void {
     const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
     if (overrideDockerCompose) {
-        param += ' -f docker-compose.yaml -f '+overrideDockerCompose;
+        param += ' -f '+overrideDockerCompose;
     }
 
-    let stdout = execSync('docker-compose '+param+' '+command, {
+    let stdout = execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }

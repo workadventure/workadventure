@@ -69,6 +69,7 @@ services:
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
       - EJABBERD_DOMAIN=ejabberd
+      - OPID_PROMPT=login
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
     labels:
@@ -107,6 +108,7 @@ services:
       - PROMETHEUS_AUTHORIZATION_TOKEN
       - MAP_STORAGE_URL=map-storage:50053
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
+      - PLAYER_VARIABLES_MAX_TTL
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
