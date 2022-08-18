@@ -15,7 +15,6 @@
     import HelpCameraSettingsPopup from "./HelpCameraSettings/HelpCameraSettingsPopup.svelte";
     import LayoutActionManager from "./LayoutActionManager/LayoutActionManager.svelte";
     import Menu from "./Menu/Menu.svelte";
-    import MyCamera from "./MyCamera.svelte";
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
@@ -146,10 +145,6 @@
             <LayoutActionManager />
         {/if}
 
-        {#if $myCameraStore}
-            <MyCamera />
-        {/if}
-
         <ActionBar />
 
         <!-- audio when user have a message TODO delete it with new chat -->
@@ -166,7 +161,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../style/breakpoints.scss";
+  @import "../../style/breakpoints.scss";
 
     #main-layout {
         display: grid;

@@ -1,11 +1,13 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import {highlightedEmbedScreen} from "../../../Stores/EmbedScreensStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
-    import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";
-    import { afterUpdate, onMount } from "svelte";
-    import { isMediaBreakpointDown, isMediaBreakpointUp } from "../../../Utils/BreakpointsUtils";
-    import { peerStore } from "../../../Stores/PeerStore";
+    import {coWebsiteManager} from "../../../WebRtc/CoWebsiteManager";
+    import {afterUpdate, onMount} from "svelte";
+    import {isMediaBreakpointDown, isMediaBreakpointUp} from "../../../Utils/BreakpointsUtils";
+    import {peerStore} from "../../../Stores/PeerStore";
+    import {myCameraStore} from "../../../Stores/MyMediaStore";
+    import MyCamera from "../../MyCamera.svelte";
 
     function closeCoWebsite() {
         if ($highlightedEmbedScreen?.type === "cowebsite") {
@@ -51,30 +53,31 @@
 <div id="presentation-layout" bind:this={layoutDom} class:full-medias={displayFullMedias}>
     {#if displayFullMedias}
         <div id="full-medias">
-            <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen} />
+            <CamerasContainer full={true} highlightedEmbedScreen={$highlightedEmbedScreen}/>
         </div>
     {:else}
-        <div id="embed-left-block" class:full={$peerStore && $peerStore.size === 0}>
+        <div id="embed-left-block">
             <div id="main-embed-screen">
                 {#if $highlightedEmbedScreen}
                     {#if $highlightedEmbedScreen.type === "streamable"}
                         {#key $highlightedEmbedScreen.embed.uniqueId}
                             <MediaBox
-                                isHightlighted={true}
-                                isClickable={true}
-                                streamable={$highlightedEmbedScreen.embed}
+                                    isHightlighted={true}
+                                    isClickable={true}
+                                    streamable={$highlightedEmbedScreen.embed}
                             />
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
                         {#key $highlightedEmbedScreen.embed.getId()}
                             <div class="highlighted-cowebsite-container nes-container is-rounded screen-blocker">
                                 <div
-                                    id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
-                                    class="highlighted-cowebsite"
+                                        id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
+                                        class="highlighted-cowebsite"
                                 />
                                 <div class="actions">
                                     <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
-                                        >&times;</button
+                                    >&times;
+                                    </button
                                     >
                                 </div>
                             </div>
@@ -85,71 +88,71 @@
         </div>
 
         {#if $peerStore.size > 0}
-            <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen} />
+            <CamerasContainer highlightedEmbedScreen={$highlightedEmbedScreen}/>
         {/if}
     {/if}
+    {#if $myCameraStore}
+        <MyCamera/>
+    {/if}
+
 </div>
 
 <style lang="scss">
-    #presentation-layout {
-        height: 100%;
-        width: 100%;
-        display: flex;
+  #presentation-layout {
+    height: 100%;
+    width: 100%;
+    display: flex;
 
-        &.full-medias {
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-
-        #full-medias {
-            overflow: hidden;
-        }
+    &.full-medias {
+      overflow-y: auto;
+      overflow-x: hidden;
     }
 
-    #embed-left-block {
-        display: flex;
-        flex-direction: column;
-        flex: 0 0 75%;
-        height: 100%;
-        width: 75%;
-
-        &.full {
-            flex: 0 0 98% !important;
-            width: 98% !important;
-        }
+    #full-medias {
+      overflow: hidden;
     }
+  }
 
-    #main-embed-screen {
-        height: 100%;
-        margin-bottom: 3%;
+  #embed-left-block {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 75%;
+    height: 100%;
+    width: 75%;
+  }
 
-        .highlighted-cowebsite {
-            height: 100% !important;
-            width: 100% !important;
-            position: relative;
+  #main-embed-screen {
+    height: 100%;
+    margin-bottom: 3%;
 
-            &-container {
-                height: 100% !important;
-                width: 96%;
-                background-color: rgba(#000000, 0.6);
-                margin: 0 !important;
-                padding: 0 !important;
-                .actions {
-                    z-index: 151;
-                    position: absolute;
-                    width: 100%;
-                    top: 5px;
-                    right: 5px;
-                    display: flex;
-                    flex-direction: row;
-                    justify-content: flex-end;
-                    gap: 2%;
+    .highlighted-cowebsite {
+      height: 100% !important;
+      width: 100% !important;
+      position: relative;
 
-                    button {
-                        pointer-events: all;
-                    }
-                }
-            }
+      &-container {
+        height: 100% !important;
+        width: 96%;
+        background-color: rgba(#000000, 0.6);
+        margin: 0 !important;
+        padding: 0 !important;
+
+        .actions {
+          z-index: 151;
+          position: absolute;
+          width: 100%;
+          top: 5px;
+          right: 5px;
+          display: flex;
+          flex-direction: row;
+          justify-content: flex-end;
+          gap: 2%;
+
+          button {
+            pointer-events: all;
+          }
         }
+      }
     }
+  }
 </style>
