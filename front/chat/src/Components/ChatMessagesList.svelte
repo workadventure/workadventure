@@ -30,7 +30,7 @@
     $: unreads = mucRoom.getCountMessagesToSee();
     $: messagesStore = mucRoom.getMessagesStore();
     $: deletedMessagesStore = mucRoom.getDeletedMessagesStore();
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
     $: usersStore = mucRoom.getPresenceStore();
     $: loadingStore = mucRoom.getLoadingStore();
 

@@ -41,7 +41,7 @@
     export const defaultColor = "#626262";
     const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? new Map<string, User>();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
     function onFocus() {}
     function onBlur() {}
@@ -86,7 +86,7 @@
         const userData = [...$presenseStore].map(([, user]) => user).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
-            [, user] = userData;
+            [user] = userData.values();
         }
         return user;
     }
