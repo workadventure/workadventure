@@ -1,29 +1,30 @@
 import { ExSocketInterface } from "./Websocket/ExSocketInterface";
 import { apiClientRepository } from "../Services/ApiClientRepository";
 import {
+    AvailabilityStatus,
     BatchToPusherMessage,
     CharacterLayerMessage,
+    CompanionMessage,
+    EmoteEventMessage,
+    ErrorMessage,
     GroupLeftZoneMessage,
     GroupUpdateMessage,
     GroupUpdateZoneMessage,
+    PlayerDetailsUpdatedMessage,
     PointMessage,
     PositionMessage,
+    SetPlayerDetailsMessage,
     UserJoinedMessage,
     UserJoinedZoneMessage,
     UserLeftZoneMessage,
     UserMovedMessage,
     ZoneMessage,
-    EmoteEventMessage,
-    CompanionMessage,
-    ErrorMessage,
-    PlayerDetailsUpdatedMessage,
-    SetPlayerDetailsMessage,
-    AvailabilityStatus,
 } from "../Messages/generated/messages_pb";
 import { ClientReadableStream } from "grpc";
 import { PositionDispatcher } from "../Model/PositionDispatcher";
 import Debug from "debug";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";
+import * as jspb from "google-protobuf";
 
 const debug = Debug("zone");
 
@@ -52,6 +53,7 @@ export class UserDescriptor {
         private position: PositionMessage,
         private availabilityStatus: AvailabilityStatus,
         private visitCardUrl: string | null,
+        private variables: jspb.Map<string, string>,
         private companion?: CompanionMessage,
         private outlineColor?: number
     ) {
@@ -73,6 +75,7 @@ export class UserDescriptor {
             position,
             message.getAvailabilitystatus(),
             message.getVisitcardurl(),
+            message.getVariablesMap(),
             message.getCompanion(),
             message.getHasoutline() ? message.getOutlinecolor() : undefined
         );
@@ -96,6 +99,10 @@ export class UserDescriptor {
         if (availabilityStatus !== undefined) {
             this.availabilityStatus = availabilityStatus;
         }
+        const setVariable = playerDetails.getSetvariable();
+        if (setVariable) {
+            this.variables.set(setVariable.getName(), setVariable.getValue());
+        }
     }
 
     public toUserJoinedMessage(): UserJoinedMessage {
@@ -116,6 +123,9 @@ export class UserDescriptor {
             userJoinedMessage.setHasoutline(true);
         } else {
             userJoinedMessage.setHasoutline(false);
+        }
+        for (const entry of this.variables.entries()) {
+            userJoinedMessage.getVariablesMap().set(entry[0], entry[1]);
         }
 
         return userJoinedMessage;

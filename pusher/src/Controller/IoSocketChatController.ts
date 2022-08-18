@@ -137,6 +137,7 @@ export class IoSocketChatController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
+                        const isLogged = tokenData?.accessToken ? true : false;
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
@@ -158,6 +159,7 @@ export class IoSocketChatController {
                             try {
                                 userData = await adminService.fetchMemberDataByUuid(
                                     userIdentifier,
+                                    isLogged,
                                     playUri,
                                     IPAddress,
                                     [],

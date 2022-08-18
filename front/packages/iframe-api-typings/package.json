@@ -11,6 +11,7 @@
     "access": "public"
   },
   "dependencies": {
-    "rxjs": "^6.6.3"
+    "rxjs": "^6.6.3",
+    "zod": "^3.14.3"
   }
 }

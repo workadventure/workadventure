@@ -1,4 +1,3 @@
-import { PlayerAnimationDirections } from "./Animation";
 import type { GameScene } from "../Game/GameScene";
 import { ActiveEventList, UserInputEvent } from "../UserInput/UserInputManager";
 import { Character } from "../Entity/Character";
@@ -7,6 +6,7 @@ import { get } from "svelte/store";
 import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import type CancelablePromise from "cancelable-promise";
+import { PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -22,7 +22,7 @@ export class Player extends Character {
         y: number,
         name: string,
         texturesPromise: CancelablePromise<string[]>,
-        direction: PlayerAnimationDirections,
+        direction: PositionMessage_Direction,
         moving: boolean,
         companion: string | null,
         companionTexturePromise?: CancelablePromise<string>
@@ -136,9 +136,9 @@ export class Player extends Character {
         let direction = this.lastDirection;
         if (moving && !joystickMovement) {
             if (Math.abs(x) > Math.abs(y)) {
-                direction = x < 0 ? PlayerAnimationDirections.Left : PlayerAnimationDirections.Right;
+                direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
             } else {
-                direction = y < 0 ? PlayerAnimationDirections.Up : PlayerAnimationDirections.Down;
+                direction = y < 0 ? PositionMessage_Direction.UP : PositionMessage_Direction.DOWN;
             }
         }
 

@@ -136,6 +136,16 @@ export class SocketManager {
             user.activatedInviteUser != undefined ? user.activatedInviteUser : true
         );
 
+        const playerVariables = user.getVariables().getVariables();
+
+        for (const [name, value] of playerVariables.entries()) {
+            const variableMessage = new VariableMessage();
+            variableMessage.setName(name);
+            variableMessage.setValue(value.value);
+
+            roomJoinedMessage.addPlayervariable(variableMessage);
+        }
+
         const serverToClientMessage = new ServerToClientMessage();
         serverToClientMessage.setRoomjoinedmessage(roomJoinedMessage);
         socket.write(serverToClientMessage);
@@ -190,6 +200,10 @@ export class SocketManager {
     handleVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
         return room.setVariable(variableMessage.getName(), variableMessage.getValue(), user);
     }
+
+    // handleSharedPlayerVariableEvent(room: GameRoom, user: User, variableMessage: VariableMessage): Promise<void> {
+    //     return room.setSharedPlayerVariable(variableMessage.getName(), variableMessage.getValue(), user);
+    // }
 
     emitVideo(room: GameRoom, user: User, data: WebRtcSignalToServerMessage): void {
         //send only at user
@@ -317,7 +331,7 @@ export class SocketManager {
         const room = await socketManager.getOrCreateRoom(roomId);
 
         //join world
-        const user = room.join(socket, joinRoomMessage);
+        const user = await room.join(socket, joinRoomMessage);
 
         clientEventsEmitter.emitClientJoin(user.uuid, roomId);
         console.log(new Date().toISOString() + " A user joined");
@@ -326,32 +340,7 @@ export class SocketManager {
 
     private onZoneEnter(thing: Movable, fromZone: Zone | null, listener: ZoneSocket) {
         if (thing instanceof User) {
-            const userJoinedZoneMessage = new UserJoinedZoneMessage();
-            if (!Number.isInteger(thing.id)) {
-                throw new Error(`clientUser.userId is not an integer ${thing.id}`);
-            }
-            userJoinedZoneMessage.setUserid(thing.id);
-            userJoinedZoneMessage.setUseruuid(thing.uuid);
-            userJoinedZoneMessage.setName(thing.name);
-            userJoinedZoneMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
-            userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
-            userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
-            userJoinedZoneMessage.setFromzone(this.toProtoZone(fromZone));
-            if (thing.visitCardUrl) {
-                userJoinedZoneMessage.setVisitcardurl(thing.visitCardUrl);
-            }
-            userJoinedZoneMessage.setCompanion(thing.companion);
-            const outlineColor = thing.getOutlineColor();
-            if (outlineColor === undefined) {
-                userJoinedZoneMessage.setHasoutline(false);
-            } else {
-                userJoinedZoneMessage.setHasoutline(true);
-                userJoinedZoneMessage.setOutlinecolor(outlineColor);
-            }
-
-            const subMessage = new SubToPusherMessage();
-            subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
-
+            const subMessage = SocketManager.toUserJoinedZoneMessage(thing, fromZone);
             emitZoneMessage(subMessage, listener);
             //listener.emitInBatch(subMessage);
         } else if (thing instanceof Group) {
@@ -359,6 +348,46 @@ export class SocketManager {
         } else {
             console.error("Unexpected type for Movable.");
         }
+    }
+
+    private static toUserJoinedZoneMessage(user: User, fromZone?: Zone | null): SubToPusherMessage {
+        const userJoinedZoneMessage = new UserJoinedZoneMessage();
+        if (!Number.isInteger(user.id)) {
+            throw new Error(`clientUser.userId is not an integer ${user.id}`);
+        }
+        userJoinedZoneMessage.setUserid(user.id);
+        userJoinedZoneMessage.setUseruuid(user.uuid);
+        userJoinedZoneMessage.setName(user.name);
+        userJoinedZoneMessage.setAvailabilitystatus(user.getAvailabilityStatus());
+        userJoinedZoneMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(user.characterLayers));
+        userJoinedZoneMessage.setPosition(ProtobufUtils.toPositionMessage(user.getPosition()));
+        if (fromZone) {
+            userJoinedZoneMessage.setFromzone(SocketManager.toProtoZone(fromZone));
+        }
+        if (user.visitCardUrl) {
+            userJoinedZoneMessage.setVisitcardurl(user.visitCardUrl);
+        }
+        userJoinedZoneMessage.setCompanion(user.companion);
+        const outlineColor = user.getOutlineColor();
+        if (outlineColor === undefined) {
+            userJoinedZoneMessage.setHasoutline(false);
+        } else {
+            userJoinedZoneMessage.setHasoutline(true);
+            userJoinedZoneMessage.setOutlinecolor(outlineColor);
+        }
+        for (const entry of user.getVariables().getVariables().entries()) {
+            const key = entry[0];
+            const value = entry[1].value;
+            const isPublic = entry[1].isPublic;
+            if (isPublic) {
+                userJoinedZoneMessage.getVariablesMap().set(key, value);
+            }
+        }
+
+        const subMessage = new SubToPusherMessage();
+        subMessage.setUserjoinedzonemessage(userJoinedZoneMessage);
+
+        return subMessage;
     }
 
     private onClientMove(thing: Movable, position: PositionInterface, listener: ZoneSocket): void {
@@ -427,7 +456,7 @@ export class SocketManager {
         groupUpdateMessage.setGroupid(group.getId());
         groupUpdateMessage.setPosition(pointMessage);
         groupUpdateMessage.setGroupsize(group.getSize);
-        groupUpdateMessage.setFromzone(this.toProtoZone(fromZone));
+        groupUpdateMessage.setFromzone(SocketManager.toProtoZone(fromZone));
         groupUpdateMessage.setLocked(group.isLocked());
 
         const subMessage = new SubToPusherMessage();
@@ -440,7 +469,7 @@ export class SocketManager {
     private emitDeleteGroupEvent(client: ZoneSocket, groupId: number, newZone: Zone | null): void {
         const groupDeleteMessage = new GroupLeftZoneMessage();
         groupDeleteMessage.setGroupid(groupId);
-        groupDeleteMessage.setTozone(this.toProtoZone(newZone));
+        groupDeleteMessage.setTozone(SocketManager.toProtoZone(newZone));
 
         const subMessage = new SubToPusherMessage();
         subMessage.setGroupleftzonemessage(groupDeleteMessage);
@@ -451,14 +480,14 @@ export class SocketManager {
     private emitUserLeftEvent(client: ZoneSocket, userId: number, newZone: Zone | null): void {
         const userLeftMessage = new UserLeftZoneMessage();
         userLeftMessage.setUserid(userId);
-        userLeftMessage.setTozone(this.toProtoZone(newZone));
+        userLeftMessage.setTozone(SocketManager.toProtoZone(newZone));
 
         const subMessage = new SubToPusherMessage();
         subMessage.setUserleftzonemessage(userLeftMessage);
         emitZoneMessage(subMessage, client);
     }
 
-    private toProtoZone(zone: Zone | null): ProtoZone | undefined {
+    private static toProtoZone(zone: Zone | null): ProtoZone | undefined {
         if (zone !== null) {
             const zoneMessage = new ProtoZone();
             zoneMessage.setX(zone.x);
@@ -777,20 +806,7 @@ export class SocketManager {
 
         for (const thing of things) {
             if (thing instanceof User) {
-                const userJoinedMessage = new UserJoinedZoneMessage();
-                userJoinedMessage.setUserid(thing.id);
-                userJoinedMessage.setUseruuid(thing.uuid);
-                userJoinedMessage.setName(thing.name);
-                userJoinedMessage.setAvailabilitystatus(thing.getAvailabilityStatus());
-                userJoinedMessage.setCharacterlayersList(ProtobufUtils.toCharacterLayerMessages(thing.characterLayers));
-                userJoinedMessage.setPosition(ProtobufUtils.toPositionMessage(thing.getPosition()));
-                if (thing.visitCardUrl) {
-                    userJoinedMessage.setVisitcardurl(thing.visitCardUrl);
-                }
-                userJoinedMessage.setCompanion(thing.companion);
-
-                const subMessage = new SubToPusherMessage();
-                subMessage.setUserjoinedzonemessage(userJoinedMessage);
+                const subMessage = SocketManager.toUserJoinedZoneMessage(thing);
 
                 batchMessage.addPayload(subMessage);
             } else if (thing instanceof Group) {
@@ -878,7 +894,7 @@ export class SocketManager {
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
-        if (recipients.length === 0) {
+        if (recipients.size === 0) {
             console.error(
                 "In sendAdminMessage, could not find user with id '" +
                     recipientUuid +
@@ -911,7 +927,7 @@ export class SocketManager {
         }
 
         const recipients = room.getUsersByUuid(recipientUuid);
-        if (recipients.length === 0) {
+        if (recipients.size === 0) {
             console.error(
                 "In banUser, could not find user with id '" +
                     recipientUuid +

@@ -7,6 +7,7 @@ import {
     OPID_USERNAME_CLAIM,
     OPID_LOCALE_CLAIM,
     OPID_SCOPE,
+    OPID_PROMPT,
     SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
 import Response from "hyper-express/types/components/http/Response";
@@ -55,7 +56,7 @@ class OpenIDClient {
         return this.issuerPromise;
     }
 
-    public authorizationUrl(res: Response, playUri?: string, redirect?: string): Promise<string> {
+    public authorizationUrl(res: Response, redirect: string | undefined, playUri: string): Promise<string> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
                 throw new Error("Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.");
@@ -79,10 +80,10 @@ class OpenIDClient {
 
             return client.authorizationUrl({
                 scope: OPID_SCOPE,
-                prompt: "login",
+                prompt: OPID_PROMPT,
                 state: state,
                 //nonce: nonce,
-                playUri: playUri,
+                playUri,
                 redirect: redirect,
 
                 code_challenge,

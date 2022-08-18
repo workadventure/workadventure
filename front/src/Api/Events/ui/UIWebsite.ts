@@ -40,8 +40,8 @@ export type UIWebsiteSize = z.infer<typeof isUIWebsiteSize>;
 
 export const isCreateUIWebsiteEvent = z.object({
     url: z.string(),
-    visible: z.optional(z.boolean()),
-    allowApi: z.optional(z.boolean()),
+    visible: z.boolean().optional(),
+    allowApi: z.boolean().optional(),
     allowPolicy: z.optional(z.string()),
     position: isUIWebsitePosition,
     size: isUIWebsiteSize,

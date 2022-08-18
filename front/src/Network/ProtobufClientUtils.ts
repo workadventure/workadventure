@@ -1,6 +1,4 @@
-import { PositionMessage, PositionMessage_Direction } from "../Messages/ts-proto-generated/protos/messages";
-
-import type { PointInterface } from "../Connexion/ConnexionModels";
+import { PositionMessage_Direction } from "../Messages/ts-proto-generated/protos/messages";
 
 export interface MucRoomDefinitionInterface {
     name: string;
@@ -9,31 +7,18 @@ export interface MucRoomDefinitionInterface {
 }
 
 export class ProtobufClientUtils {
-    public static toPointInterface(position: PositionMessage): PointInterface {
-        let direction: "up" | "down" | "left" | "right";
-        switch (position.direction) {
+    public static toDirectionString(direction: PositionMessage_Direction): "up" | "down" | "left" | "right" {
+        switch (direction) {
             case PositionMessage_Direction.UP:
-                direction = "up";
-                break;
+                return "up";
             case PositionMessage_Direction.DOWN:
-                direction = "down";
-                break;
+                return "down";
             case PositionMessage_Direction.LEFT:
-                direction = "left";
-                break;
+                return "left";
             case PositionMessage_Direction.RIGHT:
-                direction = "right";
-                break;
+                return "right";
             default:
                 throw new Error("Unexpected direction");
         }
-
-        // sending to all clients in room except sender
-        return {
-            x: position.x,
-            y: position.y,
-            direction,
-            moving: position.moving,
-        };
     }
 }

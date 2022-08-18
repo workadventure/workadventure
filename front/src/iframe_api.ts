@@ -3,6 +3,7 @@ import {
     isIframeAnswerEvent,
     isIframeErrorAnswerEvent,
     isIframeResponseEvent,
+    isLookingLikeIframeEventWrapper,
     TypedMessageEvent,
 } from "./Api/Events/IframeEvent";
 import chat from "./Api/iframe/chat";
@@ -13,6 +14,7 @@ import sound from "./Api/iframe/sound";
 import room, { setMapURL, setRoomId } from "./Api/iframe/room";
 import { createState } from "./Api/iframe/state";
 import player, { setPlayerName, setPlayerLanguage, setTags, setUserRoomToken, setUuid } from "./Api/iframe/player";
+import players from "./Api/iframe/players";
 import type { ButtonDescriptor } from "./Api/iframe/Ui/ButtonDescriptor";
 import type { Popup } from "./Api/iframe/Ui/Popup";
 import type { Sound } from "./Api/iframe/Sound/Sound";
@@ -25,7 +27,13 @@ export type { EmbeddedWebsite } from "./Api/iframe/Room/EmbeddedWebsite";
 export type { Area } from "./Api/iframe/Area/Area";
 export type { RemotePlayer, ActionsMenuAction } from "./Api/iframe/ui";
 
-const globalState = createState("global");
+const globalState = createState();
+
+let _metadata: unknown | undefined;
+
+const setMetadata = (data: unknown | undefined) => {
+    _metadata = data;
+};
 
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
@@ -39,6 +47,7 @@ const initPromise = queryWorkadventure({
     setTags(gameState.tags);
     setUuid(gameState.uuid);
     setUserRoomToken(gameState.userRoomToken);
+    setMetadata(gameState.metadata);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
 });
@@ -51,6 +60,7 @@ const wa = {
     sound,
     room,
     player,
+    players,
     camera,
     state: globalState,
 
@@ -66,6 +76,17 @@ const wa = {
      */
     onInit(): Promise<void> {
         return initPromise;
+    },
+
+    /**
+     * The metadata sent by the administration website.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     *
+     * @returns {unknown|undefined} Metadata
+     */
+    get metadata(): unknown | undefined {
+        return _metadata;
     },
 
     // All methods below are deprecated and should not be used anymore.
@@ -242,10 +263,22 @@ window.addEventListener("message", (message: TypedMessageEvent<unknown>) => {
         if (safeParsedPayload.success) {
             const payloadData = safeParsedPayload.data;
 
-            const callback = registeredCallbacks[payloadData.type];
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            callback?.(payloadData.data);
+            const callbacks = registeredCallbacks[payloadData.type];
+            if (callbacks === undefined) {
+                throw new Error('Missing event handler for event of type "' + payloadData.type + "'");
+            }
+            for (const callback of callbacks) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                callback?.(payloadData.data);
+            }
+        } else {
+            const safeLooksLikeResponse = isLookingLikeIframeEventWrapper.safeParse(payload);
+            if (safeLooksLikeResponse.success) {
+                throw new Error(
+                    "Could not parse message received from WorkAdventure. Message:" + JSON.stringify(payload)
+                );
+            }
         }
     }
 });
