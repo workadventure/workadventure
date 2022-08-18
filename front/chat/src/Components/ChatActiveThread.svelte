@@ -16,7 +16,7 @@
   import { createEventDispatcher } from "svelte";
   import ChatMessagesList from "./ChatMessagesList.svelte";
   import OnlineUsers from "./OnlineUsers.svelte";
-  import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
+  import { MucRoom, User } from "../Xmpp/MucRoom";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
   import { onDestroy } from "svelte";
 
@@ -28,8 +28,9 @@
   }>();
 
   export let activeThread: MucRoom;
-  export let usersListStore: UsersStore;
-  export let meStore: MeStore;
+
+  $: usersListStore = activeThread.getPresenceStore();
+  $: meStore = activeThread.getMeStore();
 
   let messagesList: ChatMessagesList;
 
@@ -128,7 +129,6 @@
           <ChatUser
             {openChat}
             {user}
-            {jid}
             on:goTo={(event) => dispatch("goTo", event.detail)}
             on:rankUp={(event) => dispatch("rankUp", event.detail)}
             on:rankDown={(event) => dispatch("rankDown", event.detail)}

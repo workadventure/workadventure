@@ -256,6 +256,7 @@ modules:
   mod_stream_mgmt:
     ack_timeout: infinity
     resend_on_timeout: if_offline
+    resume_timeout: 0
   mod_vcard: {}
   mod_vcard_xupdate: {}
   mod_version:

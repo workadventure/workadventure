@@ -321,6 +321,7 @@ export class IoSocketChatController {
                 console.log("WebSocket backpressure: " + ws.getBufferedAmount());
             },
             close: (ws) => {
+                console.log("IoSocketChatController closing ...");
                 const client = ws as ExSocketInterface;
                 try {
                     client.disconnecting = true;

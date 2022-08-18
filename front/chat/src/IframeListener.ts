@@ -56,7 +56,7 @@ class IframeListener {
               if (!connectionManager.connection) {
                 connectionManager.start();
               }
-              connectionManager.connectionOrFaile
+              connectionManager.connectionOrFail
                 .getXmppClient()
                 ?.joinMuc(
                   iframeEvent.data.name,
@@ -69,7 +69,7 @@ class IframeListener {
               if (!connectionManager.connection) {
                 connectionManager.start();
               }
-              connectionManager.connectionOrFaile
+              connectionManager.connectionOrFail
                 .getXmppClient()
                 ?.leaveMuc(iframeEvent.data.url);
               break;
@@ -126,7 +126,7 @@ class IframeListener {
             case "chatVisibility": {
               chatVisibilityStore.set(iframeEvent.data.visibility);
               if (!iframeEvent.data.visibility) {
-                activeThreadStore.set(undefined);
+                activeThreadStore.reset();
               }
               break;
             }
@@ -187,16 +187,16 @@ class IframeListener {
     );
   }
   sendNotificationToFront(
-      userName: string,
-      notificationType: NotificationType,
-      forum: null | string
-  ){
+    userName: string,
+    notificationType: NotificationType,
+    forum: null | string
+  ) {
     window.parent.postMessage(
-        {
-          type: "notification",
-          data: {userName, notificationType, forum},
-        },
-        "*"
+      {
+        type: "notification",
+        data: { userName, notificationType, forum },
+      },
+      "*"
     );
   }
 }

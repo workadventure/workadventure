@@ -82,7 +82,6 @@
             <ChatUser
               {openChat}
               {user}
-              {jid}
               on:goTo={(event) => dispatch("goTo", event.detail)}
               on:rankUp={(event) => dispatch("rankUp", event.detail)}
               on:rankDown={(event) => dispatch("rankDown", event.detail)}

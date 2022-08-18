@@ -77,17 +77,26 @@ export class XmppClient {
                 this.close();
             });
 
+            xmpp.reconnect.on("reconnecting", () => {
+                console.log("reconnecting");
+            });
+
+            xmpp.reconnect.on("reconnected", () => {
+                console.log("reconnected");
+            });
+
             xmpp.on("offline", () => {
+                //xmpp.reconnect.stop();
                 console.error("XmppClient => offline => status", status);
                 status = "disconnected";
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
-                /*if (this.timeout) {
+                if (this.timeout) {
                     clearTimeout(this.timeout);
                 }
                 this.timeout = setTimeout(() => {
-                    this.createClient(res, rej);
-                }, 10000);*/
+                    this.start();
+                }, 10_000);
             });
 
             xmpp.on("disconnect", () => {
@@ -119,7 +128,6 @@ export class XmppClient {
                 xmppSettings.setConferencedomain("conference.ejabberd");
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
-                        console.info("initial muc room", definition);
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
                         //@ts-ignore
                         if (!definition.name || !definition.url || !definition.type) {

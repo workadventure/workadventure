@@ -25,9 +25,8 @@
   export let openChat: Function;
   export let searchValue: string = "";
   export let meStore: MeStore;
-  export let jid: string;
 
-  $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
+  $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore();
 
   let chatMenuActive = false;
   let openChatUserMenu = () => {
@@ -49,8 +48,8 @@
     dispatch("ban", { user, name, playUri });
   }
 
-  function findUserInDefault(name: string): User | undefined {
-    const userData = [...$presenseStore].find(([, user]) => user.name === name);
+  function findUserInDefault(jid: string): User | undefined {
+    const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
     let user = undefined;
     if (userData) {
       [, user] = userData;
@@ -58,8 +57,8 @@
     return user;
   }
 
-  function getWoka(name: string) {
-    const user = findUserInDefault(name);
+  function getWoka(jid: string) {
+    const user = findUserInDefault(jid);
     if (user) {
       return user.woka;
     } else {
@@ -67,8 +66,8 @@
     }
   }
 
-  function getColor(name: string) {
-    const user = findUserInDefault(name);
+  function getColor(jid: string) {
+    const user = findUserInDefault(jid);
     if (user) {
       return user.color;
     } else {
@@ -91,11 +90,11 @@
 >
   <div
     class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
-    style={`background-color: ${getColor(user.name)}`}
+    style={`background-color: ${getColor(user.jid)}`}
     on:click|stopPropagation={() => openChat(user)}
   >
     <div class="wa-container">
-      <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
+      <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
     </div>
     {#if user.active}
       <span
@@ -192,19 +191,20 @@
         {#if $meStore.isAdmin}
           <span
             class="wa-dropdown-item tw-text-pop-red"
-            on:click|stopPropagation={() => ban(jid, user.name, user.playUri)}
+            on:click|stopPropagation={() =>
+              ban(user.jid, user.name, user.playUri)}
             ><SlashIcon size="13" /> {$LL.ban.title()}</span
           >
           {#if user.isAdmin}
             <span
               class="wa-dropdown-item tw-text-orange"
-              on:click|stopPropagation={() => rankDown(jid)}
+              on:click|stopPropagation={() => rankDown(user.jid)}
               ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
             >
           {:else}
             <span
               class="wa-dropdown-item tw-text-orange"
-              on:click|stopPropagation={() => rankUp(jid)}
+              on:click|stopPropagation={() => rankUp(user.jid)}
               ><ShieldIcon size="13" /> {$LL.rankUp()}</span
             >
           {/if}

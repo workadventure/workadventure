@@ -4,7 +4,10 @@ import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
-import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
+import {
+  mucRoomsStore,
+  numberPresenceUserStore,
+} from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
 import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
@@ -17,6 +20,7 @@ import { mediaManager, NotificationType } from "../Media/MediaManager";
 import { availabilityStatusStore } from "../Stores/ChatStore";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
+import { connectionManager } from "../Connection/ChatConnectionManager";
 
 export const USER_STATUS_AVAILABLE = "available";
 export const USER_STATUS_DISCONNECTED = "disconnected";
@@ -75,6 +79,7 @@ type ReactMessage = {
 export type Message = {
   body: string;
   name: string;
+  jid: string;
   time: Date;
   id: string;
   delivered: boolean;
@@ -132,6 +137,8 @@ export class MucRoom {
   private sendTimeOut: Timeout | undefined;
   private loadingStore: Writable<boolean>;
   public canLoadOlderMessages: boolean;
+  private closed: boolean = false;
+  private description: string = "";
 
   constructor(
     private connection: ChatConnection,
@@ -183,17 +190,19 @@ export class MucRoom {
   }
 
   public getPlayerName() {
-    return (
-      (get(userStore).name ?? "unknown") +
-      (this.nickCount > 0 ? `[${this.nickCount}]` : "")
-    );
+    try {
+      return (
+        connectionManager.connectionOrFail.getXmppClient()?.getPlayerName() ??
+        "unknown"
+      );
+    } catch (e) {
+      console.log(e);
+    }
+    return "unknown";
   }
 
   public getPlayerUuid() {
-    return (
-      (get(userStore).uuid ?? "unknown") +
-      (this.nickCount > 0 ? `[${this.nickCount}]` : "")
-    );
+    return get(userStore).uuid ?? "unknown";
   }
 
   public getUserDataByName(name: string) {
@@ -260,8 +269,10 @@ export class MucRoom {
         xmlns: "urn:xmpp:mucsub:0",
       })
     );
-    this.connection.emitXmlMessage(messageMucListAllUsers);
-    if (_VERBOSE) console.warn("[XMPP]", "Get all subscribers sent");
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageMucListAllUsers);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Get all subscribers sent");
+    }
   }
 
   public retrieveLastMessages() {
@@ -312,8 +323,10 @@ export class MucRoom {
         )
       )
     );
-    this.connection.emitXmlMessage(messageRetrieveLastMessages);
-    if (_VERBOSE) console.warn("[XMPP]", "Get older messages sent");
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageRetrieveLastMessages);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Get older messages sent");
+    }
   }
 
   private sendPresence() {
@@ -344,8 +357,11 @@ export class MucRoom {
         deleteSubscribeOnDisconnect: this.type === "live" ? "true" : "false",
       })
     );
-    this.connection.emitXmlMessage(messagePresence);
-    if (_VERBOSE) console.warn("[XMPP]", "Presence sent", get(userStore).uuid);
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messagePresence);
+      if (_VERBOSE)
+        console.warn("[XMPP]", ">> Presence sent", get(userStore).uuid);
+    }
   }
 
   private sendSubscribe() {
@@ -372,20 +388,22 @@ export class MucRoom {
         xml("event", { node: "urn:xmpp:mucsub:nodes:subject" })
       )
     );
-    this.connection.emitXmlMessage(messageMucSubscribe);
-    if (_VERBOSE)
-      console.warn("[XMPP]", "Subscribe sent", messageMucSubscribe.toString());
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageMucSubscribe);
+      if (_VERBOSE)
+        console.warn("[XMPP]", ">> Subscribe sent", this.roomJid.local);
+    }
   }
 
-  public rankUp(userJID: string | JID) {
-    this.affiliate("admin", userJID);
+  public sendRankUp(userJID: string | JID) {
+    this.sendAffiliate("admin", userJID);
   }
 
-  public rankDown(userJID: string | JID) {
-    this.affiliate("none", userJID);
+  public sendRankDown(userJID: string | JID) {
+    this.sendAffiliate("none", userJID);
   }
 
-  private affiliate(type: string, userJID: string | JID) {
+  private sendAffiliate(type: string, userJID: string | JID) {
     const messageMucAffiliateUser = xml(
       "iq",
       {
@@ -409,11 +427,13 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
-    this.connection.emitXmlMessage(messageMucAffiliateUser);
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageMucAffiliateUser);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Affiliation sent");
+    }
   }
 
-  public ban(user: string, name: string, playUri: string) {
+  public sendBan(user: string, name: string, playUri: string) {
     const userJID = jid(user);
     //this.affiliate("outcast", userJID);
     this.connection.emitBanUserByUuid(
@@ -427,14 +447,14 @@ export class MucRoom {
 
   public reInitialize() {
     // Destroy room in ejabberd
-    this.destroy();
+    this.sendDestroy();
     // Recreate room in ejabberd
     setTimeout(() => this.sendPresence(), 100);
     // Tell all users to subscribe to it
     //setTimeout(() => this.connection.emitJoinMucRoom(this.name, this.type, this.roomJid.local), 200);
   }
 
-  public destroy() {
+  public sendDestroy() {
     const messageMucDestroy = xml(
       "iq",
       {
@@ -457,11 +477,13 @@ export class MucRoom {
         )
       )
     );
-    if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
-    this.connection.emitXmlMessage(messageMucDestroy);
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageMucDestroy);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Destroy room sent");
+    }
   }
 
-  public disconnect() {
+  public sendDisconnect() {
     const to = jid(
       this.roomJid.local,
       this.roomJid.domain,
@@ -474,12 +496,14 @@ export class MucRoom {
         deleteSubscribeOnDisconnect: this.type === "live" ? "true" : "false",
       })
     );
-    this.connection.emitXmlMessage(messageMucSubscribe);
-    if (_VERBOSE) console.warn("[XMPP]", "Disconnect sent");
-    return messageMucSubscribe;
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageMucSubscribe);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Disconnect sent");
+      this.closed = true;
+    }
   }
 
-  public removeMessage(messageId: string) {
+  public sendRemoveMessage(messageId: string) {
     const messageRemove = xml(
       "message",
       {
@@ -495,8 +519,10 @@ export class MucRoom {
       }),
       xml("body", {}, "")
     );
-    this.connection.emitXmlMessage(messageRemove);
-    if (_VERBOSE) console.warn("[XMPP]", "Remove message sent");
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageRemove);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Remove message sent");
+    }
   }
 
   public sendChatState(state: string) {
@@ -512,8 +538,10 @@ export class MucRoom {
         xmlns: "http://jabber.org/protocol/chatstates",
       })
     );
-    this.connection.emitXmlMessage(chatState);
-    if (_VERBOSE) console.warn("[XMPP]", "Chat state sent");
+    if (!this.closed) {
+      this.connection.emitXmlMessage(chatState);
+      if (_VERBOSE) console.warn("[XMPP]", ">> Chat state sent");
+    }
   }
 
   public sendMessage(text: string, messageReply?: Message) {
@@ -570,42 +598,44 @@ export class MucRoom {
           return xmlValue;
         }, xml("mentions"))
       );
-      //TODO send notification
     }
 
-    this.connection.emitXmlMessage(message);
+    if (!this.closed) {
+      this.connection.emitXmlMessage(message);
 
-    this.messageStore.update((messages) => {
-      messages.push({
-        name: this.getPlayerName(),
-        body: text,
-        time: new Date(),
-        id: idMessage,
-        delivered: false,
-        error: false,
-        from: this.jid,
-        type:
-          messageReply != undefined ? messageType.reply : messageType.message,
-        files: fileMessageManager.files,
-        targetMessageReply:
-          messageReply != undefined
-            ? {
-                id: messageReply.id,
-                senderName: messageReply.name,
-                body: messageReply.body,
-                files: messageReply.files,
-              }
-            : undefined,
-        mentions: [...get(mentionsUserStore).values()],
+      this.messageStore.update((messages) => {
+        messages.push({
+          name: this.getPlayerName(),
+          jid: this.getMyJID().toString(),
+          body: text,
+          time: new Date(),
+          id: idMessage,
+          delivered: false,
+          error: false,
+          from: this.jid,
+          type:
+            messageReply != undefined ? messageType.reply : messageType.message,
+          files: fileMessageManager.files,
+          targetMessageReply:
+            messageReply != undefined
+              ? {
+                  id: messageReply.id,
+                  senderName: messageReply.name,
+                  body: messageReply.body,
+                  files: messageReply.files,
+                }
+              : undefined,
+          mentions: [...get(mentionsUserStore).values()],
+        });
+        return messages;
       });
-      return messages;
-    });
 
-    //clear list of file uploaded
-    fileMessageManager.reset();
-    mentionsUserStore.set(new Set<User>());
+      //clear list of file uploaded
+      fileMessageManager.reset();
+      mentionsUserStore.set(new Set<User>());
 
-    this.manageResendMessage();
+      this.manageResendMessage();
+    }
   }
 
   public haveSelected(messageId: string, emojiStr: string) {
@@ -617,7 +647,7 @@ export class MucRoom {
         message.emoji == emojiStr &&
         jid(message.from).getLocal() == jid(this.jid).getLocal()
       ) {
-        value = message.operation == reactAction.add ? true : false;
+        value = message.operation == reactAction.add;
       }
       return value;
     }, false);
@@ -657,25 +687,30 @@ export class MucRoom {
         action,
       })
     );
-    this.connection.emitXmlMessage(messageReacted);
 
-    this.messageReactStore.update((reactMessages) => {
-      //create or get list of react message
-      let newReactMessages = new Array<ReactMessage>();
-      if (reactMessages.has(newReactMessage.message)) {
-        newReactMessages = reactMessages.get(
-          newReactMessage.message
-        ) as ReactMessage[];
-      }
-      //check if already exist
-      if (!newReactMessages.find((react) => react.id === newReactMessage.id)) {
-        newReactMessages.push(newReactMessage);
-        reactMessages.set(newReactMessage.message, newReactMessages);
-      }
-      return reactMessages;
-    });
+    if (!this.closed) {
+      this.connection.emitXmlMessage(messageReacted);
 
-    this.manageResendMessage();
+      this.messageReactStore.update((reactMessages) => {
+        //create or get list of react message
+        let newReactMessages = new Array<ReactMessage>();
+        if (reactMessages.has(newReactMessage.message)) {
+          newReactMessages = reactMessages.get(
+            newReactMessage.message
+          ) as ReactMessage[];
+        }
+        //check if already exist
+        if (
+          !newReactMessages.find((react) => react.id === newReactMessage.id)
+        ) {
+          newReactMessages.push(newReactMessage);
+          reactMessages.set(newReactMessage.message, newReactMessages);
+        }
+        return reactMessages;
+      });
+
+      this.manageResendMessage();
+    }
   }
 
   private manageResendMessage() {
@@ -693,20 +728,22 @@ export class MucRoom {
         return messages;
       });
     }, 10_000);
-    if (_VERBOSE) console.warn("[XMPP]", "Message sent");
+    if (_VERBOSE) console.warn("[XMPP]", ">> Message sent");
   }
 
   onMessage(xml: ElementExt): void {
     let handledMessage = false;
-    if (_VERBOSE) console.warn("[XMPP]", "<< Message received", xml.getName());
+    if (_VERBOSE) console.warn("[XMPP]", "<< Stanza received", xml.getName());
 
     if (xml.getAttr("type") === "error") {
-      console.warn("[XMPP]", "Error received :", xml.toString());
+      console.warn("[XMPP]", "<< Error received :", xml.toString());
       if (
         xml.getChild("error")?.getChildText("text") ===
         "That nickname is already in use by another occupant"
       ) {
-        this.nickCount += 1;
+        connectionManager.connectionOrFail
+          .getXmppClient()
+          ?.incrementNickCount();
         this.sendSubscribe();
         //this.sendPresence(me);
         handledMessage = true;
@@ -723,18 +760,11 @@ export class MucRoom {
       const from = jid(xml.getAttr("from"));
       const type = xml.getAttr("type");
 
-      //if (from.resource === "") return;
-
-      //It's me (are you sure ?) and I want a profile details
-      //TODO create profile details with XMPP connection
-      //if (from.toString() === me.toString()) {
-      //    return;
-      //}
-
       const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
       if (x) {
-        const jid = x.getChild("item")?.getAttr("jid")?.split("/")[0];
+        const userJID = jid(x.getChild("item")?.getAttr("jid"));
+        userJID.setResource("");
         const playUri = xml.getChild("room")?.getAttr("playUri");
         const uuid = xml.getChild("user")?.getAttr("uuid");
         const color = xml.getChild("user")?.getAttr("color");
@@ -750,10 +780,15 @@ export class MucRoom {
             deleteSubscribeOnDisconnect === "true") ||
             affiliation === "outcast")
         ) {
-          this.deleteUser(jid.toString());
+          if (userJID.toString() === this.getMyJID().toString()) {
+            // If presence received from ME and type is unavailable and room type is LIVE, delete this MucRoom
+            connectionManager.connectionOrFail.getXmppClient()?.removeMuc(this);
+          } else {
+            this.deleteUser(userJID.toString());
+          }
         } else {
           this.updateUser(
-            jid,
+            userJID,
             from.resource,
             playUri,
             uuid,
@@ -772,8 +807,8 @@ export class MucRoom {
           this.reset();
 
           setTimeout(() => this.connect(), 500);
-          handledMessage = true;
         }
+        handledMessage = true;
       }
     } else if (xml.getName() === "iq" && xml.getAttr("type") === "result") {
       // Manage registered subscriptions old and new one
@@ -812,118 +847,127 @@ export class MucRoom {
         this.loadingStore.set(false);
         handledMessage = true;
       }
-    }
-    if (
+    } else if (
       xml.getName() === "message" &&
-      xml.getAttr("type") === "groupchat" &&
-      !xml.getChild("subject")
+      xml.getAttr("type") === "groupchat"
     ) {
-      const from = jid(xml.getAttr("from"));
-      const idMessage = xml.getAttr("id");
-      const name = from.resource;
-      const state = xml.getChildByAttr(
-        "xmlns",
-        "http://jabber.org/protocol/chatstates"
-      );
-      if (!state) {
-        let delay = xml.getChild("delay")?.getAttr("stamp");
-        if (delay) {
-          delay = new Date(delay);
-        } else {
-          delay = new Date();
-        }
-        const body = xml.getChildText("body") ?? "";
-
-        if (xml.getChild("reaction") != undefined) {
-          //define action, delete or not
-          const newReactMessage = {
-            id: idMessage,
-            message: xml.getChild("reaction")?.getAttr("id"),
-            from: xml.getChild("reaction")?.getAttr("from"),
-            emoji: body,
-            operation: xml.getChild("reaction")?.getAttr("action"),
-          };
-
-          //update list of message
-          this.messageReactStore.update((reactMessages) => {
-            //create or get list of react message
-            let newReactMessages = new Array<ReactMessage>();
-            if (reactMessages.has(newReactMessage.message)) {
-              newReactMessages = reactMessages.get(
-                newReactMessage.message
-              ) as ReactMessage[];
-            }
-            //check if already exist
-            if (
-              !newReactMessages.find((react) => react.id === newReactMessage.id)
-            ) {
-              newReactMessages.push(newReactMessage);
-              reactMessages.set(newReactMessage.message, newReactMessages);
-            }
-            return reactMessages;
-          });
-        } else {
-          this.messageStore.update((messages) => {
-            if (messages.find((message) => message.id === idMessage)) {
-              this.countMessagesToSee.set(0);
-              this.lastMessageSeen = new Date();
-              messages = messages.map((message) =>
-                message.id === idMessage
-                  ? { ...message, delivered: true }
-                  : message
-              );
-            } else {
-              if (delay > this.lastMessageSeen) {
-                this.countMessagesToSee.update((last) => last + 1);
-                if (
-                  get(activeThreadStore) !== this ||
-                  get(availabilityStatusStore) !== 1
-                ) {
-                  mediaManager.playNewMessageNotification();
-                  mediaManager.createNotification(
-                    name,
-                    NotificationType.message,
-                    this.name
-                  );
-                }
-              }
-              const message: Message = {
-                name,
-                body,
-                time: delay,
-                id: idMessage,
-                delivered: true,
-                error: false,
-                from: from.toString(),
-                type: xml.getChild("reply")
-                  ? messageType.message
-                  : messageType.reply,
-              };
-              if (xml.getChild("reply") != undefined) {
-                message.targetMessageReply = {
-                  ...(xml.getChild("reply")?.attrs as ReplyMessage),
-                };
-              }
-              messages.push(message);
-            }
-            return messages;
-          });
-        }
+      if (xml.getChild("subject")) {
+        this.description = xml.getChildText("subject") ?? "";
         handledMessage = true;
       } else {
-        const { jid } = this.getUserDataByName(name);
-        if (jid) {
-          this.updateUser(
-            jid,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            state.getName()
-          );
+        const from = jid(xml.getAttr("from"));
+        const idMessage = xml.getAttr("id");
+        const name = from.resource;
+        const state = xml.getChildByAttr(
+          "xmlns",
+          "http://jabber.org/protocol/chatstates"
+        );
+        if (!state) {
+          let delay = xml.getChild("delay")?.getAttr("stamp");
+          if (delay) {
+            delay = new Date(delay);
+          } else {
+            delay = new Date();
+          }
+          const body = xml.getChildText("body") ?? "";
+
+          if (xml.getChild("reaction") != undefined) {
+            //define action, delete or not
+            const newReactMessage = {
+              id: idMessage,
+              message: xml.getChild("reaction")?.getAttr("id"),
+              from: xml.getChild("reaction")?.getAttr("from"),
+              emoji: body,
+              operation: xml.getChild("reaction")?.getAttr("action"),
+            };
+
+            //update list of message
+            this.messageReactStore.update((reactMessages) => {
+              //create or get list of react message
+              let newReactMessages = new Array<ReactMessage>();
+              if (reactMessages.has(newReactMessage.message)) {
+                newReactMessages = reactMessages.get(
+                  newReactMessage.message
+                ) as ReactMessage[];
+              }
+              //check if already exist
+              if (
+                !newReactMessages.find(
+                  (react) => react.id === newReactMessage.id
+                )
+              ) {
+                newReactMessages.push(newReactMessage);
+                reactMessages.set(newReactMessage.message, newReactMessages);
+              }
+              return reactMessages;
+            });
+          } else {
+            this.messageStore.update((messages) => {
+              if (messages.find((message) => message.id === idMessage)) {
+                this.countMessagesToSee.set(0);
+                this.lastMessageSeen = new Date();
+                messages = messages.map((message) =>
+                  message.id === idMessage
+                    ? { ...message, delivered: true }
+                    : message
+                );
+              } else {
+                if (delay > this.lastMessageSeen) {
+                  this.countMessagesToSee.update((last) => last + 1);
+                  if (
+                    get(activeThreadStore) !== this ||
+                    get(availabilityStatusStore) !== 1
+                  ) {
+                    mediaManager.playNewMessageNotification();
+                    mediaManager.createNotification(
+                      name,
+                      NotificationType.message,
+                      this.name
+                    );
+                  }
+                }
+                const owner = [
+                  ...get(mucRoomsStore.getDefaultRoom().getPresenceStore()),
+                ].find(([, user]) => user.name === name);
+                const message: Message = {
+                  name,
+                  jid: owner ? owner[0] : "",
+                  body,
+                  time: delay,
+                  id: idMessage,
+                  delivered: true,
+                  error: false,
+                  from: from.toString(),
+                  type: xml.getChild("reply")
+                    ? messageType.message
+                    : messageType.reply,
+                };
+                if (xml.getChild("reply") != undefined) {
+                  message.targetMessageReply = {
+                    ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                  };
+                }
+                messages.push(message);
+              }
+              return messages;
+            });
+          }
+          handledMessage = true;
+        } else {
+          const { jid } = this.getUserDataByName(name);
+          if (jid) {
+            this.updateUser(
+              jid,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              state.getName()
+            );
+          }
           handledMessage = true;
         }
       }
@@ -950,8 +994,12 @@ export class MucRoom {
         ?.getAttr("stamp");
       if (!state && delay) {
         delay = new Date(delay);
+        const owner = [
+          ...get(mucRoomsStore.getDefaultRoom().getPresenceStore()),
+        ].find(([, user]) => user.name === name);
         const message: Message = {
           name,
+          jid: owner ? owner[0] : "",
           body,
           time: delay,
           id: idMessage,
@@ -1033,7 +1081,7 @@ export class MucRoom {
     let isMe = false;
     const user = get(userStore);
     //MucRoom.encode(user?.email) ?? MucRoom.encode(user?.uuid)) + "@" + EJABBERD_DOMAIN === jid &&
-    if (nick === this.getPlayerName()) {
+    if (jid.toString() === this.getMyJID().toString()) {
       isMe = true;
       this.meStore.update((me) => {
         me.isAdmin = isAdmin ?? this.getMeIsAdmin();
@@ -1137,6 +1185,12 @@ export class MucRoom {
 
   public getUrl(): string {
     return this.roomJid.local + "@" + this.roomJid.domain.toString();
+  }
+
+  public getMyJID(): JID {
+    const myJID = jid(this.jid);
+    myJID.setResource("");
+    return myJID;
   }
 
   public resetTeleportStore(): void {
