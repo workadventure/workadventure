@@ -24,12 +24,14 @@ jobs:
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
-      - name: Pull previous images (for caching!)
-        run: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml pull || true
       - name: Build WorkAdventure
         run: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml build --parallel
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Wait for environment to Start
         run: sleep 60
       - name: Run Playwright tests
@@ -38,12 +40,18 @@ jobs:
       - name: Display docker-compose logs on failure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Display containers state
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
         if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Side-load docker-compose logs in the playwright report
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
         if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - uses: actions/upload-artifact@v2
         if: always()
         with:

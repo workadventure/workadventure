@@ -9,6 +9,10 @@ services:
     build:
       context: ./
       dockerfile: front/Dockerfile
+      cache_from:
+       - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
@@ -21,11 +25,27 @@ services:
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
 
+  chat:
+    image: 'wa-chat-e2e'
+    build:
+      context: ./
+      dockerfile: front/chat/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    volumes: []
+
   pusher:
     image: 'wa-pusher-e2e'
     build:
       context: ./
       dockerfile: pusher/Dockerfile
+      cache_from:
+       - thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
     environment:
@@ -36,5 +56,21 @@ services:
     build:
       context: ./
       dockerfile: back/Dockerfile
+      cache_from:
+       - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
+    volumes: []
+
+  map-storage:
+    image: 'wa-mapstorage-e2e'
+    build:
+      context: ./
+      dockerfile: map-storage/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    command: yarn run start:prod
     volumes: []
