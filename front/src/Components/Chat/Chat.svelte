@@ -66,7 +66,6 @@
         subscribeListeners.push(
             canSendInitMessageStore.subscribe((value) => {
                 if (value) {
-                    console.log(name, getColorByString(name ?? ""));
                     chatIframe?.contentWindow?.postMessage(
                         {
                             type: "userData",

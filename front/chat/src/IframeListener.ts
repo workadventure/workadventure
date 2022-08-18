@@ -186,6 +186,19 @@ class IframeListener {
       "*"
     );
   }
+  sendNotificationToFront(
+      userName: string,
+      notificationType: NotificationType,
+      forum: null | string
+  ){
+    window.parent.postMessage(
+        {
+          type: "notification",
+          data: {userName, notificationType, forum},
+        },
+        "*"
+    );
+  }
 }
 
 export const iframeListener = new IframeListener();
