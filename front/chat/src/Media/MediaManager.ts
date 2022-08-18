@@ -1,7 +1,7 @@
 import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
 import { chatNotificationsStore, chatSoundsStore } from "../Stores/ChatStore";
-import {iframeListener} from "../IframeListener";
+import { iframeListener } from "../IframeListener";
 
 export enum NotificationType {
   discussion = 1,
@@ -26,7 +26,7 @@ class MediaManager {
   ) {
     if (!get(chatNotificationsStore)) {
       return;
-    } else if(window.location !== window.parent.location){
+    } else if (window.location !== window.parent.location) {
       iframeListener.sendNotificationToFront(userName, notificationType, forum);
       return;
     }
@@ -46,12 +46,13 @@ class MediaManager {
           break;
         case NotificationType.message:
           new Notification(
-            `${userName} ${get(LL).notification.message()} ${forum !== null && get(LL).notification.forum() + ' ' + forum}`,
+            `${userName} ${get(LL).notification.message()} ${
+              forum !== null && get(LL).notification.forum() + " " + forum
+            }`,
             options
           );
           break;
       }
-      console.log("Notification sent");
 
       this.canSendNotification = false;
       setTimeout(

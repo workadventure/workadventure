@@ -12,6 +12,7 @@
     import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
     import { Subscription } from "rxjs";
+    import { availabilityStatusStore } from "../../Stores/MediaStore";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -88,16 +89,30 @@
                         },
                         "*"
                     );
+                    iframeListener.sendSettingsToChatIframe();
                 }
             })
         );
         subscribeListeners.push(
-            chatVisibilityStore.subscribe(() => {
+            chatVisibilityStore.subscribe((visibility) => {
                 try {
                     gameManager.getCurrentGameScene()?.onResize();
                 } catch (err) {
                     console.info("gameManager doesn't exist!", err);
                 }
+                try {
+                    iframeListener.sendChatVisibilityToChatIframe(visibility);
+                } catch (err) {
+                    console.error("Send chat visibility to chat iFrame", err);
+                }
+            })
+        );
+        subscribeListeners.push(
+            availabilityStatusStore.subscribe((status) => {
+                iframeListener.postMessageToChat({
+                    type: "availabilityStatus",
+                    data: status,
+                });
             })
         );
         messageStream = adminMessagesService.messageStream.subscribe((message) => {

@@ -1,16 +1,19 @@
-import type {ChatConnection} from "../Connection/ChatConnection";
+import type { ChatConnection } from "../Connection/ChatConnection";
 import xml from "@xmpp/xml";
-import jid, {JID} from "@xmpp/jid";
-import type {Readable, Writable} from "svelte/store";
-import {get, writable} from "svelte/store";
+import jid, { JID } from "@xmpp/jid";
+import type { Readable, Writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
-import {numberPresenceUserStore} from "../Stores/MucRoomsStore";
-import {v4 as uuidv4} from "uuid";
-import {userStore} from "../Stores/LocalUserStore";
-import {UserData} from "../Messages/JsonMessages/ChatData";
-import {mediaManager, NotificationType} from "../Media/MediaManager";
-import {chatVisibilityStore} from "../Stores/ChatStore";
-import {activeThreadStore} from "../Stores/ActiveThreadStore";
+import { numberPresenceUserStore } from "../Stores/MucRoomsStore";
+import { v4 as uuidv4 } from "uuid";
+import { userStore } from "../Stores/LocalUserStore";
+import { UserData } from "../Messages/JsonMessages/ChatData";
+import { mediaManager, NotificationType } from "../Media/MediaManager";
+import {
+  availabilityStatusStore,
+  chatVisibilityStore,
+} from "../Stores/ChatStore";
+import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import Timeout = NodeJS.Timeout;
 
 export const USER_STATUS_AVAILABLE = "available";
@@ -627,9 +630,9 @@ export class MucRoom {
 
       if (x) {
         let userJID = x.getChild("item")?.getAttr("jid")?.split("/")[0];
-        if(!userJID){
+        if (!userJID) {
           userJID = jid(xml.getAttr("to"));
-          userJID.setResource('');
+          userJID.setResource("");
         }
         const playUri = xml.getChild("room")?.getAttr("playUri");
         const uuid = xml.getChild("user")?.getAttr("uuid");
@@ -649,7 +652,7 @@ export class MucRoom {
           this.deleteUser(userJID.toString());
         } else {
           this.updateUser(
-              userJID,
+            userJID,
             from.resource,
             playUri,
             uuid,
@@ -681,7 +684,7 @@ export class MucRoom {
       if (subscriptions) {
         subscriptions.forEach((subscription) => {
           const userJID = subscription.getAttr("jid");
-          if(userJID) {
+          if (userJID) {
             const nick = subscription.getAttr("nick");
             this.updateUser(userJID, nick, playUri);
           }
@@ -762,11 +765,15 @@ export class MucRoom {
               if (delay > this.lastMessageSeen) {
                 this.countMessagesToSee.update((last) => last + 1);
                 if (
-                  !get(chatVisibilityStore) ||
-                  (get(chatVisibilityStore) && get(activeThreadStore) !== this)
+                  get(activeThreadStore) !== this ||
+                  get(availabilityStatusStore) !== 1
                 ) {
                   mediaManager.playNewMessageNotification();
-                  mediaManager.createNotification(name, NotificationType.message, this.name);
+                  mediaManager.createNotification(
+                    name,
+                    NotificationType.message,
+                    this.name
+                  );
                 }
               }
               const message: Message = {

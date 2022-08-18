@@ -36,6 +36,10 @@ export const isIframeEventWrapper = z.union([
     type: z.literal("settings"),
     data: isSettings,
   }),
+  z.object({
+    type: z.literal("availabilityStatus"),
+    data: z.number(),
+  }),
 
   //TODO delete with chat XMPP integration for the discussion circle
   z.object({

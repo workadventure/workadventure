@@ -345,6 +345,10 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("notification"),
         data: isNotificationEvent,
     }),
+    z.object({
+        type: z.literal("availabilityStatus"),
+        data: z.number(),
+    }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
 

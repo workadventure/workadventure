@@ -4,6 +4,7 @@ import {
 } from "./Event/IframeEvent";
 import { userStore } from "./Stores/LocalUserStore";
 import {
+  availabilityStatusStore,
   chatMessagesStore,
   ChatMessageTypes,
   chatNotificationsStore,
@@ -20,7 +21,8 @@ import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
-import {NotificationType} from "./Media/MediaManager";
+import { NotificationType } from "./Media/MediaManager";
+import { activeThreadStore } from "./Stores/ActiveThreadStore";
 
 class IframeListener {
   init() {
@@ -123,11 +125,18 @@ class IframeListener {
             }
             case "chatVisibility": {
               chatVisibilityStore.set(iframeEvent.data.visibility);
+              if (!iframeEvent.data.visibility) {
+                activeThreadStore.set(undefined);
+              }
               break;
             }
             case "settings": {
               chatSoundsStore.set(iframeEvent.data.chatSounds);
               chatNotificationsStore.set(iframeEvent.data.notification);
+              break;
+            }
+            case "availabilityStatus": {
+              availabilityStatusStore.set(iframeEvent.data);
               break;
             }
           }
@@ -137,16 +146,16 @@ class IframeListener {
   }
 
   sendNotificationToFront(
-      userName: string,
-      notificationType: NotificationType,
-      forum: null | string
-  ){
+    userName: string,
+    notificationType: NotificationType,
+    forum: null | string
+  ) {
     window.parent.postMessage(
-        {
-          type: "notification",
-          data: {userName, notificationType, forum},
-        },
-        "*"
+      {
+        type: "notification",
+        data: { userName, notificationType, forum },
+      },
+      "*"
     );
   }
 }
