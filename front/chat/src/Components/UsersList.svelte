@@ -65,7 +65,7 @@
                         </button>
                     </div>
                 {:else}
-                    {#each usersFiltered as [_,user]}
+                    {#each usersFiltered as [_, user]}
                         <ChatUser
                             {openChat}
                             {user}
