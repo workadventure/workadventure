@@ -83,7 +83,7 @@
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.name === name);
+        const userData = [...$presenseStore].map(([,user]) => user).find(user => user.name === name);
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -161,7 +161,7 @@
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenseStore.values()].reduce((values: User[], user) => {
+            usersSearching = [...$presenseStore].map(([, user]) => user).reduce((values: User[], user) => {
                 if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
                     return values;
                 }
