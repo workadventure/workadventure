@@ -41,6 +41,7 @@
     import UiWebsiteContainer from "./UI/Website/UIWebsiteContainer.svelte";
     import { uiWebsitesStore } from "../Stores/UIWebsiteStore";
     import { mapEditorModeStore, mapEditorSelectedAreaPreviewStore } from "../Stores/MapEditorStore";
+    import { chatVisibilityStore } from "../Stores/ChatStore";
 
     let mainLayout: HTMLDivElement;
 
@@ -54,6 +55,17 @@
 
     onMount(() => {
         resizeObserver.observe(mainLayout);
+
+        chatVisibilityStore.subscribe((value) => {
+            if (mainLayout == undefined) return;
+            if (value === true) {
+                mainLayout.style.marginLeft = "30vw";
+                mainLayout.style.width = "70vw";
+            } else {
+                mainLayout.style.marginLeft = "0";
+                mainLayout.style.width = "100vw";
+            }
+        });
     });
 </script>
 
@@ -166,6 +178,7 @@
         display: grid;
         grid-template-columns: 120px calc(100% - 120px);
         grid-template-rows: 80% 20%;
+        transition: all 0.2s ease-in-out;
 
         &-left-aside {
             min-width: 80px;

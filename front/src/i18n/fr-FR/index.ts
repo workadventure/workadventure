@@ -15,6 +15,7 @@ import woka from "./woka";
 import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
+import cowebsite from "./cowebsite";
 
 const fr_FR = merge(en_US, {
     audio,
@@ -32,6 +33,7 @@ const fr_FR = merge(en_US, {
     trigger,
     muc,
     notification,
+    cowebsite,
 });
 
 export default fr_FR;

@@ -23,8 +23,13 @@ export default defineConfig({
             variables: [
                 "PUSHER_URL",
                 "FALLBACK_LOCALE",
+                "UPLOADER_URL",
+                "EMBEDLY_KEY"
             ],
         }),
         pluginRewriteAll(),
     ],
+    define: {
+        "global": {},
+    },
 });

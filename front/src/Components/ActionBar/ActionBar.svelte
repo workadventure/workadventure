@@ -24,7 +24,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore, chatZoneLiveStore } from "../../Stores/ChatStore";
     import { proximityMeetingStore } from "../../Stores/MyMediaStore";
     import {
         activeSubMenuStore,
@@ -428,10 +428,22 @@
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $totalMessagesToSee > 0}<span
+                    {#if $totalMessagesToSee > 0}
+                        <span
                             class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
-                            >{$totalMessagesToSee}</span
-                        >{/if}
+                        >
+                            {$totalMessagesToSee}
+                        </span>
+                    {:else if $chatZoneLiveStore}
+                        <div class="tw-absolute tw-top-1 tw-right-0">
+                            <span
+                                class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
+                            />
+                            <span
+                                class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
+                            />
+                        </div>
+                    {/if}
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">

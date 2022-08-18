@@ -15,6 +15,7 @@ import emoji from "./emoji";
 import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
+import cowebsite from "./cowebsite";
 
 const ca_ES = merge(en_US, {
     audio,
@@ -32,6 +33,7 @@ const ca_ES = merge(en_US, {
     trigger,
     muc,
     notification,
+    cowebsite,
 });
 
 export default ca_ES;

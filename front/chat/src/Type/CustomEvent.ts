@@ -1,19 +1,19 @@
 export interface GoTo {
-  type: string;
-  playUri: string;
-  uuid: string;
+    type: string;
+    playUri: string;
+    uuid: string;
 }
 
 export interface RankUp {
-  jid: string;
+    jid: string;
 }
 
 export interface RankDown {
-  jid: string;
+    jid: string;
 }
 
 export interface Ban {
-  user: string;
-  name: string;
-  playUri: string;
+    user: string;
+    name: string;
+    playUri: string;
 }
