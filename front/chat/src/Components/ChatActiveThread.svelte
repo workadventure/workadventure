@@ -103,7 +103,7 @@
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>
-                {#each [...$usersListStore] as [ user]}
+                {#each [...$usersListStore] as [_,user]}
                     <ChatUser
                         {openChat}
                         {user}

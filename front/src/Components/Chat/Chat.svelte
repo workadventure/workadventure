@@ -153,7 +153,6 @@
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads allow-modals"
         allow="fullscreen; clipboard-read; clipboard-write"
         title="WorkAdventureChat"
         src={CHAT_URL}
