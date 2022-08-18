@@ -1,5 +1,4 @@
 import { WebLink } from "../Services/WebLinkManager";
-import { ICON_URL } from "../Enum/EnvironmentVariable";
 
 export class HtmlUtils {
     public static getElementByIdOrFail<T extends HTMLElement>(id: string): T {
