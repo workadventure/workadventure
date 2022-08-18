@@ -24,6 +24,8 @@ jobs:
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
+      - name: Pull previous images (for caching!)
+        run: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml pull || true
       - name: Build WorkAdventure
         run: COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml build --parallel
       - name: Start WorkAdventure

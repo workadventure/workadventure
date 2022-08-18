@@ -46,6 +46,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-chat:
@@ -85,6 +87,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-back:
@@ -124,6 +128,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-pusher:
@@ -163,6 +169,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-uploader:
@@ -196,6 +204,8 @@ jobs:
           file: uploader/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-maps:
@@ -233,6 +243,8 @@ jobs:
           file: maps/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-map-storage:
@@ -290,6 +302,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   deeploy:
