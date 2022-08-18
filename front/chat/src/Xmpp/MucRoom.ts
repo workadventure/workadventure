@@ -838,7 +838,8 @@ export class MucRoom {
                                         mediaManager.createNotification(name, NotificationType.message, this.name);
                                     }
                                 }
-                                const owner = [...get(mucRoomsStore.getDefaultRoom().getPresenceStore())].find(
+                                const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore();
+                                const owner = [...(presenceStore ? get(presenceStore) : new Map<string, User>())].find(
                                     ([, user]) => user.name === name
                                 );
                                 const message: Message = {
@@ -885,7 +886,8 @@ export class MucRoom {
                 ?.getAttr("stamp");
             if (!state && delay) {
                 delay = new Date(delay);
-                const owner = [...get(mucRoomsStore.getDefaultRoom().getPresenceStore())].find(
+                const presenceStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore();
+                const owner = [...(presenceStore ? get(presenceStore) : new Map<string, User>())].find(
                     ([, user]) => user.name === name
                 );
                 const message: Message = {
