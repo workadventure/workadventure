@@ -11,8 +11,7 @@
   "author": "WorkAdventure",
   "license": "ISC",
   "dependencies": {
-    "@workadventure/tiled-map-type-guard": "^2.0.4",
-    "@workadventure/math-utils": "link:../math-utils"
+    "@workadventure/tiled-map-type-guard": "^2.0.4"
   },
   "files": [
     "src"
