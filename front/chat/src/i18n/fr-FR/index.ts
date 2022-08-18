@@ -28,6 +28,8 @@ const fr_FR: Translation = {
       "Bannir l'utilisateur {userName} du monde courrant. Cela peut être annulé depuis l'administration.",
     ban: "Bannir cet utilisateur",
   },
+  loading: "Chargement",
+  load: "Charger",
   rankUp: "Promouvoir",
   rankDown: "Rétrograder",
   reinit: "Ré initialiser",
@@ -49,10 +51,11 @@ const fr_FR: Translation = {
     forum: "sur le forum",
   },
   see: "Voir",
-  less: "plus",
-  more: "moins",
+  less: "moins",
+  more: "plus",
   sendBack: "Renvoyer",
   delete: "Supprimer",
+  messageDeleted: "Ce message a été supprimé.",
   emoji: {
     icon: "Icone pour ouvrir ou fermer la selection d'emoji",
     search: "Chercher un emoji...",
@@ -71,9 +74,18 @@ const fr_FR: Translation = {
     },
     notFound: "Aucun emoji trouvé",
   },
-  said: "dit :",
+  said: "a dit :",
   reply: "Répondre",
   react: "Réagir",
+  copy: "Copier",
+  copied: "Copié !",
+  file: {
+    fileContentNoEmbed:
+      "Le contenue n'est pas lisible sur le navigateur. Vous pouvez télécharger le document",
+    download: "Téléchargement",
+    openCoWebsite: "Ouvrir en co-website",
+    copy: "Copier le lien",
+  },
 };
 
 export default fr_FR;

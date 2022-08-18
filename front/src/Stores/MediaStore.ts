@@ -193,8 +193,18 @@ function createVideoConstraintStore() {
     };
 }
 
+export const inOpenWebsite = writable(false);
 export const inJitsiStore = writable(false);
 export const inBbbStore = writable(false);
+
+export const inCowebsiteZone = derived(
+    [inJitsiStore, inBbbStore, inOpenWebsite],
+    ([$inJitsiStore, $inBbbStore, $inOpenWebsite]) => {
+        return $inJitsiStore || $inBbbStore || $inOpenWebsite;
+    },
+    false
+);
+
 export const silentStore = writable(false);
 
 export const availabilityStatusStore = derived(

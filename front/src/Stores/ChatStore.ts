@@ -6,6 +6,7 @@ import { Subject } from "rxjs";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { peerStore } from "./PeerStore";
 
+export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
 
 export const chatInputFocusStore = writable(false);

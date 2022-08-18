@@ -29,6 +29,12 @@ export type { RemotePlayer, ActionsMenuAction } from "./Api/iframe/ui";
 
 const globalState = createState();
 
+let _metadata: unknown | undefined;
+
+const setMetadata = (data: unknown | undefined) => {
+    _metadata = data;
+};
+
 // Notify WorkAdventure that we are ready to receive data
 const initPromise = queryWorkadventure({
     type: "getState",
@@ -41,6 +47,7 @@ const initPromise = queryWorkadventure({
     setTags(gameState.tags);
     setUuid(gameState.uuid);
     setUserRoomToken(gameState.userRoomToken);
+    setMetadata(gameState.metadata);
     globalState.initVariables(gameState.variables as Map<string, unknown>);
     player.state.initVariables(gameState.playerVariables as Map<string, unknown>);
 });
@@ -69,6 +76,17 @@ const wa = {
      */
     onInit(): Promise<void> {
         return initPromise;
+    },
+
+    /**
+     * The metadata sent by the administration website.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-metadata.md | Website documentation}
+     *
+     * @returns {unknown|undefined} Metadata
+     */
+    get metadata(): unknown | undefined {
+        return _metadata;
     },
 
     // All methods below are deprecated and should not be used anymore.

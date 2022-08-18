@@ -145,15 +145,43 @@ class IframeListener {
     });
   }
 
-  sendNotificationToFront(
-    userName: string,
-    notificationType: NotificationType,
-    forum: null | string
+  openCoWebsite(
+    url: string,
+    allowApi?: boolean,
+    allowPolicy?: string,
+    widthPercent?: number,
+    position?: number,
+    closable?: boolean,
+    lazy?: boolean
   ) {
     window.parent.postMessage(
       {
-        type: "notification",
-        data: { userName, notificationType, forum },
+        id: 0,
+        query: {
+          type: "openCoWebsite",
+          data: {
+            url,
+            allowApi,
+            allowPolicy,
+            widthPercent,
+            position,
+            closable,
+            lazy,
+          },
+        },
+      },
+      "*"
+    );
+  }
+
+  closeCoWebsite() {
+    window.parent.postMessage(
+      {
+        id: 0,
+        query: {
+          type: "closeCoWebsites",
+          data: undefined,
+        },
       },
       "*"
     );

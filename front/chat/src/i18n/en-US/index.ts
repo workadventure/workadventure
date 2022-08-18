@@ -27,6 +27,8 @@ const en_US: BaseTranslation = {
       "Ban user {userName} from the running world. This can be cancelled from the administration.",
     ban: "Ban this user",
   },
+  loading: "Loading",
+  load: "Load",
   rankUp: "Promote",
   rankDown: "Retrograde",
   reinit: "Re initialize",
@@ -52,6 +54,7 @@ const en_US: BaseTranslation = {
   more: "more",
   sendBack: "Send back",
   delete: "Delete",
+  messageDeleted: "This message has been deleted.",
   emoji: {
     icon: "Icon to open or close emoji selected popup",
     search: "Search emojis...",
@@ -70,9 +73,17 @@ const en_US: BaseTranslation = {
     },
     notFound: "No emojis found",
   },
-  said: "said:",
+  said: "said :",
   reply: "Reply",
   react: "React",
+  copy: "Copy",
+  copied: "Copied !",
+  file: {
+    fileContentNoEmbed: "Content invailable for viewing. Please doawnload it",
+    download: "download",
+    openCoWebsite: "Open in co-website",
+    copy: "copy the link",
+  },
 };
 
 export default en_US;

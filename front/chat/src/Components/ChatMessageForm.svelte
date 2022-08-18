@@ -1,14 +1,34 @@
 <script lang="ts">
   import { fly } from "svelte/transition";
-  import { SendIcon, SmileIcon } from "svelte-feather-icons";
+  import {
+    SendIcon,
+    SmileIcon,
+    PaperclipIcon,
+    LoaderIcon,
+    Trash2Icon,
+    CheckIcon,
+    AlertCircleIcon,
+    XCircleIcon,
+  } from "svelte-feather-icons";
   import { ChatStates, MucRoom, User } from "../Xmpp/MucRoom";
   import LL, { locale } from "../i18n/i18n-svelte";
   import { createEventDispatcher, onMount } from "svelte";
   import { EmojiButton } from "@joeattardi/emoji-button";
-  import { selectedMessageToReply } from "../Stores/ChatStore";
+  import {
+    selectedMessageToReply,
+    filesUploadStore,
+    hasErrorUploadingFile,
+    hasInProgressUploadingFile,
+    mentionsUserStore,
+  } from "../Stores/ChatStore";
   import { UserData } from "../Messages/JsonMessages/ChatData";
   import { userStore } from "../Stores/LocalUserStore";
   import { mucRoomsStore } from "../Stores/MucRoomsStore";
+  import {
+    fileMessageManager,
+    UploadedFile,
+    uploadingState,
+  } from "../Services/FileMessageManager";
 
   export let mucRoom: MucRoom;
 
@@ -20,8 +40,10 @@
 
   let emojiOpened = false;
   let newMessageText = "";
+  let usersSearching: User[] = [];
 
   export const defaultColor = "#626262";
+  const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
   $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
@@ -34,7 +56,17 @@
   }
 
   function sendMessage() {
-    if (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+    if ($hasInProgressUploadingFile) {
+      return;
+    }
+    if ($hasErrorUploadingFile) {
+      showErrorMessages();
+      return;
+    }
+    if (
+      fileMessageManager.files.length === 0 &&
+      (!newMessageText || newMessageText.replace(/\s/g, "").length === 0)
+    )
       return;
     if ($selectedMessageToReply) {
       sendReplyMessage();
@@ -80,7 +112,7 @@
     )
       return;
     mucRoom.updateComposingState(ChatStates.PAUSED);
-    mucRoom.replyMessage(newMessageText, $selectedMessageToReply);
+    mucRoom.sendMessage(newMessageText, $selectedMessageToReply);
     selectedMessageToReply.set(null);
     newMessageText = "";
     dispatch("scrollDown");
@@ -90,6 +122,83 @@
   function openEmoji() {
     picker.showPicker(emojiContainer);
     emojiOpened = true;
+  }
+
+  function handleInputFile(event: Event) {
+    const files = (<HTMLInputElement>event.target).files;
+    if (!files || files.length === 0) {
+      filesUploadStore.set(new Map());
+      return;
+    }
+    fileMessageManager.sendFiles(files).catch(() => {});
+    (<HTMLInputElement>event.target).value = "";
+  }
+
+  function handlerDeleteUploadedFile(file: File | UploadedFile) {
+    if (file instanceof File) {
+      //TODO manage promise listener to delete file
+    } else {
+      fileMessageManager.deleteFile(file).catch(() => {});
+    }
+    filesUploadStore.update((list) => {
+      list.delete(file.name);
+      return list;
+    });
+  }
+
+  function resend() {
+    const files = (document.getElementById("file") as HTMLInputElement).files;
+    if (!files) {
+      console.info("No files uploaded");
+      filesUploadStore.set(new Map());
+      return;
+    }
+    fileMessageManager.sendFiles(files).catch(() => {});
+  }
+
+  function showErrorMessages() {
+    if ($hasInProgressUploadingFile || !$hasErrorUploadingFile) {
+      return;
+    }
+    const elements = document.getElementsByClassName(
+      "error-hover"
+    ) as HTMLCollectionOf<HTMLElement>;
+    for (const element of elements) {
+      element.style.display = "flex";
+    }
+  }
+
+  function analyseText() {
+    const values = newMessageText.match(regexUserTag);
+    if (values != undefined) {
+      const userNameSearching = (values.pop() as string).substring(1);
+      usersSearching = [...$presenseStore.values()].reduce(
+        (values: User[], user) => {
+          if (
+            user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) ===
+            -1
+          ) {
+            return values;
+          }
+          values.push(user);
+          return values;
+        },
+        []
+      );
+    } else {
+      usersSearching = [];
+    }
+  }
+
+  function addUserTag(user: User) {
+    const values = newMessageText.match(regexUserTag) as string[];
+    newMessageText = newMessageText.replace(
+      values.pop() as string,
+      `@${user.name} `
+    );
+    $mentionsUserStore.add(user);
+    usersSearching = [];
+    textarea.focus();
   }
 
   onMount(() => {
@@ -148,7 +257,7 @@
     >
       <div
         style={`border-bottom-color:${getColor($selectedMessageToReply.name)}`}
-        class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
+        class={`tw-mr-9 tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
           isMe($selectedMessageToReply.name)
             ? "tw-flex-row-reverse"
             : "tw-flex-row"
@@ -167,12 +276,17 @@
           })}</span
         >
       </div>
-      <div
-        class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-      >
-        <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-          {$selectedMessageToReply.body}
-        </p>
+      <div class="tw-flex tw-flex-wrap tw-items-center tw-justify-between">
+        <div
+          class="tw-w-11/12 message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+        >
+          <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
+            {$selectedMessageToReply.body}
+          </p>
+        </div>
+        <div class="close">
+          <XCircleIcon size="17" />
+        </div>
       </div>
     </div>
   {/if}
@@ -181,14 +295,74 @@
     <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
   </div>
 
+  {#if usersSearching.length > 0}
+    <div class="wa-dropdown-menu">
+      {#each usersSearching as user}
+        <span
+          class="wa-dropdown-item user-tag"
+          on:click|stopPropagation|preventDefault={() => addUserTag(user)}
+        >
+          <img src={user.woka} alt={`Woka svg of user: ${user.name}`} />
+          {user.name}
+        </span>
+      {/each}
+    </div>
+  {/if}
+
   <form on:submit|preventDefault={sendMessage}>
     <div class="tw-w-full tw-p-2">
+      {#each [...$filesUploadStore.values()] as fileUploaded}
+        <div
+          class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+        >
+          {#if fileUploaded.errorMessage != undefined}
+            <div
+              class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+            >
+              <p class="tw-m-0">{fileUploaded.errorMessage}</p>
+            </div>
+          {/if}
+          <div
+            style="max-width: 92%; display: flex; flex-wrap: nowrap;"
+            class="tw-flex tw-flex-wrap tw-text-xxs tw-items-center"
+          >
+            {#if fileUploaded.uploadState === uploadingState.finish}
+              <CheckIcon size="14" class="tw-text-pop-green" />
+            {:else if fileUploaded.uploadState === uploadingState.error}
+              <div
+                class="alert-upload tw-cursor-pointer"
+                on:click|preventDefault|stopPropagation={() => {
+                  resend();
+                }}
+              >
+                <AlertCircleIcon size="14" />
+              </div>
+            {:else}
+              <LoaderIcon size="14" class="tw-animate-spin" />
+            {/if}
+            <span
+              class="tw-ml-1 tw-max-w-full tw-text-ellipsis tw-overflow-hidden tw-whitespace-nowrap"
+            >
+              {fileUploaded.name}
+            </span>
+          </div>
+          <button
+            on:click|preventDefault|stopPropagation={() => {
+              handlerDeleteUploadedFile(fileUploaded);
+            }}
+            class="tw-pr-0 tw-mr-0"
+          >
+            <Trash2Icon size="14" />
+          </button>
+        </div>
+      {/each}
       <div class="tw-flex tw-items-center tw-relative">
         <textarea
           type="text"
           bind:this={textarea}
           bind:value={newMessageText}
           placeholder={$LL.enterText()}
+          on:input={analyseText}
           on:focus={onFocus}
           on:blur={onBlur}
           on:keydown={(key) => {
@@ -222,13 +396,31 @@
         >
           <SmileIcon size="17" />
         </button>
-
+        <input
+          type="file"
+          id="file"
+          name="file"
+          class="tw-hidden"
+          on:input={handleInputFile}
+          multiple
+        />
+        <label for="file" class="tw-mb-0 tw-cursor-pointer"
+          ><PaperclipIcon size="17" /></label
+        >
         <button
           type="submit"
           class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+          on:mouseover={showErrorMessages}
+          on:focus={showErrorMessages}
           on:click={sendMessage}
         >
-          <SendIcon size="17" />
+          {#if $hasErrorUploadingFile}
+            <AlertCircleIcon size="17" />
+          {:else if $hasInProgressUploadingFile}
+            <LoaderIcon size="17" class="tw-animate-spin" />
+          {:else}
+            <SendIcon size="17" />
+          {/if}
         </button>
       </div>
     </div>
@@ -241,8 +433,15 @@
     margin: 0;
     position: relative;
 
+    .close {
+      color: rgb(146 142 187);
+      &:hover {
+        color: rgb(255 71 90);
+      }
+    }
+
     &::after {
-      content: "x";
+      //content: "x";
       width: 20px;
       height: 20px;
       cursor: pointer;
@@ -257,7 +456,29 @@
     }
 
     .message {
-      opacity: 0.5;
+      opacity: 1;
+    }
+
+    &:hover {
+      cursor: pointer;
+      .close {
+        color: rgb(255 71 90);
+      }
+    }
+  }
+
+  .wa-dropdown-menu {
+    margin: 0 0 0 10px;
+    position: relative;
+    width: fit-content;
+    min-width: auto;
+
+    .wa-dropdown-item.user-tag {
+      &:active,
+      &:focus {
+        --tw-bg-opacity: 1;
+        background-color: rgb(77 75 103 / var(--tw-bg-opacity));
+      }
     }
   }
 
@@ -273,5 +494,29 @@
     //     border-left: solid white 1px;
     //     font-size: 16px;
     // }
+
+    .alert-upload {
+      --tw-text-opacity: 1;
+      color: rgb(255 71 90 / var(--tw-text-opacity));
+    }
+    .upload-file {
+      position: relative;
+      display: flex;
+      flex-wrap: nowrap;
+      .error-hover {
+        display: none;
+        position: absolute;
+        color: red;
+        left: 0;
+        top: -32px;
+        width: 100%;
+        min-height: 30px;
+      }
+      &:hover {
+        .error-hover {
+          display: flex;
+        }
+      }
+    }
   }
 </style>

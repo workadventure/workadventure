@@ -3,7 +3,12 @@ import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { localUserStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
-import { Message } from "../Xmpp/MucRoom";
+import {
+  FileExt,
+  UploadedFile,
+  uploadingState,
+} from "../Services/FileMessageManager";
+import { Message, User } from "../Xmpp/MucRoom";
 
 const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
@@ -167,6 +172,7 @@ export const chatInputFocusStore = writable(false);
 
 export const chatPeerConnectionInProgress = writable<boolean>(false);
 
+export const mentionsUserStore = writable<Set<User>>(new Set<User>());
 export const selectedMessageToReply = writable<Message | null>(null);
 export const selectedMessageToReact = writable<Message | null>(null);
 export const timelineMessagesToSee = derived(
@@ -175,6 +181,28 @@ export const timelineMessagesToSee = derived(
     $chatMessagesStore.filter(
       (message) => message.date > $lastTimelineMessageRead
     ).length
+);
+
+export const filesUploadStore = writable<Map<string, UploadedFile | FileExt>>(
+  new Map<string, UploadedFile | FileExt>()
+);
+export const hasErrorUploadingFile = derived(
+  [filesUploadStore],
+  ([$filesUploadStore]) =>
+    [...$filesUploadStore.values()].reduce(
+      (value, file) =>
+        file.uploadState === uploadingState.error ? true : value,
+      false
+    )
+);
+export const hasInProgressUploadingFile = derived(
+  [filesUploadStore],
+  ([$filesUploadStore]) =>
+    [...$filesUploadStore.values()].reduce(
+      (value, file) =>
+        file.uploadState === uploadingState.inprogress ? true : value,
+      false
+    )
 );
 
 export const chatSoundsStore = writable<boolean>(true);

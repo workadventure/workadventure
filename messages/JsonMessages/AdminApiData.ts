@@ -8,7 +8,7 @@ import { extendApi } from "@anatine/zod-openapi";
 
 export const isAdminApiData = z.object({
     userUuid: extendApi(z.string(), { example: "998ce839-3dea-4698-8b41-ebbdf7688ad9" }),
-    email: extendApi(z.nullable(z.string()), {
+    email: extendApi(z.string().nullable(), {
         description: "The email of the current user.",
         example: "example@workadventu.re",
     }),

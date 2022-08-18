@@ -23,6 +23,7 @@
   import { Unsubscriber } from "svelte/store";
   import { mucRoomsStore } from "../../Stores/MucRoomsStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
+  import { HtmlUtils } from "../../Utils/HtmlUtils";
 
   const dispatch = createEventDispatcher();
   const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -307,7 +308,11 @@
                 >
                   {#if message.text}
                     {#each message.text as text}
-                      <p class="messageText tw-mb-0">{text}</p>
+                      {#await HtmlUtils.urlify(text)}
+                        <p>...waiting</p>
+                      {:then body}
+                        <p class="messageText tw-mb-0">{@html body}</p>
+                      {/await}
                     {/each}
                   {/if}
                 </div>

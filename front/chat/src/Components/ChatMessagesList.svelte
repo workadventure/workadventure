@@ -22,8 +22,10 @@
     CornerLeftUpIcon,
     SmileIcon,
     MoreHorizontalIcon,
+    ArrowUpIcon,
+    CopyIcon,
   } from "svelte-feather-icons";
-  import { Unsubscriber } from "svelte/store";
+  import { get, Unsubscriber } from "svelte/store";
   import {
     chatVisibilityStore,
     selectedMessageToReact,
@@ -31,13 +33,15 @@
   } from "../Stores/ChatStore";
   import { EmojiButton } from "@joeattardi/emoji-button";
   import { HtmlUtils } from "../Utils/HtmlUtils";
+  import File from "./Content/File.svelte";
+  import HtmlMessage from "./Content/HtmlMessage.svelte";
 
   export let mucRoom: MucRoom;
 
   $: unreads = mucRoom.getCountMessagesToSee();
   $: messagesStore = mucRoom.getMessagesStore();
+  $: deletedMessagesStore = mucRoom.getDeletedMessagesStore();
 
-  let lastDate: Date;
   let isScrolledDown = false;
   let messagesList: HTMLElement;
   let picker: EmojiButton;
@@ -55,14 +59,15 @@
       60000;
     return previousMsg.name === name && minutesBetween < 2;
   }
-  function showDate(date: Date) {
-    if (!lastDate) {
-      lastDate = date;
+
+  function showDate(date: Date, i: number) {
+    let previousMsg = $messagesStore[i - 1];
+    if (!previousMsg) {
       return true;
-    } else {
-      return date.toDateString() !== lastDate.toDateString();
     }
+    return date.toDateString() !== previousMsg.time.toDateString();
   }
+
   function isMe(name: string) {
     return name === mucRoom.getPlayerName();
   }
@@ -110,6 +115,7 @@
   };
 
   let subscribers = new Array<Unsubscriber>();
+  let lastScrollPosition = 0;
 
   function scrollEvent() {
     if (
@@ -125,6 +131,31 @@
     } else {
       isScrolledDown = false;
     }
+
+    if (document.body.scrollTop >= 0 && lastScrollPosition < 0) {
+      //Pull to refresh ...
+      mucRoom.retrieveLastMessages();
+    }
+    lastScrollPosition = document.body.scrollTop;
+  }
+
+  function scrollToMessageId(messageId: string) {
+    const messageElement = document.getElementById(`message_${messageId}`);
+    if (messageElement) {
+      messageElement.classList.add("selected");
+      setTimeout(() => {
+        messageElement.classList.remove("selected");
+      }, 500);
+      setTimeout(() => {
+        messagesList.scroll(
+          0,
+          messageElement.offsetTop -
+            messagesList.clientHeight +
+            messageElement.clientHeight +
+            10
+        );
+      }, 0);
+    }
   }
 
   function selectMessage(message: Message) {
@@ -137,9 +168,31 @@
     selectedMessageToReact.set(message);
   }
 
+  function copyMessage(e: Event, message: Message) {
+    navigator.clipboard
+      .writeText(message.body)
+      .then(() => {
+        const target = e.target as HTMLElement;
+        if (target) {
+          target.classList.add("tw-text-pop-green");
+          const originalText = target.innerHTML;
+          target.innerHTML = originalText.replace(
+            get(LL).copy(),
+            get(LL).copied()
+          );
+          setTimeout(() => {
+            target.innerHTML = originalText;
+            target.classList.remove("tw-text-pop-green");
+          }, 2_000);
+        }
+      })
+      .catch((err) => {
+        console.error("error copy message => ", err);
+      });
+  }
+
   onMount(() => {
     messagesList.addEventListener("scroll", scrollEvent);
-
     subscribers.push(
       mucRoom.getMessagesStore().subscribe(() => {
         if (isScrolledDown && $chatVisibilityStore) {
@@ -156,18 +209,7 @@
         .reverse()
         .find((message) => message.time < mucRoom.lastMessageSeen);
       if (message) {
-        const messageElement = document.getElementById(`message_${message.id}`);
-        if (messageElement) {
-          setTimeout(() => {
-            messagesList.scroll(
-              0,
-              messageElement.offsetTop -
-                messagesList.clientHeight +
-                messageElement.clientHeight +
-                10
-            );
-          }, 0);
-        }
+        scrollToMessageId(message.id);
       }
     }
     picker = new EmojiButton({
@@ -219,24 +261,33 @@
     subscribers.forEach((subscriber) => subscriber());
   });
 
-  const chatStyleLink = "text-decoration: underline;";
-  function urlifyText(text: string): string {
-    return HtmlUtils.urlify(text, chatStyleLink);
-  }
-
   $: usersStore = mucRoom.getPresenceStore();
+  $: loadingStore = mucRoom.getLoadingStore();
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
+  <div class="tw-mt-14">
+    {#if $loadingStore}<div
+        style="border-top-color:transparent"
+        class="tw-w-5 tw-h-5 tw-border-2 tw-border-white tw-border-solid tw-rounded-full tw-animate-spin tw-m-auto"
+      />{/if}
+    {#if !$loadingStore && $messagesStore.length > 0 && mucRoom.canLoadOlderMessages}<button
+        class="tw-m-auto tw-cursor-pointer tw-text-xs"
+        on:click={() => mucRoom.retrieveLastMessages()}
+        >{$LL.load()}
+        {$LL.more()}
+        <ArrowUpIcon size="13" class="tw-ml-1" /></button
+      >{/if}
+  </div>
   <div class="emote-menu-container">
     <div class="emote-menu" id="emote-picker" bind:this={emojiContainer} />
   </div>
 
   <div
-    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+    class="wa-messages-list tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pb-4 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
   >
     {#each $messagesStore as message, i}
-      {#if showDate(message.time)}
+      {#if showDate(message.time, i)}
         <div class="wa-separator">
           {message.time.toLocaleDateString($locale, {
             year: "numeric",
@@ -329,68 +380,98 @@
               <div
                 class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
               >
-                <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
-                  {@html urlifyText(message.body)}
-                </p>
-                {#if message.targetMessageReact}
-                  <div class="emojis">
-                    {#each [...message.targetMessageReact.keys()] as emojiStr}
-                      {#if message.targetMessageReact.get(emojiStr)}
-                        <span
-                          class={mucRoom.haveSelected(message.id, emojiStr)
-                            ? "active"
-                            : ""}
-                          on:click={() =>
-                            mucRoom.sendReactMessage(emojiStr, message)}
-                        >
-                          {emojiStr}
-                          {message.targetMessageReact.get(emojiStr)}
-                        </span>
-                      {/if}
-                    {/each}
+                {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
+                  <p class="tw-italic">{$LL.messageDeleted()}</p>
+                {:else}
+                  <div
+                    class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal"
+                  >
+                    {#await HtmlUtils.urlify(message.body)}
+                      <p>...waiting</p>
+                    {:then html}
+                      <HtmlMessage {html} {message} />
+                    {/await}
                   </div>
-                {/if}
-                <div
-                  class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-                >
-                  <div class="action" on:click={() => selectMessage(message)}>
-                    <CornerDownLeftIcon size="17" />
-                  </div>
-                  <div class="action" on:click={() => reactMessage(message)}>
-                    <SmileIcon size="17" />
-                  </div>
-                  <!-- TODO dropdown-->
-                  <div class="action more-option">
-                    <MoreHorizontalIcon size="17" />
 
-                    <div class="wa-dropdown-menu tw-invisible">
-                      <span
-                        class="wa-dropdown-item"
-                        on:click={() => selectMessage(message)}
-                      >
-                        <CornerDownLeftIcon size="13" class="tw-mr-1" />
-                        {$LL.reply()}
-                      </span>
-                      <span
-                        class="wa-dropdown-item"
-                        on:click={() => reactMessage(message)}
-                      >
-                        <SmileIcon size="13" class="tw-mr-1" />
-                        {$LL.react()}
-                      </span>
-                      <span class="wa-dropdown-item tw-text-pop-red">
-                        <Trash2Icon size="13" class="tw-mr-1" />
-                        {$LL.delete()} (comming soon)
-                      </span>
+                  {#if message.files && message.files.length > 0}
+                    {#each message.files as file}
+                      <!-- File message -->
+                      <File {file} />
+                    {/each}
+                  {/if}
+                  <div
+                    class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                  >
+                    <div class="action" on:click={() => selectMessage(message)}>
+                      <CornerDownLeftIcon size="17" />
+                    </div>
+                    <div class="action" on:click={() => reactMessage(message)}>
+                      <SmileIcon size="17" />
+                    </div>
+                    <div class="action more-option">
+                      <MoreHorizontalIcon size="17" />
+
+                      <div class="wa-dropdown-menu tw-invisible">
+                        <span
+                          class="wa-dropdown-item"
+                          on:click={() => selectMessage(message)}
+                        >
+                          <CornerDownLeftIcon size="13" class="tw-mr-1" />
+                          {$LL.reply()}
+                        </span>
+                        <span
+                          class="wa-dropdown-item"
+                          on:click={() => reactMessage(message)}
+                        >
+                          <SmileIcon size="13" class="tw-mr-1" />
+                          {$LL.react()}
+                        </span>
+                        <span
+                          class="wa-dropdown-item"
+                          on:click={(e) => copyMessage(e, message)}
+                        >
+                          <CopyIcon size="13" class="tw-mr-1" />
+                          {$LL.copy()}
+                        </span>
+                        <span
+                          class="wa-dropdown-item tw-text-pop-red"
+                          on:click={() => mucRoom.removeMessage(message.id)}
+                        >
+                          <Trash2Icon size="13" class="tw-mr-1" />
+                          {$LL.delete()}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                {/if}
               </div>
+              {#if message.targetMessageReact}
+                <div class="emojis">
+                  {#each [...message.targetMessageReact.keys()] as emojiStr}
+                    {#if message.targetMessageReact.get(emojiStr)}
+                      <span
+                        class={mucRoom.haveSelected(message.id, emojiStr)
+                          ? "active"
+                          : ""}
+                        on:click={() =>
+                          mucRoom.sendReactMessage(emojiStr, message)}
+                      >
+                        {emojiStr}
+                        {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
+                          {message.targetMessageReact.get(emojiStr)}
+                        {/if}
+                      </span>
+                    {/if}
+                  {/each}
+                </div>
+              {/if}
 
               <!-- Reply message -->
               {#if message.targetMessageReply}
                 <div
-                  class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left"
+                  class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
+                  on:click={() =>
+                    scrollToMessageId(message.targetMessageReply?.id ?? "")}
                 >
                   <div class="icon-replied">
                     <CornerLeftUpIcon size="14" />
@@ -404,8 +485,16 @@
                   <p
                     class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words"
                   >
-                    {message.targetMessageReply.body}
+                    {@html HtmlUtils.replaceEmojy(
+                      message.targetMessageReply.body
+                    )}
                   </p>
+                  {#if message.targetMessageReply.files && message.targetMessageReply.files.length > 0}
+                    {#each message.targetMessageReply.files as file}
+                      <!-- File message -->
+                      <File {file} />
+                    {/each}
+                  {/if}
                 </div>
               {/if}
             </div>
@@ -484,9 +573,9 @@
                 style={`border-bottom-color:${getColor(user.name)}`}
                 class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
               >
-                <span class="tw-text-lighter-purple tw-text-xxs"
-                  >{user.name}</span
-                >
+                <span class="tw-text-lighter-purple tw-text-xxs">
+                  {user.name}
+                </span>
               </div>
               <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
                 <!-- loading animation -->
@@ -551,25 +640,41 @@
     opacity: 0.6;
     margin-left: 20px;
     position: relative;
+    margin-bottom: 0;
+    margin-top: 4px;
     .icon-replied {
       position: absolute;
       left: -15px;
       top: 0px;
     }
-    p {
-      margin-left: 4px;
-    }
+
     p:nth-child(1) {
       font-style: italic;
     }
   }
+  p {
+    margin-bottom: 0 !important;
+  }
+  .selected .message::after {
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    content: " ";
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: solid 0.5px white;
+  }
   .message {
+    background-color: rgba(15, 31, 45, 0.9);
     position: relative;
     .actions {
       display: none;
       position: absolute;
       right: -16px;
-      top: -10px;
+      top: calc(50% - 34px);
       padding: 0px;
       cursor: pointer;
       flex-direction: column;
@@ -590,6 +695,7 @@
       box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000),
         var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
       z-index: 1;
+      transition: all 0.2s ease-out;
 
       div.action {
         padding: 2px;
@@ -601,6 +707,7 @@
       }
     }
     &:hover {
+      background-color: rgba(15, 31, 45, 1);
       .actions {
         display: flex;
       }
@@ -616,23 +723,28 @@
         }
       }
     }
-    .emojis {
-      display: flex;
-      flex-wrap: wrap;
-      margin-top: 4px;
-      span {
-        display: block;
-        background-color: #c3c3c345;
-        border: solid 1px #c3c3c3;
-        &.active {
-          background-color: #56eaff4f;
-          border: solid 1px #56eaff;
-        }
-        border-radius: 4px;
-        cursor: pointer;
-        padding: 2px;
-        margin: 1px;
+  }
+  .emojis {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: -8px;
+    position: relative;
+    flex-direction: row-reverse;
+    margin-right: -5px;
+    span {
+      font-size: 0.65rem;
+      border-radius: 1.5rem;
+      line-height: 0.75rem;
+      display: block;
+      background-color: #c3c3c345;
+      border: solid 1px #c3c3c3;
+      &.active {
+        background-color: #56eaff4f;
+        border: solid 1px #56eaff;
       }
+      cursor: pointer;
+      padding: 2px 3px;
+      margin: 0.5px;
     }
   }
 </style>

@@ -27,8 +27,6 @@ export class XmppClient {
       this.jid = settings.jid;
       this.conferenceDomain = settings.conferenceDomain;
 
-      console.info("Settings room :", settings.rooms);
-
       this.onConnect(settings.rooms);
     });
 
@@ -59,10 +57,6 @@ export class XmppClient {
     });
 
     connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
-      console.info(
-        "xmppConnectionStatusChangeMessageStream change => status",
-        status
-      );
       switch (status) {
         case Status.DISCONNECTED: {
           //if connection manager is not closed or be closing,

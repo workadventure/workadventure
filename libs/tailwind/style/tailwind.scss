@@ -189,6 +189,7 @@
             textarea {
                 @apply tw-flex-1 tw-text-sm tw-ml-2 tw-bg-transparent tw-outline-1 focus:tw-ring-1 tw-mb-0 tw-min-h-[35px] tw-resize-none tw-border-0 placeholder:tw-italic placeholder:tw-text-light-purple tw-rounded-3xl tw-bg-dark-purple/95;
                 margin-bottom: 0;
+                margin-left: 0;
                 border-color: #4d4b67;
             }
         }
@@ -321,7 +322,7 @@
     }
 
     .tooltip .tooltiptext {
-        @apply tw-w-full tw-bg-medium-purple tw-text-white tw-text-center tw-items-center tw-px-3 tw-py-5 tw-rounded tw-bottom-full tw-absolute tw-invisible;
+        @apply tw-bg-medium-purple tw-text-white tw-text-center tw-items-center tw-px-3 tw-py-5 tw-rounded tw-bottom-full tw-absolute tw-invisible;
     }
 
     .tooltip:hover .tooltiptext {

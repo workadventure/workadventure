@@ -94,6 +94,8 @@ const menu: BaseTranslation = {
     globalAudio: {
         uploadInfo: "Upload a file",
         error: "No file selected. You need to upload a file before sending it.",
+        errorUpload:
+            "Uploading file error. Please check your file and try again. If the problem persists, contact the administrator.",
     },
     contact: {
         gettingStarted: {

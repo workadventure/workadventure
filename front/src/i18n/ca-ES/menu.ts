@@ -94,6 +94,8 @@ const menu: DeepPartial<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Pujar un arxiu",
         error: "Cap arxiu seleccionat. Teniu que pujar un arxiu abans d'enviar-lo.",
+        errorUpload:
+            "Error en carregar el fitxer. Comproveu el vostre fitxer i torneu-ho a provar. Si el problema persisteix, poseu-vos en contacte amb l'administrador.",
     },
     contact: {
         gettingStarted: {

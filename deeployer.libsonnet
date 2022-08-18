@@ -124,6 +124,8 @@
       "ports": [80],
       "env": {
         "PUSHER_URL": "//pusher-"+url,
+        "UPLOADER_URL": "//uploader-"+url,
+        "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
         "ICON_URL": "//icon-"+url
       }
     },
@@ -138,14 +140,30 @@
              "PROMETHEUS_AUTHORIZATION_TOKEN": "promToken",
            }
          },
+    "uploaderredis":{
+      "image": "redis:7",
+      "ports": [6379],
+    },
     "uploader": {
            "image": "thecodingmachine/workadventure-uploader:"+tag,
+           "replicas": 2,
            "host": {
              "url": "uploader-"+url,
              "containerPort": 8080
            },
            "ports": [8080],
            "env": {
+             "UPLOADER_URL": "//uploader-"+url,
+             # AWS
+             "AWS_ACCESS_KEY_ID": if std.objectHas(env, 'AWS_ACCESS_KEY_ID') then env.AWS_ACCESS_KEY_ID else "",
+             "AWS_SECRET_ACCESS_KEY": if std.objectHas(env, 'AWS_SECRET_ACCESS_KEY') then env.AWS_SECRET_ACCESS_KEY else "",
+             "AWS_DEFAULT_REGION": if std.objectHas(env, 'AWS_DEFAULT_REGION') then env.AWS_DEFAULT_REGION else "",
+             "AWS_BUCKET": if std.objectHas(env, 'AWS_BUCKET') then env.AWS_BUCKET else "",
+             "AWS_URL": if std.objectHas(env, 'AWS_URL') then env.AWS_URL else "",
+             "AWS_ENDPOINT": if std.objectHas(env, 'AWS_ENDPOINT') then env.AWS_ENDPOINT else "",
+             #REDIS
+             "REDIS_HOST": "uploaderredis",
+             "REDIS_PORT": "6379",
            }
          },
     "maps": {

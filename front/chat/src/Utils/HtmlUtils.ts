@@ -1,3 +1,4 @@
+import { WebLink } from "../Services/WebLinkManager";
 import { ICON_URL } from "../Enum/EnvironmentVariable";
 
 export class HtmlUtils {
@@ -44,41 +45,63 @@ export class HtmlUtils {
     return p.innerHTML;
   }
 
-  public static urlify(text: string, style: string = ""): string {
+  public static urlify(text: string, style: string = ""): Promise<string> {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const emojiRegex = /\p{Extended_Pictographic}/u;
 
     text = HtmlUtils.escapeHtml(text);
 
-    return text
-      .replace(urlRegex, (url: string) => {
-        url = HtmlUtils.htmlDecode(url);
-        const linkWrapper = document.createElement("span");
-        linkWrapper.classList.add("nice-a");
-        const favicon = document.createElement("img");
-        favicon.src = `${ICON_URL}/icon?url=${url}&size=64..96..256&fallback_icon_color=14304c`;
-        const link = document.createElement("a");
-        link.href = url;
-        link.target = "_blank";
-        const text = document.createTextNode(
-          url.replace("http://", "").replace("https://", "")
-        );
-        link.appendChild(text);
-        link.setAttribute("style", style);
-        link.prepend(favicon);
-        linkWrapper.appendChild(link);
-        return linkWrapper.outerHTML;
+    //manage website content
+
+    const promises: Promise<{ search: string; html: string } | null>[] = [];
+    const webLinks = text.match(urlRegex);
+    if (webLinks != undefined && webLinks.length > 0) {
+      for (const webLinkStr of webLinks) {
+        const webLink = new WebLink(webLinkStr);
+        const promise = webLink.contentWebsiteRenderer.then((value) => {
+          return {
+            search: webLinkStr,
+            html: value,
+          };
+        });
+        promises.push(promise);
+      }
+    }
+
+    return Promise.all(promises)
+      .then((data) => {
+        const iteamReplaced: string[] = [];
+        for (const item of data) {
+          if (item == undefined || iteamReplaced.includes(item.search))
+            continue;
+          const regexStr = item.search.replace(
+            /([.?*+^$[\]\\(){}|-])/g,
+            "\\$1"
+          );
+          const regex = new RegExp(regexStr, "g");
+          iteamReplaced.push(item.search);
+          text = text.replace(regex, item.html);
+        }
+        return this.replaceEmojy(text);
       })
-      .replace(emojiRegex, (emoji: string) => {
-        emoji = HtmlUtils.htmlDecode(emoji);
-        const span = document.createElement("span");
-        span.style.fontSize = "1rem";
-        span.append(emoji);
-        return span.outerHTML;
+      .catch((err) => {
+        console.error("error urlify => ", err);
+        return text;
       });
   }
 
-  private static htmlDecode(input: string): string {
+  public static replaceEmojy(text: string): string {
+    const emojiRegex =
+      /\p{RI}\p{RI}|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?(\u{200D}\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?)+|\p{EPres}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})?|\p{Emoji}(\p{EMod}+|\u{FE0F}\u{20E3}?|[\u{E0020}-\u{E007E}]+\u{E007F})/gu;
+    return text.replace(emojiRegex, (emoji: string) => {
+      emoji = HtmlUtils.htmlDecode(emoji);
+      const span = document.createElement("span");
+      span.style.fontSize = "1rem";
+      span.append(emoji);
+      return span.outerHTML;
+    });
+  }
+
+  public static htmlDecode(input: string): string {
     const doc = new DOMParser().parseFromString(input, "text/html");
     const text = doc.documentElement.textContent;
     if (text === null) {

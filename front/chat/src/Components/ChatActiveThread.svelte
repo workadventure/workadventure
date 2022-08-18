@@ -8,13 +8,17 @@
   } from "svelte-feather-icons";
   import ChatMessageForm from "./ChatMessageForm.svelte";
   import LL from "../i18n/i18n-svelte";
-  import { activeThreadStore } from "../Stores/ActiveThreadStore";
+  import {
+    activeThreadStore,
+    settingsViewStore,
+  } from "../Stores/ActiveThreadStore";
   import ChatUser from "./ChatUser.svelte";
   import { createEventDispatcher } from "svelte";
   import ChatMessagesList from "./ChatMessagesList.svelte";
   import OnlineUsers from "./OnlineUsers.svelte";
   import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
   import { Ban, GoTo, RankDown, RankUp } from "../Type/CustomEvent";
+  import { onDestroy } from "svelte";
 
   const dispatch = createEventDispatcher<{
     goTo: GoTo;
@@ -26,7 +30,6 @@
   export let activeThread: MucRoom;
   export let usersListStore: UsersStore;
   export let meStore: MeStore;
-  export let settingsView = false;
 
   let messagesList: ChatMessagesList;
 
@@ -34,6 +37,10 @@
     return user;
     //dispatch('activeThread', user);
   }
+
+  onDestroy(() => {
+    settingsViewStore.set(false);
+  });
 </script>
 
 <!-- thread -->
@@ -72,10 +79,10 @@
     </div>
     <div
       class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
-      on:click={() => (settingsView = !settingsView)}
+      on:click={() => settingsViewStore.set(!$settingsViewStore)}
     >
       <button class="tw-text-lighter-purple tw-m-0">
-        {#if settingsView}
+        {#if $settingsViewStore}
           <MessageCircleIcon />
         {:else}
           <SettingsIcon />
@@ -83,7 +90,7 @@
       </button>
     </div>
   </div>
-  {#if settingsView}
+  {#if $settingsViewStore}
     <div
       in:fly={{ y: -100, duration: 100, delay: 200 }}
       out:fly={{ y: -100, duration: 100 }}
