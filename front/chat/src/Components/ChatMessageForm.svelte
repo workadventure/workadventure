@@ -86,7 +86,7 @@
         const userData = [...$presenseStore].map(([, user]) => user).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
-            [user] = userData.values();
+            user = userData;
         }
         return user;
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { MeStore, User, UsersStore } from "../Xmpp/MucRoom";
+    import { MeStore, MucRoom, User, UsersStore } from "../Xmpp/MucRoom";
     import ChatUser from "./ChatUser.svelte";
     import { createEventDispatcher } from "svelte";
     import { ChevronUpIcon } from "svelte-feather-icons";
@@ -14,6 +14,7 @@
         showUsers: undefined;
     }>();
 
+    export let mucRoom: MucRoom;
     export let usersListStore: UsersStore;
     export let meStore: MeStore;
     export let showUsers: boolean;
@@ -67,6 +68,7 @@
                 {:else}
                     {#each usersFiltered as [_, user]}
                         <ChatUser
+                            {mucRoom}
                             {openChat}
                             {user}
                             on:goTo={(event) => dispatch("goTo", event.detail)}

@@ -105,6 +105,7 @@
                 </p>
                 {#each [...$usersListStore] as [_, user]}
                     <ChatUser
+                        mucRoom={activeThread}
                         {openChat}
                         {user}
                         on:goTo={(event) => dispatch("goTo", event.detail)}

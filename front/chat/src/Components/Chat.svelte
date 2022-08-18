@@ -130,6 +130,7 @@
                 <!-- chat users -->
                 {#if defaultMucRoom !== undefined}
                     <UsersList
+                        mucRoom={defaultMucRoom}
                         {showUsers}
                         usersListStore={defaultMucRoom?.getPresenceStore()}
                         meStore={defaultMucRoom?.getMeStore()}

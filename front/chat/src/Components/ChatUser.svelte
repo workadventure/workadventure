@@ -3,7 +3,7 @@
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
-    import { defaultColor, defaultWoka, MeStore, User } from "../Xmpp/MucRoom";
+    import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
@@ -16,12 +16,13 @@
         ban: Ban;
     }>();
 
+    export let mucRoom: MucRoom;
     export let user: User;
     export let openChat: Function;
     export let searchValue: string = "";
     export let meStore: MeStore;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
     let chatMenuActive = false;
     let openChatUserMenu = () => {
