@@ -48,7 +48,7 @@
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
     "google-protobuf": "^3.13.0",
-    "grpc": "^1.24.4",
+    "@grpc/grpc-js": "^1.6.7",
     "ipaddr.js": "^2.0.1",
     "jsonwebtoken": "^8.5.1",
     "mkdirp": "^1.0.4",

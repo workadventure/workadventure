@@ -1,6 +1,6 @@
 import { AdminPusherToBackMessage, ServerToAdminClientMessage } from "../../Messages/generated/messages_pb";
 import { compressors } from "hyper-express";
-import { ClientDuplexStream } from "grpc";
+import { ClientDuplexStream } from "@grpc/grpc-js";
 
 export type AdminConnection = ClientDuplexStream<AdminPusherToBackMessage, ServerToAdminClientMessage>;
 

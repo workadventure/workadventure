@@ -9,7 +9,7 @@ import {
     ServerToClientMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
-import { ClientDuplexStream } from "grpc";
+import { ClientDuplexStream } from "@grpc/grpc-js";
 import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
