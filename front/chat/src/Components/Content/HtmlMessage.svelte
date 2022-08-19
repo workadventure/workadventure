@@ -2,7 +2,7 @@
     import { iframeListener } from "../../IframeListener";
     import { onDestroy, onMount, beforeUpdate } from "svelte";
     import { linkFunction } from "../../Services/WebLinkManager";
-    import { marked } from "marked";
+    //import { marked } from "marked";
     import { Message } from "../../Xmpp/MucRoom";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
     import { settingsViewStore } from "../../Stores/ActiveThreadStore";
@@ -77,7 +77,7 @@
     }
 
     beforeUpdate(() => {
-        html = marked.parse(html);
+        //html = marked.parse(html);
     });
 
     onMount(() => {
