@@ -1,10 +1,10 @@
 import { Controller, Get, Req, Res } from "@nestjs/common";
 import { AppService } from "./app.service";
 import {
-    EditMapMessage,
     EmptyMessage,
     MapStorageController,
     MapStorageControllerMethods,
+    MapStorageEditMapMessage,
 } from "./Messages/ts-proto-nest-generated/protos/messages";
 import { PingMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
 import { Observable } from "rxjs";
@@ -29,8 +29,10 @@ export class AppController implements MapStorageController {
         return request;
     }
 
-    handleEditMapMessage(request: EditMapMessage): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
-        console.log(request);
+    handleEditMapMessage(
+        request: MapStorageEditMapMessage
+    ): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
+        this.appService.handleEditMapMessage(request);
         return {};
     }
 }

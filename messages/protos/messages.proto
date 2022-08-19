@@ -551,6 +551,12 @@ message EditMapMessage {
   }
 }
 
+message MapStorageEditMapMessage {
+  string mapKey = 1;
+  EditMapMessage editMapMessage = 2;
+
+}
+
 
 /*message BatchToAdminPusherMessage {
   repeated SubToAdminPusherMessage payload = 2;
@@ -716,5 +722,5 @@ service RoomManager {
  */
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
-  rpc handleEditMapMessage(EditMapMessage) returns (EmptyMessage);
+  rpc handleEditMapMessage(MapStorageEditMapMessage) returns (EmptyMessage);
 }

@@ -47,6 +47,7 @@ import {
     AskPositionMessage,
     MoveToPositionMessage,
     EditMapMessage,
+    MapStorageEditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1053,8 +1054,16 @@ export class SocketManager {
     }
 
     handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
-        mapStorageClient.handleEditMapMessage(message, () => {
-            console.log("CALLBACK FROM MAP STORAGE CLIENT HANDLE EDIT MAP MESSAGE");
+        console.log(message.getModifyareamessage());
+        const mapStorageMessage = new MapStorageEditMapMessage();
+        mapStorageMessage.setEditmapmessage(message);
+        mapStorageMessage.setMapkey(room.roomUrl.split("~")[1]);
+
+        console.log(message);
+
+        mapStorageClient.handleEditMapMessage(mapStorageMessage, (err, res) => {
+            // console.log("CALLBACK FROM MAP STORAGE CLIENT HANDLE EDIT MAP MESSAGE");
+            // console.log(res);
         });
         if (message.hasModifyareamessage()) {
             const msg = message.getModifyareamessage();
