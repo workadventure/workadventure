@@ -42,7 +42,6 @@
     {:else if file.isVideo}
         <video width="100%" height="100%" alt={file.name} class="tw-mt-2" controls>
             <source src={file.location} type={`video/${file.extension}`} />
-            <track kind="captions" srclang="en" label="english_captions" />
             Sorry, your browser doesn't support <code>embedded</code> videos.
         </video>
     {:else if file.isSound}

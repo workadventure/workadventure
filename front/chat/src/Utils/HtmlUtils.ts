@@ -39,7 +39,6 @@ export class HtmlUtils {
     }
 
     public static urlify(text: string, style: string = ""): Promise<string> {
-        console.log('Before before regex');
         const urlRegex = /(https?:\/\/[^\s]+)/g;
 
         text = HtmlUtils.escapeHtml(text);
@@ -47,9 +46,7 @@ export class HtmlUtils {
         //manage website content
 
         const promises: Promise<{ search: string; html: string } | null>[] = [];
-        console.log('Before regex');
         const webLinks = text.match(urlRegex);
-        console.log('After regex');
         if (webLinks != undefined && webLinks.length > 0) {
             for (const webLinkStr of webLinks) {
                 const webLink = new WebLink(webLinkStr);
@@ -68,11 +65,8 @@ export class HtmlUtils {
                 const iteamReplaced: string[] = [];
                 for (const item of data) {
                     if (item == undefined || iteamReplaced.includes(item.search)) continue;
-                    console.log('Before regex 2');
                     const regexStr = item.search.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
-                    console.log('After regex 2');
                     const regex = new RegExp(regexStr, "g");
-                    console.log('After after regex 2');
                     iteamReplaced.push(item.search);
                     text = text.replace(regex, item.html);
                 }
