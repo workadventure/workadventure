@@ -253,19 +253,6 @@ jobs:
         with:
           node-version: 16
 
-      # messages
-      - name: Install messages dependencies
-        run: yarn install --immutable
-        working-directory: messages
-
-      - name: Tag the API version
-        run: yarn run tag-version
-        working-directory: messages
-
-      - name: Build proto messages
-        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
-        working-directory: messages
-
       # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -302,6 +289,7 @@ jobs:
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.browser }}"
     strategy:
+      fail-fast: false
       matrix:
         browser: [ 'chromium', 'firefox', 'webkit' ]
     needs:
