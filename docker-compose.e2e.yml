@@ -5,14 +5,7 @@ services:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
 
   front:
-    image: 'wa-front-e2e'
-    build:
-      context: ./
-      dockerfile: front/Dockerfile
-      cache_from:
-       - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
@@ -26,51 +19,23 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   chat:
-    image: 'wa-chat-e2e'
-    build:
-      context: ./
-      dockerfile: front/chat/Dockerfile
-      cache_from:
-        - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
 
   pusher:
-    image: 'wa-pusher-e2e'
-    build:
-      context: ./
-      dockerfile: pusher/Dockerfile
-      cache_from:
-       - thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
     command: yarn run runprod
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
-    image: 'wa-back-e2e'
-    build:
-      context: ./
-      dockerfile: back/Dockerfile
-      cache_from:
-       - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
     command: yarn run runprod
     volumes: []
 
   map-storage:
-    image: 'wa-mapstorage-e2e'
-    build:
-      context: ./
-      dockerfile: map-storage/Dockerfile
-      cache_from:
-        - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
-      args:
-        BUILDKIT_INLINE_CACHE: 1
+    image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
     command: yarn run start:prod
     volumes: []

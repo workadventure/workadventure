@@ -10,7 +10,6 @@ on:
 
 jobs:
   build-front:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -51,7 +50,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-chat:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -92,7 +90,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-back:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -133,7 +130,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-pusher:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -174,7 +170,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-uploader:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -209,7 +204,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-maps:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -248,7 +242,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-map-storage:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
