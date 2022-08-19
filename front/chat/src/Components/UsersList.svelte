@@ -39,61 +39,54 @@
         .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
 </script>
 
-<div>
-    <div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
-        <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-            <!--{#if usersListUnreads()}
+<div id="users" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+    <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
+        <!--{#if usersListUnreads()}
                             <span
 									class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
 							>
                                 {usersListUnreads()}
                             </span>
 			{/if}-->
-            <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
-                {$LL.users()}
-            </p>
-            <button class="tw-text-lighter-purple" on:click={() => dispatch("showUsers")}>
-                <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
-            </button>
-        </div>
-        {#if showUsers}
-            <div transition:fly={{ y: -30, duration: 100 }}>
-                {#if [...$usersListStore].length === 0}
-                    <div class="tw-px-5 tw-mb-2">
-                        <p>{$LL.roomEmpty()}</p>
-                        <button type="button" class="light tw-m-auto tw-cursor-pointer" on:click={showInviteMenu}>
-                            {$LL.invite()}
-                        </button>
-                    </div>
-                {:else}
-                    {#each usersFiltered as [_, user]}
-                        <ChatUser
-                            {mucRoom}
-                            {openChat}
-                            {user}
-                            on:goTo={(event) => dispatch("goTo", event.detail)}
-                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                            on:ban={(event) => dispatch("ban", event.detail)}
-                            {searchValue}
-                            {meStore}
-                        />
-                    {/each}
-                {/if}
-                {#if [...$usersListStore].length > maxUsersMinimized}
-                    <div
-                        class="tw-px-2 tw-mb-1  tw-flex tw-justify-end"
-                        on:click={() => (minimizeUser = !minimizeUser)}
-                    >
-                        <button
-                            class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline"
-                        >
-                            {$LL.see()}
-                            {minimizeUser ? $LL.less() : $LL.more()} …
-                        </button>
-                    </div>
-                {/if}
-            </div>
-        {/if}
+        <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
+            {$LL.users()}
+        </p>
+        <button class="tw-text-lighter-purple" on:click={() => dispatch("showUsers")}>
+            <ChevronUpIcon class={`tw-transform tw-transition ${showUsers ? "" : "tw-rotate-180"}`} />
+        </button>
     </div>
+    {#if showUsers}
+        <div transition:fly={{ y: -30, duration: 100 }}>
+            {#if [...$usersListStore].length === 0}
+                <div class="tw-px-5 tw-mb-2">
+                    <p>{$LL.roomEmpty()}</p>
+                    <button type="button" class="light tw-m-auto tw-cursor-pointer" on:click={showInviteMenu}>
+                        {$LL.invite()}
+                    </button>
+                </div>
+            {:else}
+                {#each usersFiltered as [_, user]}
+                    <ChatUser
+                        {mucRoom}
+                        {openChat}
+                        {user}
+                        on:goTo={(event) => dispatch("goTo", event.detail)}
+                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
+                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
+                        on:ban={(event) => dispatch("ban", event.detail)}
+                        {searchValue}
+                        {meStore}
+                    />
+                {/each}
+            {/if}
+            {#if [...$usersListStore].length > maxUsersMinimized}
+                <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
+                    <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
+                        {$LL.see()}
+                        {minimizeUser ? $LL.more() : $LL.less()} …
+                    </button>
+                </div>
+            {/if}
+        </div>
+    {/if}
 </div>
