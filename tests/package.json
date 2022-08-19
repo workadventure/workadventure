@@ -12,6 +12,6 @@
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
-    "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test"
+    "test-prod-like": "OVERRIDE_DOCKER_COMPOSE=docker-compose.e2e.yml npm run test -- "
   }
 }

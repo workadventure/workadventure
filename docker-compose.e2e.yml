@@ -5,10 +5,7 @@ services:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
 
   front:
-    image: 'wa-front-e2e'
-    build:
-      context: ./
-      dockerfile: front/Dockerfile
+    image: thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
@@ -21,20 +18,24 @@ services:
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
 
+  chat:
+    image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
+    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    volumes: []
+
   pusher:
-    image: 'wa-pusher-e2e'
-    build:
-      context: ./
-      dockerfile: pusher/Dockerfile
+    image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
     command: yarn run runprod
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
-    image: 'wa-back-e2e'
-    build:
-      context: ./
-      dockerfile: back/Dockerfile
+    image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
     command: yarn run runprod
+    volumes: []
+
+  map-storage:
+    image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+    command: yarn run start:prod
     volumes: []
