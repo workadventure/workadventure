@@ -4,15 +4,22 @@ import { login } from './utils/roles';
 import {inViewport} from "./utils/viewport";
 
 test.describe('Chat', () => {
-  test('should connect to ejabberd and show list of users', async ({ page }) => {
+  test('should be fully loaded', async ({ page }) => {
     startRecordLogs(page);
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+
+    await login(page, 'Alice', 2);
+    await assertLogMessage(page, 'Chat fully loaded');
+  });
+
+  test('should connect to ejabberd and show list of users', async ({ page }) => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
 
     await login(page, 'Alice', 2);
-
-    //await assertLogMessage(page, 'Chat fully loaded');
 
     await openChat(page);
 
@@ -26,8 +33,6 @@ test.describe('Chat', () => {
     );
 
     await login(page2, 'Chat', 3);
-
-    //await assertLogMessage(page2, 'Chat fully loaded');
 
     await openChat(page2);
 

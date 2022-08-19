@@ -363,7 +363,8 @@ export class MucRoom {
         );
         if (!this.closed) {
             this.connection.emitXmlMessage(messageMucSubscribe);
-            if (_VERBOSE) console.warn("[XMPP]", ">> Subscribe sent", this.roomJid.local);
+            if (_VERBOSE)
+                console.warn("[XMPP]", ">> Subscribe sent from", this.getPlayerName(), "to", this.roomJid.local);
         }
     }
 
