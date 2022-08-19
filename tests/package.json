@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@playwright/test": "~1.23.4",
+    "@playwright/test": "~1.25.0",
     "@types/dockerode": "^3.3.0",
     "axios": "^0.24.0",
     "dockerode": "^3.3.1",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "dotenv -e ../.env -- playwright test",
+    "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",

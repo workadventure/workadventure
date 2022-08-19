@@ -39,7 +39,8 @@
     let usersSearching: User[] = [];
 
     export const defaultColor = "#626262";
-    const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    const regexUserTag = /((?![\w@]).)@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
     $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
