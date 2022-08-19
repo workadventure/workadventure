@@ -20,7 +20,6 @@ import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
-import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
@@ -40,6 +39,9 @@ import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
 import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -172,7 +174,7 @@ class IframeListener {
     public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
 
     private readonly iframes = new Set<HTMLIFrameElement>();
-    private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
+    private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
 
     private chatIframe: HTMLIFrameElement | null = null;
@@ -370,7 +372,10 @@ class IframeListener {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
                         const dataName = iframeEvent.data.name;
-                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
+                        if (!message.source) {
+                            throw new Error("Message is missing a source");
+                        }
+                        this.iframeCloseCallbacks.get(message.source)?.add(() => {
                             handleMenuUnregisterEvent(dataName);
                         });
 
@@ -405,14 +410,37 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
-        this.iframeCloseCallbacks.set(iframe, []);
+        iframe.addEventListener("load", () => {
+            if (iframe.contentWindow) {
+                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+            } else {
+                console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
+            }
+        });
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
-        this.iframeCloseCallbacks.get(iframe)?.forEach((callback) => {
-            callback();
-        });
+        if (iframe.contentWindow) {
+            this.iframeCloseCallbacks.get(iframe.contentWindow)?.forEach((callback) => {
+                callback();
+            });
+            this.iframeCloseCallbacks.delete(iframe.contentWindow);
+        }
         this.iframes.delete(iframe);
+    }
+
+    /**
+     * Registers an event listener to know when iframes are closed and returns an "unsubscriber" function.
+     */
+    onIframeCloseEvent(source: MessageEventSource, callback: () => void): () => void {
+        const callbackSet = this.iframeCloseCallbacks.get(source);
+        if (callbackSet === undefined) {
+            throw new Error("Could not find iframe in list");
+        }
+        callbackSet.add(callback);
+        return () => {
+            callbackSet.delete(callback);
+        };
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
@@ -567,11 +595,18 @@ class IframeListener {
         });
     }
 
-    hasPlayerMoved(event: HasPlayerMovedEvent) {
+    hasPlayerMoved(event: HasPlayerMovedInterface) {
         if (this.sendPlayerMove) {
             this.postMessage({
                 type: "hasPlayerMoved",
-                data: event,
+                data: {
+                    x: event.x,
+                    y: event.y,
+                    oldX: event.oldX,
+                    oldY: event.oldY,
+                    direction: ProtobufClientUtils.toDirectionString(event.direction),
+                    moving: event.moving,
+                },
             });
         }
     }
@@ -611,6 +646,13 @@ class IframeListener {
         this.postMessage({
             type: "setVariable",
             data: setVariableEvent,
+        });
+    }
+
+    setSharedPlayerVariable(setSharedPlayerVariable: SetSharedPlayerVariableEvent) {
+        this.postMessage({
+            type: "setSharedPlayerVariable",
+            data: setSharedPlayerVariable,
         });
     }
 
@@ -686,7 +728,7 @@ class IframeListener {
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;
@@ -713,20 +755,30 @@ class IframeListener {
 
     dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
         // Let's dispatch the message to the other iframes
-        for (const iframe of this.iframes) {
-            if (iframe.contentWindow !== source) {
-                iframe.contentWindow?.postMessage(
-                    {
-                        type: "setVariable",
-                        data: {
-                            key,
-                            value,
-                        },
-                    },
-                    "*"
-                );
-            }
-        }
+        this.postMessage(
+            {
+                type: "setVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
+    }
+
+    dispatchPlayerVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        this.postMessage(
+            {
+                type: "setPlayerVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
     }
 
     sendLeaveMucEvent(url: string) {

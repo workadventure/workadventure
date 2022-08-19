@@ -20,9 +20,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -133,6 +133,10 @@ jobs:
         run: ./templater.sh
         working-directory: "front/chat"
 
+      - name: "Pretty"
+        run: yarn run pretty-check
+        working-directory: "front/chat"
+        
       - name: "Generate i18n files"
         run: yarn run typesafe-i18n
         working-directory: "front/chat"
@@ -154,15 +158,10 @@ jobs:
       - name: "Lint"
         run: yarn run lint
         working-directory: "front/chat"
-
+        
       # TODO active
       #- name: "Typecheck"
       #  run: yarn run typecheck
-      #  working-directory: "front/chat"
-
-      # TODO active
-      #- name: "Pretty"
-      #  run: yarn run pretty-check
       #  working-directory: "front/chat"
 
       # TODO active
@@ -180,9 +179,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -227,9 +226,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '12.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -274,9 +273,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -321,9 +320,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
@@ -359,9 +358,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile

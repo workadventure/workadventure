@@ -11,7 +11,6 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
@@ -206,7 +205,7 @@ class ConnectionManager {
                     // try to connect with function loadOpenIDScreen
                     if (
                         this._currentRoom.authenticationMandatory ||
-                        (axios.isAxiosError(err) &&
+                        (Axios.isAxiosError(err) &&
                             err.response?.data &&
                             err.response.data !== "User cannot to be connected on openid provider")
                     ) {

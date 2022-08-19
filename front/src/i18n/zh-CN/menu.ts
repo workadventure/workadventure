@@ -93,6 +93,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "上传文件",
         error: "未选择文件。发送前必须上传一个文件。",
+        errorUpload: "上传文件错误。 请检查您的文件，然后重试。 如果问题仍然存在，请联系管理员。",
     },
     contact: {
         gettingStarted: {

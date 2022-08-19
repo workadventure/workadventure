@@ -5,6 +5,7 @@
     "outDir": "./dist/",
     "sourceMap": true,
     "moduleResolution": "node",
+    "types": ["node"],
     //"module": "CommonJS",
     "module": "ESNext",
     "target": "ES2020",

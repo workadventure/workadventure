@@ -10,6 +10,7 @@ import type { CoWebsite } from "./CoWebsite/CoWesbite";
 import type CancelablePromise from "cancelable-promise";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { gameManager } from "../Phaser/Game/GameManager";
+import { inCowebsiteZone } from "../Stores/MediaStore";
 
 export enum iframeStates {
     closed = 1,
@@ -150,7 +151,8 @@ class CoWebsiteManager {
             }
 
             if (coWebsite.isClosable()) {
-                this.closeCoWebsite(coWebsite, false);
+                //if user is in a Jitsi or openWebsite zone, the stack won't be closable
+                this.closeCoWebsite(coWebsite, !get(inCowebsiteZone));
             } else {
                 this.unloadCoWebsite(coWebsite).catch((err) => {
                     console.error("Cannot unload co-website on click on close button", err);

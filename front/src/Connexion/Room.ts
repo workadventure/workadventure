@@ -4,6 +4,7 @@ import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
@@ -28,15 +29,15 @@ export class Room {
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
-    //eslint-disable-next-line @typescript-eslint/ban-types
-    private _mucRooms: Array<Object> | undefined;
+    private _metadata: unknown | undefined;
+    private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
 
         if (this.id.startsWith("/")) {
-            this.id = this.id.substr(1);
+            this.id = this.id.substring(1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -130,6 +131,7 @@ export class Room {
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+                this._metadata = data.metadata ?? undefined;
 
                 this._mucRooms = data.mucRooms ?? undefined;
 
@@ -239,8 +241,11 @@ export class Room {
         return this._loginSceneLogo;
     }
 
-    //eslint-disable-next-line @typescript-eslint/ban-types
-    get mucRooms(): Array<Object> | undefined {
+    get metadata(): unknown {
+        return this._metadata;
+    }
+
+    get mucRooms(): Array<MucRoomDefinitionInterface> | undefined {
         return this._mucRooms;
     }
 

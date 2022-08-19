@@ -20,11 +20,11 @@ export default defineConfig({
             preprocess: sveltePreprocess(),
         }),
         envConfig({
-            variables: [
-                "PUSHER_URL",
-                "FALLBACK_LOCALE",
-            ],
+            variables: ["PUSHER_URL", "FALLBACK_LOCALE", "UPLOADER_URL", "EMBEDLY_KEY"],
         }),
         pluginRewriteAll(),
     ],
+    define: {
+        global: {},
+    },
 });

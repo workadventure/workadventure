@@ -8,7 +8,7 @@ import {
 } from "../Messages/generated/messages_pb";
 import { adminToken } from "../Middleware/AdminToken";
 import { BaseHttpController } from "./BaseHttpController";
-import { Metadata } from "grpc";
+import { Metadata } from "@grpc/grpc-js";
 
 export class AdminController extends BaseHttpController {
     routes(): void {

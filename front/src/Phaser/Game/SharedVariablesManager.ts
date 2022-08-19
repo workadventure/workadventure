@@ -49,7 +49,6 @@ export class SharedVariablesManager {
             iframeListener.setVariable({
                 key: name,
                 value: value,
-                target: "global",
             });
         });
     }

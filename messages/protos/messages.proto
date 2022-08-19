@@ -62,6 +62,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
+  SetPlayerVariableMessage setVariable = 7;
 }
 
 message UserMovesMessage {
@@ -153,6 +154,26 @@ message VariableMessage {
   string name = 1;
   string value = 2;
 }
+
+message SetPlayerVariableMessage {
+  string name = 1;
+  string value = 2;
+  bool public = 3;
+  bool persist = 4;
+  google.protobuf.Int32Value ttl = 5;
+  enum Scope {
+    ROOM = 0;
+    WORLD = 1;
+  }
+  Scope scope = 6;
+}
+
+// Should replace the VariableMessage in the long run.
+// Not working because Value seems to be serialized differently in ts-proto and grpc-node....
+/*message UpdateVariableMessage {
+  string name = 1;
+  google.protobuf.Value value = 2;
+}*/
 
 message XmppMessage {
   string stanza = 1;
@@ -272,6 +293,7 @@ message UserJoinedMessage {
   uint32 outlineColor = 8;
   bool hasOutline = 9;
   AvailabilityStatus availabilityStatus = 10;
+  map<string, string> variables = 11;
 }
 
 message UserLeftMessage {
@@ -322,6 +344,7 @@ message RoomJoinedMessage {
   // We send the current skin of the current player.
   repeated CharacterLayerMessage characterLayer = 8;
   bool activatedInviteUser = 9;
+  repeated VariableMessage playerVariable = 10;
 }
 
 message WebRtcStartMessage {
@@ -436,6 +459,7 @@ message JoinRoomMessage {
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
   bool activatedInviteUser = 12;
+  bool isLogged = 13;
 }
 
 message UserJoinedZoneMessage {
@@ -450,6 +474,7 @@ message UserJoinedZoneMessage {
   uint32 outlineColor = 9;
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
+  map<string, string> variables = 12;
 }
 
 message UserLeftZoneMessage {
@@ -587,6 +612,7 @@ message ServerToAdminClientMessage {
   oneof message {
     UserJoinedRoomMessage userJoinedRoom = 1;
     UserLeftRoomMessage userLeftRoom = 2;
+    ErrorMessage errorMessage = 3;
   }
 }
 

@@ -9,7 +9,7 @@ import {
     ServerToClientMessage,
     SubMessage,
 } from "../../Messages/generated/messages_pb";
-import { ClientDuplexStream } from "grpc";
+import { ClientDuplexStream } from "@grpc/grpc-js";
 import { Zone } from "../../Model/Zone";
 import { compressors } from "hyper-express";
 import { WokaDetail } from "../../Messages/JsonMessages/PlayerTextures";
@@ -25,6 +25,7 @@ export interface ExSocketInterface extends compressors.WebSocket, Identificable 
     //userId: number;   // A temporary (autoincremented) identifier for this user
     userUuid: string; // A unique identifier for this user
     userIdentifier: string;
+    isLogged: boolean;
     IPAddress: string; // IP address
     name: string;
     characterLayers: WokaDetail[];

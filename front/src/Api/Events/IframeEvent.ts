@@ -43,6 +43,10 @@ import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
 import { isAskPositionEvent } from "./AskPositionEvent";
 import { isLeaveMucEvent } from "./LeaveMucEvent";
 import { isJoinMucEvent } from "./JoinMucEvent";
+import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
+import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
+import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
+import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -291,6 +295,14 @@ export const isIframeResponseEvent = z.union([
         data: isSetVariableEvent,
     }),
     z.object({
+        type: z.literal("setPlayerVariable"),
+        data: isSetVariableEvent,
+    }),
+    z.object({
+        type: z.literal("setSharedPlayerVariable"),
+        data: isSetSharedPlayerVariableEvent,
+    }),
+    z.object({
         type: z.literal("messageTriggered"),
         data: isMessageReferenceEvent,
     }),
@@ -301,6 +313,18 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("joinMuc"),
         data: isJoinMucEvent,
+    }),
+    z.object({
+        type: z.literal("addRemotePlayer"),
+        data: isAddPlayerEvent,
+    }),
+    z.object({
+        type: z.literal("removeRemotePlayer"),
+        data: z.number(),
+    }),
+    z.object({
+        type: z.literal("remotePlayerChanged"),
+        data: isRemotePlayerChangedEvent,
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
@@ -325,6 +349,10 @@ export const iframeQueryMapTypeGuards = {
     },
     setVariable: {
         query: isSetVariableEvent,
+        answer: z.undefined(),
+    },
+    setPlayerVariable: {
+        query: isSetPlayerVariableEvent,
         answer: z.undefined(),
     },
     loadTileset: {
@@ -410,6 +438,10 @@ export const iframeQueryMapTypeGuards = {
     getUIWebsites: {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
+    },
+    enablePlayersTracking: {
+        query: isEnablePlayersTrackingEvent,
+        answer: z.array(isAddPlayerEvent),
     },
 };
 

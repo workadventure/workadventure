@@ -37,12 +37,17 @@
   },
   "homepage": "https://github.com/thecodingmachine/workadventure#readme",
   "dependencies": {
+    "@types/mime-types": "^2.1.1",
+    "@types/redis": "^4.0.11",
+    "aws-sdk": "^2.1185.0",
     "busboy": "^0.3.1",
     "debug": "^4.3.1",
     "jsonwebtoken": "^8.5.1",
+    "mime-types": "^2.1.35",
     "mkdirp": "^1.0.4",
     "prom-client": "^12.0.0",
     "query-string": "^6.13.3",
+    "redis": "^4.2.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.10.0",
     "uuidv4": "^6.0.7"
   },
@@ -53,13 +58,14 @@
     "@types/http-status-codes": "^1.2.0",
     "@types/jasmine": "^4.0.3",
     "@types/jsonwebtoken": "^8.3.8",
-    "@typescript-eslint/eslint-plugin": "^2.26.0",
-    "@typescript-eslint/parser": "^2.26.0",
     "@types/mkdirp": "^1.0.1",
     "@types/uuidv4": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.26.0",
+    "@typescript-eslint/parser": "^2.26.0",
     "eslint": "^6.8.0",
     "jasmine": "^4.0.3",
-    "ts-node-dev": "^1.0.0-pre.44",
-    "typescript": "^3.8.3"
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.7.4",
+    "ts-node": "^10.9.1"
   }
 }

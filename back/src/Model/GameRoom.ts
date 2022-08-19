@@ -49,14 +49,15 @@ import { mapStorageClient } from "../Services/MapStorageClient";
 import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
+import { BrothersFinder } from "./BrothersFinder";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
 
-export class GameRoom {
+export class GameRoom implements BrothersFinder {
     // Users, sorted by ID
     private readonly users = new Map<number, User>();
-    private readonly usersByUuid = new Map<string, User>();
+    private readonly usersByUuid = new Map<string, Set<User>>();
     private readonly groups: Map<number, Group> = new Map<number, Group>();
     private readonly admins = new Set<Admin>();
 
@@ -72,6 +73,7 @@ export class GameRoom {
     private constructor(
         public readonly roomUrl: string,
         private mapUrl: string,
+        private roomGroup: string | null,
         private readonly connectCallback: ConnectCallback,
         private readonly disconnectCallback: DisconnectCallback,
         private readonly minDistance: number,
@@ -115,6 +117,7 @@ export class GameRoom {
         const gameRoom = new GameRoom(
             roomUrl,
             mapDetails.mapUrl,
+            mapDetails.group,
             connectCallback,
             disconnectCallback,
             minDistance,
@@ -147,31 +150,31 @@ export class GameRoom {
     }
 
     public getUserByUuid(uuid: string): User | undefined {
-        return this.usersByUuid.get(uuid);
+        const users = this.usersByUuid.get(uuid);
+        if (users === undefined) {
+            return undefined;
+        }
+        const [user] = users;
+        return user;
     }
     public getUserById(id: number): User | undefined {
         return this.users.get(id);
     }
-    public getUsersByUuid(uuid: string): User[] {
-        const userList: User[] = [];
-        for (const user of this.users.values()) {
-            if (user.uuid === uuid) {
-                userList.push(user);
-            }
-        }
-        return userList;
+    public getUsersByUuid(uuid: string): Set<User> {
+        return this.usersByUuid.get(uuid) ?? new Set();
     }
 
-    public join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): User {
+    public async join(socket: UserSocket, joinRoomMessage: JoinRoomMessage): Promise<User> {
         const positionMessage = joinRoomMessage.getPositionmessage();
         if (positionMessage === undefined) {
             throw new Error("Missing position message");
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
 
-        const user = new User(
+        const user = await User.create(
             this.nextUserId,
             joinRoomMessage.getUseruuid(),
+            joinRoomMessage.getIslogged(),
             joinRoomMessage.getIpaddress(),
             position,
             this.positionNotifier,
@@ -181,6 +184,9 @@ export class GameRoom {
             joinRoomMessage.getVisitcardurl(),
             joinRoomMessage.getName(),
             ProtobufUtils.toCharacterLayerObjects(joinRoomMessage.getCharacterlayerList()),
+            this.roomUrl,
+            this.roomGroup ?? undefined,
+            this,
             joinRoomMessage.getCompanion(),
             undefined,
             undefined,
@@ -188,7 +194,12 @@ export class GameRoom {
         );
         this.nextUserId++;
         this.users.set(user.id, user);
-        this.usersByUuid.set(user.uuid, user);
+        let set = this.usersByUuid.get(user.uuid);
+        if (set === undefined) {
+            set = new Set<User>();
+            this.usersByUuid.set(user.uuid, set);
+        }
+        set.add(user);
         this.updateUserGroup(user);
 
         // Notify admins
@@ -649,11 +660,11 @@ export class GameRoom {
         if (!this.variableManagerPromise) {
             this.variableManagerLastLoad = new Date();
             this.variableManagerPromise = this.getMap()
-                .then((map) => {
-                    const variablesManager = new VariablesManager(this.roomUrl, map);
+                .then(async (map) => {
+                    const variablesManager = await VariablesManager.create(this.roomUrl, map);
                     return variablesManager.init();
                 })
-                .catch((e) => {
+                .catch(async (e) => {
                     if (e instanceof LocalUrlError) {
                         // If we are trying to load a local URL, we are probably in test mode.
                         // In this case, let's bypass the server-side checks completely.
@@ -668,7 +679,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
                         return variablesManager.init();
                     } else {
                         // An error occurred while loading the map
@@ -685,7 +696,7 @@ export class GameRoom {
                             }
                         }, 1000);
 
-                        const variablesManager = new VariablesManager(this.roomUrl, null);
+                        const variablesManager = await VariablesManager.create(this.roomUrl, null);
                         return variablesManager.init();
                     }
                 });
@@ -837,6 +848,17 @@ export class GameRoom {
 
     public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
         return this.mapEditorMessagesHandler;
+    }
+
+    /**
+     * Returns the list of users in this room that share the same UUID
+     */
+    public getBrothers(user: User): Array<User> {
+        const family = this.usersByUuid.get(user.uuid);
+        if (family === undefined) {
+            return [];
+        }
+        return [...family].filter((theUser) => theUser !== user);
     }
 
     private mucManagerPromise: Promise<MucManager> | undefined;

@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -33,6 +33,15 @@ jobs:
       - name: Run Playwright tests
         run: npm run test-prod-like
         working-directory: tests
+      - name: Display docker-compose logs on failure
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
+        if: failure()
+      - name: Display containers state
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
+        if: failure()
+      - name: Side-load docker-compose logs in the playwright report
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        if: failure()
       - uses: actions/upload-artifact@v2
         if: always()
         with:

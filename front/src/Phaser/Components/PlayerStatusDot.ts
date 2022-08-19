@@ -5,7 +5,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     private statusImage: Phaser.GameObjects.Image;
     private statusImageOutline: Phaser.GameObjects.Image;
 
-    private availabilityStatus: AvailabilityStatus;
+    private _availabilityStatus: AvailabilityStatus;
 
     private animationTween?: Phaser.Tweens.Tween;
 
@@ -23,7 +23,7 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y);
 
-        this.availabilityStatus = AvailabilityStatus.ONLINE;
+        this._availabilityStatus = AvailabilityStatus.ONLINE;
 
         this.statusImage = this.scene.add.image(0, 0, "iconStatusIndicatorInside");
         this.statusImageOutline = this.scene.add.image(0, 0, "iconStatusIndicatorOutline");
@@ -36,10 +36,10 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     public setAvailabilityStatus(availabilityStatus: AvailabilityStatus, instant = false): void {
-        if (this.availabilityStatus === availabilityStatus || availabilityStatus === AvailabilityStatus.UNCHANGED) {
+        if (this._availabilityStatus === availabilityStatus || availabilityStatus === AvailabilityStatus.UNCHANGED) {
             return;
         }
-        this.availabilityStatus = availabilityStatus;
+        this._availabilityStatus = availabilityStatus;
         if (instant) {
             this.redraw();
         } else {
@@ -70,8 +70,12 @@ export class PlayerStatusDot extends Phaser.GameObjects.Container {
     }
 
     private redraw(): void {
-        const colors = this.COLORS[this.availabilityStatus];
+        const colors = this.COLORS[this._availabilityStatus];
         this.statusImage.setTintFill(colors.filling);
         this.statusImageOutline.setTintFill(colors.outline);
+    }
+
+    get availabilityStatus(): AvailabilityStatus {
+        return this._availabilityStatus;
     }
 }

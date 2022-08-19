@@ -3,7 +3,6 @@ import { z } from "zod";
 export const isSetVariableEvent = z.object({
     key: z.string(),
     value: z.unknown(),
-    target: z.enum(["global", "player"]),
 });
 
 export const isSetVariableIframeEvent = z.object({

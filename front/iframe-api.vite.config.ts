@@ -6,6 +6,7 @@ export default defineConfig({
     build: {
         outDir: "public",
         emptyOutDir: false,
+        sourcemap: true,
         lib: {
             entry: resolve(__dirname, "src/iframe_api.ts"),
             name: "iframe_api",

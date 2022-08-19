@@ -76,7 +76,6 @@ services:
 
   chat:
     image: thecodingmachine/nodejs:16
-    container_name: chat
     command: yarn run start
     environment:
       STARTUP_COMMAND_1: ./templater.sh
@@ -84,6 +83,8 @@ services:
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
       PUSHER_URL: //pusher.workadventure.localhost
+      UPLOADER_URL: //uploader.workadventure.localhost
+      EMBEDLY_KEY: $EMBEDLY_KEY
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs
@@ -102,6 +103,7 @@ services:
     command: yarn dev
     environment:
       DEBUG: "socket:*"
+      DEBUG_ERROR_MESSAGES: "true"
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       STARTUP_COMMAND_0: touch /usr/src/app/src/Messages/generate_request/need_regenerate
@@ -119,6 +121,7 @@ services:
       OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       OPID_SCOPE: $OPID_SCOPE
+      OPID_PROMPT: $OPID_PROMPT
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
@@ -186,6 +189,7 @@ services:
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
       MAP_STORAGE_URL: "map-storage:50053"
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+      PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -222,6 +226,17 @@ services:
     environment:
       DEBUG: "*"
       STARTUP_COMMAND_1: yarn install
+      UPLOADER_URL: http://uploader.workadventure.localhost
+      #AWS
+      AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+      AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+      AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
+      AWS_BUCKET: "$AWS_BUCKET"
+      AWS_URL: "$AWS_URL"
+      AWS_ENDPOINT: "$AWS_ENDPOINT"
+      #REDIS
+      REDIS_HOST: "$UPLOADER_REDIS_HOST"
+      REDIS_PORT: "$UPLOADER_REDIS_PORT"
     volumes:
       - ./uploader:/usr/src/app
     labels:

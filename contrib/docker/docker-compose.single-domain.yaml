@@ -56,6 +56,25 @@ services:
       - "traefik.http.routers.front-ssl.tls=true"
       - "traefik.http.routers.front-ssl.service=front"
 
+  chat:
+    image: thecodingmachine/nodejs:16
+    environment:
+      PUSHER_URL: /pusher
+      UPLOADER_URL: /uploader
+      EMBEDLY_KEY: $EMBEDLY_KEY
+    command: yarn run start
+    volumes:
+      - ./front:/usr/src/app
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.chat.entryPoints=web,traefik"
+      - "traefik.http.services.chat.loadbalancer.server.port=8080"
+      - "traefik.http.routers.chat-ssl.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.service=chat"
+
   pusher:
     image: thecodingmachine/nodejs:16
     command: yarn dev
@@ -76,6 +95,7 @@ services:
       OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       OPID_SCOPE: $OPID_SCOPE
+      OPID_PROMPT: $OPID_PROMPT
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
@@ -184,6 +204,17 @@ services:
     environment:
       DEBUG: "*"
       STARTUP_COMMAND_1: yarn install
+      UPLOADER_URL: /uploader
+      #AWS
+      AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+      AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+      AWS_BUCKET: $AWS_BUCKET
+      AWS_URL: $AWS_URL
+      AWS_ENDPOINT: $AWS_ENDPOINT
+      #REDIS
+      REDIS_HOST: $UPLOADER_REDIS_HOST
+      REDIS_PORT: $UPLOADER_REDIS_PORT
     volumes:
       - ./uploader:/usr/src/app
     labels:

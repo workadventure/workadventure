@@ -2,12 +2,13 @@ import {
     BatchToPusherMessage,
     BatchToPusherRoomMessage,
     ErrorMessage,
+    ServerToAdminClientMessage,
     ServerToClientMessage,
     SubToPusherMessage,
     SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { UserSocket } from "../Model/User";
-import { RoomSocket, ZoneSocket } from "../RoomManager";
+import { AdminSocket, RoomSocket, ZoneSocket } from "../RoomManager";
 
 function getMessageFromError(error: unknown): string {
     if (error instanceof Error) {
@@ -26,6 +27,21 @@ export function emitError(Client: UserSocket, error: unknown): void {
     errorMessage.setMessage(message);
 
     const serverToClientMessage = new ServerToClientMessage();
+    serverToClientMessage.setErrormessage(errorMessage);
+
+    //if (!Client.disconnecting) {
+    Client.write(serverToClientMessage);
+    //}
+    console.warn(message);
+}
+
+export function emitErrorOnAdminSocket(Client: AdminSocket, error: unknown): void {
+    const message = getMessageFromError(error);
+
+    const errorMessage = new ErrorMessage();
+    errorMessage.setMessage(message);
+
+    const serverToClientMessage = new ServerToAdminClientMessage();
     serverToClientMessage.setErrormessage(errorMessage);
 
     //if (!Client.disconnecting) {

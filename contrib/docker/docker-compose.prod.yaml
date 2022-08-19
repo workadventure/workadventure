@@ -26,7 +26,6 @@ services:
       - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     restart: ${RESTART_POLICY}
 
-
   front:
     image: thecodingmachine/workadventure-front:${VERSION}
     environment:
@@ -58,6 +57,24 @@ services:
       - "traefik.http.routers.front-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
+  chat:
+    image: thecodingmachine/workadventure-chat:${VERSION}
+    environment:
+      - PUSHER_URL=//${PUSHER_HOST}
+      - UPLOADER_URL=//${UPLOADER_HOST}
+      - EMBEDLY_KEY=${EMBEDLY_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=80"
+      - "traefik.http.routers.chat-ssl.rule=Host(`${CHAT_HOST}`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.service=chat"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.tls.certresolver=myresolver"
+    restart: ${RESTART_POLICY}
+
   pusher:
     image: thecodingmachine/workadventure-pusher:${VERSION}
     command: yarn run runprod
@@ -69,6 +86,7 @@ services:
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
       - EJABBERD_DOMAIN=ejabberd
+      - OPID_PROMPT=login
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
     labels:
@@ -107,6 +125,7 @@ services:
       - PROMETHEUS_AUTHORIZATION_TOKEN
       - MAP_STORAGE_URL=map-storage:50053
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
+      - PLAYER_VARIABLES_MAX_TTL
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
@@ -118,6 +137,31 @@ services:
       - "traefik.http.routers.back-ssl.tls=true"
       - "traefik.http.routers.back-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
+
+  uploader:
+    image: thecodingmachine/workadventure-uploader:${VERSION}
+    environment:
+      - UPLOADER_URL=//${UPLOADER_HOST}
+      #AWS
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_URL=${AWS_URL}
+      - AWS_ENDPOINT=${AWS_ENDPOINT}
+      #REDIS
+      - REDIS_HOST=${UPLOADER_REDIS_HOST}
+      - REDIS_PORT=${UPLOADER_REDIS_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uploader.rule=Host(`${UPLOADER_HOST}`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader-ssl.rule=Host(`${UPLOADER_HOST}`)"
+      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
+      - "traefik.http.routers.uploader-ssl.service=uploader"
+      - "traefik.http.routers.uploader-ssl.tls=true"
+      - "traefik.http.routers.uploader-ssl.tls.certresolver=myresolver"
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0

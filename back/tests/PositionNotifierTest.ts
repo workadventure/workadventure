@@ -7,9 +7,16 @@ import { Movable } from "../src/Model/Movable";
 import { PositionInterface } from "../src/Model/PositionInterface";
 import { ZoneSocket } from "../src/RoomManager";
 import { AvailabilityStatus } from "../src/Messages/generated/messages_pb";
+import { BrothersFinder } from "../src/Model/BrothersFinder";
+
+class VoidBrothersFinder implements BrothersFinder {
+    getBrothers(user: User): Iterable<User> {
+        return [];
+    }
+}
 
 describe("PositionNotifier", () => {
-    it("should receive notifications when player moves", () => {
+    it("should receive notifications when player moves", async () => {
         let enterTriggered = false;
         let moveTriggered = false;
         let leaveTriggered = false;
@@ -31,9 +38,10 @@ describe("PositionNotifier", () => {
             () => {}
         );
 
-        const user1 = new User(
+        const user1 = await User.create(
             1,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 500,
@@ -47,12 +55,16 @@ describe("PositionNotifier", () => {
             [],
             null,
             "foo",
-            []
+            [],
+            "https://example.com/room.json",
+            undefined,
+            new VoidBrothersFinder()
         );
 
-        const user2 = new User(
+        const user2 = await User.create(
             2,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: -9999,
@@ -66,7 +78,10 @@ describe("PositionNotifier", () => {
             [],
             null,
             "foo",
-            []
+            [],
+            "https://example.com/room.json",
+            undefined,
+            new VoidBrothersFinder()
         );
 
         positionNotifier.addZoneListener({} as ZoneSocket, 0, 0);
@@ -117,7 +132,7 @@ describe("PositionNotifier", () => {
         leaveTriggered = false;
     });
 
-    it("should receive notifications when camera moves", () => {
+    it("should receive notifications when camera moves", async () => {
         let enterTriggered = false;
         let moveTriggered = false;
         let leaveTriggered = false;
@@ -139,9 +154,10 @@ describe("PositionNotifier", () => {
             () => {}
         );
 
-        const user1 = new User(
+        const user1 = await User.create(
             1,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 500,
@@ -155,12 +171,16 @@ describe("PositionNotifier", () => {
             [],
             null,
             "foo",
-            []
+            [],
+            "https://example.com/room.json",
+            undefined,
+            new VoidBrothersFinder()
         );
 
-        const user2 = new User(
+        const user2 = await User.create(
             2,
             "test",
+            false,
             "10.0.0.2",
             {
                 x: 0,
@@ -174,7 +194,10 @@ describe("PositionNotifier", () => {
             [],
             null,
             "foo",
-            []
+            [],
+            "https://example.com/room.json",
+            undefined,
+            new VoidBrothersFinder()
         );
 
         const listener = {} as ZoneSocket;

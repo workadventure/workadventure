@@ -1,5 +1,6 @@
 import "jasmine";
 import { PlayerMovement } from "../../../src/Phaser/Game/PlayerMovement";
+import { PositionMessage_Direction } from "../../../src/Messages/ts-proto-generated/protos/messages";
 
 describe("Interpolation / Extrapolation", () => {
     it("should interpolate", () => {
@@ -15,7 +16,7 @@ describe("Interpolation / Extrapolation", () => {
                 oldX: 100,
                 oldY: 200,
                 moving: true,
-                direction: "up",
+                direction: PositionMessage_Direction.UP,
             },
             42200
         );
@@ -28,7 +29,7 @@ describe("Interpolation / Extrapolation", () => {
             y: 150,
             oldX: 100,
             oldY: 200,
-            direction: "up",
+            direction: PositionMessage_Direction.UP,
             moving: true,
         });
 
@@ -37,7 +38,7 @@ describe("Interpolation / Extrapolation", () => {
             y: 100,
             oldX: 100,
             oldY: 200,
-            direction: "up",
+            direction: PositionMessage_Direction.UP,
             moving: true,
         });
 
@@ -46,7 +47,7 @@ describe("Interpolation / Extrapolation", () => {
             y: 50,
             oldX: 100,
             oldY: 200,
-            direction: "up",
+            direction: PositionMessage_Direction.UP,
             moving: true,
         });
     });
@@ -64,7 +65,7 @@ describe("Interpolation / Extrapolation", () => {
                 oldX: 100,
                 oldY: 200,
                 moving: false,
-                direction: "up",
+                direction: PositionMessage_Direction.UP,
             },
             42200
         );
@@ -74,7 +75,7 @@ describe("Interpolation / Extrapolation", () => {
             y: 100,
             oldX: 100,
             oldY: 200,
-            direction: "up",
+            direction: PositionMessage_Direction.UP,
             moving: false,
         });
     });
@@ -92,7 +93,7 @@ describe("Interpolation / Extrapolation", () => {
                 oldX: 100,
                 oldY: 200,
                 moving: false,
-                direction: "up",
+                direction: PositionMessage_Direction.UP,
             },
             42200
         );
@@ -102,7 +103,7 @@ describe("Interpolation / Extrapolation", () => {
             y: 150,
             oldX: 100,
             oldY: 200,
-            direction: "up",
+            direction: PositionMessage_Direction.UP,
             moving: false,
         });
     });

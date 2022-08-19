@@ -2,7 +2,6 @@ import { PUSHER_URL, UPLOADER_URL } from "../Enum/EnvironmentVariable";
 import Axios from "axios";
 
 import type { UserSimplePeerInterface } from "../WebRtc/SimplePeer";
-import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type {
     GroupCreatedUpdatedMessageInterface,
     GroupUsersUpdateMessageInterface,
@@ -26,31 +25,32 @@ import {
 } from "../Stores/MenuStore";
 import { localUserStore } from "./LocalUserStore";
 import {
-    ServerToClientMessage as ServerToClientMessageTsProto,
-    TokenExpiredMessage,
-    WorldConnexionMessage,
+    AnswerMessage,
+    AvailabilityStatus,
+    CharacterLayerMessage,
+    ClientToServerMessage as ClientToServerMessageTsProto,
+    EditMapMessage,
+    EmoteEventMessage as EmoteEventMessageTsProto,
     ErrorMessage as ErrorMessageTsProto,
     ErrorScreenMessage as ErrorScreenMessageTsProto,
-    UserMovedMessage as UserMovedMessageTsProto,
-    GroupUpdateMessage as GroupUpdateMessageTsProto,
     GroupDeleteMessage as GroupDeleteMessageTsProto,
-    UserJoinedMessage as UserJoinedMessageTsProto,
-    UserLeftMessage as UserLeftMessageTsProto,
-    EmoteEventMessage as EmoteEventMessageTsProto,
-    PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
-    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
-    ClientToServerMessage as ClientToServerMessageTsProto,
-    PositionMessage as PositionMessageTsProto,
-    ViewportMessage as ViewportMessageTsProto,
-    PositionMessage_Direction,
-    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
-    CharacterLayerMessage,
-    AvailabilityStatus,
-    QueryMessage,
-    AnswerMessage,
+    GroupUpdateMessage as GroupUpdateMessageTsProto,
     JoinBBBMeetingAnswer,
     MoveToPositionMessage as MoveToPositionMessageProto,
-    EditMapMessage,
+    PlayerDetailsUpdatedMessage as PlayerDetailsUpdatedMessageTsProto,
+    PositionMessage as PositionMessageTsProto,
+    PositionMessage_Direction,
+    QueryMessage,
+    ServerToClientMessage as ServerToClientMessageTsProto,
+    SetPlayerDetailsMessage as SetPlayerDetailsMessageTsProto,
+    SetPlayerVariableMessage_Scope,
+    TokenExpiredMessage,
+    UserJoinedMessage as UserJoinedMessageTsProto,
+    UserLeftMessage as UserLeftMessageTsProto,
+    UserMovedMessage as UserMovedMessageTsProto,
+    ViewportMessage as ViewportMessageTsProto,
+    WebRtcDisconnectMessage as WebRtcDisconnectMessageTsProto,
+    WorldConnexionMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { Subject } from "rxjs";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
@@ -59,6 +59,7 @@ import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { apiVersionHash } from "../Messages/JsonMessages/ApiVersion";
 import { ITiledMapRectangleObject } from "@map-editor-types";
+import { SetPlayerVariableEvent } from "../Api/Events/SetPlayerVariableEvent";
 
 const manualPingDelay = 20000;
 
@@ -298,23 +299,7 @@ export class RoomConnection implements RoomConnection {
                             }
                             case "variableMessage": {
                                 const name = subMessage.variableMessage.name;
-                                const serializedValue = subMessage.variableMessage.value;
-                                let value: unknown = undefined;
-                                if (serializedValue) {
-                                    try {
-                                        value = JSON.parse(serializedValue);
-                                    } catch (e) {
-                                        console.error(
-                                            'Unable to unserialize value received from server for variable "' +
-                                                name +
-                                                '". Value received: "' +
-                                                serializedValue +
-                                                '". Error: ',
-                                            e
-                                        );
-                                    }
-                                }
-
+                                const value = RoomConnection.unserializeVariable(subMessage.variableMessage.value);
                                 this._variableMessageStream.next({ name, value });
                                 break;
                             }
@@ -347,18 +332,12 @@ export class RoomConnection implements RoomConnection {
 
                     const variables = new Map<string, unknown>();
                     for (const variable of roomJoinedMessage.variable) {
-                        try {
-                            variables.set(variable.name, JSON.parse(variable.value));
-                        } catch (e) {
-                            console.error(
-                                'Unable to unserialize value received from server for variable "' +
-                                    variable.name +
-                                    '". Value received: "' +
-                                    variable.value +
-                                    '". Error: ',
-                                e
-                            );
-                        }
+                        variables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
+                    }
+
+                    const playerVariables = new Map<string, unknown>();
+                    for (const variable of roomJoinedMessage.playerVariable) {
+                        playerVariables.set(variable.name, RoomConnection.unserializeVariable(variable.value));
                     }
 
                     this.userId = roomJoinedMessage.currentUserId;
@@ -395,6 +374,7 @@ export class RoomConnection implements RoomConnection {
                             items,
                             variables,
                             characterLayers,
+                            playerVariables,
                         } as RoomJoinedMessageInterface,
                     });
                     break;
@@ -643,25 +623,17 @@ export class RoomConnection implements RoomConnection {
         this.closed = true;
     }
 
-    private toPositionMessage(x: number, y: number, direction: string, moving: boolean): PositionMessageTsProto {
+    private toPositionMessage(
+        x: number,
+        y: number,
+        direction: PositionMessage_Direction,
+        moving: boolean
+    ): PositionMessageTsProto {
         return {
             x: Math.floor(x),
             y: Math.floor(y),
             moving,
-            direction: (() => {
-                switch (direction) {
-                    case "up":
-                        return PositionMessage_Direction.UP;
-                    case "down":
-                        return PositionMessage_Direction.DOWN;
-                    case "left":
-                        return PositionMessage_Direction.LEFT;
-                    case "right":
-                        return PositionMessage_Direction.RIGHT;
-                    default:
-                        throw new Error("Unexpected direction");
-                }
-            })(),
+            direction,
         };
     }
 
@@ -674,7 +646,13 @@ export class RoomConnection implements RoomConnection {
         };
     }
 
-    public sharePosition(x: number, y: number, direction: string, moving: boolean, viewport: ViewportInterface): void {
+    public sharePosition(
+        x: number,
+        y: number,
+        direction: PositionMessage_Direction,
+        moving: boolean,
+        viewport: ViewportInterface
+    ): void {
         if (!this.socket) {
             return;
         }
@@ -729,16 +707,23 @@ export class RoomConnection implements RoomConnection {
 
         const companion = message.companion;
 
+        const variables = new Map<string, unknown>();
+        //console.warn('VARIABLES FOR USER: ', message.variables);
+        for (const variable of Object.entries(message.variables)) {
+            variables.set(variable[0], RoomConnection.unserializeVariable(variable[1]));
+        }
+
         return {
             userId: message.userId,
             name: message.name,
             characterLayers,
             visitCardUrl: message.visitCardUrl,
-            position: ProtobufClientUtils.toPointInterface(position),
+            position: position,
             availabilityStatus: message.availabilityStatus,
             companion: companion ? companion.name : null,
             userUuid: message.userUuid,
             outlineColor: message.hasOutline ? message.outlineColor : undefined,
+            variables: variables,
         };
     }
 
@@ -786,11 +771,16 @@ export class RoomConnection implements RoomConnection {
 
     public onServerDisconnected(callback: () => void): void {
         this.socket.addEventListener("close", (event) => {
+            // FIXME: technically incorrect: if we call onServerDisconnected several times, we will run several times the code (and we probably want to run only callback() serveral times).
+            // FIXME: call to query.reject and this.completeStreams should probably be stored somewhere else.
+
             // Cleanup queries:
             const error = new Error("Socket closed with code " + event.code + ". Reason: " + event.reason);
             for (const query of this.queries.values()) {
                 query.reject(error);
             }
+
+            this.completeStreams();
 
             if (this.closed === true || connectionManager.unloading) {
                 return;
@@ -802,6 +792,35 @@ export class RoomConnection implements RoomConnection {
             }
             callback();
         });
+    }
+
+    /**
+     * Sends a message to all observers: we are not going to send anything anymore on streams.
+     */
+    private completeStreams(): void {
+        this._errorMessageStream.complete();
+        this._errorScreenMessageStream.complete();
+        this._roomJoinedMessageStream.complete();
+        this._webRtcStartMessageStream.complete();
+        this._webRtcSignalToClientMessageStream.complete();
+        this._webRtcScreenSharingSignalToClientMessageStream.complete();
+        this._webRtcDisconnectMessageStream.complete();
+        this._teleportMessageMessageStream.complete();
+        this._worldFullMessageStream.complete();
+        this._worldConnexionMessageStream.complete();
+        this._tokenExpiredMessageStream.complete();
+        this._userMovedMessageStream.complete();
+        this._groupUpdateMessageStream.complete();
+        this._groupUsersUpdateMessageStream.complete();
+        this._groupDeleteMessageStream.complete();
+        this._userJoinedMessageStream.complete();
+        this._userLeftMessageStream.complete();
+        this._itemEventMessageStream.complete();
+        this._emoteEventMessageStream.complete();
+        this._variableMessageStream.complete();
+        this._playerDetailsUpdatedMessageStream.complete();
+        this._connectionErrorStream.complete();
+        this._moveToPositionMessageStream.complete();
     }
 
     public getUserId(): number {
@@ -1076,5 +1095,62 @@ export class RoomConnection implements RoomConnection {
             throw new Error("Unexpected answer");
         }
         return answer.joinBBBMeetingAnswer;
+    }
+
+    public emitPlayerSetVariable(event: SetPlayerVariableEvent): void {
+        //console.log("emitPlayerSetVariable", name, value);
+        let scope: SetPlayerVariableMessage_Scope;
+        switch (event.scope) {
+            case "room": {
+                scope = SetPlayerVariableMessage_Scope.ROOM;
+                break;
+            }
+            case "world": {
+                scope = SetPlayerVariableMessage_Scope.WORLD;
+                break;
+            }
+            default: {
+                const _exhaustiveCheck: never = event.scope;
+                return;
+            }
+        }
+
+        this.send({
+            message: {
+                $case: "setPlayerDetailsMessage",
+                setPlayerDetailsMessage: SetPlayerDetailsMessageTsProto.fromPartial({
+                    setVariable: {
+                        name: event.key,
+                        value: JSON.stringify(event.value),
+                        public: event.public,
+                        ttl: event.ttl,
+                        scope,
+                        persist: event.persist,
+                    },
+                }),
+            },
+        });
+    }
+
+    /**
+     * Unserializes a string received from the server.
+     * If the value cannot be unserialized, returns undefined and outputs a console error.
+     */
+    public static unserializeVariable(serializedValue: string): unknown {
+        let value: unknown = undefined;
+        if (serializedValue) {
+            try {
+                value = JSON.parse(serializedValue);
+            } catch (e) {
+                console.error(
+                    "Unable to unserialize value received from server for a variable. " +
+                        'Value received: "' +
+                        serializedValue +
+                        '". Error: ',
+                    e
+                );
+            }
+        }
+        return value;
     }
 }
