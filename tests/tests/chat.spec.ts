@@ -1,4 +1,4 @@
-import {chromium, expect, Page, test} from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
@@ -19,7 +19,7 @@ test.describe('Chat', () => {
     abortRecordLogs(page);
   });
 
-  test('should connect to ejabberd and show list of users', async ({ page }) => {
+  test('should connect to ejabberd and show list of users', async ({ page, browser }) => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -32,8 +32,8 @@ test.describe('Chat', () => {
 
     await expect(chat.locator('#users')).toContainText(nickname);
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'

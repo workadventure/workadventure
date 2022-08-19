@@ -1,4 +1,4 @@
-import {expect, test, chromium, Page} from '@playwright/test';
+import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
@@ -7,14 +7,14 @@ import {oidcLogin, oidcLogout} from "./utils/oidc";
 import {BrowserTooOldError} from "../../front/src/Stores/Errors/BrowserTooOldError";
 
 test.describe('API WA.players', () => {
-  test('enter leave events are received', async ({ page }) => {
+  test('enter leave events are received', async ({ page, browser }) => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
     );
     await login(page, 'Alice');
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
@@ -60,7 +60,7 @@ test.describe('API WA.players', () => {
     await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
 
-  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page }) => {
+  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -74,8 +74,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
@@ -156,8 +156,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    const browser2 = await chromium.launch();
-    const page2 = await browser2.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'

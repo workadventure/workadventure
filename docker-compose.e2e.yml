@@ -5,10 +5,7 @@ services:
   # docker-compose -f docker-compose.yaml -f docker-compose.e2e.yml up -d --build
 
   front:
-    image: 'wa-front-e2e'
-    build:
-      context: ./
-      dockerfile: front/Dockerfile
+    image: thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
@@ -22,36 +19,23 @@ services:
       - "traefik.http.routers.front-ssl.service=front"
 
   chat:
-    image: 'wa-chat-e2e'
-    build:
-      context: ./
-      dockerfile: front/chat/Dockerfile
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && envsubst < /usr/share/nginx/html/server.template.json > /usr/share/nginx/html/server.json && exec nginx -g 'daemon off;'"
+    image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
+    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
-      - "traefik.http.routers.chat.entryPoints=web"
-      - "traefik.http.services.chat.loadbalancer.server.port=80"
-      - "traefik.http.routers.chat-ssl.rule=Host(`chat.workadventure.localhost`)"
-      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
-      - "traefik.http.routers.chat-ssl.tls=true"
-      - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
-    image: 'wa-pusher-e2e'
-    build:
-      context: ./
-      dockerfile: pusher/Dockerfile
+    image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
     command: yarn run runprod
     volumes: []
     environment:
       ENABLE_OPENAPI_ENDPOINT: "false"
 
   back:
-    image: 'wa-back-e2e'
-    build:
-      context: ./
-      dockerfile: back/Dockerfile
+    image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
     command: yarn run runprod
+    volumes: []
+
+  map-storage:
+    image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+    command: yarn run start:prod
     volumes: []
