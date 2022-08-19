@@ -1,6 +1,6 @@
 //* GENERAL */
 .media-box-camera-on-size {
-    @apply tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
+    @apply tw-h-32 tw-w-56 sm:tw-h-48 sm:tw-w-80 md:tw-h-28 md:tw-w-48 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
 }
 
 .media-box-camera-on-position {
@@ -8,7 +8,7 @@
 }
 
 .media-box-camera-off-size {
-    @apply tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
+    @apply tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
 }
 
 .media-box-shape-color {
@@ -20,7 +20,7 @@
 }
 
 .media-box-screensharing-size {
-    @apply tw-w-56 sm:tw-w-80 md:tw-w-36 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
+    @apply tw-w-56 sm:tw-w-80 md:tw-w-48 lg:tw-w-44 xl:tw-w-64 2xl:tw-w-96;
 }
 
 .scale-y-min {
@@ -28,11 +28,10 @@
 }
 
 .other-cameras {
-    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-20 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-absolute tw-mb-2;
+    @apply tw-bottom-32 sm:tw-bottom-48 md:tw-bottom-28 lg:tw-bottom-24 xl:tw-bottom-36 2xl:tw-bottom-48 tw-absolute tw-mb-2;
 }
 
 .media-container {
-
     @apply tw-mt-2;
 
     &.hightlighted {
@@ -74,7 +73,7 @@
 }
 
 .video-on-responsive-height {
-    @apply tw-h-32 sm:tw-h-48 md:tw-h-20 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48;
+    @apply tw-h-32 sm:tw-h-48 md:tw-h-28 lg:tw-h-24 xl:tw-h-36 2xl:tw-h-48;
 }
 
 .video-container {
@@ -98,7 +97,7 @@
 
     width: 3rem;
     height: 3rem;
-    padding-top: 3rem
+    padding-top: 3rem;
 }
 
 .connecting-spinner:after {
@@ -161,15 +160,8 @@
 
 //* MY CAMERA */
 
-//.my-webcam-container,
-//.voice-meter-my-container {
-//    @apply tw-flex tw-h-24 tw-w-44 sm:tw-h-48 sm:tw-w-80 md:tw-h-20 md:tw-w-36 lg:tw-h-24 lg:tw-w-44 xl:tw-h-36 xl:tw-w-64 2xl:tw-h-48 2xl:tw-w-96;
-//    @apply tw-absolute tw-m-auto tw-left-auto tw-right-2 md:tw-right-[2vw] lg:tw-right-[4vw] xl:tw-right-[5vw] 2xl:tw-right-[9vw] tw-bottom-24 lg:tw-bottom-2;
-//}
-
 .my-webcam-container,
-.voice-meter-my-container
-{
+.voice-meter-my-container {
     @apply tw-flex media-box-camera-on-size;
 }
 

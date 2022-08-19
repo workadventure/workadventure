@@ -96,6 +96,8 @@
 </div>
 
 <style lang="scss">
+    @import "../../../../style/breakpoints.scss";
+
     #presentation-layout {
         height: 100%;
         width: 100%;
@@ -151,6 +153,12 @@
                     }
                 }
             }
+        }
+    }
+
+    @include media-breakpoint-only(md) {
+        #embed-left-block {
+            flex: 0 0 65%;
         }
     }
 </style>
