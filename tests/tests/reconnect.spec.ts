@@ -25,7 +25,8 @@ test.describe('Connection', () => {
     await startContainer(container);
 
     //await page.goto('http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/mousewheel.json');
-
-    await page.waitForResponse(response => response.status() === 200, { timeout: 180_000 });
+    await expect(page.locator("button#menuIcon")).toBeVisible({
+      timeout: 180_000
+    });
   });
 });

@@ -6,7 +6,6 @@ on:
   release:
     types: [created]
   pull_request:
-    types: [labeled, synchronize]
 
 jobs:
   build-front:
