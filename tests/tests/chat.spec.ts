@@ -1,8 +1,9 @@
-import {chromium, expect, Page, test} from '@playwright/test';
-import { assertLogMessage, startRecordLogs} from './utils/log';
+import {chromium, expect, test} from '@playwright/test';
+import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
-import {inViewport} from "./utils/viewport";
+import {openChat} from "./utils/menu";
 
+test.setTimeout(60_000);
 test.describe('Chat', () => {
   test('should be fully loaded', async ({ page }) => {
     startRecordLogs(page);
@@ -12,6 +13,7 @@ test.describe('Chat', () => {
 
     await login(page, 'Alice', 2);
     await assertLogMessage(page, 'Chat fully loaded');
+    abortRecordLogs(page);
   });
 
   test('should connect to ejabberd and show list of users', async ({ page }) => {
@@ -47,10 +49,3 @@ test.describe('Chat', () => {
     await page2.close();
   });
 });
-
-
-async function openChat(page: Page) {
-  await page.click('button.chat-btn');
-  await expect(await inViewport("#chatWindow", page)).toBeTruthy();
-  await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
-}
