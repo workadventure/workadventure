@@ -3,10 +3,10 @@
     import { localStreamStore } from "../Stores/MediaStore";
     import SoundMeterWidget from "./SoundMeterWidget.svelte";
     import { onDestroy, onMount } from "svelte";
-    import {getColorByString, getTextColorByBackgroundColor, srcObject} from "./Video/utils";
+    import { getColorByString, getTextColorByBackgroundColor, srcObject } from "./Video/utils";
     import LL from "../i18n/i18n-svelte";
     import Woka from "./Woka/Woka.svelte";
-    import {localUserStore} from "../Connexion/LocalUserStore";
+    import { localUserStore } from "../Connexion/LocalUserStore";
 
     let stream: MediaStream | null;
     let userName = localUserStore.getName();
@@ -56,24 +56,22 @@
         </div>
     {:else if $localStreamStore.type === "success" && $localStreamStore.stream}
         <div
-                class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
+            class="nametag-webcam-container container-end media-box-camera-on-size video-on-responsive-height
   "
         >
             <i class="tw-flex">
                 <span
-                        style="background-color: {backgroundColor}; color: {textColor};"
-                        class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{$LL.camera.my.nameTag()}</span
+                    style="background-color: {backgroundColor}; color: {textColor};"
+                    class="nametag-text nametag-shape tw-pr-3 tw-pl-5 tw-h-4 tw-max-h-8">{$LL.camera.my.nameTag()}</span
                 >
             </i>
         </div>
         <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1">
             <div class="tw-flex">
-                <Woka userId={-1} placeholderSrc={""} customHeight="20px" customWidth="20px"/>
+                <Woka userId={-1} placeholderSrc={""} customHeight="20px" customWidth="20px" />
             </div>
         </div>
-        <div
-            class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all"
-        >
+        <div class="my-webcam-container tw-z-[250] tw-bg-dark-blue/50 tw-rounded tw-transition-all">
             <video
                 class="tw-flex tw-h-full tw-max-w-full tw-m-auto tw-rounded"
                 use:srcObject={stream}
@@ -81,9 +79,9 @@
                 muted
                 playsinline
             />
-        <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
-            <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
-        </div>
+            <div class="voice-meter-my-container tw-justify-end tw-z-[251] tw-pr-2 tw-absolute">
+                <SoundMeterWidget volume={$localVolumeStore} classcss="tw-absolute" barColor="blue" />
+            </div>
         </div>
     {/if}
 </div>

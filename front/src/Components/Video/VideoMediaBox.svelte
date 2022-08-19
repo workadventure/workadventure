@@ -82,7 +82,9 @@
             </i>
         </div>
         <div class="woka-webcam-container container-end video-on-responsive-height tw-pb-1 tw-left-0">
-            <div class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}">
+            <div
+                class="tw-flex {($constraintStore && $constraintStore.video !== false) || minimized ? '' : 'no-video'}"
+            >
                 <Woka userId={peer.userId} placeholderSrc={""} customHeight="20px" customWidth="20px" />
             </div>
         </div>

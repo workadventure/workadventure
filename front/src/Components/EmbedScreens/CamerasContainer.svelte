@@ -9,15 +9,13 @@
     $: clickable = !full;
 </script>
 
-<aside class="cameras-container tw-self-end" class:full
-       transition:fly="{{ x: 200, duration: 100 }}"
->
+<aside class="cameras-container tw-self-end" class:full transition:fly={{ x: 200, duration: 100 }}>
     <div class="other-cameras tw-flex tw-flex-col-reverse">
-    {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
-        {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
-            <MediaBox streamable={peer} isClickable={clickable}/>
-        {/if}
-    {/each}
+        {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
+            {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
+                <MediaBox streamable={peer} isClickable={clickable} />
+            {/if}
+        {/each}
     </div>
 </aside>
 

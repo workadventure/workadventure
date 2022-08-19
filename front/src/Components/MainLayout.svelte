@@ -18,7 +18,7 @@
     import ReportMenu from "./ReportMenu/ReportMenu.svelte";
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningContainer from "./WarningContainer/WarningContainer.svelte";
-    import { isMediaBreakpointDown, isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
+    import {isMediaBreakpointDown, isMediaBreakpointUp} from "../Utils/BreakpointsUtils";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import FollowMenu from "./FollowMenu/FollowMenu.svelte";
     import { followStateStore } from "../Stores/FollowStore";
@@ -161,7 +161,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../style/breakpoints.scss";
+    @import "../../style/breakpoints.scss";
 
     #main-layout {
         display: grid;
