@@ -299,7 +299,11 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
-  test:
+  end-to-end-tests:
+    name: "End to end tests with ${{ matrix.browser }}"
+    strategy:
+      matrix:
+        browser: [ 'chromium', 'firefox', 'webkit' ]
     needs:
       - build-front
       - build-chat
@@ -319,7 +323,7 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps ${{ matrix.browser }}
         working-directory: tests
       - name: 'Setup .env file'
         run: cp .env.template .env
@@ -365,7 +369,7 @@ jobs:
       - name: Wait for environment to Start
         run: sleep 30
       - name: Run Playwright tests
-        run: npm run test-prod-like
+        run: npm run test-prod-like -- --project=${{ matrix.browser }}
         working-directory: tests
       - name: Display docker-compose logs on failure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
