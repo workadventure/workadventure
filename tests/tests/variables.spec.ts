@@ -130,6 +130,7 @@ test.describe('Variables', () => {
 
   test('cache doesnt prevent setting a variable in case the map changes', async ({
     page,
+    browser,
   }) => {
     // Let's start by visiting a map that DOES not have the variable.
 
@@ -156,8 +157,8 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
