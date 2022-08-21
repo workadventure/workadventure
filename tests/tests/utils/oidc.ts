@@ -2,8 +2,8 @@ import { Page } from '@playwright/test';
 
 export async function oidcLogin(
     page: Page,
-    userName: string = 'User1',
-    password: string = 'pwd'
+    userName = 'User1',
+    password = 'pwd'
 ) {
     await page.click('#menuIcon img:first-child');
     await page.click('a:has-text("Sign in")');

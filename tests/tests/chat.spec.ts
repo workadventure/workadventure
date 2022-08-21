@@ -1,7 +1,7 @@
 import {expect, Page, test} from '@playwright/test';
-import { assertLogMessage, startRecordLogs} from './utils/log';
+import { startRecordLogs } from './utils/log';
 import { login } from './utils/roles';
-import {inViewport} from "./utils/viewport";
+import {expectInViewport} from "./utils/viewport";
 
 test.describe('Chat', () => {
   test('should connect to ejabberd and show list of users', async ({ page, browser }) => {
@@ -40,6 +40,6 @@ test.describe('Chat', () => {
 
 async function openChat(page: Page) {
   await page.click('button.chat-btn');
-  await expect(await inViewport("#chatWindow", page)).toBeTruthy();
+  await expectInViewport("#chatWindow", page);
   await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
 }

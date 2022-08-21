@@ -1,9 +1,9 @@
 import axios from "axios";
-const fs = require('fs');
+import * as fs from 'fs';
 
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN;
 
-export async function getPusherDump(): Promise<any> {
+export async function getPusherDump(): Promise<Record<string, unknown>> {
     let url = 'http://pusher.workadventure.localhost/dump?token='+ADMIN_API_TOKEN;
     if (fs.existsSync('/project')) {
         // We are inside a container. Let's use a direct route
@@ -16,7 +16,7 @@ export async function getPusherDump(): Promise<any> {
     })).data;
 }
 
-export async function getBackDump(): Promise<any> {
+export async function getBackDump(): Promise<Array<{roomUrl: string}>> {
     let url = 'http://api.workadventure.localhost/dump?token='+ADMIN_API_TOKEN;
     if (fs.existsSync('/project')) {
         // We are inside a container. Let's use a direct route

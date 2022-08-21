@@ -1,7 +1,7 @@
-import {expect, test} from '@playwright/test';
+import {test} from '@playwright/test';
 import { login } from './utils/roles';
 import {evaluateScript} from "./utils/scripting";
-import {inViewport, outViewport} from "./utils/viewport";
+import {expectInViewport, expectOutViewport} from "./utils/viewport";
 
 test.describe('Scripting chat functions', () => {
     test('can open / close chat', async ({ page}) => {
@@ -11,22 +11,18 @@ test.describe('Scripting chat functions', () => {
 
         await login(page);
 
-        await page.waitForTimeout(1000);
-
-        await expect(await outViewport("#chatWindow", page)).toBeFalsy();
+        await expectOutViewport("#chatWindow", page);
 
         await evaluateScript(page, async () => {
-            // @ts-ignore
             return WA.chat.open();
         });
 
-        await expect(await inViewport("#chatWindow", page)).toBeTruthy();
+        await expectInViewport("#chatWindow", page);
 
         await evaluateScript(page, async () => {
-            // @ts-ignore
             return WA.chat.close();
         });
 
-        await expect(await outViewport("#chatWindow", page)).toBeFalsy();
+        await expectOutViewport("#chatWindow", page);
     });
 });
