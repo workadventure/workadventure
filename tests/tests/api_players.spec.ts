@@ -1,10 +1,12 @@
+
+import {} from "../../front/packages/iframe-api-typings/iframe_api";
+//import {} from "../../front/src/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {BrowserTooOldError} from "../../front/src/Stores/Errors/BrowserTooOldError";
 
 test.describe('API WA.players', () => {
   test('enter leave events are received', async ({ page, browser }) => {
@@ -368,10 +370,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    await page.waitForTimeout(2000);
-
-    await expect(gotExpectedNotification).toBe(true);
-    await expect(gotUnexpectedNotification).toBe(false);
+    await expect.poll(() => gotExpectedNotification).toBe(true);
+    await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
   });

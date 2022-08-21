@@ -9,6 +9,18 @@ npm install
 npx playwright install --with-deps
 ```
 
+## Build typings
+
+In order to remove warnings in your IDE, you need to build the typings from the scripting API.
+
+Run:
+
+```console
+docker-compose exec front yarn run build-typings
+```
+
+If you change the scripting API, you will need to re-run this command.
+
 ## Run on development environment
 
 Start WorkAdventure with:

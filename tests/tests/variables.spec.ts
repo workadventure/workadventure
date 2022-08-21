@@ -1,4 +1,4 @@
-import { expect, test, chromium } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import * as fs from 'fs';
 import {
   rebootBack,
