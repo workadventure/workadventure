@@ -136,7 +136,7 @@ jobs:
       - name: "Pretty"
         run: yarn run pretty-check
         working-directory: "front/chat"
-        
+
       - name: "Generate i18n files"
         run: yarn run typesafe-i18n
         working-directory: "front/chat"
@@ -158,7 +158,7 @@ jobs:
       - name: "Lint"
         run: yarn run lint
         working-directory: "front/chat"
-        
+
       # TODO active
       #- name: "Typecheck"
       #  run: yarn run typecheck
@@ -385,3 +385,33 @@ jobs:
       - name: "Prettier"
         run: yarn pretty-check
         working-directory: "desktop/local-app"
+
+  continuous-integration-end-to-end-tests:
+    name: "Continuous Integration checking End To End tests"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: "Install dependencies"
+        run: npm ci
+        working-directory: "tests"
+
+      - name: "Install front dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "front"
+
+      - name: "Build API typings"
+        run: yarn run build-typings
+        working-directory: "front"
+
+      - name: "Lint"
+        run: yarn lint
+        working-directory: "tests"

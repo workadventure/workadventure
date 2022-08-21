@@ -1,6 +1,7 @@
-/// <reference path="../../node_modules/@workadventure/iframe-api-typings/iframe_api.d.ts" />
+//import {} from "../../../front/src/iframe_api";
+import {} from "../../../front/packages/iframe-api-typings/iframe_api";
 
-import {Frame, Page} from "@playwright/test";
+import {expect, Frame, Page} from "@playwright/test";
 import {ElementHandle, JSHandle} from "playwright-core";
 
 // Types copied from "playwright-core" because they are not exposed.
@@ -52,19 +53,10 @@ export async function evaluateScript<R, Arg>(page: Page, pageFunction: PageFunct
 
 export async function getScriptFrame(page: Page, title: string) : Promise<Frame> {
     let frame: Frame | undefined;
-    let i = 0;
-    do {
-        frame = await getFrameWithTitle(page, title);
-        if (frame) {
-            break;
-        }
-        i++;
-        await page.waitForTimeout(100);
-    } while (i < 50);
 
-    if (!frame) {
-        throw new Error("Unable to find the script frame. Is there one defined on the map?");
-    }
+    await expect.poll(async () => frame = await getFrameWithTitle(page, title), {
+        message: "Unable to find the script frame. Is there one defined on the map?"
+    }).toBeDefined()
 
     return frame;
 }

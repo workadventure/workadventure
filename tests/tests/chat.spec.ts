@@ -1,6 +1,7 @@
 import {expect, Page, test} from '@playwright/test';
 import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
+import {expectInViewport} from "./utils/viewport";
 import {openChat} from "./utils/menu";
 
 const WAIT_FOR_INIT_OF_USERS_LIST = 2_000;
@@ -77,7 +78,6 @@ test.describe('Chat', () => {
 async function getChat(page: Page){
   return page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow');
 }
-
 
 function getUniqueNickname(name: string){
   return `${name}_${Date.now().toString().split("").reverse().join("")}`.substring(0, 8);
