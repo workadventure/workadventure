@@ -72,7 +72,7 @@ test.describe('Variables', () => {
 
     const pusherDump = await getPusherDump();
     //console.log('pusherDump', pusherDump);
-    expect(
+    await expect(
       pusherDump[
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
       ]
@@ -179,7 +179,7 @@ test.describe('Variables', () => {
       await timeout(15000);
       rooms = await getPusherRooms();
     }
-    expect(
+    await expect(
         rooms[
             'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
             ]

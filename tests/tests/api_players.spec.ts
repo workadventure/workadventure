@@ -92,7 +92,7 @@ test.describe('API WA.players', () => {
       }
     });
 
-    expect(myvar).toBe(12);
+    await expect(myvar).toBe(12);
 
     await page2.close();
   });
@@ -185,16 +185,16 @@ test.describe('API WA.players', () => {
     }
 
     // We should not be able to read a non public variable from another user
-    expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_non_persisted', page2)).toBe('public_non_persisted');
-    expect(await readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
+    await expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe('public_non_persisted');
+    await expect.poll(() =>  readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
 
     // The user himself should always be allowed to read his own variables
-    expect(await readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
-    expect(await readLocalPlayerVariable('non_public_non_persisted', page)).toBe('non_public_non_persisted');
-    expect(await readLocalPlayerVariable('public_non_persisted', page)).toBe('public_non_persisted');
-    expect(await readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe('non_public_non_persisted');
+    await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe('public_non_persisted');
+    await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -220,16 +220,16 @@ test.describe('API WA.players', () => {
     }));*/
 
     // Non persisted variables should be gone now
-    expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect.poll(() => readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
 
     // The user himself should always be allowed to read his own persisted variables
-    expect(await readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
-    expect(await readLocalPlayerVariable('non_public_non_persisted', page)).toBe(undefined);
-    expect(await readLocalPlayerVariable('public_non_persisted', page)).toBe(undefined);
-    expect(await readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe(undefined);
+    await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe(undefined);
+    await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
 
     await page2.close();
 
@@ -292,7 +292,7 @@ test.describe('API WA.players', () => {
 
       return WA.player.state.myvar;
     }, "embedded_iframe");
-    expect(variable).toBe(12);
+    await expect(variable).toBe(12);
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
