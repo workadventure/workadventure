@@ -1,7 +1,7 @@
-import {expect, Page} from "@playwright/test";
+import {Page} from "@playwright/test";
 
 // https://stackoverflow.com/a/68848306
-function isIntersectingViewport(selector: string, page: Page): Promise<boolean> {
+/*function isIntersectingViewport(selector: string, page: Page): Promise<boolean> {
     return page.locator(selector).evaluate(async element => {
         const visibleRatio: number = await new Promise(resolve => {
             const observer = new IntersectionObserver(entries => {
@@ -16,7 +16,7 @@ function isIntersectingViewport(selector: string, page: Page): Promise<boolean> 
         });
         return visibleRatio > 0;
     });
-}
+}*/
 
 export async function expectInViewport(selector: string, page: Page) {
     // FIXME: why not use "isVisible"???
