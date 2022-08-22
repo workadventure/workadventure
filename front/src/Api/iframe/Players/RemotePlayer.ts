@@ -1,6 +1,8 @@
 import { AddPlayerEvent } from "../../Events/AddPlayerEvent";
 import { Observable, Subject } from "rxjs";
 import { PlayerPosition } from "../../Events/PlayerPosition";
+import { ActionsMenuAction } from "../ui";
+import { sendToWorkadventure } from "../IframeApiContribution";
 
 export const remotePlayers = new Map<number, RemotePlayer>();
 
@@ -8,7 +10,7 @@ export interface RemotePlayerInterface {
     /**
      * A unique ID for this player. Each character on the map has a unique ID
      */
-    readonly id: number;
+    readonly playerId: number;
     /**
      * The displayed name for this player
      */
@@ -44,7 +46,7 @@ export type ReadOnlyState = { onVariableChange(key: string): Observable<unknown>
 };
 
 export class RemotePlayer implements RemotePlayerInterface {
-    private _userId: number;
+    private _playerId: number;
     private _name: string;
     private _userUuid: string;
     private _availabilityStatus: string;
@@ -53,9 +55,10 @@ export class RemotePlayer implements RemotePlayerInterface {
     private _variables: Map<string, unknown>;
     private _variablesSubjects = new Map<string, Subject<unknown>>();
     public readonly state: ReadOnlyState;
+    private actions: Map<string, ActionsMenuAction> = new Map<string, ActionsMenuAction>();
 
     public constructor(addPlayerEvent: AddPlayerEvent) {
-        this._userId = addPlayerEvent.userId;
+        this._playerId = addPlayerEvent.playerId;
         this._name = addPlayerEvent.name;
         this._userUuid = addPlayerEvent.userUuid;
         this._availabilityStatus = addPlayerEvent.availabilityStatus;
@@ -92,8 +95,8 @@ export class RemotePlayer implements RemotePlayerInterface {
         );
     }
 
-    get id(): number {
-        return this._userId;
+    get playerId(): number {
+        return this._playerId;
     }
 
     get name(): string {
@@ -104,6 +107,9 @@ export class RemotePlayer implements RemotePlayerInterface {
         return this._userUuid;
     }
 
+    /**
+     * Todo
+     */
     /*get availabilityStatus(): string {
         return this._availabilityStatus;
     }*/
@@ -137,6 +143,31 @@ export class RemotePlayer implements RemotePlayerInterface {
         if (observable) {
             observable.next(value);
         }
+    }
+
+    public addAction(key: string, callback: () => void): ActionsMenuAction {
+        const newAction = new ActionsMenuAction(this, key, callback);
+        this.actions.set(key, newAction);
+        sendToWorkadventure({
+            type: "addActionsMenuKeyToRemotePlayer",
+            data: { id: this._playerId, actionKey: key },
+        });
+        return newAction;
+    }
+
+    public callAction(key: string): void {
+        const action = this.actions.get(key);
+        if (action) {
+            action.call();
+        }
+    }
+
+    public removeAction(key: string): void {
+        this.actions.delete(key);
+        sendToWorkadventure({
+            type: "removeActionsMenuKeyFromRemotePlayer",
+            data: { id: this._playerId, actionKey: key },
+        });
     }
 }
 

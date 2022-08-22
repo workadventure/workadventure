@@ -6,7 +6,7 @@ export const isSetVariableEvent = z.object({
 });
 
 export const isSetVariableIframeEvent = z.object({
-    type: z.enum(["setVariable"]),
+    type: z.literal("setVariable"),
     data: isSetVariableEvent,
 });
 

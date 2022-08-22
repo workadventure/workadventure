@@ -156,7 +156,7 @@ export class RemotePlayersRepository {
      */
     public static toIframeAddPlayerEvent(player: MessageUserJoined): AddPlayerEvent {
         return {
-            userId: player.userId,
+            playerId: player.userId,
             userUuid: player.userUuid,
             name: player.name,
             position: {

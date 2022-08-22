@@ -25,7 +25,7 @@ export type { Menu } from "./Api/iframe/Ui/Menu";
 export type { ActionMessage } from "./Api/iframe/Ui/ActionMessage";
 export type { EmbeddedWebsite } from "./Api/iframe/Room/EmbeddedWebsite";
 export type { Area } from "./Api/iframe/Area/Area";
-export type { RemotePlayer, ActionsMenuAction } from "./Api/iframe/ui";
+export type { ActionsMenuAction } from "./Api/iframe/ui";
 
 const globalState = createState();
 
