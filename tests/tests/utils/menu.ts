@@ -2,7 +2,13 @@ import {expect, Page} from "@playwright/test";
 import {expectInViewport} from "./viewport";
 
 export async function openChat(page: Page) {
-    await page.click('button.chat-btn');
-    await expectInViewport("#chatWindow", page);
-    await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
+    try {
+        // If chat is opened
+        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/, {timeout: 100});
+    } catch {
+        // If chat is not opened
+        await page.click('button.chat-btn');
+        await expectInViewport("#chatWindow", page);
+        await expect(page.locator('button.chat-btn')).toHaveClass(/border-top-light/);
+    }
 }
