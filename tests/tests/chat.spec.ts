@@ -18,10 +18,10 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('should connect to ejabberd and show list of users', async () => {
-      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      const chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await page.waitForTimeout(10_000);
       console.log("USERS DIV SELECTED :", await chat.page().$$("#users"));
-      await checkNameInChat(page, chat, nickname);
+      await checkNameInChat(page, nickname);
 
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
@@ -35,16 +35,16 @@ test.describe('Chat', () => {
       await openChat(page2);
       const chat2 = page2.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
 
-      await checkNameInChat(page2, chat2, nickname);
-      await checkNameInChat(page2, chat2, nickname2);
+      await checkNameInChat(page2, nickname);
+      await checkNameInChat(page2, nickname2);
 
       await page2.close();
     });
 
 
     await test.step('enter and exit from live zone', async () => {
-      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page, chat, nickname);
+      const chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      await checkNameInChat(page, nickname);
 
       await page.locator('#game').focus();
 
@@ -57,21 +57,21 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
-      let chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page, chat, nickname);
+      let chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      await checkNameInChat(page, nickname);
 
       await stopContainer(ejabberd);
       await expect(chat).toContainText("Connection to presence server");
       await startContainer(ejabberd);
-      await checkNameInChat(page, chat, nickname);
+      await checkNameInChat(page, nickname);
 
       const pusher = await findContainer('pusher');
       await stopContainer(pusher);
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page, chat, nickname);
+      chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      await checkNameInChat(page, nickname);
     });
   });
 
@@ -166,9 +166,9 @@ test.describe('Chat', () => {
   });*/
 });
 
-async function checkNameInChat(page: Page, locator: Locator, name: string){
+async function checkNameInChat(page: Page, name: string){
   //await page.waitForTimeout(5_000);
-  await expect(locator.locator('#users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
+  await expect(page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 
 function getUniqueNickname(name: string){
