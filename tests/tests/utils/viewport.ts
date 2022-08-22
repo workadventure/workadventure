@@ -20,10 +20,12 @@ function isIntersectingViewport(selector: string, page: Page): Promise<boolean> 
 
 export async function expectInViewport(selector: string, page: Page) {
     // FIXME: why not use "isVisible"???
-    await expect.poll(() => isIntersectingViewport(selector, page)).toBeTruthy();
+    //await expect.poll(() => isIntersectingViewport(selector, page)).toBeTruthy();
+    await page.locator(selector).isVisible();
 }
 
 export async function expectOutViewport(selector: string, page: Page) {
     // FIXME: why not use "isNotVisible"???
-    await expect.poll(() => isIntersectingViewport(selector, page)).toBeFalsy();
+    //await expect.poll(() => isIntersectingViewport(selector, page)).toBeFalsy();
+    await page.locator(selector).isHidden();
 }
