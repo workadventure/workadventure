@@ -45,11 +45,11 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
-import { mapStorageClient } from "../Services/MapStorageClient";
 import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
+import { getMapStorageClient } from "../Services/MapStorageClient";
 
 export type ConnectCallback = (user: User, group: Group) => void;
 export type DisconnectCallback = (user: User, group: Group) => void;
@@ -132,7 +132,7 @@ export class GameRoom implements BrothersFinder {
         );
 
         if (ENABLE_FEATURE_MAP_EDITOR) {
-            mapStorageClient.ping(new PingMessage(), (err, res) => {
+            getMapStorageClient().ping(new PingMessage(), (err, res) => {
                 console.log(`==================================`);
                 console.log(err);
                 console.log(JSON.stringify(res));
