@@ -171,7 +171,7 @@ test.describe('Variables', () => {
 
     // Let's check the pusher getRooms endpoint returns 2 users on the map
     await expect.poll(async () => {
-      let rooms = await getPusherRooms();
+      const rooms = await getPusherRooms();
       return rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'];
     }).toBe(2);
 
