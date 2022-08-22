@@ -48,7 +48,6 @@ import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
 import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
 import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
-import { isRemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -290,7 +289,7 @@ export const isIframeResponseEvent = z.union([
     }),
     z.object({
         type: z.literal("remotePlayerClickedEvent"),
-        data: isRemotePlayerClickedEvent,
+        data: isAddPlayerEvent,
     }),
     z.object({
         type: z.literal("actionsMenuActionClickedEvent"),

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { isProximityMeetingPlayer } from "./ProximityMeetingPlayer";
+import { isAddPlayerEvent } from "../AddPlayerEvent";
 
 export const isParticipantProximityMeetingEvent = z.object({
-    user: isProximityMeetingPlayer,
+    user: isAddPlayerEvent,
 });
 
 export type ParticipantProximityMeetingEvent = z.infer<typeof isParticipantProximityMeetingEvent>;

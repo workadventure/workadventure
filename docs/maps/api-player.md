@@ -258,8 +258,8 @@ WA.player.state.saveVariable("foo", "value", {
 });
 ```
 
-### Reading a player variable 
-A player variable can be read by calling its key from the player's state. 
+### Reading a player variable
+A player variable can be read by calling its key from the player's state.
 
 Example:
 ```javascript
@@ -310,7 +310,7 @@ twice with the same user. We will call those users connected several times to Wo
 
 Brothers happen to share the same player variables.
 
-Also, if one browser sets a variable to a new value, other brothers can listen to variable 
+Also, if one browser sets a variable to a new value, other brothers can listen to variable
 changes using `WA.player.state.onVariableChange`. They will receive the new value
 if they are in the same room. So far, there is a limitation preventing brothers from listening to variable changes if
 they are in different rooms in the same world.
@@ -319,7 +319,7 @@ they are in different rooms in the same world.
 
 
 
-### Move player to position
+## Move player to position
 ```typescript
 WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
 ```
@@ -350,7 +350,7 @@ const result = await WA.player.moveTo(250, 250, 10);
 // result: { x: number, y: number, cancelled: boolean }
 ```
 
-### Set the outline color of the player
+## Set the outline color of the player
 ```
 WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
 WA.player.removeOutlineColor(): Promise<void>;
@@ -372,7 +372,7 @@ browsers automatically).
 
 ![](images/outlines.png)
 
-### Detecting when the user enters/leaves a meeting
+## Detecting when the user enters/leaves a meeting
 
 ```ts
 WA.player.proximityMeeting.onJoin(): Subscription
@@ -384,7 +384,7 @@ The event is triggered when the user enters or leaves a proximity meeting.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayers) => {
+WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayerInterface[]) => {
     WA.chat.sendChatMessage("You joined a proximity chat", "System");
 });
 
@@ -393,7 +393,7 @@ WA.player.proximityMeeting.onLeave().subscribe(async () => {
 });
 ```
 
-### Detecting when a participant enters/leaves a meeting
+## Detecting when a participant enters/leaves the current meeting
 
 ```ts
 WA.player.proximityMeeting.onParticipantJoin(): Subscription
@@ -405,11 +405,11 @@ The event is triggered when a user enters or leaves a proximity meeting.
 Example:
 
 ```ts
-WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayer) => {
+WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
     WA.chat.sendChatMessage("A participant joined the proximity chat", "System");
 });
 
-WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayer) => {
+WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
     WA.chat.sendChatMessage("A participant left the proximity chat", "System");
 });
 ```

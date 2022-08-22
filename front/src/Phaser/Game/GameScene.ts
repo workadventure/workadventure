@@ -48,6 +48,7 @@ import { PathfindingManager } from "../../Utils/PathfindingManager";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
+    MessageUserJoined,
     MessageUserMovedInterface,
     OnConnectInterface,
     PositionInterface,
@@ -1042,22 +1043,23 @@ export class GameScene extends DirtyScene {
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
-        let oldUsers = new Map<number, RemotePlayer>();
+        let oldUsers = new Map<number, MessageUserJoined>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
-            const newUsers = new Map<number, RemotePlayer>();
+            const newUsers = new Map<number, MessageUserJoined>();
 
-            for (const userId of peers.keys()) {
-                const player = this.MapPlayersByKey.get(userId);
-                if (!(player instanceof RemotePlayer)) {
-                    throw new Error("Cannot find a remote player on checking proximity chat updating");
+            for (const playerId of peers.keys()) {
+                for (const player of this.remotePlayersRepository.getPlayers()) {
+                    if (player.userId === playerId) {
+                        newUsers.set(playerId, player);
+                        break;
+                    }
                 }
-                newUsers.set(userId, player);
             }
 
             // Join
             if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
-                iframeListener.sendJoinProximityMeetingEvent(Object.values(newUsers));
+                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
             }
 
             // Left
@@ -1066,6 +1068,7 @@ export class GameScene extends DirtyScene {
             }
 
             // Participant Join
+            console.log(oldPeersNumber);
             if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 
@@ -2309,9 +2312,19 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            iframeListener.sendRemotePlayerClickedEvent({
-                id: player.userId,
-            });
+            let userFound = undefined;
+            for (const user of this.remotePlayersRepository.getPlayers()) {
+                if (user.userId === player.userId) {
+                    userFound = user;
+                }
+            }
+
+            if (!userFound) {
+                console.error("Undefined clicked player!");
+                return;
+            }
+
+            iframeListener.sendRemotePlayerClickedEvent(userFound);
         });
     }
 

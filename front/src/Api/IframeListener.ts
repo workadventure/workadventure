@@ -41,11 +41,11 @@ import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
-import { RemotePlayer } from "../Phaser/Entity/RemotePlayer";
 import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
 import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
-import { RemotePlayerInitializer } from "./Types/Initializers/RemotePlayerInitializer";
+import { MessageUserJoined } from "../Connexion/ConnexionModels";
+import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
+import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -545,44 +545,56 @@ class IframeListener {
         );
     }
 
-    sendJoinProximityMeetingEvent(users: RemotePlayer[]) {
-        const usersSerialized = users.map((user) => {
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
             return {
-                userId: user.userId,
+                playerId: user.userId,
+                name: user.name,
                 userUuid: user.userUuid,
-                name: user.playerName,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
             };
         });
 
         this.postMessage({
             type: "joinProximityMeetingEvent",
             data: {
-                users: usersSerialized,
+                users: formattedUsers,
             } as JoinProximityMeetingEvent,
         });
     }
 
-    sendParticipantJoinProximityMeetingEvent(user: RemotePlayer) {
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "participantJoinProximityMeetingEvent",
             data: {
                 user: {
-                    userId: user.userId,
+                    playerId: user.userId,
+                    name: user.name,
                     userUuid: user.userUuid,
-                    name: user.playerName,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
                 },
             } as ParticipantProximityMeetingEvent,
         });
     }
 
-    sendParticipantLeaveProximityMeetingEvent(user: RemotePlayer) {
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "participantLeaveProximityMeetingEvent",
             data: {
                 user: {
-                    userId: user.userId,
+                    playerId: user.userId,
+                    name: user.name,
                     userUuid: user.userUuid,
-                    name: user.playerName,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
                 },
             } as ParticipantProximityMeetingEvent,
         });
@@ -665,10 +677,18 @@ class IframeListener {
         }
     }
 
-    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
+    sendRemotePlayerClickedEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "remotePlayerClickedEvent",
-            data: event,
+            data: {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            },
         });
     }
 
