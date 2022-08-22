@@ -18,8 +18,9 @@ export class AppService {
         return await this.mapsManager.getMap(path);
     }
 
-    public handleEditMapMessage(request: MapStorageEditMapMessage): void {
-        console.log(request.editMapMessage);
+    public handleMapStorageEditMapMessage(request: MapStorageEditMapMessage): void {
+        console.log(request);
+        console.log(request.editMapMessage.message);
         switch (request.editMapMessage.message?.$case) {
             case "modifyAreaMessage": {
                 const data = request.editMapMessage.message.modifyAreaMessage;

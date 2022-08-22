@@ -29,10 +29,10 @@ export class AppController implements MapStorageController {
         return request;
     }
 
-    handleEditMapMessage(
+    handleMapStorageEditMapMessage(
         request: MapStorageEditMapMessage
     ): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
-        this.appService.handleEditMapMessage(request);
+        this.appService.handleMapStorageEditMapMessage(request);
         return {};
     }
 }

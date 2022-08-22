@@ -1070,17 +1070,12 @@ export class SocketManager {
     }
 
     handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
-        console.log(message.getModifyareamessage());
         const mapStorageMessage = new MapStorageEditMapMessage();
         mapStorageMessage.setEditmapmessage(message);
         mapStorageMessage.setMapkey(room.roomUrl.split("~")[1]);
 
-        console.log(message);
+        getMapStorageClient().handleMapStorageEditMapMessage(mapStorageMessage, (err, res) => {});
 
-        getMapStorageClient().handleEditMapMessage(mapStorageMessage, (err, res) => {
-            // console.log("CALLBACK FROM MAP STORAGE CLIENT HANDLE EDIT MAP MESSAGE");
-            // console.log(res);
-        });
         if (message.hasModifyareamessage()) {
             const msg = message.getModifyareamessage();
             if (msg) {
