@@ -6,6 +6,13 @@ services:
 
   front:
     image: thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: front/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
     labels:
@@ -20,11 +27,25 @@ services:
 
   chat:
     image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: front/chat/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
 
   pusher:
     image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: pusher/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
     environment:
@@ -32,10 +53,24 @@ services:
 
   back:
     image: thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: back/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-back:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
 
   map-storage:
     image: thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: map-storage/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-map-storage:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     command: yarn run start:prod
     volumes: []
