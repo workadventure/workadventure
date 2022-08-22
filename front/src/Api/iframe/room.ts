@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 
 import { EnterLeaveEvent } from "../Events/EnterLeaveEvent";
 import { ChangeLayerEvent } from "../Events/ChangeLayerEvent";
@@ -96,14 +96,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * @param {string} layerName Name of the layer who as defined in Tiled
      * @returns {Subject<void>} Event subject can be listen by a subscribtion
      */
-    onEnterLayer(layerName: string): Subject<void> {
+    onEnterLayer(layerName: string): Observable<void> {
         let subject = enterLayerStreams.get(layerName);
         if (subject === undefined) {
             subject = new Subject<void>();
             enterLayerStreams.set(layerName, subject);
         }
 
-        return subject;
+        return subject.asObservable();
     }
 
     /**
@@ -113,14 +113,14 @@ export class WorkadventureRoomCommands extends IframeApiContribution<Workadventu
      * @param {string} layerName Name of the layer who as defined in Tiled
      * @returns {Subject<void>} Event subject can be listen by a subscribtion
      */
-    onLeaveLayer(layerName: string): Subject<void> {
+    onLeaveLayer(layerName: string): Observable<void> {
         let subject = leaveLayerStreams.get(layerName);
         if (subject === undefined) {
             subject = new Subject<void>();
             leaveLayerStreams.set(layerName, subject);
         }
 
-        return subject;
+        return subject.asObservable();
     }
 
     /**
