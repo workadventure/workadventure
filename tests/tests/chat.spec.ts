@@ -3,7 +3,7 @@ import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
-test.setTimeout(60_000);
+test.setTimeout(120_000);
 
 test.describe('Chat', () => {
 
@@ -75,7 +75,7 @@ test.describe('Chat', () => {
     await openChat(page);
     const chat = await getChat(page);
     await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 10_000
+      timeout: 30_000
     });
 
     await stopContainer(ejabberd);
@@ -90,7 +90,7 @@ test.describe('Chat', () => {
     await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
     await startContainer(pusher);
     await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 10_000
+      timeout: 40_000
     });
   });
 });
