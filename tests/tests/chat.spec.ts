@@ -20,6 +20,10 @@ test.describe('Chat', () => {
 
     await test.step('should connect to ejabberd and show list of users', async () => {
 
+      await expect(chat).toBeDefined();
+
+      await expect(chat.locator('#users')).toBeDefined();
+
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
       });
@@ -175,7 +179,7 @@ test.describe('Chat', () => {
 });
 
 async function getChat(page: Page){
-  return page.locator('#chatWindow').frameLocator('iframe').locator('aside.chatWindow');
+  return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
 }
 
 function getUniqueNickname(name: string){
