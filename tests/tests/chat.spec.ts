@@ -24,6 +24,12 @@ test.describe('Chat', () => {
 
       await expect(chat.locator('#users')).toBeDefined();
 
+      await chat.locator('#users').highlight();
+
+      await page.waitForTimeout(5_000);
+
+      console.log(await chat.textContent());
+
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
       });
