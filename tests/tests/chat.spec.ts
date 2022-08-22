@@ -1,6 +1,7 @@
 import {expect, Page, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
+import {findContainer, startContainer, stopContainer, stopEjabberd} from "./utils/containers";
 
 test.setTimeout(60_000);
 
@@ -59,6 +60,38 @@ test.describe('Chat', () => {
     await page.keyboard.press('ArrowLeft', {delay: 1_500});
     // FIXME This expect is not working IDK why
     //await expect(chat.locator('#liveRooms')).not.toContainText('liveZone');
+  });
+
+  test('disconnect and reconnect to ejabberd and pusher', async ({ page }) => {
+
+    const ejabberd = await findContainer('ejabberd');
+
+    await page.goto(
+        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
+    );
+    const nickname = getUniqueNickname('A');
+    await login(page, nickname, 3);
+
+    await openChat(page);
+    const chat = await getChat(page);
+    await expect(chat.locator('#users')).toContainText(nickname, {
+      timeout: 10_000
+    });
+
+    await stopContainer(ejabberd);
+    await expect(chat).toContainText("Connection to presence server");
+    await startContainer(ejabberd);
+    await expect(chat.locator('#users')).toContainText(nickname, {
+      timeout: 10_000
+    });
+
+    const pusher = await findContainer('pusher');
+    await stopContainer(pusher);
+    await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
+    await startContainer(pusher);
+    await expect(chat.locator('#users')).toContainText(nickname, {
+      timeout: 10_000
+    });
   });
 });
 
