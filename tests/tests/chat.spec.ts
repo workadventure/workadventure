@@ -14,10 +14,11 @@ test.describe('Chat', () => {
     );
     const nickname = getUniqueNickname('A');
     await login(page, nickname, 2);
+    await openChat(page);
+    const chat = await getChat(page);
+    const ejabberd = await findContainer('ejabberd');
 
     await test.step('should connect to ejabberd and show list of users', async () => {
-      await openChat(page);
-      const chat = await getChat(page);
 
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
@@ -43,7 +44,6 @@ test.describe('Chat', () => {
 
 
     await test.step('enter and exit from live zone', async () => {
-      await openChat(page);
       const chat = await getChat(page);
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
@@ -60,10 +60,6 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
-      const ejabberd = await findContainer('ejabberd');
-
-      await openChat(page);
-      let chat = await getChat(page);
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
       });
@@ -80,8 +76,7 @@ test.describe('Chat', () => {
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      await openChat(page);
-      chat = await getChat(page);
+      //await openChat(page);
       await expect(chat.locator('#users')).toContainText(nickname, {
         timeout: TIMEOUT_TO_GET_LIST
       });
