@@ -168,7 +168,6 @@
             openChat();
         }
     }
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
