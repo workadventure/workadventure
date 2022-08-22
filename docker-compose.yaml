@@ -96,10 +96,6 @@ services:
       - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
       - "traefik.http.routers.chat.entryPoints=web"
       - "traefik.http.services.chat.loadbalancer.server.port=8080"
-      - "traefik.http.routers.chat-ssl.rule=Host(`chat.workadventure.localhost`)"
-      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
-      - "traefik.http.routers.chat-ssl.tls=true"
-      - "traefik.http.routers.chat-ssl.service=chat"
 
   pusher:
     image: thecodingmachine/nodejs:16

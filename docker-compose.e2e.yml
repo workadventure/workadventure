@@ -20,10 +20,6 @@ services:
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=80"
-      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front-ssl.entryPoints=websecure"
-      - "traefik.http.routers.front-ssl.tls=true"
-      - "traefik.http.routers.front-ssl.service=front"
 
   chat:
     image: thecodingmachine/workadventure-chat:${DOCKER_TAG:-develop}
@@ -36,6 +32,11 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
     volumes: []
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=80"
 
   pusher:
     image: thecodingmachine/workadventure-pusher:${DOCKER_TAG:-develop}
