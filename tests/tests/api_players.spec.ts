@@ -1,20 +1,22 @@
-import {expect, test, chromium, Page} from '@playwright/test';
+
+import {} from "../../front/packages/iframe-api-typings/iframe_api";
+//import {} from "../../front/src/iframe_api";
+import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
 import {assertLogMessage} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
-import {BrowserTooOldError} from "../../front/src/Stores/Errors/BrowserTooOldError";
 
 test.describe('API WA.players', () => {
-  test('enter leave events are received', async ({ page }) => {
+  test('enter leave events are received', async ({ page, browser }) => {
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
     );
     await login(page, 'Alice');
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/RemotePlayers/remote_players.json'
@@ -60,7 +62,7 @@ test.describe('API WA.players', () => {
     await expect(getCoWebsiteIframe(page).locator('#onPlayerLeavesException')).toHaveText('Yes');
   });
 
-  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page }) => {
+  test('Test that player B arriving after player A set his variables can read the variable.', async ({ page, browser }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
     );
@@ -74,8 +76,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
@@ -92,7 +94,7 @@ test.describe('API WA.players', () => {
       }
     });
 
-    expect(myvar).toBe(12);
+    await expect(myvar).toBe(12);
 
     await page2.close();
   });
@@ -156,8 +158,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    const browser2 = await chromium.launch();
-    const page2 = await browser2.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
 
     await page2.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
@@ -185,16 +187,16 @@ test.describe('API WA.players', () => {
     }
 
     // We should not be able to read a non public variable from another user
-    expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_non_persisted', page2)).toBe('public_non_persisted');
-    expect(await readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
+    await expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe('public_non_persisted');
+    await expect.poll(() =>  readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
 
     // The user himself should always be allowed to read his own variables
-    expect(await readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
-    expect(await readLocalPlayerVariable('non_public_non_persisted', page)).toBe('non_public_non_persisted');
-    expect(await readLocalPlayerVariable('public_non_persisted', page)).toBe('public_non_persisted');
-    expect(await readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe('non_public_non_persisted');
+    await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe('public_non_persisted');
+    await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
 
     /*console.log("PAGE 1 MY ID", await evaluateScript(page, async () => {
       await WA.onInit();
@@ -220,16 +222,16 @@ test.describe('API WA.players', () => {
     }));*/
 
     // Non persisted variables should be gone now
-    expect(await readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_non_persisted', page2)).toBe(undefined);
-    expect(await readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
+    await expect.poll(() => readRemotePlayerVariable('non_public_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('non_public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_non_persisted', page2)).toBe(undefined);
+    await expect.poll(() => readRemotePlayerVariable('public_persisted', page2)).toBe('public_persisted');
 
     // The user himself should always be allowed to read his own persisted variables
-    expect(await readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
-    expect(await readLocalPlayerVariable('non_public_non_persisted', page)).toBe(undefined);
-    expect(await readLocalPlayerVariable('public_non_persisted', page)).toBe(undefined);
-    expect(await readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_persisted', page)).toBe('non_public_persisted');
+    await expect.poll(() => readLocalPlayerVariable('non_public_non_persisted', page)).toBe(undefined);
+    await expect.poll(() => readLocalPlayerVariable('public_non_persisted', page)).toBe(undefined);
+    await expect.poll(() => readLocalPlayerVariable('public_persisted', page)).toBe('public_persisted');
 
     await page2.close();
 
@@ -292,7 +294,7 @@ test.describe('API WA.players', () => {
 
       return WA.player.state.myvar;
     }, "embedded_iframe");
-    expect(variable).toBe(12);
+    await expect(variable).toBe(12);
   });
 
   // This test is testing that we are listening on the back side to variables modification inside Redis.
@@ -368,10 +370,8 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    await page.waitForTimeout(2000);
-
-    await expect(gotExpectedNotification).toBe(true);
-    await expect(gotUnexpectedNotification).toBe(false);
+    await expect.poll(() => gotExpectedNotification).toBe(true);
+    await expect.poll(() => gotUnexpectedNotification).toBe(false);
 
     await page2.close();
   });

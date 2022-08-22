@@ -2,8 +2,8 @@ import {expect, Page} from '@playwright/test';
 
 export async function login(
   page: Page,
-  userName: string = 'Alice',
-  characterNumber: number = 2,
+  userName = 'Alice',
+  characterNumber = 2,
   browserLanguage: string | null = 'en-US'
 ) {
   // window.localStorage.setItem('language', browserLanguage)
@@ -11,7 +11,8 @@ export async function login(
   await page.fill('input[name="loginSceneName"]', userName);
   await page.click('button.loginSceneFormSubmit');
 
-  await page.waitForTimeout(1000);
+  await expect(page.locator('button.selectCharacterSceneFormSubmit')).toBeVisible();
+
   for (let i = 0; i < characterNumber; i++) {
     await page.keyboard.press('ArrowRight');
   }

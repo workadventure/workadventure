@@ -1,11 +1,7 @@
 //import Docker from "dockerode";
 //import * as Dockerode from "dockerode";
 import Dockerode from 'dockerode';
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-const { execSync } = require('child_process');
-const path = require("path");
-const fs = require('fs');
+import { execSync } from 'child_process';
 
 /**
  * Execute Docker compose, passing the correct host directory
@@ -18,7 +14,7 @@ export function dockerCompose(command: string): void {
         param += ' -f '+overrideDockerCompose;
     }
 
-    let stdout = execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
+    /*const stdout =*/ execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }

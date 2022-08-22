@@ -6,11 +6,9 @@ on:
   release:
     types: [created]
   pull_request:
-    types: [labeled, synchronize]
 
 jobs:
   build-front:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -46,10 +44,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-front:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-chat:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -85,10 +84,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-chat:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-back:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -124,10 +124,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-back:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-pusher:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -163,10 +164,11 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-pusher:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-uploader:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -196,10 +198,11 @@ jobs:
           file: uploader/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-uploader:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-maps:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -233,10 +236,11 @@ jobs:
           file: maps/Dockerfile
           push: true
           tags: thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-maps:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
   build-map-storage:
-    if: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -247,19 +251,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16
-
-      # messages
-      - name: Install messages dependencies
-        run: yarn install --immutable
-        working-directory: messages
-
-      - name: Tag the API version
-        run: yarn run tag-version
-        working-directory: messages
-
-      - name: Build proto messages
-        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
-        working-directory: messages
 
       # docker
       - name: Set up QEMU
@@ -290,7 +281,104 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-map-storage:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
+
+  end-to-end-tests:
+    name: "End to end tests with ${{ matrix.browser }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [ 'chromium', 'firefox', 'webkit' ]
+    needs:
+      - build-front
+      - build-chat
+      - build-back
+      - build-pusher
+      - build-maps
+      - build-uploader
+      - build-map-storage
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+        working-directory: tests
+      - name: 'Setup .env file'
+        run: cp .env.template .env
+#      - name: Wait for front to build
+#        uses: lewagon/wait-on-check-action@v1.1.2
+#        with:
+#          ref: ${{ github.sha }}
+#          check-name: 'build-front'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          wait-interval: 10
+#      - name: Wait for pusher to build
+#        uses: lewagon/wait-on-check-action@v1.1.2
+#        with:
+#          ref: ${{ github.sha }}
+#          check-name: 'build-pusher'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          wait-interval: 10
+#      - name: Wait for back to build
+#        uses: lewagon/wait-on-check-action@v1.1.2
+#        with:
+#          ref: ${{ github.sha }}
+#          check-name: 'build-back'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          wait-interval: 10
+#      - name: Wait for chat to build
+#        uses: lewagon/wait-on-check-action@v1.1.2
+#        with:
+#          ref: ${{ github.sha }}
+#          check-name: 'build-chat'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          wait-interval: 10
+#      - name: Wait for map-storage to build
+#        uses: lewagon/wait-on-check-action@v1.1.2
+#        with:
+#          ref: ${{ github.sha }}
+#          check-name: 'build-map-storage'
+#          repo-token: ${{ secrets.GITHUB_TOKEN }}
+#          wait-interval: 10
+      - name: Start WorkAdventure
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Wait for environment to Start
+        run: sleep 30
+      - name: Run Playwright tests
+        run: npm run test-prod-like -- --project=${{ matrix.browser }}
+        working-directory: tests
+      - name: Display docker-compose logs on failure
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Display containers state
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml ps
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Side-load docker-compose logs in the playwright report
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs > tests/playwright-report/docker-compose.log
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: tests/playwright-report/
+          retention-days: 30
 
   deeploy:
     needs:
