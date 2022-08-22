@@ -1,7 +1,7 @@
 import {expect, Page, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
-import {findContainer, startContainer, stopContainer, stopEjabberd} from "./utils/containers";
+import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
 test.setTimeout(60_000);
 
