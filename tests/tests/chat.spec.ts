@@ -18,9 +18,9 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('should connect to ejabberd and show list of users', async () => {
-      const chat = getChat(page);
-      await chat.locator('#users').highlight();
-
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      await page.waitForTimeout(10_000);
+      console.log("USERS DIV SELECTED :", await chat.page().$$("#users"));
       await checkNameInChat(page, chat, nickname);
 
       const newBrowser = await browser.browserType().launch();
@@ -33,7 +33,7 @@ test.describe('Chat', () => {
       await login(page2, nickname2, 3);
 
       await openChat(page2);
-      const chat2 = getChat(page2);
+      const chat2 = page2.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
 
       await checkNameInChat(page2, chat2, nickname);
       await checkNameInChat(page2, chat2, nickname2);
@@ -43,7 +43,7 @@ test.describe('Chat', () => {
 
 
     await test.step('enter and exit from live zone', async () => {
-      const chat = getChat(page);
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, chat, nickname);
 
       await page.locator('#game').focus();
@@ -57,7 +57,7 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
-      let chat = getChat(page);
+      let chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, chat, nickname);
 
       await stopContainer(ejabberd);
@@ -70,7 +70,7 @@ test.describe('Chat', () => {
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      chat = getChat(page);
+      chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, chat, nickname);
     });
   });
@@ -166,13 +166,9 @@ test.describe('Chat', () => {
   });*/
 });
 
-function getChat(page: Page){
-  return page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-}
-
 async function checkNameInChat(page: Page, locator: Locator, name: string){
-  await page.waitForTimeout(5_000);
-  await expect(locator).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
+  //await page.waitForTimeout(5_000);
+  await expect(locator.locator('#users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 
 function getUniqueNickname(name: string){
