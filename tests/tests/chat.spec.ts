@@ -1,4 +1,4 @@
-import {expect, Locator, Page, test} from '@playwright/test';
+import {expect, Page, test} from '@playwright/test';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 import {findContainer, startContainer, stopContainer} from "./utils/containers";
@@ -20,7 +20,9 @@ test.describe('Chat', () => {
     await test.step('should connect to ejabberd and show list of users', async () => {
       const chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await page.waitForTimeout(10_000);
-      console.log("USERS DIV SELECTED :", await chat.page().$$("#users"));
+      
+      console.log("USERS DIV SELECTED :", await chat.locator("#users").textContent());
+
       await checkNameInChat(page, nickname);
 
       const newBrowser = await browser.browserType().launch();
@@ -33,7 +35,6 @@ test.describe('Chat', () => {
       await login(page2, nickname2, 3);
 
       await openChat(page2);
-      const chat2 = page2.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
 
       await checkNameInChat(page2, nickname);
       await checkNameInChat(page2, nickname2);
@@ -70,7 +71,6 @@ test.describe('Chat', () => {
       await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
 
       await startContainer(pusher);
-      chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, nickname);
     });
   });
