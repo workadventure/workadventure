@@ -5,6 +5,7 @@ export const isGameStateEvent = z.object({
     mapUrl: z.string(),
     nickname: z.string(),
     language: z.string().optional(),
+    playerId: z.number().optional(),
     uuid: z.string().optional(),
     startLayerName: z.string().optional(),
     tags: z.string().array(),

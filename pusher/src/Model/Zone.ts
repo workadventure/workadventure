@@ -20,7 +20,7 @@ import {
     UserMovedMessage,
     ZoneMessage,
 } from "../Messages/generated/messages_pb";
-import { ClientReadableStream } from "grpc";
+import { ClientReadableStream } from "@grpc/grpc-js";
 import { PositionDispatcher } from "../Model/PositionDispatcher";
 import Debug from "debug";
 import { BoolValue, UInt32Value } from "google-protobuf/google/protobuf/wrappers_pb";

@@ -1,4 +1,4 @@
-import { Subject } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { ChangeAreaEvent } from "../Events/ChangeAreaEvent";
 import { CreateAreaEvent } from "../Events/CreateAreaEvent";
 import { Area } from "./Area/Area";
@@ -78,14 +78,14 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone enters the area
      */
-    onEnter(areaName: string): Subject<void> {
+    onEnter(areaName: string): Observable<void> {
         let subject = enterAreaStreams.get(areaName);
         if (subject === undefined) {
             subject = new Subject<void>();
             enterAreaStreams.set(areaName, subject);
         }
 
-        return subject;
+        return subject.asObservable();
     }
 
     /**
@@ -95,14 +95,14 @@ export class WorkadventureAreaCommands extends IframeApiContribution<Workadventu
      * @param {string} areaName Area name
      * @returns {Subject<void>} An observable fired when someone leaves the area
      */
-    onLeave(areaName: string): Subject<void> {
+    onLeave(areaName: string): Observable<void> {
         let subject = leaveAreaStreams.get(areaName);
         if (subject === undefined) {
             subject = new Subject<void>();
             leaveAreaStreams.set(areaName, subject);
         }
 
-        return subject;
+        return subject.asObservable();
     }
 }
 

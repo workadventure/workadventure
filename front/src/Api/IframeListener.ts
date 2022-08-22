@@ -29,7 +29,6 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import { CameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
-import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
@@ -42,6 +41,7 @@ import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
+import { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 
