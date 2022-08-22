@@ -18,10 +18,10 @@ test.describe('Chat', () => {
     const ejabberd = await findContainer('ejabberd');
 
     await test.step('should connect to ejabberd and show list of users', async () => {
-      const chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await page.waitForTimeout(10_000);
-      
-      console.log("USERS DIV SELECTED :", await chat.locator("#users").textContent());
+
+      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users').textContent());
 
       await checkNameInChat(page, nickname);
 
@@ -44,7 +44,7 @@ test.describe('Chat', () => {
 
 
     await test.step('enter and exit from live zone', async () => {
-      const chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, nickname);
 
       await page.locator('#game').focus();
@@ -58,7 +58,7 @@ test.describe('Chat', () => {
     });
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
-      let chat = page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      let chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, nickname);
 
       await stopContainer(ejabberd);
@@ -168,7 +168,7 @@ test.describe('Chat', () => {
 
 async function checkNameInChat(page: Page, name: string){
   //await page.waitForTimeout(5_000);
-  await expect(page.locator('#chatWindow').frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
+  await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 
 function getUniqueNickname(name: string){
