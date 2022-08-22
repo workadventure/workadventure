@@ -171,7 +171,7 @@ async function getChat(page: Page){
 }
 
 async function checkNameInChat(page: Page, locator: Locator, name: string){
-  await page.waitForTimeout(1_000);
+  await page.waitForTimeout(5_000);
   await expect(locator.locator('#users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 
