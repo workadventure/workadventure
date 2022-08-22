@@ -39,8 +39,9 @@
     let usersSearching: User[] = [];
 
     export const defaultColor = "#626262";
+    // Negative lookbehind doesn't work on Safari browser
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
-    const regexUserTag = /((?![\w@]).)@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
     $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
