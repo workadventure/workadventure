@@ -2,7 +2,7 @@ import { z } from "zod";
 import { isPlayerPosition } from "./PlayerPosition";
 
 export const isAddPlayerEvent = z.object({
-    userId: z.number(),
+    playerId: z.number(),
     name: z.string(),
     userUuid: z.string(),
     availabilityStatus: z.string(),

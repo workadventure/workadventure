@@ -759,7 +759,7 @@ export class GameScene extends DirtyScene {
                     this.playersEventDispatcher.postMessage({
                         type: "addRemotePlayer",
                         data: {
-                            userId: message.userId,
+                            playerId: message.userId,
                             name: message.name,
                             userUuid: message.userUuid,
                             outlineColor: message.outlineColor,
@@ -2270,8 +2270,6 @@ ${escapedMessage}
         player.on(RemotePlayerEvent.Clicked, () => {
             iframeListener.sendRemotePlayerClickedEvent({
                 id: player.userId,
-                uuid: player.userUuid,
-                name: player.name,
             });
         });
     }
@@ -2329,7 +2327,7 @@ ${escapedMessage}
         this.playersMovementEventDispatcher.postMessage({
             type: "remotePlayerChanged",
             data: {
-                userId: message.userId,
+                playerId: message.userId,
                 position: {
                     x: message.position.x,
                     y: message.position.y,

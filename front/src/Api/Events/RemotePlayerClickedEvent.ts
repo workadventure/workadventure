@@ -2,8 +2,6 @@ import { z } from "zod";
 
 export const isRemotePlayerClickedEvent = z.object({
     id: z.number(),
-    uuid: z.string(),
-    name: z.string(),
 });
 
 /**
