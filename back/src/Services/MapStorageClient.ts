@@ -6,4 +6,11 @@ if (ENABLE_FEATURE_MAP_EDITOR) {
     console.log(`%%%%%%%%% MAP STORAGE URL: ${MAP_STORAGE_URL}`);
 }
 
-export const mapStorageClient = new MapStorageClient(MAP_STORAGE_URL, grpc.credentials.createInsecure());
+let mapStorageClient: MapStorageClient;
+
+export function getMapStorageClient(): MapStorageClient {
+    if (!mapStorageClient) {
+        mapStorageClient = new MapStorageClient(MAP_STORAGE_URL, grpc.credentials.createInsecure());
+    }
+    return mapStorageClient;
+}

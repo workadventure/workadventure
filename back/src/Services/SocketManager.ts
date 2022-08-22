@@ -66,7 +66,7 @@ import Debug from "debug";
 import { Admin } from "../Model/Admin";
 import crypto from "crypto";
 import QueryCase = QueryMessage.QueryCase;
-import { mapStorageClient } from "./MapStorageClient";
+import { getMapStorageClient } from "./MapStorageClient";
 
 const debug = Debug("sockermanager");
 
@@ -1077,7 +1077,7 @@ export class SocketManager {
 
         console.log(message);
 
-        mapStorageClient.handleEditMapMessage(mapStorageMessage, (err, res) => {
+        getMapStorageClient().handleEditMapMessage(mapStorageMessage, (err, res) => {
             // console.log("CALLBACK FROM MAP STORAGE CLIENT HANDLE EDIT MAP MESSAGE");
             // console.log(res);
         });

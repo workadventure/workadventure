@@ -19,7 +19,7 @@ export class AppService {
     }
 
     public handleEditMapMessage(request: MapStorageEditMapMessage): void {
-        console.log(request.editMapMessage.message);
+        console.log(request.editMapMessage);
         switch (request.editMapMessage.message?.$case) {
             case "modifyAreaMessage": {
                 const data = request.editMapMessage.message.modifyAreaMessage;
