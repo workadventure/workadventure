@@ -1,21 +1,10 @@
 import {expect, Page, test} from '@playwright/test';
-import {abortRecordLogs, assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 import {openChat} from "./utils/menu";
 
 test.setTimeout(60_000);
 
 test.describe('Chat', () => {
-  test('should be fully loaded', async ({ page }) => {
-    startRecordLogs(page);
-    await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
-    );
-    const nickname = getUniqueNickname('A');
-    await login(page, nickname, 2);
-    await assertLogMessage(page, 'Chat fully loaded');
-    abortRecordLogs(page);
-  });
 
   test('should connect to ejabberd and show list of users', async ({ page, browser }) => {
     await page.goto(
