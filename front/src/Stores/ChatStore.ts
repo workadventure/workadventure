@@ -197,20 +197,3 @@ function createChatSubMenuVisibilityStore() {
 }
 
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
-
-//TODO delete it with new XMPP integration
-//send list to chat iframe
-writingStatusMessageStore.subscribe((list) => {
-    try {
-        iframeListener.sendWritingStatusToChatIframe(list);
-    } catch (err) {
-        console.error(err);
-    }
-});
-peerStore.subscribe((list) => {
-    try {
-        iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
-    } catch (err) {
-        console.error(err);
-    }
-});

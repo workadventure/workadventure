@@ -73,7 +73,7 @@ test.describe('Chat', () => {
     await login(page, nickname, 3);
 
     await openChat(page);
-    const chat = await getChat(page);
+    let chat = await getChat(page);
     await expect(chat.locator('#users')).toContainText(nickname, {
       timeout: 30_000
     });
@@ -88,9 +88,12 @@ test.describe('Chat', () => {
     const pusher = await findContainer('pusher');
     await stopContainer(pusher);
     await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
+
     await startContainer(pusher);
+    await openChat(page);
+    chat = await getChat(page);
     await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 40_000
+      timeout: 30_000
     });
   });
 });
