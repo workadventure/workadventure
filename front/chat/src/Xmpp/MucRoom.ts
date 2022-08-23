@@ -855,6 +855,45 @@ export class MucRoom {
                                     from: from.toString(),
                                     type: xml.getChild("reply") ? messageType.message : messageType.reply,
                                 };
+
+                                //get reply message
+                                if (xml.getChild("reply") != undefined) {
+                                    message.targetMessageReply = {
+                                        ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                                    };
+
+                                    //get file of reply message
+                                    const files = xml.getChild("reply")?.getChild("files");
+                                    if (files != undefined) {
+                                        message.targetMessageReply.files = fileMessageManager.getFilesListFromXml(
+                                            files as Element
+                                        );
+                                    }
+                                }
+
+                                //get file of message
+                                const files = xml.getChild("files");
+                                if (files != undefined) {
+                                    message.files = fileMessageManager.getFilesListFromXml(files as Element);
+                                }
+
+                                //get list of mentions
+                                if (xml.getChild("mentions")) {
+                                    xml.getChild("mentions")
+                                        ?.getChildElements()
+                                        .forEach((value) => {
+                                            if (message.mentions == undefined) {
+                                                message.mentions = [];
+                                            }
+                                            const uuid = value.getAttr("to");
+                                            if (get(this.presenceStore).has(uuid)) {
+                                                message.mentions.push(get(this.presenceStore).get(uuid) as User);
+                                            } else if (value.getAttr("user")) {
+                                                message.mentions.push(value.getAttr("user") as User);
+                                            }
+                                        });
+                                }
+
                                 if (xml.getChild("reply") != undefined) {
                                     message.targetMessageReply = {
                                         ...(xml.getChild("reply")?.attrs as ReplyMessage),

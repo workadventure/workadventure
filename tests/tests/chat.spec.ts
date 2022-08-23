@@ -88,8 +88,8 @@ test.describe('Chat', () => {
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
       await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
       // Receive the file
-      //await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
-      //await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
 
       await chat.locator('#activeThread #settings').click();
       // Rank up user
