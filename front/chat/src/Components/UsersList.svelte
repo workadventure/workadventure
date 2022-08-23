@@ -39,7 +39,7 @@
         .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
 </script>
 
-<div id="users" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+<div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
         <!--{#if usersListUnreads()}
                             <span

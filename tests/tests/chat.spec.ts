@@ -5,7 +5,7 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
-test.setTimeout(120_000);
+test.setTimeout(60_000);
 
 test.describe('Chat', () => {
   test('main test', async ({ page, browser }) => {
@@ -24,7 +24,7 @@ test.describe('Chat', () => {
       console.log("MAIN FRAME :", await page.frameLocator('iframe#chatWorkAdventure').locator('body').textContent());
       console.log("CHAT WINDOW :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').textContent());
 
-      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users').textContent());
+      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users').textContent());
 
       await checkNameInChat(page, nickname);
 
@@ -171,7 +171,7 @@ test.describe('Chat', () => {
 
 async function checkNameInChat(page: Page, name: string){
   //await page.waitForTimeout(5_000);
-  await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
+  await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 
 function getUniqueNickname(name: string){
