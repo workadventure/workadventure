@@ -126,7 +126,6 @@ test.describe('Chat', () => {
       await page.keyboard.press('ArrowLeft', {delay: 2_000});
       await expect(chat).not.toContain('#liveRooms');
     });
-    return;
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
