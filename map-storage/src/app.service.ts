@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { MapsManager } from "./MapsManager";
-import { EditMapWithKeyMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
+import { EditMapWithKeyMessage, ModifyAreaMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
 
 @Injectable()
 export class AppService {
@@ -20,16 +20,5 @@ export class AppService {
 
     public handleEditMapWithKeyMessage(request: EditMapWithKeyMessage): void {
         console.log(request);
-        console.log(request.editMapMessage.message);
-        switch (request.editMapMessage.message?.$case) {
-            case "modifyAreaMessage": {
-                const data = request.editMapMessage.message.modifyAreaMessage;
-                console.log(data);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
     }
 }
