@@ -93,7 +93,11 @@ test.describe('Chat', () => {
 
       await chat.locator('#activeThread #settings').click();
       // Rank up user
+      // Workaround to wait the end of svelte animation
+      //eslint-disable-next-line playwright/no-wait-for-timeout
+      await page.waitForTimeout(3_000);
       await chat.locator('#activeThread .users .wa-chat-item.user').first().locator('.wa-dropdown button').click();
+      await expect(chat.locator('.users .wa-chat-item.user').first().locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
       await chat.locator('#activeThread .users .wa-chat-item.user').first().locator('.wa-dropdown .rank-up').click();
       await expect(chat.locator('#activeThread .users .wa-chat-item').last()).toHaveClass(/admin/);
       // Rank down user
@@ -112,7 +116,11 @@ test.describe('Chat', () => {
 
 
       // Walk to
-      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown button').click({delay: 1_000});
+      // Workaround to wait the end of svelte animation
+      //eslint-disable-next-line playwright/no-wait-for-timeout
+      await page.waitForTimeout(3_000);
+      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
+      await expect(chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
       await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown .walk-to').click();
       // Open timeline
       await chat.locator('#timeline #openTimeline').click();
