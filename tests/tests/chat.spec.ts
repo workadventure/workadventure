@@ -109,12 +109,10 @@ test.describe('Chat', () => {
 
       // Exit forum
       await chat.locator('#activeThread #exit').click();
-      const element = await chat.locator('.users').elementHandle();
-      await element.waitForElementState('stable');
 
 
       // Walk to
-      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
+      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown button').click({delay: 1_000});
       await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown .walk-to').click();
       // Open timeline
       await chat.locator('#timeline #openTimeline').click();
