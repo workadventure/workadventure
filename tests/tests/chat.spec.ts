@@ -22,9 +22,9 @@ test.describe('Chat', () => {
       await page.waitForTimeout(10_000);
 
       console.log("MAIN FRAME :", await page.frameLocator('iframe#chatWorkAdventure').locator('body').textContent());
-      console.log("CHAT WINDOW :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').textContent());
+      console.log("CHAT WINDOW :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').innerHTML());
 
-      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users').textContent());
+      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('div.users').textContent());
 
       await checkNameInChat(page, nickname);
 
