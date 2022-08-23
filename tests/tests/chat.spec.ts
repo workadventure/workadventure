@@ -5,7 +5,7 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
-test.setTimeout(120_000);
+test.setTimeout(240_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser }) => {
