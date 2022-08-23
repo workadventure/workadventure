@@ -4,7 +4,7 @@ import {
     EmptyMessage,
     MapStorageController,
     MapStorageControllerMethods,
-    MapStorageEditMapMessage,
+    EditMapWithKeyMessage,
 } from "./Messages/ts-proto-nest-generated/protos/messages";
 import { PingMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
 import { Observable } from "rxjs";
@@ -29,10 +29,10 @@ export class AppController implements MapStorageController {
         return request;
     }
 
-    handleMapStorageEditMapMessage(
-        request: MapStorageEditMapMessage
+    handleEditMapWithKeyMessage(
+        request: EditMapWithKeyMessage
     ): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
-        this.appService.handleMapStorageEditMapMessage(request);
+        this.appService.handleEditMapWithKeyMessage(request);
         return {};
     }
 }

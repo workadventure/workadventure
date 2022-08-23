@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { MapsManager } from "./MapsManager";
-import { MapStorageEditMapMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
+import { EditMapWithKeyMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
 
 @Injectable()
 export class AppService {
@@ -18,7 +18,7 @@ export class AppService {
         return await this.mapsManager.getMap(path);
     }
 
-    public handleMapStorageEditMapMessage(request: MapStorageEditMapMessage): void {
+    public handleEditMapWithKeyMessage(request: EditMapWithKeyMessage): void {
         console.log(request);
         console.log(request.editMapMessage.message);
         switch (request.editMapMessage.message?.$case) {

@@ -534,7 +534,7 @@ message PusherToBackMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
     AskPositionMessage askPositionMessage = 22;
-    EditMapMessage editMapMessage = 23;
+    EditMapWithKeyMessage editMapWithKeyMessage = 23;
   }
 }
 
@@ -576,7 +576,7 @@ message EditMapMessage {
   }
 }
 
-message MapStorageEditMapMessage {
+message EditMapWithKeyMessage {
   string mapKey = 1;
   EditMapMessage editMapMessage = 2;
 
@@ -748,5 +748,5 @@ service RoomManager {
  */
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
-  rpc handleMapStorageEditMapMessage(MapStorageEditMapMessage) returns (EmptyMessage);
+  rpc handleEditMapWithKeyMessage(EditMapWithKeyMessage) returns (EmptyMessage);
 }

@@ -46,8 +46,7 @@ import {
     Zone as ProtoZone,
     AskPositionMessage,
     MoveToPositionMessage,
-    EditMapMessage,
-    MapStorageEditMapMessage,
+    EditMapWithKeyMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1069,15 +1068,12 @@ export class SocketManager {
         room.emitLockGroupEvent(user, group.getId());
     }
 
-    handleEditMapMessage(room: GameRoom, user: User, message: EditMapMessage) {
-        const mapStorageMessage = new MapStorageEditMapMessage();
-        mapStorageMessage.setEditmapmessage(message);
-        mapStorageMessage.setMapkey(room.roomUrl.split("~")[1]);
+    handleEditMapWithKeyMessage(room: GameRoom, user: User, message: EditMapWithKeyMessage) {
+        getMapStorageClient().handleEditMapWithKeyMessage(message, (err, res) => {});
 
-        getMapStorageClient().handleMapStorageEditMapMessage(mapStorageMessage, (err, res) => {});
-
-        if (message.hasModifyareamessage()) {
-            const msg = message.getModifyareamessage();
+        const editMapMessage = message.getEditmapmessage();
+        if (editMapMessage && editMapMessage.hasModifyareamessage()) {
+            const msg = editMapMessage.getModifyareamessage();
             if (msg) {
                 room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
             }

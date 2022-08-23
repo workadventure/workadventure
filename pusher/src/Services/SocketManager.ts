@@ -43,6 +43,7 @@ import {
     AskPositionMessage,
     EditMapMessage,
     BanUserByUuidMessage,
+    EditMapWithKeyMessage,
 } from "../Messages/generated/messages_pb";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import { emitInBatch } from "./IoSocketHelpers";
@@ -343,8 +344,12 @@ export class SocketManager implements ZoneEventListener {
     }
 
     handleEditMapMessage(client: ExSocketInterface, message: EditMapMessage): void {
+        const editWithMapKeyMessage = new EditMapWithKeyMessage();
+        editWithMapKeyMessage.setEditmapmessage(message);
+        editWithMapKeyMessage.setMapkey(client.roomId.split("~")[1]);
+
         const pusherToBackMessage = new PusherToBackMessage();
-        pusherToBackMessage.setEditmapmessage(message);
+        pusherToBackMessage.setEditmapwithkeymessage(editWithMapKeyMessage);
         client.backConnection.write(pusherToBackMessage);
     }
 
