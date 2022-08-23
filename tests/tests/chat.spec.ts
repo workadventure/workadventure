@@ -5,10 +5,10 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
-test.setTimeout(60_000);
+test.setTimeout(120_000);
 
 test.describe('Chat', () => {
-  test('main test', async ({ page, browser }) => {
+  test('main', async ({ page, browser }) => {
     await page.goto(
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
     );
@@ -17,51 +17,119 @@ test.describe('Chat', () => {
     await openChat(page);
     const ejabberd = await findContainer('ejabberd');
 
-    await test.step('should connect to ejabberd and show list of users', async () => {
-      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await page.waitForTimeout(10_000);
-
-      console.log("MAIN FRAME :", await page.frameLocator('iframe#chatWorkAdventure').locator('body').textContent());
-      console.log("CHAT WINDOW :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').innerHTML());
-
-      console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('div.users').textContent());
-
+    await test.step('all tests of chat', async () => {
       await checkNameInChat(page, nickname);
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
 
+
+      // Second browser
       const newBrowser = await browser.browserType().launch();
       const page2 = await newBrowser.newPage();
-
       await page2.goto(
           'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
       );
       const nickname2 = getUniqueNickname('B');
       await login(page2, nickname2, 3);
-
       await openChat(page2);
-
+      const chat2 = page2.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page2, nickname);
       await checkNameInChat(page2, nickname2);
 
-      await page2.close();
-    });
 
-
-    await test.step('enter and exit from live zone', async () => {
-      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
-      await checkNameInChat(page, nickname);
-
-      await page.locator('#game').focus();
-
+      // Enter in liveZone
       await page.keyboard.press('ArrowRight', {delay: 2_500});
+      await page.keyboard.press('ArrowUp', {delay: 500});
       await expect(chat.locator('#liveRooms')).toContainText('liveZone');
+      await page2.keyboard.press('ArrowRight', {delay: 2_500});
+      await page2.keyboard.press('ArrowDown', {delay: 500});
+      await expect(chat2.locator('#liveRooms')).toContainText('liveZone');
 
-      await page.keyboard.press('ArrowLeft', {delay: 1_500});
-      // FIXME This expect is not working IDK why
-      //await expect(chat.locator('#liveRooms')).not.toContainText('liveZone');
+
+      // Open forum
+      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
+      await chat.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+      await chat2.locator('#liveRooms .wa-chat-item .wa-dropdown button').click();
+      await chat2.locator('#liveRooms .wa-chat-item .wa-dropdown .open').click();
+
+
+      // Send a message
+      await chat.locator('#activeThread .wa-message-form textarea').fill('Hello, how are you ?');
+      await chat.locator('#activeThread #send').click();
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
+      // Receive the message
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Hello, how are you ?');
+
+
+      // React to a message
+      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
+      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.react').click();
+      await page2.frameLocator('iframe#chatWorkAdventure').locator('.emoji-picker .emoji-picker__emojis button.emoji-picker__emoji').first().click();
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.emojis span.active')).toBeDefined();
+      // Receive the reaction
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.sent').last().locator('.emojis span')).toBeDefined();
+
+
+      // Reply to a message
+      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().hover();
+      await chat2.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.actions .action.reply').click();
+      await expect(chat2.locator('#activeThread .wa-message-form .replyMessage .message p')).toContainText('Hello, how are you ?');
+      await chat2.locator('#activeThread .wa-message-form textarea').fill('Fine, what about you ?');
+      await chat2.locator('#activeThread #send').click();
+      await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
+      // Receive the reply of the message
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last()).toContainText('Fine, what about you ?');
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message.received').last().locator('.message-replied')).toContainText('Hello, how are you ?');
+
+
+      // Send a file in a message
+      await chat.locator('#activeThread input#file').setInputFiles('README.md');
+      await expect(chat.locator('#activeThread #send')).toHaveClass(/can-send/);
+      await chat.locator('#activeThread #send').click();
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/sent/);
+      await expect(chat.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+      // Receive the file
+      //await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
+      //await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
+
+      await chat.locator('#activeThread #settings').click();
+      // Rank up user
+      await chat.locator('#activeThread .users .wa-chat-item.user').first().locator('.wa-dropdown button').click();
+      await chat.locator('#activeThread .users .wa-chat-item.user').first().locator('.wa-dropdown .rank-up').click();
+      await expect(chat.locator('#activeThread .users .wa-chat-item').last()).toHaveClass(/admin/);
+      // Rank down user
+      await chat.locator('#activeThread .users .wa-chat-item.admin').last().locator('.wa-dropdown button').click();
+      await chat.locator('#activeThread .users .wa-chat-item.admin').last().locator('.wa-dropdown .rank-down').click();
+      await expect(chat.locator('#activeThread .users .wa-chat-item').last()).toHaveClass(/user/);
+      /*
+      // TODO later : Ban a user
+      await chat.locator('#activeThread .users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
+      await chat.locator('#activeThread .users .wa-chat-item.user').last().locator('.wa-dropdown .ban').click();
+      await expect(chat.locator('#activeThread .users')).not.toContainText(nickname2);
+      */
+
+      // Exit forum
+      await chat.locator('#activeThread #exit').click();
+
+
+      // Walk to
+      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
+      await chat.locator('.users .wa-chat-item.user').last().locator('.wa-dropdown .walk-to').click();
+      // Open timeline
+      await chat.locator('#timeline #openTimeline').click();
+      await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
+      // Close timeline
+      await chat.locator('#activeTimeline #exit').click();
+
+
+      // Exit of liveZone
+      await page.locator('#game').focus();
+      await page.keyboard.press('ArrowLeft', {delay: 2_000});
+      await expect(chat).not.toContain('#liveRooms');
     });
+    return;
 
     await test.step('disconnect and reconnect to ejabberd and pusher', async () => {
-      let chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
+      const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await checkNameInChat(page, nickname);
 
       await stopContainer(ejabberd);
@@ -77,100 +145,9 @@ test.describe('Chat', () => {
       await checkNameInChat(page, nickname);
     });
   });
-
-  /*test('should connect to ejabberd and show list of users', async ({ page, browser }) => {
-    await page.goto(
-      'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
-    );
-    const nickname = getUniqueNickname('A');
-    await login(page, nickname, 2);
-
-    await openChat(page);
-    const chat = await getChat(page);
-
-    await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 10_000
-    });
-
-    const newBrowser = await browser.browserType().launch();
-    const page2 = await newBrowser.newPage();
-
-    await page2.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
-    );
-    const nickname2 = getUniqueNickname('B');
-    await login(page2, nickname2, 3);
-
-    await openChat(page2);
-    const chat2 = await getChat(page2);
-
-    await expect(chat2.locator('#users')).toContainText(nickname);
-    await expect(chat2.locator('#users')).toContainText(nickname2);
-
-    await page2.close();
-  });
-
-  test('enter and exit from live zone', async ({ page }) => {
-    await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/livezone.json'
-    );
-    const nickname = getUniqueNickname('A');
-    await login(page, nickname, 3);
-
-    await openChat(page);
-    const chat = await getChat(page);
-    await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 10_000
-    });
-
-    await page.locator('#game').focus();
-
-    await page.keyboard.press('ArrowRight', {delay: 2_500});
-    await expect(chat.locator('#liveRooms')).toContainText('liveZone');
-
-    await page.keyboard.press('ArrowLeft', {delay: 1_500});
-    // FIXME This expect is not working IDK why
-    //await expect(chat.locator('#liveRooms')).not.toContainText('liveZone');
-  });
-
-  test('disconnect and reconnect to ejabberd and pusher', async ({ page }) => {
-
-    const ejabberd = await findContainer('ejabberd');
-
-    await page.goto(
-        'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/E2E/empty.json'
-    );
-    const nickname = getUniqueNickname('A');
-    await login(page, nickname, 3);
-
-    await openChat(page);
-    let chat = await getChat(page);
-    await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 30_000
-    });
-
-    await stopContainer(ejabberd);
-    await expect(chat).toContainText("Connection to presence server");
-    await startContainer(ejabberd);
-    await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 10_000
-    });
-
-    const pusher = await findContainer('pusher');
-    await stopContainer(pusher);
-    await expect(page.locator('.errorScreen p.code')).toContainText('CONNECTION_');
-
-    await startContainer(pusher);
-    await openChat(page);
-    chat = await getChat(page);
-    await expect(chat.locator('#users')).toContainText(nickname, {
-      timeout: 30_000
-    });
-  });*/
 });
 
 async function checkNameInChat(page: Page, name: string){
-  //await page.waitForTimeout(5_000);
   await expect(page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow div.users')).toContainText(name, {timeout: TIMEOUT_TO_GET_LIST});
 }
 

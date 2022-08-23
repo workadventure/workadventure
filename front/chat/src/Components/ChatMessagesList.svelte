@@ -271,8 +271,10 @@
             {/if}
             <div
                 id={`message_${message.id}`}
-                class={`tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
-            ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}`}
+                class={`wa-message tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
+            ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}
+            ${isMe(message.jid)? (message.delivered ? "sent" : "sending") : "received"}
+            `}
             >
                 <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
                     <div
@@ -353,10 +355,10 @@
                                     <div
                                         class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                     >
-                                        <div class="action" on:click={() => selectMessage(message)}>
+                                        <div class="action reply" on:click={() => selectMessage(message)}>
                                             <CornerDownLeftIcon size="17" />
                                         </div>
-                                        <div class="action" on:click={() => reactMessage(message)}>
+                                        <div class="action react" on:click={() => reactMessage(message)}>
                                             <SmileIcon size="17" />
                                         </div>
                                         <div class="action more-option">

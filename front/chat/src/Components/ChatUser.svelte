@@ -33,15 +33,19 @@
     };
     function goTo(type: string, playUri: string, uuid: string) {
         dispatch("goTo", { type, playUri, uuid });
+        closeChatUserMenu();
     }
     function rankUp(jid: string) {
         dispatch("rankUp", { jid });
+        closeChatUserMenu();
     }
     function rankDown(jid: string) {
         dispatch("rankDown", { jid });
+        closeChatUserMenu();
     }
     function ban(user: string, name: string, playUri: string) {
         dispatch("ban", { user, name, playUri });
+        closeChatUserMenu();
     }
 
     function findUserInDefault(jid: string): User | undefined {
@@ -77,7 +81,7 @@
     });
 </script>
 
-<div class={`wa-chat-item`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
+<div class={`wa-chat-item ${user.isAdmin?'admin':'user'}`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
     <div
         class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
         style={`background-color: ${getColor(user.jid)}`}
@@ -140,14 +144,14 @@
             <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
                 {#if user.isInSameMap}
                     <span
-                        class="wa-dropdown-item"
+                        class="walk-to wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("user", user.playUri, user.uuid)}
                         ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
                     <span
-                        class="wa-dropdown-item"
+                        class="teleport wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("room", user.playUri, user.uuid)}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
@@ -155,18 +159,18 @@
                 {/if}
                 {#if $meStore.isAdmin}
                     <span
-                        class="wa-dropdown-item tw-text-pop-red"
+                        class="ban wa-dropdown-item tw-text-pop-red"
                         on:click|stopPropagation={() => ban(user.jid, user.name, user.playUri)}
                         ><SlashIcon size="13" /> {$LL.ban.title()}</span
                     >
                     {#if user.isAdmin}
                         <span
-                            class="wa-dropdown-item tw-text-orange"
+                            class="rank-down wa-dropdown-item tw-text-orange"
                             on:click|stopPropagation={() => rankDown(user.jid)}
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
                         >
                     {:else}
-                        <span class="wa-dropdown-item tw-text-orange" on:click|stopPropagation={() => rankUp(user.jid)}
+                        <span class="rank-up wa-dropdown-item tw-text-orange" on:click|stopPropagation={() => rankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()}</span
                         >
                     {/if}

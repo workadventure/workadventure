@@ -707,6 +707,7 @@ export class MucRoom {
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
+                console.warn(xml.toString());
                 const userJID = jid(x.getChild("item")?.getAttr("jid"));
                 userJID.setResource("");
                 const playUri = xml.getChild("room")?.getAttr("playUri");
@@ -867,7 +868,7 @@ export class MucRoom {
                     handledMessage = true;
                 } else {
                     const { jid } = this.getUserDataByName(name);
-                    if (jid) {
+                    if (jid !== null && jid) {
                         this.updateUser(jid, null, null, null, null, null, null, null, state.getName());
                     }
                     handledMessage = true;

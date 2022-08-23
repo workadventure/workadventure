@@ -37,12 +37,13 @@
 </script>
 
 <!-- thread -->
-<div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
+<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
     <div class="wa-thread-head">
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
+                    id="exit"
                 class="tw-text-lighter-purple tw-m-0"
                 on:click={() => {
                     activeThreadStore.reset();
@@ -68,6 +69,7 @@
             <OnlineUsers {usersListStore} />
         </div>
         <div
+            id="settings"
             class="tw-border tw-border-transparent tw-border-l-light-purple tw-border-solid tw-py-1 tw-pl-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
             on:click={() => settingsViewStore.set(!$settingsViewStore)}
         >
@@ -84,7 +86,7 @@
         <div
             in:fly={{ y: -100, duration: 100, delay: 200 }}
             out:fly={{ y: -100, duration: 100 }}
-            class="tw-flex tw-flex-col tw-flex-auto tw-overflow-auto tw-w-full"
+            class="tw-flex tw-flex-col tw-flex-auto tw-w-full"
             style="margin-top: 52px"
         >
             <div
@@ -99,7 +101,7 @@
             <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid tw-px-5">
                 <p class="tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">Chatzone</p>
             </div>
-            <div class="wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+            <div class="users wa-message-bg tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                 <p class="tw-px-5 tw-py-3 tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
                     {$LL.users()}
                 </p>

@@ -371,8 +371,9 @@
                 <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
                 <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 <button
+                        id="send"
                     type="submit"
-                    class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                    class={`${!$hasErrorUploadingFile && !$hasInProgressUploadingFile?'can-send':'disabled'} tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}

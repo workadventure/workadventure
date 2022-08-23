@@ -106,13 +106,13 @@
             <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
         {:else if activeThreadTimeLine}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)} />
-        {:else if $activeThreadStore !== undefined && defaultMucRoom}
+        {:else if $activeThreadStore !== undefined}
             <ChatActiveThread
                 activeThread={$activeThreadStore}
-                on:goTo={(event) => defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                on:rankUp={(event) => defaultMucRoom?.sendRankUp(event.detail.jid)}
-                on:rankDown={(event) => defaultMucRoom?.sendRankDown(event.detail.jid)}
-                on:ban={(event) => defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
+                on:goTo={(event) => $activeThreadStore.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
+                on:rankUp={(event) => $activeThreadStore.sendRankUp(event.detail.jid)}
+                on:rankDown={(event) => $activeThreadStore.sendRankDown(event.detail.jid)}
+                on:ban={(event) => $activeThreadStore.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
             />
         {:else}
             <div class="wa-message-bg">

@@ -66,7 +66,7 @@
 
         <!-- menu -->
         <div class={`wa-dropdown-menu ${forumMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
-            <span class="wa-dropdown-item" on:click|stopPropagation={() => open(liveRoom)}
+            <span class="open wa-dropdown-item" on:click|stopPropagation={() => open(liveRoom)}
                 ><EyeIcon size="12" class="tw-mr-1" /> {$LL.open()}
             </span>
             {#if $meStore.isAdmin}
