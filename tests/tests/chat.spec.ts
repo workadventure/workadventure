@@ -21,6 +21,9 @@ test.describe('Chat', () => {
       const chat = page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow');
       await page.waitForTimeout(10_000);
 
+      console.log("MAIN FRAME :", await page.frameLocator('iframe#chatWorkAdventure').locator('body').textContent());
+      console.log("CHAT WINDOW :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow').textContent());
+
       console.log("USERS DIV SELECTED :", await page.frameLocator('iframe#chatWorkAdventure').locator('aside.chatWindow #users').textContent());
 
       await checkNameInChat(page, nickname);
