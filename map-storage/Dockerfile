@@ -16,7 +16,6 @@ WORKDIR /usr/src
 COPY map-storage/yarn.lock map-storage/package.json ./
 RUN yarn install
 COPY map-storage .
-COPY --from=proto-builder /usr/src/ts-proto-nest-generated src/Messages/ts-proto-nest-generated
 COPY --from=proto-builder /usr/src/protos/* src/Messages/protos/
 ENV NODE_ENV=production
 RUN yarn run build

@@ -1,38 +1,38 @@
-import { Controller, Get, Req, Res } from "@nestjs/common";
-import { AppService } from "./app.service";
-import {
-    EmptyMessage,
-    MapStorageController,
-    MapStorageControllerMethods,
-    EditMapWithKeyMessage,
-} from "./Messages/ts-proto-nest-generated/protos/messages";
-import { PingMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
-import { Observable } from "rxjs";
-import { Request, Response } from "express";
+// import { Controller, Get, Req, Res } from "@nestjs/common";
+// import { AppService } from "./app.service";
+// import {
+//     EmptyMessage,
+//     MapStorageController,
+//     MapStorageControllerMethods,
+//     EditMapWithKeyMessage,
+// } from "./Messages/ts-proto-nest-generated/protos/messages";
+// import { PingMessage } from "./Messages/ts-proto-nest-generated/protos/messages";
+// import { Observable } from "rxjs";
+// import { Request, Response } from "express";
 
-@Controller()
-@MapStorageControllerMethods()
-export class AppController implements MapStorageController {
-    constructor(private readonly appService: AppService) {}
+// @Controller()
+// @MapStorageControllerMethods()
+// export class AppController implements MapStorageController {
+//     constructor(private readonly appService: AppService) {}
 
-    @Get()
-    getHello(): string {
-        return this.appService.getHello();
-    }
+//     @Get()
+//     getHello(): string {
+//         return this.appService.getHello();
+//     }
 
-    @Get("*.json")
-    async getMap(@Req() req: Request, @Res() res: Response) {
-        res.send(await this.appService.getMap(req.url));
-    }
+//     @Get("*.json")
+//     async getMap(@Req() req: Request, @Res() res: Response) {
+//         res.send(await this.appService.getMap(req.url));
+//     }
 
-    ping(request: PingMessage): Promise<PingMessage> | Observable<PingMessage> | PingMessage {
-        return request;
-    }
+//     ping(request: PingMessage): Promise<PingMessage> | Observable<PingMessage> | PingMessage {
+//         return request;
+//     }
 
-    handleEditMapWithKeyMessage(
-        request: EditMapWithKeyMessage
-    ): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
-        this.appService.handleEditMapWithKeyMessage(request);
-        return {};
-    }
-}
+//     handleEditMapWithKeyMessage(
+//         request: EditMapWithKeyMessage
+//     ): EmptyMessage | Promise<EmptyMessage> | Observable<EmptyMessage> {
+//         this.appService.handleEditMapWithKeyMessage(request);
+//         return {};
+//     }
+// }
