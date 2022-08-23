@@ -3,6 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
+import proximityMeeting, { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -244,6 +245,10 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             type: "removePlayerOutline",
             data: undefined,
         });
+    }
+
+    get proximityMeeting(): WorkadventureProximityMeetingCommands {
+        return proximityMeeting;
     }
 }
 

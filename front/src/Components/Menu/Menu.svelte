@@ -20,7 +20,7 @@
     import type { MenuItem } from "../../Stores/MenuStore";
     import { onDestroy, onMount } from "svelte";
     import type { Unsubscriber } from "svelte/store";
-    import { sendMenuClickedEvent } from "../../Api/iframe/Ui/MenuItem";
+    import { sendMenuClickedEvent } from "../../Api/Iframe/Ui/MenuItem";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
 

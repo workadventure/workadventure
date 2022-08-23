@@ -33,7 +33,7 @@ import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKey
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
@@ -41,7 +41,11 @@ import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
-import { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
+import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
+import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import { MessageUserJoined } from "../Connexion/ConnexionModels";
+import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
+import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -541,6 +545,68 @@ class IframeListener {
         );
     }
 
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
+            return {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            };
+        });
+
+        this.postMessage({
+            type: "joinProximityMeetingEvent",
+            data: {
+                users: formattedUsers,
+            } as JoinProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantJoinProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantLeaveProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendLeaveProximityMeetingEvent() {
+        this.postMessage({
+            type: "leaveProximityMeetingEvent",
+            data: undefined,
+        });
+    }
+
     sendEnterEvent(name: string) {
         this.postMessage({
             type: "enterEvent",
@@ -611,10 +677,18 @@ class IframeListener {
         }
     }
 
-    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
+    sendRemotePlayerClickedEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "remotePlayerClickedEvent",
-            data: event,
+            data: {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            },
         });
     }
 

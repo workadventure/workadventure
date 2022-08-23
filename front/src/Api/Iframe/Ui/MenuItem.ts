@@ -1,4 +1,4 @@
-import type { MenuItemClickedEvent } from "../../Events/ui/MenuItemClickedEvent";
+import type { MenuItemClickedEvent } from "../../Events/Ui/MenuItemClickedEvent";
 import { iframeListener } from "../../IframeListener";
 
 export function sendMenuClickedEvent(menuItem: string) {
