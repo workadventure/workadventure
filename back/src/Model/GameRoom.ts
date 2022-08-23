@@ -139,10 +139,10 @@ export class GameRoom implements BrothersFinder {
             });
         }
 
-        const mucManager = await gameRoom.getMucManager();
-        await mucManager.init();
-
-        return gameRoom;
+        return gameRoom.getMucManager().then((mucManager) => {
+            mucManager.init();
+            return gameRoom;
+        });
     }
 
     public getUsers(): Map<number, User> {
