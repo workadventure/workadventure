@@ -24,7 +24,8 @@ export default defineConfig({
                 "PUSHER_URL",
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
-                "EMBEDLY_KEY"
+                "EMBEDLY_KEY",
+                "ICON_URL"
             ],
         }),
         pluginRewriteAll(),

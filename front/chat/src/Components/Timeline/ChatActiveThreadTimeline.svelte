@@ -147,12 +147,16 @@
 </script>
 
 <!-- thread -->
-<div class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
+<div
+    id="activeTimeline"
+    class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
+    transition:fly={{ x: 500, duration: 400 }}
+>
     <div class="wa-thread-head">
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
         >
-            <button class="tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
+            <button id="exit" class="tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
                 <ArrowLeftIcon />
             </button>
         </div>
@@ -290,7 +294,7 @@
                 {#if message.targets && message.targets.length > 0}
                     {#if message.type === ChatMessageTypes.userIncoming}
                         {#each message.targets as target}
-                            <div class="tw-text-center tw-mt-2" style="white-space: nowrap;">
+                            <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                                 <span
                                     class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                     ><b style={target.color ? `color: ${target.color};` : ""}
@@ -313,7 +317,7 @@
                     {/if}
                     {#if message.type === ChatMessageTypes.userOutcoming}
                         {#each message.targets as target}
-                            <div class="tw-text-center tw-mt-2" style="white-space: nowrap;">
+                            <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                                 <span
                                     class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                     ><b style={target.color ? `color: ${target.color};` : ""}

@@ -1,9 +1,12 @@
 import { isLookingLikeIframeEventWrapper, isIframeEventWrapper } from "./Event/IframeEvent";
 import { userStore } from "./Stores/LocalUserStore";
 import {
+    availabilityStatusStore,
     chatMessagesStore,
     ChatMessageTypes,
+    chatNotificationsStore,
     chatPeerConnectionInProgress,
+    chatSoundsStore,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
     timelineOpenedStore,
@@ -14,6 +17,9 @@ import { Locales } from "./i18n/i18n-types";
 import { mucRoomsStore } from "./Stores/MucRoomsStore";
 import { defaultUserData } from "./Xmpp/MucRoom";
 import { connectionManager } from "./Connection/ChatConnectionManager";
+import { chatVisibilityStore } from "./Stores/ChatStore";
+import { NotificationType } from "./Media/MediaManager";
+import { activeThreadStore } from "./Stores/ActiveThreadStore";
 
 class IframeListener {
     init() {
@@ -42,7 +48,7 @@ class IframeListener {
                             if (!connectionManager.connection) {
                                 connectionManager.start();
                             }
-                            connectionManager.connectionOrFaile
+                            connectionManager.connectionOrFail
                                 .getXmppClient()
                                 ?.joinMuc(iframeEvent.data.name, iframeEvent.data.url, iframeEvent.data.type);
                             break;
@@ -51,7 +57,7 @@ class IframeListener {
                             if (!connectionManager.connection) {
                                 connectionManager.start();
                             }
-                            connectionManager.connectionOrFaile.getXmppClient()?.leaveMuc(iframeEvent.data.url);
+                            connectionManager.connectionOrFail.getXmppClient()?.leaveMuc(iframeEvent.data.url);
                             break;
                         }
                         case "updateWritingStatusChatList": {
@@ -98,6 +104,22 @@ class IframeListener {
                             }
                             break;
                         }
+                        case "chatVisibility": {
+                            chatVisibilityStore.set(iframeEvent.data.visibility);
+                            if (!iframeEvent.data.visibility) {
+                                activeThreadStore.reset();
+                            }
+                            break;
+                        }
+                        case "settings": {
+                            chatSoundsStore.set(iframeEvent.data.chatSounds);
+                            chatNotificationsStore.set(iframeEvent.data.notification);
+                            break;
+                        }
+                        case "availabilityStatus": {
+                            availabilityStatusStore.set(iframeEvent.data);
+                            break;
+                        }
                     }
                 }
             }
@@ -141,6 +163,15 @@ class IframeListener {
                     type: "closeCoWebsites",
                     data: undefined,
                 },
+            },
+            "*"
+        );
+    }
+    sendNotificationToFront(userName: string, notificationType: NotificationType, forum: null | string) {
+        window.parent.postMessage(
+            {
+                type: "notification",
+                data: { userName, notificationType, forum },
             },
             "*"
         );

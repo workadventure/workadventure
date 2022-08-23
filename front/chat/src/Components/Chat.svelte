@@ -92,11 +92,7 @@
     }
 
     mucRoomsStore.subscribe(() => {
-        try {
-            defaultMucRoom = mucRoomsStore.getDefaultRoom();
-        } catch (e: unknown) {
-            console.error("Error get default room =>", e);
-        }
+        defaultMucRoom = mucRoomsStore.getDefaultRoom();
     });
 
     console.info("Chat fully loaded");
@@ -110,15 +106,15 @@
             <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
         {:else if activeThreadTimeLine}
             <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)} />
-        {:else if $activeThreadStore !== undefined && defaultMucRoom}
+        {:else if $activeThreadStore !== undefined}
             <ChatActiveThread
-                usersListStore={$activeThreadStore.getPresenceStore()}
-                meStore={$activeThreadStore.getMeStore()}
                 activeThread={$activeThreadStore}
-                on:goTo={(event) => defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
-                on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
-                on:ban={(event) => defaultMucRoom?.ban(event.detail.user, event.detail.name, event.detail.playUri)}
+                on:goTo={(event) =>
+                    $activeThreadStore?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
+                on:rankUp={(event) => $activeThreadStore?.sendRankUp(event.detail.jid)}
+                on:rankDown={(event) => $activeThreadStore?.sendRankDown(event.detail.jid)}
+                on:ban={(event) =>
+                    $activeThreadStore?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
             />
         {:else}
             <div class="wa-message-bg">
@@ -136,6 +132,7 @@
                 <!-- chat users -->
                 {#if defaultMucRoom !== undefined}
                     <UsersList
+                        mucRoom={defaultMucRoom}
                         {showUsers}
                         usersListStore={defaultMucRoom?.getPresenceStore()}
                         meStore={defaultMucRoom?.getMeStore()}
@@ -144,10 +141,10 @@
                         on:showUsers={handleShowUsers}
                         on:goTo={(event) =>
                             defaultMucRoom?.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
-                        on:rankUp={(event) => defaultMucRoom?.rankUp(event.detail.jid)}
-                        on:rankDown={(event) => defaultMucRoom?.rankDown(event.detail.jid)}
+                        on:rankUp={(event) => defaultMucRoom?.sendRankUp(event.detail.jid)}
+                        on:rankDown={(event) => defaultMucRoom?.sendRankDown(event.detail.jid)}
                         on:ban={(event) =>
-                            defaultMucRoom?.ban(event.detail.user, event.detail.name, event.detail.playUri)}
+                            defaultMucRoom?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
                     />
                 {/if}
 
@@ -166,6 +163,8 @@
         {/if}
     </section>
 </aside>
+
+<audio id="newMessageSound" src="/static/new-message.mp3" style="width: 0;height: 0;opacity: 0" />
 
 <style lang="scss">
     aside.chatWindow {

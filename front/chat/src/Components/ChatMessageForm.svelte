@@ -39,9 +39,11 @@
     let usersSearching: User[] = [];
 
     export const defaultColor = "#626262";
-    const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    // Negative lookbehind doesn't work on Safari browser
+    // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
     function onFocus() {}
     function onBlur() {}
@@ -83,10 +85,10 @@
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.name === name);
+        const userData = [...$presenseStore].map(([, user]) => user).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
-            [, user] = userData;
+            user = userData;
         }
         return user;
     }
@@ -161,13 +163,15 @@
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenseStore.values()].reduce((values: User[], user) => {
-                if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
+            usersSearching = [...$presenseStore]
+                .map(([, user]) => user)
+                .reduce((values: User[], user) => {
+                    if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
+                        return values;
+                    }
+                    values.push(user);
                     return values;
-                }
-                values.push(user);
-                return values;
-            }, []);
+                }, []);
         } else {
             usersSearching = [];
         }
@@ -367,8 +371,11 @@
                 <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
                 <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 <button
+                    id="send"
                     type="submit"
-                    class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                    class={`${
+                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile ? "can-send" : "disabled"
+                    } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}

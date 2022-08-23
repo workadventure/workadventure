@@ -17,6 +17,7 @@
 
 {#if liveRooms.length > 0}
     <div
+        id="liveRooms"
         class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple"
         transition:fly={{ y: -30, duration: 100 }}
     >

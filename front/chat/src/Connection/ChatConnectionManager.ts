@@ -20,7 +20,7 @@ class ConnectionManager {
         this.start();
     }
 
-    get connectionOrFaile(): ChatConnection {
+    get connectionOrFail(): ChatConnection {
         if (!this.chatConnection) {
             throw new Error("No chat connection with XMPP server!");
         }
@@ -36,8 +36,8 @@ class ConnectionManager {
     }
 
     public closeAndRestart() {
-        //close current cpnnexion
-        this.connectionOrFaile.close();
+        //close current connection
+        this.connectionOrFail.close();
         this.chatConnection = undefined;
 
         //create new connection

@@ -126,6 +126,7 @@
         "PUSHER_URL": "//pusher-"+url,
         "UPLOADER_URL": "//uploader-"+url,
         "CHAT_EMBEDLY_KEY": if std.objectHas(env, 'CHAT_EMBEDLY_KEY') then env.CHAT_EMBEDLY_KEY else "",
+        "ICON_URL": "//icon-"+url
       }
     },
     "map-storage": {

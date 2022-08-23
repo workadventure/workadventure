@@ -3,7 +3,7 @@
     import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
-    import { defaultColor, defaultWoka, MeStore, User } from "../Xmpp/MucRoom";
+    import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
     import walk from "../../public/static/images/walk.svg";
     import teleport from "../../public/static/images/teleport.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
@@ -16,13 +16,13 @@
         ban: Ban;
     }>();
 
+    export let mucRoom: MucRoom;
     export let user: User;
     export let openChat: Function;
     export let searchValue: string = "";
     export let meStore: MeStore;
-    export let jid: string;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
     let chatMenuActive = false;
     let openChatUserMenu = () => {
@@ -33,19 +33,23 @@
     };
     function goTo(type: string, playUri: string, uuid: string) {
         dispatch("goTo", { type, playUri, uuid });
+        closeChatUserMenu();
     }
     function rankUp(jid: string) {
         dispatch("rankUp", { jid });
+        closeChatUserMenu();
     }
     function rankDown(jid: string) {
         dispatch("rankDown", { jid });
+        closeChatUserMenu();
     }
     function ban(user: string, name: string, playUri: string) {
         dispatch("ban", { user, name, playUri });
+        closeChatUserMenu();
     }
 
-    function findUserInDefault(name: string): User | undefined {
-        const userData = [...$presenseStore].find(([, user]) => user.name === name);
+    function findUserInDefault(jid: string): User | undefined {
+        const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -53,8 +57,8 @@
         return user;
     }
 
-    function getWoka(name: string) {
-        const user = findUserInDefault(name);
+    function getWoka(jid: string) {
+        const user = findUserInDefault(jid);
         if (user) {
             return user.woka;
         } else {
@@ -62,8 +66,8 @@
         }
     }
 
-    function getColor(name: string) {
-        const user = findUserInDefault(name);
+    function getColor(jid: string) {
+        const user = findUserInDefault(jid);
         if (user) {
             return user.color;
         } else {
@@ -77,14 +81,18 @@
     });
 </script>
 
-<div class={`wa-chat-item`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
+<div
+    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}`}
+    on:click|stopPropagation={() => openChat(user)}
+    on:mouseleave={closeChatUserMenu}
+>
     <div
         class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
-        style={`background-color: ${getColor(user.name)}`}
+        style={`background-color: ${getColor(user.jid)}`}
         on:click|stopPropagation={() => openChat(user)}
     >
         <div class="wa-container">
-            <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
+            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
         </div>
         {#if user.active}
             <span
@@ -140,14 +148,14 @@
             <div class={`wa-dropdown-menu ${chatMenuActive ? "" : "tw-invisible"}`} on:mouseleave={closeChatUserMenu}>
                 {#if user.isInSameMap}
                     <span
-                        class="wa-dropdown-item"
+                        class="walk-to wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("user", user.playUri, user.uuid)}
                         ><img class="noselect" src={walk} alt="Walk to logo" height="13" width="13" />
                         {$LL.userList.walkTo()}</span
                     >
                 {:else}
                     <span
-                        class="wa-dropdown-item"
+                        class="teleport wa-dropdown-item"
                         on:click|stopPropagation={() => goTo("room", user.playUri, user.uuid)}
                         ><img class="noselect" src={teleport} alt="Teleport to logo" height="13" width="13" />
                         {$LL.userList.teleport()}</span
@@ -155,16 +163,20 @@
                 {/if}
                 {#if $meStore.isAdmin}
                     <span
-                        class="wa-dropdown-item tw-text-pop-red"
-                        on:click|stopPropagation={() => ban(jid, user.name, user.playUri)}
+                        class="ban wa-dropdown-item tw-text-pop-red"
+                        on:click|stopPropagation={() => ban(user.jid, user.name, user.playUri)}
                         ><SlashIcon size="13" /> {$LL.ban.title()}</span
                     >
                     {#if user.isAdmin}
-                        <span class="wa-dropdown-item tw-text-orange" on:click|stopPropagation={() => rankDown(jid)}
+                        <span
+                            class="rank-down wa-dropdown-item tw-text-orange"
+                            on:click|stopPropagation={() => rankDown(user.jid)}
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
                         >
                     {:else}
-                        <span class="wa-dropdown-item tw-text-orange" on:click|stopPropagation={() => rankUp(jid)}
+                        <span
+                            class="rank-up wa-dropdown-item tw-text-orange"
+                            on:click|stopPropagation={() => rankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()}</span
                         >
                     {/if}

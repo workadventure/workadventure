@@ -4,10 +4,10 @@ import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { Subject } from "rxjs";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
-import { peerStore } from "./PeerStore";
 
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
+
 export const chatInputFocusStore = writable(false);
 
 export const _newChatMessageSubject = new Subject<string>();
@@ -196,20 +196,3 @@ function createChatSubMenuVisibilityStore() {
 }
 
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
-
-//TODO delete it with new XMPP integration
-//send list to chat iframe
-writingStatusMessageStore.subscribe((list) => {
-    try {
-        iframeListener.sendWritingStatusToChatIframe(list);
-    } catch (err) {
-        console.error(err);
-    }
-});
-peerStore.subscribe((list) => {
-    try {
-        iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
-    } catch (err) {
-        console.error(err);
-    }
-});

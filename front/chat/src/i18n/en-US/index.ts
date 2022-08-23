@@ -4,7 +4,7 @@ const en_US: BaseTranslation = {
     users: "Users",
     userList: {
         disconnected: "Disconnected",
-        isHere: "Is on thi map !",
+        isHere: "Is on this map !",
         isOverThere: "Is on another map !",
         teleport: "Teleport",
         search: "Just look it up!",
@@ -45,7 +45,8 @@ const en_US: BaseTranslation = {
     },
     notification: {
         discussion: "wants to discuss with you",
-        message: "sends you a message",
+        message: "sends a message",
+        forum: "on the forum",
     },
     see: "See",
     less: "less",

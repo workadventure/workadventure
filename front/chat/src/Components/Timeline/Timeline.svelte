@@ -17,7 +17,7 @@
     $: unreadMessages = $timelineMessagesToSee;
 </script>
 
-<div class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
+<div id="timeline" class="tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center" on:click={showTimeLine}>
         {#if unreadMessages}
             <span
@@ -37,7 +37,7 @@
     {#if $timelineOpenedStore}
         <div transition:fly={{ y: -30, duration: 100 }}>
             <div class="wa-chat-item">
-                <div class="tw-relative" on:click|stopPropagation={open}>
+                <div id="openTimeline" class="tw-relative" on:click|stopPropagation={open}>
                     <img src="/static/images/logo-wa-2.png" alt="Send" width="35" />
 
                     <!-- use chat store and get new notification -->

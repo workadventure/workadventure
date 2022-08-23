@@ -46,9 +46,10 @@ const fr_FR: Translation = {
     notification: {
         discussion: "veut discuter avec toi",
         message: "a envoyé un message",
+        forum: "sur le forum",
     },
     see: "Voir",
-    less: "more",
+    less: "moins",
     more: "plus",
     sendBack: "Renvoyer",
     delete: "Supprimer",

@@ -1,4 +1,4 @@
-name: Build, push and deploy Docker image
+name: Build, push, test and deploy Docker image
 
 on:
   push:
@@ -350,6 +350,15 @@ jobs:
 #          check-name: 'build-map-storage'
 #          repo-token: ${{ secrets.GITHUB_TOKEN }}
 #          wait-interval: 10
+      - uses: rlespinasse/github-slug-action@3.1.0
+      - name: Display pulled version
+        run: echo "Pulling images with tag ${DOCKER_TAG}"
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+      - name: Download images
+        run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml pull
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Start WorkAdventure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml up -d
         env:
@@ -359,6 +368,8 @@ jobs:
       - name: Run Playwright tests
         run: npm run test-prod-like -- --project=${{ matrix.browser }}
         working-directory: tests
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
       - name: Display docker-compose logs on failure
         run: docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml -f docker-compose.e2e.yml logs
         if: failure()

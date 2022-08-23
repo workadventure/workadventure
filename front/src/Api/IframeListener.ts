@@ -46,6 +46,8 @@ import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/Part
 import { MessageUserJoined } from "../Connexion/ConnexionModels";
 import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
 import { AddPlayerEvent } from "./Events/AddPlayerEvent";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -399,6 +401,16 @@ class IframeListener {
                         this._openInviteMenuStream.next();
                     } else if (iframeEvent.type == "chatTotalMessagesToSee") {
                         this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "notification") {
+                        const notificationType =
+                            iframeEvent.data.notificationType === 1
+                                ? NotificationType.discussion
+                                : NotificationType.message;
+                        mediaManager.createNotification(
+                            iframeEvent.data.userName,
+                            notificationType,
+                            iframeEvent.data.forum
+                        );
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -739,6 +751,35 @@ class IframeListener {
         });
     }
 
+    sendChatVisibilityToChatIframe(visibility: boolean) {
+        this.postMessageToChat({
+            type: "chatVisibility",
+            data: {
+                visibility,
+            },
+        } as IframeResponseEvent);
+    }
+    sendSettingsToChatIframe() {
+        this.postMessageToChat({
+            type: "settings",
+            data: {
+                notification: localUserStore.getNotification(),
+                chatSounds: localUserStore.getChatSounds(),
+            },
+        } as IframeResponseEvent);
+    }
+
+    postMessageToChat(message: IframeResponseEvent) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("postMessageToChat Error => ", err);
+        }
+    }
+
     //TODO delete with chat XMPP integration for the discussion circle
     sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
         if (!this.chatIframe) {
@@ -856,7 +897,7 @@ class IframeListener {
     }
 
     sendLeaveMucEvent(url: string) {
-        this.postMessage({
+        this.postMessageToChat({
             type: "leaveMuc",
             data: {
                 url,
@@ -865,7 +906,7 @@ class IframeListener {
     }
 
     sendJoinMucEvent(url: string, name: string, type: string) {
-        this.postMessage({
+        this.postMessageToChat({
             type: "joinMuc",
             data: {
                 url,

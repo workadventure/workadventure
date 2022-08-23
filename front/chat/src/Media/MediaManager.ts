@@ -1,5 +1,7 @@
 import LL from "../i18n/i18n-svelte";
 import { get } from "svelte/store";
+import { chatNotificationsStore, chatSoundsStore } from "../Stores/ChatStore";
+import { iframeListener } from "../IframeListener";
 
 export enum NotificationType {
     discussion = 1,
@@ -14,11 +16,14 @@ class MediaManager {
 
     //TODO fix it with local storage configuration from front
     public hasNotification(): boolean {
-        return this.canSendNotification && Notification.permission === "granted";
+        return this.canSendNotification;
     }
 
-    public createNotification(userName: string, notificationType: NotificationType) {
-        if (document.hasFocus()) {
+    public createNotification(userName: string, notificationType: NotificationType, forum: null | string) {
+        if (!get(chatNotificationsStore)) {
+            return;
+        } else if (window.location !== window.parent.location) {
+            iframeListener.sendNotificationToFront(userName, notificationType, forum);
             return;
         }
 
@@ -33,15 +38,26 @@ class MediaManager {
                     new Notification(`${userName} ${get(LL).notification.discussion()}`, options);
                     break;
                 case NotificationType.message:
-                    new Notification(`${userName} ${get(LL).notification.message()}`, options);
+                    new Notification(
+                        `${userName} ${get(LL).notification.message()} ${
+                            forum !== null && get(LL).notification.forum() + " " + forum
+                        }`,
+                        options
+                    );
                     break;
             }
+
             this.canSendNotification = false;
             setTimeout(() => (this.canSendNotification = true), TIME_NOTIFYING_MILLISECOND);
         }
     }
 
     public playNewMessageNotification() {
+        // Sounds disabled
+        if (!get(chatSoundsStore)) {
+            return;
+        }
+
         //play notification message
         const elementAudioNewMessageNotification = document.getElementById("newMessageSound");
         if (this.canPlayNotificationMessage && elementAudioNewMessageNotification) {

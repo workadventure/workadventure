@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
     import { onDestroy, onMount } from "svelte";
     import { iframeListener } from "../../Api/IframeListener";
     import { localUserStore } from "../../Connexion/LocalUserStore";
@@ -12,6 +12,8 @@
     import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
     import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
     import { Subscription } from "rxjs";
+    import { availabilityStatusStore } from "../../Stores/MediaStore";
+    import { peerStore } from "../../Stores/PeerStore";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -39,73 +41,107 @@
             iframeLoadedStore.set(false);
             if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
                 iframeLoadedStore.set(true);
-            }
-        });
-        subscribeListeners.push(
-            locale.subscribe((value) => {
-                chatIframe?.contentWindow?.postMessage(
-                    {
-                        type: "setLocale",
-                        data: {
-                            locale: value,
-                        },
-                    },
-                    "*"
+                subscribeListeners.push(
+                    locale.subscribe((value) => {
+                        chatIframe?.contentWindow?.postMessage(
+                            {
+                                type: "setLocale",
+                                data: {
+                                    locale: value,
+                                },
+                            },
+                            "*"
+                        );
+                    })
                 );
-            })
-        );
-        subscribeListeners.push(
-            currentPlayerWokaStore.subscribe((value) => {
-                if (value !== undefined) {
-                    wokaSrc = value;
-                    wokaDefinedStore.set(true);
-                }
-            })
-        );
-        subscribeListeners.push(
-            canSendInitMessageStore.subscribe((value) => {
-                if (value) {
-                    chatIframe?.contentWindow?.postMessage(
-                        {
-                            type: "userData",
-                            data: {
-                                ...localUserStore.getLocalUser(),
-                                name,
-                                playUri,
-                                authToken: localUserStore.getAuthToken(),
-                                color: getColorByString(name ?? ""),
-                                woka: wokaSrc,
-                            },
-                        },
-                        "*"
-                    );
-                    chatIframe?.contentWindow?.postMessage(
-                        {
-                            type: "setLocale",
-                            data: {
-                                locale: $locale,
-                            },
-                        },
-                        "*"
-                    );
-                }
-            })
-        );
-        subscribeListeners.push(
-            chatVisibilityStore.subscribe(() => {
-                try {
-                    gameManager.getCurrentGameScene()?.onResize();
-                } catch (err) {
-                    console.info("gameManager doesn't exist!", err);
-                }
-            })
-        );
-        messageStream = adminMessagesService.messageStream.subscribe((message) => {
-            if (message.type === AdminMessageEventTypes.banned) {
-                chatIframe.remove();
+                subscribeListeners.push(
+                    currentPlayerWokaStore.subscribe((value) => {
+                        if (value !== undefined) {
+                            wokaSrc = value;
+                            wokaDefinedStore.set(true);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    canSendInitMessageStore.subscribe((value) => {
+                        if (value) {
+                            chatIframe?.contentWindow?.postMessage(
+                                {
+                                    type: "userData",
+                                    data: {
+                                        ...localUserStore.getLocalUser(),
+                                        name,
+                                        playUri,
+                                        authToken: localUserStore.getAuthToken(),
+                                        color: getColorByString(name ?? ""),
+                                        woka: wokaSrc,
+                                    },
+                                },
+                                "*"
+                            );
+                            chatIframe?.contentWindow?.postMessage(
+                                {
+                                    type: "setLocale",
+                                    data: {
+                                        locale: $locale,
+                                    },
+                                },
+                                "*"
+                            );
+                            iframeListener.sendSettingsToChatIframe();
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    chatVisibilityStore.subscribe((visibility) => {
+                        try {
+                            gameManager.getCurrentGameScene()?.onResize();
+                        } catch (err) {
+                            console.info("gameManager doesn't exist!", err);
+                        }
+                        try {
+                            iframeListener.sendChatVisibilityToChatIframe(visibility);
+                        } catch (err) {
+                            console.error("Send chat visibility to chat iFrame", err);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    availabilityStatusStore.subscribe((status) => {
+                        iframeListener.postMessageToChat({
+                            type: "availabilityStatus",
+                            data: status,
+                        });
+                    })
+                );
+                messageStream = adminMessagesService.messageStream.subscribe((message) => {
+                    if (message.type === AdminMessageEventTypes.banned) {
+                        chatIframe.remove();
+                    }
+                    chatVisibilityStore.set(false);
+                    menuIconVisiblilityStore.set(false);
+                });
+                //TODO delete it with new XMPP integration
+                //send list to chat iframe
+                subscribeListeners.push(
+                    writingStatusMessageStore.subscribe((list) => {
+                        try {
+                            iframeListener.sendWritingStatusToChatIframe(list);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    peerStore.subscribe((list) => {
+                        try {
+                            iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    })
+                );
             }
-            chatVisibilityStore.set(false);
-            menuIconVisiblilityStore.set(false);
         });
     });
     onDestroy(() => {
@@ -113,7 +149,9 @@
         subscribeListeners.forEach((listener) => {
             listener();
         });
-        messageStream.unsubscribe();
+        if (messageStream) {
+            messageStream.unsubscribe();
+        }
     });
 
     function closeChat() {
@@ -138,7 +176,6 @@
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
         allow="fullscreen; clipboard-read; clipboard-write"
         title="WorkAdventureChat"
         src={CHAT_URL}

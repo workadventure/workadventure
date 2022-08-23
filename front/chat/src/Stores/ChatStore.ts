@@ -137,7 +137,11 @@ function createChatSubMenuVisibilityStore() {
 }
 export const chatSubMenuVisibilityStore = createChatSubMenuVisibilityStore();
 
-export const timelineOpenedStore = writable<boolean>(false);
+export const chatVisibilityStore = writable<boolean>(false);
+
+export const availabilityStatusStore = writable<number>(1);
+
+export const timelineOpenedStore = writable<boolean>(true);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
 
@@ -171,3 +175,6 @@ export const hasInProgressUploadingFile = derived([filesUploadStore], ([$filesUp
         false
     )
 );
+
+export const chatSoundsStore = writable<boolean>(true);
+export const chatNotificationsStore = writable<boolean>(true);

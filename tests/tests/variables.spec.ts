@@ -139,8 +139,6 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
-    startRecordLogs(page);
-
     await page.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
@@ -160,6 +158,8 @@ test.describe('Variables', () => {
     const newBrowser = await browser.browserType().launch();
     const page2 = await newBrowser.newPage();
 
+    startRecordLogs(page2);
+
     await page2.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
@@ -170,20 +170,10 @@ test.describe('Variables', () => {
     await assertLogMessage(page2, 'SUCCESS!');
 
     // Let's check the pusher getRooms endpoint returns 2 users on the map
-    let rooms = await getPusherRooms();
-    for (let i = 0; i < 5; i++) {
-      if (rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] === 2) {
-        break;
-      }
-      // If we don't have the result right away, let's wait 3 seconds, just in case pusher is slow.
-      await timeout(15000);
-      rooms = await getPusherRooms();
-    }
-    await expect(
-        rooms[
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
-            ]
-    ).toBe(2);
+    await expect.poll(async () => {
+      const rooms = await getPusherRooms();
+      return rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'];
+    }).toBe(2);
 
     await page2.close();
   });
