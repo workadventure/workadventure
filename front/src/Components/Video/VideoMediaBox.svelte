@@ -46,13 +46,13 @@
 </script>
 
 <div
-    class="video-container"
+    class="video-container screen-blocker"
     class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     <div
-        class="screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
+        class="tw-flex tw-w-full tw-flex-col tw-h-full"
         class:tw-justify-center={$statusStore === "connecting" || $statusStore === "error"}
         class:tw-items-center={$statusStore === "connecting" || $statusStore === "error"}
     >
