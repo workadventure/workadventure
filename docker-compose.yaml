@@ -235,6 +235,7 @@ services:
       #REDIS
       REDIS_HOST: "$UPLOADER_REDIS_HOST"
       REDIS_PORT: "$UPLOADER_REDIS_PORT"
+      REDIS_DB_NUMBER: "$UPLOADER_REDIS_DB_NUMBER"
     volumes:
       - ./uploader:/usr/src/app
     labels:

@@ -17,7 +17,7 @@ class UploaderService{
             && process.env.AWS_SECRET_ACCESS_KEY != undefined && process.env.AWS_SECRET_ACCESS_KEY != ""
             && process.env.AWS_DEFAULT_REGION != undefined && process.env.AWS_DEFAULT_REGION != ""
         ){
-            // Set the region 
+            // Set the region
             AWS.config.update({
                 accessKeyId: (process.env.AWS_ACCESS_KEY_ID),
                 secretAccessKey: (process.env.AWS_SECRET_ACCESS_KEY),
@@ -29,13 +29,13 @@ class UploaderService{
         }
 
         if(
-            process.env.REDIS_HOST != undefined 
-            && process.env.REDIS_HOST != "" 
-            && process.env.REDIS_PORT != undefined 
+            process.env.REDIS_HOST != undefined
+            && process.env.REDIS_HOST != ""
+            && process.env.REDIS_PORT != undefined
             && process.env.REDIS_PORT != ""
         ){
             this.redisClient = createClient({
-                url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
+                url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_NUMBER || 0}`,
             });
             this.redisClient.on('error', (err: unknown) => console.error('Redis Client Error', err));
             this.redisClient.connect();
@@ -46,8 +46,8 @@ class UploaderService{
         const fileUuid = `${v4()}.${fileName.split('.').pop()}`;
         if(this.s3 != undefined){
             let uploadParams: S3.Types.PutObjectRequest = {
-                Bucket: `${(process.env.AWS_BUCKET as string)}`, 
-                Key: fileUuid, 
+                Bucket: `${(process.env.AWS_BUCKET as string)}`,
+                Key: fileUuid,
                 Body: chunks,
                 ACL: 'public-read'
             };
@@ -73,7 +73,7 @@ class UploaderService{
             }
             await this.redisClient.set(fileUuid, chunks);
             return new Promise((solve, rej) => {
-                solve({ Key:fileUuid, 
+                solve({ Key:fileUuid,
                     Location: `${process.env.UPLOADER_URL}/upload-file/${fileUuid}`,
                     Bucket: "",
                     ETag: ""

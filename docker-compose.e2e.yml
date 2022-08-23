@@ -75,3 +75,16 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run start:prod
     volumes: []
+
+
+  uploader:
+    image: thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
+    build:
+      context: ./
+      dockerfile: uploader/Dockerfile
+      cache_from:
+        - thecodingmachine/workadventure-uploader:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    command: yarn run runprod
+    volumes: []
