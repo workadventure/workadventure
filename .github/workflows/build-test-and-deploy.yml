@@ -350,6 +350,7 @@ jobs:
 #          check-name: 'build-map-storage'
 #          repo-token: ${{ secrets.GITHUB_TOKEN }}
 #          wait-interval: 10
+      - uses: rlespinasse/github-slug-action@3.1.0
       - name: Display pulled version
         run: echo "Pulling images with tag ${DOCKER_TAG}"
         env:
