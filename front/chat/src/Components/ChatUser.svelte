@@ -81,7 +81,11 @@
     });
 </script>
 
-<div class={`wa-chat-item ${user.isAdmin?'admin':'user'}`} on:click|stopPropagation={() => openChat(user)} on:mouseleave={closeChatUserMenu}>
+<div
+    class={`wa-chat-item ${user.isAdmin ? "admin" : "user"}`}
+    on:click|stopPropagation={() => openChat(user)}
+    on:mouseleave={closeChatUserMenu}
+>
     <div
         class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
         style={`background-color: ${getColor(user.jid)}`}
@@ -170,7 +174,9 @@
                             ><ShieldOffIcon size="13" /> {$LL.rankDown()}</span
                         >
                     {:else}
-                        <span class="rank-up wa-dropdown-item tw-text-orange" on:click|stopPropagation={() => rankUp(user.jid)}
+                        <span
+                            class="rank-up wa-dropdown-item tw-text-orange"
+                            on:click|stopPropagation={() => rankUp(user.jid)}
                             ><ShieldIcon size="13" /> {$LL.rankUp()}</span
                         >
                     {/if}

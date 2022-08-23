@@ -37,13 +37,17 @@
 </script>
 
 <!-- thread -->
-<div id="activeThread" class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full" transition:fly={{ x: 500, duration: 400 }}>
+<div
+    id="activeThread"
+    class="tw-flex tw-flex-col tw-h-full tw-min-h-full tw-over tw-w-full"
+    transition:fly={{ x: 500, duration: 400 }}
+>
     <div class="wa-thread-head">
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
-                    id="exit"
+                id="exit"
                 class="tw-text-lighter-purple tw-m-0"
                 on:click={() => {
                     activeThreadStore.reset();

@@ -112,7 +112,8 @@
                 on:goTo={(event) => $activeThreadStore.goTo(event.detail.type, event.detail.playUri, event.detail.uuid)}
                 on:rankUp={(event) => $activeThreadStore.sendRankUp(event.detail.jid)}
                 on:rankDown={(event) => $activeThreadStore.sendRankDown(event.detail.jid)}
-                on:ban={(event) => $activeThreadStore.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
+                on:ban={(event) =>
+                    $activeThreadStore.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
             />
         {:else}
             <div class="wa-message-bg">

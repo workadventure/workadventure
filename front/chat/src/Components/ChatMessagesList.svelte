@@ -273,7 +273,7 @@
                 id={`message_${message.id}`}
                 class={`wa-message tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
             ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}
-            ${isMe(message.jid)? (message.delivered ? "sent" : "sending") : "received"}
+            ${isMe(message.jid) ? (message.delivered ? "sent" : "sending") : "received"}
             `}
             >
                 <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
