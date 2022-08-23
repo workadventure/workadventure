@@ -250,7 +250,7 @@ interface UIWebsite {
         left?: string,
         right?: string,
     },
-    canOverlapPlayer?: boolean,     // Define if the iframe can overlap the player
+    canOverlapPlayer?: boolean,     // Defines if the iframe can overlap the player. If "false", WorkAdventure will recenter the user on the screen so that it is never hidden by the iframe
     close(): Promise<void>,         // Close the current website instance
 }
 ```
