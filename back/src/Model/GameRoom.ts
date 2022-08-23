@@ -139,10 +139,13 @@ export class GameRoom implements BrothersFinder {
             });
         }
 
-        return gameRoom.getMucManager().then((mucManager) => {
-            mucManager.init();
-            return gameRoom;
-        });
+        gameRoom
+            .getMucManager()
+            .then((mucManager) => {
+                mucManager.init().catch((err) => console.error(err));
+            })
+            .catch((err) => console.error(err));
+        return gameRoom;
     }
 
     public getUsers(): Map<number, User> {
