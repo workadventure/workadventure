@@ -6,6 +6,7 @@ on:
   release:
     types: [created]
   pull_request:
+    types: [labeled, synchronize, opened, reopened]
 
 jobs:
   build-front:

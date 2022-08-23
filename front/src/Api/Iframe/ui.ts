@@ -9,8 +9,8 @@ import { ActionsMenuActionClickedEvent } from "../Events/ActionsMenuActionClicke
 import { Observable, Subject } from "rxjs";
 import type { UIWebsiteCommands } from "./Ui/UIWebsite";
 import website from "./Ui/UIWebsite";
-import { RemotePlayer, remotePlayers } from "./Players/RemotePlayer";
-import { RemotePlayerClickedEvent } from "../Events/RemotePlayerClickedEvent";
+import { RemotePlayer } from "./Players/RemotePlayer";
+import { AddPlayerEvent } from "../Events/AddPlayerEvent";
 
 let popupId = 0;
 const popups: Map<number, Popup> = new Map<number, Popup>();
@@ -107,9 +107,8 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         }),
         apiCallback({
             type: "remotePlayerClickedEvent",
-            callback: (payloadData: RemotePlayerClickedEvent) => {
-                this.currentlyClickedRemotePlayer = remotePlayers.get(payloadData.id);
-                this._onRemotePlayerClicked.next(this.currentlyClickedRemotePlayer);
+            callback: (payloadData: AddPlayerEvent) => {
+                this._onRemotePlayerClicked.next(new RemotePlayer(payloadData));
             },
         }),
         apiCallback({
