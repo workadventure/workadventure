@@ -33,6 +33,7 @@
     $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
     $: usersStore = mucRoom.getPresenceStore();
     $: loadingStore = mucRoom.getLoadingStore();
+    $: meStore = mucRoom.getMeStore();
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
@@ -334,10 +335,20 @@
                                     })}</span
                                 >
                             </div>
-                            <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
-                                {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
-                                    <p class="tw-italic">{$LL.messageDeleted()}</p>
-                                {:else}
+
+                            <!-- Delete message -->
+                            {#if [...$deletedMessagesStore].find((deleted) => deleted.id === message.id)}
+                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                    <p class="tw-italic">
+                                        {$LL.messageDeleted()}
+                                        {[...$deletedMessagesStore].find((deleted) => deleted.id === message.id)?.from}.
+                                    </p>
+                                </div>
+
+                                <!-- Message -->
+                            {:else}
+                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                    <!-- Body associated -->
                                     <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                         {#await HtmlUtils.urlify(message.body)}
                                             <p>...waiting</p>
@@ -346,12 +357,14 @@
                                         {/await}
                                     </div>
 
+                                    <!-- File associated -->
                                     {#if message.files && message.files.length > 0}
                                         {#each message.files as file}
-                                            <!-- File message -->
                                             <File {file} />
                                         {/each}
                                     {/if}
+
+                                    <!-- Action bar -->
                                     <div
                                         class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                     >
@@ -380,63 +393,72 @@
                                                     <CopyIcon size="13" class="tw-mr-1" />
                                                     {$LL.copy()}
                                                 </span>
-                                                <span
-                                                    class="wa-dropdown-item tw-text-pop-red"
-                                                    on:click={() => mucRoom.sendRemoveMessage(message.id)}
-                                                >
-                                                    <Trash2Icon size="13" class="tw-mr-1" />
-                                                    {$LL.delete()}
-                                                </span>
+                                                {#if $meStore.isAdmin}
+                                                    <span
+                                                        class="wa-dropdown-item tw-text-pop-red"
+                                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                    >
+                                                        <Trash2Icon size="13" class="tw-mr-1" />
+                                                        {$LL.delete()}
+                                                    </span>
+                                                {:else}
+                                                    <span class="wa-dropdown-item tw-text-pop-red">
+                                                        <Trash2Icon size="13" class="tw-mr-1" />
+                                                        {$LL.delete()} (comming soon!)
+                                                    </span>
+                                                {/if}
                                             </div>
                                         </div>
                                     </div>
-                                {/if}
-                            </div>
-                            {#if message.targetMessageReact}
-                                <div class="emojis">
-                                    {#each [...message.targetMessageReact.keys()] as emojiStr}
-                                        {#if message.targetMessageReact.get(emojiStr)}
-                                            <span
-                                                class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
-                                                on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
-                                            >
-                                                {emojiStr}
-                                                {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
-                                                    {message.targetMessageReact.get(emojiStr)}
-                                                {/if}
-                                            </span>
-                                        {/if}
-                                    {/each}
                                 </div>
-                            {/if}
 
-                            <!-- Reply message -->
-                            {#if message.targetMessageReply}
-                                <div
-                                    class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
-                                    on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
-                                >
-                                    <div class="icon-replied">
-                                        <CornerLeftUpIcon size="14" />
-                                    </div>
-                                    <p class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words">
-                                        {message.targetMessageReply.senderName}
-                                        {$LL.said()}
-                                    </p>
-
-                                    <!-- Reply message body render -->
-                                    <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
-                                        {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
-                                    </p>
-
-                                    <!-- Reply message file -->
-                                    {#if message.targetMessageReply.files}
-                                        {#each message.targetMessageReply.files as file}
-                                            <!-- File message -->
-                                            <File {file} />
+                                <!-- React associated -->
+                                {#if message.targetMessageReact}
+                                    <div class="emojis">
+                                        {#each [...message.targetMessageReact.keys()] as emojiStr}
+                                            {#if message.targetMessageReact.get(emojiStr)}
+                                                <span
+                                                    class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
+                                                    on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
+                                                >
+                                                    {emojiStr}
+                                                    {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
+                                                        {message.targetMessageReact.get(emojiStr)}
+                                                    {/if}
+                                                </span>
+                                            {/if}
                                         {/each}
-                                    {/if}
-                                </div>
+                                    </div>
+                                {/if}
+
+                                <!-- Reply associated -->
+                                {#if message.targetMessageReply}
+                                    <div
+                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                        on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
+                                    >
+                                        <div class="icon-replied">
+                                            <CornerLeftUpIcon size="14" />
+                                        </div>
+                                        <p class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words">
+                                            {message.targetMessageReply.senderName}
+                                            {$LL.said()}
+                                        </p>
+
+                                        <!-- Reply message body render -->
+                                        <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
+                                            {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
+                                        </p>
+
+                                        <!-- Reply message file -->
+                                        {#if message.targetMessageReply.files}
+                                            {#each message.targetMessageReply.files as file}
+                                                <!-- File message -->
+                                                <File {file} />
+                                            {/each}
+                                        {/if}
+                                    </div>
+                                {/if}
                             {/if}
                         </div>
                     </div>
@@ -598,6 +620,7 @@
     .message {
         background-color: rgba(15, 31, 45, 0.9);
         position: relative;
+        min-width: 75px;
         .actions {
             display: none;
             position: absolute;

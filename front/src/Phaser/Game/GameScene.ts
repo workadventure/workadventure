@@ -1068,7 +1068,6 @@ export class GameScene extends DirtyScene {
             }
 
             // Participant Join
-            console.log(oldPeersNumber);
             if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
                 const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
 

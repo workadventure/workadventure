@@ -60,7 +60,7 @@ const en_US: BaseTranslation = {
     more: "more",
     sendBack: "Send back",
     delete: "Delete",
-    messageDeleted: "This message has been deleted.",
+    messageDeleted: "This message has been deleted by ",
     emoji: {
         icon: "Icon to open or close emoji selected popup",
         search: "Search emojis...",

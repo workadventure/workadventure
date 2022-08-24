@@ -224,13 +224,18 @@ export class XmppClient {
 
                     //send present unavailable
                     try {
-                        await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
-                    } catch (err) {
-                        console.error("XmppClient => onCancel => presence", err);
-                    }
+                        await this.xmppSocket?.send(
+                            xml(
+                                "presence",
+                                { type: "unavailable" }
+                            )
+                        );
 
-                    //stop xmpp socket client
-                    this.xmppSocket?.stop();
+                        //stop xmpp socket client
+                        this.xmppSocket?.stop();
+                    } catch (err) {
+                        console.info("XmppClient => onCancel => presence => err", err);
+                    }
                 })();
             });
         }).catch((err) => {

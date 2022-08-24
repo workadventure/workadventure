@@ -117,14 +117,14 @@ export const defaultUserData: UserData = {
     isLogged: false,
 };
 
-export type DeleteMessageStore = Readable<string[]>;
+export type DeleteMessageStore = Readable<{ id: string; from: string }[]>;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
     private messageStore: Writable<Message[]>;
     private messageReactStore: Writable<Map<string, ReactMessage[]>>;
-    private deletedMessagesStore: Writable<string[]>;
+    private deletedMessagesStore: Writable<{ id: string; from: string }[]>;
     private meStore: Writable<Me>;
     private nickCount = 0;
     private composingTimeOut: Timeout | undefined;
@@ -146,7 +146,7 @@ export class MucRoom {
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.messageStore = writable<Message[]>(new Array(0));
-        this.deletedMessagesStore = writable<string[]>(new Array(0));
+        this.deletedMessagesStore = writable<{ id: string; from: string }[]>(new Array(0));
         this.messageReactStore = writable<Map<string, ReactMessage[]>>(new Map<string, ReactMessage[]>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
         this.meStore = writable<Me>({ isAdmin: false });
@@ -840,6 +840,13 @@ export class MucRoom {
                                 messages = messages.map((message) =>
                                     message.id === idMessage ? { ...message, delivered: true } : message
                                 );
+                            } //Check if message is deleted
+                            else if (xml.getChildByAttr("xmlns", "urn:xmpp:message-delete:0")?.getName() === "remove") {
+                                console.log("delete message => ", xml);
+                                this.deletedMessagesStore.update((deletedMessages) => [
+                                    ...deletedMessages,
+                                    { id: xml.getChild("remove")?.getAttr("origin_id"), from: name },
+                                ]);
                             } else {
                                 if (delay > this.lastMessageSeen) {
                                     this.countMessagesToSee.update((last) => last + 1);
@@ -900,6 +907,7 @@ export class MucRoom {
                                             }
                                         });
                                 }
+
                                 messages.push(message);
                             }
                             return messages;
