@@ -10,7 +10,7 @@ const mapStorageServer: IMapStorageServer = {
         call: ServerUnaryCall<EditMapWithKeyMessage, EmptyMessage>,
         callback: sendUnaryData<EmptyMessage>
     ): void {
-        console.log(call.request.getEditmapmessage());
+        console.log(call.request.getEditmapmessage()?.getModifyareamessage()?.toObject());
         callback(null, new EmptyMessage());
     },
 };

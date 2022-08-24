@@ -2,7 +2,7 @@
   "name": "map-storage",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "index.js",
   "contributors": [
     {
       "name": "Grégoire Parant",
@@ -27,8 +27,8 @@
     "prebuild": "rimraf dist",
     "build": "npx tsc",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main.js",
-    "start:dev": "concurrently \"npx tsc --watch\" \"nodemon -q dist/main.js\"",
+    "start": "node dist/index.js",
+    "start:dev": "nodemon ./src/index.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "precommit": "lint-staged",
     "test": "jest",
@@ -40,6 +40,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.13",
+    "google-protobuf": "^3.13.0",
     "@types/cors": "^2.8.12",
     "@workadventure/map-editor-types": "link:../libs/map-editor-types",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
