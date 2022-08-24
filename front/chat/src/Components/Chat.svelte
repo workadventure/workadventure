@@ -94,7 +94,7 @@
     }
 
     function login() {
-        if (window.location !== window.top.location) {
+        if (window.location !== window.parent?.location) {
             iframeListener.sendLogin();
         }
     }
