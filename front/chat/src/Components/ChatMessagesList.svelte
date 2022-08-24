@@ -394,18 +394,13 @@
                                                     <CopyIcon size="13" class="tw-mr-1" />
                                                     {$LL.copy()}
                                                 </span>
-                                                {#if $meStore.isAdmin}
+                                                {#if $meStore.isAdmin || isMe(message.jid)}
                                                     <span
                                                         class="wa-dropdown-item tw-text-pop-red"
                                                         on:click={() => mucRoom.sendRemoveMessage(message.id)}
                                                     >
                                                         <Trash2Icon size="13" class="tw-mr-1" />
                                                         {$LL.delete()}
-                                                    </span>
-                                                {:else}
-                                                    <span class="wa-dropdown-item tw-text-pop-red">
-                                                        <Trash2Icon size="13" class="tw-mr-1" />
-                                                        {$LL.delete()} (comming soon!)
                                                     </span>
                                                 {/if}
                                             </div>
