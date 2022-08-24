@@ -5,7 +5,7 @@ import {findContainer, startContainer, stopContainer} from "./utils/containers";
 
 const TIMEOUT_TO_GET_LIST = 30_000;
 
-test.setTimeout(180_000);
+test.setTimeout(300_000);
 
 test.describe('Chat', () => {
   test('main', async ({ page, browser }) => {
@@ -91,19 +91,23 @@ test.describe('Chat', () => {
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last()).toHaveClass(/received/);
       await expect(chat2.locator('#activeThread .wa-messages-list .wa-message').last().locator('.file')).toContainText('README.md');
 
+      /*
+      // TODO later : Manage admin in live zone based on our WorkAdventure role
       await chat.locator('#activeThread #settings').click();
       // Rank up user
       // Workaround to wait the end of svelte animation
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
       await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown button').click();
-      await expect(chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
-      await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .rank-up').click();
+      //await expect(chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
+      //await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .rank-up').click();
+      await chat.locator('span:has-text("Promote")').click({ timeout: 5_000 });
       await expect(chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2})).toHaveClass(/admin/);
       // Rank down user
       await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown button').click();
       await chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .rank-down').click();
       await expect(chat.locator('#activeThread .users .wa-chat-item', {hasText: nickname2})).toHaveClass(/user/);
+      */
       /*
       // TODO later : Ban a user
       await chat.locator('#activeThread .users .wa-chat-item.user').last().locator('.wa-dropdown button').click();
@@ -112,7 +116,7 @@ test.describe('Chat', () => {
       */
 
       // Exit forum
-      await chat.locator('#activeThread #exit').click();
+      await chat.locator('#activeThread .exit').click();
 
 
       // Walk to
@@ -120,15 +124,17 @@ test.describe('Chat', () => {
       //eslint-disable-next-line playwright/no-wait-for-timeout
       await page.waitForTimeout(3_000);
       await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown button').click();
-      await expect(chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
-      await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .walk-to').click();
+      //await expect(chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .wa-dropdown-menu')).toBeVisible();
+      //await chat.locator('.users .wa-chat-item', {hasText: nickname2}).locator('.wa-dropdown .walk-to').click();
+      await expect(chat.locator('span:has-text("Walk to")')).toBeVisible();
+      await chat.locator('span:has-text("Walk to")').click({ timeout: 5_000 });
+
       // Open timeline
       await chat.locator('#timeline #openTimeline').click();
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
       //await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
       // Close timeline
-      await chat.locator('#activeTimeline #exit').click();
-
+      await chat.locator('#activeTimeline .exit').click();
 
       // Exit of liveZone
       await page.locator('#game').focus();

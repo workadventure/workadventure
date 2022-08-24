@@ -47,8 +47,7 @@
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-border-t-0 tw-border-b-0 tw-self-stretch tw-flex tw-justify-center tw-align-middle"
         >
             <button
-                id="exit"
-                class="tw-text-lighter-purple tw-m-0"
+                class="exit tw-text-lighter-purple tw-m-0"
                 on:click={() => {
                     activeThreadStore.reset();
                 }}
