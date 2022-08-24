@@ -15,6 +15,7 @@
     import teleport from "../../public/static/images/teleport.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
+    import {ENABLE_OPENID} from "../Enum/EnvironmentVariable";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
@@ -126,14 +127,16 @@
                     <ShieldIcon size="13" />
                 </span>
             {/if}
-            {#if user.isMember}
-                <span class="tw-text-pop-green" title={$LL.role.member()}>
-                    <UserCheckIcon size="13" />
-                </span>
-            {:else}
-                <span class="tw-text-pop-red" title={$LL.role.visitor()}>
-                    <UserXIcon size="13" />
-                </span>
+            {#if ENABLE_OPENID}
+                {#if user.isMember}
+                    <span class="tw-text-pop-green" title={$LL.role.member()}>
+                        <UserCheckIcon size="13" />
+                    </span>
+                {:else}
+                    <span class="tw-text-pop-red" title={$LL.role.visitor()}>
+                        <UserXIcon size="13" />
+                    </span>
+                {/if}
             {/if}
         </h1>
         <p class="tw-text-xs tw-mb-0 tw-font-condensed">
