@@ -71,21 +71,21 @@ export class XmppClient {
             this.xmppSocket = xmpp;
 
             xmpp.on("error", (err: unknown) => {
-                console.info("XmppClient => receive => error", err);
+                console.info("XmppClient => createClient => receive => error", err);
                 //console.error("XmppClient => receive => error =>", err);
                 this.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
-                console.info("reconnecting");
+                console.info("XmppClient => createClient => reconnecting");
             });
 
             xmpp.reconnect.on("reconnected", () => {
-                console.info("reconnected");
+                console.info("XmppClient => createClient => reconnected");
             });
 
             xmpp.on("offline", () => {
-                console.info("XmppClient => offline => status", status);
+                console.info("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
                 //close en restart connexion
@@ -102,7 +102,11 @@ export class XmppClient {
             });
 
             xmpp.on("disconnect", () => {
-                console.info("XmppClient => disconnect => status", status, this.clientSocket.disconnecting);
+                console.info(
+                    "XmppClient => createClient => disconnect => status",
+                    status,
+                    this.clientSocket.disconnecting
+                );
                 if (status !== "disconnected") {
                     status = "disconnected";
 
@@ -118,7 +122,7 @@ export class XmppClient {
                 }
             });
             xmpp.on("online", (address: JID) => {
-                console.info("WebSocket Pusher <> Xmpp established");
+                console.info("XmppClient => createClient => online");
                 status = "connected";
                 //TODO
                 // define if MUC must persistent or not
@@ -151,17 +155,17 @@ export class XmppClient {
                 }
             });
             xmpp.on("status", (status: string) => {
-                console.error("XmppClient => status => status", status);
+                console.error("XmppClient => createClient => status => status", status);
                 // FIXME: the client keeps trying to reconnect.... even if the pusher is disconnected!
             });
 
             xmpp.start()
                 .then(() => {
-                    console.log("XmppClient => start");
+                    console.log("XmppClient => createClient => start");
                     res(xmpp);
                 })
                 .catch((err: Error) => {
-                    console.error("XmppClient => start => error", err);
+                    console.error("XmppClient => createClient => start => error", err);
                     throw err;
                 });
 
@@ -202,11 +206,12 @@ export class XmppClient {
 
     close(): void {
         //cancel promise
+        console.info("xmppClient => close");
         this.clientPromise.cancel();
     }
 
     start(): CancelablePromise {
-        console.info("> Connecting from xmppClient");
+        console.info("xmppClient => start");
         return (this.clientPromise = new CancelablePromise((res, rej, onCancel) => {
             this.createClient(res, rej);
             onCancel(() => {
@@ -220,12 +225,12 @@ export class XmppClient {
                     //send present unavailable
                     try {
                         await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
-                    } catch (err) {
-                        console.error("XmppClient => disconnect => presence", err);
-                    }
 
-                    //stop xmpp socket client
-                    this.xmppSocket?.stop();
+                        //stop xmpp socket client
+                        this.xmppSocket?.stop();
+                    } catch (err) {
+                        console.info("XmppClient => onCancel => presence => err", err);
+                    }
                 })();
             });
         }).catch((err) => {

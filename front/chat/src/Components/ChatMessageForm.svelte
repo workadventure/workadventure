@@ -24,7 +24,8 @@
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
-    import { fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
+    import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
+    import File from "./Content/File.svelte";
 
     export let mucRoom: MucRoom;
 
@@ -127,11 +128,11 @@
         (<HTMLInputElement>event.target).value = "";
     }
 
-    function handlerDeleteUploadedFile(file: File | UploadedFile) {
-        if (file instanceof File) {
-            //TODO manage promise listener to delete file
-        } else {
+    function handlerDeleteUploadedFile(file: FileExt | UploadedFile) {
+        if (file instanceof UploadedFile) {
             fileMessageManager.deleteFile(file).catch(() => {});
+        } else {
+            //TODO manage promise listener to delete file
         }
         filesUploadStore.update((list) => {
             list.delete(file.name);
@@ -260,6 +261,12 @@
                     <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                         {$selectedMessageToReply.body}
                     </p>
+                    {#if $selectedMessageToReply && $selectedMessageToReply.files && $selectedMessageToReply.files.length > 0}
+                        {#each $selectedMessageToReply.files as file}
+                            <!-- File message -->
+                            <File {file} />
+                        {/each}
+                    {/if}
                 </div>
                 <div class="close">
                     <XCircleIcon size="17" />

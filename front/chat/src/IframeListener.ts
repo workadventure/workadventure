@@ -33,11 +33,13 @@ class IframeListener {
                     switch (iframeEvent.type) {
                         case "userData": {
                             userStore.set(iframeEvent.data);
-                            connectionManager.init(
-                                iframeEvent.data.playUri,
-                                iframeEvent.data.uuid,
-                                iframeEvent.data.authToken
-                            );
+                            if (!connectionManager.connection) {
+                                connectionManager.init(
+                                    iframeEvent.data.playUri,
+                                    iframeEvent.data.uuid,
+                                    iframeEvent.data.authToken
+                                );
+                            }
                             break;
                         }
                         case "setLocale": {

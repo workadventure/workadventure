@@ -1,5 +1,5 @@
 import type { ChatConnection } from "../Connection/ChatConnection";
-import xml from "@xmpp/xml";
+import xml, { Element } from "@xmpp/xml";
 import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
@@ -840,6 +840,13 @@ export class MucRoom {
                                 messages = messages.map((message) =>
                                     message.id === idMessage ? { ...message, delivered: true } : message
                                 );
+                            } //Check if message is deleted
+                            else if (xml.getChildByAttr("xmlns", "urn:xmpp:message-delete:0")?.getName() === "remove") {
+                                console.log("delete message => ", xml);
+                                this.deletedMessagesStore.update((deletedMessages) => [
+                                    ...deletedMessages,
+                                    xml.getChild("remove")?.getAttr("origin_id"),
+                                ]);
                             } else {
                                 if (delay > this.lastMessageSeen) {
                                     this.countMessagesToSee.update((last) => last + 1);
@@ -866,23 +873,22 @@ export class MucRoom {
 
                                 //get reply message
                                 if (xml.getChild("reply") != undefined) {
-                                    message.targetMessageReply = {
-                                        ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                                    const targetMessageReply = {
+                                        ...xml.getChild("reply")?.attrs,
                                     };
 
                                     //get file of reply message
                                     const files = xml.getChild("reply")?.getChild("files");
-                                    if (files != undefined) {
-                                        message.targetMessageReply.files = fileMessageManager.getFilesListFromXml(
-                                            files as Element
-                                        );
+                                    if (files != undefined && files instanceof Element) {
+                                        targetMessageReply.files = fileMessageManager.getFilesListFromXml(files);
                                     }
+                                    message.targetMessageReply = targetMessageReply as ReplyMessage;
                                 }
 
                                 //get file of message
                                 const files = xml.getChild("files");
-                                if (files != undefined) {
-                                    message.files = fileMessageManager.getFilesListFromXml(files as Element);
+                                if (files != undefined && files instanceof Element) {
+                                    message.files = fileMessageManager.getFilesListFromXml(files);
                                 }
 
                                 //get list of mentions
@@ -902,11 +908,6 @@ export class MucRoom {
                                         });
                                 }
 
-                                if (xml.getChild("reply") != undefined) {
-                                    message.targetMessageReply = {
-                                        ...(xml.getChild("reply")?.attrs as ReplyMessage),
-                                    };
-                                }
                                 messages.push(message);
                             }
                             return messages;
