@@ -1,5 +1,5 @@
 import type { ChatConnection } from "../Connection/ChatConnection";
-import xml from "@xmpp/xml";
+import xml, { Element } from "@xmpp/xml";
 import jid, { JID } from "@xmpp/jid";
 import type { Readable, Writable } from "svelte/store";
 import { get, writable } from "svelte/store";
@@ -866,23 +866,22 @@ export class MucRoom {
 
                                 //get reply message
                                 if (xml.getChild("reply") != undefined) {
-                                    message.targetMessageReply = {
-                                        ...(xml.getChild("reply")?.attrs as ReplyMessage),
+                                    const targetMessageReply = {
+                                        ...xml.getChild("reply")?.attrs,
                                     };
 
                                     //get file of reply message
                                     const files = xml.getChild("reply")?.getChild("files");
-                                    if (files != undefined) {
-                                        message.targetMessageReply.files = fileMessageManager.getFilesListFromXml(
-                                            files as Element
-                                        );
+                                    if (files != undefined && files instanceof Element) {
+                                        targetMessageReply.files = fileMessageManager.getFilesListFromXml(files);
                                     }
+                                    message.targetMessageReply = targetMessageReply as ReplyMessage;
                                 }
 
                                 //get file of message
                                 const files = xml.getChild("files");
-                                if (files != undefined) {
-                                    message.files = fileMessageManager.getFilesListFromXml(files as Element);
+                                if (files != undefined && files instanceof Element) {
+                                    message.files = fileMessageManager.getFilesListFromXml(files);
                                 }
 
                                 //get list of mentions
@@ -900,12 +899,6 @@ export class MucRoom {
                                                 message.mentions.push(value.getAttr("user") as User);
                                             }
                                         });
-                                }
-
-                                if (xml.getChild("reply") != undefined) {
-                                    message.targetMessageReply = {
-                                        ...(xml.getChild("reply")?.attrs as ReplyMessage),
-                                    };
                                 }
                                 messages.push(message);
                             }

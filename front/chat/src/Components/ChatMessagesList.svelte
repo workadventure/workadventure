@@ -423,10 +423,14 @@
                                         {message.targetMessageReply.senderName}
                                         {$LL.said()}
                                     </p>
+
+                                    <!-- Reply message body render -->
                                     <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
                                         {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
                                     </p>
-                                    {#if message.targetMessageReply.files && message.targetMessageReply.files.length > 0}
+
+                                    <!-- Reply message file -->
+                                    {#if message.targetMessageReply.files}
                                         {#each message.targetMessageReply.files as file}
                                             <!-- File message -->
                                             <File {file} />

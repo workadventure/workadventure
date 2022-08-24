@@ -35,20 +35,6 @@ class ConnectionManager {
         this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.uuid);
     }
 
-    public closeAndRestart() {
-        //close current connection
-        this.connectionOrFail.close();
-        this.chatConnection = undefined;
-
-        //create new connection
-        if (this.setTimeout) {
-            clearTimeout(this.setTimeout);
-        }
-        this.setTimeout = setTimeout(() => {
-            this.init(this.playUri, this.uuid, this.authToken);
-        }, 2000);
-    }
-
     get isClose(): boolean {
         return this.chatConnection == undefined || this.chatConnection.isClose;
     }
