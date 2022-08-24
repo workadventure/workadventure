@@ -26,7 +26,7 @@ class LocalAdmin implements AdminInterface {
             visitCardUrl: null,
             textures: (await localWokaService.fetchWokaDetails(characterLayers)) ?? [],
             userRoomToken: undefined,
-            mucRooms: [{ name: "Default", url: playUri, type: "default" }],
+            mucRooms: [{ name: "Connected users", url: playUri, type: "default", subscribe: false }],
             activatedInviteUser: true,
         };
     }
