@@ -185,14 +185,22 @@
 </div>
 
 <style lang="scss">
+    @import "../../../style/breakpoints.scss";
+
+    @include media-breakpoint-up(sm) {
+        #chatWindow {
+            width: calc(100% - 20px) !important;
+        }
+    }
+
     #chatWindow {
         z-index: 1000;
         position: absolute;
         background-color: transparent;
         top: 0;
         left: -100%;
-        height: 100vh;
-        width: 28vw;
+        height: 100%;
+        width: 28%;
         min-width: 250px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
@@ -202,7 +210,6 @@
             left: 0;
             pointer-events: auto;
             visibility: visible;
-            //display: block;
         }
         iframe {
             width: 100%;
