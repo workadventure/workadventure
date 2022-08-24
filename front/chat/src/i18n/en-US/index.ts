@@ -22,7 +22,7 @@ const en_US: BaseTranslation = {
     me: "Me",
     you: "You",
     ban: {
-        title: "Banish",
+        title: "Ban",
         content: "Ban user {userName} from the running world. This can be cancelled from the administration.",
         ban: "Ban this user",
     },
