@@ -4,6 +4,8 @@ import "google/protobuf/wrappers.proto";
 
 /*********** PARTIAL MESSAGES **************/
 
+package workadventure;
+
 enum AvailabilityStatus {
   UNCHANGED = 0;
   ONLINE = 1;
@@ -60,6 +62,7 @@ message SetPlayerDetailsMessage {
   google.protobuf.BoolValue removeOutlineColor = 4;
   google.protobuf.BoolValue showVoiceIndicator = 5;
   AvailabilityStatus availabilityStatus = 6;
+  SetPlayerVariableMessage setVariable = 7;
 }
 
 message UserMovesMessage {
@@ -104,6 +107,14 @@ message LockGroupPromptMessage {
   bool lock = 1;
 }
 
+message ModifyAreaMessage {
+  int32 id = 1;
+  google.protobuf.UInt32Value x = 2;
+  google.protobuf.UInt32Value y = 3;
+  google.protobuf.UInt32Value width = 4;
+  google.protobuf.UInt32Value height = 5;
+}
+
 message ClientToServerMessage {
   oneof message {
     UserMovesMessage userMovesMessage = 2;
@@ -123,6 +134,9 @@ message ClientToServerMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
     PingMessage pingMessage = 21;
+    //XmppMessage xmppMessage = 22;
+    AskPositionMessage askPositionMessage = 23;
+    EditMapMessage editMapMessage = 24;
   }
 }
 
@@ -139,6 +153,30 @@ message ItemEventMessage {
 message VariableMessage {
   string name = 1;
   string value = 2;
+}
+
+message SetPlayerVariableMessage {
+  string name = 1;
+  string value = 2;
+  bool public = 3;
+  bool persist = 4;
+  google.protobuf.Int32Value ttl = 5;
+  enum Scope {
+    ROOM = 0;
+    WORLD = 1;
+  }
+  Scope scope = 6;
+}
+
+// Should replace the VariableMessage in the long run.
+// Not working because Value seems to be serialized differently in ts-proto and grpc-node....
+/*message UpdateVariableMessage {
+  string name = 1;
+  google.protobuf.Value value = 2;
+}*/
+
+message XmppMessage {
+  string stanza = 1;
 }
 
 /**
@@ -206,6 +244,10 @@ message UserMovedMessage {
   PositionMessage position = 2;
 }
 
+message MoveToPositionMessage{
+  PositionMessage position = 1;
+}
+
 message SubMessage {
   oneof message {
     UserMovedMessage userMovedMessage = 1;
@@ -219,6 +261,8 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
+    //XmppMessage xmppMessage = 12;
+    EditMapMessage editMapMessage = 13;
   }
 }
 
@@ -249,6 +293,7 @@ message UserJoinedMessage {
   uint32 outlineColor = 8;
   bool hasOutline = 9;
   AvailabilityStatus availabilityStatus = 10;
+  map<string, string> variables = 11;
 }
 
 message UserLeftMessage {
@@ -298,6 +343,8 @@ message RoomJoinedMessage {
   string userRoomToken = 7;
   // We send the current skin of the current player.
   repeated CharacterLayerMessage characterLayer = 8;
+  bool activatedInviteUser = 9;
+  repeated VariableMessage playerVariable = 10;
 }
 
 message WebRtcStartMessage {
@@ -356,6 +403,11 @@ message BanUserMessage{
   string message = 2;
 }
 
+message AskPositionMessage{
+  string userIdentifier = 1;
+  string playUri = 2;
+}
+
 /**
  * Messages going from back and pusher to the front
  */
@@ -385,6 +437,9 @@ message ServerToClientMessage {
     GroupUsersUpdateMessage groupUsersUpdateMessage = 25;
     ErrorScreenMessage errorScreenMessage = 26;
     AnswerMessage answerMessage = 28;
+    //XmppSettingsMessage xmppSettingsMessage = 29;
+    //XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 30;
+    MoveToPositionMessage moveToPositionMessage = 31;
   }
 }
 
@@ -403,6 +458,8 @@ message JoinRoomMessage {
   string visitCardUrl = 9;
   string userRoomToken = 10;
   AvailabilityStatus availabilityStatus = 11;
+  bool activatedInviteUser = 12;
+  bool isLogged = 13;
 }
 
 message UserJoinedZoneMessage {
@@ -417,6 +474,7 @@ message UserJoinedZoneMessage {
   uint32 outlineColor = 9;
   bool hasOutline = 10;
   AvailabilityStatus availabilityStatus = 11;
+  map<string, string> variables = 12;
 }
 
 message UserLeftZoneMessage {
@@ -475,6 +533,8 @@ message PusherToBackMessage {
     FollowAbortMessage followAbortMessage = 18;
     LockGroupPromptMessage lockGroupPromptMessage = 19;
     QueryMessage queryMessage = 21;
+    AskPositionMessage askPositionMessage = 22;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -506,6 +566,13 @@ message SubToPusherRoomMessage {
   oneof message {
     VariableWithTagMessage variableMessage = 1;
     ErrorMessage errorMessage = 2;
+    EditMapMessage editMapMessage = 3;
+  }
+}
+
+message EditMapMessage {
+  oneof message {
+    ModifyAreaMessage modifyAreaMessage = 1;
   }
 }
 
@@ -539,6 +606,7 @@ message ServerToAdminClientMessage {
   oneof message {
     UserJoinedRoomMessage userJoinedRoom = 1;
     UserLeftRoomMessage userLeftRoom = 2;
+    ErrorMessage errorMessage = 3;
   }
 }
 
@@ -589,6 +657,69 @@ message EmptyMessage {
 
 }
 
+
+
+/*******************************************************µ************************
+ * Start Chat Messages
+ ********************************************************************************/
+message IframeToPusherMessage{
+  oneof message {
+    XmppMessage xmppMessage = 1;
+    BanUserByUuidMessage banUserByUuidMessage = 2;
+  }
+}
+message PusherToIframeMessage{
+  oneof message {
+    XmppSettingsMessage xmppSettingsMessage = 1;
+    XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
+    XmppMessage xmppMessage = 3;
+  }
+}
+
+message MucRoomDefinitionMessage {
+  string url = 1;
+  string name = 2;
+  string type = 3;
+  bool subscribe = 4;
+}
+
+message XmppSettingsMessage{
+  string jid = 1;
+  string conferenceDomain = 2;
+  repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+
+/**
+ * Status of the connection to the XMPP server.
+ * In case something goes wrong with the XMPP server, we are notified here.
+ */
+message XmppConnectionStatusChangeMessage{
+  enum Status {
+    DISCONNECTED = 0;
+  }
+
+  Status status = 1;
+}
+
+message BanUserByUuidMessage{
+  string playUri = 1;
+  string uuidToBan = 2;
+  string name = 3;
+  string message = 4;
+  string byUserEmail = 5;
+}
+/*********************************************************************************
+ * End Chat Messages
+ *********************************************************************************/
+
+
+
+
+
+
+
+
 /**
  * Service handled by the "back". Pusher servers connect to this service.
  */
@@ -604,5 +735,12 @@ service RoomManager {
   rpc sendWorldFullWarningToRoom(WorldFullWarningToRoomMessage) returns (EmptyMessage);
   rpc sendRefreshRoomPrompt(RefreshRoomPromptMessage) returns (EmptyMessage);
   rpc getRooms(EmptyMessage) returns (RoomsList);
+  rpc ping(PingMessage) returns (PingMessage);
+}
+
+/**
+ * Service handled by the "map-storage". Back servers connect to this service.
+ */
+service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
 }

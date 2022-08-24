@@ -20,14 +20,22 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
         with:
           version: '3.x'
+
+      - name: "Install libs/tailwind dependencies"
+        run: yarn install
+        working-directory: "libs/tailwind"
+
+      - name: "Install libs/map-editor-types dependencies"
+        run: yarn install
+        working-directory: "libs/map-editor-types"
 
       - name: "Install dependencies"
         run: yarn install
@@ -82,8 +90,8 @@ jobs:
         run: yarn test
         working-directory: "front"
 
-  continuous-integration-pusher:
-    name: "Continuous Integration Pusher"
+  continuous-integration-chat:
+    name: "Continuous Integration Chat"
 
     runs-on: "ubuntu-latest"
 
@@ -95,6 +103,85 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '14.x'
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
+      - name: "Copy libs dependencies"
+        run: mkdir -p ./../front/libs/tailwind && cp -R ./* ./../front/libs
+        working-directory: "libs"
+
+      - name: "Install libs/tailwind dependencies"
+        run: yarn install
+        working-directory: "front/libs/tailwind"
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "front/chat"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
+        working-directory: "messages"
+
+      - name: "Create index.html"
+        run: ./templater.sh
+        working-directory: "front/chat"
+
+      - name: "Pretty"
+        run: yarn run pretty-check
+        working-directory: "front/chat"
+
+      - name: "Generate i18n files"
+        run: yarn run typesafe-i18n
+        working-directory: "front/chat"
+
+      # TODO active
+      #- name: "Build"
+      #  run: yarn run build
+      #  env:
+      #    PUSHER_URL: "//localhost:8080"
+      #    ADMIN_URL: "//localhost:80"
+      #    # upgrade RAM available to 6GB
+      #    NODE_OPTIONS: --max-old-space-size=6144
+      #  working-directory: "front/chat"
+
+      - name: "Svelte check"
+        run: yarn run svelte-check
+        working-directory: "front/chat"
+
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "front/chat"
+
+      # TODO active
+      #- name: "Typecheck"
+      #  run: yarn run typecheck
+      #  working-directory: "front/chat"
+
+      # TODO active
+      #- name: "Jasmine"
+      #  run: yarn test
+      #  working-directory: "front/chat"
+
+  continuous-integration-pusher:
+    name: "Continuous Integration Pusher"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -139,9 +226,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '12.x'
+          node-version: 16
 
       - name: Install Protoc
         uses: arduino/setup-protoc@v1
@@ -176,6 +263,53 @@ jobs:
         run: yarn run pretty-check
         working-directory: "back"
 
+  continuous-integration-map-storage:
+    name: "Continuous Integration Map Storage"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v1
+        with:
+          version: '3.x'
+
+      - name: "Install dependencies"
+        run: yarn install
+        working-directory: "map-storage"
+
+      - name: "Install messages dependencies"
+        run: yarn install
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
+        working-directory: "messages"
+
+      - name: "Build"
+        run: yarn run build
+        working-directory: "map-storage"
+
+      - name: "Lint"
+        run: yarn run lint
+        working-directory: "map-storage"
+
+      - name: "Jasmine"
+        run: yarn test
+        working-directory: "map-storage"
+
+      - name: "Prettier"
+        run: yarn run format
+        working-directory: "map-storage"
+
   continuous-integration-desktop:
     name: "Continuous Integration Desktop"
 
@@ -186,9 +320,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
@@ -224,9 +358,9 @@ jobs:
         uses: "actions/checkout@v2.0.0"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '14.x'
+          node-version: 16
 
       - name: "Install dependencies"
         run: yarn install --froze-lockfile
@@ -251,3 +385,33 @@ jobs:
       - name: "Prettier"
         run: yarn pretty-check
         working-directory: "desktop/local-app"
+
+  continuous-integration-end-to-end-tests:
+    name: "Continuous Integration checking End To End tests"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v2.0.0"
+
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: "Install dependencies"
+        run: npm ci
+        working-directory: "tests"
+
+      - name: "Install front dependencies"
+        run: yarn install --froze-lockfile
+        working-directory: "front"
+
+      - name: "Build API typings"
+        run: yarn run build-typings
+        working-directory: "front"
+
+      - name: "Lint"
+        run: yarn lint
+        working-directory: "tests"

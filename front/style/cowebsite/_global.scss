@@ -45,7 +45,7 @@
       flex-direction: column;
       margin-bottom: auto;
       flex: 1;
-      justify-content: start;
+      justify-content: flex-start;
 
       img {
         min-width: 1rem;
@@ -69,7 +69,7 @@
       display: flex;
       margin-top: auto;
       visibility: hidden;
-      justify-content: end;
+      justify-content: flex-end;
       flex: 1;
     }
   }

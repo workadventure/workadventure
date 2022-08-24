@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Unsubscriber } from "svelte/store";
-    import { emoteStore, emoteMenuStore } from "../../Stores/EmoteStore";
+    import { emoteMenuStore, emoteDataStore } from "../../Stores/EmoteStore";
     import { onDestroy, onMount } from "svelte";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import LL from "../../i18n/i18n-svelte";
@@ -16,14 +16,20 @@
             rootElement: emojiContainer,
             styleProperties: {
                 "--font": "Press Start 2P",
-                "--text-color": "whitesmoke",
-                "--secondary-text-color": "whitesmoke",
-                "--category-button-color": "whitesmoke",
+                "--background-color": "#23222c",
+                "--text-color": "#ffffff",
+                "--secondary-text-color": "#ffffff",
+                "--category-button-color": "#ffffff",
+                "--category-button-active-color": "#56eaff",
+            },
+            position: {
+                bottom: "118px",
             },
             emojisPerRow: isMediaBreakpointUp("md") ? 6 : 8,
             autoFocusSearch: false,
             style: "twemoji",
             showPreview: false,
+            autoHide: false,
             i18n: {
                 search: $LL.emoji.search(),
                 categories: {
@@ -46,11 +52,7 @@
         setTimeout(() => picker.showPicker(emojiContainer), 100);
 
         picker.on("emoji", (selection) => {
-            emoteStore.set({
-                unicode: selection.emoji,
-                url: selection.url,
-                name: selection.name,
-            });
+            emoteDataStore.pushNewEmoji(selection);
         });
 
         picker.on("hidden", () => {
@@ -69,11 +71,28 @@
             unsubscriber();
         }
 
+        document.body.removeEventListener("click", checkClickOutSide);
         picker.destroyPicker();
     });
+
+    function checkClickOutSide(event: unknown) {
+        if (
+            ((event as PointerEvent).target as Element)?.id.indexOf("button-") != -1 ||
+            ((event as PointerEvent).target as Element)?.id.indexOf("icon-") != -1
+        ) {
+            (event as PointerEvent).preventDefault();
+            (event as PointerEvent).stopImmediatePropagation();
+            (event as PointerEvent).stopPropagation();
+        }
+    }
+
+    function clickOutside(element: unknown) {
+        console.info("clickOutside event listener attached to element: ", element);
+        document.body.addEventListener("click", checkClickOutSide);
+    }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window on:keydown={onKeyDown} use:clickOutside />
 
 <div class="emote-menu-container">
     <div class="emote-menu" bind:this={emojiContainer} />

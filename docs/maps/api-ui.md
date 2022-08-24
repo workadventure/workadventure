@@ -174,16 +174,10 @@ When clicking on other player's WOKA, the contextual menu (we call it ActionsMen
 To do that, we need to listen for the `onRemotePlayerClicked` stream and make use of the `remotePlayer` object that is passed by as a payload.
 
 ```ts
-WA.ui.onRemotePlayerClicked.subscribe((remotePlayer: RemotePlayer) => {
+WA.ui.onRemotePlayerClicked.subscribe((remotePlayer: RemotePlayerInterface) => {
     remotePlayer.addAction('Ask to tell a joke', () => {
         console.log('I am NOT telling you a joke!');
     });
-}
-
-interface RemotePlayer {
-    id: number,
-    uuid: string,
-    name: string,
 }
 ```
 
@@ -200,7 +194,7 @@ setTimeout(
 );
 ```
 
-# Open fixed iframes
+## Manage fixed iframes
 
 You can use the scripting API to display an iframe (so any HTML element) above the game. The iframe is positionned relative to the browser window (so unlike [embedded websites](website-in-map.md), the position of the iframe does not move when someone walks on the map).
 
@@ -210,7 +204,7 @@ You can use the scripting API to display an iframe (so any HTML element) above t
 
 This functonnality creates an iframe positionned on the viewport.
 
-## Display a UI website
+### Display a UI website
 
 ```ts
 WA.ui.website.open(website: CreateUIWebsiteEvent): Promise<UIWebsite>
@@ -278,14 +272,14 @@ const myWebsite = await WA.ui.website.open({
 myWebsite.position.vertical = "top";
 ```
 
-## Close a UI website
+### Close a UI website
 You can close a website with the close function on the `UIWebsite` object
 
 ```ts
 myWebsite.close();
 ```
 
-## Get all UI websites
+### Get all UI websites
 You can get all websites with the `WA.ui.website.getAll()` method. It returns an `Promise<UIWebsite[]>` instance.
 
 ```ts

@@ -20,7 +20,7 @@ class UrlManager {
         //@deprecated jwt url will be replace by "?token=<private access token>"
         else if (url === "/jwt") {
             return GameConnexionTypes.jwt;
-        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/")) {
+        } else if (url.includes("_/") || url.includes("*/") || url.includes("@/") || url.includes("~/")) {
             return GameConnexionTypes.room;
         }
         //@deprecated register url will be replace by "?token=<private access token>"
@@ -51,14 +51,14 @@ class UrlManager {
         history.pushState({}, "WorkAdventure", room.id + (search ? "?" + search : "") + hash);
     }
 
-    public getStartLayerNameFromUrl(): string | null {
+    public getStartPositionNameFromUrl(): string | undefined {
         const parameters = this.getHashParameters();
         for (const key in parameters) {
             if (parameters[key] === undefined) {
                 return key;
             }
         }
-        return null;
+        return undefined;
     }
 
     public getHashParameter(name: string): string | undefined {
@@ -67,6 +67,7 @@ class UrlManager {
 
     public clearHashParameter(): void {
         window.location.hash = "";
+        history.pushState("", document.title, window.location.pathname + window.location.search);
     }
 
     private getHashParameters(): Record<string, string> {
@@ -82,6 +83,10 @@ class UrlManager {
 
     pushStartLayerNameToUrl(startLayerName: string): void {
         window.location.hash = startLayerName;
+    }
+
+    getPlayUri(): string {
+        return document.location.toString();
     }
 }
 

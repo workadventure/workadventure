@@ -1,11 +1,7 @@
 //import Docker from "dockerode";
 //import * as Dockerode from "dockerode";
 import Dockerode from 'dockerode';
-const util = require('util');
-const exec = util.promisify(require('child_process').exec);
-const { execSync } = require('child_process');
-const path = require("path");
-const fs = require('fs');
+import { execSync } from 'child_process';
 
 /**
  * Execute Docker compose, passing the correct host directory
@@ -15,10 +11,10 @@ export function dockerCompose(command: string): void {
     const overrideDockerCompose = process.env.OVERRIDE_DOCKER_COMPOSE;
 
     if (overrideDockerCompose) {
-        param += ' -f docker-compose.yaml -f '+overrideDockerCompose;
+        param += ' -f '+overrideDockerCompose;
     }
 
-    let stdout = execSync('docker-compose '+param+' '+command, {
+    /*const stdout =*/ execSync('docker-compose -f docker-compose.yaml -f docker-compose-oidc.yaml '+param+' '+command, {
         cwd: __dirname + '/../../../'
     });
 }
@@ -62,6 +58,18 @@ export function rebootTraefik(): void {
 
 export async function rebootPusher(): Promise<void> {
     dockerCompose('up --force-recreate -d pusher');
+}
+
+export async function stopPusher(): Promise<void> {
+    dockerCompose('stop pusher');
+}
+
+export async function stopEjabberd(): Promise<void> {
+    dockerCompose('stop ejabberd');
+}
+
+export async function rebootEjabberd(): Promise<void> {
+    dockerCompose('up --force-recreate -d ejabberd');
 }
 
 export async function resetRedis(): Promise<void> {

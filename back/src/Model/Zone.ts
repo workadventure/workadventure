@@ -117,6 +117,13 @@ export class Zone {
     }
 
     public updatePlayerDetails(user: User, playerDetails: SetPlayerDetailsMessage) {
+        // Let's filter out private variables that must not be dispatched
+        if (playerDetails.getSetvariable()?.getPublic() === false) {
+            // Note: technically we should check no other fields are set on this "details" object.
+            // But we know we are sending variables in separated SetPlayerDetailsMessage
+            return;
+        }
+
         const playerDetailsUpdatedMessage = new PlayerDetailsUpdatedMessage();
         playerDetailsUpdatedMessage.setUserid(user.id);
         playerDetailsUpdatedMessage.setDetails(playerDetails);

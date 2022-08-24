@@ -1,5 +1,5 @@
 import CancelablePromise from "cancelable-promise";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { jitsiFactory } from "../JitsiFactory";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
@@ -14,7 +14,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
         return new CancelablePromise((resolve, reject, cancel) => {
             this.state.set("loading");
 
-            gameManager.getCurrentGameScene().disableMediaBehaviors();
+            inExternalServiceStore.set(true);
 
             if (!this.jitsiLoadPromise) {
                 return reject("Undefined Jitsi start callback");
@@ -42,7 +42,7 @@ export class JitsiCoWebsite extends SimpleCoWebsite {
 
     unload(): Promise<void> {
         jitsiFactory.destroy();
-        gameManager.getCurrentGameScene().enableMediaBehaviors();
+        inExternalServiceStore.set(false);
 
         return super.unload();
     }

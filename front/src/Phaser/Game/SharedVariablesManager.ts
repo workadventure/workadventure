@@ -1,9 +1,9 @@
 import type { RoomConnection } from "../../Connexion/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
-import type { GameMap } from "./GameMap";
-import type { ITiledMapLayer, ITiledMapObject } from "../Map/ITiledMap";
-import { GameMapProperties } from "./GameMapProperties";
 import type { SetVariableEvent } from "../../Api/Events/SetVariableEvent";
+import { ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
+import { GameMapProperties } from "@workadventure/map-editor-types";
 
 interface Variable {
     defaultValue: unknown;
@@ -20,12 +20,12 @@ export class SharedVariablesManager {
 
     constructor(
         private roomConnection: RoomConnection,
-        private gameMap: GameMap,
+        private gameMapFrontWrapper: GameMapFrontWrapper,
         serverVariables: Map<string, unknown>
     ) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
-        this.variableObjects = SharedVariablesManager.findVariablesInMap(gameMap);
+        this.variableObjects = SharedVariablesManager.findVariablesInMap(gameMapFrontWrapper);
 
         // Let's initialize default values
         for (const [name, variableObject] of this.variableObjects.entries()) {
@@ -49,7 +49,6 @@ export class SharedVariablesManager {
             iframeListener.setVariable({
                 key: name,
                 value: value,
-                target: "global",
             });
         });
     }
@@ -96,9 +95,9 @@ export class SharedVariablesManager {
         iframeListener.dispatchVariableToOtherIframes(key, event.value, source);
     }
 
-    private static findVariablesInMap(gameMap: GameMap): Map<string, Variable> {
+    private static findVariablesInMap(gameMapFrontWrapper: GameMapFrontWrapper): Map<string, Variable> {
         const objects = new Map<string, Variable>();
-        for (const layer of gameMap.getMap().layers) {
+        for (const layer of gameMapFrontWrapper.getMap().layers) {
             this.recursiveFindVariablesInLayer(layer, objects);
         }
         return objects;
@@ -107,7 +106,7 @@ export class SharedVariablesManager {
     private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "variable") {
+                if (object.class === "variable") {
                     if (object.template) {
                         console.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'

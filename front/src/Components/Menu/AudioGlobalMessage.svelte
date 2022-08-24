@@ -12,9 +12,10 @@
 
     let gameScene = gameManager.getCurrentGameScene();
     let fileInput: HTMLInputElement;
-    let fileName: string;
+    let fileName: string | undefined;
     let fileSize: string;
     let errorFile: boolean;
+    let errorUpload: boolean;
 
     const AUDIO_TYPE = AdminMessageEventTypes.audio;
 
@@ -32,15 +33,22 @@
 
             const fd = new FormData();
             fd.append("file", selectedFile);
-            const res = await gameScene.connection?.uploadAudio(fd);
+            try {
+                const res = await gameScene.connection?.uploadAudio(fd);
 
-            const audioGlobalMessage: PlayGlobalMessageInterface = {
-                content: (res as { path: string }).path,
-                type: AUDIO_TYPE,
-                broadcastToWorld: broadcast,
-            };
-            inputAudio.value = "";
-            gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
+                const audioGlobalMessage: PlayGlobalMessageInterface = {
+                    content: (res as { path: string }).path,
+                    type: AUDIO_TYPE,
+                    broadcastToWorld: broadcast,
+                };
+                inputAudio.value = "";
+                fileName = undefined;
+                gameScene.connection?.emitGlobalMessage(audioGlobalMessage);
+                errorUpload = false;
+            } catch (err) {
+                console.error(err);
+                errorUpload = true;
+            }
         },
     };
 
@@ -58,6 +66,7 @@
         fileName = file.name;
         fileSize = getFileSize(file.size);
         errorFile = false;
+        errorUpload = false;
     }
 
     function getFileSize(number: number) {
@@ -73,9 +82,10 @@
     }
 </script>
 
-<section class="section-input-send-audio">
+<section class="section-input-send-audio centered-column">
     <img
-        class="nes-pointer"
+        class="clickable tw-w-1/4"
+        draggable="false"
         src={uploadFile}
         alt={$LL.menu.globalAudio.uploadInfo()}
         on:click|preventDefault={() => {
@@ -88,7 +98,11 @@
     {#if errorFile}
         <p class="err">{$LL.menu.globalAudio.error()}</p>
     {/if}
+    {#if errorUpload}
+        <p class="err">{$LL.menu.globalAudio.errorUpload()}</p>
+    {/if}
     <input
+        class="tw-hidden"
         type="file"
         id="input-send-audio"
         bind:this={fileInput}
@@ -99,28 +113,7 @@
 </section>
 
 <style lang="scss">
-    section.section-input-send-audio {
-        display: flex;
-        flex-direction: column;
-
-        height: 100%;
-        text-align: center;
-
-        img {
-            flex: 1 1 auto;
-            max-height: 80%;
-            margin-bottom: 20px;
-        }
-        p {
-            margin-bottom: 5px;
-            color: whitesmoke;
-            font-size: 1rem;
-            &.err {
-                color: #ce372b;
-            }
-        }
-        input {
-            display: none;
-        }
+    p.err {
+        color: red;
     }
 </style>

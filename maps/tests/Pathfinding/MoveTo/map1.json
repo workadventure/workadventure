@@ -1,0 +1,386 @@
+{ "compressionlevel":-1,
+ "height":10,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 12, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+         "height":10,
+         "id":1,
+         "name":"floor",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            12, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":2,
+         "name":"start",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 34,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 0, 0, 0, 0, 0, 0, 0, 0, 17,
+            17, 17, 17, 17, 17, 17, 17, 17, 17, 17],
+         "height":10,
+         "id":7,
+         "name":"walls",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 34, 0,
+            0, 0, 0, 0, 0, 0, 0, 34, 34, 34,
+            0, 0, 0, 0, 0, 0, 34, 34, 34, 34,
+            0, 0, 0, 0, 0, 0, 0, 34, 34, 34,
+            0, 0, 0, 0, 0, 0, 0, 0, 34, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":8,
+         "name":"meeting-room",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"startLayer",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 12, 12, 0, 0, 0, 0, 0, 0,
+            0, 0, 12, 12, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+         "height":10,
+         "id":10,
+         "name":"start2",
+         "opacity":1,
+         "properties":[
+                {
+                 "name":"startLayer",
+                 "type":"bool",
+                 "value":true
+                }],
+         "type":"tilelayer",
+         "visible":true,
+         "width":10,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":3,
+         "name":"floorLayer",
+         "objects":[
+                {
+                 "class":"",
+                 "height":33.4788210765457,
+                 "id":1,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"Add \"moveTo\" parameter to the URL to make character move at game start.",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":249.954975648686,
+                 "x":35.2740564642832,
+                 "y":34.4372323693377
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":3,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start2&moveTo=meeting-room",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":223.499265952492,
+                 "x":32,
+                 "y":114
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":4,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"start",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":26.7596292501164,
+                 "x":3.30880298090358,
+                 "y":135.124359571495
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":5,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start2&moveTo=start",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":158.292,
+                 "x":32,
+                 "y":132
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":6,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start&moveTo=meeting-room",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":217.164845831393,
+                 "x":32,
+                 "y":93.740349627387
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":7,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"start2",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":33.0940201210992,
+                 "x":74.556855798789,
+                 "y":245.393819585468
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":8,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"meeting-room",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":92.7120717279925,
+                 "x":233.848901257569,
+                 "y":135.845612785282
+                }, 
+                {
+                 "class":"",
+                 "height":0,
+                 "id":9,
+                 "name":"destination",
+                 "point":true,
+                 "rotation":0,
+                 "visible":true,
+                 "width":0,
+                 "x":207.918025151374,
+                 "y":243.31625523987
+                }, 
+                {
+                 "class":"",
+                 "height":45.0829063809967,
+                 "id":10,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "halign":"center",
+                     "text":"destination object",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":83,
+                 "x":167.26,
+                 "y":254.682580344667
+                }, 
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":11,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start&moveTo=destination",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":202.260327899394,
+                 "x":32.2652715416861,
+                 "y":148.51445302748
+                },
+            
+                {
+                 "class":"",
+                 "height":19.6921,
+                 "id":12,
+                 "name":"",
+                 "rotation":0,
+                 "text":
+                    {
+                     "fontfamily":"Sans Serif",
+                     "pixelsize":13,
+                     "text":"...#start2&moveTo=200,100",
+                     "wrap":true
+                    },
+                 "visible":true,
+                 "width":202.26,
+                 "x":32.2654354913834,
+                 "y":169.008165183978
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":11,
+ "nextobjectid":13,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.9.0",
+ "tileheight":32,
+ "tilesets":[
+        {
+         "columns":11,
+         "firstgid":1,
+         "image":"..\/..\/tileset1.png",
+         "imageheight":352,
+         "imagewidth":352,
+         "margin":0,
+         "name":"tileset1",
+         "spacing":0,
+         "tilecount":121,
+         "tileheight":32,
+         "tiles":[
+                {
+                 "id":16,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":17,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":18,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }, 
+                {
+                 "id":19,
+                 "properties":[
+                        {
+                         "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.9",
+ "width":10
+}

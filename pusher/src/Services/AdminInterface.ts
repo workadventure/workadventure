@@ -13,6 +13,7 @@ export interface AdminInterface {
      */
     fetchMemberDataByUuid(
         userIdentifier: string,
+        isLogged: boolean,
         playUri: string,
         ipAddress: string,
         characterLayers: string[],
@@ -80,4 +81,12 @@ export interface AdminInterface {
      * @param token
      */
     logoutOauth(token: string): Promise<void>;
+
+    banUserByUuid(
+        uuidToBan: string,
+        playUri: string,
+        name: string,
+        message: string,
+        byUserEmail: string
+    ): Promise<boolean>;
 }

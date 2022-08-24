@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { PUSHER_URL } from "../Enum/EnvironmentVariable";
+import { ENABLE_OPENID, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import { RoomConnection } from "./RoomConnection";
 import type { OnConnectInterface, PositionInterface, ViewportInterface } from "./ConnexionModels";
 import { GameConnexionTypes, urlManager } from "../Url/UrlManager";
@@ -11,7 +11,6 @@ import { loginSceneVisibleIframeStore } from "../Stores/LoginSceneStore";
 import { userIsConnected, warningContainerStore } from "../Stores/MenuStore";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { axiosWithRetry } from "./AxiosUtils";
-import axios from "axios";
 import { isRegisterData } from "../Messages/JsonMessages/RegisterData";
 import { limitMapStore } from "../Stores/GameStore";
 import { showLimitRoomModalStore } from "../Stores/ModalStore";
@@ -19,7 +18,6 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { locales } from "../i18n/i18n-util";
 import type { Locales } from "../i18n/i18n-types";
 import { setCurrentLocale } from "../i18n/locales";
-import { isErrorApiData } from "../Messages/JsonMessages/ErrorApiData";
 import { AvailabilityStatus } from "../Messages/ts-proto-generated/protos/messages";
 
 class ConnectionManager {
@@ -47,20 +45,19 @@ class ConnectionManager {
     /**
      * TODO fix me to be move in game manager
      *
-     * Returns the URL that we need to redirect to to load the OpenID screen, or "null" if no redirection needs to happen.
+     * Returns the URL that we need to redirect to load the OpenID screen, or "null" if no redirection needs to happen.
      */
     public loadOpenIDScreen(): URL | null {
-        const state = localUserStore.generateState();
-        const nonce = localUserStore.generateNonce();
         localUserStore.setAuthToken(null);
-
-        if (!this._currentRoom || !this._currentRoom.iframeAuthentication) {
+        // FIXME: remove this._currentRoom.iframeAuthentication
+        // FIXME: remove this._currentRoom.iframeAuthentication
+        // FIXME: remove this._currentRoom.iframeAuthentication
+        // FIXME: remove this._currentRoom.iframeAuthentication
+        if (!ENABLE_OPENID || !this._currentRoom || !this._currentRoom.iframeAuthentication) {
             loginSceneVisibleIframeStore.set(false);
             return null;
         }
         const redirectUrl = new URL(`${this._currentRoom.iframeAuthentication}`, window.location.href);
-        redirectUrl.searchParams.append("state", state);
-        redirectUrl.searchParams.append("nonce", nonce);
         redirectUrl.searchParams.append("playUri", this._currentRoom.key);
         return redirectUrl;
     }
@@ -77,8 +74,8 @@ class ConnectionManager {
         await Axios.get(`${PUSHER_URL}/logout-callback`, { params: { token } }).then((res) => res.data);
         localUserStore.setAuthToken(null);
 
-        //Go on login page can permit to clear token and start authentication process
-        window.location.assign("/login");
+        //Go on root page
+        window.location.assign("/");
     }
 
     /**
@@ -109,38 +106,9 @@ class ConnectionManager {
             urlManager.pushRoomIdToUrl(this._currentRoom);
         } else if (this.connexionType === GameConnexionTypes.jwt) {
             /** @deprecated */
-            if (!token) {
-                const code = urlParams.get("code");
-                const state = urlParams.get("state");
-                if (!state || !localUserStore.verifyState(state)) {
-                    throw new Error("Could not validate state!");
-                }
-                if (!code) {
-                    throw new Error("No Auth code provided");
-                }
-                localUserStore.setCode(code);
-            }
-
-            this._currentRoom = await Room.createRoom(new URL(localUserStore.getLastRoomUrl()));
-            try {
-                await this.checkAuthUserConnexion();
-                analyticsClient.loggedWithSso();
-            } catch (err) {
-                if (Axios.isAxiosError(err)) {
-                    const errorType = isErrorApiData.safeParse(err?.response?.data);
-                    if (errorType.success) {
-                        throw err;
-                    }
-                }
-                console.error(err);
-                const redirect = this.loadOpenIDScreen();
-                if (redirect === null) {
-                    throw new Error("Unable to redirect on login page.");
-                }
-                return redirect;
-            }
-            urlManager.pushRoomIdToUrl(this._currentRoom);
+            throw new Error("This endpoint is deprecated");
         }
+
         //@deprecated
         else if (this.connexionType === GameConnexionTypes.register) {
             const organizationMemberToken = urlManager.getOrganizationToken();
@@ -217,11 +185,19 @@ class ConnectionManager {
             await localUserStore.setLastRoomUrl(roomPathUrl.href);
 
             //todo: add here some kind of warning if authToken has expired.
-            if (!this.authToken && !this._currentRoom.authenticationMandatory) {
-                await this.anonymousLogin();
+            if (!this.authToken) {
+                if (!this._currentRoom.authenticationMandatory) {
+                    await this.anonymousLogin();
+                } else {
+                    const redirect = this.loadOpenIDScreen();
+                    if (redirect === null) {
+                        throw new Error("Unable to redirect on login page.");
+                    }
+                    return redirect;
+                }
             } else {
                 try {
-                    await this.checkAuthUserConnexion();
+                    await this.checkAuthUserConnexion(this.authToken);
                     analyticsClient.loggedWithSso();
                 } catch (err) {
                     console.error(err);
@@ -229,7 +205,7 @@ class ConnectionManager {
                     // try to connect with function loadOpenIDScreen
                     if (
                         this._currentRoom.authenticationMandatory ||
-                        (axios.isAxiosError(err) &&
+                        (Axios.isAxiosError(err) &&
                             err.response?.data &&
                             err.response.data !== "User cannot to be connected on openid provider")
                     ) {
@@ -384,29 +360,13 @@ class ConnectionManager {
         return this.connexionType;
     }
 
-    async checkAuthUserConnexion() {
+    async checkAuthUserConnexion(token: string) {
         //set connected store for menu at false
         userIsConnected.set(false);
 
-        const token = localUserStore.getAuthToken();
-        const state = localUserStore.getState();
-        const code = localUserStore.getCode();
-        const nonce = localUserStore.getNonce();
-
-        if (!token) {
-            if (!state || !localUserStore.verifyState(state)) {
-                throw new Error("Could not validate state!");
-            }
-            if (!code) {
-                throw new Error("No Auth code provided");
-            }
-        }
-        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(
-            `${PUSHER_URL}/login-callback`,
-            {
-                params: { code, nonce, token, playUri: this.currentRoom?.key },
-            }
-        ).then((res) => {
+        const { authToken, userUuid, email, username, locale, textures } = await Axios.get(`${PUSHER_URL}/me`, {
+            params: { token, playUri: this.currentRoom?.key },
+        }).then((res) => {
             return res.data;
         });
         localUserStore.setAuthToken(authToken);
@@ -446,7 +406,9 @@ class ConnectionManager {
         }
 
         //user connected, set connected store for menu at true
-        userIsConnected.set(true);
+        if (localUserStore.isLogged()) {
+            userIsConnected.set(true);
+        }
     }
 
     get currentRoom() {

@@ -1,10 +1,11 @@
-version: "3.5"
+version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.6
+    image: traefik:v2.8
     command:
       - --log.level=${LOG_LEVEL}
       - --providers.docker
+      - --providers.docker.exposedbydefault=false
       # Entry points
       - --entryPoints.web.address=:${HTTP_PORT}
       - --entrypoints.web.http.redirections.entryPoint.to=websecure
@@ -25,13 +26,13 @@ services:
       - ${DATA_DIR}/letsencrypt/:/letsencrypt/
     restart: ${RESTART_POLICY}
 
-
   front:
     image: thecodingmachine/workadventure-front:${VERSION}
     environment:
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE
+      - ENABLE_FEATURE_MAP_EDITOR
       - PUSHER_URL=//${PUSHER_HOST}
       - ICON_URL=//${ICON_HOST}
       - TURN_SERVER
@@ -45,6 +46,7 @@ services:
       - DISABLE_ANONYMOUS
       - DISABLE_NOTIFICATIONS
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`${FRONT_HOST}`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=80"
@@ -55,6 +57,24 @@ services:
       - "traefik.http.routers.front-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
+  chat:
+    image: thecodingmachine/workadventure-chat:${VERSION}
+    environment:
+      - PUSHER_URL=//${PUSHER_HOST}
+      - UPLOADER_URL=//${UPLOADER_HOST}
+      - EMBEDLY_KEY=${EMBEDLY_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`${CHAT_HOST}`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=80"
+      - "traefik.http.routers.chat-ssl.rule=Host(`${CHAT_HOST}`)"
+      - "traefik.http.routers.chat-ssl.entryPoints=websecure"
+      - "traefik.http.routers.chat-ssl.service=chat"
+      - "traefik.http.routers.chat-ssl.tls=true"
+      - "traefik.http.routers.chat-ssl.tls.certresolver=myresolver"
+    restart: ${RESTART_POLICY}
+
   pusher:
     image: thecodingmachine/workadventure-pusher:${VERSION}
     command: yarn run runprod
@@ -62,9 +82,15 @@ services:
       - SECRET_KEY
       - API_URL
       - FRONT_URL=https://${FRONT_HOST}
+      - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - DISABLE_ANONYMOUS
       - START_ROOM_URL
+      - EJABBERD_DOMAIN=ejabberd
+      - OPID_PROMPT=login
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      - EJABBERD_JWT_SECRET
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
@@ -80,6 +106,7 @@ services:
     command: yarn run runprod
     environment:
       - SECRET_JITSI_KEY
+      - ENABLE_FEATURE_MAP_EDITOR
       - SECRET_KEY
       - ADMIN_API_TOKEN
       - ADMIN_API_URL
@@ -96,7 +123,11 @@ services:
       - STORE_VARIABLES_FOR_LOCAL_MAPS
       - REDIS_HOST=redis
       - PROMETHEUS_AUTHORIZATION_TOKEN
+      - MAP_STORAGE_URL=map-storage:50053
+      - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
+      - PLAYER_VARIABLES_MAX_TTL
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
@@ -107,9 +138,35 @@ services:
       - "traefik.http.routers.back-ssl.tls.certresolver=myresolver"
     restart: ${RESTART_POLICY}
 
+  uploader:
+    image: thecodingmachine/workadventure-uploader:${VERSION}
+    environment:
+      - UPLOADER_URL=//${UPLOADER_HOST}
+      #AWS
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - AWS_BUCKET=${AWS_BUCKET}
+      - AWS_URL=${AWS_URL}
+      - AWS_ENDPOINT=${AWS_ENDPOINT}
+      #REDIS
+      - REDIS_HOST=${UPLOADER_REDIS_HOST}
+      - REDIS_PORT=${UPLOADER_REDIS_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uploader.rule=Host(`${UPLOADER_HOST}`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
+      - "traefik.http.routers.uploader-ssl.rule=Host(`${UPLOADER_HOST}`)"
+      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
+      - "traefik.http.routers.uploader-ssl.service=uploader"
+      - "traefik.http.routers.uploader-ssl.tls=true"
+      - "traefik.http.routers.uploader-ssl.tls.certresolver=myresolver"
+
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
     labels:
+      - "traefik.enable=true"
       - "traefik.http.routers.icon.rule=Host(`${ICON_HOST}`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
@@ -123,6 +180,36 @@ services:
     image: redis:6
     volumes:
       - redisdata:/data
+
+  ejabberd:
+    image: ejabberd/ecs
+    volumes:
+      - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.xmpp.rule=Host(`${XMPP_HOST}`)"
+      - "traefik.http.routers.xmpp.entryPoints=web"
+      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+      - "traefik.http.routers.xmpp-ssl.rule=Host(`${XMPP_HOST}`)"
+      - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
+      - "traefik.http.routers.xmpp-ssl.tls=true"
+      - "traefik.http.routers.xmpp-ssl.service=xmpp"
+      - "traefik.http.routers.xmpp-ssl.tls.certresolver=myresolver"
+
+  map-storage:
+    image: thecodingmachine/workadventure-map-storage:${VERSION}
+    environment:
+      PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.map-storage.rule=Host(`${MAP_STORAGE_HOST}`)"
+      - "traefik.http.routers.map-storage.entryPoints=web"
+      - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
+      - "traefik.http.routers.map-storage-ssl.rule=Host(`${MAP_STORAGE_HOST}`)"
+      - "traefik.http.routers.map-storage-ssl.entryPoints=websecure"
+      - "traefik.http.routers.map-storage-ssl.service=map-storage"
+      - "traefik.http.routers.map-storage-ssl.tls=true"
+      - "traefik.http.routers.map-storage-ssl.tls.certresolver=myresolver"
 
 volumes:
   redisdata:

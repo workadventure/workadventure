@@ -11,27 +11,31 @@ import {
     VariableWithTagMessage,
 } from "../Messages/generated/messages_pb";
 import Debug from "debug";
-import { ClientReadableStream } from "grpc";
+import { ClientReadableStream } from "@grpc/grpc-js";
 
 const debug = Debug("room");
-
-export enum GameRoomPolicyTypes {
-    ANONYMOUS_POLICY = 1,
-    MEMBERS_ONLY_POLICY,
-    USE_TAGS_POLICY,
-}
 
 export class PusherRoom {
     private readonly positionNotifier: PositionDispatcher;
     private versionNumber = 1;
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public mucRooms: Array<any> = [];
+
     private backConnection!: ClientReadableStream<BatchToPusherRoomMessage>;
     private isClosing = false;
     private listeners: Set<ExSocketInterface> = new Set<ExSocketInterface>();
-    //public readonly variables = new Map<string, string>();
 
     constructor(public readonly roomUrl: string, private socketListener: ZoneEventListener) {
         // A zone is 10 sprites wide.
         this.positionNotifier = new PositionDispatcher(this.roomUrl, 320, 320, this.socketListener);
+
+        // By default, create a MUC room whose name is the name of the room.
+        this.mucRooms = [
+            {
+                name: "Connected users",
+                uri: roomUrl,
+            },
+        ];
     }
 
     public setViewport(socket: ExSocketInterface, viewport: ViewportInterface): void {
@@ -40,11 +44,22 @@ export class PusherRoom {
 
     public join(socket: ExSocketInterface): void {
         this.listeners.add(socket);
+
+        if (!this.mucRooms) {
+            return;
+        }
+
+        //socket.xmppClient = new XmppClient(socket, this.mucRooms);
+        socket.pusherRoom = this;
     }
 
     public leave(socket: ExSocketInterface): void {
         this.positionNotifier.removeViewport(socket);
         this.listeners.delete(socket);
+        if (socket.xmppClient) {
+            socket.xmppClient.close();
+        }
+        socket.pusherRoom = undefined;
     }
 
     public isEmpty(): boolean {
@@ -85,6 +100,12 @@ export class PusherRoom {
                             subMessage.setVariablemessage(variableMessage);
                             listener.emitInBatch(subMessage);
                         }
+                    }
+                } else if (message.hasEditmapmessage()) {
+                    for (const listener of this.listeners) {
+                        const subMessage = new SubMessage();
+                        subMessage.setEditmapmessage(message.getEditmapmessage());
+                        listener.emitInBatch(subMessage);
                     }
                 } else if (message.hasErrormessage()) {
                     const errorMessage = message.getErrormessage() as ErrorMessage;
@@ -130,5 +151,10 @@ export class PusherRoom {
         debug("Closing connection to room %s on back server", this.roomUrl);
         this.isClosing = true;
         this.backConnection.cancel();
+
+        debug("Closing connections to XMPP server for room %s", this.roomUrl);
+        for (const client of this.listeners) {
+            client.xmppClient?.close();
+        }
     }
 }

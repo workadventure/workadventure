@@ -1,6 +1,6 @@
-import type { ITiledMapObject } from "../Map/ITiledMap";
 import type { GameScene } from "../Game/GameScene";
-import { GameMapProperties } from "../Game/GameMapProperties";
+import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { GameMapProperties } from "@workadventure/map-editor-types";
 
 export class TextUtils {
     public static createTextFromITiledMapObject(scene: GameScene, object: ITiledMapObject): void {
@@ -42,7 +42,7 @@ export class TextUtils {
             color = object.text.color;
         }
         options.color = color;
-        if (object.text.wrap === true) {
+        if (object.text.wrap === true && object.width) {
             options.wordWrap = {
                 width: object.width,
                 //useAdvancedWrap: true

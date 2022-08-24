@@ -19,9 +19,11 @@ import {
     FollowAbortMessage,
     VariableMessage,
     LockGroupPromptMessage,
+    AskPositionMessage,
     AvailabilityStatus,
     QueryMessage,
     PingMessage,
+    EditMapMessage,
 } from "../Messages/generated/messages_pb";
 import { UserMovesMessage } from "../Messages/generated/messages_pb";
 import { parse } from "query-string";
@@ -29,14 +31,19 @@ import { AdminSocketTokenData, jwtTokenManager, tokenInvalidException } from "..
 import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
-import { ADMIN_API_URL, ADMIN_SOCKETS_TOKEN, DISABLE_ANONYMOUS, SOCKET_IDLE_TIMER } from "../Enum/EnvironmentVariable";
+import {
+    ADMIN_SOCKETS_TOKEN,
+    DISABLE_ANONYMOUS,
+    EJABBERD_DOMAIN,
+    EJABBERD_JWT_SECRET,
+    SOCKET_IDLE_TIMER,
+} from "../Enum/EnvironmentVariable";
 import { Zone } from "../Model/Zone";
 import { ExAdminSocketInterface } from "../Model/Websocket/ExAdminSocketInterface";
 import { AdminMessageInterface, isAdminMessageInterface } from "../Model/Websocket/Admin/AdminMessages";
 import Axios from "axios";
 import { InvalidTokenError } from "../Controller/InvalidTokenError";
 import HyperExpress from "hyper-express";
-import { localWokaService } from "../Services/LocalWokaService";
 import { WebSocket } from "uWebSockets.js";
 import { WokaDetail } from "../Messages/JsonMessages/PlayerTextures";
 import { z } from "zod";
@@ -69,6 +76,9 @@ interface UpgradeData {
         bottom: number;
         left: number;
     };
+    mucRooms: Array<MucRoomDefinitionInterface> | undefined;
+    activatedInviteUser: boolean | undefined;
+    isLogged: boolean;
 }
 
 interface UpgradeFailedInvalidData {
@@ -77,6 +87,10 @@ interface UpgradeFailedInvalidData {
     message: string;
     roomId: string;
 }
+import Jwt from "jsonwebtoken";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
+//eslint-disable-next-line @typescript-eslint/no-var-requires
+const { jid } = require("@xmpp/client");
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -327,6 +341,7 @@ export class IoSocketController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : "";
+                        const isLogged = tokenData?.accessToken ? true : false;
 
                         let memberTags: string[] = [];
                         let memberVisitCardUrl: string | null = null;
@@ -342,90 +357,83 @@ export class IoSocketController {
                             messages: [],
                             anonymous: true,
                             userRoomToken: undefined,
+                            jabberId: null,
+                            jabberPassword: null,
+                            mucRooms: [],
+                            activatedInviteUser: true,
                         };
 
                         let characterLayerObjs: WokaDetail[];
 
-                        if (ADMIN_API_URL) {
+                        try {
                             try {
-                                try {
-                                    userData = await adminService.fetchMemberDataByUuid(
-                                        userIdentifier,
-                                        roomId,
-                                        IPAddress,
-                                        characterLayers,
-                                        locale
-                                    );
-                                } catch (err) {
-                                    if (Axios.isAxiosError(err)) {
-                                        const errorType = isErrorApiData.safeParse(err?.response?.data);
-                                        if (errorType.success) {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: "error",
-                                                    status: err?.response?.status,
-                                                    error: errorType.data,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        } else {
-                                            return res.upgrade(
-                                                {
-                                                    rejected: true,
-                                                    reason: null,
-                                                    status: 500,
-                                                    message: err?.response?.data,
-                                                    roomId: roomId,
-                                                } as UpgradeFailedData,
-                                                websocketKey,
-                                                websocketProtocol,
-                                                websocketExtensions,
-                                                context
-                                            );
-                                        }
+                                userData = await adminService.fetchMemberDataByUuid(
+                                    userIdentifier,
+                                    isLogged,
+                                    roomId,
+                                    IPAddress,
+                                    characterLayers,
+                                    locale
+                                );
+                            } catch (err) {
+                                if (Axios.isAxiosError(err)) {
+                                    const errorType = isErrorApiData.safeParse(err?.response?.data);
+                                    if (errorType.success) {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: "error",
+                                                status: err?.response?.status,
+                                                error: errorType.data,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
+                                    } else {
+                                        return res.upgrade(
+                                            {
+                                                rejected: true,
+                                                reason: null,
+                                                status: 500,
+                                                message: err?.response?.data,
+                                                roomId: roomId,
+                                            } as UpgradeFailedData,
+                                            websocketKey,
+                                            websocketProtocol,
+                                            websocketExtensions,
+                                            context
+                                        );
                                     }
-                                    throw err;
                                 }
-                                memberMessages = userData.messages;
-                                memberTags = userData.tags;
-                                memberVisitCardUrl = userData.visitCardUrl;
-                                memberTextures = userData.textures;
-                                memberUserRoomToken = userData.userRoomToken;
-                                characterLayerObjs = memberTextures;
-                            } catch (e) {
-                                console.log(
-                                    "access not granted for user " +
-                                        (userIdentifier || "anonymous") +
-                                        " and room " +
-                                        roomId
-                                );
-                                console.error(e);
-                                throw new Error("User cannot access this world");
+                                throw err;
                             }
-                        } else {
-                            const fetchedTextures = await localWokaService.fetchWokaDetails(characterLayers);
-                            if (fetchedTextures === undefined) {
-                                // The textures we want to use do not exist!
-                                // We need to go in error.
-                                res.upgrade(
-                                    {
-                                        rejected: true,
-                                        reason: "textureInvalid",
-                                        message: "",
-                                        roomId,
-                                    } as UpgradeFailedData,
-                                    websocketKey,
-                                    websocketProtocol,
-                                    websocketExtensions,
-                                    context
-                                );
-                                return;
+                            memberMessages = userData.messages;
+                            memberTags = userData.tags;
+                            memberVisitCardUrl = userData.visitCardUrl;
+                            memberTextures = userData.textures;
+                            memberUserRoomToken = userData.userRoomToken;
+                            characterLayerObjs = memberTextures;
+                        } catch (e) {
+                            console.log(
+                                "access not granted for user " + (userIdentifier || "anonymous") + " and room " + roomId
+                            );
+                            console.error(e);
+                            throw new Error("User cannot access this world");
+                        }
+
+                        if (!userData.jabberId) {
+                            // If there is no admin, or no user, let's log users using JWT tokens
+                            userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
+                            if (EJABBERD_JWT_SECRET) {
+                                userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
+                                    expiresIn: "1d",
+                                    algorithm: "HS256",
+                                });
+                            } else {
+                                userData.jabberPassword = "no_password_set";
                             }
-                            characterLayerObjs = fetchedTextures;
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -446,6 +454,7 @@ export class IoSocketController {
                                 token,
                                 userUuid: userData.userUuid,
                                 IPAddress,
+                                userIdentifier,
                                 roomId,
                                 name,
                                 companion,
@@ -455,6 +464,11 @@ export class IoSocketController {
                                 tags: memberTags,
                                 visitCardUrl: memberVisitCardUrl,
                                 userRoomToken: memberUserRoomToken,
+                                textures: memberTextures,
+                                jabberId: userData.jabberId,
+                                jabberPassword: userData.jabberPassword,
+                                mucRooms: userData.mucRooms,
+                                activatedInviteUser: userData.activatedInviteUser,
                                 position: {
                                     x: x,
                                     y: y,
@@ -467,6 +481,7 @@ export class IoSocketController {
                                     bottom,
                                     left,
                                 },
+                                isLogged,
                             } as UpgradeData,
                             /* Spell these correctly */
                             websocketKey,
@@ -476,6 +491,9 @@ export class IoSocketController {
                         );
                     } catch (e) {
                         if (e instanceof Error) {
+                            if (!(e instanceof InvalidTokenError)) {
+                                console.error(e);
+                            }
                             res.upgrade(
                                 {
                                     rejected: true,
@@ -627,6 +645,13 @@ export class IoSocketController {
                     );
                 } else if (message.hasPingmessage()) {
                     client.resetPongTimeout();
+                } else if (message.hasEditmapmessage()) {
+                    socketManager.handleEditMapMessage(client, message.getEditmapmessage() as EditMapMessage);
+                } else if (message.hasAskpositionmessage()) {
+                    socketManager.handleAskPositionMessage(
+                        client,
+                        message.getAskpositionmessage() as AskPositionMessage
+                    );
                 }
 
                 /* Ok is false if backpressure was built up, wait for drain */
@@ -679,6 +704,7 @@ export class IoSocketController {
 
         client.messages = ws.messages;
         client.name = ws.name;
+        client.userIdentifier = ws.userIdentifier;
         client.tags = ws.tags;
         client.visitCardUrl = ws.visitCardUrl;
         client.characterLayers = ws.characterLayers;
@@ -686,6 +712,11 @@ export class IoSocketController {
         client.availabilityStatus = ws.availabilityStatus;
         client.roomId = ws.roomId;
         client.listenedZones = new Set<Zone>();
+        client.jabberId = ws.jabberId;
+        client.jabberPassword = ws.jabberPassword;
+        client.mucRooms = ws.mucRooms;
+        client.activatedInviteUser = ws.activatedInviteUser;
+        client.isLogged = ws.isLogged;
         return client;
     }
 }

@@ -1,15 +1,16 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { UIWebsite } from "../../../Api/Events/ui/UIWebsite";
+    import { UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
     import { iframeListener } from "../../../Api/IframeListener";
 
     export let uiWebsite: UIWebsite;
 
     let main: HTMLDivElement;
     const iframe = document.createElement("iframe");
+    iframe.id = `ui-website-${uiWebsite.id}`;
+    iframe.tabIndex = -1;
 
     $: {
-        iframe.id = `ui-website-${uiWebsite.id}`;
         iframe.src = uiWebsite.url;
         iframe.title = uiWebsite.url;
         iframe.style.border = "0";

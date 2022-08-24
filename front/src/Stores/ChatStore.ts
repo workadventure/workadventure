@@ -3,18 +3,26 @@ import { playersStore } from "./PlayersStore";
 import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { Subject } from "rxjs";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 
+export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
+
 export const chatInputFocusStore = writable(false);
 
-const _newChatMessageSubject = new Subject<string>();
+export const _newChatMessageSubject = new Subject<string>();
 export const newChatMessageSubject = _newChatMessageSubject.asObservable();
+
+export const _newChatMessageWritingStatusSubject = new Subject<number>();
+export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
 
 export enum ChatMessageTypes {
     text = 1,
     me,
     userIncoming,
     userOutcoming,
+    userWriting,
+    userStopWriting,
 }
 
 export interface ChatMessage {
@@ -33,6 +41,25 @@ function getAuthor(authorId: number): PlayerInterface {
     return author;
 }
 
+function createWritingStatusMessageStore() {
+    const { subscribe, update } = writable<Set<PlayerInterface>>(new Set<PlayerInterface>());
+    return {
+        subscribe,
+        addWritingStatus(authorId: number, status: 5 | 6) {
+            update((list) => {
+                if (status === ChatMessageTypes.userWriting) {
+                    list.add(getAuthor(authorId));
+                } else if (status === ChatMessageTypes.userStopWriting) {
+                    list.delete(getAuthor(authorId));
+                }
+
+                return list;
+            });
+        },
+    };
+}
+export const writingStatusMessageStore = createWritingStatusMessageStore();
+
 function createChatMessagesStore() {
     const { subscribe, update } = writable<ChatMessage[]>([]);
 
@@ -50,6 +77,14 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                /* @deprecated with new chat service */
+                iframeListener.sendComingUserToChatIframe({
+                    type: ChatMessageTypes.userIncoming,
+                    targets: [getAuthor(authorId)],
+                    date: new Date(),
+                });
+
                 return list;
             });
         },
@@ -65,12 +100,21 @@ function createChatMessagesStore() {
                         date: new Date(),
                     });
                 }
+
+                /* @deprecated with new chat service */
+                iframeListener.sendComingUserToChatIframe({
+                    type: ChatMessageTypes.userOutcoming,
+                    targets: [getAuthor(authorId)],
+                    date: new Date(),
+                });
+
+                //end of writing message
+                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
                 return list;
             });
         },
         addPersonnalMessage(text: string) {
             iframeListener.sendUserInputChat(text);
-
             _newChatMessageSubject.next(text);
             update((list) => {
                 const lastMessage = list[list.length - 1];
@@ -92,7 +136,11 @@ function createChatMessagesStore() {
          */
         addExternalMessage(authorId: number, text: string, origin?: Window) {
             update((list) => {
-                const lastMessage = list[list.length - 1];
+                const author = getAuthor(authorId);
+                let lastMessage = null;
+                if (list.length > 0) {
+                    lastMessage = list[list.length - 1];
+                }
                 if (
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.text &&
@@ -104,10 +152,25 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.text,
                         text: [text],
-                        author: getAuthor(authorId),
+                        author: author,
                         date: new Date(),
                     });
                 }
+
+                //TODO delete it with new XMPP integration
+                //send list to chat iframe
+                iframeListener.sendMessageToChatIframe({
+                    type: ChatMessageTypes.text,
+                    text: [text],
+                    author: author,
+                    date: new Date(),
+                });
+
+                //create message sound and text notification
+                mediaManager.playNewMessageNotification();
+                mediaManager.createNotification(author.name, NotificationType.message);
+                //end of writing message
+                writingStatusMessageStore.addWritingStatus(authorId, ChatMessageTypes.userStopWriting);
 
                 iframeListener.sendUserInputChat(text, origin);
                 return list;

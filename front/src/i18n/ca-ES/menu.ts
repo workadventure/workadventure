@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menú",
     icon: {
         open: {
@@ -8,6 +9,9 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Mostrar invitació",
             register: "Registre",
             chat: "Obrir chat",
+            userlist: "Lista de utilizadores",
+            openEmoji: "Obre la finestra emergent de l'emoji seleccionat",
+            closeEmoji: "Tanca el menú d'emojis",
         },
     },
     visitCard: {
@@ -90,6 +94,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Pujar un arxiu",
         error: "Cap arxiu seleccionat. Teniu que pujar un arxiu abans d'enviar-lo.",
+        errorUpload:
+            "Error en carregar el fitxer. Comproveu el vostre fitxer i torneu-ho a provar. Si el problema persisteix, poseu-vos en contacte amb l'administrador.",
     },
     contact: {
         gettingStarted: {

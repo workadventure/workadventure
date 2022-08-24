@@ -8,6 +8,9 @@ const menu: BaseTranslation = {
             invite: "Show invite",
             register: "Register",
             chat: "Open chat",
+            userlist: "User list",
+            openEmoji: "Open emoji selected popup",
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {
@@ -70,6 +73,7 @@ const menu: BaseTranslation = {
         },
         fullscreen: "Fullscreen",
         notifications: "Notifications",
+        chatSounds: "Sounds of chat",
         cowebsiteTrigger: "Always ask before opening websites and Jitsi Meet rooms",
         ignoreFollowRequest: "Ignore requests to follow other users",
     },
@@ -90,6 +94,8 @@ const menu: BaseTranslation = {
     globalAudio: {
         uploadInfo: "Upload a file",
         error: "No file selected. You need to upload a file before sending it.",
+        errorUpload:
+            "Uploading file error. Please check your file and try again. If the problem persists, contact the administrator.",
     },
     contact: {
         gettingStarted: {

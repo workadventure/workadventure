@@ -29,7 +29,7 @@ It is possible to define special regions on the map that can make the camera zoo
         <img class="document-img" src="images/camera/3_define_new_zone.png" alt="" />
     </div>
 
-4. Make sure your object is of type "area"!
+4. Make sure your object is of class "area"!
 
     <div class="px-5 card rounded d-inline-block">
         <img class="document-img" src="images/camera/4_add_zone_type.png" alt="" />

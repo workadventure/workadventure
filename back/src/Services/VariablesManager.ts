@@ -1,11 +1,11 @@
 /**
  * Handles variables shared between the scripting API and the server.
  */
-import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard/dist";
+import { ITiledMap, ITiledMapLayer, ITiledMapObject } from "@workadventure/tiled-map-type-guard";
 import { User } from "../Model/User";
-import { variablesRepository } from "./Repository/VariablesRepository";
-import { redisClient } from "./RedisClient";
+import { getVariablesRepository } from "./Repository/VariablesRepository";
 import { VariableError } from "./VariableError";
+import { VariablesRepositoryInterface } from "./Repository/VariablesRepositoryInterface";
 
 interface Variable {
     defaultValue?: string;
@@ -28,7 +28,11 @@ export class VariablesManager {
     /**
      * @param map The map can be "null" if it is hosted on a private network. In this case, we assume this is a test setup and bypass any server-side checks.
      */
-    constructor(private roomUrl: string, private map: ITiledMap | null) {
+    private constructor(
+        private roomUrl: string,
+        private map: ITiledMap | null,
+        private variablesRepository: VariablesRepositoryInterface
+    ) {
         // We initialize the list of variable object at room start. The objects cannot be edited later
         // (otherwise, this would cause a security issue if the scripting API can edit this list of objects)
         if (map) {
@@ -44,13 +48,21 @@ export class VariablesManager {
     }
 
     /**
+     * @param map The map can be "null" if it is hosted on a private network. In this case, we assume this is a test setup and bypass any server-side checks.
+     */
+    public static async create(roomUrl: string, map: ITiledMap | null): Promise<VariablesManager> {
+        const variablesRepository = await getVariablesRepository();
+        return new VariablesManager(roomUrl, map, variablesRepository);
+    }
+
+    /**
      * Let's load data from the Redis backend.
      */
     public async init(): Promise<VariablesManager> {
         if (!this.shouldPersist()) {
             return this;
         }
-        const variables = await variablesRepository.loadVariables(this.roomUrl);
+        const variables = await this.variablesRepository.loadVariables(this.roomUrl);
         for (const key in variables) {
             // Let's only set variables if they are in the map (if the map has changed, maybe stored variables do not exist anymore)
             if (this.variableObjects) {
@@ -71,14 +83,14 @@ export class VariablesManager {
     /**
      * Returns true if saving should be enabled, and false otherwise.
      *
-     * Saving is enabled if REDIS_HOST is set
+     * Saving is enabled
      *   unless we are editing a local map
      *     unless we are in dev mode in which case it is ok to save
      *
      * @private
      */
     private shouldPersist(): boolean {
-        return redisClient !== null && (this.map !== null || process.env.NODE_ENV === "development");
+        return this.map !== null || process.env.NODE_ENV === "development";
     }
 
     private static findVariablesInMap(map: ITiledMap): Map<string, Variable> {
@@ -92,7 +104,7 @@ export class VariablesManager {
     private static recursiveFindVariablesInLayer(layer: ITiledMapLayer, objects: Map<string, Variable>): void {
         if (layer.type === "objectgroup") {
             for (const object of layer.objects) {
-                if (object.type === "variable") {
+                if (object.class === "variable" || object.type === "variable") {
                     if (object.template) {
                         console.warn(
                             'Warning, a variable object is using a Tiled "template". WorkAdventure does not support objects generated from Tiled templates.'
@@ -101,11 +113,11 @@ export class VariablesManager {
                     }
 
                     // We store a copy of the object (to make it immutable)
-                    objects.set(object.name as string, this.iTiledObjectToVariable(object));
+                    objects.set(object.name, this.iTiledObjectToVariable(object));
                 }
             }
         } else if (layer.type === "group") {
-            for (const innerLayer of layer.layers as ITiledMapLayer[]) {
+            for (const innerLayer of layer.layers) {
                 this.recursiveFindVariablesInLayer(innerLayer, objects);
             }
         }
@@ -200,7 +212,7 @@ export class VariablesManager {
         this._variables.set(name, value);
 
         if (variableObject !== undefined && variableObject.persist) {
-            variablesRepository
+            this.variablesRepository
                 .saveVariable(this.roomUrl, name, value)
                 .catch((e) => console.error("Error while saving variable in Redis:", e));
         }

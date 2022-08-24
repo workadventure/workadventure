@@ -6,51 +6,32 @@
     }
 </script>
 
-<div class="layout-manager-list">
+<div class="layout-manager-list tw-flex tw-flex-col tw-m-auto tw-right-0 tw-left-0 tw-absolute tw-bottom-10 tw-z-[155]">
     {#each $layoutManagerActionStore as action}
-        <div class="nes-container is-rounded {action.type}" on:click={() => onClick(action.callback)}>
-            <p>{action.message}</p>
-        </div>
+        {#if action.type === "warning"}
+            <div
+                class="blue-dialog-box tw-w-56 tw-min-h-10 tw-border-pop-yellow tw-text-pop-yellow tw-border tw-border-solid tw-pointer-events-auto"
+                on:click={() => onClick(action.callback)}
+            >
+                <p class="tw-text-center tw-m-0 tw-p-2">{action.message}</p>
+            </div>
+        {:else}
+            <div
+                class="blue-dialog-box tw-w-56 tw-min-h-10 tw-border-light-blue tw-text-light-blue tw-border tw-border-solid tw-pointer-events-auto"
+                on:click={() => onClick(action.callback)}
+            >
+                <p class="tw-text-center tw-m-0 tw-p-2">{action.message}</p>
+            </div>
+        {/if}
     {/each}
 </div>
 
 <style lang="scss">
     div.layout-manager-list {
-        pointer-events: auto;
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 40px;
-        margin-right: auto;
-        margin-left: auto;
-        padding: 0;
-        width: clamp(200px, 20vw, 20vw);
-        z-index: 155;
-
-        display: flex;
-        flex-direction: column;
-
-        animation: moveMessage 0.5s;
+        animation: moveMessage 0.7s;
         animation-iteration-count: infinite;
         animation-timing-function: ease-in-out;
-
-        div {
-            margin-bottom: 5%;
-        }
-    }
-
-    div.nes-container.is-rounded {
-        padding: 8px 4px;
-        text-align: center;
-
-        font-family: Lato;
-        color: whitesmoke;
-        background-color: rgb(0, 0, 0, 0.5);
-
-        &.warning {
-            background-color: #ff9800eb;
-            color: #000;
-        }
+        margin-bottom: 2rem;
     }
 
     @keyframes moveMessage {

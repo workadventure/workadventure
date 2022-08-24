@@ -1,5 +1,5 @@
-import { expect, test, chromium } from '@playwright/test';
-import fs from 'fs';
+import { expect, test } from '@playwright/test';
+import * as fs from 'fs';
 import {
   rebootBack,
   rebootPusher,
@@ -9,7 +9,7 @@ import {
   stopRedis,
 } from './utils/containers';
 import {getBackDump, getPusherDump, getPusherRooms} from './utils/debug';
-import { assertLogMessage } from './utils/log';
+import {assertLogMessage, startRecordLogs} from './utils/log';
 import { login } from './utils/roles';
 
 test.setTimeout(180000);
@@ -72,7 +72,7 @@ test.describe('Variables', () => {
 
     const pusherDump = await getPusherDump();
     //console.log('pusherDump', pusherDump);
-    expect(
+    await expect(
       pusherDump[
         'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/shared_variables.json'
       ]
@@ -130,6 +130,7 @@ test.describe('Variables', () => {
 
   test('cache doesnt prevent setting a variable in case the map changes', async ({
     page,
+    browser,
   }) => {
     // Let's start by visiting a map that DOES not have the variable.
 
@@ -145,7 +146,7 @@ test.describe('Variables', () => {
     await login(page, 'Alice', 2);
 
     // Wait for page to load before copying file (it seems the await above does not 100% fills its role otherwise).
-    await timeout(3000);
+    await timeout(5000);
 
     // Let's REPLACE the map by a map that has a new variable
     // At this point, the back server contains a cache of the old map (with no variables)
@@ -154,33 +155,27 @@ test.describe('Variables', () => {
       '../maps/tests/Variables/Cache/variables_tmp.json'
     );
 
-    const browser = await chromium.launch();
-    const page2 = await browser.newPage();
+    const newBrowser = await browser.browserType().launch();
+    const page2 = await newBrowser.newPage();
+
+    startRecordLogs(page2);
 
     await page2.goto(
       'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
     );
 
-    await login(page2, 'Alice', 2);
+    await login(page2, 'Chapelier', 3);
 
     // Let's check we successfully manage to save the variable value.
     await assertLogMessage(page2, 'SUCCESS!');
 
     // Let's check the pusher getRooms endpoint returns 2 users on the map
-    let rooms = await getPusherRooms();
-    for (let i = 0; i < 5; i++) {
-      if (rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'] === 2) {
-        break;
-      }
-      // If we don't have the result right away, let's wait 3 seconds, just in case pusher is slow.
-      await timeout(3000);
-      rooms = await getPusherRooms();
-    }
-    expect(
-        rooms[
-            'http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'
-            ]
-    ).toBe(2);
+    await expect.poll(async () => {
+      const rooms = await getPusherRooms();
+      return rooms['http://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Variables/Cache/variables_tmp.json'];
+    }).toBe(2);
+
+    await page2.close();
   });
 });
 

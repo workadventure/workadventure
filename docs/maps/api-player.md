@@ -167,30 +167,159 @@ WA.player.onPlayerMove(console.log);
 ```
 
 ## Player specific variables
-Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser. Any value that is serializable in JSON can be stored.
+
+Similarly to maps (see [API state related functions](api-state.md)), it is possible to store data **related to a specific player** in a "state". Such data will be stored using the local storage from the user's browser. Any value that is serializable to JSON can be stored.
+
+Each variable can be stored and fetched in a variety of ways.
+
+Here is what defines a player variable.
+
+**Visibility:**
+
+A player variable can be **public** or **private**.
+- Public variables are automatically shared to players around you. Players around you can view
+these variables using the `RemotePlayer.state` object (you can get a `RemotePlayer` object) using
+[`WA.players.list()`](api-players.md).
+- Private variables are only accessible by the current user.
+
+**Persistence:**
+
+A player variable can be **persisted** or **transient**
+
+- Persisted variables are stored across sessions. If you refresh your page or come back later,
+  a persisted variable can be fetched again. Use "persisted variables" to store valuable values
+  (like a score in a game that is played in the long run)
+- Transient variables disappear as soon as the connection to the room is lost. So if you
+  you refresh your page, if your network connection is lost for a brief amount of time, or
+  if you simply close WorkAdventure and come back later, the transient player variable value
+  will be lost. Use transient variables for values that are short-lived in inherently tied to
+  the game state. For instance, if you are doing a live voting system, you can use a transient
+  variable to store the current vote of the player.
+
+**Time to live:**
+
+Persisted variables can have a **Time to live** (TTL):
+
+The TTL (expressed in seconds) is the time after which the stored value will be destroyed.
+TTL can be set on persisted variables only. It cannot be set on transient variables.
 
 {.alert.alert-info}
-In the future, player-related variables will be stored on the WorkAdventure server if the current player is logged.
+Depending on the server you are using, the server might itself decide of a maximum TTL for
+player variables. So far, WorkAdventure SAAS version has no maximum TTL set. However, please note you should
+probably not use player variables for sensitive / important information.
 
-Any value that is serializable in JSON can be stored.
+**Scope:**
 
-### Setting a property
-A player property can be set simply by assigning a value.
+A player variable can have 2 scopes:
+
+- **Room** scope: the player variable is attached to a given room.
+- **World** scope: the player variable is set for a given world. It is shared with all the rooms
+  of this world.
+
+
+{.alert.alert-info}
+Player variables can be stored in 2 different places. If the player is logged, the player variables are stored on
+the WorkAdventure server. If the player is not logged, the player variables are stored in local storage (so in the
+player's browser).
+
+
+### Setting a player variable
+A player variable can be set simply by assigning a value.
 
 Example:
 ```javascript
-WA.player.state.toto = "value" //will set the "toto" key to "value"
+WA.player.state.foo = "value" //will set the "foo" key to "value". By default, variable is transient and private.
 ```
 
-### Reading a variable 
-A player variable can be read by calling its key from the player's state. 
+If you want to set some options, you will need to use the `saveVariable` function:
+
+```typescript
+WA.player.state.saveVariable(
+    key: string,
+    value: unknown,
+    options?: {
+        public?: boolean;
+        persist?: boolean;
+        ttl?: number;
+        scope?: "world" | "room";
+    }
+): Promise<void>;
+```
+
+For instance, setting a variable shared with other players, that is accessible from any rooms of the current world
+with a time to live of one day:
+
+```javascript
+WA.player.state.saveVariable("foo", "value", {
+  public: true,
+  persist: true,
+  ttl: 24 * 3600,
+  scope: "world",
+});
+```
+
+### Reading a player variable
+A player variable can be read by calling its key from the player's state.
 
 Example:
 ```javascript
-WA.player.state.toto //will retrieve the variable
+WA.player.state.foo //will retrieve the variable
 ```
 
-### Move player to position
+### Listening to a player variable change
+
+You can listen to modifications
+of any player variable by using the `WA.player.state.onVariableChange()` method.
+
+```
+WA.player.state.onVariableChange(name: string): Observable<unknown>
+```
+
+Usage:
+
+```javascript
+WA.player.state.onVariableChange('config').subscribe((value) => {
+    console.log('Variable "config" changed. New value: ', value);
+});
+```
+
+The `WA.plaeyr.state.onVariableChange` method returns an [RxJS `Observable` object](https://rxjs.dev/guide/observable). This is
+an object on which you can add subscriptions using the `subscribe` method.
+
+### Stopping tracking player variables
+
+If you want to stop tracking a player variable change, the `subscribe` method returns a subscription object with an `unsubscribe` method.
+
+**Example with unsubscription:**
+
+```javascript
+const subscription = WA.player.state.onVariableChange('config').subscribe((value) => {
+    console.log('Variable "config" changed. New value: ', value);
+});
+// Later:
+subscription.unsubscribe();
+```
+
+### Special rules for users connected several times
+
+You can be connected several times with the same user to WorkAdventure (and WorkAdventure
+will not complain about it, this is by design).
+Open another tab, connect again to WorkAdventure and you will be connected to WorkAdventure
+twice with the same user. We will call those users connected several times to WorkAdventure
+**brothers**.
+
+Brothers happen to share the same player variables.
+
+Also, if one browser sets a variable to a new value, other brothers can listen to variable
+changes using `WA.player.state.onVariableChange`. They will receive the new value
+if they are in the same room. So far, there is a limitation preventing brothers from listening to variable changes if
+they are in different rooms in the same world.
+
+
+
+
+
+## Move player to position
 ```typescript
 WA.player.moveTo(x: number, y: number, speed?: number): Promise<{ x: number, y: number, cancelled: boolean }>;
 ```
@@ -221,7 +350,7 @@ const result = await WA.player.moveTo(250, 250, 10);
 // result: { x: number, y: number, cancelled: boolean }
 ```
 
-### Set the outline color of the player
+## Set the outline color of the player
 ```
 WA.player.setOutlineColor(red: number, green: number, blue: number): Promise<void>;
 WA.player.removeOutlineColor(): Promise<void>;
@@ -242,3 +371,45 @@ When you set the outline on your player, other players will see the outline too 
 browsers automatically).
 
 ![](images/outlines.png)
+
+## Detecting when the user enters/leaves a meeting
+
+```ts
+WA.player.proximityMeeting.onJoin(): Subscription
+WA.player.proximityMeeting.onLeave(): Subscription
+```
+
+The event is triggered when the user enters or leaves a proximity meeting.
+
+Example:
+
+```ts
+WA.player.proximityMeeting.onJoin().subscribe(async (players: RemotePlayerInterface[]) => {
+    WA.chat.sendChatMessage("You joined a proximity chat", "System");
+});
+
+WA.player.proximityMeeting.onLeave().subscribe(async () => {
+    WA.chat.sendChatMessage("You left the proximity chat", "System");
+});
+```
+
+## Detecting when a participant enters/leaves the current meeting
+
+```ts
+WA.player.proximityMeeting.onParticipantJoin(): Subscription
+WA.player.proximityMeeting.onParticipantLeave(): Subscription
+```
+
+The event is triggered when a user enters or leaves a proximity meeting.
+
+Example:
+
+```ts
+WA.player.proximityMeeting.onParticipantJoin().subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage("A participant joined the proximity chat", "System");
+});
+
+WA.player.proximityMeeting.onParticipantLeave().subscribe(async (player: RemotePlayerInterface) => {
+    WA.chat.sendChatMessage("A participant left the proximity chat", "System");
+});
+```
