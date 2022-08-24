@@ -1,32 +1,23 @@
-// import { NestFactory } from "@nestjs/core";
-// import { AppModule } from "./app.module";
-// import { MicroserviceOptions, Transport } from "@nestjs/microservices";
-// import { join } from "path";
-
-// async function bootstrap() {
-//     const app = await NestFactory.create(AppModule);
-//     app.connectMicroservice<MicroserviceOptions>({
-//         transport: Transport.GRPC,
-//         options: {
-//             // gRPC listens on port 50053
-//             url: "0.0.0.0:50053",
-//             package: "workadventure",
-//             protoPath: join(__dirname, "Messages/protos/messages.proto"),
-//         },
-//     });
-
-//     await app.startAllMicroservices();
-//     // HTTP listens on port 3000
-//     app.enableCors();
-//     await app.listen(3000);
-//     console.log(`Application is running on: ${await app.getUrl()}`);
-//     console.log(`gRPC port is 50053`);
-// }
-// bootstrap().catch((e) => console.error(e));
-
+import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
 import { MapsManager } from "./MapsManager";
+import { MapStorageService } from "./Messages/generated/messages_grpc_pb";
+import { mapStorageServer } from "./MapStorageServer";
+
+const server = new grpc.Server();
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+//@ts-ignore
+server.addService(MapStorageService, mapStorageServer);
+
+server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+    if (err) {
+        throw err;
+    }
+    console.log("Application is running");
+    console.log("gRPC port is 50053");
+    server.start();
+});
 
 const mapsManager = new MapsManager();
 
