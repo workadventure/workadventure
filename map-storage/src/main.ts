@@ -26,6 +26,9 @@
 
 import express from "express";
 import cors from "cors";
+import { MapsManager } from "./MapsManager";
+
+const mapsManager = new MapsManager();
 
 const app = express();
 app.use(cors());
@@ -34,6 +37,13 @@ app.get("/", (req, res) => {
     res.send("Hello World!");
     console.log("HELLO WORLD");
 });
+
+app.get("*.json", async (req, res) => {
+    console.log("GOT JSON FILE");
+    res.send(await mapsManager.getMap(req.url));
+});
+
+app.use(express.static("public"));
 
 app.listen(3000, () => {
     console.log("Application is running on port 3000");
