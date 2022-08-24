@@ -85,9 +85,9 @@ export class XmppClient {
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
         xmppServerConnectionStatusStore.set(true);
 
-        for (const { name, url, type } of initialRoomDefinitions) {
+        for (const { name, url, type, subscribe } of initialRoomDefinitions) {
             if (name && url) {
-                this.joinMuc(name, url, type);
+                this.joinMuc(name, url, type, subscribe);
             }
         }
     }
@@ -129,7 +129,7 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
@@ -137,7 +137,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, type, this.jid);
+        const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 

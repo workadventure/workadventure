@@ -14,6 +14,13 @@ const fr_FR: Translation = {
     reconnecting: "Connexion au serveur ...",
     waitingData: "En attentes des informations de l'utilisateur ...",
     search: "Rechercher un utilisateur, un message, un canal ...",
+    role: {
+        admin: "Administrateur",
+        member: "Membre",
+        visitor: "Visiteur",
+    },
+    logIn: "Se connecter",
+    signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
     invite: "Inviter",
     roomEmpty: "Cette salle est vide, invitez un collègue ou un ami à vous rejoindre !",
     userOnline: "utilisateur en ligne",

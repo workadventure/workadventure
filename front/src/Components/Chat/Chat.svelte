@@ -75,6 +75,7 @@
                                         authToken: localUserStore.getAuthToken(),
                                         color: getColorByString(name ?? ""),
                                         woka: wokaSrc,
+                                        isLogged: localUserStore.isLogged(),
                                     },
                                 },
                                 "*"

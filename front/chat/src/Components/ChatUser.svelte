@@ -1,6 +1,13 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon } from "svelte-feather-icons";
+    import {
+        MoreHorizontalIcon,
+        ShieldOffIcon,
+        ShieldIcon,
+        SlashIcon,
+        UserCheckIcon,
+        UserXIcon,
+    } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
     import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
@@ -8,6 +15,7 @@
     import teleport from "../../public/static/images/teleport.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
+    import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
@@ -115,9 +123,20 @@
                 </span>
             {/if}
             {#if user.isAdmin}
-                <span class="tw-text-orange">
+                <span class="tw-text-orange" title={$LL.role.admin()}>
                     <ShieldIcon size="13" />
                 </span>
+            {/if}
+            {#if ENABLE_OPENID}
+                {#if user.isMember}
+                    <span class="tw-text-pop-green" title={$LL.role.member()}>
+                        <UserCheckIcon size="13" />
+                    </span>
+                {:else}
+                    <span class="tw-text-pop-red" title={$LL.role.visitor()}>
+                        <UserXIcon size="13" />
+                    </span>
+                {/if}
             {/if}
         </h1>
         <p class="tw-text-xs tw-mb-0 tw-font-condensed">

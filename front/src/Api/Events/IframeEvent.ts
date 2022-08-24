@@ -241,6 +241,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("notification"),
         data: isNotificationEvent,
     }),
+    z.object({
+        type: z.literal("login"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

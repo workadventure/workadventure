@@ -88,6 +88,7 @@ services:
       EMBEDLY_KEY: $EMBEDLY_KEY
       ICON_URL: http://icon.workadventure.localhost
       EJABBERD_DOMAIN: ejabberd
+      ENABLE_OPENID: "$OPID_CLIENT_ID"
     volumes:
       - ./front/chat:/usr/src/app
       - ./libs:/usr/src/libs

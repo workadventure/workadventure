@@ -4,6 +4,10 @@ services:
     environment:
       ENABLE_OPENID: 1
 
+  chat:
+    environment:
+      ENABLE_OPENID: 1
+
   pusher:
     environment:
       #OPID_CLIENT_ID: authorization-code-with-pkce-client-id

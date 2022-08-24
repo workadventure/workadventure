@@ -5,7 +5,7 @@
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { userStore } from "../Stores/LocalUserStore";
+    import { localUserStore, userStore } from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
@@ -17,6 +17,8 @@
     import { timelineMessagesToSee, timelineOpenedStore } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
+    import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
+    import { iframeListener } from "../IframeListener";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -91,6 +93,12 @@
         }
     }
 
+    function login() {
+        if (window.location !== window.parent?.location) {
+            iframeListener.sendLogin();
+        }
+    }
+
     mucRoomsStore.subscribe(() => {
         defaultMucRoom = mucRoomsStore.getDefaultRoom();
     });
@@ -129,6 +137,16 @@
                         />
                     </div>
                 </div>
+                {#if !localUserStore.getUserData().isLogged && ENABLE_OPENID}
+                    <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
+                        <div class="tw-p-3 tw-text-sm tw-text-center">
+                            <p>{$LL.signIn()}</p>
+                            <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={login}>
+                                {$LL.logIn()}
+                            </button>
+                        </div>
+                    </div>
+                {/if}
                 <!-- chat users -->
                 {#if defaultMucRoom !== undefined}
                     <UsersList
