@@ -322,7 +322,8 @@
 
     .clickable,
     .clickable:hover {
-        cursor: url("./images/cursor_pointer.png"), pointer;
+        background: gray;
+        //cursor: url("./images/cursor_pointer.png"), pointer;
     }
 }
 

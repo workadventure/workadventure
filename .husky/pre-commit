@@ -21,3 +21,7 @@ yarn run precommit
 cd map-storage || exit
 yarn run precommit
 )
+(
+cd libs/tailwind || exit
+yarn run precommit
+)
