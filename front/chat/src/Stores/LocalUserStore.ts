@@ -7,6 +7,7 @@ const emailKey = "email";
 const playUriKey = "playUri";
 const wokaKey = "woka";
 const colorKey = "color";
+const isLoggedKey = "isLogged";
 
 function createUserStore() {
     const { subscribe, update, set } = writable<UserData>();
@@ -36,6 +37,7 @@ class LocalUserStore {
             playUri: localStorage.getItem(playUriKey) || "",
             woka: localStorage.getItem(wokaKey) || "",
             color: localStorage.getItem(colorKey) || "",
+            isLogged: localStorage.getItem(isLoggedKey) === "true" || false,
         };
     }
 

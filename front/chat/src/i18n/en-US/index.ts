@@ -14,6 +14,13 @@ const en_US: BaseTranslation = {
     reconnecting: "Connection to presence server ...",
     waitingData: "Waiting user data ...",
     search: "Search for user, message, channel, etc.",
+    role: {
+        admin: "Administrator",
+        member: "Member",
+        visitor: "Visitor",
+    },
+    logIn: "Log in",
+    signIn: "Register or log in to enjoy all the features of the chat !",
     invite: "Invite",
     roomEmpty: "This room is empty, invite a colleague or friend to join you!",
     userOnline: "user online",

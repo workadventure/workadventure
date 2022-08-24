@@ -60,7 +60,7 @@
             {#if [...$usersListStore].length === 0}
                 <div class="tw-px-5 tw-mb-2">
                     <p>{$LL.roomEmpty()}</p>
-                    <button type="button" class="light tw-m-auto tw-cursor-pointer" on:click={showInviteMenu}>
+                    <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={showInviteMenu}>
                         {$LL.invite()}
                     </button>
                 </div>

@@ -237,7 +237,7 @@ export class GameMapPropertiesListener {
                 chatZoneLiveStore.set(false);
             }
             if (newValue !== undefined) {
-                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live");
+                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live", false);
                 chatZoneLiveStore.set(true);
             }
         });

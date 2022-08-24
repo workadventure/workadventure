@@ -48,6 +48,7 @@ import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/
 import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -411,6 +412,9 @@ class IframeListener {
                             notificationType,
                             iframeEvent.data.forum
                         );
+                    } else if (iframeEvent.type == "login") {
+                        analyticsClient.login();
+                        window.location.href = "/login";
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -905,13 +909,14 @@ class IframeListener {
         });
     }
 
-    sendJoinMucEvent(url: string, name: string, type: string) {
+    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
         this.postMessageToChat({
             type: "joinMuc",
             data: {
                 url,
                 name,
                 type,
+                subscribe,
             },
         });
     }

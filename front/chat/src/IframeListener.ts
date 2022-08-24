@@ -50,7 +50,12 @@ class IframeListener {
                             }
                             connectionManager.connectionOrFail
                                 .getXmppClient()
-                                ?.joinMuc(iframeEvent.data.name, iframeEvent.data.url, iframeEvent.data.type);
+                                ?.joinMuc(
+                                    iframeEvent.data.name,
+                                    iframeEvent.data.url,
+                                    iframeEvent.data.type,
+                                    iframeEvent.data.subscribe
+                                );
                             break;
                         }
                         case "leaveMuc": {
@@ -172,6 +177,15 @@ class IframeListener {
             {
                 type: "notification",
                 data: { userName, notificationType, forum },
+            },
+            "*"
+        );
+    }
+
+    sendLogin() {
+        window.parent.postMessage(
+            {
+                type: "login",
             },
             "*"
         );

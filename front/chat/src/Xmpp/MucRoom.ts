@@ -32,7 +32,7 @@ export type User = {
     chatState: string;
     isMe: boolean;
     jid: string;
-    isLogged: boolean;
+    isMember: boolean;
 };
 
 export const ChatStates = {
@@ -211,17 +211,28 @@ export class MucRoom {
         return { woka, color, jid };
     }
 
-    public getUserDataByUuid(uuid: string): UserData {
-        if (this.getPlayerUuid() === uuid) {
-            return get(userStore);
-        } else {
-            for (const [, user] of get(this.presenceStore)) {
-                if (user.uuid === uuid) {
-                    return user;
-                }
+    public getUserDataByUuid(uuid: string): User {
+        for (const [, user] of get(this.presenceStore)) {
+            if (user.uuid === uuid) {
+                return user;
             }
         }
-        return defaultUserData;
+        return {
+            name: "unknown",
+            playUri: "",
+            uuid: "",
+            status: "",
+            active: false,
+            isInSameMap: false,
+            color: defaultColor,
+            woka: defaultWoka,
+            unreads: false,
+            isAdmin: false,
+            chatState: "",
+            isMe: false,
+            jid: "",
+            isMember: false,
+        };
     }
 
     public goTo(type: string, playUri: string, uuid: string) {
@@ -326,15 +337,17 @@ export class MucRoom {
             xml("x", {
                 xmlns: "http://jabber.org/protocol/muc",
             }),
-            //add window location and have possibility to teleport on the user and remove all hash from the url
+            // Add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
                 playUri: get(userStore).playUri,
             }),
-            //add uuid of the user to identify and target them on teleport
+            // Add uuid of the user to identify and target them on teleport
             xml("user", {
                 uuid: get(userStore).uuid,
                 color: get(userStore).color,
                 woka: get(userStore).woka,
+                // If you can subscribe to the default muc room, this is that you are a member
+                isMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
             })
         );
         if (!this.closed) {
@@ -712,6 +725,7 @@ export class MucRoom {
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
+                const isMember = xml.getChild("user")?.getAttr("isMember");
                 //const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const role = x.getChild("item")?.getAttr("role");
                 if (type === "unavailable") {
@@ -730,7 +744,8 @@ export class MucRoom {
                         type === "unavailable" ? USER_STATUS_DISCONNECTED : USER_STATUS_AVAILABLE,
                         color,
                         woka,
-                        ["moderator", "owner"].includes(role)
+                        ["moderator", "owner"].includes(role),
+                        isMember === "true"
                     );
                 }
 
@@ -901,7 +916,7 @@ export class MucRoom {
                 } else {
                     const { jid } = this.getUserDataByName(name);
                     if (jid !== null && jid) {
-                        this.updateUser(jid, null, null, null, null, null, null, null, state.getName());
+                        this.updateUser(jid, null, null, null, null, null, null, null, null, state.getName());
                     }
                     handledMessage = true;
                 }
@@ -982,6 +997,10 @@ export class MucRoom {
         return get(this.presenceStore).get(jid.toString())?.chatState ?? ChatStates.INACTIVE;
     }
 
+    private getCurrentIsMember(jid: JID | string) {
+        return get(this.presenceStore).get(jid.toString())?.isMember ?? false;
+    }
+
     private getMeIsAdmin() {
         return get(this.meStore).isAdmin;
     }
@@ -995,6 +1014,7 @@ export class MucRoom {
         color: string | null = null,
         woka: string | null = null,
         isAdmin: boolean | null = null,
+        isMember: boolean | null = null,
         chatState: string | null = null
     ) {
         let isMe = false;
@@ -1022,7 +1042,7 @@ export class MucRoom {
                 chatState: chatState ?? this.getCurrentChatState(jid),
                 isMe,
                 jid: jid.toString(),
-                isLogged: false,
+                isMember: isMember ?? this.getCurrentIsMember(jid),
             });
             numberPresenceUserStore.set(list.size);
             return list;

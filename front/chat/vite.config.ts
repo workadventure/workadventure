@@ -25,7 +25,8 @@ export default defineConfig({
                 "FALLBACK_LOCALE",
                 "UPLOADER_URL",
                 "EMBEDLY_KEY",
-                "ICON_URL"
+                "ICON_URL",
+                "ENABLE_OPENID"
             ],
         }),
         pluginRewriteAll(),
