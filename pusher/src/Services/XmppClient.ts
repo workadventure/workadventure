@@ -224,12 +224,7 @@ export class XmppClient {
 
                     //send present unavailable
                     try {
-                        await this.xmppSocket?.send(
-                            xml(
-                                "presence",
-                                { type: "unavailable" }
-                            )
-                        );
+                        await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
 
                         //stop xmpp socket client
                         this.xmppSocket?.stop();
