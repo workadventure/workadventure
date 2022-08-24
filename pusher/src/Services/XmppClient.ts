@@ -93,12 +93,12 @@ export class XmppClient {
 
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
-                /*if (this.timeout) {
+                if (this.timeout) {
                     clearTimeout(this.timeout);
                 }
                 this.timeout = setTimeout(() => {
                     this.start();
-                }, 10_000);*/
+                }, 10_000);
             });
 
             xmpp.on("disconnect", () => {
