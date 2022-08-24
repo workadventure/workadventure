@@ -15,7 +15,7 @@
     import teleport from "../../public/static/images/teleport.svg";
     import { GoTo, RankUp, RankDown, Ban } from "../Type/CustomEvent";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
-    import {ENABLE_OPENID} from "../Enum/EnvironmentVariable";
+    import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
 
     const dispatch = createEventDispatcher<{
         goTo: GoTo;
