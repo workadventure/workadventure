@@ -89,6 +89,9 @@ services:
       - OPID_PROMPT=login
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       - EJABBERD_JWT_SECRET
+      - EJABBERD_DOMAIN
+      - EJABBERD_WS_URI
+
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pusher.rule=Host(`${PUSHER_HOST}`)"
@@ -126,6 +129,8 @@ services:
       - MAP_STORAGE_URL=map-storage:50053
       - PUBLIC_MAP_STORAGE_URL=https://${MAP_STORAGE_HOST}
       - PLAYER_VARIABLES_MAX_TTL
+      - EJABBERD_API_URI
+      - EJABBERD_DOMAIN
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.back.rule=Host(`${BACK_HOST}`)"

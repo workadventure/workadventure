@@ -8,7 +8,7 @@ import {
     XmppSettingsMessage,
 } from "../Messages/generated/messages_pb";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
-import { EJABBERD_DOMAIN, EJABBERD_URI } from "../Enum/EnvironmentVariable";
+import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 
 //eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -61,7 +61,7 @@ export class XmppClient {
         try {
             let status: "disconnected" | "connected" = "disconnected";
             const xmpp = client({
-                service: `ws://${EJABBERD_URI}/ws`,
+                service: `${EJABBERD_WS_URI}`,
                 domain: EJABBERD_DOMAIN,
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
