@@ -156,7 +156,7 @@
         <div
             class="tw-border tw-border-transparent tw-border-r-light-purple tw-border-solid tw-py-1 tw-pr-2 tw-self-stretch tw-flex tw-justify-center tw-align-middle tw-border-t-0"
         >
-            <button id="exit" class="tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
+            <button class="exit tw-text-lighter-purple tw-m-0" on:click={backToThreadList}>
                 <ArrowLeftIcon />
             </button>
         </div>
