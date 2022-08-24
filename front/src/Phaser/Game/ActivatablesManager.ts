@@ -1,4 +1,4 @@
-import { MathUtils } from "@math-utils";
+import { MathUtils } from "@workadventure/math-utils";
 import { isOutlineable } from "../../Utils/CustomTypeGuards";
 import type { Player } from "../Player/Player";
 import type { ActivatableInterface } from "./ActivatableInterface";

@@ -1,4 +1,4 @@
-import { flattenGroupLayersMap } from "@map-editor-types";
+import { flattenGroupLayersMap } from "@workadventure/map-editor-types";
 import { ITiledMapLayer } from "@workadventure/tiled-map-type-guard";
 import "jasmine";
 

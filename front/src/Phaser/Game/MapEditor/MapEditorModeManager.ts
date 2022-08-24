@@ -1,6 +1,4 @@
-import { CommandConfig } from "@map-editor-types";
-import { UpdateAreaCommand } from "@map-editor-types";
-import { Command } from "@map-editor-types";
+import { CommandConfig, UpdateAreaCommand, Command } from "@workadventure/map-editor-types";
 import { Unsubscriber } from "svelte/store";
 import { RoomConnection } from "../../../Connexion/RoomConnection";
 import { mapEditorModeDragCameraPointerDownStore, mapEditorModeStore } from "../../../Stores/MapEditorStore";

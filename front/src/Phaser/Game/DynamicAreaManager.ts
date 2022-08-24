@@ -1,4 +1,4 @@
-import { AreaType } from "@map-editor-types";
+import { AreaType } from "@workadventure/map-editor-types";
 import { Subscription } from "rxjs";
 import { CreateAreaEvent, ModifyAreaEvent } from "../../Api/Events/CreateAreaEvent";
 import { iframeListener } from "../../Api/IframeListener";

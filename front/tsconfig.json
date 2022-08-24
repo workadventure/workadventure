@@ -25,10 +25,6 @@
     "alwaysStrict": true, /* Parse in strict mode and emit "use strict" for each source file. */
     "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
     "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-    "paths": {
-      "@map-editor-types": ["node_modules/@workadventure/map-editor-types/src/index"],
-      "@math-utils": ["node_modules/@workadventure/math-utils/src/index"],
-    }
   },
   "exclude": [
     "node_modules",

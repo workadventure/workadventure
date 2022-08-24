@@ -2,6 +2,7 @@
   "name": "map-storage",
   "version": "1.0.0",
   "description": "",
+  "main": "main.js",
   "contributors": [
     {
       "name": "Grégoire Parant",

@@ -1,5 +1,5 @@
-import { AreaType, GameMapProperties } from "@map-editor-types";
-import { MathUtils } from "@math-utils";
+import { AreaType, GameMapProperties } from "@workadventure/map-editor-types";
+import { MathUtils } from "@workadventure/math-utils";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";

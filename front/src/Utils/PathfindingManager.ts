@@ -1,4 +1,4 @@
-import { MathUtils } from "@math-utils";
+import { MathUtils } from "@workadventure/math-utils";
 import * as EasyStar from "easystarjs";
 
 export enum PathTileType {
