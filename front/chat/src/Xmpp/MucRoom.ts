@@ -88,10 +88,6 @@ export type Message = {
 };
 export type MessagesList = Message[];
 export type MessagesStore = Readable<MessagesList>;
-export type DeleteMessage = {
-    id: string;
-    from: string;
-};
 
 export type Me = {
     isAdmin: boolean;
@@ -121,14 +117,14 @@ export const defaultUserData: UserData = {
     isLogged: false,
 };
 
-export type DeleteMessageStore = Readable<DeleteMessage[]>;
+export type DeleteMessageStore = Readable<string[]>;
 
 export class MucRoom {
     private presenceStore: Writable<UserList>;
     private teleportStore: Writable<Teleport>;
     private messageStore: Writable<Message[]>;
     private messageReactStore: Writable<Map<string, ReactMessage[]>>;
-    private deletedMessagesStore: Writable<DeleteMessage[]>;
+    private deletedMessagesStore: Writable<string[]>;
     private meStore: Writable<Me>;
     private nickCount = 0;
     private composingTimeOut: Timeout | undefined;
@@ -150,7 +146,7 @@ export class MucRoom {
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
         this.messageStore = writable<Message[]>(new Array(0));
-        this.deletedMessagesStore = writable<DeleteMessage[]>(new Array(0));
+        this.deletedMessagesStore = writable<string[]>(new Array(0));
         this.messageReactStore = writable<Map<string, ReactMessage[]>>(new Map<string, ReactMessage[]>());
         this.teleportStore = writable<Teleport>({ state: false, to: null });
         this.meStore = writable<Me>({ isAdmin: false });
@@ -849,7 +845,7 @@ export class MucRoom {
                                 console.log("delete message => ", xml);
                                 this.deletedMessagesStore.update((deletedMessages) => [
                                     ...deletedMessages,
-                                    { id: xml.getChild("remove")?.getAttr("origin_id"), from: name },
+                                    xml.getChild("remove")?.getAttr("origin_id"),
                                 ]);
                             } else {
                                 if (delay > this.lastMessageSeen) {

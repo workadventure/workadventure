@@ -338,11 +338,15 @@
                             </div>
 
                             <!-- Delete message -->
-                            {#if (deleteMessage = [...$deletedMessagesStore].find((deleted) => deleted.id === message.id)) != undefined}
+                            {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
                                 <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
                                     <p class="tw-italic">
                                         {$LL.messageDeleted()}
-                                        {deleteMessage?.from}.
+                                        {#if isMe(message.jid)}
+                                            {$LL.me()}.
+                                        {:else}
+                                            {message.name}.
+                                        {/if}
                                     </p>
                                 </div>
 
