@@ -41,7 +41,6 @@ export class XmppClient {
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
-    private deleteSubscribeOnDisconnect = false;
     private xmppSocket: XmppSocket | undefined;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
@@ -172,18 +171,6 @@ export class XmppClient {
                 const stanzaString = stanza.toString();
                 xmppMessage.setStanza(stanzaString);
 
-                if (
-                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
-                    !stanzaString.includes('type="unavailable"')
-                ) {
-                    this.deleteSubscribeOnDisconnect = true;
-                } else if (
-                    stanzaString.includes('deleteSubscribeOnDisconnect="true"') &&
-                    stanzaString.includes('type="unavailable"')
-                ) {
-                    this.deleteSubscribeOnDisconnect = false;
-                }
-
                 const pusherToIframeMessage = new PusherToIframeMessage();
                 pusherToIframeMessage.setXmppmessage(xmppMessage);
 
@@ -232,15 +219,7 @@ export class XmppClient {
 
                     //send present unavailable
                     try {
-                        await this.xmppSocket?.send(
-                            xml(
-                                "presence",
-                                { type: "unavailable" },
-                                xml("user", {
-                                    deleteSubscribeOnDisconnect: this.deleteSubscribeOnDisconnect ? "true" : "false",
-                                })
-                            )
-                        );
+                        await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
                     } catch (err) {
                         console.error("XmppClient => disconnect => presence", err);
                     }

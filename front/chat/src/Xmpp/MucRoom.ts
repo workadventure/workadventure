@@ -6,7 +6,7 @@ import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { mucRoomsStore, numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import { userStore } from "../Stores/LocalUserStore";
+import { localUserStore, userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { fileMessageManager, UploadedFile } from "../Services/FileMessageManager";
@@ -32,6 +32,7 @@ export type User = {
     chatState: string;
     isMe: boolean;
     jid: string;
+    isLogged: boolean;
 };
 
 export const ChatStates = {
@@ -113,6 +114,7 @@ export const defaultUserData: UserData = {
     authToken: "",
     color: defaultColor,
     woka: defaultWoka,
+    isLogged: false,
 };
 
 export type DeleteMessageStore = Readable<string[]>;
@@ -139,6 +141,7 @@ export class MucRoom {
         public readonly name: string,
         private roomJid: JID,
         public type: string,
+        public subscribe: boolean,
         private jid: string
     ) {
         this.presenceStore = writable<UserList>(new Map<string, User>());
@@ -231,7 +234,11 @@ export class MucRoom {
     }
 
     public connect() {
-        this.sendSubscribe();
+        if (localUserStore.getUserData().isLogged && this.subscribe && this.type !== "live") {
+            this.sendSubscribe();
+        } else {
+            this.sendPresence();
+        }
     }
 
     private requestAllSubscribers() {
@@ -328,7 +335,6 @@ export class MucRoom {
                 uuid: get(userStore).uuid,
                 color: get(userStore).color,
                 woka: get(userStore).woka,
-                deleteSubscribeOnDisconnect: this.type === "live" ? "true" : "false",
             })
         );
         if (!this.closed) {
@@ -453,13 +459,7 @@ export class MucRoom {
 
     public sendDisconnect() {
         const to = jid(this.roomJid.local, this.roomJid.domain, this.getPlayerName());
-        const messageMucSubscribe = xml(
-            "presence",
-            { to: to.toString(), from: this.jid, type: "unavailable" },
-            xml("user", {
-                deleteSubscribeOnDisconnect: this.type === "live" ? "true" : "false",
-            })
-        );
+        const messageMucSubscribe = xml("presence", { to: to.toString(), from: this.jid, type: "unavailable" });
         if (!this.closed) {
             this.connection.emitXmlMessage(messageMucSubscribe);
             if (_VERBOSE) console.warn("[XMPP]", ">> Disconnect sent");
@@ -691,12 +691,11 @@ export class MucRoom {
             console.warn("[XMPP]", "<< Error received :", xml.toString());
             if (xml.getChild("error")?.getChildText("text") === "That nickname is already in use by another occupant") {
                 connectionManager.connectionOrFail.getXmppClient()?.incrementNickCount();
-                this.sendSubscribe();
-                //this.sendPresence(me);
+                this.connect();
                 handledMessage = true;
             } else if (xml.getChild("error")?.getChildText("text") === "You have been banned from this room") {
                 handledMessage = true;
-                //this.connectionFinished = true;
+                this.closed = true;
             }
         }
         // We are receiving the presence from someone
@@ -707,21 +706,15 @@ export class MucRoom {
             const x = xml.getChild("x", "http://jabber.org/protocol/muc#user");
 
             if (x) {
-                console.warn(xml.toString());
                 const userJID = jid(x.getChild("item")?.getAttr("jid"));
                 userJID.setResource("");
                 const playUri = xml.getChild("room")?.getAttr("playUri");
                 const uuid = xml.getChild("user")?.getAttr("uuid");
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
-                const affiliation = x.getChild("item")?.getAttr("affiliation");
+                //const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const role = x.getChild("item")?.getAttr("role");
-                const deleteSubscribeOnDisconnect = xml.getChild("user")?.getAttr("deleteSubscribeOnDisconnect");
-                if (
-                    type === "unavailable" &&
-                    ((deleteSubscribeOnDisconnect !== undefined && deleteSubscribeOnDisconnect === "true") ||
-                        affiliation === "outcast")
-                ) {
+                if (type === "unavailable") {
                     if (userJID.toString() === this.getMyJID().toString()) {
                         // If presence received from ME and type is unavailable and room type is LIVE, delete this MucRoom
                         connectionManager.connectionOrFail.getXmppClient()?.removeMuc(this);
@@ -1029,6 +1022,7 @@ export class MucRoom {
                 chatState: chatState ?? this.getCurrentChatState(jid),
                 isMe,
                 jid: jid.toString(),
+                isLogged: false,
             });
             numberPresenceUserStore.set(list.size);
             return list;
