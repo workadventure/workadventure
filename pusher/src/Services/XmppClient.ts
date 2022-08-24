@@ -10,17 +10,11 @@ import {
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
+import jid, { JID } from "@xmpp/jid";
+import { client, xml } from "@xmpp/client";
 
-//eslint-disable-next-line @typescript-eslint/no-var-requires
-const { client, xml, jid } = require("@xmpp/client");
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
-
-interface JID {
-    _domain: string;
-    _resource: string;
-    _local: string;
-}
 
 export interface XmppSocket {
     send: Function;
@@ -36,18 +30,20 @@ interface XmlElement {
 export class XmppClient {
     private address!: JID;
     private clientPromise!: CancelablePromise<XmppSocket>;
+    private clientJID: JID;
     private clientID: string;
     private clientDomain: string;
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
     private xmppSocket: XmppSocket | undefined;
+    private pingInterval: NodeJS.Timer | null = null;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
-        const clientJID = jid(clientSocket.jabberId);
-        this.clientID = clientJID.local;
-        this.clientDomain = clientJID.domain;
-        this.clientResource = clientJID.resource;
+        this.clientJID = jid(clientSocket.jabberId);
+        this.clientID = this.clientJID.local;
+        this.clientDomain = this.clientJID.domain;
+        this.clientResource = this.clientJID.resource;
         this.clientPassword = clientSocket.jabberPassword;
         this.start();
     }
@@ -66,7 +62,6 @@ export class XmppClient {
                 username: this.clientID,
                 resource: this.clientResource ? this.clientResource : v4().toString(), //"pusher",
                 password: this.clientPassword,
-                roomId: this.clientSocket.roomId,
             });
             this.xmppSocket = xmpp;
 
@@ -85,6 +80,10 @@ export class XmppClient {
             });
 
             xmpp.on("offline", () => {
+                if (this.pingInterval) {
+                    clearInterval(this.pingInterval);
+                    this.pingInterval = null;
+                }
                 console.info("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
 
@@ -153,6 +152,8 @@ export class XmppClient {
                 if (!this.clientSocket.disconnecting) {
                     this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
                 }
+
+                this.pingInterval = setInterval(() => this.ping(), 30_000);
             });
             xmpp.on("status", (status: string) => {
                 console.error("XmppClient => createClient => status => status", status);
@@ -242,5 +243,21 @@ export class XmppClient {
     send(stanza: string): Promise<void> {
         const ctx = parse(stanza);
         return this.xmppSocket?.send(ctx);
+    }
+
+    ping(): void {
+        this.xmppSocket?.send(
+            xml(
+                "iq",
+                {
+                    from: this.clientJID,
+                    to: EJABBERD_DOMAIN,
+                    id: v4(),
+                    type: "get",
+                },
+                xml("ping", { xmlns: "urn:xmpp:ping" })
+            )
+        );
+        // TODO catch pong
     }
 }
