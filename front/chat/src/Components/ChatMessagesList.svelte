@@ -1,6 +1,6 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { ChatStates, defaultColor, defaultWoka, Message, MucRoom, User } from "../Xmpp/MucRoom";
+    import { ChatStates, defaultColor, defaultWoka, Message, MucRoom, User, DeleteMessage } from "../Xmpp/MucRoom";
     import LL, { locale } from "../i18n/i18n-svelte";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
@@ -39,6 +39,7 @@
     let messagesList: HTMLElement;
     let picker: EmojiButton;
     let emojiContainer: HTMLElement;
+    let deleteMessage: DeleteMessage | undefined;
 
     function needHideHeader(name: string, date: Date, i: number) {
         let previousMsg = $messagesStore[i - 1];
@@ -337,11 +338,11 @@
                             </div>
 
                             <!-- Delete message -->
-                            {#if [...$deletedMessagesStore].find((deleted) => deleted.id === message.id)}
+                            {#if (deleteMessage = [...$deletedMessagesStore].find((deleted) => deleted.id === message.id)) != undefined}
                                 <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
                                     <p class="tw-italic">
                                         {$LL.messageDeleted()}
-                                        {[...$deletedMessagesStore].find((deleted) => deleted.id === message.id)?.from}.
+                                        {deleteMessage?.from}.
                                     </p>
                                 </div>
 
