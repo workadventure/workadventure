@@ -666,7 +666,7 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.0.1.tgz#549ce746c163d0869a61cfdabafe625a13ab5d0f"
   integrity sha512-zKVyTt6rELvPXYwcVPTJcPFtY0AckN5A7xWuc7owBqR0FdtuDYhE9MZZUi6IY1kZUQFSXV1B3UOOIyLkVHYd2w==
 
-"@workadventure/map-editor-types@link:../libs/map-editor-types":
+"@workadventure/map-editor@link:../libs/map-editor":
   version "0.0.0"
   uid ""
 
@@ -3668,7 +3668,7 @@ typesafe-i18n@^5.4.0:
   resolved "https://registry.yarnpkg.com/typesafe-i18n/-/typesafe-i18n-5.11.0.tgz#76820dbc1d0652b954f537414920ab9eec4951d8"
   integrity sha512-OVX/6/F834XldHTMdmo3TcMPePcvLXwYrkDgqWYxmuVCTyCrk0aIdUOIWM0RPZEQ2D106+/LcWFCkJiBCuK2pA==
 
-typescript@*, typescript@^4.3.5, typescript@^4.7.2:
+typescript@*, typescript@^4.7.2:
   version "4.7.4"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.7.4.tgz#1a88596d1cf47d59507a1bcdfb5b9dfe4d488235"
   integrity sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==

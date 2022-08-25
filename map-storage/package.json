@@ -42,7 +42,7 @@
     "@grpc/proto-loader": "^0.6.13",
     "google-protobuf": "^3.13.0",
     "@types/cors": "^2.8.12",
-    "@workadventure/map-editor-types": "link:../libs/map-editor-types",
+    "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/tiled-map-type-guard": "^1.0.3",
     "concurrently": "^7.3.0",
     "cors": "^2.8.5",

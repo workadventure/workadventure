@@ -138,7 +138,7 @@ import { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterfac
 import { PlayerVariablesManager } from "./PlayerVariablesManager";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
-import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor-types";
+import { AreaType, GameMap, GameMapProperties } from "@workadventure/map-editor";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { GameStateEvent } from "../../Api/Events/GameStateEvent";
 export interface GameSceneInitInterface {

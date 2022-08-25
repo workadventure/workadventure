@@ -1113,7 +1113,11 @@
     "@typescript-eslint/types" "5.28.0"
     eslint-visitor-keys "^3.3.0"
 
-"@workadventure/map-editor-types@link:../libs/map-editor-types":
+"@workadventure/map-editor@link:../libs/map-editor":
+  version "0.0.0"
+  uid ""
+
+"@workadventure/math-utils@link:../libs/math-utils":
   version "0.0.0"
   uid ""
 

@@ -33,9 +33,9 @@ jobs:
         run: yarn install
         working-directory: "libs/tailwind"
 
-      - name: "Install libs/map-editor-types dependencies"
+      - name: "Install libs/map-editor dependencies"
         run: yarn install
-        working-directory: "libs/map-editor-types"
+        working-directory: "libs/map-editor"
 
       - name: "Install dependencies"
         run: yarn install

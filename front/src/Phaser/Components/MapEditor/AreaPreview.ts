@@ -1,4 +1,4 @@
-import { ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { ITiledMapRectangleObject } from "@workadventure/map-editor";
 
 export enum AreaPreviewEvent {
     Clicked = "Clicked",

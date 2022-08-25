@@ -1,4 +1,4 @@
-import { AreaType, GameMapProperties } from "@workadventure/map-editor-types";
+import { AreaType, GameMapProperties } from "@workadventure/map-editor";
 import { MathUtils } from "@workadventure/math-utils";
 import { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileLayer } from "@workadventure/tiled-map-type-guard";
 import type { PositionInterface } from "../../Connexion/ConnexionModels";

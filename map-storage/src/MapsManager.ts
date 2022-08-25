@@ -1,4 +1,4 @@
-import { GameMap } from "@workadventure/map-editor-types";
+import { GameMap } from "@workadventure/map-editor";
 import { readFile } from "fs/promises";
 
 export class MapsManager {

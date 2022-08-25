@@ -4,7 +4,7 @@ import {
     GameMap,
     GameMapProperties,
     ITiledMapRectangleObject,
-} from "@workadventure/map-editor-types";
+} from "@workadventure/map-editor";
 import {
     ITiledMap,
     ITiledMapLayer,

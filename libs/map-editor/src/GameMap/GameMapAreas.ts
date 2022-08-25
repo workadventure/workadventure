@@ -1,4 +1,5 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { MathUtils } from "@workadventure/math-utils";
 import { GameMap } from "./GameMap";
 import { AreaType, ITiledMapRectangleObject } from '../types';
 
@@ -253,22 +254,10 @@ export class GameMapAreas {
 
         const overlappedAreas: ITiledMapRectangleObject[] = [];
         for (const area of areasOfInterest) {
-            if (this.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
+            if (MathUtils.isOverlappingWithRectangle({ x: position.x, y: position.y + offsetY }, area)) {
                 overlappedAreas.push(area);
             }
         }
         return overlappedAreas;
-    }
-
-    // TODO: Get it from MathUtils lib - Note: Currently hard to do with CommonJS modules needed by NestJS
-    private isOverlappingWithRectangle(
-        p: { x: number; y: number },
-        r: { x: number; y: number; width: number; height: number }
-    ): boolean {
-        return this.isBetween(p.x, r.x, r.x + r.width) && this.isBetween(p.y, r.y, r.y + r.height);
-    }
-
-    private isBetween(value: number, min: number, max: number): boolean {
-        return value >= min && value <= max;
     }
 }

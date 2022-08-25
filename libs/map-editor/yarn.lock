@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@workadventure/math-utils@link:../math-utils":
+  version "0.0.0"
+  uid ""
+
 "@workadventure/tiled-map-type-guard@^2.0.4":
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/@workadventure/tiled-map-type-guard/-/tiled-map-type-guard-2.0.5.tgz#e4158770fd1b046cb211343da4e7bb7926112e6d"

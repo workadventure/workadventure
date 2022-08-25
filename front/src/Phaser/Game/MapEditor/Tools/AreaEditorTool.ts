@@ -1,4 +1,4 @@
-import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor-types";
+import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { Subscription } from "rxjs";
 import { RoomConnection } from "../../../../Connexion/RoomConnection";
 import { mapEditorSelectedAreaPreviewStore } from "../../../../Stores/MapEditorStore";
