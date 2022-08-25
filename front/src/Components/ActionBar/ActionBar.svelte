@@ -364,7 +364,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
