@@ -166,7 +166,8 @@ export class XmppClient {
                 })
                 .catch((err: Error) => {
                     console.error("XmppClient => createClient => start => error", err);
-                    throw err;
+                    //throw err;
+                    rej(err);
                 });
 
             xmpp.on("stanza", (stanza: unknown) => {
