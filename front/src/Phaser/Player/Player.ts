@@ -95,6 +95,9 @@ export class Player extends Character {
         this.pathToFollow = undefined;
         this.pathWalkingSpeed = undefined;
         this.followingPathPromiseResolve?.call(this, { x: this.x, y: this.y, cancelled });
+        if (!cancelled) {
+            console.log("destination-reached");
+        }
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
