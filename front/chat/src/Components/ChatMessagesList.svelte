@@ -338,7 +338,9 @@
 
                             <!-- Delete message -->
                             {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
-                                <div class="wa-message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                <div
+                                    class="wa-message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                                >
                                     <p class="tw-italic">
                                         {$LL.messageDeleted()}
                                         {#if isMe(message.jid)}
