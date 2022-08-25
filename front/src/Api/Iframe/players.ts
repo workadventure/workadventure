@@ -107,8 +107,13 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
      * @param options
      */
     public async configureTracking(options?: { players?: boolean; movement?: boolean }): Promise<void> {
-        this.trackingPlayers = options?.players ?? true;
-        this.trackingMovement = options?.movement ?? true;
+        const trackingPlayers = options?.players ?? true;
+        const trackingMovement = options?.movement ?? true;
+        if (trackingPlayers === this.trackingPlayers && trackingMovement === this.trackingMovement) {
+            return;
+        }
+        this.trackingPlayers = trackingPlayers;
+        this.trackingMovement = trackingMovement;
         const remotePlayersData = await queryWorkadventure({
             type: "enablePlayersTracking",
             data: {
@@ -117,8 +122,10 @@ export class WorkadventurePlayersCommands extends IframeApiContribution<Workadve
             },
         });
 
-        for (const remotePlayerEvent of remotePlayersData) {
-            this.registerRemotePlayer(remotePlayerEvent);
+        if (trackingPlayers) {
+            for (const remotePlayerEvent of remotePlayersData) {
+                this.registerRemotePlayer(remotePlayerEvent);
+            }
         }
     }
 
