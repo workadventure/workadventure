@@ -16,25 +16,25 @@ export class WorkadventureProximityMeetingCommands extends IframeApiContribution
         apiCallback({
             type: "joinProximityMeetingEvent",
             callback: (payloadData: JoinProximityMeetingEvent) => {
-                joinStream.next(payloadData.users.map((user) => new RemotePlayer(user)));
+                joinStream?.next(payloadData.users.map((user) => new RemotePlayer(user)));
             },
         }),
         apiCallback({
             type: "participantJoinProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                participantJoinStream.next(new RemotePlayer(payloadData.user));
+                participantJoinStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "participantLeaveProximityMeetingEvent",
             callback: (payloadData: ParticipantProximityMeetingEvent) => {
-                participantLeaveStream.next(new RemotePlayer(payloadData.user));
+                participantLeaveStream?.next(new RemotePlayer(payloadData.user));
             },
         }),
         apiCallback({
             type: "leaveProximityMeetingEvent",
             callback: () => {
-                leaveStream.next();
+                leaveStream?.next();
             },
         }),
     ];
