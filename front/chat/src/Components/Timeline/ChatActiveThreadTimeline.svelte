@@ -216,7 +216,7 @@
         <!-- MESSAGE LIST-->
         <div
             id="timeLine-messageList"
-            class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-overflow-y-scroll tw-h-auto tw-min-h-screen"
+            class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
             bind:this={messagesList}
         >
             {#each $chatMessagesStore as message}
