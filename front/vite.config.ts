@@ -1,5 +1,4 @@
 import { defineConfig } from "vite";
-import tsconfigPaths from "vite-tsconfig-paths";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import { envConfig } from "@geprog/vite-plugin-env-config";
 import sveltePreprocess from "svelte-preprocess";
@@ -17,7 +16,6 @@ export default defineConfig({
         sourcemap: true,
     },
     plugins: [
-        tsconfigPaths(),
         svelte({
             preprocess: sveltePreprocess(),
         }),
