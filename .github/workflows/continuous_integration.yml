@@ -49,10 +49,6 @@ jobs:
         run: yarn run ts-proto && yarn run copy-to-front-ts-proto && yarn run json-copy-to-front
         working-directory: "messages"
 
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front"
-
       - name: "Generate i18n files"
         run: yarn run typesafe-i18n
         working-directory: "front"
