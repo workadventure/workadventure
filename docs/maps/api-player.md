@@ -228,8 +228,10 @@ A player variable can be set simply by assigning a value.
 
 Example:
 ```javascript
-WA.player.state.foo = "value" //will set the "foo" key to "value". By default, variable is transient and private.
+WA.player.state.foo = "value"
 ```
+
+By **default**, variables saved are **persisted** and **private** in the **world** scope.
 
 If you want to set some options, you will need to use the `saveVariable` function:
 
