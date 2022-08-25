@@ -5,7 +5,7 @@
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { localUserStore, userStore } from "../Stores/LocalUserStore";
+    import { userStore } from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
