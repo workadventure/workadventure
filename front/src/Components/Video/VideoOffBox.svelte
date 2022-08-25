@@ -42,7 +42,7 @@
 </script>
 
 <div
-    class="video-container video-off"
+    class="video-container video-off "
     class:no-clikable={!clickable}
     bind:this={videoContainer}
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}

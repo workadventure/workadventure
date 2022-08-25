@@ -55,11 +55,11 @@
     &:hover {
         .report-ban-container,
         .report-ban-screenshare-container {
-            @apply -tw-translate-x-3 tw-opacity-100;
+            @apply -tw-translate-x-3 tw-opacity-100 xl:-tw-translate-x-10;
         }
 
         .report-ban-container-cam-off {
-            @apply -tw-translate-x-[1.37rem] tw-opacity-100 md:-tw-translate-x-3.5 xl:-tw-translate-x-[1.37rem];
+            @apply -tw-translate-x-[1.37rem] tw-opacity-100 md:-tw-translate-x-4 xl:-tw-translate-x-5;
         }
 
         .voice-meter-cam-off {

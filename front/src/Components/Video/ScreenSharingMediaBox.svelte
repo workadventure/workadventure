@@ -29,7 +29,7 @@
 </script>
 
 <div
-    class="video-container screen-sharing screen-blocker tw-flex tw-w-full tw-flex-col tw-h-full"
+    class="video-container screen-sharing tw-flex tw-w-full tw-flex-col tw-h-full"
     on:click={() => (clickable ? highlightedEmbedScreen.toggleHighlight(embedScreen) : null)}
 >
     {#if $statusStore === "connecting"}

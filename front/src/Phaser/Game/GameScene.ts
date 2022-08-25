@@ -1034,11 +1034,11 @@ export class GameScene extends DirtyScene {
         });
 
         this.highlightedEmbedScreenUnsubscriber = highlightedEmbedScreen.subscribe((value) => {
-            this.reposition();
+            //this.reposition();
         });
 
         this.embedScreenLayoutStoreUnsubscriber = embedScreenLayoutStore.subscribe((layout) => {
-            this.reposition();
+            //this.reposition();
         });
 
         const talkIconVolumeTreshold = 10;
@@ -1100,7 +1100,7 @@ export class GameScene extends DirtyScene {
                         this.tryChangeShowVoiceIndicatorState(volume > talkIconVolumeTreshold);
                     });
                 }
-                this.reposition();
+                //this.reposition();
             } else {
                 this.CurrentPlayer.showTalkIcon(false, true);
                 this.connection?.emitPlayerShowVoiceIndicator(false);
@@ -1110,7 +1110,8 @@ export class GameScene extends DirtyScene {
                     this.localVolumeStoreUnsubscriber();
                     this.localVolumeStoreUnsubscriber = undefined;
                 }
-                this.reposition();
+
+                //this.reposition();
             }
 
             oldUsers = newUsers;
@@ -2523,7 +2524,7 @@ ${escapedMessage}
         return undefined;
     }
 
-    private reposition(instant = false): void {
+    public reposition(instant = false): void {
         // Recompute camera offset if needed
         this.time.delayedCall(0, () => {
             biggestAvailableAreaStore.recompute();
