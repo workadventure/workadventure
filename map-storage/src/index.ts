@@ -1,9 +1,9 @@
 import * as grpc from "@grpc/grpc-js";
 import express from "express";
 import cors from "cors";
-import { MapsManager } from "./MapsManager";
 import { MapStorageService } from "./Messages/generated/messages_grpc_pb";
 import { mapStorageServer } from "./MapStorageServer";
+import { mapsManager } from "./MapsManager";
 
 const server = new grpc.Server();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -18,8 +18,6 @@ server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err,
     console.log("gRPC port is 50053");
     server.start();
 });
-
-const mapsManager = new MapsManager();
 
 const app = express();
 app.use(cors());

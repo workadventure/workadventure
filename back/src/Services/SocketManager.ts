@@ -1069,15 +1069,17 @@ export class SocketManager {
     }
 
     handleEditMapWithKeyMessage(room: GameRoom, user: User, message: EditMapWithKeyMessage) {
-        getMapStorageClient().handleEditMapWithKeyMessage(message, (err, res) => {});
-
-        const editMapMessage = message.getEditmapmessage();
-        if (editMapMessage && editMapMessage.hasModifyareamessage()) {
-            const msg = editMapMessage.getModifyareamessage();
-            if (msg) {
-                room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+        getMapStorageClient().handleEditMapWithKeyMessage(message, (err, editMapMessage) => {
+            if (err) {
+                throw err;
             }
-        }
+            if (editMapMessage && editMapMessage.hasModifyareamessage()) {
+                const msg = editMapMessage.getModifyareamessage();
+                if (msg) {
+                    room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
+                }
+            }
+        });
     }
 
     getAllRooms(): RoomsList {
