@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
-    import { UIWebsite } from "../../../Api/Events/ui/UIWebsite";
+    import { UIWebsite } from "../../../Api/Events/Ui/UIWebsite";
     import { iframeListener } from "../../../Api/IframeListener";
 
     export let uiWebsite: UIWebsite;

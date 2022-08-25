@@ -81,7 +81,6 @@ export class ChatConnection implements ChatConnection {
                 const arrayBuffer: ArrayBuffer = messageEvent.data;
 
                 const pusherToIframeMessage = PusherToIframeMessage.decode(new Uint8Array(arrayBuffer));
-                //const message = ServerToClientMessage.deserializeBinary(new Uint8Array(arrayBuffer));
 
                 const message = pusherToIframeMessage.message;
                 if (message === undefined) {

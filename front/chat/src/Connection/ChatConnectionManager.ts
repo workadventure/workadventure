@@ -20,7 +20,7 @@ class ConnectionManager {
         this.start();
     }
 
-    get connectionOrFaile(): ChatConnection {
+    get connectionOrFail(): ChatConnection {
         if (!this.chatConnection) {
             throw new Error("No chat connection with XMPP server!");
         }
@@ -33,20 +33,6 @@ class ConnectionManager {
 
     public start() {
         this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.uuid);
-    }
-
-    public closeAndRestart() {
-        //close current cpnnexion
-        this.connectionOrFaile.close();
-        this.chatConnection = undefined;
-
-        //create new connection
-        if (this.setTimeout) {
-            clearTimeout(this.setTimeout);
-        }
-        this.setTimeout = setTimeout(() => {
-            this.init(this.playUri, this.uuid, this.authToken);
-        }, 2000);
     }
 
     get isClose(): boolean {

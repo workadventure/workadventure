@@ -24,7 +24,8 @@
     import { UserData } from "../Messages/JsonMessages/ChatData";
     import { userStore } from "../Stores/LocalUserStore";
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
-    import { fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
+    import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
+    import File from "./Content/File.svelte";
 
     export let mucRoom: MucRoom;
 
@@ -39,9 +40,11 @@
     let usersSearching: User[] = [];
 
     export const defaultColor = "#626262";
-    const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    // Negative lookbehind doesn't work on Safari browser
+    // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
+    const regexUserTag = /@([\w@]+(?:[.!][\w@]+)*)+$/gm;
 
-    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
 
     function onFocus() {}
     function onBlur() {}
@@ -83,10 +86,10 @@
         if (isMe(name)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.name === name);
+        const userData = [...$presenseStore].map(([, user]) => user).find((user) => user.name === name);
         let user = undefined;
         if (userData) {
-            [, user] = userData;
+            user = userData;
         }
         return user;
     }
@@ -125,11 +128,11 @@
         (<HTMLInputElement>event.target).value = "";
     }
 
-    function handlerDeleteUploadedFile(file: File | UploadedFile) {
-        if (file instanceof File) {
-            //TODO manage promise listener to delete file
-        } else {
+    function handlerDeleteUploadedFile(file: FileExt | UploadedFile) {
+        if (file instanceof UploadedFile) {
             fileMessageManager.deleteFile(file).catch(() => {});
+        } else {
+            //TODO manage promise listener to delete file
         }
         filesUploadStore.update((list) => {
             list.delete(file.name);
@@ -161,13 +164,15 @@
         const values = newMessageText.match(regexUserTag);
         if (values != undefined) {
             const userNameSearching = (values.pop() as string).substring(1);
-            usersSearching = [...$presenseStore.values()].reduce((values: User[], user) => {
-                if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
+            usersSearching = [...$presenseStore]
+                .map(([, user]) => user)
+                .reduce((values: User[], user) => {
+                    if (user.name.toLowerCase().indexOf(userNameSearching.toLowerCase()) === -1) {
+                        return values;
+                    }
+                    values.push(user);
                     return values;
-                }
-                values.push(user);
-                return values;
-            }, []);
+                }, []);
         } else {
             usersSearching = [];
         }
@@ -256,6 +261,12 @@
                     <p class="tw-mb-0 tw-whitespace-pre-line tw-break-words">
                         {$selectedMessageToReply.body}
                     </p>
+                    {#if $selectedMessageToReply && $selectedMessageToReply.files && $selectedMessageToReply.files.length > 0}
+                        {#each $selectedMessageToReply.files as file}
+                            <!-- File message -->
+                            <File {file} />
+                        {/each}
+                    {/if}
                 </div>
                 <div class="close">
                     <XCircleIcon size="17" />
@@ -367,8 +378,11 @@
                 <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
                 <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 <button
+                    id="send"
                     type="submit"
-                    class="tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue"
+                    class={`${
+                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile ? "can-send" : "disabled"
+                    } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}

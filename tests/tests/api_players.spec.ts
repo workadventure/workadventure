@@ -4,7 +4,7 @@ import {} from "../../front/packages/iframe-api-typings/iframe_api";
 import {expect, test, Browser, Page} from '@playwright/test';
 import { login } from './utils/roles';
 import {getCoWebsiteIframe} from "./utils/iframe";
-import {assertLogMessage} from "./utils/log";
+import {assertLogMessage, startRecordLogs} from "./utils/log";
 import {evaluateScript} from "./utils/scripting";
 import {oidcLogin, oidcLogout} from "./utils/oidc";
 
@@ -279,7 +279,7 @@ test.describe('API WA.players', () => {
       return;
     }, null, "embedded_iframe");
 
-    const awaitLog = assertLogMessage(page, "myvar CHANGE TRIGGERED");
+    startRecordLogs(page);
 
     await evaluateScript(page, async () => {
       await WA.onInit();
@@ -287,7 +287,7 @@ test.describe('API WA.players', () => {
       return;
     });
 
-    await awaitLog;
+    await assertLogMessage(page, "myvar CHANGE TRIGGERED");
 
     const variable = await evaluateScript(page, async () => {
       await WA.onInit();

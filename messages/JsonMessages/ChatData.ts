@@ -8,6 +8,7 @@ export const isUserData = z.object({
     authToken: z.optional(z.string()),
     color: z.string(),
     woka: z.string(),
+    isLogged: z.boolean(),
 });
 
 export type UserData = z.infer<typeof isUserData>;

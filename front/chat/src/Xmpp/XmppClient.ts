@@ -8,13 +8,15 @@ import { XmppConnectionStatusChangeMessage_Status as Status } from "../Messages/
 import { ChatConnection } from "../Connection/ChatConnection";
 import { activeThreadStore } from "../Stores/ActiveThreadStore";
 import { get } from "svelte/store";
-import { connectionManager } from "../Connection/ChatConnectionManager";
+import { userStore } from "../Stores/LocalUserStore";
 
 export class XmppClient {
     private jid: string | undefined;
     private conferenceDomain: string | undefined;
     private subscriptions = new Map<string, Subject<ElementExt>>();
     private rooms = new Map<string, MucRoom>();
+
+    private nickCount = 0;
 
     constructor(private connection: ChatConnection) {
         connection.xmppSettingsMessageStream.subscribe((settings) => {
@@ -56,16 +58,17 @@ export class XmppClient {
         connection.xmppConnectionStatusChangeMessageStream.subscribe((status) => {
             switch (status) {
                 case Status.DISCONNECTED: {
+                    console.log("Disconnected from xmpp server");
                     //if connection manager is not closed or be closing,
                     //continue with the same WebSocket and wait information from server
-                    if (!connectionManager.isClose) {
-                        break;
-                    }
+                    //if (!connectionManager.isClose) {
+                    //  break;
+                    //}
 
                     //close reset mucroom, close connection and try to restart
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
-                    connectionManager.closeAndRestart();
+                    //connection.close();
                     break;
                 }
                 case Status.UNRECOGNIZED: {
@@ -82,9 +85,9 @@ export class XmppClient {
     private onConnect(initialRoomDefinitions: MucRoomDefinitionInterface[]) {
         xmppServerConnectionStatusStore.set(true);
 
-        for (const { name, url, type } of initialRoomDefinitions) {
+        for (const { name, url, type, subscribe } of initialRoomDefinitions) {
             if (name && url) {
-                this.joinMuc(name, url, type);
+                this.joinMuc(name, url, type, subscribe);
             }
         }
     }
@@ -126,7 +129,7 @@ export class XmppClient {
         }).join("");
     }
 
-    public joinMuc(name: string, waRoomUrl: string, type: string): MucRoom {
+    public joinMuc(name: string, waRoomUrl: string, type: string, subscribe: boolean): MucRoom {
         if (this.jid === undefined || this.conferenceDomain === undefined) {
             throw new Error(
                 "joinRoom called before we received the XMPP connection details. There is a race condition."
@@ -134,7 +137,7 @@ export class XmppClient {
         }
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
-        const room = new MucRoom(this.connection, name, roomUrl, type, this.jid);
+        const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
         room.connect();
         this.rooms.set(roomUrl.toString(), room);
 
@@ -156,20 +159,38 @@ export class XmppClient {
             console.error('Cannot leave MUC room "' + name + '", room does not exist.');
             return;
         }
-        room.disconnect();
-        this.rooms.delete(roomUrl.toString());
+        room.sendDisconnect();
+    }
 
-        mucRoomsStore.removeMucRoom(room);
+    public removeMuc(room: MucRoom) {
+        if (this.jid === undefined || this.conferenceDomain === undefined) {
+            throw new Error(
+                "leaveMuc called before we received the XMPP connection details. There is a race condition."
+            );
+        }
+        const roomUrl = room.getUrl();
+
         const activeThread = get(activeThreadStore);
         if (activeThread && activeThread.getUrl() === roomUrl.toString()) {
             activeThreadStore.reset();
         }
+
+        this.rooms.delete(roomUrl.toString());
+        mucRoomsStore.removeMucRoom(room);
     }
 
     public close() {
         for (const [, room] of this.rooms) {
-            room.disconnect();
+            room.sendDisconnect();
             mucRoomsStore.removeMucRoom(room);
         }
+    }
+
+    public getPlayerName() {
+        return (get(userStore).name ?? "unknown") + (this.nickCount > 0 ? `[${this.nickCount}]` : "");
+    }
+
+    public incrementNickCount() {
+        this.nickCount++;
     }
 }

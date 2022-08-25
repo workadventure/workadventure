@@ -1,43 +1,34 @@
 import { expect, Page } from '@playwright/test';
 
+let logs = [];
+
 /**
  * Tries to find a given log message in the logs (for 10 seconds)
+ *
+ * @deprecated Avoid using this function. Rely on expect instead.
  */
-let logs = [];
 export async function assertLogMessage(
     page: Page,
     substring: string,
     timeout = 10000
 ): Promise<void> {
-  await page.on('console', async (msg) => {
-    logs.push(await msg.text());
-  });
-
   await expect.poll(() => logs, {
     timeout
   }).toContain(substring);
 }
 
-/*export async function assertLogMessage(
-  page: Page,
-  substring: string,
-  timeout: number = 20_000
-): Promise<void> {
-  // wait for log to appear
-  for (let i = 0; i < timeout / POLLING_INTERVAL; i++) {
-    if (logs.includes(substring)) {
-      break;
-    }
-    await page.waitForTimeout(POLLING_INTERVAL);
-  }
-
-  expect(logs).toContain(substring);
-}*/
+/**
+ * @deprecated Avoid using this function. Rely on expect instead.
+ */
 export function startRecordLogs(page: Page) {
   page.on('console', async (msg) => {
     logs.push(msg.text());
   });
 }
+
+/**
+ * @deprecated Avoid using this function. Rely on expect instead.
+ */
 export function abortRecordLogs(page: Page){
   logs = [];
   page.on('console', async () => null);

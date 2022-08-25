@@ -29,12 +29,11 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import { CameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
-import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
 import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
@@ -42,6 +41,14 @@ import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
+import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
+import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import { MessageUserJoined } from "../Connexion/ConnexionModels";
+import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
+import { AddPlayerEvent } from "./Events/AddPlayerEvent";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -395,6 +402,19 @@ class IframeListener {
                         this._openInviteMenuStream.next();
                     } else if (iframeEvent.type == "chatTotalMessagesToSee") {
                         this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "notification") {
+                        const notificationType =
+                            iframeEvent.data.notificationType === 1
+                                ? NotificationType.discussion
+                                : NotificationType.message;
+                        mediaManager.createNotification(
+                            iframeEvent.data.userName,
+                            notificationType,
+                            iframeEvent.data.forum
+                        );
+                    } else if (iframeEvent.type == "login") {
+                        analyticsClient.login();
+                        window.location.href = "/login";
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -541,6 +561,68 @@ class IframeListener {
         );
     }
 
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
+            return {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            };
+        });
+
+        this.postMessage({
+            type: "joinProximityMeetingEvent",
+            data: {
+                users: formattedUsers,
+            } as JoinProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantJoinProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantLeaveProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendLeaveProximityMeetingEvent() {
+        this.postMessage({
+            type: "leaveProximityMeetingEvent",
+            data: undefined,
+        });
+    }
+
     sendEnterEvent(name: string) {
         this.postMessage({
             type: "enterEvent",
@@ -611,10 +693,18 @@ class IframeListener {
         }
     }
 
-    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
+    sendRemotePlayerClickedEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "remotePlayerClickedEvent",
-            data: event,
+            data: {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            },
         });
     }
 
@@ -663,6 +753,35 @@ class IframeListener {
                 uuid,
             },
         });
+    }
+
+    sendChatVisibilityToChatIframe(visibility: boolean) {
+        this.postMessageToChat({
+            type: "chatVisibility",
+            data: {
+                visibility,
+            },
+        } as IframeResponseEvent);
+    }
+    sendSettingsToChatIframe() {
+        this.postMessageToChat({
+            type: "settings",
+            data: {
+                notification: localUserStore.getNotification(),
+                chatSounds: localUserStore.getChatSounds(),
+            },
+        } as IframeResponseEvent);
+    }
+
+    postMessageToChat(message: IframeResponseEvent) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("postMessageToChat Error => ", err);
+        }
     }
 
     //TODO delete with chat XMPP integration for the discussion circle
@@ -782,7 +901,7 @@ class IframeListener {
     }
 
     sendLeaveMucEvent(url: string) {
-        this.postMessage({
+        this.postMessageToChat({
             type: "leaveMuc",
             data: {
                 url,
@@ -790,13 +909,14 @@ class IframeListener {
         });
     }
 
-    sendJoinMucEvent(url: string, name: string, type: string) {
-        this.postMessage({
+    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
+        this.postMessageToChat({
             type: "joinMuc",
             data: {
                 url,
                 name,
                 type,
+                subscribe,
             },
         });
     }

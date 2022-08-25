@@ -686,6 +686,7 @@ message MucRoomDefinitionMessage {
   string url = 1;
   string name = 2;
   string type = 3;
+  bool subscribe = 4;
 }
 
 message XmppSettingsMessage{

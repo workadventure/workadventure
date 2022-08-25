@@ -48,6 +48,7 @@ import { PathfindingManager } from "../../Utils/PathfindingManager";
 import { ActivatablesManager } from "./ActivatablesManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
+    MessageUserJoined,
     MessageUserMovedInterface,
     OnConnectInterface,
     PositionInterface,
@@ -759,7 +760,7 @@ export class GameScene extends DirtyScene {
                     this.playersEventDispatcher.postMessage({
                         type: "addRemotePlayer",
                         data: {
-                            userId: message.userId,
+                            playerId: message.userId,
                             name: message.name,
                             userUuid: message.userUuid,
                             outlineColor: message.outlineColor,
@@ -1042,8 +1043,48 @@ export class GameScene extends DirtyScene {
 
         const talkIconVolumeTreshold = 10;
         let oldPeersNumber = 0;
+        let oldUsers = new Map<number, MessageUserJoined>();
         this.peerStoreUnsubscriber = peerStore.subscribe((peers) => {
             const newPeerNumber = peers.size;
+            const newUsers = new Map<number, MessageUserJoined>();
+
+            for (const playerId of peers.keys()) {
+                for (const player of this.remotePlayersRepository.getPlayers()) {
+                    if (player.userId === playerId) {
+                        newUsers.set(playerId, player);
+                        break;
+                    }
+                }
+            }
+
+            // Join
+            if (oldPeersNumber === 0 && newPeerNumber > oldPeersNumber) {
+                iframeListener.sendJoinProximityMeetingEvent(Array.from(newUsers.values()));
+            }
+
+            // Left
+            if (newPeerNumber === 0 && newPeerNumber < oldPeersNumber) {
+                iframeListener.sendLeaveProximityMeetingEvent();
+            }
+
+            // Participant Join
+            if (oldPeersNumber > 0 && oldPeersNumber < newPeerNumber) {
+                const newUser = Array.from(newUsers.values()).find((player) => !oldUsers.get(player.userId));
+
+                if (newUser) {
+                    iframeListener.sendParticipantJoinProximityMeetingEvent(newUser);
+                }
+            }
+
+            // Participant Left
+            if (newPeerNumber > 0 && newPeerNumber < oldPeersNumber) {
+                const oldUser = Array.from(oldUsers.values()).find((player) => !newUsers.get(player.userId));
+
+                if (oldUser) {
+                    iframeListener.sendParticipantLeaveProximityMeetingEvent(oldUser);
+                }
+            }
+
             if (newPeerNumber > oldPeersNumber) {
                 this.playSound("audio-webrtc-in");
             } else if (newPeerNumber < oldPeersNumber) {
@@ -1071,7 +1112,9 @@ export class GameScene extends DirtyScene {
                 }
                 this.reposition();
             }
-            oldPeersNumber = peers.size;
+
+            oldUsers = newUsers;
+            oldPeersNumber = newPeerNumber;
         });
     }
 
@@ -2268,11 +2311,19 @@ ${escapedMessage}
         });
 
         player.on(RemotePlayerEvent.Clicked, () => {
-            iframeListener.sendRemotePlayerClickedEvent({
-                id: player.userId,
-                uuid: player.userUuid,
-                name: player.name,
-            });
+            let userFound = undefined;
+            for (const user of this.remotePlayersRepository.getPlayers()) {
+                if (user.userId === player.userId) {
+                    userFound = user;
+                }
+            }
+
+            if (!userFound) {
+                console.error("Undefined clicked player!");
+                return;
+            }
+
+            iframeListener.sendRemotePlayerClickedEvent(userFound);
         });
     }
 
@@ -2329,7 +2380,7 @@ ${escapedMessage}
         this.playersMovementEventDispatcher.postMessage({
             type: "remotePlayerChanged",
             data: {
-                userId: message.userId,
+                playerId: message.userId,
                 position: {
                     x: message.position.x,
                     y: message.position.y,

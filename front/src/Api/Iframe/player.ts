@@ -3,6 +3,7 @@ import type { HasPlayerMovedEvent, HasPlayerMovedEventCallback } from "../Events
 import { Subject } from "rxjs";
 import { apiCallback } from "./registeredCallbacks";
 import { playerState } from "./playerState";
+import proximityMeeting, { WorkadventureProximityMeetingCommands } from "./Player/ProximityMeeting";
 
 const moveStream = new Subject<HasPlayerMovedEvent>();
 
@@ -24,13 +25,19 @@ export const setTags = (_tags: string[]) => {
     tags = _tags;
 };
 
-let uuid: string | undefined;
-
 let userRoomToken: string | undefined;
 
 export const setUserRoomToken = (token: string | undefined) => {
     userRoomToken = token;
 };
+
+let playerId: number | undefined;
+
+export const setPlayerId = (_id: number | undefined) => {
+    playerId = _id;
+};
+
+let uuid: string | undefined;
 
 export const setUuid = (_uuid: string | undefined) => {
     uuid = _uuid;
@@ -65,17 +72,48 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
     }
 
     /**
+     * Get the player UUID.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
+     * @deprecated Use WA.player.uuid instead
+     *
+     * @returns {string|undefined} Player UUID
+     */
+    get id(): string | undefined {
+        if (uuid === undefined) {
+            throw new Error("Player id not initialized yet. You should call WA.player.id within a WA.onInit callback.");
+        }
+        return uuid;
+    }
+
+    /**
      * Get the player id.
      * Important: You need to wait for the end of the initialization before accessing.
      * {@link https://workadventu.re/map-building/api-player.md#get-the-player-id | Website documentation}
      *
-     * @returns {string|undefined} Player id
+     * @returns {number} Player id
      */
-    get id(): string | undefined {
-        // Note: this is not a type, we are checking if playerName is undefined because playerName cannot be undefined
-        // while uuid could.
-        if (playerName === undefined) {
-            throw new Error("Player id not initialized yet. You should call WA.player.id within a WA.onInit callback.");
+    get playerId(): number {
+        if (playerId === undefined) {
+            throw new Error(
+                "Player id not initialized yet. You should call WA.player.playerId within a WA.onInit callback."
+            );
+        }
+        return playerId;
+    }
+
+    /**
+     * Get the player UUID.
+     * Important: You need to wait for the end of the initialization before accessing.
+     * {@link https://workadventu.re/map-building/api-player.md#get-the-player-uuid | Website documentation}
+     *
+     * @returns {string|undefined} Player UUID
+     */
+    get uuid(): string | undefined {
+        if (uuid === undefined) {
+            throw new Error(
+                "Player id not initialized yet. You should call WA.player.uuid within a WA.onInit callback."
+            );
         }
         return uuid;
     }
@@ -207,6 +245,10 @@ export class WorkadventurePlayerCommands extends IframeApiContribution<Workadven
             type: "removePlayerOutline",
             data: undefined,
         });
+    }
+
+    get proximityMeeting(): WorkadventureProximityMeetingCommands {
+        return proximityMeeting;
     }
 }
 

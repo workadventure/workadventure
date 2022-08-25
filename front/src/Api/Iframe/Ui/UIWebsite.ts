@@ -7,7 +7,7 @@ import {
     ViewportPositionHorizontal,
     ViewportPositionVertical,
     UIWebsite as UIWebsiteCore,
-} from "../../Events/ui/UIWebsite";
+} from "../../Events/Ui/UIWebsite";
 import { IframeApiContribution, queryWorkadventure, sendToWorkadventure } from "../IframeApiContribution";
 
 class UIWebsitePositionInternal {

@@ -19,7 +19,7 @@
         CopyIcon,
     } from "svelte-feather-icons";
     import { get, Unsubscriber } from "svelte/store";
-    import { selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
+    import { chatVisibilityStore, selectedMessageToReact, selectedMessageToReply } from "../Stores/ChatStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import File from "./Content/File.svelte";
@@ -30,13 +30,15 @@
     $: unreads = mucRoom.getCountMessagesToSee();
     $: messagesStore = mucRoom.getMessagesStore();
     $: deletedMessagesStore = mucRoom.getDeletedMessagesStore();
+    $: presenseStore = mucRoomsStore.getDefaultRoom()?.getPresenceStore() ?? mucRoom.getPresenceStore();
+    $: usersStore = mucRoom.getPresenceStore();
+    $: loadingStore = mucRoom.getLoadingStore();
+    $: meStore = mucRoom.getMeStore();
 
     let isScrolledDown = false;
     let messagesList: HTMLElement;
     let picker: EmojiButton;
     let emojiContainer: HTMLElement;
-
-    $: presenseStore = mucRoomsStore.getDefaultRoom().getPresenceStore();
 
     function needHideHeader(name: string, date: Date, i: number) {
         let previousMsg = $messagesStore[i - 1];
@@ -55,15 +57,15 @@
         return date.toDateString() !== previousMsg.time.toDateString();
     }
 
-    function isMe(name: string) {
-        return name === mucRoom.getPlayerName();
+    function isMe(jid: string) {
+        return jid === mucRoom.getMyJID().toString();
     }
 
-    function findUserInDefault(name: string): User | UserData | undefined {
-        if (isMe(name)) {
+    function findUserInDefault(jid: string): User | UserData | undefined {
+        if (isMe(jid)) {
             return $userStore;
         }
-        const userData = [...$presenseStore].find(([, user]) => user.name === name);
+        const userData = [...$presenseStore].find(([, user]) => user.jid === jid);
         let user = undefined;
         if (userData) {
             [, user] = userData;
@@ -71,8 +73,8 @@
         return user;
     }
 
-    function getWoka(name: string) {
-        const user = findUserInDefault(name);
+    function getWoka(jid: string) {
+        const user = findUserInDefault(jid);
         if (user) {
             return user.woka;
         } else {
@@ -80,8 +82,8 @@
         }
     }
 
-    function getColor(name: string) {
-        const user = findUserInDefault(name);
+    function getColor(jid: string) {
+        const user = findUserInDefault(jid);
         if (user) {
             return user.color;
         } else {
@@ -172,7 +174,7 @@
         messagesList.addEventListener("scroll", scrollEvent);
         subscribers.push(
             mucRoom.getMessagesStore().subscribe(() => {
-                if (isScrolledDown) {
+                if (isScrolledDown && $chatVisibilityStore) {
                     scrollDownAndRead();
                 }
             })
@@ -235,9 +237,6 @@
         messagesList.removeEventListener("scroll", scrollEvent);
         subscribers.forEach((subscriber) => subscriber());
     });
-
-    $: usersStore = mucRoom.getPresenceStore();
-    $: loadingStore = mucRoom.getLoadingStore();
 </script>
 
 <div class="wa-messages-list-container" bind:this={messagesList}>
@@ -273,46 +272,48 @@
             {/if}
             <div
                 id={`message_${message.id}`}
-                class={`tw-flex ${isMe(message.name) ? "tw-justify-end" : "tw-justify-start"}
-            ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}`}
+                class={`wa-message tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
+            ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}
+            ${isMe(message.jid) ? (message.delivered ? "sent" : "sending") : "received"}
+            `}
             >
                 <div class="tw-flex tw-flex-row tw-items-center  tw-max-w-full">
                     <div
                         class={`tw-flex tw-flex-wrap tw-max-w-full ${
-                            isMe(message.name) ? "tw-justify-end" : "tw-justify-start"
+                            isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"
                         }`}
                     >
                         <div
                             class={`${
-                                isMe(message.name) || needHideHeader(message.name, message.time, i)
+                                isMe(message.jid) || needHideHeader(message.name, message.time, i)
                                     ? "tw-opacity-0"
                                     : "tw-mt-4"
                             } tw-relative wa-avatar-mini tw-mr-2`}
                             transition:fade={{ duration: 100 }}
-                            style={`background-color: ${getColor(message.name)}`}
+                            style={`background-color: ${getColor(message.jid)}`}
                         >
                             <div class="wa-container">
-                                <img class="tw-w-full" src={getWoka(message.name)} alt="Avatar" loading="lazy" />
+                                <img class="tw-w-full" src={getWoka(message.jid)} alt="Avatar" loading="lazy" />
                             </div>
                         </div>
                         <div
                             style="max-width: 75%"
                             transition:fly={{
-                                x: isMe(message.name) ? 10 : -10,
+                                x: isMe(message.jid) ? 10 : -10,
                                 delay: 100,
                                 duration: 200,
                             }}
                         >
                             <div
-                                style={`border-bottom-color:${getColor(message.name)}`}
+                                style={`border-bottom-color:${getColor(message.jid)}`}
                                 class={`tw-flex tw-items-end tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-0.5 ${
                                     !message.targetMessageReply && needHideHeader(message.name, message.time, i)
                                         ? "tw-hidden"
                                         : ""
-                                } ${isMe(message.name) ? "tw-flex-row-reverse" : "tw-flex-row"}`}
+                                } ${isMe(message.jid) ? "tw-flex-row-reverse" : "tw-flex-row"}`}
                             >
-                                <span class={`tw-text-lighter-purple ${isMe(message.name) ? "tw-ml-2" : "tw-mr-2"}`}
-                                    >{#if isMe(message.name)}{$LL.me()}{:else}
+                                <span class={`tw-text-lighter-purple ${isMe(message.jid) ? "tw-ml-2" : "tw-mr-2"}`}
+                                    >{#if isMe(message.jid)}{$LL.me()}{:else}
                                         {message.name.match(/\[\d*]/)
                                             ? message.name.substring(0, message.name.search(/\[\d*]/))
                                             : message.name}
@@ -334,10 +335,24 @@
                                     })}</span
                                 >
                             </div>
-                            <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
-                                {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
-                                    <p class="tw-italic">{$LL.messageDeleted()}</p>
-                                {:else}
+
+                            <!-- Delete message -->
+                            {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
+                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                    <p class="tw-italic">
+                                        {$LL.messageDeleted()}
+                                        {#if isMe(message.jid)}
+                                            {$LL.me()}.
+                                        {:else}
+                                            {message.name}.
+                                        {/if}
+                                    </p>
+                                </div>
+
+                                <!-- Message -->
+                            {:else}
+                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                    <!-- Body associated -->
                                     <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                         {#await HtmlUtils.urlify(message.body)}
                                             <p>...waiting</p>
@@ -346,19 +361,21 @@
                                         {/await}
                                     </div>
 
+                                    <!-- File associated -->
                                     {#if message.files && message.files.length > 0}
                                         {#each message.files as file}
-                                            <!-- File message -->
                                             <File {file} />
                                         {/each}
                                     {/if}
+
+                                    <!-- Action bar -->
                                     <div
                                         class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
                                     >
-                                        <div class="action" on:click={() => selectMessage(message)}>
+                                        <div class="action reply" on:click={() => selectMessage(message)}>
                                             <CornerDownLeftIcon size="17" />
                                         </div>
-                                        <div class="action" on:click={() => reactMessage(message)}>
+                                        <div class="action react" on:click={() => reactMessage(message)}>
                                             <SmileIcon size="17" />
                                         </div>
                                         <div class="action more-option">
@@ -380,59 +397,67 @@
                                                     <CopyIcon size="13" class="tw-mr-1" />
                                                     {$LL.copy()}
                                                 </span>
-                                                <span
-                                                    class="wa-dropdown-item tw-text-pop-red"
-                                                    on:click={() => mucRoom.removeMessage(message.id)}
-                                                >
-                                                    <Trash2Icon size="13" class="tw-mr-1" />
-                                                    {$LL.delete()}
-                                                </span>
+                                                {#if $meStore.isAdmin || isMe(message.jid)}
+                                                    <span
+                                                        class="wa-dropdown-item tw-text-pop-red"
+                                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                    >
+                                                        <Trash2Icon size="13" class="tw-mr-1" />
+                                                        {$LL.delete()}
+                                                    </span>
+                                                {/if}
                                             </div>
                                         </div>
                                     </div>
-                                {/if}
-                            </div>
-                            {#if message.targetMessageReact}
-                                <div class="emojis">
-                                    {#each [...message.targetMessageReact.keys()] as emojiStr}
-                                        {#if message.targetMessageReact.get(emojiStr)}
-                                            <span
-                                                class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
-                                                on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
-                                            >
-                                                {emojiStr}
-                                                {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
-                                                    {message.targetMessageReact.get(emojiStr)}
-                                                {/if}
-                                            </span>
-                                        {/if}
-                                    {/each}
                                 </div>
-                            {/if}
 
-                            <!-- Reply message -->
-                            {#if message.targetMessageReply}
-                                <div
-                                    class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
-                                    on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
-                                >
-                                    <div class="icon-replied">
-                                        <CornerLeftUpIcon size="14" />
-                                    </div>
-                                    <p class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words">
-                                        {message.targetMessageReply.senderName}
-                                        {$LL.said()}
-                                    </p>
-                                    <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
-                                        {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
-                                    </p>
-                                    {#if message.targetMessageReply.files && message.targetMessageReply.files.length > 0}
-                                        {#each message.targetMessageReply.files as file}
-                                            <!-- File message -->
-                                            <File {file} />
+                                <!-- React associated -->
+                                {#if message.targetMessageReact}
+                                    <div class="emojis">
+                                        {#each [...message.targetMessageReact.keys()] as emojiStr}
+                                            {#if message.targetMessageReact.get(emojiStr)}
+                                                <span
+                                                    class={mucRoom.haveSelected(message.id, emojiStr) ? "active" : ""}
+                                                    on:click={() => mucRoom.sendReactMessage(emojiStr, message)}
+                                                >
+                                                    {emojiStr}
+                                                    {#if message.targetMessageReact.get(emojiStr) ?? 0 > 1}
+                                                        {message.targetMessageReact.get(emojiStr)}
+                                                    {/if}
+                                                </span>
+                                            {/if}
                                         {/each}
-                                    {/if}
-                                </div>
+                                    </div>
+                                {/if}
+
+                                <!-- Reply associated -->
+                                {#if message.targetMessageReply}
+                                    <div
+                                        class="message-replied tw-text-xs tw-rounded-lg tw-bg-dark tw-px-3 tw-py-2 tw-mb-2 tw-text-left tw-cursor-pointer"
+                                        on:click={() => scrollToMessageId(message.targetMessageReply?.id ?? "")}
+                                    >
+                                        <div class="icon-replied">
+                                            <CornerLeftUpIcon size="14" />
+                                        </div>
+                                        <p class="tw-mb-0 tw-text-xxxs tw-whitespace-pre-line tw-break-words">
+                                            {message.targetMessageReply.senderName}
+                                            {$LL.said()}
+                                        </p>
+
+                                        <!-- Reply message body render -->
+                                        <p class="tw-mb-0 tw-text-xxs tw-whitespace-pre-line tw-break-words">
+                                            {@html HtmlUtils.replaceEmojy(message.targetMessageReply.body)}
+                                        </p>
+
+                                        <!-- Reply message file -->
+                                        {#if message.targetMessageReply.files}
+                                            {#each message.targetMessageReply.files as file}
+                                                <!-- File message -->
+                                                <File {file} />
+                                            {/each}
+                                        {/if}
+                                    </div>
+                                {/if}
                             {/if}
                         </div>
                     </div>
@@ -481,12 +506,12 @@
                 <div class={`tw-flex tw-justify-start`}>
                     <div
                         class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-                        style={`background-color: ${getColor(user.name)}`}
+                        style={`background-color: ${getColor(user.jid)}`}
                         in:fade={{ duration: 100 }}
                         out:fade={{ delay: 200, duration: 100 }}
                     >
                         <div class="wa-container">
-                            <img class="tw-w-full" src={getWoka(user.name)} alt="Avatar" />
+                            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
                         </div>
                     </div>
                     <div
@@ -496,7 +521,7 @@
                     >
                         <div class="tw-w-fit">
                             <div
-                                style={`border-bottom-color:${getColor(user.name)}`}
+                                style={`border-bottom-color:${getColor(user.jid)}`}
                                 class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
                             >
                                 <span class="tw-text-lighter-purple tw-text-xxs">
@@ -594,6 +619,7 @@
     .message {
         background-color: rgba(15, 31, 45, 0.9);
         position: relative;
+        min-width: 75px;
         .actions {
             display: none;
             position: absolute;

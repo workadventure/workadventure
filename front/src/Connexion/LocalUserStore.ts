@@ -21,6 +21,7 @@ const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTal
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const chatSounds = "chatSounds";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
@@ -254,12 +255,20 @@ class LocalUserStore {
         return JSON.parse(jsonPayload);
     }
 
-    setNotification(value: string): void {
-        localStorage.setItem(notification, value);
+    setNotification(value: boolean): void {
+        localStorage.setItem(notification, value.toString());
     }
 
-    getNotification(): string | null {
-        return localStorage.getItem(notification);
+    getNotification(): boolean {
+        return localStorage.getItem(notification) === "true";
+    }
+
+    setChatSounds(value: boolean): void {
+        localStorage.setItem(chatSounds, value.toString());
+    }
+
+    getChatSounds(): boolean {
+        return localStorage.getItem(chatSounds) !== "false";
     }
 
     setCameraSetup(cameraId: string) {
