@@ -291,7 +291,7 @@ jobs:
         working-directory: "messages"
 
       - name: "Build proto messages"
-        run: yarn run ts-proto-nest && yarn run copy-to-map-storage
+        run: yarn run proto && yarn run copy-to-map-storage
         working-directory: "messages"
 
       - name: "Build"
