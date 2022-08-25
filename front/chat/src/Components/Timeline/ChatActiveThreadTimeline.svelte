@@ -269,7 +269,7 @@
                                     >
                                 </div>
                                 {#if message.text}
-                                    <div class="wa-message">
+                                    <div class="wa-message-body">
                                         {#each message.text as text}
                                             <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                                 {#await HtmlUtils.urlify(text)}

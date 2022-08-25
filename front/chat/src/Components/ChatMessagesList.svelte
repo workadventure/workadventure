@@ -272,7 +272,7 @@
             {/if}
             <div
                 id={`message_${message.id}`}
-                class={`tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
+                class={`wa-message tw-flex ${isMe(message.jid) ? "tw-justify-end" : "tw-justify-start"}
             ${needHideHeader(message.name, message.time, i) ? "tw-mt-0.5" : "tw-mt-2"}
             ${isMe(message.jid) ? (message.delivered ? "sent" : "sending") : "received"}
             `}
@@ -338,9 +338,7 @@
 
                             <!-- Delete message -->
                             {#if [...$deletedMessagesStore].find((deleted) => deleted === message.id)}
-                                <div
-                                    class="wa-message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-                                >
+                                <div class="wa-message-body">
                                     <p class="tw-italic">
                                         {$LL.messageDeleted()}
                                         {#if isMe(message.jid)}
@@ -353,7 +351,7 @@
 
                                 <!-- Message -->
                             {:else}
-                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                <div class="wa-message-body">
                                     <!-- Body associated -->
                                     <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                         {#await HtmlUtils.urlify(message.body)}
@@ -618,8 +616,7 @@
         right: 0;
         border: solid 0.5px white;
     }
-    .message {
-        background-color: rgba(15, 31, 45, 0.9);
+    .wa-message-body {
         position: relative;
         min-width: 75px;
         .actions {
