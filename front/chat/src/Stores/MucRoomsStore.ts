@@ -28,7 +28,7 @@ function createMucRoomsStore() {
             set(new Set<MucRoom>());
         },
         getDefaultRoom(): MucRoom | undefined {
-            return [...get(mucRoomsStore).values()].find((mucRoom) => mucRoom.type === "default");
+            return [...get(this).values()].find((mucRoom) => mucRoom.type === "default");
         },
     };
 }

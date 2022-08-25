@@ -138,10 +138,10 @@ export class XmppClient {
 
         const roomUrl = jid(waRoomUrl, this.conferenceDomain);
         const room = new MucRoom(this.connection, name, roomUrl, type, subscribe, this.jid);
-        room.connect();
         this.rooms.set(roomUrl.toString(), room);
-
         mucRoomsStore.addMucRoom(room);
+
+        room.connect();
 
         return room;
     }
