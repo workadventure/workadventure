@@ -73,14 +73,6 @@ function createSubMenusStore() {
         },
         {
             type: "translated",
-            key: SubMenusInterface.globalMessages,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.contact,
-        },
-        {
-            type: "translated",
             key: SubMenusInterface.settings,
         },
         {
@@ -88,6 +80,14 @@ function createSubMenusStore() {
             key: SubMenusInterface.aboutRoom,
         },
         inviteMenu,
+        {
+            type: "translated",
+            key: SubMenusInterface.globalMessages,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.contact,
+        },
     ]);
 
     return {
@@ -200,7 +200,7 @@ inviteUserActivated.subscribe((value) => {
         (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
     );
     if (value && indexInviteMenu === -1) {
-        valuesSubMenusStore.push(inviteMenu);
+        valuesSubMenusStore.splice(3, 0, inviteMenu);
         subMenusStore.set(valuesSubMenusStore);
     } else if (!value && indexInviteMenu !== -1) {
         valuesSubMenusStore.splice(indexInviteMenu, 1);
