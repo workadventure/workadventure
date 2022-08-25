@@ -98,7 +98,7 @@ export class Player extends Character {
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
-        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 25 : 9;
+        return this.pathWalkingSpeed ? this.pathWalkingSpeed : speedUp && !followMode ? 500 : 180;
     }
 
     private adjustPathToFollowToColliderBounds(path: { x: number; y: number }[]): { x: number; y: number }[] {
@@ -124,28 +124,26 @@ export class Player extends Character {
         // Compute movement deltas
         const followMode = get(followStateStore) !== "off";
         const speed = this.deduceSpeed(activeEvents.get(UserInputEvent.SpeedUp), followMode);
-        const moveAmount = speed * 20;
-        x = x * moveAmount;
-        y = y * moveAmount;
-
+        const velocityX = x * speed;
+        const velocityY = y * speed;
         // Compute moving state
         const joystickMovement = activeEvents.get(UserInputEvent.JoystickMove);
-        const moving = x !== 0 || y !== 0 || joystickMovement;
+        const moving = velocityX !== 0 || velocityY !== 0 || joystickMovement;
 
         // Compute direction
         let direction = this.lastDirection;
         if (moving && !joystickMovement) {
-            if (Math.abs(x) > Math.abs(y)) {
-                direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
+            if (Math.abs(velocityX) > Math.abs(velocityY)) {
+                direction = velocityX < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
             } else {
-                direction = y < 0 ? PositionMessage_Direction.UP : PositionMessage_Direction.DOWN;
+                direction = velocityY < 0 ? PositionMessage_Direction.UP : PositionMessage_Direction.DOWN;
             }
         }
 
         // Send movement events
         const emit = () => this.emit(hasMovedEventName, { moving, direction, x: this.x, y: this.y });
         if (moving) {
-            this.move(x, y);
+            this.move(velocityX, velocityY);
             emit();
         } else if (get(userMovingStore)) {
             this.stop();

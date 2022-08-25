@@ -314,10 +314,10 @@ export abstract class Character extends Container implements OutlineableInterfac
         return body;
     }
 
-    move(x: number, y: number) {
+    move(velocityX: number, velocityY: number) {
         const body = this.getBody();
 
-        body.setVelocity(x, y);
+        body.setVelocity(velocityX, velocityY);
 
         if (Math.abs(body.velocity.x) > Math.abs(body.velocity.y)) {
             if (body.velocity.x < 0) {
