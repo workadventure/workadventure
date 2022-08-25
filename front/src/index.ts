@@ -16,7 +16,7 @@ import { coWebsiteManager } from "./WebRtc/CoWebsiteManager";
 import { localUserStore } from "./Connexion/LocalUserStore";
 import { ErrorScene } from "./Phaser/Reconnecting/ErrorScene";
 import { iframeListener } from "./Api/IframeListener";
-import { desktopApi } from "./Api/desktop/index";
+import { desktopApi } from "./Api/Desktop/index";
 import { HdpiManager } from "./Phaser/Services/HdpiManager";
 import { waScaleManager } from "./Phaser/Services/WaScaleManager";
 import { Game } from "./Phaser/Game/Game";
@@ -147,7 +147,7 @@ HtmlUtils.querySelectorOrFail("#game canvas").addEventListener("contextmenu", fu
 });
 
 window.addEventListener("resize", function () {
-    coWebsiteManager.resetStyleMain();
+    coWebsiteManager.restoreMainSize();
 
     waScaleManager.applyNewSize();
     waScaleManager.refreshFocusOnTarget();

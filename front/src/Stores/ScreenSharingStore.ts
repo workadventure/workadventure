@@ -1,9 +1,9 @@
 import { derived, Readable, readable, writable } from "svelte/store";
 import { peerStore } from "./PeerStore";
 import type { LocalStreamStoreValue } from "./MediaStore";
-import { myCameraVisibilityStore } from "./MyCameraStoreVisibility";
+import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
-import type {} from "../Api/desktop";
+import type {} from "../Api/Desktop";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -43,8 +43,8 @@ let previousComputedAudioConstraint: boolean | MediaTrackConstraints = false;
  * A store containing the media constraints we want to apply.
  */
 export const screenSharingConstraintsStore = derived(
-    [requestedScreenSharingState, myCameraVisibilityStore, peerStore],
-    ([$requestedScreenSharingState, $myCameraVisibilityStore, $peerStore], set) => {
+    [requestedScreenSharingState, myCameraStore, myMicrophoneStore, inExternalServiceStore, peerStore],
+    ([$requestedScreenSharingState, $myCameraStore, $myMicrophoneStore, $inExternalServiceStore, $peerStore], set) => {
         let currentVideoConstraint: boolean | MediaTrackConstraints = true;
         let currentAudioConstraint: boolean | MediaTrackConstraints = false;
 
@@ -54,8 +54,8 @@ export const screenSharingConstraintsStore = derived(
             currentAudioConstraint = false;
         }
 
-        // Disable screen sharing when in a Jitsi
-        if (!$myCameraVisibilityStore) {
+        // Disable screen sharing if is in a external video/audio service.
+        if ($inExternalServiceStore) {
             currentVideoConstraint = false;
             currentAudioConstraint = false;
         }

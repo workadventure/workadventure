@@ -24,6 +24,7 @@
     "plugins": [
         "@typescript-eslint"
     ],
+    "ignorePatterns": ["**/generated/*.ts"],
     "rules": {
         "no-unused-vars": "off",
         "@typescript-eslint/no-explicit-any": "error",
@@ -31,6 +32,7 @@
             "error", { "args": "none", "caughtErrors": "all", "varsIgnorePattern": "_exhaustiveCheck" }
         ],
         "no-throw-literal": "error",
-        "@typescript-eslint/camelcase": "off"
+        "@typescript-eslint/camelcase": "off",
+        "@typescript-eslint/ban-ts-ignore": "off"
     }
 }

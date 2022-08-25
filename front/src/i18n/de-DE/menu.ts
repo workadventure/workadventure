@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const menu: NonNullable<Translation["menu"]> = {
+const menu: DeepPartial<Translation["menu"]> = {
     title: "Menu",
     icon: {
         open: {
@@ -8,6 +9,9 @@ const menu: NonNullable<Translation["menu"]> = {
             invite: "Einladung anzeigen",
             register: "Registrieren",
             chat: "Chat öffnen",
+            userlist: "Benutzerliste",
+            openEmoji: "Open emoji selected popup",
+            closeEmoji: "Close emoji menu",
         },
     },
     visitCard: {
@@ -77,7 +81,6 @@ const menu: NonNullable<Translation["menu"]> = {
         copy: "Kopieren",
         share: "Teilen",
         walkAutomaticallyToPosition: "Automatisch zu meiner Position gehen",
-        selectEntryPoint: "Select an entry point",
     },
     globalMessage: {
         text: "Text",
@@ -89,6 +92,8 @@ const menu: NonNullable<Translation["menu"]> = {
     globalAudio: {
         uploadInfo: "Datei hochladen",
         error: "Keine Datei ausgewählt. Du musst vor dem Versenden eine Datei hochladen.",
+        errorUpload:
+            "Fehler beim Hochladen der Datei. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut. Wenn das Problem weiterhin besteht, wenden Sie sich an den Administrator.",
     },
     contact: {
         gettingStarted: {

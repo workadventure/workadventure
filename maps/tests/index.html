@@ -50,22 +50,6 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-pathfinding"> Success <input type="radio" name="test-pathfinding"> Failure <input type="radio" name="test-pathfinding" checked> Pending
-                    </td>
-                    <td>
-                        <a href="#" class="testLink" data-testmap="Pathfinding/map.json" target="_blank">Test Pathfinding</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="radio" name="test-door-map"> Success <input type="radio" name="test-door-map"> Failure <input type="radio" name="test-door-map" checked> Pending
-                    </td>
-                    <td>
-                        <a href="#" class="testLink" data-testmap="DoorTest/map.json" target="_blank">Test Doors</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
                         <input type="radio" name="test-start-tile-S1"> Success <input type="radio" name="test-start-tile-S1"> Failure <input type="radio" name="test-start-tile-S1" checked> Pending
                     </td>
                     <td>
@@ -82,15 +66,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-exits"> Success <input type="radio" name="test-exits"> Failure <input type="radio" name="test-exits" checked> Pending
-                    </td>
-                    <td>
-                        <a href="#" class="testLink" data-testmap="move_to.json" target="_blank">Test moveTo parameter</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <input type="radio" name="test-exits"> Success <input type="radio" name="test-exits"> Failure <input type="radio" name="test-exits" checked> Pending
+                        <input type="radio" name="test-moveto-parameter"> Success <input type="radio" name="test-moveto-parameter"> Failure <input type="radio" name="test-moveto-parameter" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="exit1.json" target="_blank">Test exits</a>
@@ -162,7 +138,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-emoji"> Success <input type="radio" name="test-emoji"> Failure <input type="radio" name="test-emoji" checked> Pending
+                        <input type="radio" name="test-focuzable-zone-map"> Success <input type="radio" name="test-focuzable-zone-map"> Failure <input type="radio" name="test-focuzable-zone-map" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="focusable_zone_map.json" target="_blank">Focusable Zones</a>
@@ -285,7 +261,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-set-tiles"> Success <input type="radio" name="test-set-tiles"> Failure <input type="radio" name="test-set-tiles" checked> Pending
+                        <input type="radio" name="test-camera-api"> Success <input type="radio" name="test-camera-api"> Failure <input type="radio" name="test-camera-api" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="CameraApi/camera_api_test.json" target="_blank">Test camera API</a>
@@ -301,7 +277,7 @@
                 </tr>
                 <tr>
                     <td>
-                        <input type="radio" name="test-set-tiles"> Success <input type="radio" name="test-set-tiles"> Failure <input type="radio" name="test-set-tiles" checked> Pending
+                        <input type="radio" name="test-player-movement-api"> Success <input type="radio" name="test-player-movement-api"> Failure <input type="radio" name="test-player-movement-api" checked> Pending
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="MovePlayer/move_player_api_test.json" target="_blank">Test Player Movement API</a>
@@ -395,6 +371,46 @@
                         <a href="#" class="testLink" data-testmap="DisableProximityMeeting/disableProximityMeeting.json" target="_blank">Testing disable proximity meeting</a>
                     </td>
                 </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-openclosechat"> Success <input type="radio" name="test-openclosechat"> Failure <input type="radio" name="test-openclosechat" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Chat/chat_open_close_event.json" target="_blank">Testing open and close chat <i>(already automated in E2E tests)</i></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-remoteplayers"> Success <input type="radio" name="test-remoteplayers"> Failure <input type="radio" name="test-remoteplayers" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="RemotePlayers/remote_players.json" target="_blank">Testing remote players API <i>(already automated in E2E tests)</i></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-remoteplayers-noinit"> Success <input type="radio" name="test-remoteplayers-noinit"> Failure <input type="radio" name="test-remoteplayers-noinit" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="RemotePlayers/remote_players_no_init.json" target="_blank">Testing remote players API not properly initialized <i>(already automated in E2E tests)</i></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-disable_cam_micro"> Success <input type="radio" name="test-disable_cam_micro"> Failure <input type="radio" name="test-disable_cam_micro" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="DisabledWebcamMicro/disable_cam_micro.json" target="_blank">Testing disable/restore webcam and microphone</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-proximitymeetingevents"> Success <input type="radio" name="test-proximitymeetingevents"> Failure <input type="radio" name="test-proximitymeetingevents" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="ProximityMeeting/proximity_meeting_events.json" target="_blank">Testing proximity meeting events</a>
+                    </td>
+                </tr>
             </table>
             <h2>CoWebsite</h2>
             <table class="table">
@@ -431,6 +447,41 @@
                     </td>
                 </tr>
             </table>
+            <h2>Pathfinding</h2>
+            <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-pathfinding-doors"> Success <input type="radio" name="test-pathfinding-doors"> Failure <input type="radio" name="test-pathfinding-doors" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/Doors/map.json" target="_blank">Test Doors</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-pathfinding-avoid-exits"> Success <input type="radio" name="test-pathfinding-avoid-exits"> Failure <input type="radio" name="test-avoid-exits" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/AvoidExits/map1.json" target="_blank">Avoid Exits</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-pathfinding-moveto"> Success <input type="radio" name="test-pathfinding-moveto"> Failure <input type="radio" name="test-pathfinding-moveto" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/MoveTo/map1.json" target="_blank">Test moveTo parameter 1</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-pathfinding-moveto2"> Success <input type="radio" name="test-pathfinding-moveto2"> Failure <input type="radio" name="test-pathfinding-moveto2" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Pathfinding/MoveTo/map2.json#moveTo=destination" target="_blank">Test moveTo parameter 2</a>
+                    </td>
+                </tr>
+            </table>
             <h2>Areas</h2>
             <table class="table">
                 <tr>
@@ -438,7 +489,15 @@
                         <input type="radio" name="test-areas-from-tiled"> Success <input type="radio" name="test-areas-from-tiled"> Failure <input type="radio" name="test-areas-from-tiled" checked> Pending
                     </td>
                     <td>
-                        <a href="#" class="testLink" data-testmap="Areas/AreaFromTiledMap/areas_from_tiled.json" target="_blank">Test areas created in Tiled</a>
+                        <a href="#" class="testLink" data-testmap="Areas/AreaFromTiledMap/map.json" target="_blank">Test areas created in Tiled</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="test-start-areas"> Success <input type="radio" name="test-start-areas"> Failure <input type="radio" name="test-start-areas" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="Areas/StartAreas/start_areas.json" target="_blank">Test Start Areas</a>
                     </td>
                 </tr>
                 <tr>
@@ -455,6 +514,17 @@
                     </td>
                     <td>
                         <a href="#" class="testLink" data-testmap="Areas/CRUD/area_crud.json" target="_blank">Test Area CRUD</a>
+                    </td>
+                </tr>
+            </table>
+            <h2>Map Editor</h2>
+            <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="move-to-non-editable-map"> Success <input type="radio" name="move-to-non-editable-map"> Failure <input type="radio" name="move-to-non-editable-map" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="MapEditor/move_to_non_editable_map.json" target="_blank">Test moving to non-editable map</a>
                     </td>
                 </tr>
             </table>
@@ -490,6 +560,14 @@
             </table>
             <h2>Others</h2>
             <table class="table">
+                <tr>
+                    <td>
+                        <input type="radio" name="test-big-map"> Success <input type="radio" name="test-big-map"> Failure <input type="radio" name="test-big-map" checked> Pending
+                    </td>
+                    <td>
+                        <a href="#" class="testLink" data-testmap="BigMap/map.json" target="_blank">Test Big Map</a>
+                    </td>
+                </tr>
                 <tr>
                     <td>
                         <input type="radio" name="test-reconnection"> Success <input type="radio" name="test-reconnection"> Failure <input type="radio" name="test-reconnection" checked> Pending

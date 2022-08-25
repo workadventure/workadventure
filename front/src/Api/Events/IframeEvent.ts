@@ -17,8 +17,8 @@ import { isMapDataEvent } from "./MapDataEvent";
 import { isSetVariableEvent } from "./SetVariableEvent";
 import { isCreateEmbeddedWebsiteEvent, isEmbeddedWebsiteEvent } from "./EmbeddedWebsiteEvent";
 import { isLoadTilesetEvent } from "./LoadTilesetEvent";
-import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./ui/TriggerActionMessageEvent";
-import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./ui/MenuRegisterEvent";
+import { isMessageReferenceEvent, isTriggerActionMessageEvent } from "./Ui/TriggerActionMessageEvent";
+import { isMenuRegisterEvent, isUnregisterMenuEvent } from "./Ui/MenuRegisterEvent";
 import { isPlayerPosition } from "./PlayerPosition";
 import { isCameraSetEvent } from "./CameraSetEvent";
 import { isCameraFollowPlayerEvent } from "./CameraFollowPlayerEvent";
@@ -28,18 +28,29 @@ import { isMovePlayerToEventAnswer } from "./MovePlayerToEventAnswer";
 import { isAddActionsMenuKeyToRemotePlayerEvent } from "./AddActionsMenuKeyToRemotePlayerEvent";
 import { isRemoveActionsMenuKeyFromRemotePlayerEvent } from "./RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { isSetAreaPropertyEvent } from "./SetAreaPropertyEvent";
-import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./ui/UIWebsite";
+import { isCreateUIWebsiteEvent, isModifyUIWebsiteEvent, isUIWebsite } from "./Ui/UIWebsite";
 import { isAreaEvent, isCreateAreaEvent } from "./CreateAreaEvent";
 import { isUserInputChatEvent } from "./UserInputChatEvent";
 import { isEnterLeaveEvent } from "./EnterLeaveEvent";
 import { isChangeLayerEvent } from "./ChangeLayerEvent";
 import { isChangeAreaEvent } from "./ChangeAreaEvent";
 import { isButtonClickedEvent } from "./ButtonClickedEvent";
-import { isRemotePlayerClickedEvent } from "./RemotePlayerClickedEvent";
 import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent";
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
-import { isMenuItemClickedEvent } from "./ui/MenuItemClickedEvent";
+import { isAskPositionEvent } from "./AskPositionEvent";
+import { isLeaveMucEvent } from "./LeaveMucEvent";
+import { isJoinMucEvent } from "./JoinMucEvent";
+import { isMenuItemClickedEvent } from "./Ui/MenuItemClickedEvent";
+import { isJoinProximityMeetingEvent } from "./ProximityMeeting/JoinProximityMeetingEvent";
+import { isParticipantProximityMeetingEvent } from "./ProximityMeeting/ParticipantProximityMeetingEvent";
+import { isSetSharedPlayerVariableEvent } from "./SetSharedPlayerVariableEvent";
+import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
+import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
+import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
+import { isSettingsEvent } from "./SettingsEvent";
+import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
+import { isNotificationEvent } from "./NotificationEvent";
 
 export interface TypedMessageEvent<T> extends MessageEvent {
     data: T;
@@ -66,6 +77,23 @@ export const isIframeEventWrapper = z.union([
         data: isChatEvent,
     }),
     z.object({
+        type: z.literal("openChat"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("closeChat"),
+        data: z.undefined(),
+    }),
+    /* @deprecated with new service chat messagerie */
+    z.object({
+        type: z.literal("addPersonnalMessage"),
+        data: z.string(),
+    }),
+    z.object({
+        type: z.literal("newChatMessageWritingStatus"),
+        data: z.number(),
+    }),
+    z.object({
         type: z.literal("cameraFollowPlayer"),
         data: isCameraFollowPlayerEvent,
     }),
@@ -88,6 +116,30 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("goToPage"),
         data: isGoToPageEvent,
+    }),
+    z.object({
+        type: z.literal("turnOffMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("turnOffWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreMicrophone"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("disableWebcam"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("restoreWebcam"),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("disablePlayerControls"),
@@ -173,6 +225,26 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("modifyArea"),
         data: isAreaEvent,
     }),
+    z.object({
+        type: z.literal("askPosition"),
+        data: isAskPositionEvent,
+    }),
+    z.object({
+        type: z.literal("openInviteMenu"),
+        data: z.undefined(),
+    }),
+    z.object({
+        type: z.literal("chatTotalMessagesToSee"),
+        data: z.number(),
+    }),
+    z.object({
+        type: z.literal("notification"),
+        data: isNotificationEvent,
+    }),
+    z.object({
+        type: z.literal("login"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;
@@ -181,6 +253,22 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("userInputChat"),
         data: isUserInputChatEvent,
+    }),
+    z.object({
+        type: z.literal("joinProximityMeetingEvent"),
+        data: isJoinProximityMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("participantJoinProximityMeetingEvent"),
+        data: isParticipantProximityMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("participantLeaveProximityMeetingEvent"),
+        data: isParticipantProximityMeetingEvent,
+    }),
+    z.object({
+        type: z.literal("leaveProximityMeetingEvent"),
+        data: z.undefined(),
     }),
     z.object({
         type: z.literal("enterEvent"),
@@ -212,7 +300,7 @@ export const isIframeResponseEvent = z.union([
     }),
     z.object({
         type: z.literal("remotePlayerClickedEvent"),
-        data: isRemotePlayerClickedEvent,
+        data: isAddPlayerEvent,
     }),
     z.object({
         type: z.literal("actionsMenuActionClickedEvent"),
@@ -235,8 +323,52 @@ export const isIframeResponseEvent = z.union([
         data: isSetVariableEvent,
     }),
     z.object({
+        type: z.literal("setPlayerVariable"),
+        data: isSetVariableEvent,
+    }),
+    z.object({
+        type: z.literal("setSharedPlayerVariable"),
+        data: isSetSharedPlayerVariableEvent,
+    }),
+    z.object({
         type: z.literal("messageTriggered"),
         data: isMessageReferenceEvent,
+    }),
+    z.object({
+        type: z.literal("leaveMuc"),
+        data: isLeaveMucEvent,
+    }),
+    z.object({
+        type: z.literal("joinMuc"),
+        data: isJoinMucEvent,
+    }),
+    z.object({
+        type: z.literal("addRemotePlayer"),
+        data: isAddPlayerEvent,
+    }),
+    z.object({
+        type: z.literal("removeRemotePlayer"),
+        data: z.number(),
+    }),
+    z.object({
+        type: z.literal("remotePlayerChanged"),
+        data: isRemotePlayerChangedEvent,
+    }),
+    z.object({
+        type: z.literal("settings"),
+        data: isSettingsEvent,
+    }),
+    z.object({
+        type: z.literal("chatVisibility"),
+        data: isChatVisibilityEvent,
+    }),
+    z.object({
+        type: z.literal("notification"),
+        data: isNotificationEvent,
+    }),
+    z.object({
+        type: z.literal("availabilityStatus"),
+        data: z.number(),
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
@@ -261,6 +393,10 @@ export const iframeQueryMapTypeGuards = {
     },
     setVariable: {
         query: isSetVariableEvent,
+        answer: z.undefined(),
+    },
+    setPlayerVariable: {
+        query: isSetPlayerVariableEvent,
         answer: z.undefined(),
     },
     loadTileset: {
@@ -346,6 +482,10 @@ export const iframeQueryMapTypeGuards = {
     getUIWebsites: {
         query: z.undefined(),
         answer: z.array(isUIWebsite),
+    },
+    enablePlayersTracking: {
+        query: isEnablePlayersTrackingEvent,
+        answer: z.array(isAddPlayerEvent),
     },
 };
 

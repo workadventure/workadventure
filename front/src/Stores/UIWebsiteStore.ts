@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import { UIWebsite } from "../Api/Events/ui/UIWebsite";
+import { UIWebsite } from "../Api/Events/Ui/UIWebsite";
 
 function createUIWebsiteStore() {
     const { subscribe, update, set } = writable(Array<UIWebsite>());

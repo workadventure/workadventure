@@ -19,6 +19,14 @@
                 const onAreaEnterField = document.getElementById('onAreaEnter');
                 const onAreaLeaveField = document.getElementById('onAreaLeave');
 
+                const area = WA.room.area.create({
+                        name: 'Center',
+                        x: 224,
+                        y: 256,
+                        width: 514,
+                        height: 288,
+                    });
+
                 WA.room.area.onEnter('Center').subscribe(() => {
                     console.log(onAreaEnterField.value || 'default area enter message');
                 });
@@ -26,8 +34,6 @@
                 WA.room.area.onLeave('Center').subscribe(() => {
                     console.log(onAreaLeaveField.value || 'default area leave message');
                 });
-
-                const area = await WA.room.area.get('Center');
 
                 updateButton.addEventListener('click', () => {
                     area.setProperty('focusable', focusableField.checked);
@@ -42,7 +48,7 @@
     </script>
 </head>
 <body style="color: #ffffff">
-focusable: <input type="checkbox" id="focusable" value=1 checked /><br/>
+focusaaaable: <input type="checkbox" id="focusable" value=1 checked /><br/>
 zoom_margin: <input type="text" id="zoom_margin" value=0 /><br/>
 silent: <input type="checkbox" id="silent" value=0 /><br/>
 openWebsite: <input type="text" id="openWebiste" value="https://workadventu.re/" /><br/>

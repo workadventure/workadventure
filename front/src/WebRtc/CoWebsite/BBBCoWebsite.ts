@@ -1,5 +1,5 @@
 import type CancelablePromise from "cancelable-promise";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { inExternalServiceStore } from "../../Stores/MyMediaStore";
 import { coWebsiteManager } from "../CoWebsiteManager";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
@@ -16,12 +16,12 @@ export class BBBCoWebsite extends SimpleCoWebsite {
     }
 
     load(): CancelablePromise<HTMLIFrameElement> {
-        gameManager.getCurrentGameScene().disableMediaBehaviors();
+        inExternalServiceStore.set(true);
         return super.load();
     }
 
     unload(): Promise<void> {
-        gameManager.getCurrentGameScene().enableMediaBehaviors();
+        inExternalServiceStore.set(false);
 
         return super.unload();
     }

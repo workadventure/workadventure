@@ -65,7 +65,7 @@ body .message-info.warning{
 
     i {
         position: absolute;
-        width: 100px;
+        width: 150px;
         height: auto;
         left: -6px;
         top: calc(100% - 28px);
@@ -917,8 +917,9 @@ div.action.danger p.action-body{
 }
 
 div.emoji-picker {
-    background-color: #333;
+    background-color: #23222c;
     border-radius: 1em;
+    border: none;
 
     input.emoji-picker__search {
         border-radius: 1em;
@@ -938,4 +939,8 @@ div.emoji-picker {
 // TODO: remove once https://github.com/nostalgic-css/NES.css/pull/482 is released
 .nes-container.is-rounded {
     border-image-repeat: stretch;
+}
+
+.emoji-picker__overlay{
+    z-index: 200!important;
 }

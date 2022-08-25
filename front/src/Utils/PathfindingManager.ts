@@ -1,5 +1,11 @@
+import { MathUtils } from "@workadventure/math-utils";
 import * as EasyStar from "easystarjs";
-import { MathUtils } from "./MathUtils";
+
+export enum PathTileType {
+    Walkable = 0,
+    Collider = 1,
+    Exit = 2,
+}
 
 export class PathfindingManager {
     private scene: Phaser.Scene;
@@ -14,7 +20,7 @@ export class PathfindingManager {
         this.easyStar = new EasyStar.js();
         this.easyStar.enableDiagonals();
         this.easyStar.disableCornerCutting();
-        this.easyStar.setTileCost(2, 100);
+        this.easyStar.setTileCost(PathTileType.Exit, 100);
 
         this.grid = collisionsGrid;
         this.tileDimensions = tileDimensions;
@@ -114,7 +120,7 @@ export class PathfindingManager {
 
     private setEasyStarGrid(grid: number[][]): void {
         this.easyStar.setGrid(grid);
-        this.easyStar.setAcceptableTiles([0, 2]); // zeroes are walkable, 2 are exits, also walkable
+        this.easyStar.setAcceptableTiles([PathTileType.Walkable, PathTileType.Exit]);
     }
 
     private logGridToTheConsole(grid: number[][]): void {

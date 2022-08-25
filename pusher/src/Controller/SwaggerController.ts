@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { ADMIN_URL } from "../Enum/EnvironmentVariable";
 import SwaggerGenerator from "../Services/SwaggerGenerator";
 import swaggerJsdoc from "swagger-jsdoc";
-import LiveDirectory from "live-directory";
+import path from "path";
 
 export class SwaggerController extends BaseHttpController {
     routes(): void {
@@ -210,17 +210,6 @@ export class SwaggerController extends BaseHttpController {
             res.json(options);
         });
 
-        // Create a LiveDirectory instance to virtualize directory with our assets
-        const LiveAssets = new LiveDirectory({
-            path: process.cwd() + "/node_modules/swagger-ui-dist", // We want to provide the system path to the folder. Avoid using relative paths.
-            keep: {
-                extensions: [".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".html"], // We only want to serve files with these extensions
-            },
-            ignore: (path: string): boolean => {
-                return path.startsWith("."); // We want to ignore dotfiles for safety
-            },
-        });
-
         // Create static serve route to serve index.html
         this.app.get("/swagger-ui/", (request, response) => {
             fs.readFile(process.cwd() + "/node_modules/swagger-ui-dist/index.html", "utf8", function (err, data) {
@@ -246,16 +235,27 @@ export class SwaggerController extends BaseHttpController {
 
         // Create static serve route to serve frontend assets
         this.app.get("/swagger-ui/*", (request, response) => {
+            const fileParsed = path.parse(request.path);
+            // Filter files
+            if (
+                fileParsed.name.startsWith(".") ||
+                ![".css", ".js", ".json", ".png", ".jpg", ".jpeg", ".html"].includes(fileParsed.ext)
+            )
+                return response.status(404).send("");
+
             // Strip away '/assets' from the request path to get asset relative path
-            // Lookup LiveFile instance from our LiveDirectory instance.
-            const path = request.path.replace("/swagger-ui", "");
-            const file = LiveAssets.get(path);
+            const formattedPath = request.path.replace("/swagger-ui", "");
+            const realPath = `${path.resolve("node_modules/swagger-ui-dist")}${formattedPath}`;
+
+            if (!fs.existsSync(realPath)) return response.status(404).send("");
+
+            const file = fs.readFileSync(realPath);
 
             // Return a 404 if no asset/file exists on the derived path
             if (file === undefined) return response.status(404).send("");
 
             // Set appropriate mime-type and serve file buffer as response body
-            return response.type(file.extension).send(file.buffer);
+            return response.type(fileParsed.ext).send(file.buffer);
         });
     }
 }

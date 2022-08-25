@@ -14,7 +14,6 @@
     import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
     import { SelectCharacterScene, SelectCharacterSceneName } from "../../Phaser/Login/SelectCharacterScene";
     import { connectionManager } from "../../Connexion/ConnectionManager";
-    import { PROFILE_URL } from "../../Enum/EnvironmentVariable";
     import { EnableCameraScene, EnableCameraSceneName } from "../../Phaser/Login/EnableCameraScene";
     import { enableCameraSceneVisibilityStore } from "../../Stores/MediaStore";
     import btnProfileSubMenuCamera from "../images/btn-menu-profile-camera.svg";
@@ -24,6 +23,7 @@
     import Companion from "../Companion/Companion.svelte";
     import LL from "../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { ENABLE_OPENID } from "../../Enum/EnvironmentVariable";
 
     function disableMenuStores() {
         menuVisiblilityStore.set(false);
@@ -62,133 +62,88 @@
 
 <div class="customize-main">
     <div class="submenu">
-        <section>
+        <section class="centered-column resizing-width tw-m-auto resizing-text">
             <button
                 type="button"
-                class="nes-btn"
+                class="tw-w-full outline"
                 on:click={() => analyticsClient.editName()}
                 on:click={openEditNameScene}
             >
-                <img src={btnProfileSubMenuIdentity} alt={$LL.menu.profile.edit.name()} />
-                <span class="btn-hover">{$LL.menu.profile.edit.name()}</span>
+                <img
+                    draggable="false"
+                    src={btnProfileSubMenuIdentity}
+                    alt={$LL.menu.profile.edit.name()}
+                    width="26px"
+                    height="26px"
+                    class="darken-icon"
+                />
+                <span class="">{$LL.menu.profile.edit.name()}</span>
             </button>
             <button
                 type="button"
-                class="nes-btn"
+                class="tw-w-full outline"
                 on:click={() => analyticsClient.editWoka()}
                 on:click={openEditSkinScene}
             >
                 <Woka userId={-1} placeholderSrc="" width="26px" height="26px" />
-                <span class="btn-hover">{$LL.menu.profile.edit.woka()}</span>
+                <span class="">{$LL.menu.profile.edit.woka()}</span>
             </button>
             <button
                 type="button"
-                class="nes-btn"
+                class="tw-w-full outline"
                 on:click={() => analyticsClient.editCompanion()}
                 on:click={openEditCompanionScene}
             >
                 <Companion userId={-1} placeholderSrc={btnProfileSubMenuCompanion} width="26px" height="26px" />
-                <span class="btn-hover">{$LL.menu.profile.edit.companion()}</span>
+                <span class="">{$LL.menu.profile.edit.companion()}</span>
             </button>
             <button
                 type="button"
-                class="nes-btn"
+                class="tw-w-full outline"
                 on:click={() => analyticsClient.editCamera()}
                 on:click={openEnableCameraScene}
             >
-                <img src={btnProfileSubMenuCamera} alt={$LL.menu.profile.edit.camera()} />
-                <span class="btn-hover">{$LL.menu.profile.edit.camera()}</span>
+                <img
+                    draggable="false"
+                    src={btnProfileSubMenuCamera}
+                    alt={$LL.menu.profile.edit.camera()}
+                    width="26px"
+                    height="26px"
+                    class="darken-icon"
+                />
+                <span class="">{$LL.menu.profile.edit.camera()}</span>
             </button>
         </section>
     </div>
 
     <div class="content">
-        {#if $userIsConnected && $profileAvailable}
-            <section>
-                {#if PROFILE_URL != undefined}
-                    <iframe title="profile" src={getProfileUrl()} />
+        <section class="centered-column tw-w-full tw-m-auto resizing-text">
+            {#if $profileAvailable}
+                <iframe
+                    title="profile"
+                    src={getProfileUrl()}
+                    class="tw-w-4/5 tw-h-screen tw-border-0 tw-border-solid tw-border-light-blue"
+                />
+            {/if}
+            {#if ENABLE_OPENID}
+                {#if $userIsConnected}
+                    <button
+                        type="button"
+                        class="btn outline resizing-width tw-justify-center"
+                        on:click={() => analyticsClient.logout()}
+                        on:click={logOut}>{$LL.menu.profile.logout()}</button
+                    >
+                {:else}
+                    <a
+                        type="button"
+                        class="btn light resizing-width tw-justify-center"
+                        href="/login"
+                        on:click={() => analyticsClient.login()}
+                    >
+                        {$LL.menu.profile.login()}</a
+                    >
                 {/if}
-            </section>
-            <section>
-                <button type="button" class="nes-btn" on:click={() => analyticsClient.logout()} on:click={logOut}
-                    >{$LL.menu.profile.logout()}</button
-                >
-            </section>
-        {:else}
-            <section>
-                <a type="button" class="nes-btn" href="/login" on:click={() => analyticsClient.login()}
-                    >{$LL.menu.profile.login()}</a
-                >
-            </section>
-        {/if}
+            {/if}
+        </section>
     </div>
 </div>
-
-<style lang="scss">
-    @import "../../../style/breakpoints.scss";
-
-    div.customize-main {
-        width: 100%;
-        display: inline-flex;
-
-        div.submenu {
-            height: 100%;
-            width: 50px;
-
-            button {
-                transition: all 0.5s ease;
-                text-align: left;
-                white-space: nowrap;
-                margin-bottom: 10px;
-                max-height: 44px;
-
-                img {
-                    height: 26px;
-                    width: 26px;
-                    cursor: pointer;
-                }
-
-                span.btn-hover {
-                    display: none;
-                    font-family: "Press Start 2P";
-                }
-
-                &:hover {
-                    width: auto;
-
-                    span.btn-hover {
-                        display: initial;
-                    }
-                }
-            }
-        }
-
-        div.content {
-            width: 100%;
-            section {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
-
-                iframe {
-                    width: 100%;
-                    height: 50vh;
-                    border: none;
-                }
-
-                button {
-                    height: 50px;
-                    width: 250px;
-                }
-            }
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        div.customize-main.content section button {
-            width: 130px;
-        }
-    }
-</style>

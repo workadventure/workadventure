@@ -1,5 +1,6 @@
 import { areCharacterLayersValid, isUserNameValid, LocalUser } from "./LocalUser";
-import { v4 as uuidv4 } from "uuid";
+import { Emoji } from "../Stores/EmoteStore";
+import { z } from "zod";
 
 const playerNameKey = "playerName";
 const selectedPlayerKey = "selectedPlayer";
@@ -19,17 +20,31 @@ const ignoreFollowRequests = "ignoreFollowRequests";
 const decreaseAudioPlayerVolumeWhileTalking = "decreaseAudioPlayerVolumeWhileTalking";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
-const state = "state";
-const nonce = "nonce";
 const notification = "notificationPermission";
-const code = "code";
+const chatSounds = "chatSounds";
 const cameraSetup = "cameraSetup";
 const cacheAPIIndex = "workavdenture-cache";
 const userProperties = "user-properties";
 const cameraPrivacySettings = "cameraPrivacySettings";
 const microphonePrivacySettings = "microphonePrivacySettings";
+const emojiFavorite = "emojiFavorite";
+
+const JwtAuthToken = z
+    .object({
+        accessToken: z.string().optional(),
+    })
+    .partial();
+
+type JwtAuthToken = z.infer<typeof JwtAuthToken>;
+
+interface PlayerVariable {
+    value: undefined;
+    isPublic: boolean;
+}
 
 class LocalUserStore {
+    private jwt: JwtAuthToken | undefined;
+
     saveUser(localUser: LocalUser) {
         localStorage.setItem("localUser", JSON.stringify(localUser));
     }
@@ -208,60 +223,52 @@ class LocalUserStore {
     }
 
     setAuthToken(value: string | null) {
-        value ? localStorage.setItem(authToken, value) : localStorage.removeItem(authToken);
+        if (value !== null) {
+            localStorage.setItem(authToken, value);
+            this.jwt = JwtAuthToken.parse(LocalUserStore.parseJwt(value));
+        } else {
+            localStorage.removeItem(authToken);
+        }
     }
 
     getAuthToken(): string | null {
         return localStorage.getItem(authToken);
     }
 
-    setNotification(value: string): void {
-        localStorage.setItem(notification, value);
+    isLogged(): boolean {
+        return this.jwt?.accessToken !== undefined;
     }
 
-    getNotification(): string | null {
-        return localStorage.getItem(notification);
+    private static parseJwt(token: string) {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+            window
+                .atob(base64)
+                .split("")
+                .map(function (c) {
+                    return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+        );
+
+        return JSON.parse(jsonPayload);
     }
 
-    generateState(): string {
-        const newState = uuidv4();
-        localStorage.setItem(state, newState);
-        return newState;
+    setNotification(value: boolean): void {
+        localStorage.setItem(notification, value.toString());
     }
 
-    verifyState(value: string): boolean {
-        const oldValue = localStorage.getItem(state);
-        if (!oldValue) {
-            localStorage.setItem(state, value);
-            return true;
-        }
-        return oldValue === value;
+    getNotification(): boolean {
+        return localStorage.getItem(notification) === "true";
     }
 
-    setState(value: string) {
-        localStorage.setItem(state, value);
+    setChatSounds(value: boolean): void {
+        localStorage.setItem(chatSounds, value.toString());
     }
 
-    getState(): string | null {
-        return localStorage.getItem(state);
-    }
-
-    generateNonce(): string {
-        const newNonce = uuidv4();
-        localStorage.setItem(nonce, newNonce);
-        return newNonce;
-    }
-
-    getNonce(): string | null {
-        return localStorage.getItem(nonce);
-    }
-
-    setCode(value: string): void {
-        localStorage.setItem(code, value);
-    }
-
-    getCode(): string | null {
-        return localStorage.getItem(code);
+    getChatSounds(): boolean {
+        return localStorage.getItem(chatSounds) !== "false";
     }
 
     setCameraSetup(cameraId: string) {
@@ -297,16 +304,55 @@ class LocalUserStore {
         return localStorage.getItem(microphonePrivacySettings) === "true";
     }
 
-    getAllUserProperties(): Map<string, unknown> {
-        const result = new Map<string, string>();
+    getAllUserProperties(context: string): Map<string, PlayerVariable> {
+        const now = new Date().getTime();
+        const result = new Map<string, PlayerVariable>();
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key) {
-                if (key.startsWith(userProperties + "_")) {
-                    const value = localStorage.getItem(key);
-                    if (value) {
-                        const userKey = key.substr((userProperties + "_").length);
-                        result.set(userKey, JSON.parse(value));
+                if (key.startsWith(userProperties + "_" + context + "__|__")) {
+                    const storedValue = localStorage.getItem(key);
+                    if (storedValue) {
+                        const userKey = key.substring((userProperties + "_" + context + "__|__").length);
+
+                        const [expireStr, isPublicStr, value] = storedValue.split(":", 3);
+                        if (isPublicStr === undefined || value === undefined) {
+                            console.error(
+                                'Invalid value stored in Redis. Expecting the value to be in the "ttl:0|1:value" format. Got: ',
+                                storedValue
+                            );
+                            continue;
+                        }
+                        let isPublic: boolean;
+                        if (isPublicStr === "0") {
+                            isPublic = false;
+                        } else if (isPublicStr === "1") {
+                            isPublic = true;
+                        } else {
+                            console.error('Invalid value stored in Redis for isPublic. Expecting "0" or "1"');
+                            continue;
+                        }
+                        let expire: number | undefined;
+                        if (expireStr === "") {
+                            expire = undefined;
+                        } else {
+                            expire = parseInt(expireStr);
+                            if (isNaN(expire)) {
+                                console.error("Invalid value stored in Redis. The TTL is not a number");
+                                continue;
+                            }
+
+                            // Let's check the TTL. If it is less than current date, let's remove the key.
+                            if (expire < now) {
+                                localStorage.removeItem(key);
+                                continue;
+                            }
+                        }
+
+                        result.set(userKey, {
+                            isPublic,
+                            value: JSON.parse(value),
+                        });
                     }
                 }
             }
@@ -314,8 +360,44 @@ class LocalUserStore {
         return result;
     }
 
-    setUserProperty(name: string, value: unknown): void {
-        localStorage.setItem(userProperties + "_" + name, JSON.stringify(value));
+    setUserProperty(
+        name: string,
+        value: unknown,
+        context: string,
+        isPublic: boolean,
+        expire: number | undefined
+    ): void {
+        const storedValue =
+            (expire !== undefined ? expire : "") + ":" + (isPublic ? "1" : "0") + ":" + JSON.stringify(value);
+
+        const key = userProperties + "_" + context + "__|__" + name;
+
+        localStorage.setItem(key, storedValue);
+    }
+
+    setEmojiFavorite(value: Map<number, Emoji>) {
+        const valueToSave: Array<Emoji> = new Array<Emoji>();
+        for (const data of value.values()) {
+            valueToSave.push(data);
+        }
+        localStorage.setItem(emojiFavorite, JSON.stringify(valueToSave));
+    }
+    getEmojiFavorite(): Map<number, Emoji> | null {
+        const value = localStorage.getItem(emojiFavorite);
+        if (value == undefined) return null;
+
+        const emojis = JSON.parse(value);
+        if (!Array.isArray(emojis)) {
+            localStorage.removeItem(emojiFavorite);
+            return null;
+        }
+
+        const array: Array<Emoji> = JSON.parse(value) as Array<Emoji>;
+        const map: Map<number, Emoji> = new Map<number, Emoji>();
+        array.forEach((value, index) => {
+            map.set(index + 1, value);
+        });
+        return map;
     }
 }
 

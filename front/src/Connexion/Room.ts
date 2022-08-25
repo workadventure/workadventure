@@ -1,9 +1,10 @@
-import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS, OPID_LOGIN_SCREEN_PROVIDER } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, PUSHER_URL, DISABLE_ANONYMOUS } from "../Enum/EnvironmentVariable";
 import { localUserStore } from "./LocalUserStore";
 import axios from "axios";
 import { axiosWithRetry } from "./AxiosUtils";
 import { isMapDetailsData } from "../Messages/JsonMessages/MapDetailsData";
 import { isRoomRedirect } from "../Messages/JsonMessages/RoomRedirect";
+import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 
 export class MapDetail {
     constructor(public readonly mapUrl: string) {}
@@ -16,24 +17,27 @@ export interface RoomRedirect {
 export class Room {
     public readonly id: string;
     private _authenticationMandatory: boolean = DISABLE_ANONYMOUS;
-    private _iframeAuthentication?: string = OPID_LOGIN_SCREEN_PROVIDER;
+    private _iframeAuthentication?: string = PUSHER_URL + "/login-screen";
     private _mapUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
+    private _canEditMap = false;
     private _miniLogo: string | undefined;
     private _loadingCowebsiteLogo: string | undefined;
     private _loadingLogo: string | undefined;
     private _loginSceneLogo: string | undefined;
+    private _metadata: unknown | undefined;
+    private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
 
         if (this.id.startsWith("/")) {
-            this.id = this.id.substr(1);
+            this.id = this.id.substring(1);
         }
 
         this._search = new URLSearchParams(roomUrl.search);
@@ -115,17 +119,22 @@ export class Room {
                 this._group = data.group;
                 this._authenticationMandatory =
                     data.authenticationMandatory != null ? data.authenticationMandatory : DISABLE_ANONYMOUS;
-                this._iframeAuthentication = data.iframeAuthentication || OPID_LOGIN_SCREEN_PROVIDER;
+                this._iframeAuthentication = data.iframeAuthentication || PUSHER_URL + "/login-screen";
                 this._contactPage = data.contactPage || CONTACT_URL;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
                 this._canReport = data.canReport ?? false;
+                this._canEditMap = data.canEdit ?? false;
                 this._miniLogo = data.miniLogo ?? undefined;
                 this._loadingCowebsiteLogo = data.loadingCowebsiteLogo ?? undefined;
                 this._loadingLogo = data.loadingLogo ?? undefined;
                 this._loginSceneLogo = data.loginSceneLogo ?? undefined;
                 this._showPoweredBy = data.showPoweredBy ?? true;
+                this._metadata = data.metadata ?? undefined;
+
+                this._mucRooms = data.mucRooms ?? undefined;
+
                 return new MapDetail(data.mapUrl);
             } else {
                 console.log(data);
@@ -212,6 +221,10 @@ export class Room {
         return this._canReport;
     }
 
+    get canEditMap(): boolean {
+        return this._canEditMap;
+    }
+
     get loadingCowebsiteLogo(): string | undefined {
         return this._loadingCowebsiteLogo;
     }
@@ -226,6 +239,14 @@ export class Room {
 
     get loginSceneLogo(): string | undefined {
         return this._loginSceneLogo;
+    }
+
+    get metadata(): unknown {
+        return this._metadata;
+    }
+
+    get mucRooms(): Array<MucRoomDefinitionInterface> | undefined {
+        return this._mucRooms;
     }
 
     get showPoweredBy(): boolean | undefined {

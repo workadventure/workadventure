@@ -1,0 +1,36 @@
+//@import "fonts";
+//@import "tailwind";
+@import '@workadventure/tailwind/style/index.scss';
+
+.emoji-picker__overlay{
+    background: none!important;
+}
+.emoji-picker__wrapper{
+    bottom: 50px!important;
+    top: auto!important;
+    .emoji-picker{
+        border: none!important;
+    }
+}
+
+.message{
+    p{
+        min-height: 20px;
+        margin: 0;
+        .mention{
+            margin: 0 2px;
+            padding: 0px 4px;
+            background-color: black;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+    }
+}
+
+.selected {
+    .message{
+        &::after{
+            @apply tw-animate-ping;
+        }
+    }
+}

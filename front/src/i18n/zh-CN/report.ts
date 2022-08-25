@@ -1,6 +1,7 @@
+import { DeepPartial } from "../../Utils/DeepPartial";
 import type { Translation } from "../i18n-types";
 
-const report: NonNullable<Translation["report"]> = {
+const report: DeepPartial<Translation["report"]> = {
     block: {
         title: "屏蔽",
         content: "屏蔽任何来自 {userName} 的通信。该操作是可逆的。",
@@ -15,7 +16,7 @@ const report: NonNullable<Translation["report"]> = {
     },
     submit: "举报该用户",
     moderate: {
-        title: "Moderate {userName}",
+        title: "缓和 {userName}",
         block: "屏蔽",
         report: "举报",
         noSelect: "错误：未选择行为。",

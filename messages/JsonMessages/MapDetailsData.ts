@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { extendApi } from "@anatine/zod-openapi";
+import { isMucRoomDefinition } from "./MucRoomDefinitionInterface";
 
 /*
  * WARNING! The original file is in /messages/JsonMessages.
@@ -22,20 +23,20 @@ const isJitsiData = z.object({
         description: "The domain name of your Jitsi server.",
         example: "meet.jit.si",
     }),
-    iss: extendApi(z.optional(z.nullable(z.string())), {
+    iss: extendApi(z.string().nullable().optional(), {
         description: "The Jitsi ISS setting. See https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md",
         default: false,
     }),
-    secret: extendApi(z.optional(z.nullable(z.string())), {
+    secret: extendApi(z.string().nullable().optional(), {
         description: "The Jitsi secret setting. See https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md",
     }),
 });
 
 const isMapThirdPartyData = z.object({
-    bbb: extendApi(z.optional(z.nullable(isBbbData)), {
+    bbb: extendApi(isBbbData.nullable().optional(), {
         description: "Use these settings to override default BigBlueButton settings.",
     }),
-    jitsi: extendApi(z.optional(z.nullable(isJitsiData)), {
+    jitsi: extendApi(isJitsiData.nullable().optional(), {
         description: "Use these settings to override default Jitsi settings.",
     }),
 });
@@ -45,20 +46,23 @@ export const isMapDetailsData = z.object({
         description: "The full URL to the JSON map file",
         example: "https://myuser.github.io/myrepo/map.json",
     }),
-    authenticationMandatory: extendApi(z.optional(z.nullable(z.boolean())), {
+    authenticationMandatory: extendApi(z.boolean().nullable().optional(), {
         description: "Whether the authentication is mandatory or not for this map",
         example: true,
     }),
-    group: extendApi(z.nullable(z.string()), {
+    group: extendApi(z.string().nullable(), {
         description: 'The group this room is part of (maps the notion of "world" in WorkAdventure SAAS)',
         example: "myorg/myworld",
     }),
+    mucRooms: extendApi(isMucRoomDefinition.array().nullable(), {
+        description: "The MUC room is a room of message",
+    }),
 
-    contactPage: extendApi(z.optional(z.nullable(z.string())), {
+    contactPage: extendApi(z.string().nullable().optional(), {
         description: "The URL to the contact page",
         example: "https://mycompany.com/contact-us",
     }),
-    iframeAuthentication: extendApi(z.optional(z.nullable(z.string())), {
+    iframeAuthentication: extendApi(z.string().nullable().optional(), {
         description: "The URL of the authentication Iframe",
         example: "https://mycompany.com/authc",
     }),
@@ -68,31 +72,39 @@ export const isMapDetailsData = z.object({
         example: "2022-11-05T08:15:30-05:00",
     }),
     // Whether the "report" feature is enabled or not on this room
-    canReport: extendApi(z.optional(z.boolean()), {
+    canReport: extendApi(z.boolean().optional(), {
         description: 'Whether the "report" feature is enabled or not on this room',
         example: true,
     }),
-    loadingCowebsiteLogo: extendApi(z.optional(z.nullable(z.string())), {
+    // Whether the "report" feature is enabled or not on this room
+    canEdit: extendApi(z.optional(z.boolean()), {
+        description: 'Whether the "map editor" feature is enabled or not on this room',
+        example: true,
+    }),
+    loadingCowebsiteLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the cowebsite loading page",
         example: "https://example.com/logo.gif",
     }),
-    miniLogo: z.optional(z.nullable(z.string())),
+    miniLogo: z.string().nullable().optional(),
     // The URL of the logo image on the loading screen
-    loadingLogo: extendApi(z.optional(z.nullable(z.string())), {
+    loadingLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the loading page",
         example: "https://example.com/logo.png",
     }),
     // The URL of the logo image on "LoginScene"
-    loginSceneLogo: extendApi(z.optional(z.nullable(z.string())), {
+    loginSceneLogo: extendApi(z.string().nullable().optional(), {
         description: "The URL of the image to be used on the LoginScene",
         example: "https://example.com/logo_login.png",
     }),
-    showPoweredBy: extendApi(z.optional(z.nullable(z.boolean())), {
+    showPoweredBy: extendApi(z.boolean().nullable().optional(), {
         description: "The URL of the image to be used on the name scene",
         example: "https://example.com/logo_login.png",
     }),
-    thirdParty: extendApi(z.optional(z.nullable(isMapThirdPartyData)), {
+    thirdParty: extendApi(isMapThirdPartyData.nullable().optional(), {
         description: "Configuration data for third party services",
+    }),
+    metadata: extendApi(z.unknown().optional(), {
+        description: "Metadata from administration",
     }),
 });
 

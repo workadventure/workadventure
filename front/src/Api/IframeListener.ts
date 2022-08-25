@@ -20,7 +20,6 @@ import { StopSoundEvent } from "./Events/StopSoundEvent";
 import { LoadSoundEvent } from "./Events/LoadSoundEvent";
 import { SetPropertyEvent } from "./Events/SetPropertyEvent";
 import { LayerEvent } from "./Events/LayerEvent";
-import type { HasPlayerMovedEvent } from "./Events/HasPlayerMovedEvent";
 import { SetTilesEvent } from "./Events/SetTilesEvent";
 import type { SetVariableEvent } from "./Events/SetVariableEvent";
 import { ModifyEmbeddedWebsiteEvent } from "./Events/EmbeddedWebsiteEvent";
@@ -30,13 +29,26 @@ import type { WasCameraUpdatedEvent } from "./Events/WasCameraUpdatedEvent";
 import type { ChangeAreaEvent } from "./Events/ChangeAreaEvent";
 import { CameraSetEvent } from "./Events/CameraSetEvent";
 import { CameraFollowPlayerEvent } from "./Events/CameraFollowPlayerEvent";
-import type { RemotePlayerClickedEvent } from "./Events/RemotePlayerClickedEvent";
 import { AddActionsMenuKeyToRemotePlayerEvent } from "./Events/AddActionsMenuKeyToRemotePlayerEvent";
 import type { ActionsMenuActionClickedEvent } from "./Events/ActionsMenuActionClickedEvent";
 import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveActionsMenuKeyFromRemotePlayerEvent";
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
-import { ModifyUIWebsiteEvent } from "./Events/ui/UIWebsite";
+import { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
+import { ChatMessage } from "../Stores/ChatStore";
+import { AskPositionEvent } from "./Events/AskPositionEvent";
+import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
+import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
+import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
+import { HasPlayerMovedInterface } from "./Events/HasPlayerMovedInterface";
+import { JoinProximityMeetingEvent } from "./Events/ProximityMeeting/JoinProximityMeetingEvent";
+import { ParticipantProximityMeetingEvent } from "./Events/ProximityMeeting/ParticipantProximityMeetingEvent";
+import { MessageUserJoined } from "../Connexion/ConnexionModels";
+import { availabilityStatusToJSON } from "../Messages/ts-proto-generated/protos/messages";
+import { AddPlayerEvent } from "./Events/AddPlayerEvent";
+import { localUserStore } from "../Connexion/LocalUserStore";
+import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -56,6 +68,36 @@ class IframeListener {
 
     private readonly _loadPageStream: Subject<string> = new Subject();
     public readonly loadPageStream = this._loadPageStream.asObservable();
+
+    private readonly _openChatStream: Subject<void> = new Subject();
+    public readonly openChatStream = this._openChatStream.asObservable();
+
+    private readonly _closeChatStream: Subject<void> = new Subject();
+    public readonly closeChatStream = this._closeChatStream.asObservable();
+
+    private readonly _turnOffMicrophoneStream: Subject<void> = new Subject();
+    public readonly turnOffMicrophoneStream = this._turnOffMicrophoneStream.asObservable();
+
+    private readonly _turnOffWebcamStream: Subject<void> = new Subject();
+    public readonly turnOffWebcamStream = this._turnOffWebcamStream.asObservable();
+
+    private readonly _disableMicrophoneStream: Subject<void> = new Subject();
+    public readonly disableMicrophoneStream = this._disableMicrophoneStream.asObservable();
+
+    private readonly _restoreMicrophoneStream: Subject<void> = new Subject();
+    public readonly restoreMicrophoneStream = this._restoreMicrophoneStream.asObservable();
+
+    private readonly _disableWebcamStream: Subject<void> = new Subject();
+    public readonly disableWebcamStream = this._disableWebcamStream.asObservable();
+
+    private readonly _restoreWebcamStream: Subject<void> = new Subject();
+    public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
+
+    private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
+    public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
+
+    private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
+    public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
     private readonly _disablePlayerControlStream: Subject<void> = new Subject();
     public readonly disablePlayerControlStream = this._disablePlayerControlStream.asObservable();
@@ -129,9 +171,21 @@ class IframeListener {
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
 
+    private readonly _askPositionStream: Subject<AskPositionEvent> = new Subject();
+    public readonly askPositionStream = this._askPositionStream.asObservable();
+
+    private readonly _openInviteMenuStream: Subject<void> = new Subject();
+    public readonly openInviteMenuStream = this._openInviteMenuStream.asObservable();
+
+    private readonly _chatTotalMessagesToSeeStream: Subject<number> = new Subject();
+    public readonly chatTotalMessagesToSeeStream = this._chatTotalMessagesToSeeStream.asObservable();
+
     private readonly iframes = new Set<HTMLIFrameElement>();
-    private readonly iframeCloseCallbacks = new Map<HTMLIFrameElement, (() => void)[]>();
+    private readonly iframeCloseCallbacks = new Map<MessageEventSource, Set<() => void>>();
     private readonly scripts = new Map<string, HTMLIFrameElement>();
+
+    private chatIframe: HTMLIFrameElement | null = null;
+
     private sendPlayerMove = false;
 
     // Note: we are forced to type this in unknown and later cast with "as" because of https://github.com/microsoft/TypeScript/issues/31904
@@ -142,7 +196,7 @@ class IframeListener {
     init() {
         window.addEventListener(
             "message",
-            (message: MessageEvent<unknown>) => {
+            (message: MessageEvent) => {
                 // Do we trust the sender of this message?
                 // Let's only accept messages from the iframe that are allowed.
                 // Note: maybe we could restrict on the domain too for additional security (in case the iframe goes to another domain).
@@ -259,6 +313,14 @@ class IframeListener {
                         this._cameraFollowPlayerStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "chat") {
                         scriptUtils.sendAnonymousChat(iframeEvent.data, iframe.contentWindow ?? undefined);
+                    } else if (iframeEvent.type === "openChat") {
+                        this._openChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "closeChat") {
+                        this._closeChatStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "addPersonnalMessage") {
+                        this._addPersonnalMessageStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type === "newChatMessageWritingStatus") {
+                        this._newChatMessageWritingStatusStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "openPopup") {
                         this._openPopupStream.next(iframeEvent.data);
                     } else if (iframeEvent.type === "closePopup") {
@@ -279,6 +341,18 @@ class IframeListener {
                         this._disablePlayerControlStream.next();
                     } else if (iframeEvent.type === "restorePlayerControls") {
                         this._enablePlayerControlStream.next();
+                    } else if (iframeEvent.type === "turnOffMicrophone") {
+                        this._turnOffMicrophoneStream.next();
+                    } else if (iframeEvent.type === "turnOffWebcam") {
+                        this._turnOffWebcamStream.next();
+                    } else if (iframeEvent.type === "disableMicrophone") {
+                        this._disableMicrophoneStream.next();
+                    } else if (iframeEvent.type === "restoreMicrophone") {
+                        this._restoreMicrophoneStream.next();
+                    } else if (iframeEvent.type === "disableWebcam") {
+                        this._disableWebcamStream.next();
+                    } else if (iframeEvent.type === "restoreWebcam") {
+                        this._restoreWebcamStream.next();
                     } else if (iframeEvent.type === "disablePlayerProximityMeeting") {
                         this._disablePlayerProximityMeetingStream.next();
                     } else if (iframeEvent.type === "restorePlayerProximityMeeting") {
@@ -305,7 +379,10 @@ class IframeListener {
                         this._modifyUIWebsiteStream.next(iframeEvent.data);
                     } else if (iframeEvent.type == "registerMenu") {
                         const dataName = iframeEvent.data.name;
-                        this.iframeCloseCallbacks.get(iframe)?.push(() => {
+                        if (!message.source) {
+                            throw new Error("Message is missing a source");
+                        }
+                        this.iframeCloseCallbacks.get(message.source)?.add(() => {
                             handleMenuUnregisterEvent(dataName);
                         });
 
@@ -319,6 +396,25 @@ class IframeListener {
                         );
                     } else if (iframeEvent.type == "unregisterMenu") {
                         handleMenuUnregisterEvent(iframeEvent.data.name);
+                    } else if (iframeEvent.type == "askPosition") {
+                        this._askPositionStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "openInviteMenu") {
+                        this._openInviteMenuStream.next();
+                    } else if (iframeEvent.type == "chatTotalMessagesToSee") {
+                        this._chatTotalMessagesToSeeStream.next(iframeEvent.data);
+                    } else if (iframeEvent.type == "notification") {
+                        const notificationType =
+                            iframeEvent.data.notificationType === 1
+                                ? NotificationType.discussion
+                                : NotificationType.message;
+                        mediaManager.createNotification(
+                            iframeEvent.data.userName,
+                            notificationType,
+                            iframeEvent.data.forum
+                        );
+                    } else if (iframeEvent.type == "login") {
+                        analyticsClient.login();
+                        window.location.href = "/login";
                     } else {
                         // Keep the line below. It will throw an error if we forget to handle one of the possible values.
                         const _exhaustiveCheck: never = iframeEvent;
@@ -334,14 +430,37 @@ class IframeListener {
      */
     registerIframe(iframe: HTMLIFrameElement): void {
         this.iframes.add(iframe);
-        this.iframeCloseCallbacks.set(iframe, []);
+        iframe.addEventListener("load", () => {
+            if (iframe.contentWindow) {
+                this.iframeCloseCallbacks.set(iframe.contentWindow, new Set());
+            } else {
+                console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
+            }
+        });
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
-        this.iframeCloseCallbacks.get(iframe)?.forEach((callback) => {
-            callback();
-        });
+        if (iframe.contentWindow) {
+            this.iframeCloseCallbacks.get(iframe.contentWindow)?.forEach((callback) => {
+                callback();
+            });
+            this.iframeCloseCallbacks.delete(iframe.contentWindow);
+        }
         this.iframes.delete(iframe);
+    }
+
+    /**
+     * Registers an event listener to know when iframes are closed and returns an "unsubscriber" function.
+     */
+    onIframeCloseEvent(source: MessageEventSource, callback: () => void): () => void {
+        const callbackSet = this.iframeCloseCallbacks.get(source);
+        if (callbackSet === undefined) {
+            throw new Error("Could not find iframe in list");
+        }
+        callbackSet.add(callback);
+        return () => {
+            callbackSet.delete(callback);
+        };
     }
 
     registerScript(scriptUrl: string, enableModuleMode = true): Promise<void> {
@@ -442,6 +561,68 @@ class IframeListener {
         );
     }
 
+    sendJoinProximityMeetingEvent(users: MessageUserJoined[]) {
+        const formattedUsers: AddPlayerEvent[] = users.map((user) => {
+            return {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            };
+        });
+
+        this.postMessage({
+            type: "joinProximityMeetingEvent",
+            data: {
+                users: formattedUsers,
+            } as JoinProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantJoinProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantJoinProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendParticipantLeaveProximityMeetingEvent(user: MessageUserJoined) {
+        this.postMessage({
+            type: "participantLeaveProximityMeetingEvent",
+            data: {
+                user: {
+                    playerId: user.userId,
+                    name: user.name,
+                    userUuid: user.userUuid,
+                    outlineColor: user.outlineColor,
+                    availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                    position: user.position,
+                    variables: user.variables,
+                },
+            } as ParticipantProximityMeetingEvent,
+        });
+    }
+
+    sendLeaveProximityMeetingEvent() {
+        this.postMessage({
+            type: "leaveProximityMeetingEvent",
+            data: undefined,
+        });
+    }
+
     sendEnterEvent(name: string) {
         this.postMessage({
             type: "enterEvent",
@@ -496,19 +677,34 @@ class IframeListener {
         });
     }
 
-    hasPlayerMoved(event: HasPlayerMovedEvent) {
+    hasPlayerMoved(event: HasPlayerMovedInterface) {
         if (this.sendPlayerMove) {
             this.postMessage({
                 type: "hasPlayerMoved",
-                data: event,
+                data: {
+                    x: event.x,
+                    y: event.y,
+                    oldX: event.oldX,
+                    oldY: event.oldY,
+                    direction: ProtobufClientUtils.toDirectionString(event.direction),
+                    moving: event.moving,
+                },
             });
         }
     }
 
-    sendRemotePlayerClickedEvent(event: RemotePlayerClickedEvent) {
+    sendRemotePlayerClickedEvent(user: MessageUserJoined) {
         this.postMessage({
             type: "remotePlayerClickedEvent",
-            data: event,
+            data: {
+                playerId: user.userId,
+                name: user.name,
+                userUuid: user.userUuid,
+                outlineColor: user.outlineColor,
+                availabilityStatus: availabilityStatusToJSON(user.availabilityStatus),
+                position: user.position,
+                variables: user.variables,
+            },
         });
     }
 
@@ -543,6 +739,13 @@ class IframeListener {
         });
     }
 
+    setSharedPlayerVariable(setSharedPlayerVariable: SetSharedPlayerVariableEvent) {
+        this.postMessage({
+            type: "setSharedPlayerVariable",
+            data: setSharedPlayerVariable,
+        });
+    }
+
     sendActionMessageTriggered(uuid: string): void {
         this.postMessage({
             type: "messageTriggered",
@@ -552,10 +755,99 @@ class IframeListener {
         });
     }
 
+    sendChatVisibilityToChatIframe(visibility: boolean) {
+        this.postMessageToChat({
+            type: "chatVisibility",
+            data: {
+                visibility,
+            },
+        } as IframeResponseEvent);
+    }
+    sendSettingsToChatIframe() {
+        this.postMessageToChat({
+            type: "settings",
+            data: {
+                notification: localUserStore.getNotification(),
+                chatSounds: localUserStore.getChatSounds(),
+            },
+        } as IframeResponseEvent);
+    }
+
+    postMessageToChat(message: IframeResponseEvent) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("postMessageToChat Error => ", err);
+        }
+    }
+
+    //TODO delete with chat XMPP integration for the discussion circle
+    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "updateWritingStatusChatList",
+            data: list,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendWritingStatusToChatIframe Error => ", err);
+        }
+    }
+
+    sendMessageToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "addChatMessage",
+            data: chatMessage,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendMessageToChatIframe Error => ", err);
+        }
+    }
+
+    sendComingUserToChatIframe(chatMessage: ChatMessage) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "comingUser",
+            data: chatMessage,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendComingUserToChatIframe Error => ", err);
+        }
+    }
+    sendPeerConnexionStatusToChatIframe(status: boolean) {
+        if (!this.chatIframe) {
+            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
+        }
+        const message = {
+            type: "peerConexionStatus",
+            data: status,
+        };
+        try {
+            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+        } catch (err) {
+            console.error("sendPeerConnexionStatusToChatIframe Error => ", err);
+        }
+    }
+
     /**
      * Sends the message... to all allowed iframes.
      */
-    public postMessage(message: IframeResponseEvent, exceptOrigin?: Window) {
+    public postMessage(message: IframeResponseEvent, exceptOrigin?: MessageEventSource) {
         for (const iframe of this.iframes) {
             if (exceptOrigin === iframe.contentWindow) {
                 continue;
@@ -582,20 +874,51 @@ class IframeListener {
 
     dispatchVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
         // Let's dispatch the message to the other iframes
-        for (const iframe of this.iframes) {
-            if (iframe.contentWindow !== source) {
-                iframe.contentWindow?.postMessage(
-                    {
-                        type: "setVariable",
-                        data: {
-                            key,
-                            value,
-                        },
-                    },
-                    "*"
-                );
-            }
-        }
+        this.postMessage(
+            {
+                type: "setVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
+    }
+
+    dispatchPlayerVariableToOtherIframes(key: string, value: unknown, source: MessageEventSource | null) {
+        // Let's dispatch the message to the other iframes
+        this.postMessage(
+            {
+                type: "setPlayerVariable",
+                data: {
+                    key,
+                    value,
+                },
+            },
+            source ?? undefined
+        );
+    }
+
+    sendLeaveMucEvent(url: string) {
+        this.postMessageToChat({
+            type: "leaveMuc",
+            data: {
+                url,
+            },
+        });
+    }
+
+    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
+        this.postMessageToChat({
+            type: "joinMuc",
+            data: {
+                url,
+                name,
+                type,
+                subscribe,
+            },
+        });
     }
 }
 

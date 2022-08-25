@@ -1,133 +1,231 @@
 <script lang="ts">
-    import { fly } from "svelte/transition";
-    import { chatMessagesStore, chatVisibilityStore } from "../../Stores/ChatStore";
-    import ChatMessageForm from "./ChatMessageForm.svelte";
-    import ChatElement from "./ChatElement.svelte";
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
-    import LL from "../../i18n/i18n-svelte";
+    import { chatVisibilityStore, writingStatusMessageStore } from "../../Stores/ChatStore";
+    import { onDestroy, onMount } from "svelte";
+    import { iframeListener } from "../../Api/IframeListener";
+    import { localUserStore } from "../../Connexion/LocalUserStore";
+    import { getColorByString } from "../Video/utils";
+    import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
+    import { derived, Unsubscriber, writable } from "svelte/store";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { CHAT_URL } from "../../Enum/EnvironmentVariable";
+    import { locale } from "../../i18n/i18n-svelte";
+    import { AdminMessageEventTypes, adminMessagesService } from "../../Connexion/AdminMessagesService";
+    import { menuIconVisiblilityStore } from "../../Stores/MenuStore";
+    import { Subscription } from "rxjs";
+    import { availabilityStatusStore } from "../../Stores/MediaStore";
+    import { peerStore } from "../../Stores/PeerStore";
 
-    let listDom: HTMLElement;
-    let chatWindowElement: HTMLElement;
-    let handleFormBlur: { blur(): void };
-    let autoscroll: boolean;
+    let chatIframe: HTMLIFrameElement;
 
-    beforeUpdate(() => {
-        autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
-    });
+    let subscribeListeners: Array<Unsubscriber> = [];
+
+    const wokaDefinedStore = writable<boolean>(false);
+    const iframeLoadedStore = writable<boolean>(false);
+
+    export const canSendInitMessageStore = derived(
+        [wokaDefinedStore, iframeLoadedStore],
+        ([$wokaDefinedStore, $iframeLoadedStore]) => $wokaDefinedStore && $iframeLoadedStore
+    );
+
+    // Phantom woka
+    let wokaSrc =
+        " data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABcAAAAdCAYAAABBsffGAAAB/ElEQVRIia1WMW7CQBC8EAoqFy74AD1FqNzkAUi09DROwwN4Ag+gMQ09dcQXXNHQIucBPAJFc2Iue+dd40QZycLc7c7N7d7u+cU9wXw+ryyL0+n00eU9tCZIOp1O/f/ZbBbmzuczX6uuRVTlIAYpCSeTScumaZqw0OVyURd47SIGaZ7n6s4wjmc0Grn7/e6yLFtcr9dPaaOGhcTEeDxu2dxut2hXUJ9ioKmW0IidMg6/NPmD1EmqtojTBWAvE26SW8r+YhfIu87zbyB5BiRerVYtikXxXuLRuK058HABMyz/AX8UHwXgV0NRaEXzDKzaw+EQCioo1yrsLfvyjwZrTvK0yp/xh/o+JwbFhFYgFRNqzGEIB1ZhH2INkXJZoShn2WNSgJRNS/qoYSHxer1+qkhChnC320ULRI1LEsNhv99HISBkLmhP/7L8OfqhiKC6SzEJtSTLHMkGFhK6XC79L89rmtC6rv0YfjXV9COPDwtVQxEc2ZflIu7R+WADQrkA7eCH5BdFwQRXQ8bKxXejeWFoYZGCQM7Yh7BAkcw0DEnEEPHhbjBPQfCDvwzlEINlWZq3OAiOx2O0KwAKU8gehXfzu2Wz2VQMTXqCeLZZSNvtVv20MFsu48gQpDvjuHYxE+ZHESBPSJ/x3sqBvhe0hc5vRXkfypBY4xGcc9+lcFxartG6LgAAAABJRU5ErkJggg==";
+    const playUri = document.location.toString().split("#")[0].toString();
+    const name = localUserStore.getName();
+
+    let messageStream: Subscription;
 
     onMount(() => {
-        listDom.scrollTo(0, listDom.scrollHeight);
+        iframeListener.registerIframe(chatIframe);
+        chatIframe.addEventListener("load", () => {
+            iframeLoadedStore.set(false);
+            if (chatIframe && chatIframe.contentWindow && "postMessage" in chatIframe.contentWindow) {
+                iframeLoadedStore.set(true);
+                subscribeListeners.push(
+                    locale.subscribe((value) => {
+                        chatIframe?.contentWindow?.postMessage(
+                            {
+                                type: "setLocale",
+                                data: {
+                                    locale: value,
+                                },
+                            },
+                            "*"
+                        );
+                    })
+                );
+                subscribeListeners.push(
+                    currentPlayerWokaStore.subscribe((value) => {
+                        if (value !== undefined) {
+                            wokaSrc = value;
+                            wokaDefinedStore.set(true);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    canSendInitMessageStore.subscribe((value) => {
+                        if (value) {
+                            chatIframe?.contentWindow?.postMessage(
+                                {
+                                    type: "userData",
+                                    data: {
+                                        ...localUserStore.getLocalUser(),
+                                        name,
+                                        playUri,
+                                        authToken: localUserStore.getAuthToken(),
+                                        color: getColorByString(name ?? ""),
+                                        woka: wokaSrc,
+                                        isLogged: localUserStore.isLogged(),
+                                    },
+                                },
+                                "*"
+                            );
+                            chatIframe?.contentWindow?.postMessage(
+                                {
+                                    type: "setLocale",
+                                    data: {
+                                        locale: $locale,
+                                    },
+                                },
+                                "*"
+                            );
+                            iframeListener.sendSettingsToChatIframe();
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    chatVisibilityStore.subscribe((visibility) => {
+                        try {
+                            gameManager.getCurrentGameScene()?.onResize();
+                        } catch (err) {
+                            console.info("gameManager doesn't exist!", err);
+                        }
+                        try {
+                            iframeListener.sendChatVisibilityToChatIframe(visibility);
+                        } catch (err) {
+                            console.error("Send chat visibility to chat iFrame", err);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    availabilityStatusStore.subscribe((status) => {
+                        iframeListener.postMessageToChat({
+                            type: "availabilityStatus",
+                            data: status,
+                        });
+                    })
+                );
+                messageStream = adminMessagesService.messageStream.subscribe((message) => {
+                    if (message.type === AdminMessageEventTypes.banned) {
+                        chatIframe.remove();
+                    }
+                    chatVisibilityStore.set(false);
+                    menuIconVisiblilityStore.set(false);
+                });
+                //TODO delete it with new XMPP integration
+                //send list to chat iframe
+                subscribeListeners.push(
+                    writingStatusMessageStore.subscribe((list) => {
+                        try {
+                            iframeListener.sendWritingStatusToChatIframe(list);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    })
+                );
+                subscribeListeners.push(
+                    peerStore.subscribe((list) => {
+                        try {
+                            iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    })
+                );
+            }
+        });
     });
-
-    afterUpdate(() => {
-        if (autoscroll) listDom.scrollTo(0, listDom.scrollHeight);
-    });
-
-    function onClick(event: MouseEvent) {
-        if (HtmlUtils.isClickedOutside(event, chatWindowElement)) {
-            handleFormBlur.blur();
+    onDestroy(() => {
+        iframeListener.unregisterIframe(chatIframe);
+        subscribeListeners.forEach((listener) => {
+            listener();
+        });
+        if (messageStream) {
+            messageStream.unsubscribe();
         }
-    }
+    });
 
     function closeChat() {
         chatVisibilityStore.set(false);
     }
-
+    function openChat() {
+        chatVisibilityStore.set(true);
+    }
     function onKeyDown(e: KeyboardEvent) {
-        if (e.key === "Escape") {
+        if (e.key === "Escape" && $chatVisibilityStore) {
             closeChat();
+            chatIframe.blur();
+        } else if (e.key === "c" && !$chatVisibilityStore) {
+            openChat();
         }
     }
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:click={onClick} />
-
-<aside class="chatWindow" transition:fly={{ x: -1000, duration: 500 }} bind:this={chatWindowElement}>
-    <p class="close-icon noselect" on:click={closeChat}>&times</p>
-    <section class="messagesList" bind:this={listDom}>
-        <ul>
-            <li><p class="system-text">{$LL.chat.intro()}</p></li>
-            {#each $chatMessagesStore as message, i}
-                <li>
-                    <ChatElement {message} line={i} />
-                </li>
-            {/each}
-        </ul>
-    </section>
-    <section class="messageForm">
-        <ChatMessageForm bind:handleForm={handleFormBlur} />
-    </section>
-</aside>
+<svelte:window on:keydown={onKeyDown} />
+<div id="chatWindow" class:show={$chatVisibilityStore}>
+    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
+    <iframe
+        id="chatWorkAdventure"
+        bind:this={chatIframe}
+        allow="fullscreen; clipboard-read; clipboard-write"
+        title="WorkAdventureChat"
+        src={CHAT_URL}
+        class="tw-border-0"
+    />
+</div>
 
 <style lang="scss">
-    @import "../style/breakpoints.scss";
-
-    p.close-icon {
-        position: absolute;
-        padding: 4px;
-        right: 12px;
-        font-size: 30px;
-        line-height: 25px;
-        cursor: pointer;
-    }
-
-    p.system-text {
-        border-radius: 8px;
-        margin-bottom: 10px;
-        padding: 6px;
-        overflow-wrap: break-word;
-        max-width: 100%;
-        background: gray;
-        display: inline-block;
-    }
-
-    aside.chatWindow {
-        z-index: 1000;
-        pointer-events: auto;
-        position: absolute;
-        top: 0;
-        left: 0;
-        height: 95%;
-        width: 95%;
-        background: rgb(5, 31, 51, 0.9);
-        color: whitesmoke;
-        display: flex;
-        flex-direction: column;
-
-        padding: 10px;
-
-        border-bottom-right-radius: 16px;
-        border-top-right-radius: 16px;
-
-        .messagesList {
-            margin-top: 35px;
-            overflow-y: auto;
-            flex: auto;
-
-            ul {
-                list-style-type: none;
-                padding-left: 0;
-            }
-        }
-
-        .messageForm {
-            flex: 0 70px;
-            padding-top: 15px;
-        }
-    }
-
-    @include media-breakpoint-up(xxl) {
-        aside.chatWindow {
-            height: 100vh;
-            width: 30vw;
-        }
-    }
+    @import "../../../style/breakpoints.scss";
 
     @include media-breakpoint-up(sm) {
-        aside.chatWindow {
-            height: calc(99vh - 50px);
-            width: 95vw;
+        #chatWindow {
+            width: calc(100% - 20px) !important;
+        }
+    }
+
+    #chatWindow {
+        z-index: 1000;
+        position: absolute;
+        background-color: transparent;
+        top: 0;
+        left: -100%;
+        height: 100%;
+        width: 28%;
+        min-width: 250px;
+        transition: all 0.2s ease-in-out;
+        pointer-events: none;
+        visibility: hidden;
+        //display: none;
+        &.show {
+            left: 0;
+            pointer-events: auto;
+            visibility: visible;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+        .hide {
+            top: 1%;
+            padding: 0 7px 2px 6px;
+            min-height: fit-content;
+            position: absolute;
+            right: -21px;
+            z-index: -1;
+            font-size: 20px;
+            border-bottom-left-radius: 0;
+            border-top-left-radius: 0;
+            background: rgba(27, 27, 41, 0.95);
         }
     }
 </style>

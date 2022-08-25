@@ -1,21 +1,24 @@
-version: "3.5"
+version: "3.6"
 services:
   reverse-proxy:
-    image: traefik:v2.5
+    image: traefik:v2.8
+    expose:
+      - "8080"
+    ports:
+      - "80:80"
     command:
       - --api.insecure=true
       - --providers.docker
       - --entryPoints.web.address=:80
-      - --entryPoints.websecure.address=:443
-      - "--providers.docker.exposedbydefault=false"
-    ports:
-      - "80:80"
-      - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
-    #depends_on:
-    #  - back
-    #  - front
+      - --providers.docker.exposedbydefault=false
+    labels:
+      - "traefik.enable=true"
+      - "traefik.port=8080"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.workadventure.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+    depends_on:
+      - back
+      - front
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -24,6 +27,8 @@ services:
           - 'play.workadventure.localhost'
           - 'pusher.workadventure.localhost'
           - 'maps.workadventure.localhost'
+          - 'oidc.workadventure.localhost'
+          - 'map-storage.workadventure.localhost'
 
   front:
     image: thecodingmachine/nodejs:16
@@ -31,6 +36,7 @@ services:
       DEBUG_MODE: "$DEBUG_MODE"
       JITSI_URL: $JITSI_URL
       JITSI_PRIVATE_MODE: "$JITSI_PRIVATE_MODE"
+      ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
       HOST: "0.0.0.0"
       NODE_ENV: development
       SERVER_ID: "$SERVER_ID"
@@ -41,6 +47,8 @@ services:
       STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
+      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
       STUN_SERVER: "stun:stun.l.google.com:19302"
       TURN_SERVER: "turn:coturn.workadventure.localhost:3478,turns:coturn.workadventure.localhost:5349"
       DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
@@ -51,26 +59,51 @@ services:
       TURN_PASSWORD: ""
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       MAX_USERNAME_LENGTH: "$MAX_USERNAME_LENGTH"
-      DISABLE_ANONYMOUS: "$DISABLE_ANONYMOUS"
-      OPID_LOGIN_SCREEN_PROVIDER: "$OPID_LOGIN_SCREEN_PROVIDER"
+      DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      # Note: ENABLE_OPENID needs to have any not falsy value to be enabled.
+      ENABLE_OPENID: "$OPID_CLIENT_ID"
+      OPID_PROFILE_SCREEN_PROVIDER: "$OPID_PROFILE_SCREEN_PROVIDER"
+      CHAT_URL: //chat.workadventure.localhost
     command: yarn run start
     volumes:
       - ./front:/usr/src/app
+      - ./libs:/usr/src/libs
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.front.rule=Host(`play.workadventure.localhost`)"
       - "traefik.http.routers.front.entryPoints=web"
       - "traefik.http.services.front.loadbalancer.server.port=8080"
-      - "traefik.http.routers.front-ssl.rule=Host(`play.workadventure.localhost`)"
-      - "traefik.http.routers.front-ssl.entryPoints=websecure"
-      - "traefik.http.routers.front-ssl.tls=true"
-      - "traefik.http.routers.front-ssl.service=front"
+
+  chat:
+    image: thecodingmachine/nodejs:16
+    command: yarn run start
+    environment:
+      STARTUP_COMMAND_1: ./templater.sh
+      STARTUP_COMMAND_2: yarn install
+      STARTUP_COMMAND_3: yarn typesafe-i18n
+      STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
+      STARTUP_COMMAND_5: cd ../map-editor-types && yarn install
+      PUSHER_URL: //pusher.workadventure.localhost
+      UPLOADER_URL: //uploader.workadventure.localhost
+      EMBEDLY_KEY: $EMBEDLY_KEY
+      ICON_URL: http://icon.workadventure.localhost
+      EJABBERD_DOMAIN: ejabberd
+      ENABLE_OPENID: "$OPID_CLIENT_ID"
+    volumes:
+      - ./front/chat:/usr/src/app
+      - ./libs:/usr/src/libs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=Host(`chat.workadventure.localhost`)"
+      - "traefik.http.routers.chat.entryPoints=web"
+      - "traefik.http.services.chat.loadbalancer.server.port=8080"
 
   pusher:
     image: thecodingmachine/nodejs:16
     command: yarn dev
     environment:
       DEBUG: "socket:*"
+      DEBUG_ERROR_MESSAGES: "true"
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       STARTUP_COMMAND_0: touch /usr/src/app/src/Messages/generate_request/need_regenerate
@@ -81,17 +114,24 @@ services:
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       API_URL: back:50051
       FRONT_URL: http://play.workadventure.localhost
+      PUSHER_URL: http://pusher.workadventure.localhost
       OPID_CLIENT_ID: $OPID_CLIENT_ID
       OPID_CLIENT_SECRET: $OPID_CLIENT_SECRET
       OPID_CLIENT_ISSUER: $OPID_CLIENT_ISSUER
       OPID_CLIENT_REDIRECT_URL: $OPID_CLIENT_REDIRECT_URL
       OPID_PROFILE_SCREEN_PROVIDER: $OPID_PROFILE_SCREEN_PROVIDER
       OPID_SCOPE: $OPID_SCOPE
+      OPID_PROMPT: $OPID_PROMPT
       OPID_USERNAME_CLAIM: $OPID_USERNAME_CLAIM
       OPID_LOCALE_CLAIM: $OPID_LOCALE_CLAIM
       DISABLE_ANONYMOUS: $DISABLE_ANONYMOUS
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       ENABLE_OPENAPI_ENDPOINT: "true"
       START_ROOM_URL: "$START_ROOM_URL"
+      # Only used if you set up a JWT authentication mechanism in Ejabberd
+      EJABBERD_JWT_SECRET: mySecretJwtToken
+      EJABBERD_DOMAIN: ejabberd
+      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -99,10 +139,6 @@ services:
       - "traefik.http.routers.pusher.rule=Host(`pusher.workadventure.localhost`)"
       - "traefik.http.routers.pusher.entryPoints=web"
       - "traefik.http.services.pusher.loadbalancer.server.port=8080"
-      - "traefik.http.routers.pusher-ssl.rule=Host(`pusher.workadventure.localhost`)"
-      - "traefik.http.routers.pusher-ssl.entryPoints=websecure"
-      - "traefik.http.routers.pusher-ssl.tls=true"
-      - "traefik.http.routers.pusher-ssl.service=pusher"
 
   maps:
     image: thecodingmachine/php:8.1-v4-apache-node12
@@ -123,10 +159,6 @@ services:
       - "traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)"
       - "traefik.http.routers.maps.entryPoints=web,traefik"
       - "traefik.http.services.maps.loadbalancer.server.port=80"
-      - "traefik.http.routers.maps-ssl.rule=Host(`maps.workadventure.localhost`)"
-      - "traefik.http.routers.maps-ssl.entryPoints=websecure"
-      - "traefik.http.routers.maps-ssl.tls=true"
-      - "traefik.http.routers.maps-ssl.service=maps"
 
   back:
     image: thecodingmachine/nodejs:16
@@ -142,6 +174,7 @@ services:
       STARTUP_COMMAND_2: while [ -f /usr/src/app/src/Messages/generate_request/need_regenerate ]; do sleep 1; done
       SECRET_KEY: yourSecretKey
       SECRET_JITSI_KEY: "$SECRET_JITSI_KEY"
+      ENABLE_FEATURE_MAP_EDITOR: "$ENABLE_FEATURE_MAP_EDITOR"
       ALLOW_ARTILLERY: "true"
       ADMIN_API_TOKEN: "$ADMIN_API_TOKEN"
       JITSI_URL: $JITSI_URL
@@ -154,6 +187,10 @@ services:
       NODE_ENV: development
       STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
       PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+      MAP_STORAGE_URL: "map-storage:50053"
+      PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
+      PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
+      EJABBERD_API_URI: http://ejabberd:5443/api/
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -161,10 +198,26 @@ services:
       - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
       - "traefik.http.routers.back.entryPoints=web"
       - "traefik.http.services.back.loadbalancer.server.port=8080"
-      - "traefik.http.routers.back-ssl.rule=Host(`api.workadventure.localhost`)"
-      - "traefik.http.routers.back-ssl.entryPoints=websecure"
-      - "traefik.http.routers.back-ssl.tls=true"
-      - "traefik.http.routers.back-ssl.service=back"
+
+  map-storage:
+    image: thecodingmachine/nodejs:16
+    command: yarn start:dev
+    #command: yarn run profile
+    environment:
+      DEBUG: "*"
+      STARTUP_COMMAND_1: yarn install
+      # wait for files generated by "messages" container to exists
+      STARTUP_COMMAND_2: sleep 5; while [ ! -f /usr/src/app/src/Messages/ts-proto-nest-generated/protos/messages.ts ]; do sleep 1; done
+      NODE_ENV: development
+      PROMETHEUS_AUTHORIZATION_TOKEN: "$PROMETHEUS_AUTHORIZATION_TOKEN"
+    volumes:
+      - ./map-storage:/usr/src/app
+      - ./libs:/usr/src/libs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
+      - "traefik.http.routers.map-storage.entryPoints=web"
+      - "traefik.http.services.map-storage.loadbalancer.server.port=3000"
 
   uploader:
     image: thecodingmachine/nodejs:16
@@ -173,6 +226,18 @@ services:
     environment:
       DEBUG: "*"
       STARTUP_COMMAND_1: yarn install
+      UPLOADER_URL: http://uploader.workadventure.localhost
+      #AWS
+      AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+      AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+      AWS_DEFAULT_REGION: "$AWS_DEFAULT_REGION"
+      AWS_BUCKET: "$AWS_BUCKET"
+      AWS_URL: "$AWS_URL"
+      AWS_ENDPOINT: "$AWS_ENDPOINT"
+      #REDIS
+      REDIS_HOST: "$UPLOADER_REDIS_HOST"
+      REDIS_PORT: "$UPLOADER_REDIS_PORT"
+      REDIS_DB_NUMBER: "$UPLOADER_REDIS_DB_NUMBER"
     volumes:
       - ./uploader:/usr/src/app
     labels:
@@ -180,10 +245,6 @@ services:
       - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
       - "traefik.http.routers.uploader.entryPoints=web"
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
-      - "traefik.http.routers.uploader-ssl.rule=Host(`uploader.workadventure.localhost`)"
-      - "traefik.http.routers.uploader-ssl.entryPoints=websecure"
-      - "traefik.http.routers.uploader-ssl.tls=true"
-      - "traefik.http.routers.uploader-ssl.service=uploader"
 
   messages:
     image: thecodingmachine/workadventure-back-base:latest
@@ -196,6 +257,7 @@ services:
       - ./back:/usr/src/back
       - ./front:/usr/src/front
       - ./pusher:/usr/src/pusher
+      - ./map-storage:/usr/src/map-storage
 
   redis:
     image: redis:6
@@ -207,10 +269,6 @@ services:
       - "traefik.http.routers.redisinsight.rule=Host(`redis.workadventure.localhost`)"
       - "traefik.http.routers.redisinsight.entryPoints=web"
       - "traefik.http.services.redisinsight.loadbalancer.server.port=8001"
-      - "traefik.http.routers.redisinsight-ssl.rule=Host(`redis.workadventure.localhost`)"
-      - "traefik.http.routers.redisinsight-ssl.entryPoints=websecure"
-      - "traefik.http.routers.redisinsight-ssl.tls=true"
-      - "traefik.http.routers.redisinsight-ssl.service=redisinsight"
 
   icon:
     image: matthiasluedtke/iconserver:v3.13.0
@@ -219,10 +277,89 @@ services:
       - "traefik.http.routers.icon.rule=Host(`icon.workadventure.localhost`)"
       - "traefik.http.routers.icon.entryPoints=web"
       - "traefik.http.services.icon.loadbalancer.server.port=8080"
-      - "traefik.http.routers.icon-ssl.rule=Host(`icon.workadventure.localhost`)"
-      - "traefik.http.routers.icon-ssl.entryPoints=websecure"
-      - "traefik.http.routers.icon-ssl.tls=true"
-      - "traefik.http.routers.icon-ssl.service=icon"
+
+  ejabberd:
+    image: ejabberd/ecs
+    volumes:
+      - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
+      - "traefik.http.routers.xmpp.entryPoints=web"
+      - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
+
+  # A mock server to test OpenID connect connectivity
+  oidc-server-mock:
+    image: ghcr.io/soluto/oidc-server-mock:0.7.0
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SERVER_OPTIONS_INLINE: |
+        {
+          "AccessTokenJwtType": "JWT",
+          "Discovery": {
+            "ShowKeySet": true
+          },
+          "Authentication": {
+            "CookieSameSiteMode": "Lax",
+            "CheckSessionCookieSameSiteMode": "Lax"
+          }
+        }
+      LOGIN_OPTIONS_INLINE: |
+        {
+          "AllowRememberLogin": false
+        }
+      LOGOUT_OPTIONS_INLINE: |
+        {
+          "AutomaticRedirectAfterSignOut": true
+        }
+      API_SCOPES_INLINE: |
+        - Name: some-app-scope-1
+        - Name: some-app-scope-2
+      API_RESOURCES_INLINE: |
+        - Name: some-app
+          Scopes:
+            - some-app-scope-1
+            - some-app-scope-2
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"User1",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "Sam Tailor"
+              },
+              {
+                "Type": "email",
+                "Value": "sam.tailor@gmail.com"
+              },
+              {
+                "Type": "some-api-resource-claim",
+                "Value": "Sam's Api Resource Custom Claim"
+              },
+              {
+                "Type": "some-api-scope-claim",
+                "Value": "Sam's Api Scope Custom Claim"
+              },
+              {
+                "Type": "some-identity-resource-claim",
+                "Value": "Sam's Identity Resource Custom Claim"
+              }
+            ]
+          }
+        ]
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+    volumes:
+      - ./contrib/oidc-server-mock:/tmp/config:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
+      - "traefik.http.routers.oidc.entryPoints=web"
+    healthcheck:
+      #disable: true
+      timeout: 5s
 
 #  coturn:
 #    image: coturn/coturn:4.5.2

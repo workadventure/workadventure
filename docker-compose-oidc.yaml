@@ -1,0 +1,91 @@
+version: "3.6"
+services:
+  front:
+    environment:
+      ENABLE_OPENID: 1
+
+  chat:
+    environment:
+      ENABLE_OPENID: 1
+
+  pusher:
+    environment:
+      #OPID_CLIENT_ID: authorization-code-with-pkce-client-id
+      #OPID_CLIENT_SECRET: authorization-code-with-pkce-client-secret
+      OPID_CLIENT_ID: authorization-code-client-id
+      OPID_CLIENT_SECRET: authorization-code-client-secret
+      OPID_CLIENT_ISSUER: http://oidc.workadventure.localhost
+      OPID_CLIENT_REDIRECT_URL: http://pusher.workadventure.localhost/openid-callback
+
+  # A mock server to test OpenID connect connectivity
+  oidc-server-mock:
+    image: ghcr.io/soluto/oidc-server-mock:0.7.0
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SERVER_OPTIONS_INLINE: |
+        {
+          "AccessTokenJwtType": "JWT",
+          "Discovery": {
+            "ShowKeySet": true
+          },
+          "Authentication": {
+            "CookieSameSiteMode": "Lax",
+            "CheckSessionCookieSameSiteMode": "Lax"
+          }
+        }
+      LOGIN_OPTIONS_INLINE: |
+        {
+          "AllowRememberLogin": false
+        }
+      LOGOUT_OPTIONS_INLINE: |
+        {
+          "AutomaticRedirectAfterSignOut": true
+        }
+      API_SCOPES_INLINE: |
+        - Name: some-app-scope-1
+        - Name: some-app-scope-2
+      API_RESOURCES_INLINE: |
+        - Name: some-app
+          Scopes:
+            - some-app-scope-1
+            - some-app-scope-2
+      USERS_CONFIGURATION_INLINE: |
+        [
+          {
+            "SubjectId":"1",
+            "Username":"User1",
+            "Password":"pwd",
+            "Claims": [
+              {
+                "Type": "name",
+                "Value": "John Doe"
+              },
+              {
+                "Type": "email",
+                "Value": "john.doe@example.com"
+              },
+              {
+                "Type": "some-api-resource-claim",
+                "Value": "Sam's Api Resource Custom Claim"
+              },
+              {
+                "Type": "some-api-scope-claim",
+                "Value": "Sam's Api Scope Custom Claim"
+              },
+              {
+                "Type": "some-identity-resource-claim",
+                "Value": "Sam's Identity Resource Custom Claim"
+              }
+            ]
+          }
+        ]
+      CLIENTS_CONFIGURATION_PATH: /tmp/config/clients-config.json
+    volumes:
+      - ./contrib/oidc-server-mock:/tmp/config:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.oidc.rule=Host(`oidc.workadventure.localhost`)"
+      - "traefik.http.routers.oidc.entryPoints=web"
+    healthcheck:
+      #disable: true
+      timeout: 5s

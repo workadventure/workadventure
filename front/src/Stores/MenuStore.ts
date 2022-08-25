@@ -1,9 +1,8 @@
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import Timeout = NodeJS.Timeout;
 import { userIsAdminStore } from "./GameStore";
-import { CONTACT_URL, IDENTITY_URL, PROFILE_URL } from "../Enum/EnvironmentVariable";
+import { CONTACT_URL, OPID_PROFILE_SCREEN_PROVIDER, PUSHER_URL } from "../Enum/EnvironmentVariable";
 import type { Translation } from "../i18n/i18n-types";
-import axios from "axios";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { connectionManager } from "../Connexion/ConnectionManager";
 
@@ -11,15 +10,9 @@ export const menuIconVisiblilityStore = writable(false);
 export const menuVisiblilityStore = writable(false);
 export const menuInputFocusStore = writable(false);
 export const userIsConnected = writable(false);
-export const profileAvailable = writable(true);
 
-menuVisiblilityStore.subscribe((value) => {
-    if (userIsConnected && value && IDENTITY_URL != null) {
-        axios.get(getMeUrl()).catch((err) => {
-            console.error("menuVisiblilityStore => err => ", err);
-            profileAvailable.set(false);
-        });
-    }
+export const profileAvailable = derived(userIsConnected, ($userIsConnected) => {
+    return $userIsConnected && OPID_PROFILE_SCREEN_PROVIDER !== undefined;
 });
 
 let warningContainerTimeout: Timeout | null = null;
@@ -52,7 +45,7 @@ export enum SubMenusInterface {
 
 type MenuKeys = keyof Translation["menu"]["sub"];
 
-interface TranslatedMenu {
+export interface TranslatedMenu {
     type: "translated";
     key: MenuKeys;
 }
@@ -67,8 +60,13 @@ interface ScriptingMenu {
 
 export type MenuItem = TranslatedMenu | ScriptingMenu;
 
+export const inviteMenu: MenuItem = {
+    type: "translated",
+    key: SubMenusInterface.invite,
+};
+
 function createSubMenusStore() {
-    const { subscribe, update } = writable<MenuItem[]>([
+    const { subscribe, update, set } = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
@@ -87,16 +85,14 @@ function createSubMenusStore() {
         },
         {
             type: "translated",
-            key: SubMenusInterface.invite,
-        },
-        {
-            type: "translated",
             key: SubMenusInterface.aboutRoom,
         },
+        inviteMenu,
     ]);
 
     return {
         subscribe,
+        set,
         addTranslatedMenu(menuCommand: MenuKeys) {
             update((menuList) => {
                 if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
@@ -142,6 +138,8 @@ function createSubMenusStore() {
 
 export const subMenusStore = createSubMenusStore();
 
+export const activeSubMenuStore = writable<number>(0);
+
 export const contactPageStore = writable<string | undefined>(CONTACT_URL);
 
 export function checkSubMenuToShow() {
@@ -184,9 +182,28 @@ export function handleMenuUnregisterEvent(menuName: string) {
 }
 
 export function getProfileUrl() {
-    return PROFILE_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
+    return (
+        PUSHER_URL +
+        `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
+    );
 }
 
-export function getMeUrl() {
-    return IDENTITY_URL + `?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`;
-}
+export const inviteUserActivated = writable(true);
+
+inviteUserActivated.subscribe((value) => {
+    //update menu tab
+    const valuesSubMenusStore = get(subMenusStore);
+    if (!valuesSubMenusStore) {
+        return;
+    }
+    const indexInviteMenu = valuesSubMenusStore.findIndex(
+        (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+    );
+    if (value && indexInviteMenu === -1) {
+        valuesSubMenusStore.push(inviteMenu);
+        subMenusStore.set(valuesSubMenusStore);
+    } else if (!value && indexInviteMenu !== -1) {
+        valuesSubMenusStore.splice(indexInviteMenu, 1);
+        subMenusStore.set(valuesSubMenusStore);
+    }
+});

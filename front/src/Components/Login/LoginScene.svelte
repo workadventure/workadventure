@@ -14,7 +14,7 @@
     let name = gameManager.getPlayerName() || "";
     let startValidating = false;
 
-    let logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
+    let logo = gameManager.currentStartedRoom?.loginSceneLogo ?? logoImg;
 
     function submit() {
         startValidating = true;
