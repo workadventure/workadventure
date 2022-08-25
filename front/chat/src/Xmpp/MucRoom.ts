@@ -132,7 +132,7 @@ export const defaultUser: User = {
     isMe: false,
     jid: "",
     isMember: false,
-}
+};
 
 export type DeleteMessageStore = Readable<string[]>;
 
