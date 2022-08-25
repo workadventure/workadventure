@@ -18,6 +18,7 @@
     import { mucRoomsStore } from "../../Stores/MucRoomsStore";
     import { EmojiButton } from "@joeattardi/emoji-button";
     import { HtmlUtils } from "../../Utils/HtmlUtils";
+    import HtmlMessage from "../Content/HtmlMessage.svelte";
 
     const dispatch = createEventDispatcher();
     const defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -41,6 +42,7 @@
         if (!newMessageText) return;
         chatMessagesStore.addPersonnalMessage(newMessageText);
         newMessageText = "";
+        return false;
     }
 
     function backToThreadList() {
@@ -56,21 +58,13 @@
         }
     }
 
-    let keyShiftPressed = false;
     function handlerKeyDown(keyDownEvent: KeyboardEvent) {
-        if (keyDownEvent.key === "Shift") {
-            keyShiftPressed = true;
-        }
-    }
-    function handlerKeyUp(keyUpEvent: KeyboardEvent) {
-        if (keyShiftPressed === false && (keyUpEvent.key === "Enter" || keyUpEvent.code === "Enter")) {
+        if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             saveMessage();
-            return;
+            setTimeout(() => (newMessageText = ""), 10);
+            return false;
         }
-
-        if (keyUpEvent.key === "Shift") {
-            keyShiftPressed = false;
-        }
+        return true;
     }
 
     let messagesList: HTMLElement;
@@ -144,6 +138,8 @@
         picker.showPicker(emojiContainer);
         emojiOpened = true;
     }
+
+    function HTMLDecrypt(text: string) {}
 </script>
 
 <!-- thread -->
@@ -244,7 +240,7 @@
                                     />
                                 </div>
                             </div>
-                            <div class="tw-w-3/4" style="white-space: pre-wrap;">
+                            <div class="tw-w-3/4">
                                 <div
                                     style={`border-bottom-color:${message.author?.color}`}
                                     class="tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-text-xxs tw-pb-1"
@@ -275,16 +271,16 @@
                                         })}</span
                                     >
                                 </div>
-                                <div class={`tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2`}>
-                                    {#if message.text}
-                                        {#each message.text as text}
+                                <div class="wa-message">
+                                    {#each message.text as text}
+                                        <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                             {#await HtmlUtils.urlify(text)}
                                                 <p>...waiting</p>
-                                            {:then body}
-                                                <p class="messageText tw-mb-0">{@html body}</p>
+                                            {:then html}
+                                                <HtmlMessage {html} {message} />
                                             {/await}
-                                        {/each}
-                                    {/if}
+                                        </div>
+                                    {/each}
                                 </div>
                             </div>
                         </div>
@@ -361,7 +357,6 @@
                             </div>
                             <div
                                 class={`tw-w-3/4`}
-                                style="white-space: pre-wrap;"
                                 in:fly={{ x: -10, delay: 100, duration: 200 }}
                                 out:fly={{ x: -10, duration: 200 }}
                             >
@@ -372,8 +367,27 @@
                                         }`}
                                         class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
                                     >
-                                        <span class="tw-text-lighter-purple tw-text-xxs"
-                                            >{defaultMucRoom.getUserDataByUuid(user.userUuid).name}</span
+                                        <span class="tw-text-lighter-purple tw-text-xxs">
+                                            {defaultMucRoom.getUserDataByUuid(user.userUuid).name.match(/\[\d*]/)
+                                                ? defaultMucRoom
+                                                      .getUserDataByUuid(user.userUuid)
+                                                      .name.substring(
+                                                          0,
+                                                          defaultMucRoom
+                                                              .getUserDataByUuid(user.userUuid)
+                                                              .name.search(/\[\d*]/)
+                                                      )
+                                                : defaultMucRoom.getUserDataByUuid(user.userUuid).name}
+                                            {#if defaultMucRoom.getUserDataByUuid(user.userUuid).name.match(/\[\d*]/)}
+                                                <span class="tw-font-light tw-text-xs tw-text-gray">
+                                                    #{defaultMucRoom
+                                                        .getUserDataByUuid(user.userUuid)
+                                                        .name.match(/\[\d*]/)
+                                                        ?.join()
+                                                        ?.replace("[", "")
+                                                        ?.replace("]", "")}
+                                                </span>
+                                            {/if}</span
                                         >
                                     </div>
                                     <div class="tw-rounded-lg tw-bg-dark tw-text-xs tw-p-3">
@@ -406,7 +420,6 @@
                             bind:value={newMessageText}
                             placeholder={$LL.form.placeholder()}
                             on:keydown={handlerKeyDown}
-                            on:keyup={handlerKeyUp}
                             on:input={writing}
                             on:focus={onFocus}
                             on:blur={onBlur}

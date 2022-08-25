@@ -351,7 +351,7 @@
 
                                 <!-- Message -->
                             {:else}
-                                <div class="message tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left">
+                                <div class="wa-message">
                                     <!-- Body associated -->
                                     <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
                                         {#await HtmlUtils.urlify(message.body)}

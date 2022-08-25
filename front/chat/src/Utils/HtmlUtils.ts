@@ -62,12 +62,12 @@ export class HtmlUtils {
 
         return Promise.all(promises)
             .then((data) => {
-                const iteamReplaced: string[] = [];
+                const itemReplaced: string[] = [];
                 for (const item of data) {
-                    if (item == undefined || iteamReplaced.includes(item.search)) continue;
+                    if (item == undefined || itemReplaced.includes(item.search)) continue;
                     const regexStr = item.search.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
                     const regex = new RegExp(regexStr, "g");
-                    iteamReplaced.push(item.search);
+                    itemReplaced.push(item.search);
                     text = text.replace(regex, item.html);
                 }
                 return this.replaceEmojy(text);
