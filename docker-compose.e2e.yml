@@ -13,7 +13,7 @@ services:
         - thecodingmachine/workadventure-front:${DOCKER_TAG:-develop}
       args:
         BUILDKIT_INLINE_CACHE: 1
-    command: /bin/sh -c "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && exec nginx -g 'daemon off;'"
+    command: /start_nginx.sh
     volumes: []
     labels:
       - "traefik.enable=true"
