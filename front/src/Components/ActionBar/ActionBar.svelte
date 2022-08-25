@@ -270,12 +270,12 @@
     style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar" class:move-menu={$bottomActionBarVisibilityStore}>
+    <div class="bottom-action-bar">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
                 id="bubble-menu"
-                in:fly={{ y: 70, duration: 100, delay: 500 }}
+                in:fly={{ y: 70, duration: 100, delay: 200 }}
                 out:fly={{ y: 70, duration: 100, delay: 0 }}
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
@@ -364,7 +364,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
@@ -584,10 +584,6 @@
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
-        }
-
-        .move-menu {
-            transform: translate(-3rem, -2rem);
         }
     }
 </style>
