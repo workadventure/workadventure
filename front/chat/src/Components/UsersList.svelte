@@ -33,10 +33,24 @@
         window.parent.postMessage({ type: "openInviteMenu" }, "*");
     }
 
-    $: usersFiltered = [...$usersListStore]
-        .sort(([, a], [, b]) => Number(b.active) - Number(a.active))
-        .splice(0, minimizeUser ? maxUsersMinimized : [...$usersListStore].length)
-        .filter(([, user]) => user.name.toLocaleLowerCase().includes(searchValue));
+    $: usersList = [...$usersListStore.values()] as Array<User>;
+    $: me = usersList.find((user) => user.isMe);
+    $: meArray = me ? [me] : [];
+
+    $: usersFiltered = meArray
+        .concat(
+            usersList
+                .filter((user) => user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .concat(
+                    usersList
+                        .filter(
+                            (user) => !user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue)
+                        )
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                )
+        )
+        .splice(0, minimizeUser ? maxUsersMinimized : usersList.length);
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
@@ -57,7 +71,7 @@
     </div>
     {#if showUsers}
         <div transition:fly={{ y: -30, duration: 100 }}>
-            {#if [...$usersListStore].length === 0}
+            {#if usersList.length === 0}
                 <div class="tw-px-5 tw-mb-2">
                     <p>{$LL.roomEmpty()}</p>
                     <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={showInviteMenu}>
@@ -65,7 +79,7 @@
                     </button>
                 </div>
             {:else}
-                {#each usersFiltered as [_, user]}
+                {#each usersFiltered as user}
                     <ChatUser
                         {mucRoom}
                         {openChat}

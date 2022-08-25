@@ -92,7 +92,7 @@ class IframeListener {
                                 let userData = defaultUserData;
                                 const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                                 if (mucRoomDefault) {
-                                    userData = mucRoomDefault.getUserDataByUuid(target.userUuid);
+                                    userData = mucRoomDefault.getUserDataByUuid(target);
                                 }
 
                                 if (ChatMessageTypes.userIncoming === iframeEvent.data.type) {
@@ -104,7 +104,7 @@ class IframeListener {
                             }
                             break;
                         }
-                        case "peerConexionStatus": {
+                        case "peerConnectionStatus": {
                             chatPeerConnectionInProgress.set(iframeEvent.data);
                             if (iframeEvent.data) {
                                 timelineOpenedStore.set(true);

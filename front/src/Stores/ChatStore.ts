@@ -4,6 +4,7 @@ import type { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { iframeListener } from "../Api/IframeListener";
 import { Subject } from "rxjs";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
+import { ChatMessage, ChatMessageTypes } from "../Api/Events/ChatEvent";
 
 export const chatZoneLiveStore = writable(false);
 export const chatVisibilityStore = writable(false);
@@ -15,23 +16,6 @@ export const newChatMessageSubject = _newChatMessageSubject.asObservable();
 
 export const _newChatMessageWritingStatusSubject = new Subject<number>();
 export const newChatMessageWritingStatusSubject = _newChatMessageWritingStatusSubject.asObservable();
-
-export enum ChatMessageTypes {
-    text = 1,
-    me,
-    userIncoming,
-    userOutcoming,
-    userWriting,
-    userStopWriting,
-}
-
-export interface ChatMessage {
-    type: ChatMessageTypes;
-    date: Date;
-    author?: PlayerInterface;
-    targets?: PlayerInterface[];
-    text?: string[];
-}
 
 function getAuthor(authorId: number): PlayerInterface {
     const author = playersStore.getPlayerById(authorId);
@@ -69,11 +53,11 @@ function createChatMessagesStore() {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.userIncoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId));
+                    lastMessage.targets.push(getAuthor(authorId).userUuid);
                 } else {
                     list.push({
                         type: ChatMessageTypes.userIncoming,
-                        targets: [getAuthor(authorId)],
+                        targets: [getAuthor(authorId).userUuid],
                         date: new Date(),
                     });
                 }
@@ -81,7 +65,7 @@ function createChatMessagesStore() {
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userIncoming,
-                    targets: [getAuthor(authorId)],
+                    targets: [getAuthor(authorId).userUuid],
                     date: new Date(),
                 });
 
@@ -92,11 +76,11 @@ function createChatMessagesStore() {
             update((list) => {
                 const lastMessage = list[list.length - 1];
                 if (lastMessage && lastMessage.type === ChatMessageTypes.userOutcoming && lastMessage.targets) {
-                    lastMessage.targets.push(getAuthor(authorId));
+                    lastMessage.targets.push(getAuthor(authorId).userUuid);
                 } else {
                     list.push({
                         type: ChatMessageTypes.userOutcoming,
-                        targets: [getAuthor(authorId)],
+                        targets: [getAuthor(authorId).userUuid],
                         date: new Date(),
                     });
                 }
@@ -104,7 +88,7 @@ function createChatMessagesStore() {
                 /* @deprecated with new chat service */
                 iframeListener.sendComingUserToChatIframe({
                     type: ChatMessageTypes.userOutcoming,
-                    targets: [getAuthor(authorId)],
+                    targets: [getAuthor(authorId).userUuid],
                     date: new Date(),
                 });
 
@@ -145,14 +129,14 @@ function createChatMessagesStore() {
                     lastMessage &&
                     lastMessage.type === ChatMessageTypes.text &&
                     lastMessage.text &&
-                    lastMessage?.author?.userId === authorId
+                    lastMessage?.author === author.userUuid
                 ) {
                     lastMessage.text.push(text);
                 } else {
                     list.push({
                         type: ChatMessageTypes.text,
                         text: [text],
-                        author: author,
+                        author: author.userUuid,
                         date: new Date(),
                     });
                 }
@@ -162,7 +146,7 @@ function createChatMessagesStore() {
                 iframeListener.sendMessageToChatIframe({
                     type: ChatMessageTypes.text,
                     text: [text],
-                    author: author,
+                    author: author.userUuid,
                     date: new Date(),
                 });
 

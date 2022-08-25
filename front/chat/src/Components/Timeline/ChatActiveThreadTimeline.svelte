@@ -291,7 +291,7 @@
                         {#each message.targets as target}
                             <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                                 <span
-                                    class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
+                                    class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                     ><b style={target.color ? `color: ${target.color};` : ""}
                                         >{target.name.match(/\[\d*]/)
                                             ? target.name.substring(0, target.name.search(/\[\d*]/))
@@ -314,7 +314,7 @@
                         {#each message.targets as target}
                             <div class="event tw-text-center tw-mt-2" style="white-space: nowrap;">
                                 <span
-                                    class="tw-cursor-pointer tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
+                                    class="tw-w-fit tag tw-bg-dark tw-mx-2 tw-px-3 tw-py-1 tw-border tw-border-solid tw-rounded-full tw-text-xs tw-border-lighter-purple"
                                     ><b style={target.color ? `color: ${target.color};` : ""}
                                         >{target.name.match(/\[\d*]/)
                                             ? target.name.substring(0, target.name.search(/\[\d*]/))
