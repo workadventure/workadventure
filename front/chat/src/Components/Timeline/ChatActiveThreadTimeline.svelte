@@ -138,8 +138,6 @@
         picker.showPicker(emojiContainer);
         emojiOpened = true;
     }
-
-    function HTMLDecrypt(text: string) {}
 </script>
 
 <!-- thread -->
@@ -271,17 +269,19 @@
                                         })}</span
                                     >
                                 </div>
-                                <div class="wa-message">
-                                    {#each message.text as text}
-                                        <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
-                                            {#await HtmlUtils.urlify(text)}
-                                                <p>...waiting</p>
-                                            {:then html}
-                                                <HtmlMessage {html} {message} />
-                                            {/await}
-                                        </div>
-                                    {/each}
-                                </div>
+                                {#if message.text}
+                                    <div class="wa-message">
+                                        {#each message.text as text}
+                                            <div class="tw-text-ellipsis tw-overflow-y-auto tw-whitespace-normal">
+                                                {#await HtmlUtils.urlify(text)}
+                                                    <p>...waiting</p>
+                                                {:then html}
+                                                    <HtmlMessage {html} />
+                                                {/await}
+                                            </div>
+                                        {/each}
+                                    </div>
+                                {/if}
                             </div>
                         </div>
                     </div>
@@ -457,9 +457,5 @@
         overflow-y: scroll;
         min-height: calc(100vh - 40px);
         padding: 60px 0;
-
-        p.messageText {
-            white-space: pre-line;
-        }
     }
 </style>
