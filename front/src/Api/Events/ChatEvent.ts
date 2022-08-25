@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
 
 export const isChatEvent = z.object({
     message: z.string(),
