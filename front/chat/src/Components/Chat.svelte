@@ -19,6 +19,7 @@
     import { connectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
     import { iframeListener } from "../IframeListener";
+    import { fly } from "svelte/transition";
 
     let listDom: HTMLElement;
     let chatWindowElement: HTMLElement;
@@ -125,7 +126,7 @@
                     $activeThreadStore?.sendBan(event.detail.user, event.detail.name, event.detail.playUri)}
             />
         {:else}
-            <div class="wa-message-bg">
+            <div class="wa-message-bg" transition:fly={{ x: -500, duration: 400 }}>
                 <!-- searchbar -->
                 <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                     <div class="tw-p-3">
@@ -187,7 +188,6 @@
 <style lang="scss">
     aside.chatWindow {
         pointer-events: auto;
-        //background: rgba(27, 27, 41, 0.79);
         color: whitesmoke;
         display: flex;
         flex-direction: column;
