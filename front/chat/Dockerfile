@@ -24,7 +24,6 @@ COPY --from=proto-builder /usr/src/ts-proto-generated src/Messages/ts-proto-gene
 RUN sed -i 's/import { Observable } from "rxjs";/import type { Observable } from "rxjs";/g' src/Messages/ts-proto-generated/protos/messages.ts
 COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 
-
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
@@ -36,7 +35,7 @@ FROM nginx:1.21.6-alpine
 RUN rm /usr/share/nginx/html/index.html
 COPY front/chat/nginx.conf /etc/nginx/conf.d/default.conf
 COPY front/chat/templater.sh /
-COPY front/start_nginx.sh /start_nginx.sh
+COPY front/chat/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/dist /usr/share/nginx/html
 COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
