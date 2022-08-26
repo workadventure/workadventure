@@ -28,14 +28,18 @@ COPY --from=proto-builder /usr/src/JsonMessages src/Messages/JsonMessages
 # upgrade RAM available to 6G
 RUN yarn run typesafe-i18n && NODE_OPTIONS="--max-old-space-size=6144" yarn build
 
+RUN mv /usr/src/dist/index.html /usr/src/dist/index.tpl.html
+
 # final production image
 FROM nginx:1.21.6-alpine
 
+RUN rm /usr/share/nginx/html/index.html
 COPY front/chat/nginx.conf /etc/nginx/conf.d/default.conf
 COPY front/chat/templater.sh /
+COPY front/start_nginx.sh /start_nginx.sh
 
 COPY --from=builder /usr/src/dist /usr/share/nginx/html
 COPY --from=builder /usr/src/server.template.json /usr/share/nginx/html/server.template.json
 
 EXPOSE 80
-CMD ["/bin/sh", "-c", "/templater.sh && envsubst < /usr/share/nginx/html/env-config.template.js > /usr/share/nginx/html/env-config.js && envsubst < /usr/share/nginx/html/server.template.json > /usr/share/nginx/html/server.json && exec nginx -g 'daemon off;'"]
+CMD ["/start_nginx.sh"]

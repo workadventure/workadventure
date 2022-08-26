@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 set -x
 set -o nounset errexit
-index_file=/usr/share/nginx/html/index.html
+index_file_in=/usr/share/nginx/html/index.tpl.html
+index_file_out=/usr/share/nginx/html/index.html
 tmp_trackcodefile=/tmp/trackcode
 
 # To inject tracking code, you have two choices:
@@ -20,6 +21,12 @@ if [ "${GA_TRACKING_ID:-}" != "" ] || [ "${INSERT_ANALYTICS:-NO}" != "NO" ]; the
     sed "s#<!-- TRACKING NUMBER -->#${GA_TRACKING_ID:-}#g" "${ANALYTICS_CODE_PATH}" > "$tmp_trackcodefile"
 fi
 
-echo "Templating ${index_file}"
-sed --in-place "/<!-- TRACK CODE -->/r ${tmp_trackcodefile}" "${index_file}"
+echo "Templating ${index_file_in}"
+sed "/<!-- TRACK CODE -->/r ${tmp_trackcodefile}" "${index_file_in}" > "${index_file_out}"
 rm "${tmp_trackcodefile}"
+
+# Let's copy env-config.js using a hash
+set -- $(md5sum /usr/share/nginx/html/env-config.js)
+md5="${1}"
+cp /usr/share/nginx/html/env-config.js /usr/share/nginx/html/env-config.${md5}.js
+sed -i "s/env-config.js/env-config.${md5}.js/g" "${index_file_out}"
