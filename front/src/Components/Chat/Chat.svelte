@@ -14,7 +14,6 @@
     import { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
-    import { XIcon } from "svelte-feather-icons";
 
     let chatIframe: HTMLIFrameElement;
 
