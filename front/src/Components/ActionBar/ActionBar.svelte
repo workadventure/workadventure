@@ -38,6 +38,7 @@
     import {
         Emoji,
         emoteDataStore,
+        emoteDataStoreLoading,
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
@@ -550,7 +551,23 @@
 
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
-                        <img draggable="false" src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
+                        {#if $emoteDataStoreLoading}
+                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
+                                <!-- loading animation -->
+                                <div class="loading-group">
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                </div>
+                            </div>
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={penImg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.openEmoji()}
+                            />
+                        {/if}
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
