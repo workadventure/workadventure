@@ -1,7 +1,7 @@
 import { derived, writable } from "svelte/store";
 import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
-import { localUserStore } from "./LocalUserStore";
+import { userStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { FileExt, UploadedFile, uploadingState } from "../Services/FileMessageManager";
 import { Message, User } from "../Xmpp/MucRoom";
@@ -79,7 +79,7 @@ function createChatMessagesStore() {
                     list.push({
                         type: ChatMessageTypes.me,
                         text: [text],
-                        author: localUserStore.getUserData(),
+                        author: userStore.get(),
                         date: new Date(),
                     });
                 }
@@ -142,6 +142,8 @@ export const chatVisibilityStore = writable<boolean>(false);
 export const availabilityStatusStore = writable<number>(1);
 
 export const timelineOpenedStore = writable<boolean>(true);
+
+export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
 

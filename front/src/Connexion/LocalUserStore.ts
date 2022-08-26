@@ -31,7 +31,7 @@ const emojiFavorite = "emojiFavorite";
 
 const JwtAuthToken = z
     .object({
-        accessToken: z.string().optional(),
+        accessToken: z.string().optional().nullable(),
     })
     .partial();
 
@@ -236,7 +236,7 @@ class LocalUserStore {
     }
 
     isLogged(): boolean {
-        return this.jwt?.accessToken !== undefined;
+        return this.jwt?.accessToken !== undefined && this.jwt?.accessToken !== null;
     }
 
     private static parseJwt(token: string) {

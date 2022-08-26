@@ -86,8 +86,8 @@
               "OPID_CLIENT_ISSUER": "https://publichydra-"+url,
               "START_ROOM_URL": "/_/global/maps-"+url+"/starter/map.json",
               # Ejabberd
-              "EJABBERD_DOMAIN": "xmpp-admin-"+url,
-              "EJABBERD_URI": "adminxmpp-"+url,
+              "EJABBERD_DOMAIN": "xmpp-"+url,
+              "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
               "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
             } else {})
           },

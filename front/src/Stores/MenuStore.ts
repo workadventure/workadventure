@@ -65,19 +65,13 @@ export const inviteMenu: MenuItem = {
     key: SubMenusInterface.invite,
 };
 
+export const inviteUserActivated = writable(true);
+
 function createSubMenusStore() {
-    const { subscribe, update, set } = writable<MenuItem[]>([
+    const { subscribe, update } = writable<MenuItem[]>([
         {
             type: "translated",
             key: SubMenusInterface.profile,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.globalMessages,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.contact,
         },
         {
             type: "translated",
@@ -88,11 +82,33 @@ function createSubMenusStore() {
             key: SubMenusInterface.aboutRoom,
         },
         inviteMenu,
+        {
+            type: "translated",
+            key: SubMenusInterface.globalMessages,
+        },
+        {
+            type: "translated",
+            key: SubMenusInterface.contact,
+        },
     ]);
+
+    inviteUserActivated.subscribe((value) => {
+        //update menu tab
+        update((valuesSubMenusStore) => {
+            const indexInviteMenu = valuesSubMenusStore.findIndex(
+                (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
+            );
+            if (value && indexInviteMenu === -1) {
+                valuesSubMenusStore.splice(3, 0, inviteMenu);
+            } else if (!value && indexInviteMenu !== -1) {
+                valuesSubMenusStore.splice(indexInviteMenu, 1);
+            }
+            return valuesSubMenusStore;
+        });
+    });
 
     return {
         subscribe,
-        set,
         addTranslatedMenu(menuCommand: MenuKeys) {
             update((menuList) => {
                 if (!menuList.find((menu) => menu.type === "translated" && menu.key === menuCommand)) {
@@ -187,23 +203,3 @@ export function getProfileUrl() {
         `/profile-callback?token=${localUserStore.getAuthToken()}&playUri=${connectionManager.currentRoom?.key}`
     );
 }
-
-export const inviteUserActivated = writable(true);
-
-inviteUserActivated.subscribe((value) => {
-    //update menu tab
-    const valuesSubMenusStore = get(subMenusStore);
-    if (!valuesSubMenusStore) {
-        return;
-    }
-    const indexInviteMenu = valuesSubMenusStore.findIndex(
-        (menu) => (menu as TranslatedMenu).key === SubMenusInterface.invite
-    );
-    if (value && indexInviteMenu === -1) {
-        valuesSubMenusStore.push(inviteMenu);
-        subMenusStore.set(valuesSubMenusStore);
-    } else if (!value && indexInviteMenu !== -1) {
-        valuesSubMenusStore.splice(indexInviteMenu, 1);
-        subMenusStore.set(valuesSubMenusStore);
-    }
-});

@@ -38,6 +38,7 @@
     import {
         Emoji,
         emoteDataStore,
+        emoteDataStoreLoading,
         emoteMenuStore,
         emoteMenuSubCurrentEmojiSelectedStore,
         emoteMenuSubStore,
@@ -54,6 +55,7 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
+    import { peerStore } from "../../Stores/PeerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -270,12 +272,12 @@
     style="margin-bottom: 10px"
     class:animated={$bottomActionBarVisibilityStore}
 >
-    <div class="bottom-action-bar" class:move-menu={$bottomActionBarVisibilityStore}>
+    <div class="bottom-action-bar">
         {#if $bottomActionBarVisibilityStore}
             <div
                 class="bottom-action-section tw-flex animate"
                 id="bubble-menu"
-                in:fly={{ y: 70, duration: 100, delay: 500 }}
+                in:fly={{ y: 70, duration: 100, delay: 200 }}
                 out:fly={{ y: 70, duration: 100, delay: 0 }}
                 class:tw-translate-x-0={$bottomActionBarVisibilityStore}
                 class:translate-right={!$bottomActionBarVisibilityStore}
@@ -364,7 +366,7 @@
 
         <div class="tw-flex tw-flex-row base-section animated">
             <div class="bottom-action-section tw-flex tw-flex-initial">
-                {#if !$inExternalServiceStore && $proximityMeetingStore}
+                {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
                             class="bottom-action-button"
@@ -428,21 +430,25 @@
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $totalMessagesToSee > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                        <div class="tw-absolute tw-top-1 tw-right-0.5">
+                            <span
+                                class={`tw-w-4 tw-h-4 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                            />
+                            <span
+                                class={`tw-w-3 tw-h-3 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                            />
+                        </div>
+                    {:else if $totalMessagesToSee > 0}
                         <span
                             class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
                         >
                             {$totalMessagesToSee}
                         </span>
-                    {:else if $chatZoneLiveStore}
-                        <div class="tw-absolute tw-top-1 tw-right-0">
-                            <span
-                                class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                            />
-                            <span
-                                class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                            />
-                        </div>
                     {/if}
                 </div>
 
@@ -550,7 +556,23 @@
 
                 <div class="tw-transition-all bottom-action-button">
                     <button on:click={() => analyticsClient.editEmote()} on:click|preventDefault={edit}>
-                        <img draggable="false" src={penImg} style="padding: 2px" alt={$LL.menu.icon.open.openEmoji()} />
+                        {#if $emoteDataStoreLoading}
+                            <div class="tw-rounded-lg tw-bg-dark tw-text-xs">
+                                <!-- loading animation -->
+                                <div class="loading-group">
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                    <span class="loading-dot" />
+                                </div>
+                            </div>
+                        {:else}
+                            <img
+                                draggable="false"
+                                src={penImg}
+                                style="padding: 2px"
+                                alt={$LL.menu.icon.open.openEmoji()}
+                            />
+                        {/if}
                     </button>
                 </div>
                 <div class="tw-transition-all bottom-action-button">
@@ -584,10 +606,6 @@
         //is equal to tailwind's sm breakpoint
         .translate-right {
             transform: translateX(0);
-        }
-
-        .move-menu {
-            transform: translate(-3rem, -2rem);
         }
     }
 </style>

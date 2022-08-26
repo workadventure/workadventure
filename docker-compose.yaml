@@ -44,7 +44,6 @@ services:
       UPLOADER_URL: //uploader.workadventure.localhost
       #ADMIN_URL: //workadventure.localhost
       ICON_URL: //icon.workadventure.localhost
-      STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
@@ -78,7 +77,6 @@ services:
     image: thecodingmachine/nodejs:16
     command: yarn run start
     environment:
-      STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
@@ -131,7 +129,7 @@ services:
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
       EJABBERD_DOMAIN: ejabberd
-      EJABBERD_URI: ejabberd:5443
+      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -190,6 +188,7 @@ services:
       MAP_STORAGE_URL: "map-storage:50053"
       PUBLIC_MAP_STORAGE_URL: "http://map-storage.workadventure.localhost"
       PLAYER_VARIABLES_MAX_TTL: $PLAYER_VARIABLES_MAX_TTL
+      EJABBERD_API_URI: http://ejabberd:5443/api/
     volumes:
       - ./back:/usr/src/app
     labels:
@@ -283,7 +282,7 @@ services:
       - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp-admin.workadventure.localhost`)"
+      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
       - "traefik.http.routers.xmpp.entryPoints=web"
       - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
 

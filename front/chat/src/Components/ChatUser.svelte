@@ -1,13 +1,6 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import {
-        MoreHorizontalIcon,
-        ShieldOffIcon,
-        ShieldIcon,
-        SlashIcon,
-        UserCheckIcon,
-        UserXIcon,
-    } from "svelte-feather-icons";
+    import { MoreHorizontalIcon, ShieldOffIcon, ShieldIcon, SlashIcon, UsersIcon } from "svelte-feather-icons";
     import LL from "../i18n/i18n-svelte";
     import { createEventDispatcher } from "svelte";
     import { defaultColor, defaultWoka, MeStore, MucRoom, User } from "../Xmpp/MucRoom";
@@ -83,6 +76,18 @@
         }
     }
 
+    function getColorOfAvailabilityStatus(status: number) {
+        switch (status) {
+            case 1:
+            default:
+                return "tw-bg-pop-green";
+            case 2:
+                return "tw-bg-pop-red";
+            case 3:
+                return "tw-bg-orange";
+        }
+    }
+
     $: chunks = highlightWords({
         text: user.name.match(/\[\d*]/) ? user.name.substring(0, user.name.search(/\[\d*]/)) : user.name,
         query: searchValue,
@@ -95,7 +100,7 @@
     on:mouseleave={closeChatUserMenu}
 >
     <div
-        class={`tw-relative wa-avatar ${user.active ? "" : "tw-opacity-50"}`}
+        class={`tw-relative wa-avatar ${!user.active && "tw-opacity-50"}`}
         style={`background-color: ${getColor(user.jid)}`}
         on:click|stopPropagation={() => openChat(user)}
     >
@@ -104,11 +109,16 @@
         </div>
         {#if user.active}
             <span
-                class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple"
+                class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
+                    user.availabilityStatus
+                )} tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
             />
         {/if}
     </div>
-    <div class={`tw-flex-auto tw-ml-3`} on:click|stopPropagation={() => openChat(user)}>
+    <div
+        class={`tw-flex-auto tw-ml-3 ${!user.active && "tw-opacity-50"}`}
+        on:click|stopPropagation={() => openChat(user)}
+    >
         <h1 class={`tw-text-sm tw-font-bold tw-mb-0`}>
             {#each chunks as chunk (chunk.key)}
                 <span class={`${chunk.match ? "tw-text-light-blue" : ""}`}>{chunk.text}</span>
@@ -130,12 +140,15 @@
             {#if ENABLE_OPENID}
                 {#if user.isMember}
                     <span class="tw-text-pop-green" title={$LL.role.member()}>
-                        <UserCheckIcon size="13" />
+                        <UsersIcon size="13" />
                     </span>
+                    <!--
+                // If it's not a member
                 {:else}
                     <span class="tw-text-pop-red" title={$LL.role.visitor()}>
                         <UserXIcon size="13" />
                     </span>
+                    -->
                 {/if}
             {/if}
         </h1>

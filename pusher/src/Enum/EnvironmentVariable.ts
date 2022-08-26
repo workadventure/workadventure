@@ -27,7 +27,7 @@ export const OPID_LOCALE_CLAIM = process.env.OPID_LOCALE_CLAIM || "locale";
 export const DISABLE_ANONYMOUS: boolean = process.env.DISABLE_ANONYMOUS === "true";
 export const PROMETHEUS_AUTHORIZATION_TOKEN = process.env.PROMETHEUS_AUTHORIZATION_TOKEN;
 export const EJABBERD_DOMAIN: string = process.env.EJABBERD_DOMAIN || "";
-export const EJABBERD_URI: string = process.env.EJABBERD_URI || "";
+export const EJABBERD_WS_URI: string = process.env.EJABBERD_WS_URI || "";
 export const EJABBERD_JWT_SECRET: string = process.env.EJABBERD_JWT_SECRET || "";
 
 const debugErrorMessages = process.env.DEBUG_ERROR_MESSAGES;

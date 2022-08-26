@@ -103,7 +103,7 @@ services:
       # Only used if you set up a JWT authentication mechanism in Ejabberd
       EJABBERD_JWT_SECRET: mySecretJwtToken
       EJABBERD_DOMAIN: ejabberd
-      EJABBERD_URI: ejabberd:5443
+      EJABBERD_WS_URI: ws://ejabberd:5443/ws
     volumes:
       - ./pusher:/usr/src/app
     labels:
@@ -125,10 +125,10 @@ services:
       - ./xmpp/ejabberd.yml:/home/ejabberd/conf/ejabberd.yml
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.xmpp.rule=Host(`xmpp-admin.workadventure.localhost`)"
+      - "traefik.http.routers.xmpp.rule=Host(`xmpp.workadventure.localhost`)"
       - "traefik.http.routers.xmpp.entryPoints=web"
       - "traefik.http.services.xmpp.loadbalancer.server.port=5380"
-      - "traefik.http.routers.xmpp-ssl.rule=Host(`xmpp-admin.workadventure.localhost`)"
+      - "traefik.http.routers.xmpp-ssl.rule=Host(`xmpp.workadventure.localhost`)"
       - "traefik.http.routers.xmpp-ssl.entryPoints=websecure"
       - "traefik.http.routers.xmpp-ssl.tls=true"
       - "traefik.http.routers.xmpp-ssl.service=xmpp"
@@ -182,6 +182,8 @@ services:
       MAX_PER_GROUP: "$MAX_PER_GROUP"
       REDIS_HOST: redis
       NODE_ENV: development
+      EJABBERD_API_URI: $EJABBERD_API_URI
+      EJABBERD_DOMAIN: $EJABBERD_DOMAIN
     volumes:
       - ./back:/usr/src/app
     labels:
