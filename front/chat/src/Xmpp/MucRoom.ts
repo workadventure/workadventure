@@ -6,7 +6,7 @@ import { get, writable } from "svelte/store";
 import ElementExt from "./Lib/ElementExt";
 import { mucRoomsStore, numberPresenceUserStore } from "../Stores/MucRoomsStore";
 import { v4 as uuidv4 } from "uuid";
-import { localUserStore, userStore } from "../Stores/LocalUserStore";
+import { userStore } from "../Stores/LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
 import { filesUploadStore, mentionsUserStore } from "../Stores/ChatStore";
 import { fileMessageManager, UploadedFile } from "../Services/FileMessageManager";
