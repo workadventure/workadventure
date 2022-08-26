@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { afterUpdate, beforeUpdate, onMount } from "svelte";
+    import { afterUpdate, beforeUpdate, onDestroy, onMount } from "svelte";
     import { HtmlUtils } from "../Utils/HtmlUtils";
     import Loader from "./Loader.svelte";
     import { mucRoomsStore, xmppServerConnectionStatusStore } from "../Stores/MucRoomsStore";
     import UsersList from "./UsersList.svelte";
     import { MucRoom } from "../Xmpp/MucRoom";
-    import { localUserStore, userStore } from "../Stores/LocalUserStore";
+    import { userStore } from "../Stores/LocalUserStore";
     import LL from "../i18n/i18n-svelte";
     import { localeDetector } from "../i18n/locales";
     import { locale } from "../i18n/i18n-svelte";
@@ -36,7 +36,7 @@
     });
 
     let defaultMucRoom: MucRoom | undefined = undefined;
-    let subscribers = new Array<Unsubscriber>();
+    let subscribeListeners = new Array<Unsubscriber>();
 
     $: totalMessagesToSee = derived(
         [...[...$mucRoomsStore].map((mucRoom) => mucRoom.getCountMessagesToSee()), timelineMessagesToSee],
@@ -48,7 +48,7 @@
             await localeDetector();
         }
         listDom.scrollTo(0, listDom.scrollHeight);
-        subscribers.push(
+        subscribeListeners.push(
             mucRoomsStore.subscribe(() => {
                 try {
                     defaultMucRoom = mucRoomsStore.getDefaultRoom();
@@ -57,11 +57,22 @@
                 }
             })
         );
-        subscribers.push(
+        subscribeListeners.push(
             totalMessagesToSee.subscribe((total) => {
                 window.parent.postMessage({ type: "chatTotalMessagesToSee", data: total }, "*");
             })
         );
+        subscribeListeners.push(
+            mucRoomsStore.subscribe(() => {
+                defaultMucRoom = mucRoomsStore.getDefaultRoom();
+            })
+        );
+    });
+
+    onDestroy(() => {
+        subscribeListeners.forEach((listener) => {
+            listener();
+        });
     });
 
     afterUpdate(() => {
@@ -100,10 +111,6 @@
         }
     }
 
-    mucRoomsStore.subscribe(() => {
-        defaultMucRoom = mucRoomsStore.getDefaultRoom();
-    });
-
     console.info("Chat fully loaded");
 </script>
 
@@ -138,7 +145,7 @@
                         />
                     </div>
                 </div>
-                {#if !localUserStore.getUserData().isLogged && ENABLE_OPENID}
+                {#if !userStore.get().isLogged && ENABLE_OPENID}
                     <div class="tw-border tw-border-transparent tw-border-b-light-purple tw-border-solid">
                         <div class="tw-p-3 tw-text-sm tw-text-center">
                             <p>{$LL.signIn()}</p>

@@ -35,7 +35,6 @@ import { RemoveActionsMenuKeyFromRemotePlayerEvent } from "./Events/RemoveAction
 import { SetAreaPropertyEvent } from "./Events/SetAreaPropertyEvent";
 import { ModifyUIWebsiteEvent } from "./Events/Ui/UIWebsite";
 import { ModifyAreaEvent } from "./Events/CreateAreaEvent";
-import { ChatMessage } from "../Stores/ChatStore";
 import { AskPositionEvent } from "./Events/AskPositionEvent";
 import { PlayerInterface } from "../Phaser/Game/PlayerInterface";
 import { SetSharedPlayerVariableEvent } from "./Events/SetSharedPlayerVariableEvent";
@@ -49,6 +48,7 @@ import { AddPlayerEvent } from "./Events/AddPlayerEvent";
 import { localUserStore } from "../Connexion/LocalUserStore";
 import { mediaManager, NotificationType } from "../WebRtc/MediaManager";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { ChatMessage } from "./Events/ChatEvent";
 
 type AnswererCallback<T extends keyof IframeQueryMap> = (
     query: IframeQueryMap[T]["query"],
@@ -192,6 +192,8 @@ class IframeListener {
     private answerers: {
         [str in keyof IframeQueryMap]?: unknown;
     } = {};
+
+    private messagesToChatQueue = new Map<number, IframeResponseEvent>();
 
     init() {
         window.addEventListener(
@@ -437,6 +439,16 @@ class IframeListener {
                 console.error('Could not register "iframeCloseCallbacks". No contentWindow.');
             }
         });
+    }
+
+    registerChatIframe(iframe: HTMLIFrameElement): void {
+        this.registerIframe(iframe);
+        if (this.messagesToChatQueue.size > 0) {
+            this.messagesToChatQueue.forEach((message, time) => {
+                this.postMessageToChat(message);
+                this.messagesToChatQueue.delete(time);
+            });
+        }
     }
 
     unregisterIframe(iframe: HTMLIFrameElement): void {
@@ -761,7 +773,7 @@ class IframeListener {
             data: {
                 visibility,
             },
-        } as IframeResponseEvent);
+        });
     }
     sendSettingsToChatIframe() {
         this.postMessageToChat({
@@ -770,77 +782,77 @@ class IframeListener {
                 notification: localUserStore.getNotification(),
                 chatSounds: localUserStore.getChatSounds(),
             },
-        } as IframeResponseEvent);
+        });
     }
 
+    sendLeaveMucEvent(url: string) {
+        this.postMessageToChat({
+            type: "leaveMuc",
+            data: {
+                url,
+            },
+        });
+    }
+
+    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
+        this.postMessageToChat({
+            type: "joinMuc",
+            data: {
+                url,
+                name,
+                type,
+                subscribe,
+            },
+        });
+    }
+
+    // << TODO delete with chat XMPP integration for the discussion circle
+    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
+        const usersTyping: Array<string> = [];
+        list.forEach((user) => usersTyping.push(user.userUuid));
+        this.postMessageToChat({
+            type: "updateWritingStatusChatList",
+            data: usersTyping,
+        });
+    }
+
+    sendMessageToChatIframe(chatMessage: ChatMessage) {
+        this.postMessageToChat({
+            type: "addChatMessage",
+            data: chatMessage,
+        });
+    }
+
+    sendComingUserToChatIframe(chatMessage: ChatMessage) {
+        this.postMessageToChat({
+            type: "comingUser",
+            data: chatMessage,
+        });
+    }
+    sendPeerConnexionStatusToChatIframe(status: boolean) {
+        this.postMessageToChat({
+            type: "peerConnectionStatus",
+            data: status,
+        });
+    }
+    // end delete >>
+
+    /**
+     * Sends the message... to the chat iFrame.
+     */
     postMessageToChat(message: IframeResponseEvent) {
         if (!this.chatIframe) {
             this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
         }
         try {
-            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
+            if (!this.chatIframe) {
+                throw new Error("No chat iFrame registered");
+            } else {
+                this.chatIframe.contentWindow?.postMessage(message, this.chatIframe?.src);
+            }
         } catch (err) {
             console.error("postMessageToChat Error => ", err);
-        }
-    }
-
-    //TODO delete with chat XMPP integration for the discussion circle
-    sendWritingStatusToChatIframe(list: Set<PlayerInterface>) {
-        if (!this.chatIframe) {
-            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
-        }
-        const message = {
-            type: "updateWritingStatusChatList",
-            data: list,
-        };
-        try {
-            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
-        } catch (err) {
-            console.error("sendWritingStatusToChatIframe Error => ", err);
-        }
-    }
-
-    sendMessageToChatIframe(chatMessage: ChatMessage) {
-        if (!this.chatIframe) {
-            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
-        }
-        const message = {
-            type: "addChatMessage",
-            data: chatMessage,
-        };
-        try {
-            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
-        } catch (err) {
-            console.error("sendMessageToChatIframe Error => ", err);
-        }
-    }
-
-    sendComingUserToChatIframe(chatMessage: ChatMessage) {
-        if (!this.chatIframe) {
-            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
-        }
-        const message = {
-            type: "comingUser",
-            data: chatMessage,
-        };
-        try {
-            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
-        } catch (err) {
-            console.error("sendComingUserToChatIframe Error => ", err);
-        }
-    }
-    sendPeerConnexionStatusToChatIframe(status: boolean) {
-        if (!this.chatIframe) {
-            this.chatIframe = document.getElementById("chatWorkAdventure") as HTMLIFrameElement | null;
-        }
-        const message = {
-            type: "peerConexionStatus",
-            data: status,
-        };
-        try {
-            this.chatIframe?.contentWindow?.postMessage(message, this.chatIframe?.src);
-        } catch (err) {
-            console.error("sendPeerConnexionStatusToChatIframe Error => ", err);
+            this.messagesToChatQueue.set(Date.now(), message);
         }
     }
 
@@ -898,27 +910,6 @@ class IframeListener {
             },
             source ?? undefined
         );
-    }
-
-    sendLeaveMucEvent(url: string) {
-        this.postMessageToChat({
-            type: "leaveMuc",
-            data: {
-                url,
-            },
-        });
-    }
-
-    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
-        this.postMessageToChat({
-            type: "joinMuc",
-            data: {
-                url,
-                name,
-                type,
-                subscribe,
-            },
-        });
     }
 }
 

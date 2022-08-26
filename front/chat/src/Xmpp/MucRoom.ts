@@ -117,6 +117,23 @@ export const defaultUserData: UserData = {
     isLogged: false,
 };
 
+export const defaultUser: User = {
+    name: "unknown",
+    playUri: "",
+    uuid: "",
+    status: "",
+    active: false,
+    isInSameMap: false,
+    color: defaultColor,
+    woka: defaultWoka,
+    unreads: false,
+    isAdmin: false,
+    chatState: "",
+    isMe: false,
+    jid: "",
+    isMember: false,
+};
+
 export type DeleteMessageStore = Readable<string[]>;
 
 export class MucRoom {
@@ -211,28 +228,13 @@ export class MucRoom {
         return { woka, color, jid };
     }
 
-    public getUserDataByUuid(uuid: string): User {
+    public getUserDataByUuid(uuid: string): UserData {
         for (const [, user] of get(this.presenceStore)) {
             if (user.uuid === uuid) {
-                return user;
+                return user as unknown as UserData;
             }
         }
-        return {
-            name: "unknown",
-            playUri: "",
-            uuid: "",
-            status: "",
-            active: false,
-            isInSameMap: false,
-            color: defaultColor,
-            woka: defaultWoka,
-            unreads: false,
-            isAdmin: false,
-            chatState: "",
-            isMe: false,
-            jid: "",
-            isMember: false,
-        };
+        return defaultUserData;
     }
 
     public goTo(type: string, playUri: string, uuid: string) {

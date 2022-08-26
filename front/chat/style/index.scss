@@ -13,9 +13,9 @@
     }
 }
 
-.message{
+.wa-message-body{
+    @apply tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left;
     p{
-        min-height: 20px;
         margin: 0;
         .mention{
             margin: 0 2px;
@@ -28,7 +28,7 @@
 }
 
 .selected {
-    .message{
+    .wa-message{
         &::after{
             @apply tw-animate-ping;
         }

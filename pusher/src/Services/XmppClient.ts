@@ -134,14 +134,13 @@ export class XmppClient {
                 xmppSettings.setRoomsList(
                     this.initialMucRooms.map((definition: MucRoomDefinitionInterface) => {
                         const mucRoomDefinitionMessage = new MucRoomDefinitionMessage();
-                        //@ts-ignore
                         if (!definition.name || !definition.url || !definition.type) {
                             throw new Error("Name URL and type cannot be empty!");
                         }
                         mucRoomDefinitionMessage.setName(definition.name);
-                        //@ts-ignore
                         mucRoomDefinitionMessage.setUrl(definition.url);
                         mucRoomDefinitionMessage.setType(definition.type);
+                        mucRoomDefinitionMessage.setSubscribe(definition.subscribe);
                         return mucRoomDefinitionMessage;
                     })
                 );
@@ -167,7 +166,8 @@ export class XmppClient {
                 })
                 .catch((err: Error) => {
                     console.error("XmppClient => createClient => start => error", err);
-                    throw err;
+                    //throw err;
+                    rej(err);
                 });
 
             xmpp.on("stanza", (stanza: unknown) => {

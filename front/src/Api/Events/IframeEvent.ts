@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isChatEvent } from "./ChatEvent";
+import { isChatEvent, isChatMessage } from "./ChatEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
 import { isLoadPageEvent } from "./LoadPageEvent";
@@ -369,6 +369,24 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("availabilityStatus"),
         data: z.number(),
+    }),
+
+    // TODO will be deleted if timeline is becoming a MUC room
+    z.object({
+        type: z.literal("peerConnectionStatus"),
+        data: z.boolean(),
+    }),
+    z.object({
+        type: z.literal("comingUser"),
+        data: isChatMessage,
+    }),
+    z.object({
+        type: z.literal("addChatMessage"),
+        data: isChatMessage,
+    }),
+    z.object({
+        type: z.literal("updateWritingStatusChatList"),
+        data: z.array(z.nullable(z.string())),
     }),
 ]);
 export type IframeResponseEvent = z.infer<typeof isIframeResponseEvent>;
