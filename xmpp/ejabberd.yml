@@ -13,9 +13,9 @@ log_rotate_size: 10485760
 log_rotate_count: 1
 
 certfiles:
-  - /home/ejabberd/conf/server.pem
+  - /opt/ejabberd/conf/server.pem
 
-ca_file: "/home/ejabberd/conf/cacert.pem"
+ca_file: "/opt/ejabberd/conf/cacert.pem"
 
 ## When using let's encrypt to generate certificates
 ##certfiles:
@@ -30,7 +30,7 @@ anonymous_protocol: login_anon
 allow_multiple_connections: true
 
 #jwt_jid_field: "identifier"
-#jwt_key: "/home/ejabberd/conf/jwtKey"
+#jwt_key: "/opt/ejabberd/conf/jwtKey"
 
 listen:
   -

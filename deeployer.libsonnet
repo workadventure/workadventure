@@ -30,7 +30,10 @@
        } + (if adminUrl != null then {
          "ADMIN_API_URL": adminUrl,
          "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-       } else {})
+         "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+       } else {
+         "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+       })
      },
      "back2": {
             "image": "thecodingmachine/workadventure-back:"+tag,
@@ -54,8 +57,11 @@
             } + (if adminUrl != null then {
               "ADMIN_API_URL": adminUrl,
               "ADMIN_API_TOKEN": env.ADMIN_API_TOKEN,
-            } else {})
-          },
+              "EJABBERD_API_URI": "http://xmpp-"+adminUrl+"/api/",
+            } else {
+              "EJABBERD_API_URI": "http://ejabberd:5443/api/",
+            })
+     },
      "pusher": {
             "replicas": 2,
             "image": "thecodingmachine/workadventure-pusher:"+tag,
@@ -88,8 +94,13 @@
               # Ejabberd
               "EJABBERD_DOMAIN": "xmpp-"+url,
               "EJABBERD_WS_URI": "wss://xmpp-"+url+"/ws",
-              "EJABBERD_JWT_SECRET": "tempSecretKeyNeedsToChange",
-            } else {})
+              "EJABBERD_JWT_SECRET": env.EJABBERD_JWT_SECRET,
+            } else {
+              # Ejabberd
+              "EJABBERD_DOMAIN": "ejabberd",
+              "EJABBERD_WS_URI": "ws://ejabberd:5443/ws",
+              //"EJABBERD_JWT_SECRET": env.JWT_SECRET_KEY,
+            })
           },
     "front": {
       "image": "thecodingmachine/workadventure-front:"+tag,
@@ -191,7 +202,16 @@
       },
       "ports": [8080]
     },
-  },
+  }+ (if (adminUrl == "") then {
+    "ejabberd": {
+      "image": "thecodingmachine/workadventure-simple-ecs:"+tag,
+      "ports": [5222, 5269, 5443, 5280, 5380, 1883],
+      "env": {
+        "JWT_SECRET": "tempSecretKeyNeedsToChange",
+      }
+    }
+  } else {
+  }),
   "config": {
     k8sextension(k8sConf)::
         k8sConf + {

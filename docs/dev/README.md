@@ -16,7 +16,7 @@ Check out the [contributing guide](../../CONTRIBUTING.md)
 - [How to add translations](how-to-translate.md)
 - [How to add new functions in the scripting API](contributing-to-scripting-api.md)
 - [About Wokas](wokas.md)
-- [OpenID configuration]openid.md)
+- [OpenID configuration](openid.md)
 
 ## Pusher documentation
 
