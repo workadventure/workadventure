@@ -441,35 +441,38 @@
                                 {/if}
                             </button>
 
-                            <button
-                                class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
-                            >
-                                {#if cameraActive}
-                                    <ChevronUpIcon size="13" />
-                                {:else}
-                                    <ChevronDownIcon size="13" />
-                                {/if}
-                            </button>
+                            {#if $requestedCameraState && $cameraListStore.length > 1}
+                                <button
+                                    class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                >
+                                    {#if cameraActive}
+                                        <ChevronUpIcon size="13" />
+                                    {:else}
+                                        <ChevronDownIcon size="13" />
+                                    {/if}
+                                </button>
 
-                            <!-- camera list -->
-                            <div
-                                class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
-                                style="bottom: 15px;right: 0;"
-                                on:mouseleave={() => (cameraActive = false)}
-                            >
-                                {#each $cameraListStore as camera}
-                                    <span
-                                        class="wa-dropdown-item tw-flex"
-                                        on:click|stopPropagation|preventDefault={() => selectCamera(camera.deviceId)}
-                                    >
-                                        {StringUtils.normalizeDeviceName(camera.label)}
-                                        {#if selectedCamera === camera.deviceId}
-                                            <CheckIcon size="13" class="tw-ml-1" />
-                                        {/if}
-                                    </span>
-                                {/each}
-                            </div>
+                                <!-- camera list -->
+                                <div
+                                    class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (cameraActive = false)}
+                                >
+                                    {#each $cameraListStore as camera}
+                                        <span
+                                            class="wa-dropdown-item tw-flex"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectCamera(camera.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(camera.label)}
+                                            {#if selectedCamera === camera.deviceId}
+                                                <CheckIcon size="13" class="tw-ml-1" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
 
@@ -498,36 +501,39 @@
                                 {/if}
                             </button>
 
-                            <button
-                                class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
-                                on:click|stopPropagation|preventDefault={() => (microphoneActive = !microphoneActive)}
-                            >
-                                {#if microphoneActive}
-                                    <ChevronUpIcon size="13" />
-                                {:else}
-                                    <ChevronDownIcon size="13" />
-                                {/if}
-                            </button>
+                            {#if $requestedMicrophoneState && $microphoneListStore.length > 1}
+                                <button
+                                    class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() =>
+                                        (microphoneActive = !microphoneActive)}
+                                >
+                                    {#if microphoneActive}
+                                        <ChevronUpIcon size="13" />
+                                    {:else}
+                                        <ChevronDownIcon size="13" />
+                                    {/if}
+                                </button>
 
-                            <!-- microphone list -->
-                            <div
-                                class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
-                                style="bottom: 15px;right: 0;"
-                                on:mouseleave={() => (microphoneActive = false)}
-                            >
-                                {#each $microphoneListStore as microphone}
-                                    <span
-                                        class="wa-dropdown-item"
-                                        on:click|stopPropagation|preventDefault={() =>
-                                            selectMicrophone(microphone.deviceId)}
-                                    >
-                                        {StringUtils.normalizeDeviceName(microphone.label)}
-                                        {#if selectedMicrophone === microphone.deviceId}
-                                            <CheckIcon size="13" />
-                                        {/if}
-                                    </span>
-                                {/each}
-                            </div>
+                                <!-- microphone list -->
+                                <div
+                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (microphoneActive = false)}
+                                >
+                                    {#each $microphoneListStore as microphone}
+                                        <span
+                                            class="wa-dropdown-item"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectMicrophone(microphone.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(microphone.label)}
+                                            {#if selectedMicrophone === microphone.deviceId}
+                                                <CheckIcon size="13" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
                 {/if}
