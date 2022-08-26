@@ -125,10 +125,6 @@ jobs:
         run: yarn run ts-proto && yarn run copy-to-chat-ts-proto && yarn run json-copy-to-chat
         working-directory: "messages"
 
-      - name: "Create index.html"
-        run: ./templater.sh
-        working-directory: "front/chat"
-
       - name: "Pretty"
         run: yarn run pretty-check
         working-directory: "front/chat"

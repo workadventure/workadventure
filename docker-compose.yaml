@@ -77,7 +77,6 @@ services:
     image: thecodingmachine/nodejs:16
     command: yarn run start
     environment:
-      STARTUP_COMMAND_1: ./templater.sh
       STARTUP_COMMAND_2: yarn install
       STARTUP_COMMAND_3: yarn typesafe-i18n
       STARTUP_COMMAND_4: cd ../libs/tailwind && yarn install
