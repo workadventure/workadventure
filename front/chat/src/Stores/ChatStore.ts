@@ -143,6 +143,8 @@ export const availabilityStatusStore = writable<number>(1);
 
 export const timelineOpenedStore = writable<boolean>(true);
 
+export const timelineActiveStore = writable<boolean>(false);
+
 export const lastTimelineMessageRead = writable<Date>(new Date());
 
 export const writingStatusMessageStore = writable<Set<PlayerInterface>>(new Set<PlayerInterface>());

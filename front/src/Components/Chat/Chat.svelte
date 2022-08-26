@@ -5,7 +5,7 @@
     import { localUserStore } from "../../Connexion/LocalUserStore";
     import { getColorByString } from "../Video/utils";
     import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-    import { derived, Unsubscriber, writable } from "svelte/store";
+    import { derived, get, Unsubscriber, writable } from "svelte/store";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { CHAT_URL } from "../../Enum/EnvironmentVariable";
     import { locale } from "../../i18n/i18n-svelte";
@@ -14,6 +14,7 @@
     import { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
+    import { XIcon } from "svelte-feather-icons";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -76,6 +77,7 @@
                                         color: getColorByString(name ?? ""),
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
+                                        availabilityStatus: get(availabilityStatusStore),
                                     },
                                 },
                                 "*"
@@ -94,25 +96,18 @@
                     })
                 );
                 subscribeListeners.push(
+                    availabilityStatusStore.subscribe((status) =>
+                        iframeListener.sendAvailabilityStatusToChatIframe(status)
+                    )
+                );
+                subscribeListeners.push(
                     chatVisibilityStore.subscribe((visibility) => {
                         try {
                             gameManager.getCurrentGameScene()?.onResize();
                         } catch (err) {
                             console.info("gameManager doesn't exist!", err);
                         }
-                        try {
-                            iframeListener.sendChatVisibilityToChatIframe(visibility);
-                        } catch (err) {
-                            console.error("Send chat visibility to chat iFrame", err);
-                        }
-                    })
-                );
-                subscribeListeners.push(
-                    availabilityStatusStore.subscribe((status) => {
-                        iframeListener.postMessageToChat({
-                            type: "availabilityStatus",
-                            data: status,
-                        });
+                        iframeListener.sendChatVisibilityToChatIframe(visibility);
                     })
                 );
                 messageStream = adminMessagesService.messageStream.subscribe((message) => {
@@ -125,22 +120,10 @@
                 //TODO delete it with new XMPP integration
                 //send list to chat iframe
                 subscribeListeners.push(
-                    writingStatusMessageStore.subscribe((list) => {
-                        try {
-                            iframeListener.sendWritingStatusToChatIframe(list);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    })
+                    writingStatusMessageStore.subscribe((list) => iframeListener.sendWritingStatusToChatIframe(list))
                 );
                 subscribeListeners.push(
-                    peerStore.subscribe((list) => {
-                        try {
-                            iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0);
-                        } catch (err) {
-                            console.error(err);
-                        }
-                    })
+                    peerStore.subscribe((list) => iframeListener.sendPeerConnexionStatusToChatIframe(list.size > 0))
                 );
             }
         });
@@ -173,7 +156,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 <div id="chatWindow" class:show={$chatVisibilityStore}>
-    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&lsaquo</button>{/if}
+    {#if $chatVisibilityStore}<button class="hide" on:click={closeChat}>&#215;</button>{/if}
     <iframe
         id="chatWorkAdventure"
         bind:this={chatIframe}
@@ -217,12 +200,12 @@
         }
         .hide {
             top: 1%;
-            padding: 0 7px 2px 6px;
+            padding: 0 5px 0 3px;
             min-height: fit-content;
             position: absolute;
             right: -21px;
             z-index: -1;
-            font-size: 20px;
+            font-size: 21px;
             border-bottom-left-radius: 0;
             border-top-left-radius: 0;
             background: rgba(27, 27, 41, 0.95);

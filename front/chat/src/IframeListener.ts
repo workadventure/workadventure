@@ -9,6 +9,7 @@ import {
     chatSoundsStore,
     newChatMessageSubject,
     newChatMessageWritingStatusSubject,
+    timelineActiveStore,
     timelineOpenedStore,
     writingStatusMessageStore,
 } from "./Stores/ChatStore";
@@ -20,6 +21,7 @@ import { connectionManager } from "./Connection/ChatConnectionManager";
 import { chatVisibilityStore } from "./Stores/ChatStore";
 import { NotificationType } from "./Media/MediaManager";
 import { activeThreadStore } from "./Stores/ActiveThreadStore";
+import { get } from "svelte/store";
 
 class IframeListener {
     init() {
@@ -115,6 +117,10 @@ class IframeListener {
                             chatVisibilityStore.set(iframeEvent.data.visibility);
                             if (!iframeEvent.data.visibility) {
                                 activeThreadStore.reset();
+                            } else if (get(chatPeerConnectionInProgress)) {
+                                timelineActiveStore.set(true);
+                            } else if (mucRoomsStore.getLiveRoom()) {
+                                activeThreadStore.set(mucRoomsStore.getLiveRoom());
                             }
                             break;
                         }

@@ -233,11 +233,11 @@ export class GameMapPropertiesListener {
             const playUri = urlManager.getPlayUri() + "/";
 
             if (oldValue !== undefined) {
-                iframeListener.sendLeaveMucEvent(playUri + oldValue);
+                iframeListener.sendLeaveMucEventToChatIframe(playUri + oldValue);
                 chatZoneLiveStore.set(false);
             }
             if (newValue !== undefined) {
-                iframeListener.sendJoinMucEvent(playUri + newValue, newValue.toString(), "live", false);
+                iframeListener.sendJoinMucEventToChatIframe(playUri + newValue, newValue.toString(), "live", false);
                 chatZoneLiveStore.set(true);
             }
         });

@@ -785,7 +785,7 @@ class IframeListener {
         });
     }
 
-    sendLeaveMucEvent(url: string) {
+    sendLeaveMucEventToChatIframe(url: string) {
         this.postMessageToChat({
             type: "leaveMuc",
             data: {
@@ -794,7 +794,7 @@ class IframeListener {
         });
     }
 
-    sendJoinMucEvent(url: string, name: string, type: string, subscribe: boolean) {
+    sendJoinMucEventToChatIframe(url: string, name: string, type: string, subscribe: boolean) {
         this.postMessageToChat({
             type: "joinMuc",
             data: {
@@ -803,6 +803,13 @@ class IframeListener {
                 type,
                 subscribe,
             },
+        });
+    }
+
+    sendAvailabilityStatusToChatIframe(status: number) {
+        this.postMessageToChat({
+            type: "availabilityStatus",
+            data: status,
         });
     }
 

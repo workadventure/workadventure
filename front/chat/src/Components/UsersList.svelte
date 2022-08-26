@@ -55,13 +55,11 @@
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
     <div class="tw-px-4 tw-py-1 tw-flex tw-items-center">
-        <!--{#if usersListUnreads()}
-                            <span
-									class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
-							>
-                                {usersListUnreads()}
-                            </span>
-			{/if}-->
+        <span
+            class="tw-bg-light-blue tw-text-dark-purple tw-w-5 tw-h-5 tw-mr-3 tw-text-sm tw-font-semibold tw-flex tw-items-center tw-justify-center tw-rounded"
+        >
+            {usersList.filter((user) => user.active).length}
+        </span>
         <p class="tw-text-light-blue tw-mb-0 tw-text-sm tw-flex-auto">
             {$LL.users()}
         </p>

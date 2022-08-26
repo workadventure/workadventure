@@ -30,6 +30,12 @@ function createMucRoomsStore() {
         getDefaultRoom(): MucRoom | undefined {
             return [...get(this).values()].find((mucRoom) => mucRoom.type === "default");
         },
+        getLiveRoom(): MucRoom | undefined {
+            return [...get(this).values()].find((mucRoom) => mucRoom.type === "live");
+        },
+        sendAvailabilityStatus() {
+            [...get(this).values()].forEach((mucRoom) => mucRoom.sendPresence());
+        },
     };
 }
 export const mucRoomsStore = createMucRoomsStore();

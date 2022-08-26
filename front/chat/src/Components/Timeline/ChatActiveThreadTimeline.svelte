@@ -160,10 +160,10 @@
                 {#if $chatPeerConnectionInProgress}
                     <div class="tw-block tw-relative tw-ml-7 tw-mt-1">
                         <span
-                            class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
+                            class="tw-w-4 tw-h-4 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
                         />
                         <span
-                            class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
+                            class="tw-w-3 tw-h-3 tw-bg-pop-green tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
                         />
                     </div>
                 {/if}
@@ -209,7 +209,7 @@
         <!-- MESSAGE LIST-->
         <div
             id="timeLine-messageList"
-            class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-overflow-y-scroll tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
+            class="tw-flex tw-flex-col tw-flex-auto tw-px-5 tw-pt-14 tw-pb-14 tw-justify-end tw-h-auto tw-min-h-screen"
             bind:this={messagesList}
         >
             {#each $chatMessagesStore as message}

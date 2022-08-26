@@ -55,6 +55,7 @@
     import { iframeListener } from "../../Api/IframeListener";
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
+    import { peerStore } from "../../Stores/PeerStore";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -429,21 +430,25 @@
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
-                    {#if $totalMessagesToSee > 0}
+                    {#if $chatZoneLiveStore || $peerStore.size > 0}
+                        <div class="tw-absolute tw-top-1 tw-right-0.5">
+                            <span
+                                class={`tw-w-4 tw-h-4 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0 tw-right-0 tw-animate-ping`}
+                            />
+                            <span
+                                class={`tw-w-3 tw-h-3 ${
+                                    $peerStore.size > 0 ? "tw-bg-pop-green" : "tw-bg-pop-red"
+                                } tw-block tw-rounded-full tw-absolute tw-top-0.5 tw-right-0.5`}
+                            />
+                        </div>
+                    {:else if $totalMessagesToSee > 0}
                         <span
                             class="tw-absolute tw-top-1.5 tw-right-1 tw-items-center tw-justify-center tw-px-1 tw-py-0.5 tw-text-xxs tw-font-bold tw-leading-none tw-text-white tw-bg-pop-red tw-rounded-full"
                         >
                             {$totalMessagesToSee}
                         </span>
-                    {:else if $chatZoneLiveStore}
-                        <div class="tw-absolute tw-top-1 tw-right-0">
-                            <span
-                                class="tw-w-4 tw-h-4 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-animate-ping"
-                            />
-                            <span
-                                class="tw-w-3 tw-h-3 tw-bg-pop-red tw-block tw-rounded-full tw-absolute tw-right-0.5 tw-top-0.5"
-                            />
-                        </div>
                     {/if}
                 </div>
 

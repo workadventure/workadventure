@@ -33,6 +33,7 @@ export type User = {
     isMe: boolean;
     jid: string;
     isMember: boolean;
+    availabilityStatus: number;
 };
 
 export const ChatStates = {
@@ -115,6 +116,7 @@ export const defaultUserData: UserData = {
     color: defaultColor,
     woka: defaultWoka,
     isLogged: false,
+    availabilityStatus: 0,
 };
 
 export const defaultUser: User = {
@@ -132,6 +134,7 @@ export const defaultUser: User = {
     isMe: false,
     jid: "",
     isMember: false,
+    availabilityStatus: 0,
 };
 
 export type DeleteMessageStore = Readable<string[]>;
@@ -247,7 +250,7 @@ export class MucRoom {
     }
 
     public connect() {
-        if (localUserStore.getUserData().isLogged && this.subscribe && this.type !== "live") {
+        if (userStore.get().isLogged && this.subscribe && this.type !== "live") {
             this.sendSubscribe();
         } else {
             this.sendPresence();
@@ -327,7 +330,7 @@ export class MucRoom {
         }
     }
 
-    private sendPresence() {
+    sendPresence() {
         const messagePresence = xml(
             "presence",
             {
@@ -350,6 +353,7 @@ export class MucRoom {
                 woka: get(userStore).woka,
                 // If you can subscribe to the default muc room, this is that you are a member
                 isMember: mucRoomsStore.getDefaultRoom()?.subscribe ?? false,
+                availabilityStatus: get(availabilityStatusStore),
             })
         );
         if (!this.closed) {
@@ -728,6 +732,7 @@ export class MucRoom {
                 const color = xml.getChild("user")?.getAttr("color");
                 const woka = xml.getChild("user")?.getAttr("woka");
                 const isMember = xml.getChild("user")?.getAttr("isMember");
+                const availabilityStatus = parseInt(xml.getChild("user")?.getAttr("availabilityStatus"));
                 //const affiliation = x.getChild("item")?.getAttr("affiliation");
                 const role = x.getChild("item")?.getAttr("role");
                 if (type === "unavailable") {
@@ -735,7 +740,12 @@ export class MucRoom {
                         // If presence received from ME and type is unavailable and room type is LIVE, delete this MucRoom
                         connectionManager.connectionOrFail.getXmppClient()?.removeMuc(this);
                     } else {
-                        this.deleteUser(userJID.toString());
+                        // If the user is a member and the current user is a member too just disconnect him
+                        if (this.getCurrentIsMember(userJID.toString()) && this.getMeIsMember()) {
+                            this.updateUser(userJID, null, null, null, USER_STATUS_DISCONNECTED);
+                        } else {
+                            this.deleteUser(userJID.toString());
+                        }
                     }
                 } else {
                     this.updateUser(
@@ -747,7 +757,8 @@ export class MucRoom {
                         color,
                         woka,
                         ["moderator", "owner"].includes(role),
-                        isMember === "true"
+                        isMember === "true",
+                        availabilityStatus
                     );
                 }
 
@@ -775,6 +786,7 @@ export class MucRoom {
                 const subscription = xml.getChild("subscribe");
                 if (subscription) {
                     const nick = subscription.getAttr("nick");
+                    // FIXME When we can get 2 users that have the same nickname (if they are not getting from the same server) (not safe to check that like this)
                     if (nick === this.getPlayerName()) {
                         this.sendPresence();
                         this.requestAllSubscribers();
@@ -968,6 +980,10 @@ export class MucRoom {
         }
     }
 
+    private getMeIsMember() {
+        return this.subscribe;
+    }
+
     private getCurrentName(jid: JID | string) {
         return get(this.presenceStore).get(jid.toString())?.name ?? "";
     }
@@ -1001,7 +1017,11 @@ export class MucRoom {
     }
 
     private getCurrentIsMember(jid: JID | string) {
-        return get(this.presenceStore).get(jid.toString())?.isMember ?? false;
+        return get(this.presenceStore).get(jid.toString())?.isMember ?? true;
+    }
+
+    private getCurrentAvailabilityStatus(jid: JID | string) {
+        return get(this.presenceStore).get(jid.toString())?.availabilityStatus ?? 0;
     }
 
     private getMeIsAdmin() {
@@ -1018,6 +1038,7 @@ export class MucRoom {
         woka: string | null = null,
         isAdmin: boolean | null = null,
         isMember: boolean | null = null,
+        availabilityStatus: number | null = null,
         chatState: string | null = null
     ) {
         let isMe = false;
@@ -1046,6 +1067,7 @@ export class MucRoom {
                 isMe,
                 jid: jid.toString(),
                 isMember: isMember ?? this.getCurrentIsMember(jid),
+                availabilityStatus: availabilityStatus ?? this.getCurrentAvailabilityStatus(jid),
             });
             numberPresenceUserStore.set(list.size);
             return list;
