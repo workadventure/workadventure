@@ -2,14 +2,14 @@
     import type { EmbedScreen } from "../../Stores/EmbedScreensStore";
     import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import MediaBox from "../Video/MediaBox.svelte";
-    import { fly } from "svelte/transition";
+    import { fly, fade } from "svelte/transition";
 
     export let highlightedEmbedScreen: EmbedScreen | undefined;
     export let full = false;
     $: clickable = !full;
 </script>
 
-<aside class="cameras-container tw-self-end" class:full transition:fly={{ x: 200, duration: 100 }}>
+<aside class="cameras-container tw-self-end" class:full in:fly={{ x: 200, duration: 100 }} out:fade>
     <div class="other-cameras tw-flex tw-flex-col-reverse">
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
