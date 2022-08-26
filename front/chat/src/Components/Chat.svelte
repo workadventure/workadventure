@@ -14,7 +14,12 @@
     import ChatActiveThread from "./ChatActiveThread.svelte";
     import ChatActiveThreadTimeLine from "./Timeline/ChatActiveThreadTimeline.svelte";
     import Timeline from "./Timeline/Timeline.svelte";
-    import { timelineMessagesToSee, timelineOpenedStore } from "../Stores/ChatStore";
+    import {
+        availabilityStatusStore,
+        timelineActiveStore,
+        timelineMessagesToSee,
+        timelineOpenedStore,
+    } from "../Stores/ChatStore";
     import { Unsubscriber, derived } from "svelte/store";
     import { connectionManager } from "../Connection/ChatConnectionManager";
     import { ENABLE_OPENID } from "../Enum/EnvironmentVariable";
@@ -29,7 +34,6 @@
     let searchValue = "";
     let showUsers = true;
     let showLives = true;
-    let activeThreadTimeLine = false;
 
     beforeUpdate(() => {
         autoscroll = listDom && listDom.offsetHeight + listDom.scrollTop > listDom.scrollHeight - 20;
@@ -60,6 +64,11 @@
         subscribeListeners.push(
             totalMessagesToSee.subscribe((total) => {
                 window.parent.postMessage({ type: "chatTotalMessagesToSee", data: total }, "*");
+            })
+        );
+        subscribeListeners.push(
+            availabilityStatusStore.subscribe(() => {
+                mucRoomsStore.sendAvailabilityStatus();
             })
         );
         subscribeListeners.push(
@@ -120,8 +129,8 @@
     <section class="tw-p-0 tw-m-0" bind:this={listDom}>
         {#if !connectionManager.connection || !$xmppServerConnectionStatusStore}
             <Loader text={$userStore ? $LL.reconnecting() : $LL.waitingData()} />
-        {:else if activeThreadTimeLine}
-            <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => (activeThreadTimeLine = false)} />
+        {:else if $timelineActiveStore}
+            <ChatActiveThreadTimeLine on:unactiveThreadTimeLine={() => timelineActiveStore.set(false)} />
         {:else if $activeThreadStore !== undefined}
             <ChatActiveThread
                 activeThread={$activeThreadStore}
@@ -184,7 +193,7 @@
                     )}
                 />
 
-                <Timeline on:activeThreadTimeLine={() => (activeThreadTimeLine = true)} />
+                <Timeline on:activeThreadTimeLine={() => timelineActiveStore.set(true)} />
             </div>
         {/if}
     </section>
