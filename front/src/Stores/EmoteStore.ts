@@ -75,6 +75,8 @@ export const emoteMenuStore = createEmoteMenuStore();
 export const emoteMenuSubStore = createEmoteMenuStore();
 export const emoteDataStore = createEmoteDataStore();
 
+export const emoteDataStoreLoading = writable<boolean>(false);
+
 //subscribe to update localstorage favorite emoji
 emoteDataStore.subscribe((map: Map<number, Emoji>) => {
     localUserStore.setEmojiFavorite(map);
