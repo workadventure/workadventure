@@ -15,6 +15,7 @@
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
     import LL from "../../i18n/i18n-svelte";
+    import { StringUtils } from "../../Utils/StringUtils";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
@@ -64,11 +65,6 @@
         unsubscribeLocalStreamStore();
     });
 
-    function normalizeDeviceName(label: string): string {
-        // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
-        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, "").trim();
-    }
-
     function selectCamera() {
         videoConstraintStore.setDeviceId(selectedCamera);
     }
@@ -100,7 +96,7 @@
                     <select bind:value={selectedCamera} on:change={selectCamera}>
                         {#each $cameraListStore as camera}
                             <option value={camera.deviceId}>
-                                {normalizeDeviceName(camera.label)}
+                                {StringUtils.normalizeDeviceName(camera.label)}
                             </option>
                         {/each}
                     </select>
@@ -116,7 +112,7 @@
                     <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
                         {#each $microphoneListStore as microphone}
                             <option value={microphone.deviceId}>
-                                {normalizeDeviceName(microphone.label)}
+                                {StringUtils.normalizeDeviceName(microphone.label)}
                             </option>
                         {/each}
                     </select>
