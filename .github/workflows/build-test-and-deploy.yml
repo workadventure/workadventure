@@ -8,6 +8,10 @@ on:
   pull_request:
     types: [labeled, synchronize, opened, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-front:
     runs-on: ubuntu-latest
