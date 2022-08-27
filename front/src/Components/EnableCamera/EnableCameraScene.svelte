@@ -151,8 +151,6 @@
 </form>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
-
     .enableCameraScene {
         pointer-events: auto;
         margin: 20px auto 0;
@@ -187,10 +185,6 @@
 
         section.text-center {
             text-align: center;
-        }
-
-        button.letsgo {
-            font-size: 200%;
         }
 
         .control-group {
@@ -234,18 +228,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        .enableCameraScene h2 {
-            font-size: 80%;
-        }
-        .enableCameraScene .control-group .nes-select {
-            font-size: 80%;
-        }
-        .enableCameraScene button.letsgo {
-            font-size: 160%;
         }
     }
 </style>
