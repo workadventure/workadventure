@@ -55,13 +55,13 @@
     }
 </script>
 
-<div class="source-picker nes-container is-rounded" transition:fly={{ y: -50, duration: 500 }}>
-    <button type="button" class="nes-btn is-error close" on:click={cancel}>&times</button>
+<div class="source-picker is-rounded" transition:fly={{ y: -50, duration: 500 }}>
+    <button type="button" class="light is-error close" on:click={cancel}>&times</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source}
             <div
-                class="media-box nes-container is-rounded clickable"
+                class="media-box is-rounded clickable"
                 on:click|preventDefault={() => selectDesktopCapturerSource(source)}
             >
                 <img src={source.thumbnailURL} alt={source.name} />
@@ -93,14 +93,10 @@
         background-color: #333333;
         color: whitesmoke;
 
-        .nes-btn.is-error.close {
+        .light.is-error.close {
             position: absolute;
             top: -20px;
             right: -20px;
-        }
-
-        h2 {
-            font-family: "Press Start 2P";
         }
 
         section.streams {
@@ -142,7 +138,7 @@
                 transform: translate(-50%, -50%);
             }
 
-            &.nes-container.is-rounded {
+            &.is-rounded {
                 border-image-outset: 1;
             }
 

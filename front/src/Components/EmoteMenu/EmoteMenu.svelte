@@ -15,7 +15,6 @@
         picker = new EmojiButton({
             rootElement: emojiContainer,
             styleProperties: {
-                "--font": "Press Start 2P",
                 "--background-color": "#23222c",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",

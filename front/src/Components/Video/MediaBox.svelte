@@ -15,7 +15,7 @@
 </script>
 
 <div
-    class="media-container nes-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
+    class="media-container is-rounded {isHightlighted ? 'hightlighted' : ''}"
     class:clickable={isClickable}
     class:mozaic-solo={mozaicSolo}
     class:mozaic-full-width={mozaicFullWidth}
@@ -101,7 +101,7 @@
             }
         }
 
-        &.nes-container.is-rounded {
+        &.is-rounded {
             border-image-outset: 1;
         }
 

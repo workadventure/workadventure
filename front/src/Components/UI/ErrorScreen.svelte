@@ -47,7 +47,7 @@
                 {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="nes-btn is-primary button" on:click={click}>
+                <button type="button" class="light is-primary button" on:click={click}>
                     {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                     {$errorScreenStore.buttonTitle}
                 </button>
@@ -96,13 +96,10 @@
             max-height: 100%;
         }
         h2 {
-            font-family: "Press Start 2P";
             padding: 5px;
             font-size: 30px;
         }
-        p {
-            font-family: "Press Start 2P";
-        }
+
         p.code {
             font-size: 12px;
             opacity: 0.6;
@@ -127,7 +124,6 @@
             animation: ellipsis steps(4, end) 900ms infinite;
             content: "\2026";
             width: 0;
-            font-family: "Press Start 2P";
             font-size: 16px;
             position: absolute;
             left: 0;
@@ -148,7 +144,6 @@
 
         .button {
             cursor: pointer;
-            font-family: "Press Start 2P";
             font-size: 14px;
             .reload {
                 margin-top: -4px;

@@ -38,7 +38,7 @@
 </script>
 
 <div
-    class="nes-container is-rounded my-cam-video-container"
+    class="is-rounded my-cam-video-container"
     class:hide={($localStreamStore.type !== "success" || !$obtainedMediaConstraintStore.video) && !$silentStore}
     bind:this={cameraContainer}
 >
@@ -66,7 +66,7 @@
         line-height: 0;
         z-index: 250;
 
-        &.nes-container.is-rounded {
+        &.is-rounded {
             border-image-outset: 1;
         }
     }

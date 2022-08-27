@@ -358,7 +358,6 @@ export class GameScene extends DirtyScene {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
             custom: {
-                families: ["Press Start 2P"],
                 testString: "abcdefg",
             },
         });
@@ -1186,7 +1185,7 @@ export class GameScene extends DirtyScene {
                 const escapedMessage = HtmlUtils.escapeHtml(openPopupEvent.message);
                 let html = '<div id="container" hidden>';
                 if (escapedMessage) {
-                    html += `<div class="nes-container with-title is-centered">
+                    html += `<div class="with-title is-centered">
 ${escapedMessage}
  </div> `;
                 }

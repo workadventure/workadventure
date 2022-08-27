@@ -61,7 +61,7 @@
         </section>
     {/if}
     <section class="action">
-        <button type="submit" class="nes-btn is-primary loginSceneFormSubmit">{$LL.login.continue()}</button>
+        <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
     </section>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-right powered-by">
@@ -85,7 +85,6 @@
 
         input {
             text-align: center;
-            font-family: "Press Start 2P";
             max-width: 400px;
         }
 
@@ -116,7 +115,6 @@
             }
 
             h2 {
-                font-family: "Press Start 2P";
                 font-size: 0.75rem;
                 margin: 0.5rem;
             }

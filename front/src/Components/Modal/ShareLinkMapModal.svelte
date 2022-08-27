@@ -39,7 +39,7 @@
     }
 </script>
 
-<div class="share-link-map nes-container" transition:fly={{ y: -900, duration: 500 }}>
+<div class="share-link-map" transition:fly={{ y: -900, duration: 500 }}>
     <section>
         <h2>Invite your friends or colleagues</h2>
         <p>Share the link of the room!</p>
@@ -47,17 +47,17 @@
     <section>
         {#if haveNavigatorSharingFeature}
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={shareLink}>Share</button>
+            <button type="button" class="light is-primary" on:click={shareLink}>Share</button>
         {:else}
             <input type="text" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="nes-btn is-primary" on:click={copyLink}>Copy</button>
+            <button type="button" class="light is-primary" on:click={copyLink}>Copy</button>
         {/if}
         {#if copied}
             <p>Copied!</p>
         {/if}
     </section>
     <section>
-        <button class="nes-btn" on:click|preventDefault={close}>Close</button>
+        <button class="light" on:click|preventDefault={close}>Close</button>
     </section>
 </div>
 
@@ -74,14 +74,9 @@
         text-align: center;
         z-index: 450;
 
-        h2 {
-            font-family: "Press Start 2P";
-        }
-
         section {
             p {
                 margin: 15px;
-                font-family: "Press Start 2P";
             }
         }
     }

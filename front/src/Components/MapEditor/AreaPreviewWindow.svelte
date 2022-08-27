@@ -46,8 +46,8 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if areaPreview && areaData}
-    <div class="area-details-window nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeAreaPreviewWindow}>&times</button>
+    <div class="area-details-window is-rounded">
+        <button type="button" class="light is-error close" on:click={closeAreaPreviewWindow}>&times</button>
         <h2>{areaData.name}</h2>
         fields:
         <hr />
@@ -85,7 +85,6 @@
         z-index: 425;
 
         pointer-events: auto;
-        font-family: "Press Start 2P";
         background-color: #333333;
         color: whitesmoke;
 
@@ -98,10 +97,9 @@
         h2 {
             text-align: center;
             margin-bottom: 20px;
-            font-family: "Press Start 2P";
         }
 
-        .nes-btn.is-error.close {
+        .light.is-error.close {
             position: absolute;
             top: -20px;
             right: -20px;

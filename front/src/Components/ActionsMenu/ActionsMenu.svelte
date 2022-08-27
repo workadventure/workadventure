@@ -49,14 +49,14 @@
 <svelte:window on:keydown={onKeyDown} />
 
 {#if actionsMenuData}
-    <div class="actions-menu nes-container is-rounded">
-        <button type="button" class="nes-btn is-error close" on:click={closeActionsMenu}>&times</button>
+    <div class="actions-menu is-rounded">
+        <button type="button" class="light is-error close" on:click={closeActionsMenu}>&times</button>
         <h2>{actionsMenuData.playerName}</h2>
         <div class="actions">
             {#each sortedActions ?? [] as action}
                 <button
                     type="button"
-                    class="nes-btn {action.style ?? ''}"
+                    class="light {action.style ?? ''}"
                     on:click|preventDefault={() => {
                         action.callback();
                     }}
@@ -80,7 +80,6 @@
         z-index: 425;
 
         pointer-events: auto;
-        font-family: "Press Start 2P";
         background-color: #333333;
         color: whitesmoke;
 
@@ -104,10 +103,9 @@
         h2 {
             text-align: center;
             margin-bottom: 20px;
-            font-family: "Press Start 2P";
         }
 
-        .nes-btn.is-error.close {
+        .is-error.close {
             position: absolute;
             top: -20px;
             right: -20px;

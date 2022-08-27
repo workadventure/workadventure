@@ -8,7 +8,7 @@
     }
 </script>
 
-<div class="error-div nes-container is-dark is-rounded" open>
+<div class="error-div is-dark is-rounded" open>
     <p class="nes-text is-error title">{$LL.error.error()}</p>
     <div class="body">
         {#each $errorStore as error}
@@ -17,7 +17,7 @@
     </div>
     {#if $hasClosableMessagesInErrorStore}
         <div class="button-bar">
-            <button class="nes-btn is-error" on:click={close}>Close</button>
+            <button class="light is-error" on:click={close}>Close</button>
         </div>
     {/if}
 </div>
@@ -46,8 +46,6 @@
         }
 
         p {
-            font-family: "Press Start 2P";
-
             &.title {
                 text-align: center;
             }

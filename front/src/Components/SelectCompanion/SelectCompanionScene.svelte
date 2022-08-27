@@ -27,20 +27,20 @@
 <form class="selectCompanionScene">
     <section class="text-center">
         <h2>{$LL.companion.select.title()}</h2>
-        <button class="selectCharacterButton selectCharacterButtonLeft nes-btn" on:click|preventDefault={selectLeft}>
+        <button class="selectCharacterButton selectCharacterButtonLeft light" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
-        <button class="selectCharacterButton selectCharacterButtonRight nes-btn" on:click|preventDefault={selectRight}>
+        <button class="selectCharacterButton selectCharacterButtonRight light" on:click|preventDefault={selectRight}>
             &gt;
         </button>
     </section>
     <section class="action">
-        <button href="/" class="selectCompanionSceneFormBack nes-btn" on:click|preventDefault={noCompanion}
+        <button href="/" class="selectCompanionSceneFormBack light" on:click|preventDefault={noCompanion}
             >{$LL.companion.select.any()}</button
         >
         <button
             type="submit"
-            class="selectCompanionSceneFormSubmit nes-btn is-primary"
+            class="selectCompanionSceneFormSubmit light is-primary"
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
     </section>
@@ -50,7 +50,6 @@
     @import "../../../style/breakpoints.scss";
 
     form.selectCompanionScene {
-        font-family: "Press Start 2P";
         pointer-events: auto;
         color: #ebeeee;
 
@@ -63,7 +62,6 @@
             }
 
             h2 {
-                font-family: "Press Start 2P";
                 margin: 1px;
             }
 

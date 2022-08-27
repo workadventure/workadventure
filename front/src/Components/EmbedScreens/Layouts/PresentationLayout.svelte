@@ -67,13 +67,13 @@
                         {/key}
                     {:else if $highlightedEmbedScreen.type === "cowebsite"}
                         {#key $highlightedEmbedScreen.embed.getId()}
-                            <div class="highlighted-cowebsite-container nes-container is-rounded screen-blocker">
+                            <div class="highlighted-cowebsite-container is-rounded screen-blocker">
                                 <div
                                     id={"cowebsite-slot-" + $highlightedEmbedScreen.embed.getId()}
                                     class="highlighted-cowebsite"
                                 />
                                 <div class="actions">
-                                    <button type="button" class="nes-btn is-error close" on:click={closeCoWebsite}
+                                    <button type="button" class="light is-error close" on:click={closeCoWebsite}
                                         >&times;</button
                                     >
                                 </div>

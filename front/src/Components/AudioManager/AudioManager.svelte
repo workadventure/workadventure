@@ -102,7 +102,7 @@
     }
 </script>
 
-<div class="main-audio-manager nes-container is-rounded">
+<div class="main-audio-manager is-rounded">
     <div class:hidden={!isAudioAllowed}>
         <div class="audio-manager-player-volume">
             <span id="audioplayer_volume_icon_playing" bind:this={audioPlayerVolumeIcon} on:click={onMute}>
@@ -151,7 +151,7 @@
         </section>
     </div>
     <div class:hidden={isAudioAllowed}>
-        <button type="button" class="nes-btn" on:click={tryPlay}>{$LL.audio.manager.allow()}</button>
+        <button type="button" class="light" on:click={tryPlay}>{$LL.audio.manager.allow()}</button>
     </div>
 </div>
 
