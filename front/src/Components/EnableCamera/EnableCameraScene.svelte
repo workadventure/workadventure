@@ -113,7 +113,7 @@
     <section class="selectWebcamForm">
         <div class="control-group">
             <img src={cinemaImg} alt="Camera" />
-            <div class="nes-select is-dark">
+            <div class="is-dark">
                 <!-- svelte-ignore a11y-no-onchange -->
                 <select bind:value={selectedCamera} on:change={selectCamera}>
                     <!-- start with camera off -->
@@ -130,7 +130,7 @@
 
         <div class="control-group">
             <img src={microphoneImg} alt="Microphone" />
-            <div class="nes-select is-dark">
+            <div class="is-dark">
                 <!-- svelte-ignore a11y-no-onchange -->
                 <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
                     <!-- start with microphone off -->
@@ -146,7 +146,7 @@
         </div>
     </section>
     <section class="action">
-        <button type="submit" class="nes-btn is-primary letsgo">{$LL.camera.enable.start()}</button>
+        <button type="submit" class="light">{$LL.camera.enable.start()}</button>
     </section>
 </form>
 
@@ -167,24 +167,21 @@
             margin-right: auto;
 
             select {
-                //font-family: "Press Start 2P";
                 margin-top: 1vh;
                 margin-bottom: 1vh;
-            }
-
-            option {
-                //font-family: "Press Start 2P";
             }
         }
 
         section.action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             margin: 0;
             width: 100%;
         }
 
         h2 {
-            //font-family: "Press Start 2P";
             margin: 1px;
         }
 
