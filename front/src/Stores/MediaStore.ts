@@ -300,20 +300,6 @@ export const mediaStreamConstraintsStore = derived(
         let currentVideoConstraint: boolean | MediaTrackConstraints = $videoConstraintStore;
         let currentAudioConstraint: boolean | MediaTrackConstraints = $audioConstraintStore;
 
-        if ($enableCameraSceneVisibilityStore) {
-            set({
-                video: currentVideoConstraint,
-                audio: currentAudioConstraint,
-            });
-            localUserStore.setCameraSetup(
-                JSON.stringify({
-                    video: currentVideoConstraint,
-                    audio: currentAudioConstraint,
-                })
-            );
-            return;
-        }
-
         // Disable webcam if the user requested so
         if ($requestedCameraState === false) {
             currentVideoConstraint = false;
@@ -352,7 +338,7 @@ export const mediaStreamConstraintsStore = derived(
         }
 
         // Disable webcam for energy reasons (the user is not moving and we are talking to no one)
-        if ($cameraEnergySavingStore === true) {
+        if ($cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false) {
             currentVideoConstraint = false;
             //this optimization is desactivated because of sound issues on chrome
             //todo: fix this conflicts and reactivate this optimization
@@ -393,6 +379,15 @@ export const mediaStreamConstraintsStore = derived(
                     audio: currentAudioConstraint,
                 });
             }, 100);
+        }
+
+        if ($enableCameraSceneVisibilityStore) {
+            localUserStore.setCameraSetup(
+                JSON.stringify({
+                    video: currentVideoConstraint,
+                    audio: currentAudioConstraint,
+                })
+            );
         }
     },
     {

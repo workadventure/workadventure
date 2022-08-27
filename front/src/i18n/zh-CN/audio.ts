@@ -7,6 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         allow: "播放声音",
     },
     message: "音频消息",
+    disable: "关掉你的麦克风",
 };
 
 export default audio;
