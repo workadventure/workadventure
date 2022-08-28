@@ -118,6 +118,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             });
 
         this.playerNameText = new Text(scene, 0, playerNameY, name, {
+            fontFamily: '"Press Start 2P"',
             fontSize: "8px",
             strokeThickness: 2,
             stroke: "#14304C",
