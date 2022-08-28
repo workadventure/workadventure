@@ -1,6 +1,16 @@
 <script lang="ts">
     import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { requestedCameraState, requestedMicrophoneState, silentStore } from "../../Stores/MediaStore";
+    import {
+        audioConstraintStore,
+        cameraListStore,
+        localStreamStore,
+        microphoneListStore,
+        requestedCameraState,
+        requestedMicrophoneState,
+        silentStore,
+        videoConstraintStore,
+    } from "../../Stores/MediaStore";
+    import { ChevronDownIcon, ChevronUpIcon, CheckIcon } from "svelte-feather-icons";
     import cameraImg from "../images/camera.png";
     import cameraOffImg from "../images/camera-off.png";
     import microphoneImg from "../images/microphone.png";
@@ -56,8 +66,14 @@
     import { onDestroy, onMount } from "svelte";
     import { Unsubscriber, writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
+    import { StringUtils } from "../../Utils/StringUtils";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
+
+    let cameraActive = false;
+    let microphoneActive = false;
+    let selectedCamera: string | undefined = undefined;
+    let selectedMicrophone: string | undefined = undefined;
 
     function screenSharingClick(): void {
         if ($silentStore) return;
@@ -252,6 +268,16 @@
         return false;
     }
 
+    function selectCamera(deviceId: string) {
+        videoConstraintStore.setDeviceId(deviceId);
+        cameraActive = false;
+    }
+
+    function selectMicrophone(deviceId: string) {
+        audioConstraintStore.setDeviceId(deviceId);
+        microphoneActive = false;
+    }
+
     let subscribers = new Array<Unsubscriber>();
     let totalMessagesToSee = writable<number>(0);
     onMount(() => {
@@ -259,7 +285,30 @@
     });
 
     onDestroy(() => {
-        return subscribers.map((subscriber) => subscriber());
+        subscribers.map((subscriber) => subscriber());
+        unsubscribeLocalStreamStore();
+    });
+
+    let stream: MediaStream | null;
+    const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
+        if (value.type === "success") {
+            stream = value.stream;
+
+            if (stream !== null) {
+                const videoTracks = stream.getVideoTracks();
+                if (videoTracks.length > 0) {
+                    selectedCamera = videoTracks[0].getSettings().deviceId;
+                }
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length > 0) {
+                    selectedMicrophone = audioTracks[0].getSettings().deviceId;
+                }
+            }
+        } else {
+            stream = null;
+            selectedCamera = undefined;
+            selectedMicrophone = undefined;
+        }
     });
 
     const isMobile = isMediaBreakpointUp("md");
@@ -369,7 +418,7 @@
                 {#if !$inExternalServiceStore && !$silentStore && $proximityMeetingStore}
                     {#if $myCameraStore}
                         <div
-                            class="bottom-action-button"
+                            class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.camera()}
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
@@ -391,12 +440,45 @@
                                     />
                                 {/if}
                             </button>
+
+                            {#if $requestedCameraState && $cameraListStore.length > 1}
+                                <button
+                                    class="camera tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
+                                >
+                                    {#if cameraActive}
+                                        <ChevronUpIcon size="13" />
+                                    {:else}
+                                        <ChevronDownIcon size="13" />
+                                    {/if}
+                                </button>
+
+                                <!-- camera list -->
+                                <div
+                                    class={`wa-dropdown-menu ${cameraActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (cameraActive = false)}
+                                >
+                                    {#each $cameraListStore as camera}
+                                        <span
+                                            class="wa-dropdown-item tw-flex"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectCamera(camera.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(camera.label)}
+                                            {#if selectedCamera === camera.deviceId}
+                                                <CheckIcon size="13" class="tw-ml-1" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
 
                     {#if $myMicrophoneStore}
                         <div
-                            class="bottom-action-button"
+                            class="bottom-action-button tw-relative"
                             on:click={() => analyticsClient.microphone()}
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
@@ -418,6 +500,40 @@
                                     />
                                 {/if}
                             </button>
+
+                            {#if $requestedMicrophoneState && $microphoneListStore.length > 1}
+                                <button
+                                    class="microphone tw-absolute tw-text-light-purple focus:outline-none tw-m-0"
+                                    on:click|stopPropagation|preventDefault={() =>
+                                        (microphoneActive = !microphoneActive)}
+                                >
+                                    {#if microphoneActive}
+                                        <ChevronUpIcon size="13" />
+                                    {:else}
+                                        <ChevronDownIcon size="13" />
+                                    {/if}
+                                </button>
+
+                                <!-- microphone list -->
+                                <div
+                                    class={`wa-dropdown-menu ${microphoneActive ? "" : "tw-invisible"}`}
+                                    style="bottom: 15px;right: 0;"
+                                    on:mouseleave={() => (microphoneActive = false)}
+                                >
+                                    {#each $microphoneListStore as microphone}
+                                        <span
+                                            class="wa-dropdown-item"
+                                            on:click|stopPropagation|preventDefault={() =>
+                                                selectMicrophone(microphone.deviceId)}
+                                        >
+                                            {StringUtils.normalizeDeviceName(microphone.label)}
+                                            {#if selectedMicrophone === microphone.deviceId}
+                                                <CheckIcon size="13" />
+                                            {/if}
+                                        </span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                     {/if}
                 {/if}
@@ -600,6 +716,30 @@
 
     .translate-right {
         transform: translateX(2rem);
+    }
+
+    .bottom-action-section {
+        .bottom-action-button {
+            button.camera,
+            button.microphone {
+                bottom: 0;
+                width: 20px;
+                height: 20px;
+                background: none;
+                right: 0;
+                border-top-left-radius: 0.5rem;
+                border-bottom-left-radius: 0.5rem;
+                border-top-right-radius: 0.5rem;
+                border-bottom-right-radius: 0.5rem;
+                color: white;
+                padding: 0;
+                margin: 0;
+                display: block;
+                &:hover {
+                    background-color: rgb(56 56 74 / 30%);
+                }
+            }
+        }
     }
 
     @include media-breakpoint-down(sm) {

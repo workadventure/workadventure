@@ -21,6 +21,7 @@ const camera: BaseTranslation = {
     my: {
         silentZone: "Silent zone",
     },
+    disable: "Turn off your camera",
 };
 
 export default camera;

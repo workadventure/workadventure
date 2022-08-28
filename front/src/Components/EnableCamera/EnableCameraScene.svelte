@@ -7,14 +7,18 @@
         localStreamStore,
         localVolumeStore,
         microphoneListStore,
+        requestedCameraState,
+        requestedMicrophoneState,
         videoConstraintStore,
     } from "../../Stores/MediaStore";
-    import { onDestroy } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import cinemaCloseImg from "../images/cinema-close.svg";
     import cinemaImg from "../images/cinema.svg";
     import microphoneImg from "../images/microphone.svg";
     import LL from "../../i18n/i18n-svelte";
+    import { StringUtils } from "../../Utils/StringUtils";
+    import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
 
     export let game: Game;
     let selectedCamera: string | undefined = undefined;
@@ -64,16 +68,29 @@
         unsubscribeLocalStreamStore();
     });
 
-    function normalizeDeviceName(label: string): string {
-        // remove IDs (that can appear in Chrome, like: "HD Pro Webcam (4df7:4eda)"
-        return label.replace(/(\([[0-9a-f]{4}:[0-9a-f]{4}\))/g, "").trim();
-    }
+    onMount(() => {
+        //init the componenent to enable webcam and microphone
+        myCameraStore.set(true);
+        myMicrophoneStore.set(true);
+        requestedCameraState.enableWebcam();
+        requestedMicrophoneState.enableMicrophone();
+    });
 
     function selectCamera() {
+        if (selectedCamera === null) {
+            requestedCameraState.disableWebcam();
+            return;
+        }
+        requestedCameraState.enableWebcam();
         videoConstraintStore.setDeviceId(selectedCamera);
     }
 
     function selectMicrophone() {
+        if (selectedMicrophone === null) {
+            requestedMicrophoneState.disableMicrophone();
+            return;
+        }
+        requestedMicrophoneState.enableMicrophone();
         audioConstraintStore.setDeviceId(selectedMicrophone);
     }
 </script>
@@ -82,56 +99,58 @@
     <section class="text-center">
         <h2>{$LL.camera.enable.title()}</h2>
     </section>
-    {#if $localStreamStore.type === "success" && $localStreamStore.stream}
+    {#if selectedCamera != undefined && $localStreamStore.type === "success" && $localStreamStore.stream}
         <video class="myCamVideoSetup" use:srcObject={$localStreamStore.stream} autoplay muted playsinline />
     {:else}
         <div class="webrtcsetup">
             <img class="background-img" src={cinemaCloseImg} alt="" />
         </div>
     {/if}
-    <HorizontalSoundMeterWidget volume={$localVolumeStore} />
+    {#if selectedMicrophone != undefined}
+        <HorizontalSoundMeterWidget volume={$localVolumeStore} />
+    {/if}
 
     <section class="selectWebcamForm">
-        {#if $cameraListStore.length > 1}
-            <div class="control-group">
-                <img src={cinemaImg} alt="Camera" />
-                <div class="nes-select is-dark">
-                    <!-- svelte-ignore a11y-no-onchange -->
-                    <select bind:value={selectedCamera} on:change={selectCamera}>
-                        {#each $cameraListStore as camera}
-                            <option value={camera.deviceId}>
-                                {normalizeDeviceName(camera.label)}
-                            </option>
-                        {/each}
-                    </select>
-                </div>
-            </div>
-        {/if}
+        <div class="control-group">
+            <img src={cinemaImg} alt="Camera" />
+            <div class="is-dark">
+                <!-- svelte-ignore a11y-no-onchange -->
+                <select bind:value={selectedCamera} on:change={selectCamera}>
+                    <!-- start with camera off -->
+                    <option value={null}>{$LL.camera.disable()}</option>
 
-        {#if $microphoneListStore.length > 1}
-            <div class="control-group">
-                <img src={microphoneImg} alt="Microphone" />
-                <div class="nes-select is-dark">
-                    <!-- svelte-ignore a11y-no-onchange -->
-                    <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
-                        {#each $microphoneListStore as microphone}
-                            <option value={microphone.deviceId}>
-                                {normalizeDeviceName(microphone.label)}
-                            </option>
-                        {/each}
-                    </select>
-                </div>
+                    {#each $cameraListStore as camera}
+                        <option value={camera.deviceId}>
+                            {StringUtils.normalizeDeviceName(camera.label)}
+                        </option>
+                    {/each}
+                </select>
             </div>
-        {/if}
+        </div>
+
+        <div class="control-group">
+            <img src={microphoneImg} alt="Microphone" />
+            <div class="is-dark">
+                <!-- svelte-ignore a11y-no-onchange -->
+                <select bind:value={selectedMicrophone} on:change={selectMicrophone}>
+                    <!-- start with microphone off -->
+                    <option value={null}>{$LL.audio.disable()}</option>
+
+                    {#each $microphoneListStore as microphone}
+                        <option value={microphone.deviceId}>
+                            {StringUtils.normalizeDeviceName(microphone.label)}
+                        </option>
+                    {/each}
+                </select>
+            </div>
+        </div>
     </section>
     <section class="action">
-        <button type="submit" class="nes-btn is-primary letsgo">{$LL.camera.enable.start()}</button>
+        <button type="submit" class="light">{$LL.camera.enable.start()}</button>
     </section>
 </form>
 
 <style lang="scss">
-    @import "../../../style/breakpoints.scss";
-
     .enableCameraScene {
         pointer-events: auto;
         margin: 20px auto 0;
@@ -146,33 +165,26 @@
             margin-right: auto;
 
             select {
-                font-family: "Press Start 2P";
                 margin-top: 1vh;
                 margin-bottom: 1vh;
-            }
-
-            option {
-                font-family: "Press Start 2P";
             }
         }
 
         section.action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             margin: 0;
             width: 100%;
         }
 
         h2 {
-            font-family: "Press Start 2P";
             margin: 1px;
         }
 
         section.text-center {
             text-align: center;
-        }
-
-        button.letsgo {
-            font-size: 200%;
         }
 
         .control-group {
@@ -216,18 +228,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        .enableCameraScene h2 {
-            font-size: 80%;
-        }
-        .enableCameraScene .control-group .nes-select {
-            font-size: 80%;
-        }
-        .enableCameraScene button.letsgo {
-            font-size: 160%;
         }
     }
 </style>
