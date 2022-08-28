@@ -15,6 +15,7 @@
         picker = new EmojiButton({
             rootElement: emojiContainer,
             styleProperties: {
+                "--font": "Roboto",
                 "--background-color": "#23222c",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",

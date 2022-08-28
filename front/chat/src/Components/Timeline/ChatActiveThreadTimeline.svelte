@@ -89,6 +89,7 @@
 
         picker = new EmojiButton({
             styleProperties: {
+                "--font": "Roboto",
                 "--background-color": "#1b1b29f2",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",

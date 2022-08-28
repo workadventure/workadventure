@@ -30,6 +30,7 @@ export class Button extends Phaser.GameObjects.Container {
         this.background = this.scene.add.graphics();
         this.text = this.scene.add
             .text(0, 0, "", {
+                fontFamily: '"Press Start 2P"',
                 color: "0x000000",
                 fontSize: "9px",
             })
