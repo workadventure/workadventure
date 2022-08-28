@@ -68,6 +68,7 @@
 
         &.is-rounded {
             border-image-outset: 1;
+            border-radius: 0.25rem;
         }
     }
 
