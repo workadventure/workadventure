@@ -7,6 +7,7 @@ const audio: DeepPartial<Translation["audio"]> = {
         allow: "Permetre audio",
     },
     message: "Missatge d'audio",
+    disable: "Apagueu el micròfon",
 };
 
 export default audio;
