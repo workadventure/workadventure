@@ -46,7 +46,7 @@
         </p>
     </section>
     <section class="tw-flex tw-row tw-justify-center">
-        <button class="light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
+        <button class="btn light" on:click|preventDefault={refresh}>{$LL.camera.help.refresh()}</button>
         <button type="submit" class="outline" on:click|preventDefault={close}>{$LL.camera.help.continue()}</button>
     </section>
 </form>

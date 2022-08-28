@@ -35,12 +35,12 @@
         <section class="tw-flex tw-justify-center">
             <button
                 type="button"
-                class=" {inputSendTextActive ? 'light' : 'outline'}"
+                class=" {inputSendTextActive ? 'btn light' : 'outline'}"
                 on:click|preventDefault={activateInputText}>{$LL.menu.globalMessage.text()}</button
             >
             <button
                 type="button"
-                class=" {uploadAudioActive ? 'light' : 'outline'}"
+                class=" {uploadAudioActive ? 'btn light' : 'outline'}"
                 on:click|preventDefault={activateUploadAudio}>{$LL.menu.globalMessage.audio()}</button
             >
         </section>
@@ -59,7 +59,7 @@
             <span>{$LL.menu.globalMessage.warning()}</span>
         </label>
         <section class="centered-column">
-            <button class="light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
+            <button class="btn light" on:click|preventDefault={send}>{$LL.menu.globalMessage.send()}</button>
         </section>
     </div>
 </div>

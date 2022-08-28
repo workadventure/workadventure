@@ -358,6 +358,7 @@ export class GameScene extends DirtyScene {
         //eslint-disable-next-line @typescript-eslint/no-explicit-any
         (this.load as any).rexWebFont({
             custom: {
+                families: ["Press Start 2P"],
                 testString: "abcdefg",
             },
         });
@@ -1194,7 +1195,7 @@ ${escapedMessage}
                 html += buttonContainer;
                 let id = 0;
                 for (const button of openPopupEvent.buttons) {
-                    html += `<button type="button" class="nes-btn is-${HtmlUtils.escapeHtml(
+                    html += `<button type="button" class="light is-${HtmlUtils.escapeHtml(
                         button.className ?? ""
                     )}" id="popup-${openPopupEvent.popupId}-${id}">${HtmlUtils.escapeHtml(button.label)}</button>`;
                     id++;

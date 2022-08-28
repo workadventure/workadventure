@@ -47,17 +47,17 @@
     <section>
         {#if haveNavigatorSharingFeature}
             <input type="hidden" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="light is-primary" on:click={shareLink}>Share</button>
+            <button type="button" class="btn light is-primary" on:click={shareLink}>Share</button>
         {:else}
             <input type="text" readonly id="input-share-link" value={location.toString()} />
-            <button type="button" class="light is-primary" on:click={copyLink}>Copy</button>
+            <button type="button" class="btn light is-primary" on:click={copyLink}>Copy</button>
         {/if}
         {#if copied}
             <p>Copied!</p>
         {/if}
     </section>
     <section>
-        <button class="light" on:click|preventDefault={close}>Close</button>
+        <button class="btn light" on:click|preventDefault={close}>Close</button>
     </section>
 </div>
 

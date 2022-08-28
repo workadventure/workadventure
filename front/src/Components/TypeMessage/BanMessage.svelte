@@ -51,7 +51,7 @@
     <div class="tw-flex tw-justify-center">
         <button
             type="button"
-            class="{nameButton === NAME_BUTTON ? 'light' : 'disabled'} tw-h-10"
+            class="{nameButton === NAME_BUTTON ? 'btn light' : 'disabled'} tw-h-10"
             disabled={!(nameButton === NAME_BUTTON)}
             on:click|preventDefault={closeBanMessage}>{nameButton}</button
         >

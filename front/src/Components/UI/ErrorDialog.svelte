@@ -9,7 +9,7 @@
 </script>
 
 <div class="error-div is-dark is-rounded" open>
-    <p class="nes-text is-error title">{$LL.error.error()}</p>
+    <p class="is-error title">{$LL.error.error()}</p>
     <div class="body">
         {#each $errorStore as error}
             <p>{error.message}</p>
@@ -17,7 +17,7 @@
     </div>
     {#if $hasClosableMessagesInErrorStore}
         <div class="button-bar">
-            <button class="light is-error" on:click={close}>Close</button>
+            <button class="btn light is-error" on:click={close}>Close</button>
         </div>
     {/if}
 </div>

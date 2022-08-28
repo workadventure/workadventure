@@ -27,21 +27,21 @@
 <form class="selectCompanionScene">
     <section class="text-center">
         <h2>{$LL.companion.select.title()}</h2>
-        <button class="selectCharacterButton selectCharacterButtonLeft light" on:click|preventDefault={selectLeft}>
+        <button class="selectCharacterButton selectCharacterButtonLeft btn light" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
-        <button class="selectCharacterButton selectCharacterButtonRight light" on:click|preventDefault={selectRight}>
+        <button class="selectCharacterButton selectCharacterButtonRight btn light" on:click|preventDefault={selectRight}>
             &gt;
         </button>
     </section>
     <section class="action">
-        <button href="/" class="selectCompanionSceneFormBack light" on:click|preventDefault={noCompanion}
-            >{$LL.companion.select.any()}</button
-        >
         <button
             type="submit"
-            class="selectCompanionSceneFormSubmit light is-primary"
+            class="selectCompanionSceneFormSubmit btn light is-primary"
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
+        >
+        <button href="/" class="selectCompanionSceneFormBack btn light is-secondary" on:click|preventDefault={noCompanion}
+            >{$LL.companion.select.any()}</button
         >
     </section>
 </form>
@@ -59,6 +59,18 @@
             &.action {
                 text-align: center;
                 margin-top: 55vh;
+                button{
+                    position: relative;
+                    display: inline-block;
+                    user-select: none;
+                    padding: 6px 8px;
+                    margin: 4px;
+                    text-align: center;
+                    vertical-align: middle;
+                    border-image-slice: 2;
+                    border-image-width: 2;
+                    border-image-repeat: stretch;
+                }
             }
 
             h2 {

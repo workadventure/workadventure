@@ -37,7 +37,7 @@
     <input
         type="text"
         name="loginSceneName"
-        class="nes-input is-dark"
+        class="is-dark"
         autofocus
         maxlength={MAX_USERNAME_LENGTH}
         bind:value={name}
@@ -61,7 +61,7 @@
         </section>
     {/if}
     <section class="action">
-        <button type="submit" class="light loginSceneFormSubmit">{$LL.login.continue()}</button>
+        <button type="submit" class="btn light loginSceneFormSubmit">{$LL.login.continue()}</button>
     </section>
     {#if logo !== logoImg && gameManager.currentStartedRoom.showPoweredBy !== false}
         <section class="text-right powered-by">

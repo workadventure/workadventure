@@ -47,7 +47,7 @@
 
 {#if areaPreview && areaData}
     <div class="area-details-window is-rounded">
-        <button type="button" class="light is-error close" on:click={closeAreaPreviewWindow}>&times</button>
+        <button type="button" class="btn light is-error close" on:click={closeAreaPreviewWindow}>&times</button>
         <h2>{areaData.name}</h2>
         fields:
         <hr />
@@ -99,7 +99,7 @@
             margin-bottom: 20px;
         }
 
-        .light.is-error.close {
+        .btn.light.is-error.close {
             position: absolute;
             top: -20px;
             right: -20px;

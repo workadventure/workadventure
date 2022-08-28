@@ -56,7 +56,7 @@
 </script>
 
 <div class="source-picker is-rounded" transition:fly={{ y: -50, duration: 500 }}>
-    <button type="button" class="light is-error close" on:click={cancel}>&times</button>
+    <button type="button" class="btn light is-error close" on:click={cancel}>&times</button>
     <h2>Select a Screen or Window to share!</h2>
     <section class="streams">
         {#each desktopCapturerSources as source}
@@ -93,7 +93,7 @@
         background-color: #333333;
         color: whitesmoke;
 
-        .light.is-error.close {
+        .btn.light.is-error.close {
             position: absolute;
             top: -20px;
             right: -20px;

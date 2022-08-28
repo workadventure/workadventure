@@ -35,22 +35,22 @@
 </section>
 <section class="category">
     {#if $collectionsSizeStore > 1}
-        <button class="selectCharacterButton light" on:click|preventDefault={selectLeft}> &lt; </button>
+        <button class="selectCharacterButton btn light" on:click|preventDefault={selectLeft}> &lt; </button>
         <strong class="category-text">{$selectedCollection}</strong>
-        <button class="selectCharacterButton light" on:click|preventDefault={selectRight}> &gt; </button>
+        <button class="selectCharacterButton btn light" on:click|preventDefault={selectRight}> &gt; </button>
     {/if}
 </section>
 <section class="action">
     <button
         type="submit"
-        class="selectCharacterSceneFormSubmit light is-primary"
+        class="selectCharacterSceneFormSubmit btn light is-primary"
         on:click={() => analyticsClient.selectWoka()}
         on:click={cameraScene}>{$LL.woka.selectWoka.continue()}</button
     >
     {#if $customizeAvailableStore}
         <button
             type="submit"
-            class="selectCharacterSceneFormCustomYourOwnSubmit light"
+            class="selectCharacterSceneFormCustomYourOwnSubmit btn light is-secondary"
             on:click={() => analyticsClient.selectCustomWoka()}
             on:click={customizeScene}>{$LL.woka.selectWoka.customize()}</button
         >
@@ -80,6 +80,18 @@
             top: 0;
             width: 100%;
             text-align: center;
+            button{
+                position: relative;
+                display: inline-block;
+                user-select: none;
+                padding: 6px 8px;
+                margin: 4px;
+                text-align: center;
+                vertical-align: middle;
+                border-image-slice: 2;
+                border-image-width: 2;
+                border-image-repeat: stretch;
+            }
         }
 
         h2 {

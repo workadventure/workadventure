@@ -41,7 +41,7 @@
     />
     {#if !hidden}
         <div class="buttonContainer">
-            <button class="light is-popUpElement" on:click={closeCard}>{$LL.menu.visitCard.close()}</button>
+            <button class="btn light is-popUpElement" on:click={closeCard}>{$LL.menu.visitCard.close()}</button>
         </div>
     {/if}
 </section>

@@ -17,7 +17,7 @@
         </p>
     </section>
     <section>
-        <button class="light is-primary" on:click|preventDefault={register}>Register</button>
+        <button class="btn light is-primary" on:click|preventDefault={register}>Register</button>
     </section>
 </div>
 

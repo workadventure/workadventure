@@ -69,12 +69,12 @@
     </section>
     <section class="report-menu-action {disableReport ? 'tw-hidden' : ''}">
         <section class="tw-flex tw-justify-center">
-            <button type="button" class={blockActive ? "disabled" : "light"} on:click|preventDefault={activateBlock}
+            <button type="button" class={blockActive ? "disabled" : "btn light"} on:click|preventDefault={activateBlock}
                 >{$LL.report.moderate.block()}</button
             >
         </section>
         <section class="tw-flex tw-justify-center">
-            <button type="button" class={reportActive ? "disabled" : "light"} on:click|preventDefault={activateReport}
+            <button type="button" class={reportActive ? "disabled" : "btn light"} on:click|preventDefault={activateReport}
                 >{$LL.report.moderate.report()}</button
             >
         </section>

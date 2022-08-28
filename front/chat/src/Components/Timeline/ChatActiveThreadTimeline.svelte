@@ -89,8 +89,7 @@
 
         picker = new EmojiButton({
             styleProperties: {
-                "--font": "Press Start 2P",
-                "--background-color": "#23222c",
+                "--background-color": "#1b1b29f2",
                 "--text-color": "#ffffff",
                 "--secondary-text-color": "#ffffff",
                 "--category-button-color": "#ffffff",

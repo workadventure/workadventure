@@ -47,7 +47,7 @@
                 {/if}
             </p>
             {#if ($errorScreenStore.type === "retry" && $errorScreenStore.canRetryManual) || $errorScreenStore.type === "unauthorized"}
-                <button type="button" class="light is-primary button" on:click={click}>
+                <button type="button" class="btn light is-primary button" on:click={click}>
                     {#if $errorScreenStore.type === "retry"}<img src={reload} alt="" class="reload" />{/if}
                     {$errorScreenStore.buttonTitle}
                 </button>

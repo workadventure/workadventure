@@ -842,33 +842,41 @@ div.action.danger p.action-body{
     color: #000;
 }
 .popUpElement{
-    font-family: 'Press Start 2P';
     text-align: left;
     color: white;
 }
+.popUpElement div#container{
+    background-color: #1b1b29f2;
+    border-radius: 0.25rem;
+}
 .popUpElement div{
-    font-family: 'Press Start 2P';
     font-size: 10px;
-    background-color: #727678;
-    white-space: pre-line;
+    white-space: break-spaces;
 }
-.popUpElement .nes-container{
+.popUpElement .with-title{
     padding: 1rem 1rem;
+    --tw-text-opacity: 1;
+    color: rgb(86 234 255 / var(--tw-text-opacity))
 }
-
 .popUpElement button {
     position: relative;
     font-size: 10px;
-    border-image-repeat: revert;
-    margin-right: 5px;
+    display: inline-block;
+    user-select: none;
+    padding: 6px 8px;
+    margin: 4px;
+    text-align: center;
+    vertical-align: middle;
+    border-image-slice: 2;
+    border-image-width: 2;
+    border-image-repeat: stretch;
 }
 
 .popUpElement .buttonContainer {
     float: right;
     background-color: inherit;
-
+    border-radius: 0.25rem;
 }
-
 
 @keyframes mymove {
     0% {bottom: 40px;}
@@ -937,7 +945,7 @@ div.emoji-picker {
 }
 
 // TODO: remove once https://github.com/nostalgic-css/NES.css/pull/482 is released
-.nes-container.is-rounded {
+.is-rounded {
     border-image-repeat: stretch;
 }
 

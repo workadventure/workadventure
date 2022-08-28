@@ -36,6 +36,7 @@
     @import "../../../style/breakpoints.scss";
 
     .media-container {
+        position: relative;
         display: flex;
         margin-top: 4%;
         margin-bottom: 4%;
@@ -113,6 +114,7 @@
             background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             width: 100%;
+            border-radius: 0.25rem;
         }
     }
 
