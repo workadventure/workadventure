@@ -108,7 +108,7 @@
     video.no-video {
         visibility: collapse;
     }
-    video{
+    video {
         border-radius: 0.25rem;
     }
 </style>

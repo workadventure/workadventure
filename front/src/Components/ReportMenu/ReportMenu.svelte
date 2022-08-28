@@ -74,8 +74,10 @@
             >
         </section>
         <section class="tw-flex tw-justify-center">
-            <button type="button" class={reportActive ? "disabled" : "btn light"} on:click|preventDefault={activateReport}
-                >{$LL.report.moderate.report()}</button
+            <button
+                type="button"
+                class={reportActive ? "disabled" : "btn light"}
+                on:click|preventDefault={activateReport}>{$LL.report.moderate.report()}</button
             >
         </section>
     </section>

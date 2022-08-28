@@ -80,7 +80,7 @@
             top: 0;
             width: 100%;
             text-align: center;
-            button{
+            button {
                 position: relative;
                 display: inline-block;
                 user-select: none;

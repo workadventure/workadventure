@@ -30,7 +30,10 @@
         <button class="selectCharacterButton selectCharacterButtonLeft btn light" on:click|preventDefault={selectLeft}>
             &lt;
         </button>
-        <button class="selectCharacterButton selectCharacterButtonRight btn light" on:click|preventDefault={selectRight}>
+        <button
+            class="selectCharacterButton selectCharacterButtonRight btn light"
+            on:click|preventDefault={selectRight}
+        >
             &gt;
         </button>
     </section>
@@ -40,8 +43,10 @@
             class="selectCompanionSceneFormSubmit btn light is-primary"
             on:click|preventDefault={selectCompanion}>{$LL.companion.select.continue()}</button
         >
-        <button href="/" class="selectCompanionSceneFormBack btn light is-secondary" on:click|preventDefault={noCompanion}
-            >{$LL.companion.select.any()}</button
+        <button
+            href="/"
+            class="selectCompanionSceneFormBack btn light is-secondary"
+            on:click|preventDefault={noCompanion}>{$LL.companion.select.any()}</button
         >
     </section>
 </form>
@@ -59,7 +64,7 @@
             &.action {
                 text-align: center;
                 margin-top: 55vh;
-                button{
+                button {
                     position: relative;
                     display: inline-block;
                     user-select: none;

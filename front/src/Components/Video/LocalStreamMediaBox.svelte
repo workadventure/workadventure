@@ -31,8 +31,9 @@
         />
     {/if}
 </div>
+
 <style lang="scss">
-    video{
+    video {
         border-radius: 0.25rem;
     }
 </style>
