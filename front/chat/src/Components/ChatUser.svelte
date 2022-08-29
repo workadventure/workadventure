@@ -79,26 +79,24 @@
     function getColorOfAvailabilityStatus(status: number) {
         switch (status) {
             case 1:
+            default:
                 return "tw-bg-pop-green";
             case 2:
                 return "tw-bg-pop-red";
             case 3:
                 return "tw-bg-orange";
-            default:
-                return "tw-bg-gray";
         }
     }
 
     function getNameOfAvailabilityStatus(status: number) {
         switch (status) {
             case 1:
+            default:
                 return $LL.status.online();
             case 2:
                 return $LL.status.away();
             case 3:
                 return $LL.status.unavailable();
-            default:
-                return "";
         }
     }
 
