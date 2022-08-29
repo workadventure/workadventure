@@ -74,14 +74,14 @@ class IframeListener {
                             break;
                         }
                         case "addChatMessage": {
-                            if (iframeEvent.data.author?.userUuid == undefined || iframeEvent.data.text == undefined) {
+                            if (iframeEvent.data.author == undefined || iframeEvent.data.text == undefined) {
                                 break;
                             }
 
                             let userData = defaultUserData;
                             const mucRoomDefault = mucRoomsStore.getDefaultRoom();
                             if (mucRoomDefault) {
-                                userData = mucRoomDefault.getUserDataByUuid(iframeEvent.data.author?.userUuid);
+                                userData = mucRoomDefault.getUserDataByUuid(iframeEvent.data.author);
                             }
 
                             for (const chatMessageText of iframeEvent.data.text) {
