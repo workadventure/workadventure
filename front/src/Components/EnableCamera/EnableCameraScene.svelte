@@ -220,13 +220,12 @@
             margin-left: auto;
             margin-right: auto;
             max-height: 28vh;
-            width: 50vw;
+            width: auto;
             transform: scaleX(-1);
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 0.5rem;
-            object-fit: cover;
         }
     }
 </style>

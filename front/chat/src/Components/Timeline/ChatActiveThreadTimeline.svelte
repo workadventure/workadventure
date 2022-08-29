@@ -60,7 +60,10 @@
     function handlerKeyDown(keyDownEvent: KeyboardEvent) {
         if (keyDownEvent.key === "Enter" && !keyDownEvent.shiftKey) {
             saveMessage();
-            setTimeout(() => (newMessageText = ""), 10);
+            setTimeout(() => {
+                newMessageText = "";
+                writing();
+            }, 10);
             return false;
         }
         return true;
@@ -337,19 +340,19 @@
             {/each}
 
             {#if defaultMucRoom}
-                {#each [...$writingStatusMessageStore] as user}
+                {#each [...$writingStatusMessageStore] as userUuid}
                     <div class={`tw-mt-2`}>
                         <div class={`tw-flex tw-justify-start`}>
                             <div
                                 class={`tw-mt-4 tw-relative wa-avatar-mini tw-mr-2 tw-z-10`}
-                                style={`background-color: ${defaultMucRoom?.getUserDataByUuid(user.userUuid).color}`}
+                                style={`background-color: ${defaultMucRoom?.getUserDataByUuid(userUuid).color}`}
                                 in:fade={{ duration: 100 }}
                                 out:fade={{ delay: 200, duration: 100 }}
                             >
                                 <div class="wa-container">
                                     <img
                                         class="tw-w-full"
-                                        src={defaultMucRoom.getUserDataByUuid(user.userUuid).woka}
+                                        src={defaultMucRoom.getUserDataByUuid(userUuid).woka}
                                         alt="Avatar"
                                     />
                                 </div>
@@ -362,25 +365,25 @@
                                 <div class="tw-w-fit">
                                     <div
                                         style={`border-bottom-color:${
-                                            defaultMucRoom.getUserDataByUuid(user.userUuid).color
+                                            defaultMucRoom.getUserDataByUuid(userUuid).color
                                         }`}
                                         class={`tw-flex tw-justify-between tw-mx-2 tw-border-0 tw-border-b tw-border-solid tw-text-light-purple-alt tw-pb-1`}
                                     >
                                         <span class="tw-text-lighter-purple tw-text-xxs">
-                                            {defaultMucRoom.getUserDataByUuid(user.userUuid).name.match(/\[\d*]/)
+                                            {defaultMucRoom.getUserDataByUuid(userUuid).name.match(/\[\d*]/)
                                                 ? defaultMucRoom
-                                                      .getUserDataByUuid(user.userUuid)
+                                                      .getUserDataByUuid(userUuid)
                                                       .name.substring(
                                                           0,
                                                           defaultMucRoom
-                                                              .getUserDataByUuid(user.userUuid)
+                                                              .getUserDataByUuid(userUuid)
                                                               .name.search(/\[\d*]/)
                                                       )
-                                                : defaultMucRoom.getUserDataByUuid(user.userUuid).name}
-                                            {#if defaultMucRoom.getUserDataByUuid(user.userUuid).name.match(/\[\d*]/)}
+                                                : defaultMucRoom.getUserDataByUuid(userUuid).name}
+                                            {#if defaultMucRoom.getUserDataByUuid(userUuid).name.match(/\[\d*]/)}
                                                 <span class="tw-font-light tw-text-xs tw-text-gray">
                                                     #{defaultMucRoom
-                                                        .getUserDataByUuid(user.userUuid)
+                                                        .getUserDataByUuid(userUuid)
                                                         .name.match(/\[\d*]/)
                                                         ?.join()
                                                         ?.replace("[", "")
