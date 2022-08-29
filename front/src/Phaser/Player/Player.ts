@@ -32,7 +32,7 @@ export class Player extends Character {
         this.getBody().setImmovable(false);
     }
 
-    public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
+    public moveUser(dt: number, activeUserInputEvents: ActiveEventList): void {
         const state = get(followStateStore);
         const role = get(followRoleStore);
 
@@ -54,7 +54,7 @@ export class Player extends Character {
             [x, y] = this.computeFollowMovement();
         }
         if (this.pathToFollow) {
-            [x, y] = this.computeFollowPathMovement();
+            [x, y] = this.computeFollowPathMovement(dt);
         }
         this.inputStep(activeUserInputEvents, x, y);
     }
@@ -173,7 +173,7 @@ export class Player extends Character {
         return this.getMovementDirection(xDistance, yDistance, distance);
     }
 
-    private computeFollowPathMovement(): number[] {
+    private computeFollowPathMovement(dt: number): number[] {
         if (this.pathToFollow !== undefined && this.pathToFollow.length === 0) {
             this.finishFollowingPath();
         }
@@ -186,7 +186,7 @@ export class Player extends Character {
         const xDistance = nextStep.x - this.x;
         const yDistance = nextStep.y - this.y;
         const distance = Math.pow(xDistance, 2) + Math.pow(yDistance, 2);
-        if (distance < 200) {
+        if (distance < 10 * dt) {
             this.pathToFollow.shift();
         }
         return this.getMovementDirection(xDistance, yDistance, distance);
