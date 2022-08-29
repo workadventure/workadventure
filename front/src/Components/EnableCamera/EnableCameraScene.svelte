@@ -219,15 +219,14 @@
             margin-top: 2vh;
             margin-left: auto;
             margin-right: auto;
-            max-height: 50vh;
+            max-height: 28vh;
             width: 50vw;
-            border: white 6px solid;
-            -webkit-transform: scaleX(-1);
             transform: scaleX(-1);
-
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 0.5rem;
+            object-fit: cover;
         }
     }
 </style>
