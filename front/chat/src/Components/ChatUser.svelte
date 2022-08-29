@@ -156,7 +156,7 @@
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {user.isInSameMap ? $LL.userList.isHere() : $LL.userList.isOverThere()}
+                {user.isInSameMap ? $LL.userList.isHere() : `${$LL.userList.in()} "${user.roomName}"`}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}

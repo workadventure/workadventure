@@ -106,6 +106,10 @@ export const isMapDetailsData = z.object({
     metadata: extendApi(z.unknown().optional(), {
         description: "Metadata from administration",
     }),
+    roomName: extendApi(z.string().nullable().optional(), {
+        description: "The name of the current room.",
+        example: "WA Village"
+    }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

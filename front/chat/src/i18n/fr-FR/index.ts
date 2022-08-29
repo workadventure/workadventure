@@ -5,7 +5,7 @@ const fr_FR: Translation = {
     userList: {
         disconnected: "Non connecté",
         isHere: "Sur cette map !",
-        isOverThere: "Sur une autre map !",
+        in: "Dans ",
         teleport: "Se téléporter",
         search: "Il suffit de chercher !",
         walkTo: "Marcher jusqu'à",

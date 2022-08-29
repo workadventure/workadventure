@@ -32,6 +32,7 @@ export class Room {
     private _metadata: unknown | undefined;
     private _mucRooms: Array<MucRoomDefinitionInterface> | undefined;
     private _showPoweredBy: boolean | undefined = true;
+    private _roomName: string | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -134,6 +135,7 @@ export class Room {
                 this._metadata = data.metadata ?? undefined;
 
                 this._mucRooms = data.mucRooms ?? undefined;
+                this._roomName = data.roomName ?? undefined;
 
                 return new MapDetail(data.mapUrl);
             } else {
@@ -247,6 +249,10 @@ export class Room {
 
     get mucRooms(): Array<MucRoomDefinitionInterface> | undefined {
         return this._mucRooms;
+    }
+
+    get roomName(): string | undefined {
+        return this._roomName;
     }
 
     get showPoweredBy(): boolean | undefined {

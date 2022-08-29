@@ -14,6 +14,7 @@
     import { Subscription } from "rxjs";
     import { availabilityStatusStore } from "../../Stores/MediaStore";
     import { peerStore } from "../../Stores/PeerStore";
+    import {connectionManager} from "../../Connexion/ConnectionManager";
 
     let chatIframe: HTMLIFrameElement;
 
@@ -77,6 +78,7 @@
                                         woka: wokaSrc,
                                         isLogged: localUserStore.isLogged(),
                                         availabilityStatus: get(availabilityStatusStore),
+                                        roomName: connectionManager.currentRoom?.roomName ?? null
                                     },
                                 },
                                 "*"
@@ -183,7 +185,7 @@
         left: -100%;
         height: 100%;
         width: 28%;
-        min-width: 250px;
+        min-width: 335px;
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         visibility: hidden;

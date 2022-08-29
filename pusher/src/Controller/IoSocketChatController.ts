@@ -137,7 +137,7 @@ export class IoSocketChatController {
                         }
 
                         const userIdentifier = tokenData ? tokenData.identifier : uuid ?? "";
-                        const isLogged = tokenData?.accessToken ? true : false;
+                        const isLogged = !!tokenData?.accessToken;
 
                         let memberTags: string[] = [];
                         let memberUserRoomToken: string | undefined;
