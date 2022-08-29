@@ -70,7 +70,6 @@ export class XmppClient {
                 }
                 //console.error("XmppClient => receive => error =>", err);
                 this.xmppSocket?.stop();
-                this.xmppSocket?.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
