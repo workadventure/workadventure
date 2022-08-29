@@ -4,7 +4,7 @@ const actionbar: BaseTranslation = {
     chat: "Open / Close chat",
     follow: "Follow / Unfollow",
     lock: "Lock / Unlock discussion",
-    screensharing: "Start / Stop sreen haring your screen",
+    screensharing: "Start / Stop sharing your screen",
     layout: "Toggle tile view",
     camera: "Start / Stop camera",
     microphone: "Mute / Unmute",
