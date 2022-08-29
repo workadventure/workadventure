@@ -56,6 +56,7 @@ const fr_FR: Translation = {
         forum: "sur le forum",
     },
     see: "Voir",
+    show: "Voir",
     less: "moins",
     more: "plus",
     sendBack: "Renvoyer",
@@ -90,6 +91,8 @@ const fr_FR: Translation = {
         openCoWebsite: "Ouvrir en co-website",
         copy: "Copier le lien",
     },
+    needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
+    refresh: "Rafraichir",
 };
 
 export default fr_FR;

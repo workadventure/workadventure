@@ -198,6 +198,15 @@ class IframeListener {
             "*"
         );
     }
+
+    sendRefresh() {
+        window.parent.postMessage(
+            {
+                type: "refresh",
+            },
+            "*"
+        );
+    }
 }
 
 export const iframeListener = new IframeListener();

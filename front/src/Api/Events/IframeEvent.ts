@@ -245,6 +245,10 @@ export const isIframeEventWrapper = z.union([
         type: z.literal("login"),
         data: z.undefined(),
     }),
+    z.object({
+        type: z.literal("refresh"),
+        data: z.undefined(),
+    }),
 ]);
 
 export type IframeEvent = z.infer<typeof isIframeEventWrapper>;

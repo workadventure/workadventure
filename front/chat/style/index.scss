@@ -9,11 +9,11 @@
     background-color: rgba(27, 27, 41, 0.95);
 }
 ::-webkit-scrollbar-thumb {
-    @apply tw-bg-light-purple;
+    @apply tw-bg-grey;
     border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover {
-    @apply tw-bg-lighter-purple;
+::-webkit-scrollbar-thumb:active {
+    @apply tw-bg-light-blue;
 }
 
 .emoji-picker__overlay{
