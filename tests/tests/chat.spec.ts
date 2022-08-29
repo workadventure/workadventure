@@ -132,7 +132,7 @@ test.describe('Chat', () => {
       // Open timeline
       await chat.locator('#timeline #openTimeline').click();
       // FIXME After this issues is completed : https://github.com/thecodingmachine/workadventure/issues/2500
-      //await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
+      await expect(chat.locator('#activeTimeline #timeLine-messageList .event').last()).toContainText(nickname2 + ' join the discussion');
       // Close timeline
       await chat.locator('#activeTimeline .exit').click();
 
