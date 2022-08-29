@@ -5,7 +5,7 @@ const en_US: BaseTranslation = {
     userList: {
         disconnected: "Disconnected",
         isHere: "Is on this map !",
-        isOverThere: "Is on another map !",
+        in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
         walkTo: "Walk to",

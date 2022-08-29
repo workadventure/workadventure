@@ -36,7 +36,7 @@ export class XmppClient {
     private timeout: ReturnType<typeof setTimeout> | undefined;
     private xmppSocket: Client | undefined;
     private pingInterval: NodeJS.Timer | undefined;
-    private isAuthorized: boolean = true;
+    private isAuthorized = true;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         this.clientJID = jid(clientSocket.jabberId);
@@ -62,14 +62,14 @@ export class XmppClient {
             });
             this.xmppSocket = xmpp;
 
-            xmpp.on("error", async (err: unknown) => {
+            xmpp.on("error", (err: unknown) => {
                 if (err instanceof SASLError)
                     console.info("XmppClient => createClient => receive => error", err.name, err.condition);
                 else {
                     console.info("XmppClient => createClient => receive => error", err);
                 }
                 //console.error("XmppClient => receive => error =>", err);
-                await this.xmppSocket?.stop;
+                this.xmppSocket?.stop();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
@@ -272,18 +272,20 @@ export class XmppClient {
     }
 
     ping(): void {
-        this.xmppSocket?.send(
-            xml(
-                "iq",
-                {
-                    from: this.clientJID,
-                    to: EJABBERD_DOMAIN,
-                    id: v4(),
-                    type: "get",
-                },
-                xml("ping", { xmlns: "urn:xmpp:ping" })
-            )
-        );
+        if(this.isAuthorized && this.xmppSocket?.status === "online") {
+            this.xmppSocket?.send(
+                xml(
+                    "iq",
+                    {
+                        from: this.clientJID,
+                        to: EJABBERD_DOMAIN,
+                        id: v4(),
+                        type: "get",
+                    },
+                    xml("ping", {xmlns: "urn:xmpp:ping"})
+                )
+            );
+        }
         // TODO catch pong
     }
 }

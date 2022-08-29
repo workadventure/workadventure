@@ -9,6 +9,8 @@ export const isUserData = z.object({
     color: z.string(),
     woka: z.string(),
     isLogged: z.boolean(),
+    availabilityStatus: z.number(),
+    roomName: z.optional(z.nullable(z.string()))
 });
 
 export type UserData = z.infer<typeof isUserData>;
