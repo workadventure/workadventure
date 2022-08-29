@@ -16,6 +16,8 @@ export class Player extends Character {
     private pathToFollow?: { x: number; y: number }[];
     private followingPathPromiseResolve?: (result: { x: number; y: number; cancelled: boolean }) => void;
     private pathWalkingSpeed?: number;
+    private lastKnownX: number;
+    private lastKnownY: number;
 
     constructor(
         Scene: GameScene,
@@ -31,6 +33,36 @@ export class Player extends Character {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companion, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+
+        this.lastKnownX = x;
+        this.lastKnownY = y;
+        this.scene.events.on("postupdate", this.detectOvershoot.bind(this));
+    }
+
+    /**
+     * If we are moving towards a target, we are trying to detect if we "overshoot" the target or not.
+     * This can happen on slow machines with unstable frame rate.
+     */
+    private detectOvershoot() {
+        // This is triggered just after the Physics engine has run, on each frame
+
+        // The current position should be within the bounding box made of the last known position and the target position
+        if (this.pathToFollow && this.pathToFollow.length > 0) {
+            const nearestTarget = this.pathToFollow[0];
+            const left = Math.min(this.lastKnownX, nearestTarget.x);
+            const right = Math.max(this.lastKnownX, nearestTarget.x);
+            const top = Math.min(this.lastKnownY, nearestTarget.y);
+            const bottom = Math.max(this.lastKnownY, nearestTarget.y);
+            if (!(left <= this.x && this.x <= right && top <= this.y && this.y <= bottom)) {
+                console.log("OVERSHOOT DETECTED!!!! WE WENT TOO FAR! LET'S RESET THE SPRITE POSITION");
+                //this.setPosition(nearestTarget.x, nearestTarget.y);
+                // TODO: we need to find a way to reset the sprite position here
+                // TODO: we probably need to stop the sprite too!
+            }
+        }
+
+        this.lastKnownX = this.x;
+        this.lastKnownY = this.y;
     }
 
     public moveUser(dt: number, activeUserInputEvents: ActiveEventList): void {
