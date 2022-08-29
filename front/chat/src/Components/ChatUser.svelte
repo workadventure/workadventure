@@ -79,12 +79,26 @@
     function getColorOfAvailabilityStatus(status: number) {
         switch (status) {
             case 1:
-            default:
                 return "tw-bg-pop-green";
             case 2:
                 return "tw-bg-pop-red";
             case 3:
                 return "tw-bg-orange";
+            default:
+                return "tw-bg-gray";
+        }
+    }
+
+    function getNameOfAvailabilityStatus(status: number) {
+        switch (status) {
+            case 1:
+                return $LL.status.online();
+            case 2:
+                return $LL.status.away();
+            case 3:
+                return $LL.status.unavailable();
+            default:
+                return "";
         }
     }
 
@@ -109,6 +123,7 @@
         </div>
         {#if user.active}
             <span
+                title={getNameOfAvailabilityStatus(user.availabilityStatus)}
                 class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
                     user.availabilityStatus
                 )} tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
@@ -139,7 +154,7 @@
             {/if}
             {#if ENABLE_OPENID}
                 {#if user.isMember}
-                    <span class="tw-text-pop-green" title={$LL.role.member()}>
+                    <span title={$LL.role.member()}>
                         <UsersIcon size="13" />
                     </span>
                     <!--
