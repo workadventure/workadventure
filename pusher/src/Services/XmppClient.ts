@@ -272,7 +272,7 @@ export class XmppClient {
     }
 
     ping(): void {
-        if(this.isAuthorized && this.xmppSocket?.status === "online") {
+        if (this.isAuthorized && this.xmppSocket?.status === "online") {
             this.xmppSocket?.send(
                 xml(
                     "iq",
@@ -282,7 +282,7 @@ export class XmppClient {
                         id: v4(),
                         type: "get",
                     },
-                    xml("ping", {xmlns: "urn:xmpp:ping"})
+                    xml("ping", { xmlns: "urn:xmpp:ping" })
                 )
             );
         }

@@ -108,7 +108,7 @@ export const isMapDetailsData = z.object({
     }),
     roomName: extendApi(z.string().nullable().optional(), {
         description: "The name of the current room.",
-        example: "WA Village"
+        example: "WA Village",
     }),
 });
 
