@@ -146,7 +146,7 @@
         </div>
     </section>
     <section class="action">
-        <button type="submit" class="light letsgo">{$LL.camera.enable.start()}</button>
+        <button type="submit" class="light">{$LL.camera.enable.start()}</button>
     </section>
 </form>
 
