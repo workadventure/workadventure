@@ -19,6 +19,11 @@ const en_US: BaseTranslation = {
         member: "Member",
         visitor: "Visitor",
     },
+    status: {
+        online: "Online",
+        away: "Away",
+        unavailable: "Unavailable",
+    },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",
     invite: "Invite",

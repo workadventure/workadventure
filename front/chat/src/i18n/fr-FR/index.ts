@@ -19,6 +19,11 @@ const fr_FR: Translation = {
         member: "Membre",
         visitor: "Visiteur",
     },
+    status: {
+        online: "En ligne",
+        away: "Absent",
+        unavailable: "Non disponnible",
+    },
     logIn: "Se connecter",
     signIn: "Inscrivez-vous ou connectez-vous pour profiter de toutes les fonctionnalités du chat !",
     invite: "Inviter",
