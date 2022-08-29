@@ -8,10 +8,12 @@ import {
     XmppSettingsMessage,
     XmppConnectionStatusChangeMessage_Status,
     IframeToPusherMessage,
+    XmppConnectionNotAuthorizedMessage,
 } from "../Messages/ts-proto-generated/protos/messages";
 import { XmppClient } from "../Xmpp/XmppClient";
 import { Parser } from "@xmpp/xml";
 import { userStore } from "../Stores/LocalUserStore";
+import { connectionNotAuthorized } from "../Stores/ChatStore";
 
 const manualPingDelay = 20000;
 
@@ -35,6 +37,9 @@ export class ChatConnection implements ChatConnection {
     private readonly _xmppConnectionStatusChangeMessageStream = new Subject<XmppConnectionStatusChangeMessage_Status>();
     public readonly xmppConnectionStatusChangeMessageStream =
         this._xmppConnectionStatusChangeMessageStream.asObservable();
+
+    private readonly _xmppConnectionNotAuthorizedStream = new Subject<XmppConnectionNotAuthorizedMessage>();
+    public readonly xmppConnectionNotAuthorizedStream = this._xmppConnectionNotAuthorizedStream.asObservable();
 
     public constructor(token: string | null, roomUrl: string, uuid: string) {
         let url = new URL(PUSHER_URL, window.location.toString()).toString();
@@ -106,6 +111,11 @@ export class ChatConnection implements ChatConnection {
                             break;
                         }
                         this._xmppMessageStream.next(elementExtParsed);
+                        break;
+                    }
+                    case "xmppConnectionNotAuthorized": {
+                        this._xmppConnectionNotAuthorizedStream.next(message.xmppConnectionNotAuthorized);
+                        connectionNotAuthorized.set(true);
                         break;
                     }
                     default: {

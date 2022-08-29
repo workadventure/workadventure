@@ -56,6 +56,7 @@ const en_US: BaseTranslation = {
         forum: "on the forum",
     },
     see: "See",
+    show: "Show",
     less: "less",
     more: "more",
     sendBack: "Send back",
@@ -90,6 +91,8 @@ const en_US: BaseTranslation = {
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
     },
+    needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
+    refresh: "Refresh",
 };
 
 export default en_US;
