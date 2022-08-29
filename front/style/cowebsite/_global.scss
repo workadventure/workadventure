@@ -1,8 +1,8 @@
 #cowebsite {
+  @apply tw-bg-dark-blue/80;
   position: fixed;
   z-index: 820;
   transition: transform 0.5s;
-  background-color: rgba(10, 9, 9, 0.8);
   display: none;
 
   #cowebsite-slot-main #custom-logo{
@@ -19,14 +19,14 @@
   }
 
   aside {
-    background: gray;
+   @apply tw-bg-dark-blue;
     align-items: center;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 
     #cowebsite-aside-holder {
-      background: gray;
+      @apply tw-bg-dark-blue;
       height: 20px;
       flex: 1;
       display: flex;
