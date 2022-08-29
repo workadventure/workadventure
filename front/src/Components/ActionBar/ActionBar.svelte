@@ -67,6 +67,7 @@
     import { Unsubscriber, writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
+    import Tootltip from "../Util/Tootltip.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -337,6 +338,8 @@
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
                 >
+                    <Tootltip text={'Ask follow / Unfollow'}/>
+
                     <button class:border-top-light={$followStateStore === "active"}>
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
                     </button>
@@ -347,6 +350,8 @@
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
+                    <Tootltip text={'Chat / Presentation layout'}/>
+
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
                             <img
@@ -372,7 +377,9 @@
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
                 >
-                    <button class=" " class:border-top-light={$currentPlayerGroupLockStateStore}>
+                    <Tootltip text={'Toggle tile view'}/>
+
+                    <button class:border-top-light={$currentPlayerGroupLockStateStore}>
                         {#if $currentPlayerGroupLockStateStore}
                             <img
                                 draggable="false"
@@ -392,6 +399,8 @@
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
                 >
+                    <Tootltip text={'Start / Stop charing your screen'}/>
+                    
                     <button class:border-top-light={$requestedScreenSharingState}>
                         {#if $requestedScreenSharingState && !$silentStore}
                             <img
@@ -423,7 +432,9 @@
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
                         >
-                            <button class:border-top-light={$requestedCameraState}>
+                            <Tootltip text={'Start / Stop camera'}/>
+
+                            <button class="tooltiptext sm:tw-w-56 md:tw-w-96" class:border-top-light={$requestedCameraState}>
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -447,9 +458,9 @@
                                     on:click|stopPropagation|preventDefault={() => (cameraActive = !cameraActive)}
                                 >
                                     {#if cameraActive}
-                                        <ChevronUpIcon size="13" />
-                                    {:else}
                                         <ChevronDownIcon size="13" />
+                                    {:else}
+                                        <ChevronUpIcon size="13" />
                                     {/if}
                                 </button>
 
@@ -483,6 +494,8 @@
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
                         >
+                            <Tootltip text={'Mute / Unmute'}/>
+
                             <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
                                     <img
@@ -508,9 +521,9 @@
                                         (microphoneActive = !microphoneActive)}
                                 >
                                     {#if microphoneActive}
-                                        <ChevronUpIcon size="13" />
-                                    {:else}
                                         <ChevronDownIcon size="13" />
+                                    {:else}
+                                        <ChevronUpIcon size="13" />
                                     {/if}
                                 </button>
 
@@ -543,6 +556,8 @@
                     on:click={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
+                    <Tootltip text={'Open chat'}/>
+                    
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
@@ -569,6 +584,8 @@
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
+                    <Tootltip text={'Open emoji'}/>
+
                     <button class:border-top-light={$emoteMenuSubStore}>
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
                     </button>
@@ -582,6 +599,8 @@
                     on:click={showMenu}
                     class="bottom-action-button"
                 >
+                    <Tootltip text={'Open menu'}/>
+
                     <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />
                     </button>
@@ -722,21 +741,21 @@
         .bottom-action-button {
             button.camera,
             button.microphone {
-                bottom: 0;
+                top: 0;
                 width: 20px;
                 height: 20px;
                 background: none;
                 right: 0;
-                border-top-left-radius: 0.5rem;
-                border-bottom-left-radius: 0.5rem;
-                border-top-right-radius: 0.5rem;
-                border-bottom-right-radius: 0.5rem;
+                border-top-left-radius: 0.25rem;
+                border-bottom-left-radius: 0.25rem;
+                border-top-right-radius: 0.25rem;
+                border-bottom-right-radius: 0.25rem;
                 color: white;
                 padding: 0;
                 margin: 0;
                 display: block;
                 &:hover {
-                    background-color: rgb(56 56 74 / 30%);
+                    background-color: rgb(56 56 74);
                 }
             }
         }
