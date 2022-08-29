@@ -1910,6 +1910,8 @@ ${escapedMessage}
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();
+        layoutManagerActionStore.clearActions();
+
         // We are completely destroying the current scene to avoid using a half-backed instance when coming back to the same map.
         this.connection?.closeConnection();
         this.simplePeer?.closeAllConnections();
