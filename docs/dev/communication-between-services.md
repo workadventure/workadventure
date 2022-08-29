@@ -1,7 +1,37 @@
-# Communication between services
+# WorkAdventure containers explained
 
-This document explains the communication between the different components of WorkAdventure.
+This document explains the services that WorkAdventure is made of and the communication 
+between those different components.
 
+```mermaid
+graph LR
+    BR[Browser] --> RP
+    RP[Reverse-Proxy] --> A
+    RP[Reverse-Proxy] --> B
+    RP[Reverse-Proxy] --> D
+    A[Front] --> B[Pusher]
+    B --> A
+    B --> C[Back]
+    C --> D[Map-Storage]
+```
+
+## Reverse-proxy
+
+The role of the reverse-proxy is to distribute web traffic to the appropriate services. Another important role
+is to terminate SSL connections. It is the reverse-proxy that will handle HTTPS encoding/decoding.
+The front / pusher and map-storage containers don't handle the SSL certificates themselves. It is the role of the
+reverse-proxy to do so.
+
+
+## Front container
+
+The "front" container is responsible for serving HTML / JS / CSS static files.
+It is a simple webserver (nginx).
+
+
+
+
+## Communication between services
 
 ```mermaid
 graph LR
