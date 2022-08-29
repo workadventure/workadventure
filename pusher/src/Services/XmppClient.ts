@@ -252,7 +252,6 @@ export class XmppClient {
                     try {
                         //stop xmpp socket client
                         await this.xmppSocket?.stop();
-                        await this.xmppSocket?.close();
                     } catch (err) {
                         console.info("XmppClient => onCancel => xmppSocket => err", err);
                     }
