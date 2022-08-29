@@ -67,7 +67,7 @@
     import { Unsubscriber, writable } from "svelte/store";
     import { peerStore } from "../../Stores/PeerStore";
     import { StringUtils } from "../../Utils/StringUtils";
-    import Tootltip from "../Util/Tootltip.svelte";
+    import Tooltip from "../Util/Tooltip.svelte";
 
     const menuImg = gameManager.currentStartedRoom?.miniLogo ?? WorkAdventureImg;
 
@@ -338,7 +338,7 @@
                     on:click={() => analyticsClient.follow()}
                     on:click={followClick}
                 >
-                    <Tootltip text={'Ask follow / Unfollow'}/>
+                    <Tooltip text={$LL.actionbar.follow()} />
 
                     <button class:border-top-light={$followStateStore === "active"}>
                         <img draggable="false" src={followImg} style="padding: 2px" alt="Toggle follow" />
@@ -350,7 +350,7 @@
                     on:click={() => analyticsClient.layoutPresentChange()}
                     on:click={switchLayoutMode}
                 >
-                    <Tootltip text={'Chat / Presentation layout'}/>
+                    <Tooltip text={$LL.actionbar.layout()} />
 
                     <button>
                         {#if $embedScreenLayoutStore === LayoutMode.Presentation}
@@ -377,7 +377,7 @@
                     on:click={() => analyticsClient.lockDiscussion()}
                     on:click={lockClick}
                 >
-                    <Tootltip text={'Toggle tile view'}/>
+                    <Tooltip text={$LL.actionbar.lock()} />
 
                     <button class:border-top-light={$currentPlayerGroupLockStateStore}>
                         {#if $currentPlayerGroupLockStateStore}
@@ -399,8 +399,8 @@
                     on:click={screenSharingClick}
                     class:enabled={$requestedScreenSharingState}
                 >
-                    <Tootltip text={'Start / Stop charing your screen'}/>
-                    
+                    <Tooltip text={$LL.actionbar.screensharing()} />
+
                     <button class:border-top-light={$requestedScreenSharingState}>
                         {#if $requestedScreenSharingState && !$silentStore}
                             <img
@@ -432,9 +432,12 @@
                             on:click={cameraClick}
                             class:disabled={!$requestedCameraState || $silentStore}
                         >
-                            <Tootltip text={'Start / Stop camera'}/>
+                            <Tooltip text={$LL.actionbar.camera()} />
 
-                            <button class="tooltiptext sm:tw-w-56 md:tw-w-96" class:border-top-light={$requestedCameraState}>
+                            <button
+                                class="tooltiptext sm:tw-w-56 md:tw-w-96"
+                                class:border-top-light={$requestedCameraState}
+                            >
                                 {#if $requestedCameraState && !$silentStore}
                                     <img
                                         draggable="false"
@@ -494,7 +497,7 @@
                             on:click={microphoneClick}
                             class:disabled={!$requestedMicrophoneState || $silentStore}
                         >
-                            <Tootltip text={'Mute / Unmute'}/>
+                            <Tooltip text={$LL.actionbar.microphone()} />
 
                             <button class:border-top-light={$requestedMicrophoneState}>
                                 {#if $requestedMicrophoneState && !$silentStore}
@@ -556,8 +559,8 @@
                     on:click={toggleChat}
                     class="bottom-action-button tw-relative"
                 >
-                    <Tootltip text={'Open chat'}/>
-                    
+                    <Tooltip text={$LL.actionbar.chat()} />
+
                     <button class:border-top-light={$chatVisibilityStore} class="chat-btn">
                         <img draggable="false" src={bubbleImg} style="padding: 2px" alt="Toggle chat" />
                     </button>
@@ -584,7 +587,7 @@
                 </div>
 
                 <div on:click={toggleEmojiPicker} class="bottom-action-button">
-                    <Tootltip text={'Open emoji'}/>
+                    <Tooltip text={$LL.actionbar.emoji()} />
 
                     <button class:border-top-light={$emoteMenuSubStore}>
                         <img draggable="false" src={emojiPickOn} style="padding: 2px" alt="Toggle emoji picker" />
@@ -599,7 +602,7 @@
                     on:click={showMenu}
                     class="bottom-action-button"
                 >
-                    <Tootltip text={'Open menu'}/>
+                    <Tooltip text={$LL.actionbar.menu()} />
 
                     <button id="menuIcon" class:border-top-light={$menuVisiblilityStore}>
                         <img draggable="false" src={menuImg} style="padding: 2px" alt={$LL.menu.icon.open.menu()} />

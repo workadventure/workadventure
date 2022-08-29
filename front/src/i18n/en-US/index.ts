@@ -15,6 +15,7 @@ import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
 import cowebsite from "./cowebsite";
+import actionbar from "./actionbar";
 
 const en_US: BaseTranslation = {
     audio,
@@ -33,6 +34,7 @@ const en_US: BaseTranslation = {
     muc,
     notification,
     cowebsite,
+    actionbar,
 };
 
 export default en_US;

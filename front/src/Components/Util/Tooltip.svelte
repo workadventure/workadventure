@@ -1,37 +1,37 @@
 <script lang="ts">
-import { onMount, onDestroy } from "svelte";
-
+    import { onMount, onDestroy } from "svelte";
 
     export let text: string;
 
     let tooltipElement: HTMLDivElement;
     let textElement: HTMLSpanElement;
 
-    function hide(){
-        textElement?.style.setProperty('visibility', 'hidden');
+    function hide() {
+        textElement?.style.setProperty("visibility", "hidden");
     }
-    function show(){
-        textElement?.style.setProperty('visibility', 'visible');
+    function show() {
+        textElement?.style.setProperty("visibility", "visible");
     }
 
     onMount(() => {
-        tooltipElement?.parentElement?.addEventListener('mouseenter', () => show());
-        tooltipElement?.parentElement?.addEventListener('mouseleave', () => hide());
+        tooltipElement?.parentElement?.addEventListener("mouseenter", () => show());
+        tooltipElement?.parentElement?.addEventListener("mouseleave", () => hide());
     });
 
     onDestroy(() => {
-        tooltipElement?.parentElement?.removeEventListener('mouseenter', () => show());
-        tooltipElement?.parentElement?.removeEventListener('mouseleave', () => hide());
+        tooltipElement?.parentElement?.removeEventListener("mouseenter", () => show());
+        tooltipElement?.parentElement?.removeEventListener("mouseleave", () => hide());
     });
 </script>
 
 <div bind:this={tooltipElement} class="tooltip tw-w-fit">
     <span bind:this={textElement} class="tooltiptext">{text}</span>
 </div>
+
 <style lang="scss">
     .tooltip {
         display: block;
-        .tooltiptext{
+        .tooltiptext {
             white-space: pre;
             visibility: hidden;
             position: absolute;
@@ -48,7 +48,7 @@ import { onMount, onDestroy } from "svelte";
             text-align: center;
             --tw-text-opacity: 1;
             color: rgb(255 255 255 / var(--tw-text-opacity));
-            &::after{
+            &::after {
                 left: 1.5rem;
             }
         }
