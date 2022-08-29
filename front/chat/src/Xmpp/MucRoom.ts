@@ -21,7 +21,7 @@ export const USER_STATUS_DISCONNECTED = "disconnected";
 export type User = {
     name: string;
     playUri: string;
-    roomName: string|null;
+    roomName: string | null;
     uuid: string;
     status: string;
     active: boolean;
@@ -118,7 +118,7 @@ export const defaultUserData: UserData = {
     woka: defaultWoka,
     isLogged: false,
     availabilityStatus: 0,
-    roomName: null
+    roomName: null,
 };
 
 export const defaultUser: User = {
@@ -348,7 +348,7 @@ export class MucRoom {
             // Add window location and have possibility to teleport on the user and remove all hash from the url
             xml("room", {
                 playUri: get(userStore).playUri,
-                name: get(userStore).roomName
+                name: get(userStore).roomName,
             }),
             // Add uuid of the user to identify and target them on teleport
             xml("user", {
@@ -937,7 +937,20 @@ export class MucRoom {
                 } else {
                     const { jid } = this.getUserDataByName(name);
                     if (jid !== null && jid) {
-                        this.updateUser(jid, null, null, null, null, null, null, null, null, null, null, state.getName());
+                        this.updateUser(
+                            jid,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            state.getName()
+                        );
                     }
                     handledMessage = true;
                 }
