@@ -7,6 +7,7 @@ import { userMovingStore } from "../../Stores/GameStore";
 import { followStateStore, followRoleStore, followUsersStore } from "../../Stores/FollowStore";
 import type CancelablePromise from "cancelable-promise";
 import { PositionMessage_Direction } from "../../Messages/ts-proto-generated/protos/messages";
+import { MathUtils } from "@workadventure/math-utils";
 
 export const hasMovedEventName = "hasMoved";
 export const requestEmoteEventName = "requestEmote";
@@ -56,7 +57,7 @@ export class Player extends Character {
         if (this.pathToFollow) {
             [x, y] = this.computeFollowPathMovement(dt);
         }
-        this.inputStep(activeUserInputEvents, x, y);
+        this.inputStep(activeUserInputEvents, x, y, dt);
     }
 
     public sendFollowRequest() {
@@ -107,7 +108,7 @@ export class Player extends Character {
         });
     }
 
-    private inputStep(activeEvents: ActiveEventList, x: number, y: number) {
+    private inputStep(activeEvents: ActiveEventList, x: number, y: number, dt: number) {
         // Process input events
         if (activeEvents.get(UserInputEvent.MoveUp)) {
             y = y - 1;
@@ -124,8 +125,8 @@ export class Player extends Character {
         // Compute movement deltas
         const followMode = get(followStateStore) !== "off";
         const speed = this.deduceSpeed(activeEvents.get(UserInputEvent.SpeedUp), followMode);
-        const velocityX = x * speed;
-        const velocityY = y * speed;
+        let velocityX = x * speed;
+        let velocityY = y * speed;
         // Compute moving state
         const joystickMovement = activeEvents.get(UserInputEvent.JoystickMove);
         const moving = velocityX !== 0 || velocityY !== 0 || joystickMovement;
@@ -137,6 +138,18 @@ export class Player extends Character {
                 direction = velocityX < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
             } else {
                 direction = velocityY < 0 ? PositionMessage_Direction.UP : PositionMessage_Direction.DOWN;
+            }
+        }
+
+        // we are currently following the path
+        if (this.pathToFollow && this.pathToFollow.length > 0) {
+            const nearestTarget = this.pathToFollow[0];
+            const distanceToTarget = MathUtils.distanceBetween({ x: this.x, y: this.y }, nearestTarget);
+            const distanceToTraveldThisFrame = MathUtils.distanceTraveledInTime({ x: velocityX, y: velocityY }, dt);
+
+            if (distanceToTarget < distanceToTraveldThisFrame) {
+                velocityX *= distanceToTarget / distanceToTraveldThisFrame;
+                velocityY *= distanceToTarget / distanceToTraveldThisFrame;
             }
         }
 

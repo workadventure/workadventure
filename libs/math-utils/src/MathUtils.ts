@@ -45,6 +45,15 @@ export class MathUtils {
         return squared ? Math.sqrt(distance) : distance;
     }
 
+    /**
+     * 
+     * @param velocity - Object velocity measured in px/s
+     * @param timeMS - time in milliseconds
+     */
+    public static distanceTraveledInTime(velocity: { x: number, y: number }, timeMS: number): number {
+        return Math.sqrt(Math.pow(velocity.x, 2) + Math.pow(velocity.y, 2)) * (timeMS / 1000);
+    }
+
     public static randomFromArray<T>(array: T[]): T {
         return array[Math.floor(Math.random() * array.length)];
     }
