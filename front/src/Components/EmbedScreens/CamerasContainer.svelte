@@ -10,7 +10,7 @@
 </script>
 
 <aside class="cameras-container tw-self-end" class:full in:fly={{ x: 200, duration: 100 }} out:fade>
-    <div class="other-cameras tw-flex tw-flex-col-reverse">
+    <div class="other-cameras tw-flex tw-flex-col">
         {#each [...$streamableCollectionStore.values()] as peer (peer.uniqueId)}
             {#if !highlightedEmbedScreen || highlightedEmbedScreen.type !== "streamable" || (highlightedEmbedScreen.type === "streamable" && highlightedEmbedScreen.embed !== peer)}
                 <MediaBox streamable={peer} isClickable={clickable} />
