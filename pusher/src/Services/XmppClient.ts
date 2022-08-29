@@ -70,6 +70,7 @@ export class XmppClient {
                 }
                 //console.error("XmppClient => receive => error =>", err);
                 this.xmppSocket?.stop();
+                this.xmppSocket?.close();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
@@ -90,6 +91,8 @@ export class XmppClient {
 
                 //close en restart connexion
                 this.close();
+                this.xmppSocket?.stop();
+                this.xmppSocket?.close();
 
                 // This can happen when the first connection failed for some reason.
                 // We should probably retry regularly (every 10 seconds)
@@ -225,6 +228,8 @@ export class XmppClient {
         //cancel promise
         console.info("xmppClient => close");
         this.clientPromise.cancel();
+        this.xmppSocket?.stop();
+        this.xmppSocket?.close();
     }
 
     start(): CancelablePromise {
@@ -250,6 +255,7 @@ export class XmppClient {
                     try {
                         //stop xmpp socket client
                         await this.xmppSocket?.stop();
+                        await this.xmppSocket?.close();
                     } catch (err) {
                         console.info("XmppClient => onCancel => xmppSocket => err", err);
                     }
