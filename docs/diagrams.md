@@ -1,5 +1,6 @@
 Diagrams are rendered with "mermaid.js"
 
+```mermaid
 sequenceDiagram
     participant Br as Browser
     participant P as Pusher
@@ -22,6 +23,5 @@ sequenceDiagram
     P->>A: /api/membership(uuid): get data from the user (again!)
     A->>P: 200 (user data)
     P->>Br: SendUserMessage (if any message to send)
+```
 
-    
-    
