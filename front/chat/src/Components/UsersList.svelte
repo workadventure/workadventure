@@ -20,8 +20,8 @@
     export let showUsers: boolean;
     export let searchValue: string;
 
-    let minimizeUser = true;
-    const maxUsersMinimized = 7;
+    //let minimizeUser = true;
+    //const maxUsersMinimized = 7;
 
     let usersContainerEl: HTMLElement;
     let usersListEl: HTMLElement;
