@@ -169,7 +169,7 @@
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {user.isInSameMap ? $LL.userList.isHere() : `${$LL.userList.in()} "${user.roomName}"`}
+                {user.isInSameMap ? $LL.userList.isHere() : (user.roomName?`${$LL.userList.in()} "${user.roomName}"`:$LL.inAnotherMap())}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}
