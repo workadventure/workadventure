@@ -39,6 +39,10 @@
     let newMessageText = "";
     let usersSearching: User[] = [];
 
+
+    const maxCharMessage = 10_000;
+    $: isMessageTooLong = newMessageText.length > maxCharMessage;
+
     export const defaultColor = "#626262";
     // Negative lookbehind doesn't work on Safari browser
     // const regexUserTag = /(?<![\w@])@([\w@]+(?:[.!][\w@]+)*)+$/gm;
@@ -51,11 +55,14 @@
 
     function adjustHeight() {
         textarea.style.height = "auto";
-        textarea.style.height = textarea.scrollHeight + "px";
+        textarea.style.height = textarea.scrollHeight+ "px";
     }
 
     function sendMessage() {
         if ($hasInProgressUploadingFile) {
+            return;
+        }
+        if (isMessageTooLong) {
             return;
         }
         if ($hasErrorUploadingFile) {
@@ -176,6 +183,28 @@
         } else {
             usersSearching = [];
         }
+    }
+
+    function onKeyDown(key): boolean {
+        if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
+            setTimeout(() => adjustHeight(), 10);
+        }
+        if (key.key === "Enter" && !key.shiftKey) {
+            sendMessage();
+            setTimeout(() => (newMessageText = ""), 10);
+            return false;
+        }
+        return true;
+    }
+
+    function onKeyPress(): boolean {
+        adjustHeight();
+        mucRoom.updateComposingState(ChatStates.COMPOSING);
+        return true;
+    }
+
+    function onKeyUp(){
+        adjustHeight();
     }
 
     function addUserTag(user: User) {
@@ -338,7 +367,11 @@
                     </button>
                 </div>
             {/each}
-            <div class="tw-flex tw-items-center tw-relative">
+            <div class="tw-flex tw-items-end tw-relative">
+                <div class="tw-relative tw-w-full">
+                {#if isMessageTooLong}
+                    <div class="tw-text-pop-red tw-text-xxxs tw-absolute tw-right-4 tw-font-bold" style="bottom: -9px;">{newMessageText.length}/{maxCharMessage}</div>
+                {/if}
                 <textarea
                     type="text"
                     bind:this={textarea}
@@ -347,25 +380,14 @@
                     on:input={analyseText}
                     on:focus={onFocus}
                     on:blur={onBlur}
-                    on:keydown={(key) => {
-                        if ((key.key === "Enter" && key.shiftKey) || ["Backspace", "Delete"].includes(key.key)) {
-                            setTimeout(() => adjustHeight(), 10);
-                        }
-                        if (key.key === "Enter" && !key.shiftKey) {
-                            sendMessage();
-                            setTimeout(() => (newMessageText = ""), 10);
-                            return false;
-                        }
-                        return true;
-                    }}
-                    on:keypress={() => {
-                        adjustHeight();
-                        mucRoom.updateComposingState(ChatStates.COMPOSING);
-                        return true;
-                    }}
+                    on:keydown={onKeyDown}
+                    on:keyup={onKeyUp}
+                    on:keypress={onKeyPress}
                     rows="1"
-                    style="margin-bottom: 0;"
+                    style='margin-bottom: 0;'
+                    class="tw-w-full"
                 />
+                </div>
 
                 <button
                     class={`tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 ${
@@ -376,19 +398,19 @@
                     <SmileIcon size="17" />
                 </button>
                 <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
-                <label for="file" class="tw-mb-0 tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+                <label for="file" class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"><PaperclipIcon size="17" /></label>
                 <button
                     id="send"
                     type="submit"
                     class={`${
-                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile ? "can-send" : "disabled"
+                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile && !isMessageTooLong? "can-send" : "cant-send"
                     } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}
                 >
-                    {#if $hasErrorUploadingFile}
-                        <AlertCircleIcon size="17" />
+                    {#if $hasErrorUploadingFile || isMessageTooLong}
+                        <AlertCircleIcon size="17" class="tw-text-pop-red"/>
                     {:else if $hasInProgressUploadingFile}
                         <LoaderIcon size="17" class="tw-animate-spin" />
                     {:else}

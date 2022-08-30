@@ -619,6 +619,7 @@
     .wa-message-body {
         position: relative;
         min-width: 75px;
+        word-break: break-all;
         .actions {
             display: none;
             position: absolute;
