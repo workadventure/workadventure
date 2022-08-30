@@ -19,6 +19,11 @@ export class Player extends Character {
     private lastKnownX: number;
     private lastKnownY: number;
 
+    /**
+     * Very low framerate tends to break path following. We make sure to react if that happens during certain frame
+     */
+    private readonly UNSUPERVISED_PATH_FOLLOW_MAX_DELTA_TIME: number = 50;
+
     constructor(
         Scene: GameScene,
         x: number,
@@ -36,7 +41,11 @@ export class Player extends Character {
 
         this.lastKnownX = x;
         this.lastKnownY = y;
-        this.scene.events.on("postupdate", this.detectOvershoot.bind(this));
+        this.scene.events.on("postupdate", (sys: Phaser.Scenes.Systems, time: number, dt: number) => {
+            if (dt > this.UNSUPERVISED_PATH_FOLLOW_MAX_DELTA_TIME) {
+                this.detectOvershoot();
+            }
+        });
     }
 
     /**
