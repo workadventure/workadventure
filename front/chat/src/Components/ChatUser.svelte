@@ -165,14 +165,14 @@
                 {/if}
             {/if}
         </h1>
-        <p class="tw-text-xs tw-mb-0 tw-font-condensed">
+        <p class="tw-text-xs tw-mb-0 tw-font-condensed tw-opacity-75">
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {user.isInSameMap
+                {@html user.isInSameMap
                     ? $LL.userList.isHere()
                     : user.roomName
-                    ? `${$LL.userList.in()} "${user.roomName}"`
+                    ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
                     : $LL.inAnotherMap()}
             {:else}
                 {$LL.userList.disconnected()}
