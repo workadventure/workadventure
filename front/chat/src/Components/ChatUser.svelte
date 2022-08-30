@@ -117,7 +117,7 @@
         on:click|stopPropagation={() => openChat(user)}
     >
         <div class="wa-container">
-            <img class="tw-w-full" src={getWoka(user.jid)} alt="Avatar" />
+            <img class="tw-w-full" style="image-rendering: pixelated;" src={getWoka(user.jid)} alt="Avatar" />
         </div>
         {#if user.active}
             <span
