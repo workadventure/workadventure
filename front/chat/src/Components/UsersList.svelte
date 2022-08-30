@@ -23,6 +23,9 @@
     let minimizeUser = true;
     const maxUsersMinimized = 7;
 
+    let usersContainerEl: HTMLElement;
+    let usersListEl: HTMLElement;
+
     function openChat(user: User) {
         return user;
         //dispatch('activeThread', user);
@@ -37,20 +40,17 @@
     $: me = usersList.find((user) => user.isMe);
     $: meArray = me ? [me] : [];
 
-    $: usersFiltered = meArray
-        .concat(
-            usersList
-                .filter((user) => user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue))
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .concat(
-                    usersList
-                        .filter(
-                            (user) => !user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue)
-                        )
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                )
-        )
-        .splice(0, minimizeUser ? maxUsersMinimized : usersList.length);
+    $: usersFiltered = meArray.concat(
+        usersList
+            .filter((user) => user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .concat(
+                usersList
+                    .filter((user) => !user.active && !user.isMe && user.name.toLocaleLowerCase().includes(searchValue))
+                    .sort((a, b) => a.name.localeCompare(b.name))
+            )
+    );
+    //.splice(0, minimizeUser ? maxUsersMinimized : usersList.length);
 </script>
 
 <div id="users" class="users tw-border-b tw-border-solid tw-border-0 tw-border-transparent tw-border-b-light-purple">
@@ -68,29 +68,41 @@
         </button>
     </div>
     {#if showUsers}
-        <div transition:fly={{ y: -30, duration: 100 }}>
-            {#if usersList.length === 0}
-                <div class="tw-px-5 tw-mb-2">
-                    <p>{$LL.roomEmpty()}</p>
-                    <button type="button" class="light tw-m-auto tw-cursor-pointer tw-px-3" on:click={showInviteMenu}>
-                        {$LL.invite()}
-                    </button>
-                </div>
-            {:else}
-                {#each usersFiltered as user}
-                    <ChatUser
-                        {mucRoom}
-                        {openChat}
-                        {user}
-                        on:goTo={(event) => dispatch("goTo", event.detail)}
-                        on:rankUp={(event) => dispatch("rankUp", event.detail)}
-                        on:rankDown={(event) => dispatch("rankDown", event.detail)}
-                        on:ban={(event) => dispatch("ban", event.detail)}
-                        {searchValue}
-                        {meStore}
-                    />
-                {/each}
-            {/if}
+        <div
+            class="users-container"
+            transition:fly={{ y: -30, duration: 100 }}
+            bind:this={usersContainerEl}
+            style={`overflow-y: ${usersContainerEl?.clientHeight < usersListEl?.clientHeight ? "scroll" : "hidden"}`}
+        >
+            <div bind:this={usersListEl}>
+                {#if usersList.length === 0}
+                    <div class="tw-px-5 tw-mb-2">
+                        <p>{$LL.roomEmpty()}</p>
+                        <button
+                            type="button"
+                            class="light tw-m-auto tw-cursor-pointer tw-px-3"
+                            on:click={showInviteMenu}
+                        >
+                            {$LL.invite()}
+                        </button>
+                    </div>
+                {:else}
+                    {#each usersFiltered as user}
+                        <ChatUser
+                            {mucRoom}
+                            {openChat}
+                            {user}
+                            on:goTo={(event) => dispatch("goTo", event.detail)}
+                            on:rankUp={(event) => dispatch("rankUp", event.detail)}
+                            on:rankDown={(event) => dispatch("rankDown", event.detail)}
+                            on:ban={(event) => dispatch("ban", event.detail)}
+                            {searchValue}
+                            {meStore}
+                        />
+                    {/each}
+                {/if}
+            </div>
+            <!--
             {#if [...$usersListStore].length > maxUsersMinimized}
                 <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
                     <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
@@ -99,6 +111,13 @@
                     </button>
                 </div>
             {/if}
+            -->
         </div>
     {/if}
 </div>
+
+<style lang="scss">
+    .users-container {
+        max-height: 40vh;
+    }
+</style>
