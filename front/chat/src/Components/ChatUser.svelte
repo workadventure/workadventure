@@ -88,6 +88,18 @@
         }
     }
 
+    function getNameOfAvailabilityStatus(status: number) {
+        switch (status) {
+            case 1:
+            default:
+                return $LL.status.online();
+            case 2:
+                return $LL.status.away();
+            case 3:
+                return $LL.status.unavailable();
+        }
+    }
+
     $: chunks = highlightWords({
         text: user.name.match(/\[\d*]/) ? user.name.substring(0, user.name.search(/\[\d*]/)) : user.name,
         query: searchValue,
@@ -109,6 +121,7 @@
         </div>
         {#if user.active}
             <span
+                title={getNameOfAvailabilityStatus(user.availabilityStatus)}
                 class={`tw-w-4 tw-h-4 ${getColorOfAvailabilityStatus(
                     user.availabilityStatus
                 )} tw-block tw-rounded-full tw-absolute tw-right-0 tw-top-0 tw-transform tw-translate-x-2 -tw-translate-y-1 tw-border-solid tw-border-2 tw-border-light-purple`}
@@ -139,7 +152,7 @@
             {/if}
             {#if ENABLE_OPENID}
                 {#if user.isMember}
-                    <span class="tw-text-pop-green" title={$LL.role.member()}>
+                    <span title={$LL.role.member()}>
                         <UsersIcon size="13" />
                     </span>
                     <!--
@@ -156,7 +169,7 @@
             {#if user.isMe}
                 {$LL.you()}
             {:else if user.active}
-                {user.isInSameMap ? $LL.userList.isHere() : $LL.userList.isOverThere()}
+                {user.isInSameMap ? $LL.userList.isHere() : `${$LL.userList.in()} "${user.roomName}"`}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}

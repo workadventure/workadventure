@@ -3,6 +3,7 @@ import { v4 } from "uuid";
 import {
     MucRoomDefinitionMessage,
     PusherToIframeMessage,
+    XmppConnectionNotAuthorizedMessage,
     XmppConnectionStatusChangeMessage,
     XmppMessage,
     XmppSettingsMessage,
@@ -11,15 +12,12 @@ import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefi
 import { EJABBERD_DOMAIN, EJABBERD_WS_URI } from "../Enum/EnvironmentVariable";
 import CancelablePromise from "cancelable-promise";
 import jid, { JID } from "@xmpp/jid";
-import { client, xml } from "@xmpp/client";
+import { Client, client, xml } from "@xmpp/client";
+import SASLError from "@xmpp/sasl/lib/SASLError";
+import StreamError from "@xmpp/connection/lib/StreamError";
 
 //eslint-disable-next-line @typescript-eslint/no-var-requires
 const parse = require("@xmpp/xml/lib/parse");
-
-export interface XmppSocket {
-    send: Function;
-    stop: Function;
-}
 
 interface XmlElement {
     name: string;
@@ -29,15 +27,16 @@ interface XmlElement {
 
 export class XmppClient {
     private address!: JID;
-    private clientPromise!: CancelablePromise<XmppSocket>;
+    private clientPromise!: CancelablePromise<Client>;
     private clientJID: JID;
     private clientID: string;
     private clientDomain: string;
     private clientResource: string;
     private clientPassword: string;
     private timeout: ReturnType<typeof setTimeout> | undefined;
-    private xmppSocket: XmppSocket | undefined;
-    private pingInterval: NodeJS.Timer | null = null;
+    private xmppSocket: Client | undefined;
+    private pingInterval: NodeJS.Timer | undefined;
+    private isAuthorized = true;
 
     constructor(private clientSocket: ExSocketInterface, private initialMucRooms: MucRoomDefinitionInterface[]) {
         this.clientJID = jid(clientSocket.jabberId);
@@ -50,10 +49,8 @@ export class XmppClient {
 
     // FIXME: complete a scenario where ejabberd is STOPPED when a user enters the room and then started
 
-    private createClient(
-        res: (value: XmppSocket | PromiseLike<XmppSocket>) => void,
-        rej: (reason?: unknown) => void
-    ): void {
+    private createClient(res: (value: Client | PromiseLike<Client>) => void, rej: (reason?: unknown) => void): void {
+        if (!this.isAuthorized) return;
         try {
             let status: "disconnected" | "connected" = "disconnected";
             const xmpp = client({
@@ -66,9 +63,13 @@ export class XmppClient {
             this.xmppSocket = xmpp;
 
             xmpp.on("error", (err: unknown) => {
-                console.info("XmppClient => createClient => receive => error", err);
+                if (err instanceof SASLError)
+                    console.info("XmppClient => createClient => receive => error", err.name, err.condition);
+                else {
+                    console.info("XmppClient => createClient => receive => error", err);
+                }
                 //console.error("XmppClient => receive => error =>", err);
-                this.close();
+                this.xmppSocket?.stop();
             });
 
             xmpp.reconnect.on("reconnecting", () => {
@@ -82,7 +83,7 @@ export class XmppClient {
             xmpp.on("offline", () => {
                 if (this.pingInterval) {
                     clearInterval(this.pingInterval);
-                    this.pingInterval = null;
+                    this.pingInterval = undefined;
                 }
                 console.info("XmppClient => createClient => offline => status", status);
                 status = "disconnected";
@@ -94,10 +95,13 @@ export class XmppClient {
                 // We should probably retry regularly (every 10 seconds)
                 if (this.timeout) {
                     clearTimeout(this.timeout);
+                    this.timeout = undefined;
                 }
-                this.timeout = setTimeout(() => {
-                    this.start();
-                }, 10_000);
+                if (this.isAuthorized) {
+                    this.timeout = setTimeout(() => {
+                        this.start();
+                    }, 10_000);
+                }
             });
 
             xmpp.on("disconnect", () => {
@@ -165,8 +169,20 @@ export class XmppClient {
                     res(xmpp);
                 })
                 .catch((err: Error) => {
-                    console.error("XmppClient => createClient => start => error", err);
                     //throw err;
+                    if (err instanceof SASLError || err instanceof StreamError) {
+                        this.isAuthorized = err.condition !== "not-authorized";
+                        if (!this.isAuthorized) {
+                            const pusherToIframeMessage = new PusherToIframeMessage();
+                            pusherToIframeMessage.setXmppconnectionnotauthorized(
+                                new XmppConnectionNotAuthorizedMessage()
+                            );
+
+                            if (!this.clientSocket.disconnecting) {
+                                this.clientSocket.send(pusherToIframeMessage.serializeBinary().buffer, true);
+                            }
+                        }
+                    }
                     rej(err);
                 });
 
@@ -209,6 +225,7 @@ export class XmppClient {
         //cancel promise
         console.info("xmppClient => close");
         this.clientPromise.cancel();
+        this.xmppSocket?.stop();
     }
 
     start(): CancelablePromise {
@@ -225,39 +242,51 @@ export class XmppClient {
 
                     //send present unavailable
                     try {
-                        await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
-
-                        //stop xmpp socket client
-                        this.xmppSocket?.stop();
+                        if (this.xmppSocket?.status === "online") {
+                            await this.xmppSocket?.send(xml("presence", { type: "unavailable" }));
+                        }
                     } catch (err) {
                         console.info("XmppClient => onCancel => presence => err", err);
+                    }
+                    try {
+                        //stop xmpp socket client
+                        await this.xmppSocket?.stop();
+                    } catch (err) {
+                        console.info("XmppClient => onCancel => xmppSocket => err", err);
                     }
                 })();
             });
         }).catch((err) => {
-            console.error("> Connecting from xmppClient => error: ", err);
+            if (err instanceof SASLError) {
+                console.info("clientPromise => receive => error", err.name, err.condition);
+            } else {
+                console.info("clientPromise => receive => error", err);
+            }
             this.clientPromise.cancel();
         }));
     }
 
-    send(stanza: string): Promise<void> {
+    async send(stanza: string): Promise<void> {
         const ctx = parse(stanza);
-        return this.xmppSocket?.send(ctx);
+        await this.xmppSocket?.send(ctx);
+        return;
     }
 
     ping(): void {
-        this.xmppSocket?.send(
-            xml(
-                "iq",
-                {
-                    from: this.clientJID,
-                    to: EJABBERD_DOMAIN,
-                    id: v4(),
-                    type: "get",
-                },
-                xml("ping", { xmlns: "urn:xmpp:ping" })
-            )
-        );
+        if (this.isAuthorized && this.xmppSocket?.status === "online") {
+            this.xmppSocket?.send(
+                xml(
+                    "iq",
+                    {
+                        from: this.clientJID,
+                        to: EJABBERD_DOMAIN,
+                        id: v4(),
+                        type: "get",
+                    },
+                    xml("ping", { xmlns: "urn:xmpp:ping" })
+                )
+            );
+        }
         // TODO catch pong
     }
 }

@@ -5,7 +5,7 @@ const en_US: BaseTranslation = {
     userList: {
         disconnected: "Disconnected",
         isHere: "Is on this map !",
-        isOverThere: "Is on another map !",
+        in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
         walkTo: "Walk to",
@@ -18,6 +18,11 @@ const en_US: BaseTranslation = {
         admin: "Administrator",
         member: "Member",
         visitor: "Visitor",
+    },
+    status: {
+        online: "Online",
+        away: "Away",
+        unavailable: "Unavailable",
     },
     logIn: "Log in",
     signIn: "Register or log in to enjoy all the features of the chat !",
@@ -56,6 +61,7 @@ const en_US: BaseTranslation = {
         forum: "on the forum",
     },
     see: "See",
+    show: "Show",
     less: "less",
     more: "more",
     sendBack: "Send back",
@@ -90,6 +96,8 @@ const en_US: BaseTranslation = {
         openCoWebsite: "Open in co-website",
         copy: "copy the link",
     },
+    needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
+    refresh: "Refresh",
 };
 
 export default en_US;

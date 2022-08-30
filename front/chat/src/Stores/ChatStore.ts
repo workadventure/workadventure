@@ -1,5 +1,4 @@
 import { derived, writable } from "svelte/store";
-import type { PlayerInterface } from "../Type/PlayerInterface";
 import { Subject } from "rxjs";
 import { userStore } from "./LocalUserStore";
 import { UserData } from "../Messages/JsonMessages/ChatData";
@@ -147,7 +146,7 @@ export const timelineActiveStore = writable<boolean>(false);
 
 export const lastTimelineMessageRead = writable<Date>(new Date());
 
-export const writingStatusMessageStore = writable<Set<PlayerInterface>>(new Set<PlayerInterface>());
+export const writingStatusMessageStore = writable<Set<string>>(new Set<string>());
 
 export const chatInputFocusStore = writable(false);
 
@@ -180,3 +179,5 @@ export const hasInProgressUploadingFile = derived([filesUploadStore], ([$filesUp
 
 export const chatSoundsStore = writable<boolean>(true);
 export const chatNotificationsStore = writable<boolean>(true);
+
+export const connectionNotAuthorized = writable<boolean>(false);

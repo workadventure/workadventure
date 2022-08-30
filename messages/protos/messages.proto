@@ -673,6 +673,7 @@ message PusherToIframeMessage{
     XmppSettingsMessage xmppSettingsMessage = 1;
     XmppConnectionStatusChangeMessage xmppConnectionStatusChangeMessage = 2;
     XmppMessage xmppMessage = 3;
+    XmppConnectionNotAuthorizedMessage xmppConnectionNotAuthorized= 4;
   }
 }
 
@@ -687,6 +688,10 @@ message XmppSettingsMessage{
   string jid = 1;
   string conferenceDomain = 2;
   repeated MucRoomDefinitionMessage rooms = 3;
+}
+
+message XmppConnectionNotAuthorizedMessage{
+
 }
 
 

@@ -15,6 +15,7 @@ import emoji from "./emoji";
 import trigger from "./trigger";
 import muc from "./muc";
 import notification from "./notification";
+import actionbar from "./actionbar";
 
 const zh_CN = merge(en_US, {
     audio,
@@ -32,6 +33,7 @@ const zh_CN = merge(en_US, {
     trigger,
     muc,
     notification,
+    actionbar,
 });
 
 export default zh_CN;
