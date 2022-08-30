@@ -173,7 +173,7 @@
                     ? $LL.userList.isHere()
                     : user.roomName
                     ? `${$LL.userList.in()} <span class="tw-font-medium">${user.roomName}</span>`
-                    : $LL.inAnotherMap()}
+                    : $LL.userList.inAnotherMap()}
             {:else}
                 {$LL.userList.disconnected()}
             {/if}
