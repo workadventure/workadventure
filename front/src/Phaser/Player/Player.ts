@@ -48,16 +48,14 @@ export class Player extends Character {
 
         // The current position should be within the bounding box made of the last known position and the target position
         if (this.pathToFollow && this.pathToFollow.length > 0) {
-            const nearestTarget = this.pathToFollow[0];
+            const nearestTarget = { ...this.pathToFollow[0] };
             const left = Math.min(this.lastKnownX, nearestTarget.x);
             const right = Math.max(this.lastKnownX, nearestTarget.x);
             const top = Math.min(this.lastKnownY, nearestTarget.y);
             const bottom = Math.max(this.lastKnownY, nearestTarget.y);
             if (!(left <= this.x && this.x <= right && top <= this.y && this.y <= bottom)) {
-                console.log("OVERSHOOT DETECTED!!!! WE WENT TOO FAR! LET'S RESET THE SPRITE POSITION");
-                //this.setPosition(nearestTarget.x, nearestTarget.y);
-                // TODO: we need to find a way to reset the sprite position here
-                // TODO: we probably need to stop the sprite too!
+                this.getBody().reset(nearestTarget.x, nearestTarget.y);
+                this.pathToFollow.shift();
             }
         }
 
