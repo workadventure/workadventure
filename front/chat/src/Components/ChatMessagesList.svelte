@@ -293,7 +293,13 @@
                             style={`background-color: ${getColor(message.jid)}`}
                         >
                             <div class="wa-container">
-                                <img class="tw-w-full" src={getWoka(message.jid)} alt="Avatar" loading="lazy" />
+                                <img
+                                    class="tw-w-full"
+                                    style="image-rendering: pixelated;"
+                                    src={getWoka(message.jid)}
+                                    alt="Avatar"
+                                    loading="lazy"
+                                />
                             </div>
                         </div>
                         <div
