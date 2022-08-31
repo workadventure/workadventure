@@ -468,7 +468,7 @@
                                 document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                         >
                             <div
-                                class={`tw-text-pop-red tw-ml-1 tw-flex ${
+                                class={`tw-cursor-pointer tw-text-pop-red tw-ml-1 tw-flex ${
                                     needHideHeader(message.name, message.time, i) ? "" : "tw-mt-4"
                                 }`}
                                 on:click={() =>
