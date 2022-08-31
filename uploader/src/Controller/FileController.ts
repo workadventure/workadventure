@@ -7,6 +7,7 @@ import {Readable} from 'stream'
 import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
+import Axios from "axios";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -64,8 +65,8 @@ export class FileController extends BaseController {
                     });
 
                     await uploaderService.uploadTempFile(
-                        audioMessageId, 
-                        Buffer.concat(chunks), 
+                        audioMessageId,
+                        Buffer.concat(chunks),
                         60
                     );
 
@@ -183,7 +184,7 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     res.writeStatus("200 OK");
                     //TODO manage type with the extension of file
-                    const memeType = mimeTypeManager.getMimeTypeByFileName(id); 
+                    const memeType = mimeTypeManager.getMimeTypeByFileName(id);
                     if(memeType !== false){
                         res.writeHeader("Content-Type", memeType);
                     }
@@ -237,7 +238,10 @@ export class FileController extends BaseController {
             (async () => {
                 res.onAborted(() => {
                     console.warn('upload-audio-message request was aborted');
-                })
+                });
+
+                let userRoomToken = null;
+                let isPremium = '0';
 
                 try {
                     const chunksByFile: Map<string, Buffer> = new Map<string, Buffer>();
@@ -254,27 +258,39 @@ export class FileController extends BaseController {
                                     chunksByFile.set(filename, Buffer.concat(chunks));
                                 }
                             })();
+                        },
+                        onField: (fieldname: string, value: any) => {
+                            if(fieldname === 'userRoomToken'){
+                                userRoomToken = value;
+                            }
                         }
                     });
+
+                    if(!userRoomToken){
+                        throw new Error('No user room token');
+                    }
+
+                    isPremium = process.env.ADMIN_API_URL? await Axios.get(`${process.env.ADMIN_API_URL}/api/is_premium`, {headers: {userRoomToken}} ).then(response => response.data).catch(() => '1') : '1';
+                    const maxSizeFile = isPremium? 1_073_741_824 : 5_242_880;
 
                     if(params == undefined || chunksByFile.size === 0){
                         throw new Error('no file name');
                     }
-                    
+
                     const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        if(buffer.byteLength > 1073741824){
-                            throw new ByteLenghtBufferException(`The file ${fileName} is too big`);
+                        if(buffer.byteLength > maxSizeFile){
+                            throw new ByteLenghtBufferException(`file-too-big`);
                         }
                         const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
                         const {Location, Key} = await uploaderService.uploadFile(
-                            fileName, 
-                            buffer, 
+                            fileName,
+                            buffer,
                             mimeType
                         );
                         uploadedFile.push({
-                            name: fileName, 
-                            id: Key, 
+                            name: fileName,
+                            id: Key,
                             location: Location,
                             size: buffer.byteLength,
                             lastModified: new Date(),
@@ -296,7 +312,8 @@ export class FileController extends BaseController {
                         this.addCorsHeaders(res);
                         res.writeHeader('Content-Type', 'application/json');
                         return res.end(JSON.stringify({
-                            message: err.message
+                            message: err.message,
+                            isPremium
                         }));
                     }
                     res.writeStatus("500 Internal Server Error");

@@ -11,6 +11,7 @@ export const isUserData = z.object({
     isLogged: z.boolean(),
     availabilityStatus: z.number(),
     roomName: z.optional(z.nullable(z.string())),
+    userRoomToken: z.optional(z.nullable(z.string())),
 });
 
 export type UserData = z.infer<typeof isUserData>;

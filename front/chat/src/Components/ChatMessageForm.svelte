@@ -26,6 +26,7 @@
     import { mucRoomsStore } from "../Stores/MucRoomsStore";
     import { FileExt, fileMessageManager, UploadedFile, uploadingState } from "../Services/FileMessageManager";
     import File from "./Content/File.svelte";
+    import crown from "../../public/static/svg/icone-premium-crown.svg";
 
     export let mucRoom: MucRoom;
 
@@ -38,7 +39,6 @@
     let emojiOpened = false;
     let newMessageText = "";
     let usersSearching: User[] = [];
-
 
     const maxCharMessage = 10_000;
     $: isMessageTooLong = newMessageText.length > maxCharMessage;
@@ -55,7 +55,7 @@
 
     function adjustHeight() {
         textarea.style.height = "auto";
-        textarea.style.height = textarea.scrollHeight+ "px";
+        textarea.style.height = textarea.scrollHeight + "px";
     }
 
     function sendMessage() {
@@ -203,7 +203,7 @@
         return true;
     }
 
-    function onKeyUp(){
+    function onKeyUp() {
         adjustHeight();
     }
 
@@ -256,6 +256,24 @@
             emojiOpened = false;
         });
     });
+
+    function getFileError(fileUploaded) {
+        switch (fileUploaded.errorMessage) {
+            case "file-too-big": {
+                if (fileUploaded.isPremium === "1") {
+                    return $LL.file.tooBigPremium({ fileName: fileUploaded.name });
+                } else {
+                    if (mucRoom.getMe().isAdmin) {
+                        return $LL.file.tooBigNeedPremium({ fileName: fileUploaded.name });
+                    }
+                    return $LL.file.tooBig({ fileName: fileUploaded.name });
+                }
+            }
+            default: {
+                return fileUploaded.errorMessage;
+            }
+        }
+    }
 </script>
 
 <div class="wa-message-form">
@@ -328,11 +346,19 @@
                 <div
                     class="upload-file tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
                 >
-                    {#if fileUploaded.errorMessage != undefined}
+                    {#if fileUploaded.errorMessage !== undefined}
                         <div
-                            class="error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-3 tw-mb-1"
+                            class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
+                                fileUploaded.isPremium === "0" && mucRoom.getMe().isAdmin
+                                    ? "tw-text-orange"
+                                    : "tw-text-pop-red"
+                            } tw-absolute tw-w-full`}
                         >
-                            <p class="tw-m-0">{fileUploaded.errorMessage}</p>
+                            <p class="tw-m-0">{@html getFileError(fileUploaded)}</p>
+                            {#if fileUploaded.isPremium === "1" && mucRoom.getMe().isAdmin}<button
+                                    class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
+                                    ><img src={crown} class="tw-mr-1" /> Passez premium</button
+                                >{/if}
                         </div>
                     {/if}
                     <div
@@ -345,7 +371,14 @@
                             <div
                                 class="alert-upload tw-cursor-pointer"
                                 on:click|preventDefault|stopPropagation={() => {
-                                    resend();
+                                    if (
+                                        fileUploaded.errorMessage !== undefined &&
+                                        fileUploaded.errorMessage === "file-too-big"
+                                    ) {
+                                        showErrorMessages();
+                                    } else {
+                                        resend();
+                                    }
                                 }}
                             >
                                 <AlertCircleIcon size="14" />
@@ -369,24 +402,29 @@
             {/each}
             <div class="tw-flex tw-items-end tw-relative">
                 <div class="tw-relative tw-w-full">
-                {#if isMessageTooLong}
-                    <div class="tw-text-pop-red tw-text-xxxs tw-absolute tw-right-4 tw-font-bold" style="bottom: -9px;">{newMessageText.length}/{maxCharMessage}</div>
-                {/if}
-                <textarea
-                    type="text"
-                    bind:this={textarea}
-                    bind:value={newMessageText}
-                    placeholder={$LL.enterText()}
-                    on:input={analyseText}
-                    on:focus={onFocus}
-                    on:blur={onBlur}
-                    on:keydown={onKeyDown}
-                    on:keyup={onKeyUp}
-                    on:keypress={onKeyPress}
-                    rows="1"
-                    style='margin-bottom: 0;'
-                    class="tw-w-full"
-                />
+                    {#if isMessageTooLong}
+                        <div
+                            class="tw-text-pop-red tw-text-xxxs tw-absolute tw-right-4 tw-font-bold"
+                            style="bottom: -9px;"
+                        >
+                            {newMessageText.length}/{maxCharMessage}
+                        </div>
+                    {/if}
+                    <textarea
+                        type="text"
+                        bind:this={textarea}
+                        bind:value={newMessageText}
+                        placeholder={$LL.enterText()}
+                        on:input={analyseText}
+                        on:focus={onFocus}
+                        on:blur={onBlur}
+                        on:keydown={onKeyDown}
+                        on:keyup={onKeyUp}
+                        on:keypress={onKeyPress}
+                        rows="1"
+                        style="margin-bottom: 0;"
+                        class="tw-w-full"
+                    />
                 </div>
 
                 <button
@@ -398,19 +436,25 @@
                     <SmileIcon size="17" />
                 </button>
                 <input type="file" id="file" name="file" class="tw-hidden" on:input={handleInputFile} multiple />
-                <label for="file" class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"><PaperclipIcon size="17" /></label>
+                <label
+                    for="file"
+                    class="tw-px-1 tw-py-1 tw-mx-0.5 tw-my-1 tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-cursor-pointer"
+                    ><PaperclipIcon size="17" /></label
+                >
                 <button
                     id="send"
                     type="submit"
                     class={`${
-                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile && !isMessageTooLong? "can-send" : "cant-send"
+                        !$hasErrorUploadingFile && !$hasInProgressUploadingFile && !isMessageTooLong
+                            ? "can-send"
+                            : "cant-send"
                     } tw-bg-transparent tw-h-8 tw-w-8 tw-p-0 tw-inline-flex tw-justify-center tw-items-center tw-right-0 tw-text-light-blue`}
                     on:mouseover={showErrorMessages}
                     on:focus={showErrorMessages}
                     on:click={sendMessage}
                 >
                     {#if $hasErrorUploadingFile || isMessageTooLong}
-                        <AlertCircleIcon size="17" class="tw-text-pop-red"/>
+                        <AlertCircleIcon size="17" class="tw-text-pop-red" />
                     {:else if $hasInProgressUploadingFile}
                         <LoaderIcon size="17" class="tw-animate-spin" />
                     {:else}
@@ -500,12 +544,13 @@
             flex-wrap: nowrap;
             .error-hover {
                 display: none;
-                position: absolute;
-                color: red;
                 left: 0;
-                top: -32px;
-                width: 100%;
                 min-height: 30px;
+                bottom: 35px;
+            }
+            button {
+                min-height: 0;
+                cursor: pointer;
             }
             &:hover {
                 .error-hover {

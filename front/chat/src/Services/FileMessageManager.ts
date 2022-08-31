@@ -2,6 +2,7 @@ import { uploaderManager } from "./UploaderManager";
 import { filesUploadStore } from "../Stores/ChatStore";
 import xml, { Element } from "@xmpp/xml";
 import { get } from "svelte/store";
+import { userStore } from "../Stores/LocalUserStore";
 
 const _VERBOSE = true;
 
@@ -21,6 +22,7 @@ export interface UploadedFileInterface {
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
     public errorMessage?: string;
+    public isPremium = "0";
     constructor(
         public name: string,
         public id: string,
@@ -75,6 +77,7 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
 export interface FileExt extends File {
     uploadState: uploadingState;
     errorMessage?: string;
+    isPremium?: string;
 }
 
 export class FileMessageManager {
@@ -93,7 +96,11 @@ export class FileMessageManager {
         if (_VERBOSE) console.warn("[XMPP]", "File uploaded");
 
         try {
-            const results = await uploaderManager.write(files);
+            const userRoomToken = userStore.get().userRoomToken;
+            if (!userRoomToken) {
+                throw new Error("User not authorized to upload file;");
+            }
+            const results = await uploaderManager.write(files, userRoomToken);
 
             //update state of message
             filesUploadStore.update((list) => {
@@ -111,6 +118,7 @@ export class FileMessageManager {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
                     file.errorMessage = err.response?.data?.message;
+                    file.isPremium = err.response?.data?.isPremium;
                     list.set(file.name, file);
                 }
                 return list;

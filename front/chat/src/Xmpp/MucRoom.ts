@@ -1051,6 +1051,10 @@ export class MucRoom {
         return get(this.meStore).isAdmin;
     }
 
+    public getMe() {
+        return get(this.presenceStore).get(this.getMyJID().toString());
+    }
+
     private updateUser(
         jid: JID | string,
         nick: string | null = null,
