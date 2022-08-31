@@ -4,7 +4,7 @@
     import { iframeListener } from "../IframeListener";
 
     let countReconnection = 10;
-    let timeout: NodeJS.Timeout|null = null;
+    let timeout: NodeJS.Timeout | null = null;
 
     function chrono() {
         if (countReconnection === 0) {
