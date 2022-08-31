@@ -68,7 +68,7 @@ export class XmppClient {
                     //close reset mucroom, close connection and try to restart
                     xmppServerConnectionStatusStore.set(false);
                     mucRoomsStore.reset();
-                    //connection.close();
+                    connection.close();
                     break;
                 }
                 case Status.UNRECOGNIZED: {

@@ -232,6 +232,7 @@
                                 <div class="wa-container">
                                     <img
                                         class="tw-w-full"
+                                        style="image-rendering: pixelated;"
                                         src={`${
                                             message.author?.woka ? message.author?.woka : "/static/images/logo-wa-2.png"
                                         }`}

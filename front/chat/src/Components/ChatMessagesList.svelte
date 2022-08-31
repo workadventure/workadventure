@@ -293,7 +293,13 @@
                             style={`background-color: ${getColor(message.jid)}`}
                         >
                             <div class="wa-container">
-                                <img class="tw-w-full" src={getWoka(message.jid)} alt="Avatar" loading="lazy" />
+                                <img
+                                    class="tw-w-full"
+                                    style="image-rendering: pixelated;"
+                                    src={getWoka(message.jid)}
+                                    alt="Avatar"
+                                    loading="lazy"
+                                />
                             </div>
                         </div>
                         <div
@@ -468,7 +474,7 @@
                                 document.getElementById(`error_${message.id}`)?.classList.add("tw-invisible")}
                         >
                             <div
-                                class={`tw-text-pop-red tw-ml-1 tw-flex ${
+                                class={`tw-cursor-pointer tw-text-pop-red tw-ml-1 tw-flex ${
                                     needHideHeader(message.name, message.time, i) ? "" : "tw-mt-4"
                                 }`}
                                 on:click={() =>

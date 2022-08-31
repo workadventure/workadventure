@@ -91,14 +91,14 @@
                     />
                 {/each}
             {/if}
-            {#if [...$usersListStore].length > maxUsersMinimized}
-                <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
-                    <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
-                        {$LL.see()}
-                        {minimizeUser ? $LL.more() : $LL.less()} …
-                    </button>
-                </div>
-            {/if}
         </div>
+        {#if [...$usersListStore].length > maxUsersMinimized}
+            <div class="tw-px-2 tw-mb-1  tw-flex tw-justify-end" on:click={() => (minimizeUser = !minimizeUser)}>
+                <button class="tw-underline tw-text-sm tw-text-lighter-purple tw-font-condensed hover:tw-underline">
+                    {$LL.see()}
+                    {minimizeUser ? $LL.more() : $LL.less()} …
+                </button>
+            </div>
+        {/if}
     {/if}
 </div>
