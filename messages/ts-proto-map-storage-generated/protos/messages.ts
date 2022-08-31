@@ -210,10 +210,10 @@ export interface LockGroupPromptMessage {
 
 export interface ModifyAreaMessage {
     id: number;
-    x: number | undefined;
-    y: number | undefined;
-    width: number | undefined;
-    height: number | undefined;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
 }
 
 export interface ClientToServerMessage {
@@ -1787,24 +1787,24 @@ export const LockGroupPromptMessage = {
     },
 };
 
-const baseModifyAreaMessage: object = { id: 0 };
+const baseModifyAreaMessage: object = { id: 0, x: 0, y: 0, width: 0, height: 0 };
 
 export const ModifyAreaMessage = {
     encode(message: ModifyAreaMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
         if (message.id !== 0) {
             writer.uint32(8).int32(message.id);
         }
-        if (message.x !== undefined) {
-            UInt32Value.encode({ value: message.x! }, writer.uint32(18).fork()).ldelim();
+        if (message.x !== 0) {
+            writer.uint32(16).uint32(message.x);
         }
-        if (message.y !== undefined) {
-            UInt32Value.encode({ value: message.y! }, writer.uint32(26).fork()).ldelim();
+        if (message.y !== 0) {
+            writer.uint32(24).uint32(message.y);
         }
-        if (message.width !== undefined) {
-            UInt32Value.encode({ value: message.width! }, writer.uint32(34).fork()).ldelim();
+        if (message.width !== 0) {
+            writer.uint32(32).uint32(message.width);
         }
-        if (message.height !== undefined) {
-            UInt32Value.encode({ value: message.height! }, writer.uint32(42).fork()).ldelim();
+        if (message.height !== 0) {
+            writer.uint32(40).uint32(message.height);
         }
         return writer;
     },
@@ -1820,16 +1820,16 @@ export const ModifyAreaMessage = {
                     message.id = reader.int32();
                     break;
                 case 2:
-                    message.x = UInt32Value.decode(reader, reader.uint32()).value;
+                    message.x = reader.uint32();
                     break;
                 case 3:
-                    message.y = UInt32Value.decode(reader, reader.uint32()).value;
+                    message.y = reader.uint32();
                     break;
                 case 4:
-                    message.width = UInt32Value.decode(reader, reader.uint32()).value;
+                    message.width = reader.uint32();
                     break;
                 case 5:
-                    message.height = UInt32Value.decode(reader, reader.uint32()).value;
+                    message.height = reader.uint32();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1842,30 +1842,30 @@ export const ModifyAreaMessage = {
     fromJSON(object: any): ModifyAreaMessage {
         const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
         message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : undefined;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : undefined;
-        message.width = object.width !== undefined && object.width !== null ? Number(object.width) : undefined;
-        message.height = object.height !== undefined && object.height !== null ? Number(object.height) : undefined;
+        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
+        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
+        message.width = object.width !== undefined && object.width !== null ? Number(object.width) : 0;
+        message.height = object.height !== undefined && object.height !== null ? Number(object.height) : 0;
         return message;
     },
 
     toJSON(message: ModifyAreaMessage): unknown {
         const obj: any = {};
         message.id !== undefined && (obj.id = Math.round(message.id));
-        message.x !== undefined && (obj.x = message.x);
-        message.y !== undefined && (obj.y = message.y);
-        message.width !== undefined && (obj.width = message.width);
-        message.height !== undefined && (obj.height = message.height);
+        message.x !== undefined && (obj.x = Math.round(message.x));
+        message.y !== undefined && (obj.y = Math.round(message.y));
+        message.width !== undefined && (obj.width = Math.round(message.width));
+        message.height !== undefined && (obj.height = Math.round(message.height));
         return obj;
     },
 
     fromPartial<I extends Exact<DeepPartial<ModifyAreaMessage>, I>>(object: I): ModifyAreaMessage {
         const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
         message.id = object.id ?? 0;
-        message.x = object.x ?? undefined;
-        message.y = object.y ?? undefined;
-        message.width = object.width ?? undefined;
-        message.height = object.height ?? undefined;
+        message.x = object.x ?? 0;
+        message.y = object.y ?? 0;
+        message.width = object.width ?? 0;
+        message.height = object.height ?? 0;
         return message;
     },
 };

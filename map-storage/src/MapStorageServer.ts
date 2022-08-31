@@ -1,5 +1,5 @@
 import { sendUnaryData, ServerUnaryCall } from "@grpc/grpc-js";
-import { AreaType } from "@workadventure/map-editor";
+import { AreaType, ITiledMapRectangleObject } from "@workadventure/map-editor";
 import { mapsManager } from "./MapsManager";
 import {
     EditMapMessage,
@@ -17,41 +17,42 @@ const mapStorageServer: MapStorageServer = {
         call: ServerUnaryCall<EditMapWithKeyMessage, EmptyMessage>,
         callback: sendUnaryData<EditMapMessage>
     ): void {
-        // const editMapMessage = call.request.getEditmapmessage();
-        // if (!editMapMessage) {
-        //     callback(null, new EditMapMessage());
-        //     return;
-        // }
-        // const gameMap = mapsManager.getGameMap(call.request.getMapkey());
-        // if (!gameMap) {
-        //     // TODO: Send an error?
-        //     callback(null, new EditMapMessage());
-        //     return;
-        // }
-        // if (editMapMessage.hasModifyareamessage()) {
-        //     const modifyAreaMessage = editMapMessage.getModifyareamessage();
-        //     if (modifyAreaMessage) {
-        //         // TODO: Not feeling this way of handling incoming data. gRPC problem?
-        //         const area = gameMap.getGameMapAreas().getArea(modifyAreaMessage.getId(), AreaType.Static);
-        //         if (area) {
-        //             const areaObjectConfig = {
-        //                 ...area,
-        //                 x: Number(modifyAreaMessage.getX()),
-        //                 y: Number(modifyAreaMessage.getY()),
-        //                 width: Number(modifyAreaMessage.getWidth()),
-        //                 height: Number(modifyAreaMessage.getHeight()),
-        //             };
-        //             mapsManager.executeCommand(call.request.getMapkey(), {
-        //                 type: "UpdateAreaCommand",
-        //                 areaObjectConfig,
-        //             });
-        //             callback(null, editMapMessage);
-        //             return;
-        //         }
-        //     }
-        // }
-        // // TODO: Change to EmptyMessage?
-        // callback(null, new EditMapMessage());
+        const editMapMessage = call.request.editMapMessage;
+        if (!editMapMessage || !editMapMessage.message) {
+            callback(null, {});
+            return;
+        }
+        const gameMap = mapsManager.getGameMap(call.request.mapKey);
+        if (!gameMap) {
+            // TODO: Send an error?
+            callback(null, {});
+            return;
+        }
+        switch (editMapMessage.message.$case) {
+            case "modifyAreaMessage": {
+                const message = editMapMessage.message.modifyAreaMessage;
+                const area = gameMap.getGameMapAreas().getArea(message.id, AreaType.Static);
+                if (area) {
+                    console.log(message);
+                    const areaObjectConfig: ITiledMapRectangleObject = {
+                        ...area,
+                        ...message,
+                    };
+                    mapsManager.executeCommand(call.request.mapKey, {
+                        type: "UpdateAreaCommand",
+                        areaObjectConfig,
+                    });
+                    callback(null, editMapMessage);
+                    return;
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        // TODO: Change to EmptyMessage?
+        callback(null, {});
     },
 };
 
