@@ -8,6 +8,10 @@ on:
 env:
   DOCKER_BUILDKIT: 1
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   delete_namespace:

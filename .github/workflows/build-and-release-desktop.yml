@@ -12,6 +12,10 @@ on:
 env:
   YARN_CACHE_FOLDER: ~/.yarn
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build_on_linux:
     name: "Build & release desktop app for ${{ matrix.os }}"

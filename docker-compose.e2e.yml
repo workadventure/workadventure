@@ -88,3 +88,13 @@ services:
         BUILDKIT_INLINE_CACHE: 1
     command: yarn run runprod
     volumes: []
+
+  ejabberd:
+    image: thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+    build:
+      context: xmpp/
+      cache_from:
+        - thecodingmachine/workadventure-simple-ecs:${DOCKER_TAG:-develop}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    volumes: []

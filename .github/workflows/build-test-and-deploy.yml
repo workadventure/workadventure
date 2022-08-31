@@ -8,6 +8,10 @@ on:
   pull_request:
     types: [labeled, synchronize, opened, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-front:
     runs-on: ubuntu-latest
@@ -248,11 +252,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
       # docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -286,6 +285,45 @@ jobs:
           cache-to: type=inline
           labels: ${{ steps.meta.outputs.labels }}
 
+  build-ejabberd:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      # docker
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - uses: rlespinasse/github-slug-action@3.1.0
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: thecodingmachine/workadventure-simple-ecs
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: xmpp/
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-from: type=registry,ref=thecodingmachine/workadventure-simple-ecs:${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          cache-to: type=inline
+          labels: ${{ steps.meta.outputs.labels }}
+
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.browser }}"
     strategy:
@@ -300,6 +338,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-ejabberd
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
@@ -401,6 +440,7 @@ jobs:
       - build-maps
       - build-uploader
       - build-map-storage
+      - build-ejabberd
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'deploy') }}
 
@@ -459,6 +499,7 @@ jobs:
           DEPLOY_REF: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_URL: ${{ secrets.POSTHOG_URL }}
+          EJABBERD_JWT_SECRET: ${{ secrets.EJABBERD_JWT_SECRET }}
         with:
           namespace: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 

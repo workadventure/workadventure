@@ -9,6 +9,10 @@ on:
       - develop
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   continuous-integration-front:
     name: "Continuous Integration Front"
