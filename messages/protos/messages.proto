@@ -134,9 +134,8 @@ message ClientToServerMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
     PingMessage pingMessage = 21;
-    //XmppMessage xmppMessage = 22;
-    AskPositionMessage askPositionMessage = 23;
-    EditMapMessage editMapMessage = 24;
+    AskPositionMessage askPositionMessage = 22;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -261,8 +260,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
-    EditMapMessage editMapMessage = 13;
+    EditMapMessage editMapMessage = 12;
   }
 }
 
@@ -691,7 +689,7 @@ message XmppSettingsMessage{
 }
 
 message XmppConnectionNotAuthorizedMessage{
-
+  string message = 1;
 }
 
 
