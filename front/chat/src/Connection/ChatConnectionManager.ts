@@ -34,7 +34,7 @@ class ConnectionManager {
     public start() {
         this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.uuid);
 
-        this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {
+        /*this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe(() => {
             if (this.setTimeout) {
                 clearTimeout(this.setTimeout);
             }
@@ -62,7 +62,7 @@ class ConnectionManager {
                     this.start();
                 }
             }, 10000));
-        });
+        });*/
     }
 
     get isClose(): boolean {
