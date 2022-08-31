@@ -1864,7 +1864,7 @@ ${escapedMessage}
         if (!targetRoom.isEqual(this.room)) {
             if (this.scene.get(targetRoom.key) === null) {
                 console.error("next room not loaded", targetRoom.key);
-                // Try to load next dame room from exit URL
+                // Try to load next game room from exit URL
                 // The policy of room can to be updated during a session and not load before
                 await this.loadNextGameFromExitUrl(targetRoom.key);
             }
