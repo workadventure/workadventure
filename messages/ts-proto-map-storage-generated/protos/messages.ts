@@ -1,23 +1,22 @@
 /* eslint-disable */
-import Long from "long";
 import {
-    makeGenericClientConstructor,
+    CallOptions,
     ChannelCredentials,
     ChannelOptions,
-    UntypedServiceImplementation,
+    Client,
+    ClientDuplexStream,
+    ClientReadableStream,
+    ClientUnaryCall,
     handleBidiStreamingCall,
     handleServerStreamingCall,
     handleUnaryCall,
-    Client,
-    ClientDuplexStream,
-    CallOptions,
+    makeGenericClientConstructor,
     Metadata,
-    ClientReadableStream,
-    ClientUnaryCall,
     ServiceError,
+    UntypedServiceImplementation,
 } from "@grpc/grpc-js";
 import _m0 from "protobufjs/minimal";
-import { UInt32Value, BoolValue, Int32Value, StringValue } from "../google/protobuf/wrappers";
+import { BoolValue, Int32Value, StringValue, UInt32Value } from "../google/protobuf/wrappers";
 
 export const protobufPackage = "workadventure";
 
@@ -78,8 +77,9 @@ export function availabilityStatusToJSON(object: AvailabilityStatus): string {
             return "BBB";
         case AvailabilityStatus.DENY_PROXIMITY_MEETING:
             return "DENY_PROXIMITY_MEETING";
+        case AvailabilityStatus.UNRECOGNIZED:
         default:
-            return "UNKNOWN";
+            return "UNRECOGNIZED";
     }
 }
 
@@ -129,8 +129,9 @@ export function positionMessage_DirectionToJSON(object: PositionMessage_Directio
             return "DOWN";
         case PositionMessage_Direction.LEFT:
             return "LEFT";
+        case PositionMessage_Direction.UNRECOGNIZED:
         default:
-            return "UNKNOWN";
+            return "UNRECOGNIZED";
     }
 }
 
@@ -210,10 +211,10 @@ export interface LockGroupPromptMessage {
 
 export interface ModifyAreaMessage {
     id: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
+    x?: number | undefined;
+    y?: number | undefined;
+    width?: number | undefined;
+    height?: number | undefined;
 }
 
 export interface ClientToServerMessage {
@@ -290,8 +291,9 @@ export function setPlayerVariableMessage_ScopeToJSON(object: SetPlayerVariableMe
             return "ROOM";
         case SetPlayerVariableMessage_Scope.WORLD:
             return "WORLD";
+        case SetPlayerVariableMessage_Scope.UNRECOGNIZED:
         default:
-            return "UNKNOWN";
+            return "UNRECOGNIZED";
     }
 }
 
@@ -320,7 +322,10 @@ export interface QueryMessage {
     id: number;
     query?:
         | { $case: "jitsiJwtQuery"; jitsiJwtQuery: JitsiJwtQuery }
-        | { $case: "joinBBBMeetingQuery"; joinBBBMeetingQuery: JoinBBBMeetingQuery };
+        | {
+              $case: "joinBBBMeetingQuery";
+              joinBBBMeetingQuery: JoinBBBMeetingQuery;
+          };
 }
 
 export interface JitsiJwtQuery {
@@ -341,7 +346,10 @@ export interface AnswerMessage {
     answer?:
         | { $case: "error"; error: ErrorMessage }
         | { $case: "jitsiJwtAnswer"; jitsiJwtAnswer: JitsiJwtAnswer }
-        | { $case: "joinBBBMeetingAnswer"; joinBBBMeetingAnswer: JoinBBBMeetingAnswer };
+        | {
+              $case: "joinBBBMeetingAnswer";
+              joinBBBMeetingAnswer: JoinBBBMeetingAnswer;
+          };
 }
 
 export interface JitsiJwtAnswer {
@@ -680,7 +688,10 @@ export interface BatchToPusherRoomMessage {
 export interface SubToPusherRoomMessage {
     message?:
         | { $case: "variableMessage"; variableMessage: VariableWithTagMessage }
-        | { $case: "errorMessage"; errorMessage: ErrorMessage }
+        | {
+              $case: "errorMessage";
+              errorMessage: ErrorMessage;
+          }
         | { $case: "editMapMessage"; editMapMessage: EditMapMessage };
 }
 
@@ -706,7 +717,10 @@ export interface UserLeftRoomMessage {
 export interface ServerToAdminClientMessage {
     message?:
         | { $case: "userJoinedRoom"; userJoinedRoom: UserJoinedRoomMessage }
-        | { $case: "userLeftRoom"; userLeftRoom: UserLeftRoomMessage }
+        | {
+              $case: "userLeftRoom";
+              userLeftRoom: UserLeftRoomMessage;
+          }
         | { $case: "errorMessage"; errorMessage: ErrorMessage };
 }
 
@@ -760,7 +774,10 @@ export interface EmptyMessage {}
 export interface IframeToPusherMessage {
     message?:
         | { $case: "xmppMessage"; xmppMessage: XmppMessage }
-        | { $case: "banUserByUuidMessage"; banUserByUuidMessage: BanUserByUuidMessage };
+        | {
+              $case: "banUserByUuidMessage";
+              banUserByUuidMessage: BanUserByUuidMessage;
+          };
 }
 
 export interface PusherToIframeMessage {
@@ -819,8 +836,9 @@ export function xmppConnectionStatusChangeMessage_StatusToJSON(
     switch (object) {
         case XmppConnectionStatusChangeMessage_Status.DISCONNECTED:
             return "DISCONNECTED";
+        case XmppConnectionStatusChangeMessage_Status.UNRECOGNIZED:
         default:
-            return "UNKNOWN";
+            return "UNRECOGNIZED";
     }
 }
 
@@ -832,7 +850,9 @@ export interface BanUserByUuidMessage {
     byUserEmail: string;
 }
 
-const basePositionMessage: object = { x: 0, y: 0, direction: 0, moving: false };
+function createBasePositionMessage(): PositionMessage {
+    return { x: 0, y: 0, direction: 0, moving: false };
+}
 
 export const PositionMessage = {
     encode(message: PositionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -854,7 +874,7 @@ export const PositionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PositionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePositionMessage } as PositionMessage;
+        const message = createBasePositionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -879,15 +899,12 @@ export const PositionMessage = {
     },
 
     fromJSON(object: any): PositionMessage {
-        const message = { ...basePositionMessage } as PositionMessage;
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
-        message.direction =
-            object.direction !== undefined && object.direction !== null
-                ? positionMessage_DirectionFromJSON(object.direction)
-                : 0;
-        message.moving = object.moving !== undefined && object.moving !== null ? Boolean(object.moving) : false;
-        return message;
+        return {
+            x: isSet(object.x) ? Number(object.x) : 0,
+            y: isSet(object.y) ? Number(object.y) : 0,
+            direction: isSet(object.direction) ? positionMessage_DirectionFromJSON(object.direction) : 0,
+            moving: isSet(object.moving) ? Boolean(object.moving) : false,
+        };
     },
 
     toJSON(message: PositionMessage): unknown {
@@ -900,7 +917,7 @@ export const PositionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PositionMessage>, I>>(object: I): PositionMessage {
-        const message = { ...basePositionMessage } as PositionMessage;
+        const message = createBasePositionMessage();
         message.x = object.x ?? 0;
         message.y = object.y ?? 0;
         message.direction = object.direction ?? 0;
@@ -909,7 +926,9 @@ export const PositionMessage = {
     },
 };
 
-const basePointMessage: object = { x: 0, y: 0 };
+function createBasePointMessage(): PointMessage {
+    return { x: 0, y: 0 };
+}
 
 export const PointMessage = {
     encode(message: PointMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -925,7 +944,7 @@ export const PointMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PointMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePointMessage } as PointMessage;
+        const message = createBasePointMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -944,10 +963,7 @@ export const PointMessage = {
     },
 
     fromJSON(object: any): PointMessage {
-        const message = { ...basePointMessage } as PointMessage;
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
-        return message;
+        return { x: isSet(object.x) ? Number(object.x) : 0, y: isSet(object.y) ? Number(object.y) : 0 };
     },
 
     toJSON(message: PointMessage): unknown {
@@ -958,14 +974,16 @@ export const PointMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PointMessage>, I>>(object: I): PointMessage {
-        const message = { ...basePointMessage } as PointMessage;
+        const message = createBasePointMessage();
         message.x = object.x ?? 0;
         message.y = object.y ?? 0;
         return message;
     },
 };
 
-const baseViewportMessage: object = { left: 0, top: 0, right: 0, bottom: 0 };
+function createBaseViewportMessage(): ViewportMessage {
+    return { left: 0, top: 0, right: 0, bottom: 0 };
+}
 
 export const ViewportMessage = {
     encode(message: ViewportMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -987,7 +1005,7 @@ export const ViewportMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ViewportMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseViewportMessage } as ViewportMessage;
+        const message = createBaseViewportMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1012,12 +1030,12 @@ export const ViewportMessage = {
     },
 
     fromJSON(object: any): ViewportMessage {
-        const message = { ...baseViewportMessage } as ViewportMessage;
-        message.left = object.left !== undefined && object.left !== null ? Number(object.left) : 0;
-        message.top = object.top !== undefined && object.top !== null ? Number(object.top) : 0;
-        message.right = object.right !== undefined && object.right !== null ? Number(object.right) : 0;
-        message.bottom = object.bottom !== undefined && object.bottom !== null ? Number(object.bottom) : 0;
-        return message;
+        return {
+            left: isSet(object.left) ? Number(object.left) : 0,
+            top: isSet(object.top) ? Number(object.top) : 0,
+            right: isSet(object.right) ? Number(object.right) : 0,
+            bottom: isSet(object.bottom) ? Number(object.bottom) : 0,
+        };
     },
 
     toJSON(message: ViewportMessage): unknown {
@@ -1030,7 +1048,7 @@ export const ViewportMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ViewportMessage>, I>>(object: I): ViewportMessage {
-        const message = { ...baseViewportMessage } as ViewportMessage;
+        const message = createBaseViewportMessage();
         message.left = object.left ?? 0;
         message.top = object.top ?? 0;
         message.right = object.right ?? 0;
@@ -1039,7 +1057,9 @@ export const ViewportMessage = {
     },
 };
 
-const baseCharacterLayerMessage: object = { url: "", name: "", layer: "" };
+function createBaseCharacterLayerMessage(): CharacterLayerMessage {
+    return { url: "", name: "", layer: "" };
+}
 
 export const CharacterLayerMessage = {
     encode(message: CharacterLayerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1058,7 +1078,7 @@ export const CharacterLayerMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): CharacterLayerMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseCharacterLayerMessage } as CharacterLayerMessage;
+        const message = createBaseCharacterLayerMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1080,11 +1100,11 @@ export const CharacterLayerMessage = {
     },
 
     fromJSON(object: any): CharacterLayerMessage {
-        const message = { ...baseCharacterLayerMessage } as CharacterLayerMessage;
-        message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.layer = object.layer !== undefined && object.layer !== null ? String(object.layer) : "";
-        return message;
+        return {
+            url: isSet(object.url) ? String(object.url) : "",
+            name: isSet(object.name) ? String(object.name) : "",
+            layer: isSet(object.layer) ? String(object.layer) : "",
+        };
     },
 
     toJSON(message: CharacterLayerMessage): unknown {
@@ -1096,7 +1116,7 @@ export const CharacterLayerMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<CharacterLayerMessage>, I>>(object: I): CharacterLayerMessage {
-        const message = { ...baseCharacterLayerMessage } as CharacterLayerMessage;
+        const message = createBaseCharacterLayerMessage();
         message.url = object.url ?? "";
         message.name = object.name ?? "";
         message.layer = object.layer ?? "";
@@ -1104,7 +1124,9 @@ export const CharacterLayerMessage = {
     },
 };
 
-const baseCompanionMessage: object = { name: "" };
+function createBaseCompanionMessage(): CompanionMessage {
+    return { name: "" };
+}
 
 export const CompanionMessage = {
     encode(message: CompanionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1117,7 +1139,7 @@ export const CompanionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): CompanionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseCompanionMessage } as CompanionMessage;
+        const message = createBaseCompanionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1133,9 +1155,7 @@ export const CompanionMessage = {
     },
 
     fromJSON(object: any): CompanionMessage {
-        const message = { ...baseCompanionMessage } as CompanionMessage;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        return message;
+        return { name: isSet(object.name) ? String(object.name) : "" };
     },
 
     toJSON(message: CompanionMessage): unknown {
@@ -1145,13 +1165,15 @@ export const CompanionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<CompanionMessage>, I>>(object: I): CompanionMessage {
-        const message = { ...baseCompanionMessage } as CompanionMessage;
+        const message = createBaseCompanionMessage();
         message.name = object.name ?? "";
         return message;
     },
 };
 
-const basePingMessage: object = {};
+function createBasePingMessage(): PingMessage {
+    return {};
+}
 
 export const PingMessage = {
     encode(_: PingMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1161,7 +1183,7 @@ export const PingMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PingMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePingMessage } as PingMessage;
+        const message = createBasePingMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1174,8 +1196,7 @@ export const PingMessage = {
     },
 
     fromJSON(_: any): PingMessage {
-        const message = { ...basePingMessage } as PingMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: PingMessage): unknown {
@@ -1184,12 +1205,20 @@ export const PingMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PingMessage>, I>>(_: I): PingMessage {
-        const message = { ...basePingMessage } as PingMessage;
+        const message = createBasePingMessage();
         return message;
     },
 };
 
-const baseSetPlayerDetailsMessage: object = { availabilityStatus: 0 };
+function createBaseSetPlayerDetailsMessage(): SetPlayerDetailsMessage {
+    return {
+        outlineColor: undefined,
+        removeOutlineColor: undefined,
+        showVoiceIndicator: undefined,
+        availabilityStatus: 0,
+        setVariable: undefined,
+    };
+}
 
 export const SetPlayerDetailsMessage = {
     encode(message: SetPlayerDetailsMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1214,7 +1243,7 @@ export const SetPlayerDetailsMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SetPlayerDetailsMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSetPlayerDetailsMessage } as SetPlayerDetailsMessage;
+        const message = createBaseSetPlayerDetailsMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1242,26 +1271,15 @@ export const SetPlayerDetailsMessage = {
     },
 
     fromJSON(object: any): SetPlayerDetailsMessage {
-        const message = { ...baseSetPlayerDetailsMessage } as SetPlayerDetailsMessage;
-        message.outlineColor =
-            object.outlineColor !== undefined && object.outlineColor !== null ? Number(object.outlineColor) : undefined;
-        message.removeOutlineColor =
-            object.removeOutlineColor !== undefined && object.removeOutlineColor !== null
-                ? Boolean(object.removeOutlineColor)
-                : undefined;
-        message.showVoiceIndicator =
-            object.showVoiceIndicator !== undefined && object.showVoiceIndicator !== null
-                ? Boolean(object.showVoiceIndicator)
-                : undefined;
-        message.availabilityStatus =
-            object.availabilityStatus !== undefined && object.availabilityStatus !== null
+        return {
+            outlineColor: isSet(object.outlineColor) ? Number(object.outlineColor) : undefined,
+            removeOutlineColor: isSet(object.removeOutlineColor) ? Boolean(object.removeOutlineColor) : undefined,
+            showVoiceIndicator: isSet(object.showVoiceIndicator) ? Boolean(object.showVoiceIndicator) : undefined,
+            availabilityStatus: isSet(object.availabilityStatus)
                 ? availabilityStatusFromJSON(object.availabilityStatus)
-                : 0;
-        message.setVariable =
-            object.setVariable !== undefined && object.setVariable !== null
-                ? SetPlayerVariableMessage.fromJSON(object.setVariable)
-                : undefined;
-        return message;
+                : 0,
+            setVariable: isSet(object.setVariable) ? SetPlayerVariableMessage.fromJSON(object.setVariable) : undefined,
+        };
     },
 
     toJSON(message: SetPlayerDetailsMessage): unknown {
@@ -1277,7 +1295,7 @@ export const SetPlayerDetailsMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SetPlayerDetailsMessage>, I>>(object: I): SetPlayerDetailsMessage {
-        const message = { ...baseSetPlayerDetailsMessage } as SetPlayerDetailsMessage;
+        const message = createBaseSetPlayerDetailsMessage();
         message.outlineColor = object.outlineColor ?? undefined;
         message.removeOutlineColor = object.removeOutlineColor ?? undefined;
         message.showVoiceIndicator = object.showVoiceIndicator ?? undefined;
@@ -1290,7 +1308,9 @@ export const SetPlayerDetailsMessage = {
     },
 };
 
-const baseUserMovesMessage: object = {};
+function createBaseUserMovesMessage(): UserMovesMessage {
+    return { position: undefined, viewport: undefined };
+}
 
 export const UserMovesMessage = {
     encode(message: UserMovesMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1306,7 +1326,7 @@ export const UserMovesMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserMovesMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserMovesMessage } as UserMovesMessage;
+        const message = createBaseUserMovesMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1325,16 +1345,10 @@ export const UserMovesMessage = {
     },
 
     fromJSON(object: any): UserMovesMessage {
-        const message = { ...baseUserMovesMessage } as UserMovesMessage;
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PositionMessage.fromJSON(object.position)
-                : undefined;
-        message.viewport =
-            object.viewport !== undefined && object.viewport !== null
-                ? ViewportMessage.fromJSON(object.viewport)
-                : undefined;
-        return message;
+        return {
+            position: isSet(object.position) ? PositionMessage.fromJSON(object.position) : undefined,
+            viewport: isSet(object.viewport) ? ViewportMessage.fromJSON(object.viewport) : undefined,
+        };
     },
 
     toJSON(message: UserMovesMessage): unknown {
@@ -1347,7 +1361,7 @@ export const UserMovesMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserMovesMessage>, I>>(object: I): UserMovesMessage {
-        const message = { ...baseUserMovesMessage } as UserMovesMessage;
+        const message = createBaseUserMovesMessage();
         message.position =
             object.position !== undefined && object.position !== null
                 ? PositionMessage.fromPartial(object.position)
@@ -1360,7 +1374,9 @@ export const UserMovesMessage = {
     },
 };
 
-const baseWebRtcSignalToServerMessage: object = { receiverId: 0, signal: "" };
+function createBaseWebRtcSignalToServerMessage(): WebRtcSignalToServerMessage {
+    return { receiverId: 0, signal: "" };
+}
 
 export const WebRtcSignalToServerMessage = {
     encode(message: WebRtcSignalToServerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1376,7 +1392,7 @@ export const WebRtcSignalToServerMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WebRtcSignalToServerMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWebRtcSignalToServerMessage } as WebRtcSignalToServerMessage;
+        const message = createBaseWebRtcSignalToServerMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1395,11 +1411,10 @@ export const WebRtcSignalToServerMessage = {
     },
 
     fromJSON(object: any): WebRtcSignalToServerMessage {
-        const message = { ...baseWebRtcSignalToServerMessage } as WebRtcSignalToServerMessage;
-        message.receiverId =
-            object.receiverId !== undefined && object.receiverId !== null ? Number(object.receiverId) : 0;
-        message.signal = object.signal !== undefined && object.signal !== null ? String(object.signal) : "";
-        return message;
+        return {
+            receiverId: isSet(object.receiverId) ? Number(object.receiverId) : 0,
+            signal: isSet(object.signal) ? String(object.signal) : "",
+        };
     },
 
     toJSON(message: WebRtcSignalToServerMessage): unknown {
@@ -1410,14 +1425,16 @@ export const WebRtcSignalToServerMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WebRtcSignalToServerMessage>, I>>(object: I): WebRtcSignalToServerMessage {
-        const message = { ...baseWebRtcSignalToServerMessage } as WebRtcSignalToServerMessage;
+        const message = createBaseWebRtcSignalToServerMessage();
         message.receiverId = object.receiverId ?? 0;
         message.signal = object.signal ?? "";
         return message;
     },
 };
 
-const baseReportPlayerMessage: object = { reportedUserUuid: "", reportComment: "" };
+function createBaseReportPlayerMessage(): ReportPlayerMessage {
+    return { reportedUserUuid: "", reportComment: "" };
+}
 
 export const ReportPlayerMessage = {
     encode(message: ReportPlayerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1433,7 +1450,7 @@ export const ReportPlayerMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ReportPlayerMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseReportPlayerMessage } as ReportPlayerMessage;
+        const message = createBaseReportPlayerMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1452,14 +1469,10 @@ export const ReportPlayerMessage = {
     },
 
     fromJSON(object: any): ReportPlayerMessage {
-        const message = { ...baseReportPlayerMessage } as ReportPlayerMessage;
-        message.reportedUserUuid =
-            object.reportedUserUuid !== undefined && object.reportedUserUuid !== null
-                ? String(object.reportedUserUuid)
-                : "";
-        message.reportComment =
-            object.reportComment !== undefined && object.reportComment !== null ? String(object.reportComment) : "";
-        return message;
+        return {
+            reportedUserUuid: isSet(object.reportedUserUuid) ? String(object.reportedUserUuid) : "",
+            reportComment: isSet(object.reportComment) ? String(object.reportComment) : "",
+        };
     },
 
     toJSON(message: ReportPlayerMessage): unknown {
@@ -1470,14 +1483,16 @@ export const ReportPlayerMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ReportPlayerMessage>, I>>(object: I): ReportPlayerMessage {
-        const message = { ...baseReportPlayerMessage } as ReportPlayerMessage;
+        const message = createBaseReportPlayerMessage();
         message.reportedUserUuid = object.reportedUserUuid ?? "";
         message.reportComment = object.reportComment ?? "";
         return message;
     },
 };
 
-const baseEmotePromptMessage: object = { emote: "" };
+function createBaseEmotePromptMessage(): EmotePromptMessage {
+    return { emote: "" };
+}
 
 export const EmotePromptMessage = {
     encode(message: EmotePromptMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1490,7 +1505,7 @@ export const EmotePromptMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): EmotePromptMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseEmotePromptMessage } as EmotePromptMessage;
+        const message = createBaseEmotePromptMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1506,9 +1521,7 @@ export const EmotePromptMessage = {
     },
 
     fromJSON(object: any): EmotePromptMessage {
-        const message = { ...baseEmotePromptMessage } as EmotePromptMessage;
-        message.emote = object.emote !== undefined && object.emote !== null ? String(object.emote) : "";
-        return message;
+        return { emote: isSet(object.emote) ? String(object.emote) : "" };
     },
 
     toJSON(message: EmotePromptMessage): unknown {
@@ -1518,13 +1531,15 @@ export const EmotePromptMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<EmotePromptMessage>, I>>(object: I): EmotePromptMessage {
-        const message = { ...baseEmotePromptMessage } as EmotePromptMessage;
+        const message = createBaseEmotePromptMessage();
         message.emote = object.emote ?? "";
         return message;
     },
 };
 
-const baseEmoteEventMessage: object = { actorUserId: 0, emote: "" };
+function createBaseEmoteEventMessage(): EmoteEventMessage {
+    return { actorUserId: 0, emote: "" };
+}
 
 export const EmoteEventMessage = {
     encode(message: EmoteEventMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1540,7 +1555,7 @@ export const EmoteEventMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): EmoteEventMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseEmoteEventMessage } as EmoteEventMessage;
+        const message = createBaseEmoteEventMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1559,11 +1574,10 @@ export const EmoteEventMessage = {
     },
 
     fromJSON(object: any): EmoteEventMessage {
-        const message = { ...baseEmoteEventMessage } as EmoteEventMessage;
-        message.actorUserId =
-            object.actorUserId !== undefined && object.actorUserId !== null ? Number(object.actorUserId) : 0;
-        message.emote = object.emote !== undefined && object.emote !== null ? String(object.emote) : "";
-        return message;
+        return {
+            actorUserId: isSet(object.actorUserId) ? Number(object.actorUserId) : 0,
+            emote: isSet(object.emote) ? String(object.emote) : "",
+        };
     },
 
     toJSON(message: EmoteEventMessage): unknown {
@@ -1574,14 +1588,16 @@ export const EmoteEventMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<EmoteEventMessage>, I>>(object: I): EmoteEventMessage {
-        const message = { ...baseEmoteEventMessage } as EmoteEventMessage;
+        const message = createBaseEmoteEventMessage();
         message.actorUserId = object.actorUserId ?? 0;
         message.emote = object.emote ?? "";
         return message;
     },
 };
 
-const baseFollowRequestMessage: object = { leader: 0 };
+function createBaseFollowRequestMessage(): FollowRequestMessage {
+    return { leader: 0 };
+}
 
 export const FollowRequestMessage = {
     encode(message: FollowRequestMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1594,7 +1610,7 @@ export const FollowRequestMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): FollowRequestMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseFollowRequestMessage } as FollowRequestMessage;
+        const message = createBaseFollowRequestMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1610,9 +1626,7 @@ export const FollowRequestMessage = {
     },
 
     fromJSON(object: any): FollowRequestMessage {
-        const message = { ...baseFollowRequestMessage } as FollowRequestMessage;
-        message.leader = object.leader !== undefined && object.leader !== null ? Number(object.leader) : 0;
-        return message;
+        return { leader: isSet(object.leader) ? Number(object.leader) : 0 };
     },
 
     toJSON(message: FollowRequestMessage): unknown {
@@ -1622,13 +1636,15 @@ export const FollowRequestMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<FollowRequestMessage>, I>>(object: I): FollowRequestMessage {
-        const message = { ...baseFollowRequestMessage } as FollowRequestMessage;
+        const message = createBaseFollowRequestMessage();
         message.leader = object.leader ?? 0;
         return message;
     },
 };
 
-const baseFollowConfirmationMessage: object = { leader: 0, follower: 0 };
+function createBaseFollowConfirmationMessage(): FollowConfirmationMessage {
+    return { leader: 0, follower: 0 };
+}
 
 export const FollowConfirmationMessage = {
     encode(message: FollowConfirmationMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1644,7 +1660,7 @@ export const FollowConfirmationMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): FollowConfirmationMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseFollowConfirmationMessage } as FollowConfirmationMessage;
+        const message = createBaseFollowConfirmationMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1663,10 +1679,10 @@ export const FollowConfirmationMessage = {
     },
 
     fromJSON(object: any): FollowConfirmationMessage {
-        const message = { ...baseFollowConfirmationMessage } as FollowConfirmationMessage;
-        message.leader = object.leader !== undefined && object.leader !== null ? Number(object.leader) : 0;
-        message.follower = object.follower !== undefined && object.follower !== null ? Number(object.follower) : 0;
-        return message;
+        return {
+            leader: isSet(object.leader) ? Number(object.leader) : 0,
+            follower: isSet(object.follower) ? Number(object.follower) : 0,
+        };
     },
 
     toJSON(message: FollowConfirmationMessage): unknown {
@@ -1677,14 +1693,16 @@ export const FollowConfirmationMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<FollowConfirmationMessage>, I>>(object: I): FollowConfirmationMessage {
-        const message = { ...baseFollowConfirmationMessage } as FollowConfirmationMessage;
+        const message = createBaseFollowConfirmationMessage();
         message.leader = object.leader ?? 0;
         message.follower = object.follower ?? 0;
         return message;
     },
 };
 
-const baseFollowAbortMessage: object = { leader: 0, follower: 0 };
+function createBaseFollowAbortMessage(): FollowAbortMessage {
+    return { leader: 0, follower: 0 };
+}
 
 export const FollowAbortMessage = {
     encode(message: FollowAbortMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1700,7 +1718,7 @@ export const FollowAbortMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): FollowAbortMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseFollowAbortMessage } as FollowAbortMessage;
+        const message = createBaseFollowAbortMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1719,10 +1737,10 @@ export const FollowAbortMessage = {
     },
 
     fromJSON(object: any): FollowAbortMessage {
-        const message = { ...baseFollowAbortMessage } as FollowAbortMessage;
-        message.leader = object.leader !== undefined && object.leader !== null ? Number(object.leader) : 0;
-        message.follower = object.follower !== undefined && object.follower !== null ? Number(object.follower) : 0;
-        return message;
+        return {
+            leader: isSet(object.leader) ? Number(object.leader) : 0,
+            follower: isSet(object.follower) ? Number(object.follower) : 0,
+        };
     },
 
     toJSON(message: FollowAbortMessage): unknown {
@@ -1733,14 +1751,16 @@ export const FollowAbortMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<FollowAbortMessage>, I>>(object: I): FollowAbortMessage {
-        const message = { ...baseFollowAbortMessage } as FollowAbortMessage;
+        const message = createBaseFollowAbortMessage();
         message.leader = object.leader ?? 0;
         message.follower = object.follower ?? 0;
         return message;
     },
 };
 
-const baseLockGroupPromptMessage: object = { lock: false };
+function createBaseLockGroupPromptMessage(): LockGroupPromptMessage {
+    return { lock: false };
+}
 
 export const LockGroupPromptMessage = {
     encode(message: LockGroupPromptMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1753,7 +1773,7 @@ export const LockGroupPromptMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): LockGroupPromptMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseLockGroupPromptMessage } as LockGroupPromptMessage;
+        const message = createBaseLockGroupPromptMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1769,9 +1789,7 @@ export const LockGroupPromptMessage = {
     },
 
     fromJSON(object: any): LockGroupPromptMessage {
-        const message = { ...baseLockGroupPromptMessage } as LockGroupPromptMessage;
-        message.lock = object.lock !== undefined && object.lock !== null ? Boolean(object.lock) : false;
-        return message;
+        return { lock: isSet(object.lock) ? Boolean(object.lock) : false };
     },
 
     toJSON(message: LockGroupPromptMessage): unknown {
@@ -1781,29 +1799,31 @@ export const LockGroupPromptMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<LockGroupPromptMessage>, I>>(object: I): LockGroupPromptMessage {
-        const message = { ...baseLockGroupPromptMessage } as LockGroupPromptMessage;
+        const message = createBaseLockGroupPromptMessage();
         message.lock = object.lock ?? false;
         return message;
     },
 };
 
-const baseModifyAreaMessage: object = { id: 0, x: 0, y: 0, width: 0, height: 0 };
+function createBaseModifyAreaMessage(): ModifyAreaMessage {
+    return { id: 0, x: undefined, y: undefined, width: undefined, height: undefined };
+}
 
 export const ModifyAreaMessage = {
     encode(message: ModifyAreaMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
         if (message.id !== 0) {
             writer.uint32(8).int32(message.id);
         }
-        if (message.x !== 0) {
+        if (message.x !== undefined) {
             writer.uint32(16).uint32(message.x);
         }
-        if (message.y !== 0) {
+        if (message.y !== undefined) {
             writer.uint32(24).uint32(message.y);
         }
-        if (message.width !== 0) {
+        if (message.width !== undefined) {
             writer.uint32(32).uint32(message.width);
         }
-        if (message.height !== 0) {
+        if (message.height !== undefined) {
             writer.uint32(40).uint32(message.height);
         }
         return writer;
@@ -1812,7 +1832,7 @@ export const ModifyAreaMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ModifyAreaMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
+        const message = createBaseModifyAreaMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -1840,13 +1860,13 @@ export const ModifyAreaMessage = {
     },
 
     fromJSON(object: any): ModifyAreaMessage {
-        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
-        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
-        message.width = object.width !== undefined && object.width !== null ? Number(object.width) : 0;
-        message.height = object.height !== undefined && object.height !== null ? Number(object.height) : 0;
-        return message;
+        return {
+            id: isSet(object.id) ? Number(object.id) : 0,
+            x: isSet(object.x) ? Number(object.x) : undefined,
+            y: isSet(object.y) ? Number(object.y) : undefined,
+            width: isSet(object.width) ? Number(object.width) : undefined,
+            height: isSet(object.height) ? Number(object.height) : undefined,
+        };
     },
 
     toJSON(message: ModifyAreaMessage): unknown {
@@ -1860,17 +1880,19 @@ export const ModifyAreaMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ModifyAreaMessage>, I>>(object: I): ModifyAreaMessage {
-        const message = { ...baseModifyAreaMessage } as ModifyAreaMessage;
+        const message = createBaseModifyAreaMessage();
         message.id = object.id ?? 0;
-        message.x = object.x ?? 0;
-        message.y = object.y ?? 0;
-        message.width = object.width ?? 0;
-        message.height = object.height ?? 0;
+        message.x = object.x ?? undefined;
+        message.y = object.y ?? undefined;
+        message.width = object.width ?? undefined;
+        message.height = object.height ?? undefined;
         return message;
     },
 };
 
-const baseClientToServerMessage: object = {};
+function createBaseClientToServerMessage(): ClientToServerMessage {
+    return { message: undefined };
+}
 
 export const ClientToServerMessage = {
     encode(message: ClientToServerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -1946,7 +1968,7 @@ export const ClientToServerMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ClientToServerMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseClientToServerMessage } as ClientToServerMessage;
+        const message = createBaseClientToServerMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2076,121 +2098,87 @@ export const ClientToServerMessage = {
     },
 
     fromJSON(object: any): ClientToServerMessage {
-        const message = { ...baseClientToServerMessage } as ClientToServerMessage;
-        if (object.userMovesMessage !== undefined && object.userMovesMessage !== null) {
-            message.message = {
-                $case: "userMovesMessage",
-                userMovesMessage: UserMovesMessage.fromJSON(object.userMovesMessage),
-            };
-        }
-        if (object.viewportMessage !== undefined && object.viewportMessage !== null) {
-            message.message = {
-                $case: "viewportMessage",
-                viewportMessage: ViewportMessage.fromJSON(object.viewportMessage),
-            };
-        }
-        if (object.itemEventMessage !== undefined && object.itemEventMessage !== null) {
-            message.message = {
-                $case: "itemEventMessage",
-                itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage),
-            };
-        }
-        if (object.setPlayerDetailsMessage !== undefined && object.setPlayerDetailsMessage !== null) {
-            message.message = {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: SetPlayerDetailsMessage.fromJSON(object.setPlayerDetailsMessage),
-            };
-        }
-        if (object.webRtcSignalToServerMessage !== undefined && object.webRtcSignalToServerMessage !== null) {
-            message.message = {
-                $case: "webRtcSignalToServerMessage",
-                webRtcSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(object.webRtcSignalToServerMessage),
-            };
-        }
-        if (
-            object.webRtcScreenSharingSignalToServerMessage !== undefined &&
-            object.webRtcScreenSharingSignalToServerMessage !== null
-        ) {
-            message.message = {
-                $case: "webRtcScreenSharingSignalToServerMessage",
-                webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
-                    object.webRtcScreenSharingSignalToServerMessage
-                ),
-            };
-        }
-        if (object.playGlobalMessage !== undefined && object.playGlobalMessage !== null) {
-            message.message = {
-                $case: "playGlobalMessage",
-                playGlobalMessage: PlayGlobalMessage.fromJSON(object.playGlobalMessage),
-            };
-        }
-        if (object.stopGlobalMessage !== undefined && object.stopGlobalMessage !== null) {
-            message.message = {
-                $case: "stopGlobalMessage",
-                stopGlobalMessage: StopGlobalMessage.fromJSON(object.stopGlobalMessage),
-            };
-        }
-        if (object.reportPlayerMessage !== undefined && object.reportPlayerMessage !== null) {
-            message.message = {
-                $case: "reportPlayerMessage",
-                reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
-            };
-        }
-        if (object.emotePromptMessage !== undefined && object.emotePromptMessage !== null) {
-            message.message = {
-                $case: "emotePromptMessage",
-                emotePromptMessage: EmotePromptMessage.fromJSON(object.emotePromptMessage),
-            };
-        }
-        if (object.variableMessage !== undefined && object.variableMessage !== null) {
-            message.message = {
-                $case: "variableMessage",
-                variableMessage: VariableMessage.fromJSON(object.variableMessage),
-            };
-        }
-        if (object.followRequestMessage !== undefined && object.followRequestMessage !== null) {
-            message.message = {
-                $case: "followRequestMessage",
-                followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
-            };
-        }
-        if (object.followConfirmationMessage !== undefined && object.followConfirmationMessage !== null) {
-            message.message = {
-                $case: "followConfirmationMessage",
-                followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
-            };
-        }
-        if (object.followAbortMessage !== undefined && object.followAbortMessage !== null) {
-            message.message = {
-                $case: "followAbortMessage",
-                followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
-            };
-        }
-        if (object.lockGroupPromptMessage !== undefined && object.lockGroupPromptMessage !== null) {
-            message.message = {
-                $case: "lockGroupPromptMessage",
-                lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
-            };
-        }
-        if (object.queryMessage !== undefined && object.queryMessage !== null) {
-            message.message = { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) };
-        }
-        if (object.pingMessage !== undefined && object.pingMessage !== null) {
-            message.message = { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) };
-        }
-        if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
-            message.message = {
-                $case: "askPositionMessage",
-                askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
-            };
-        }
-        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
-            message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.userMovesMessage)
+                ? { $case: "userMovesMessage", userMovesMessage: UserMovesMessage.fromJSON(object.userMovesMessage) }
+                : isSet(object.viewportMessage)
+                ? { $case: "viewportMessage", viewportMessage: ViewportMessage.fromJSON(object.viewportMessage) }
+                : isSet(object.itemEventMessage)
+                ? { $case: "itemEventMessage", itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage) }
+                : isSet(object.setPlayerDetailsMessage)
+                ? {
+                      $case: "setPlayerDetailsMessage",
+                      setPlayerDetailsMessage: SetPlayerDetailsMessage.fromJSON(object.setPlayerDetailsMessage),
+                  }
+                : isSet(object.webRtcSignalToServerMessage)
+                ? {
+                      $case: "webRtcSignalToServerMessage",
+                      webRtcSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
+                          object.webRtcSignalToServerMessage
+                      ),
+                  }
+                : isSet(object.webRtcScreenSharingSignalToServerMessage)
+                ? {
+                      $case: "webRtcScreenSharingSignalToServerMessage",
+                      webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
+                          object.webRtcScreenSharingSignalToServerMessage
+                      ),
+                  }
+                : isSet(object.playGlobalMessage)
+                ? {
+                      $case: "playGlobalMessage",
+                      playGlobalMessage: PlayGlobalMessage.fromJSON(object.playGlobalMessage),
+                  }
+                : isSet(object.stopGlobalMessage)
+                ? {
+                      $case: "stopGlobalMessage",
+                      stopGlobalMessage: StopGlobalMessage.fromJSON(object.stopGlobalMessage),
+                  }
+                : isSet(object.reportPlayerMessage)
+                ? {
+                      $case: "reportPlayerMessage",
+                      reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
+                  }
+                : isSet(object.emotePromptMessage)
+                ? {
+                      $case: "emotePromptMessage",
+                      emotePromptMessage: EmotePromptMessage.fromJSON(object.emotePromptMessage),
+                  }
+                : isSet(object.variableMessage)
+                ? { $case: "variableMessage", variableMessage: VariableMessage.fromJSON(object.variableMessage) }
+                : isSet(object.followRequestMessage)
+                ? {
+                      $case: "followRequestMessage",
+                      followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
+                  }
+                : isSet(object.followConfirmationMessage)
+                ? {
+                      $case: "followConfirmationMessage",
+                      followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
+                  }
+                : isSet(object.followAbortMessage)
+                ? {
+                      $case: "followAbortMessage",
+                      followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
+                  }
+                : isSet(object.lockGroupPromptMessage)
+                ? {
+                      $case: "lockGroupPromptMessage",
+                      lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
+                  }
+                : isSet(object.queryMessage)
+                ? { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) }
+                : isSet(object.pingMessage)
+                ? { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) }
+                : isSet(object.askPositionMessage)
+                ? {
+                      $case: "askPositionMessage",
+                      askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
+                  }
+                : isSet(object.editMapMessage)
+                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : undefined,
+        };
     },
 
     toJSON(message: ClientToServerMessage): unknown {
@@ -2275,7 +2263,7 @@ export const ClientToServerMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ClientToServerMessage>, I>>(object: I): ClientToServerMessage {
-        const message = { ...baseClientToServerMessage } as ClientToServerMessage;
+        const message = createBaseClientToServerMessage();
         if (
             object.message?.$case === "userMovesMessage" &&
             object.message?.userMovesMessage !== undefined &&
@@ -2476,7 +2464,9 @@ export const ClientToServerMessage = {
     },
 };
 
-const baseItemEventMessage: object = { itemId: 0, event: "", stateJson: "", parametersJson: "" };
+function createBaseItemEventMessage(): ItemEventMessage {
+    return { itemId: 0, event: "", stateJson: "", parametersJson: "" };
+}
 
 export const ItemEventMessage = {
     encode(message: ItemEventMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2498,7 +2488,7 @@ export const ItemEventMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ItemEventMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseItemEventMessage } as ItemEventMessage;
+        const message = createBaseItemEventMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2523,13 +2513,12 @@ export const ItemEventMessage = {
     },
 
     fromJSON(object: any): ItemEventMessage {
-        const message = { ...baseItemEventMessage } as ItemEventMessage;
-        message.itemId = object.itemId !== undefined && object.itemId !== null ? Number(object.itemId) : 0;
-        message.event = object.event !== undefined && object.event !== null ? String(object.event) : "";
-        message.stateJson = object.stateJson !== undefined && object.stateJson !== null ? String(object.stateJson) : "";
-        message.parametersJson =
-            object.parametersJson !== undefined && object.parametersJson !== null ? String(object.parametersJson) : "";
-        return message;
+        return {
+            itemId: isSet(object.itemId) ? Number(object.itemId) : 0,
+            event: isSet(object.event) ? String(object.event) : "",
+            stateJson: isSet(object.stateJson) ? String(object.stateJson) : "",
+            parametersJson: isSet(object.parametersJson) ? String(object.parametersJson) : "",
+        };
     },
 
     toJSON(message: ItemEventMessage): unknown {
@@ -2542,7 +2531,7 @@ export const ItemEventMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ItemEventMessage>, I>>(object: I): ItemEventMessage {
-        const message = { ...baseItemEventMessage } as ItemEventMessage;
+        const message = createBaseItemEventMessage();
         message.itemId = object.itemId ?? 0;
         message.event = object.event ?? "";
         message.stateJson = object.stateJson ?? "";
@@ -2551,7 +2540,9 @@ export const ItemEventMessage = {
     },
 };
 
-const baseVariableMessage: object = { name: "", value: "" };
+function createBaseVariableMessage(): VariableMessage {
+    return { name: "", value: "" };
+}
 
 export const VariableMessage = {
     encode(message: VariableMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2567,7 +2558,7 @@ export const VariableMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): VariableMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseVariableMessage } as VariableMessage;
+        const message = createBaseVariableMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2586,10 +2577,10 @@ export const VariableMessage = {
     },
 
     fromJSON(object: any): VariableMessage {
-        const message = { ...baseVariableMessage } as VariableMessage;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.value = object.value !== undefined && object.value !== null ? String(object.value) : "";
-        return message;
+        return {
+            name: isSet(object.name) ? String(object.name) : "",
+            value: isSet(object.value) ? String(object.value) : "",
+        };
     },
 
     toJSON(message: VariableMessage): unknown {
@@ -2600,14 +2591,16 @@ export const VariableMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<VariableMessage>, I>>(object: I): VariableMessage {
-        const message = { ...baseVariableMessage } as VariableMessage;
+        const message = createBaseVariableMessage();
         message.name = object.name ?? "";
         message.value = object.value ?? "";
         return message;
     },
 };
 
-const baseSetPlayerVariableMessage: object = { name: "", value: "", public: false, persist: false, scope: 0 };
+function createBaseSetPlayerVariableMessage(): SetPlayerVariableMessage {
+    return { name: "", value: "", public: false, persist: false, ttl: undefined, scope: 0 };
+}
 
 export const SetPlayerVariableMessage = {
     encode(message: SetPlayerVariableMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2635,7 +2628,7 @@ export const SetPlayerVariableMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SetPlayerVariableMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSetPlayerVariableMessage } as SetPlayerVariableMessage;
+        const message = createBaseSetPlayerVariableMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2666,17 +2659,14 @@ export const SetPlayerVariableMessage = {
     },
 
     fromJSON(object: any): SetPlayerVariableMessage {
-        const message = { ...baseSetPlayerVariableMessage } as SetPlayerVariableMessage;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.value = object.value !== undefined && object.value !== null ? String(object.value) : "";
-        message.public = object.public !== undefined && object.public !== null ? Boolean(object.public) : false;
-        message.persist = object.persist !== undefined && object.persist !== null ? Boolean(object.persist) : false;
-        message.ttl = object.ttl !== undefined && object.ttl !== null ? Number(object.ttl) : undefined;
-        message.scope =
-            object.scope !== undefined && object.scope !== null
-                ? setPlayerVariableMessage_ScopeFromJSON(object.scope)
-                : 0;
-        return message;
+        return {
+            name: isSet(object.name) ? String(object.name) : "",
+            value: isSet(object.value) ? String(object.value) : "",
+            public: isSet(object.public) ? Boolean(object.public) : false,
+            persist: isSet(object.persist) ? Boolean(object.persist) : false,
+            ttl: isSet(object.ttl) ? Number(object.ttl) : undefined,
+            scope: isSet(object.scope) ? setPlayerVariableMessage_ScopeFromJSON(object.scope) : 0,
+        };
     },
 
     toJSON(message: SetPlayerVariableMessage): unknown {
@@ -2691,7 +2681,7 @@ export const SetPlayerVariableMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SetPlayerVariableMessage>, I>>(object: I): SetPlayerVariableMessage {
-        const message = { ...baseSetPlayerVariableMessage } as SetPlayerVariableMessage;
+        const message = createBaseSetPlayerVariableMessage();
         message.name = object.name ?? "";
         message.value = object.value ?? "";
         message.public = object.public ?? false;
@@ -2702,7 +2692,9 @@ export const SetPlayerVariableMessage = {
     },
 };
 
-const baseXmppMessage: object = { stanza: "" };
+function createBaseXmppMessage(): XmppMessage {
+    return { stanza: "" };
+}
 
 export const XmppMessage = {
     encode(message: XmppMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2715,7 +2707,7 @@ export const XmppMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): XmppMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseXmppMessage } as XmppMessage;
+        const message = createBaseXmppMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2731,9 +2723,7 @@ export const XmppMessage = {
     },
 
     fromJSON(object: any): XmppMessage {
-        const message = { ...baseXmppMessage } as XmppMessage;
-        message.stanza = object.stanza !== undefined && object.stanza !== null ? String(object.stanza) : "";
-        return message;
+        return { stanza: isSet(object.stanza) ? String(object.stanza) : "" };
     },
 
     toJSON(message: XmppMessage): unknown {
@@ -2743,13 +2733,15 @@ export const XmppMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<XmppMessage>, I>>(object: I): XmppMessage {
-        const message = { ...baseXmppMessage } as XmppMessage;
+        const message = createBaseXmppMessage();
         message.stanza = object.stanza ?? "";
         return message;
     },
 };
 
-const baseVariableWithTagMessage: object = { name: "", value: "", readableBy: "" };
+function createBaseVariableWithTagMessage(): VariableWithTagMessage {
+    return { name: "", value: "", readableBy: "" };
+}
 
 export const VariableWithTagMessage = {
     encode(message: VariableWithTagMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2768,7 +2760,7 @@ export const VariableWithTagMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): VariableWithTagMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseVariableWithTagMessage } as VariableWithTagMessage;
+        const message = createBaseVariableWithTagMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2790,12 +2782,11 @@ export const VariableWithTagMessage = {
     },
 
     fromJSON(object: any): VariableWithTagMessage {
-        const message = { ...baseVariableWithTagMessage } as VariableWithTagMessage;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.value = object.value !== undefined && object.value !== null ? String(object.value) : "";
-        message.readableBy =
-            object.readableBy !== undefined && object.readableBy !== null ? String(object.readableBy) : "";
-        return message;
+        return {
+            name: isSet(object.name) ? String(object.name) : "",
+            value: isSet(object.value) ? String(object.value) : "",
+            readableBy: isSet(object.readableBy) ? String(object.readableBy) : "",
+        };
     },
 
     toJSON(message: VariableWithTagMessage): unknown {
@@ -2807,7 +2798,7 @@ export const VariableWithTagMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<VariableWithTagMessage>, I>>(object: I): VariableWithTagMessage {
-        const message = { ...baseVariableWithTagMessage } as VariableWithTagMessage;
+        const message = createBaseVariableWithTagMessage();
         message.name = object.name ?? "";
         message.value = object.value ?? "";
         message.readableBy = object.readableBy ?? "";
@@ -2815,7 +2806,9 @@ export const VariableWithTagMessage = {
     },
 };
 
-const basePlayGlobalMessage: object = { type: "", content: "", broadcastToWorld: false };
+function createBasePlayGlobalMessage(): PlayGlobalMessage {
+    return { type: "", content: "", broadcastToWorld: false };
+}
 
 export const PlayGlobalMessage = {
     encode(message: PlayGlobalMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2834,7 +2827,7 @@ export const PlayGlobalMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PlayGlobalMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePlayGlobalMessage } as PlayGlobalMessage;
+        const message = createBasePlayGlobalMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2856,14 +2849,11 @@ export const PlayGlobalMessage = {
     },
 
     fromJSON(object: any): PlayGlobalMessage {
-        const message = { ...basePlayGlobalMessage } as PlayGlobalMessage;
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.content = object.content !== undefined && object.content !== null ? String(object.content) : "";
-        message.broadcastToWorld =
-            object.broadcastToWorld !== undefined && object.broadcastToWorld !== null
-                ? Boolean(object.broadcastToWorld)
-                : false;
-        return message;
+        return {
+            type: isSet(object.type) ? String(object.type) : "",
+            content: isSet(object.content) ? String(object.content) : "",
+            broadcastToWorld: isSet(object.broadcastToWorld) ? Boolean(object.broadcastToWorld) : false,
+        };
     },
 
     toJSON(message: PlayGlobalMessage): unknown {
@@ -2875,7 +2865,7 @@ export const PlayGlobalMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PlayGlobalMessage>, I>>(object: I): PlayGlobalMessage {
-        const message = { ...basePlayGlobalMessage } as PlayGlobalMessage;
+        const message = createBasePlayGlobalMessage();
         message.type = object.type ?? "";
         message.content = object.content ?? "";
         message.broadcastToWorld = object.broadcastToWorld ?? false;
@@ -2883,7 +2873,9 @@ export const PlayGlobalMessage = {
     },
 };
 
-const baseStopGlobalMessage: object = { id: "" };
+function createBaseStopGlobalMessage(): StopGlobalMessage {
+    return { id: "" };
+}
 
 export const StopGlobalMessage = {
     encode(message: StopGlobalMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2896,7 +2888,7 @@ export const StopGlobalMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): StopGlobalMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseStopGlobalMessage } as StopGlobalMessage;
+        const message = createBaseStopGlobalMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2912,9 +2904,7 @@ export const StopGlobalMessage = {
     },
 
     fromJSON(object: any): StopGlobalMessage {
-        const message = { ...baseStopGlobalMessage } as StopGlobalMessage;
-        message.id = object.id !== undefined && object.id !== null ? String(object.id) : "";
-        return message;
+        return { id: isSet(object.id) ? String(object.id) : "" };
     },
 
     toJSON(message: StopGlobalMessage): unknown {
@@ -2924,13 +2914,15 @@ export const StopGlobalMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<StopGlobalMessage>, I>>(object: I): StopGlobalMessage {
-        const message = { ...baseStopGlobalMessage } as StopGlobalMessage;
+        const message = createBaseStopGlobalMessage();
         message.id = object.id ?? "";
         return message;
     },
 };
 
-const baseQueryMessage: object = { id: 0 };
+function createBaseQueryMessage(): QueryMessage {
+    return { id: 0, query: undefined };
+}
 
 export const QueryMessage = {
     encode(message: QueryMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -2949,7 +2941,7 @@ export const QueryMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): QueryMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseQueryMessage } as QueryMessage;
+        const message = createBaseQueryMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -2977,18 +2969,17 @@ export const QueryMessage = {
     },
 
     fromJSON(object: any): QueryMessage {
-        const message = { ...baseQueryMessage } as QueryMessage;
-        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
-        if (object.jitsiJwtQuery !== undefined && object.jitsiJwtQuery !== null) {
-            message.query = { $case: "jitsiJwtQuery", jitsiJwtQuery: JitsiJwtQuery.fromJSON(object.jitsiJwtQuery) };
-        }
-        if (object.joinBBBMeetingQuery !== undefined && object.joinBBBMeetingQuery !== null) {
-            message.query = {
-                $case: "joinBBBMeetingQuery",
-                joinBBBMeetingQuery: JoinBBBMeetingQuery.fromJSON(object.joinBBBMeetingQuery),
-            };
-        }
-        return message;
+        return {
+            id: isSet(object.id) ? Number(object.id) : 0,
+            query: isSet(object.jitsiJwtQuery)
+                ? { $case: "jitsiJwtQuery", jitsiJwtQuery: JitsiJwtQuery.fromJSON(object.jitsiJwtQuery) }
+                : isSet(object.joinBBBMeetingQuery)
+                ? {
+                      $case: "joinBBBMeetingQuery",
+                      joinBBBMeetingQuery: JoinBBBMeetingQuery.fromJSON(object.joinBBBMeetingQuery),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: QueryMessage): unknown {
@@ -3006,7 +2997,7 @@ export const QueryMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<QueryMessage>, I>>(object: I): QueryMessage {
-        const message = { ...baseQueryMessage } as QueryMessage;
+        const message = createBaseQueryMessage();
         message.id = object.id ?? 0;
         if (
             object.query?.$case === "jitsiJwtQuery" &&
@@ -3032,7 +3023,9 @@ export const QueryMessage = {
     },
 };
 
-const baseJitsiJwtQuery: object = { jitsiRoom: "" };
+function createBaseJitsiJwtQuery(): JitsiJwtQuery {
+    return { jitsiRoom: "" };
+}
 
 export const JitsiJwtQuery = {
     encode(message: JitsiJwtQuery, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3045,7 +3038,7 @@ export const JitsiJwtQuery = {
     decode(input: _m0.Reader | Uint8Array, length?: number): JitsiJwtQuery {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
+        const message = createBaseJitsiJwtQuery();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3061,9 +3054,7 @@ export const JitsiJwtQuery = {
     },
 
     fromJSON(object: any): JitsiJwtQuery {
-        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
-        message.jitsiRoom = object.jitsiRoom !== undefined && object.jitsiRoom !== null ? String(object.jitsiRoom) : "";
-        return message;
+        return { jitsiRoom: isSet(object.jitsiRoom) ? String(object.jitsiRoom) : "" };
     },
 
     toJSON(message: JitsiJwtQuery): unknown {
@@ -3073,13 +3064,15 @@ export const JitsiJwtQuery = {
     },
 
     fromPartial<I extends Exact<DeepPartial<JitsiJwtQuery>, I>>(object: I): JitsiJwtQuery {
-        const message = { ...baseJitsiJwtQuery } as JitsiJwtQuery;
+        const message = createBaseJitsiJwtQuery();
         message.jitsiRoom = object.jitsiRoom ?? "";
         return message;
     },
 };
 
-const baseJoinBBBMeetingQuery: object = { meetingId: "", meetingName: "" };
+function createBaseJoinBBBMeetingQuery(): JoinBBBMeetingQuery {
+    return { meetingId: "", meetingName: "" };
+}
 
 export const JoinBBBMeetingQuery = {
     encode(message: JoinBBBMeetingQuery, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3095,7 +3088,7 @@ export const JoinBBBMeetingQuery = {
     decode(input: _m0.Reader | Uint8Array, length?: number): JoinBBBMeetingQuery {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
+        const message = createBaseJoinBBBMeetingQuery();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3114,11 +3107,10 @@ export const JoinBBBMeetingQuery = {
     },
 
     fromJSON(object: any): JoinBBBMeetingQuery {
-        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
-        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
-        message.meetingName =
-            object.meetingName !== undefined && object.meetingName !== null ? String(object.meetingName) : "";
-        return message;
+        return {
+            meetingId: isSet(object.meetingId) ? String(object.meetingId) : "",
+            meetingName: isSet(object.meetingName) ? String(object.meetingName) : "",
+        };
     },
 
     toJSON(message: JoinBBBMeetingQuery): unknown {
@@ -3129,14 +3121,16 @@ export const JoinBBBMeetingQuery = {
     },
 
     fromPartial<I extends Exact<DeepPartial<JoinBBBMeetingQuery>, I>>(object: I): JoinBBBMeetingQuery {
-        const message = { ...baseJoinBBBMeetingQuery } as JoinBBBMeetingQuery;
+        const message = createBaseJoinBBBMeetingQuery();
         message.meetingId = object.meetingId ?? "";
         message.meetingName = object.meetingName ?? "";
         return message;
     },
 };
 
-const baseAnswerMessage: object = { id: 0 };
+function createBaseAnswerMessage(): AnswerMessage {
+    return { id: 0, answer: undefined };
+}
 
 export const AnswerMessage = {
     encode(message: AnswerMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3158,7 +3152,7 @@ export const AnswerMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AnswerMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAnswerMessage } as AnswerMessage;
+        const message = createBaseAnswerMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3189,24 +3183,19 @@ export const AnswerMessage = {
     },
 
     fromJSON(object: any): AnswerMessage {
-        const message = { ...baseAnswerMessage } as AnswerMessage;
-        message.id = object.id !== undefined && object.id !== null ? Number(object.id) : 0;
-        if (object.error !== undefined && object.error !== null) {
-            message.answer = { $case: "error", error: ErrorMessage.fromJSON(object.error) };
-        }
-        if (object.jitsiJwtAnswer !== undefined && object.jitsiJwtAnswer !== null) {
-            message.answer = {
-                $case: "jitsiJwtAnswer",
-                jitsiJwtAnswer: JitsiJwtAnswer.fromJSON(object.jitsiJwtAnswer),
-            };
-        }
-        if (object.joinBBBMeetingAnswer !== undefined && object.joinBBBMeetingAnswer !== null) {
-            message.answer = {
-                $case: "joinBBBMeetingAnswer",
-                joinBBBMeetingAnswer: JoinBBBMeetingAnswer.fromJSON(object.joinBBBMeetingAnswer),
-            };
-        }
-        return message;
+        return {
+            id: isSet(object.id) ? Number(object.id) : 0,
+            answer: isSet(object.error)
+                ? { $case: "error", error: ErrorMessage.fromJSON(object.error) }
+                : isSet(object.jitsiJwtAnswer)
+                ? { $case: "jitsiJwtAnswer", jitsiJwtAnswer: JitsiJwtAnswer.fromJSON(object.jitsiJwtAnswer) }
+                : isSet(object.joinBBBMeetingAnswer)
+                ? {
+                      $case: "joinBBBMeetingAnswer",
+                      joinBBBMeetingAnswer: JoinBBBMeetingAnswer.fromJSON(object.joinBBBMeetingAnswer),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: AnswerMessage): unknown {
@@ -3226,7 +3215,7 @@ export const AnswerMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AnswerMessage>, I>>(object: I): AnswerMessage {
-        const message = { ...baseAnswerMessage } as AnswerMessage;
+        const message = createBaseAnswerMessage();
         message.id = object.id ?? 0;
         if (object.answer?.$case === "error" && object.answer?.error !== undefined && object.answer?.error !== null) {
             message.answer = { $case: "error", error: ErrorMessage.fromPartial(object.answer.error) };
@@ -3255,7 +3244,9 @@ export const AnswerMessage = {
     },
 };
 
-const baseJitsiJwtAnswer: object = { jwt: "" };
+function createBaseJitsiJwtAnswer(): JitsiJwtAnswer {
+    return { jwt: "" };
+}
 
 export const JitsiJwtAnswer = {
     encode(message: JitsiJwtAnswer, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3268,7 +3259,7 @@ export const JitsiJwtAnswer = {
     decode(input: _m0.Reader | Uint8Array, length?: number): JitsiJwtAnswer {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
+        const message = createBaseJitsiJwtAnswer();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3284,9 +3275,7 @@ export const JitsiJwtAnswer = {
     },
 
     fromJSON(object: any): JitsiJwtAnswer {
-        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
-        message.jwt = object.jwt !== undefined && object.jwt !== null ? String(object.jwt) : "";
-        return message;
+        return { jwt: isSet(object.jwt) ? String(object.jwt) : "" };
     },
 
     toJSON(message: JitsiJwtAnswer): unknown {
@@ -3296,13 +3285,15 @@ export const JitsiJwtAnswer = {
     },
 
     fromPartial<I extends Exact<DeepPartial<JitsiJwtAnswer>, I>>(object: I): JitsiJwtAnswer {
-        const message = { ...baseJitsiJwtAnswer } as JitsiJwtAnswer;
+        const message = createBaseJitsiJwtAnswer();
         message.jwt = object.jwt ?? "";
         return message;
     },
 };
 
-const baseJoinBBBMeetingAnswer: object = { meetingId: "", clientURL: "" };
+function createBaseJoinBBBMeetingAnswer(): JoinBBBMeetingAnswer {
+    return { meetingId: "", clientURL: "" };
+}
 
 export const JoinBBBMeetingAnswer = {
     encode(message: JoinBBBMeetingAnswer, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3318,7 +3309,7 @@ export const JoinBBBMeetingAnswer = {
     decode(input: _m0.Reader | Uint8Array, length?: number): JoinBBBMeetingAnswer {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
+        const message = createBaseJoinBBBMeetingAnswer();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3337,10 +3328,10 @@ export const JoinBBBMeetingAnswer = {
     },
 
     fromJSON(object: any): JoinBBBMeetingAnswer {
-        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
-        message.meetingId = object.meetingId !== undefined && object.meetingId !== null ? String(object.meetingId) : "";
-        message.clientURL = object.clientURL !== undefined && object.clientURL !== null ? String(object.clientURL) : "";
-        return message;
+        return {
+            meetingId: isSet(object.meetingId) ? String(object.meetingId) : "",
+            clientURL: isSet(object.clientURL) ? String(object.clientURL) : "",
+        };
     },
 
     toJSON(message: JoinBBBMeetingAnswer): unknown {
@@ -3351,14 +3342,16 @@ export const JoinBBBMeetingAnswer = {
     },
 
     fromPartial<I extends Exact<DeepPartial<JoinBBBMeetingAnswer>, I>>(object: I): JoinBBBMeetingAnswer {
-        const message = { ...baseJoinBBBMeetingAnswer } as JoinBBBMeetingAnswer;
+        const message = createBaseJoinBBBMeetingAnswer();
         message.meetingId = object.meetingId ?? "";
         message.clientURL = object.clientURL ?? "";
         return message;
     },
 };
 
-const baseUserMovedMessage: object = { userId: 0 };
+function createBaseUserMovedMessage(): UserMovedMessage {
+    return { userId: 0, position: undefined };
+}
 
 export const UserMovedMessage = {
     encode(message: UserMovedMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3374,7 +3367,7 @@ export const UserMovedMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserMovedMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserMovedMessage } as UserMovedMessage;
+        const message = createBaseUserMovedMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3393,13 +3386,10 @@ export const UserMovedMessage = {
     },
 
     fromJSON(object: any): UserMovedMessage {
-        const message = { ...baseUserMovedMessage } as UserMovedMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PositionMessage.fromJSON(object.position)
-                : undefined;
-        return message;
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            position: isSet(object.position) ? PositionMessage.fromJSON(object.position) : undefined,
+        };
     },
 
     toJSON(message: UserMovedMessage): unknown {
@@ -3411,7 +3401,7 @@ export const UserMovedMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserMovedMessage>, I>>(object: I): UserMovedMessage {
-        const message = { ...baseUserMovedMessage } as UserMovedMessage;
+        const message = createBaseUserMovedMessage();
         message.userId = object.userId ?? 0;
         message.position =
             object.position !== undefined && object.position !== null
@@ -3421,7 +3411,9 @@ export const UserMovedMessage = {
     },
 };
 
-const baseMoveToPositionMessage: object = {};
+function createBaseMoveToPositionMessage(): MoveToPositionMessage {
+    return { position: undefined };
+}
 
 export const MoveToPositionMessage = {
     encode(message: MoveToPositionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3434,7 +3426,7 @@ export const MoveToPositionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): MoveToPositionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
+        const message = createBaseMoveToPositionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3450,12 +3442,7 @@ export const MoveToPositionMessage = {
     },
 
     fromJSON(object: any): MoveToPositionMessage {
-        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PositionMessage.fromJSON(object.position)
-                : undefined;
-        return message;
+        return { position: isSet(object.position) ? PositionMessage.fromJSON(object.position) : undefined };
     },
 
     toJSON(message: MoveToPositionMessage): unknown {
@@ -3466,7 +3453,7 @@ export const MoveToPositionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<MoveToPositionMessage>, I>>(object: I): MoveToPositionMessage {
-        const message = { ...baseMoveToPositionMessage } as MoveToPositionMessage;
+        const message = createBaseMoveToPositionMessage();
         message.position =
             object.position !== undefined && object.position !== null
                 ? PositionMessage.fromPartial(object.position)
@@ -3475,7 +3462,9 @@ export const MoveToPositionMessage = {
     },
 };
 
-const baseSubMessage: object = {};
+function createBaseSubMessage(): SubMessage {
+    return { message: undefined };
+}
 
 export const SubMessage = {
     encode(message: SubMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3524,7 +3513,7 @@ export const SubMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SubMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSubMessage } as SubMessage;
+        const message = createBaseSubMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3609,74 +3598,50 @@ export const SubMessage = {
     },
 
     fromJSON(object: any): SubMessage {
-        const message = { ...baseSubMessage } as SubMessage;
-        if (object.userMovedMessage !== undefined && object.userMovedMessage !== null) {
-            message.message = {
-                $case: "userMovedMessage",
-                userMovedMessage: UserMovedMessage.fromJSON(object.userMovedMessage),
-            };
-        }
-        if (object.groupUpdateMessage !== undefined && object.groupUpdateMessage !== null) {
-            message.message = {
-                $case: "groupUpdateMessage",
-                groupUpdateMessage: GroupUpdateMessage.fromJSON(object.groupUpdateMessage),
-            };
-        }
-        if (object.groupDeleteMessage !== undefined && object.groupDeleteMessage !== null) {
-            message.message = {
-                $case: "groupDeleteMessage",
-                groupDeleteMessage: GroupDeleteMessage.fromJSON(object.groupDeleteMessage),
-            };
-        }
-        if (object.userJoinedMessage !== undefined && object.userJoinedMessage !== null) {
-            message.message = {
-                $case: "userJoinedMessage",
-                userJoinedMessage: UserJoinedMessage.fromJSON(object.userJoinedMessage),
-            };
-        }
-        if (object.userLeftMessage !== undefined && object.userLeftMessage !== null) {
-            message.message = {
-                $case: "userLeftMessage",
-                userLeftMessage: UserLeftMessage.fromJSON(object.userLeftMessage),
-            };
-        }
-        if (object.itemEventMessage !== undefined && object.itemEventMessage !== null) {
-            message.message = {
-                $case: "itemEventMessage",
-                itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage),
-            };
-        }
-        if (object.emoteEventMessage !== undefined && object.emoteEventMessage !== null) {
-            message.message = {
-                $case: "emoteEventMessage",
-                emoteEventMessage: EmoteEventMessage.fromJSON(object.emoteEventMessage),
-            };
-        }
-        if (object.variableMessage !== undefined && object.variableMessage !== null) {
-            message.message = {
-                $case: "variableMessage",
-                variableMessage: VariableMessage.fromJSON(object.variableMessage),
-            };
-        }
-        if (object.errorMessage !== undefined && object.errorMessage !== null) {
-            message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
-        }
-        if (object.playerDetailsUpdatedMessage !== undefined && object.playerDetailsUpdatedMessage !== null) {
-            message.message = {
-                $case: "playerDetailsUpdatedMessage",
-                playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(object.playerDetailsUpdatedMessage),
-            };
-        }
-        if (object.pingMessage !== undefined && object.pingMessage !== null) {
-            message.message = { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) };
-        }
-        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
-            message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.userMovedMessage)
+                ? { $case: "userMovedMessage", userMovedMessage: UserMovedMessage.fromJSON(object.userMovedMessage) }
+                : isSet(object.groupUpdateMessage)
+                ? {
+                      $case: "groupUpdateMessage",
+                      groupUpdateMessage: GroupUpdateMessage.fromJSON(object.groupUpdateMessage),
+                  }
+                : isSet(object.groupDeleteMessage)
+                ? {
+                      $case: "groupDeleteMessage",
+                      groupDeleteMessage: GroupDeleteMessage.fromJSON(object.groupDeleteMessage),
+                  }
+                : isSet(object.userJoinedMessage)
+                ? {
+                      $case: "userJoinedMessage",
+                      userJoinedMessage: UserJoinedMessage.fromJSON(object.userJoinedMessage),
+                  }
+                : isSet(object.userLeftMessage)
+                ? { $case: "userLeftMessage", userLeftMessage: UserLeftMessage.fromJSON(object.userLeftMessage) }
+                : isSet(object.itemEventMessage)
+                ? { $case: "itemEventMessage", itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage) }
+                : isSet(object.emoteEventMessage)
+                ? {
+                      $case: "emoteEventMessage",
+                      emoteEventMessage: EmoteEventMessage.fromJSON(object.emoteEventMessage),
+                  }
+                : isSet(object.variableMessage)
+                ? { $case: "variableMessage", variableMessage: VariableMessage.fromJSON(object.variableMessage) }
+                : isSet(object.errorMessage)
+                ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
+                : isSet(object.playerDetailsUpdatedMessage)
+                ? {
+                      $case: "playerDetailsUpdatedMessage",
+                      playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(
+                          object.playerDetailsUpdatedMessage
+                      ),
+                  }
+                : isSet(object.pingMessage)
+                ? { $case: "pingMessage", pingMessage: PingMessage.fromJSON(object.pingMessage) }
+                : isSet(object.editMapMessage)
+                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : undefined,
+        };
     },
 
     toJSON(message: SubMessage): unknown {
@@ -3733,7 +3698,7 @@ export const SubMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SubMessage>, I>>(object: I): SubMessage {
-        const message = { ...baseSubMessage } as SubMessage;
+        const message = createBaseSubMessage();
         if (
             object.message?.$case === "userMovedMessage" &&
             object.message?.userMovedMessage !== undefined &&
@@ -3860,7 +3825,9 @@ export const SubMessage = {
     },
 };
 
-const baseBatchMessage: object = { event: "" };
+function createBaseBatchMessage(): BatchMessage {
+    return { event: "", payload: [] };
+}
 
 export const BatchMessage = {
     encode(message: BatchMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3876,8 +3843,7 @@ export const BatchMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BatchMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBatchMessage } as BatchMessage;
-        message.payload = [];
+        const message = createBaseBatchMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3896,10 +3862,10 @@ export const BatchMessage = {
     },
 
     fromJSON(object: any): BatchMessage {
-        const message = { ...baseBatchMessage } as BatchMessage;
-        message.event = object.event !== undefined && object.event !== null ? String(object.event) : "";
-        message.payload = (object.payload ?? []).map((e: any) => SubMessage.fromJSON(e));
-        return message;
+        return {
+            event: isSet(object.event) ? String(object.event) : "",
+            payload: Array.isArray(object?.payload) ? object.payload.map((e: any) => SubMessage.fromJSON(e)) : [],
+        };
     },
 
     toJSON(message: BatchMessage): unknown {
@@ -3914,14 +3880,16 @@ export const BatchMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BatchMessage>, I>>(object: I): BatchMessage {
-        const message = { ...baseBatchMessage } as BatchMessage;
+        const message = createBaseBatchMessage();
         message.event = object.event ?? "";
         message.payload = object.payload?.map((e) => SubMessage.fromPartial(e)) || [];
         return message;
     },
 };
 
-const baseGroupUpdateMessage: object = { groupId: 0 };
+function createBaseGroupUpdateMessage(): GroupUpdateMessage {
+    return { groupId: 0, position: undefined, groupSize: undefined, locked: undefined };
+}
 
 export const GroupUpdateMessage = {
     encode(message: GroupUpdateMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -3943,7 +3911,7 @@ export const GroupUpdateMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): GroupUpdateMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseGroupUpdateMessage } as GroupUpdateMessage;
+        const message = createBaseGroupUpdateMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -3968,16 +3936,12 @@ export const GroupUpdateMessage = {
     },
 
     fromJSON(object: any): GroupUpdateMessage {
-        const message = { ...baseGroupUpdateMessage } as GroupUpdateMessage;
-        message.groupId = object.groupId !== undefined && object.groupId !== null ? Number(object.groupId) : 0;
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PointMessage.fromJSON(object.position)
-                : undefined;
-        message.groupSize =
-            object.groupSize !== undefined && object.groupSize !== null ? Number(object.groupSize) : undefined;
-        message.locked = object.locked !== undefined && object.locked !== null ? Boolean(object.locked) : undefined;
-        return message;
+        return {
+            groupId: isSet(object.groupId) ? Number(object.groupId) : 0,
+            position: isSet(object.position) ? PointMessage.fromJSON(object.position) : undefined,
+            groupSize: isSet(object.groupSize) ? Number(object.groupSize) : undefined,
+            locked: isSet(object.locked) ? Boolean(object.locked) : undefined,
+        };
     },
 
     toJSON(message: GroupUpdateMessage): unknown {
@@ -3991,7 +3955,7 @@ export const GroupUpdateMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<GroupUpdateMessage>, I>>(object: I): GroupUpdateMessage {
-        const message = { ...baseGroupUpdateMessage } as GroupUpdateMessage;
+        const message = createBaseGroupUpdateMessage();
         message.groupId = object.groupId ?? 0;
         message.position =
             object.position !== undefined && object.position !== null
@@ -4003,7 +3967,9 @@ export const GroupUpdateMessage = {
     },
 };
 
-const baseGroupDeleteMessage: object = { groupId: 0 };
+function createBaseGroupDeleteMessage(): GroupDeleteMessage {
+    return { groupId: 0 };
+}
 
 export const GroupDeleteMessage = {
     encode(message: GroupDeleteMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4016,7 +3982,7 @@ export const GroupDeleteMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): GroupDeleteMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseGroupDeleteMessage } as GroupDeleteMessage;
+        const message = createBaseGroupDeleteMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4032,9 +3998,7 @@ export const GroupDeleteMessage = {
     },
 
     fromJSON(object: any): GroupDeleteMessage {
-        const message = { ...baseGroupDeleteMessage } as GroupDeleteMessage;
-        message.groupId = object.groupId !== undefined && object.groupId !== null ? Number(object.groupId) : 0;
-        return message;
+        return { groupId: isSet(object.groupId) ? Number(object.groupId) : 0 };
     },
 
     toJSON(message: GroupDeleteMessage): unknown {
@@ -4044,21 +4008,27 @@ export const GroupDeleteMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<GroupDeleteMessage>, I>>(object: I): GroupDeleteMessage {
-        const message = { ...baseGroupDeleteMessage } as GroupDeleteMessage;
+        const message = createBaseGroupDeleteMessage();
         message.groupId = object.groupId ?? 0;
         return message;
     },
 };
 
-const baseUserJoinedMessage: object = {
-    userId: 0,
-    name: "",
-    visitCardUrl: "",
-    userUuid: "",
-    outlineColor: 0,
-    hasOutline: false,
-    availabilityStatus: 0,
-};
+function createBaseUserJoinedMessage(): UserJoinedMessage {
+    return {
+        userId: 0,
+        name: "",
+        characterLayers: [],
+        position: undefined,
+        companion: undefined,
+        visitCardUrl: "",
+        userUuid: "",
+        outlineColor: 0,
+        hasOutline: false,
+        availabilityStatus: 0,
+        variables: {},
+    };
+}
 
 export const UserJoinedMessage = {
     encode(message: UserJoinedMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4101,9 +4071,7 @@ export const UserJoinedMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserJoinedMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserJoinedMessage } as UserJoinedMessage;
-        message.characterLayers = [];
-        message.variables = {};
+        const message = createBaseUserJoinedMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4152,37 +4120,28 @@ export const UserJoinedMessage = {
     },
 
     fromJSON(object: any): UserJoinedMessage {
-        const message = { ...baseUserJoinedMessage } as UserJoinedMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.characterLayers = (object.characterLayers ?? []).map((e: any) => CharacterLayerMessage.fromJSON(e));
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PositionMessage.fromJSON(object.position)
-                : undefined;
-        message.companion =
-            object.companion !== undefined && object.companion !== null
-                ? CompanionMessage.fromJSON(object.companion)
-                : undefined;
-        message.visitCardUrl =
-            object.visitCardUrl !== undefined && object.visitCardUrl !== null ? String(object.visitCardUrl) : "";
-        message.userUuid = object.userUuid !== undefined && object.userUuid !== null ? String(object.userUuid) : "";
-        message.outlineColor =
-            object.outlineColor !== undefined && object.outlineColor !== null ? Number(object.outlineColor) : 0;
-        message.hasOutline =
-            object.hasOutline !== undefined && object.hasOutline !== null ? Boolean(object.hasOutline) : false;
-        message.availabilityStatus =
-            object.availabilityStatus !== undefined && object.availabilityStatus !== null
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            name: isSet(object.name) ? String(object.name) : "",
+            characterLayers: Array.isArray(object?.characterLayers)
+                ? object.characterLayers.map((e: any) => CharacterLayerMessage.fromJSON(e))
+                : [],
+            position: isSet(object.position) ? PositionMessage.fromJSON(object.position) : undefined,
+            companion: isSet(object.companion) ? CompanionMessage.fromJSON(object.companion) : undefined,
+            visitCardUrl: isSet(object.visitCardUrl) ? String(object.visitCardUrl) : "",
+            userUuid: isSet(object.userUuid) ? String(object.userUuid) : "",
+            outlineColor: isSet(object.outlineColor) ? Number(object.outlineColor) : 0,
+            hasOutline: isSet(object.hasOutline) ? Boolean(object.hasOutline) : false,
+            availabilityStatus: isSet(object.availabilityStatus)
                 ? availabilityStatusFromJSON(object.availabilityStatus)
-                : 0;
-        message.variables = Object.entries(object.variables ?? {}).reduce<{ [key: string]: string }>(
-            (acc, [key, value]) => {
-                acc[key] = String(value);
-                return acc;
-            },
-            {}
-        );
-        return message;
+                : 0,
+            variables: isObject(object.variables)
+                ? Object.entries(object.variables).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+                      acc[key] = String(value);
+                      return acc;
+                  }, {})
+                : {},
+        };
     },
 
     toJSON(message: UserJoinedMessage): unknown {
@@ -4214,7 +4173,7 @@ export const UserJoinedMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserJoinedMessage>, I>>(object: I): UserJoinedMessage {
-        const message = { ...baseUserJoinedMessage } as UserJoinedMessage;
+        const message = createBaseUserJoinedMessage();
         message.userId = object.userId ?? 0;
         message.name = object.name ?? "";
         message.characterLayers = object.characterLayers?.map((e) => CharacterLayerMessage.fromPartial(e)) || [];
@@ -4244,7 +4203,9 @@ export const UserJoinedMessage = {
     },
 };
 
-const baseUserJoinedMessage_VariablesEntry: object = { key: "", value: "" };
+function createBaseUserJoinedMessage_VariablesEntry(): UserJoinedMessage_VariablesEntry {
+    return { key: "", value: "" };
+}
 
 export const UserJoinedMessage_VariablesEntry = {
     encode(message: UserJoinedMessage_VariablesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4260,7 +4221,7 @@ export const UserJoinedMessage_VariablesEntry = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserJoinedMessage_VariablesEntry {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserJoinedMessage_VariablesEntry } as UserJoinedMessage_VariablesEntry;
+        const message = createBaseUserJoinedMessage_VariablesEntry();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4279,10 +4240,10 @@ export const UserJoinedMessage_VariablesEntry = {
     },
 
     fromJSON(object: any): UserJoinedMessage_VariablesEntry {
-        const message = { ...baseUserJoinedMessage_VariablesEntry } as UserJoinedMessage_VariablesEntry;
-        message.key = object.key !== undefined && object.key !== null ? String(object.key) : "";
-        message.value = object.value !== undefined && object.value !== null ? String(object.value) : "";
-        return message;
+        return {
+            key: isSet(object.key) ? String(object.key) : "",
+            value: isSet(object.value) ? String(object.value) : "",
+        };
     },
 
     toJSON(message: UserJoinedMessage_VariablesEntry): unknown {
@@ -4295,14 +4256,16 @@ export const UserJoinedMessage_VariablesEntry = {
     fromPartial<I extends Exact<DeepPartial<UserJoinedMessage_VariablesEntry>, I>>(
         object: I
     ): UserJoinedMessage_VariablesEntry {
-        const message = { ...baseUserJoinedMessage_VariablesEntry } as UserJoinedMessage_VariablesEntry;
+        const message = createBaseUserJoinedMessage_VariablesEntry();
         message.key = object.key ?? "";
         message.value = object.value ?? "";
         return message;
     },
 };
 
-const baseUserLeftMessage: object = { userId: 0 };
+function createBaseUserLeftMessage(): UserLeftMessage {
+    return { userId: 0 };
+}
 
 export const UserLeftMessage = {
     encode(message: UserLeftMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4315,7 +4278,7 @@ export const UserLeftMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserLeftMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserLeftMessage } as UserLeftMessage;
+        const message = createBaseUserLeftMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4331,9 +4294,7 @@ export const UserLeftMessage = {
     },
 
     fromJSON(object: any): UserLeftMessage {
-        const message = { ...baseUserLeftMessage } as UserLeftMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        return message;
+        return { userId: isSet(object.userId) ? Number(object.userId) : 0 };
     },
 
     toJSON(message: UserLeftMessage): unknown {
@@ -4343,13 +4304,15 @@ export const UserLeftMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserLeftMessage>, I>>(object: I): UserLeftMessage {
-        const message = { ...baseUserLeftMessage } as UserLeftMessage;
+        const message = createBaseUserLeftMessage();
         message.userId = object.userId ?? 0;
         return message;
     },
 };
 
-const baseErrorMessage: object = { message: "" };
+function createBaseErrorMessage(): ErrorMessage {
+    return { message: "" };
+}
 
 export const ErrorMessage = {
     encode(message: ErrorMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4362,7 +4325,7 @@ export const ErrorMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ErrorMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseErrorMessage } as ErrorMessage;
+        const message = createBaseErrorMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4378,9 +4341,7 @@ export const ErrorMessage = {
     },
 
     fromJSON(object: any): ErrorMessage {
-        const message = { ...baseErrorMessage } as ErrorMessage;
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return { message: isSet(object.message) ? String(object.message) : "" };
     },
 
     toJSON(message: ErrorMessage): unknown {
@@ -4390,13 +4351,26 @@ export const ErrorMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ErrorMessage>, I>>(object: I): ErrorMessage {
-        const message = { ...baseErrorMessage } as ErrorMessage;
+        const message = createBaseErrorMessage();
         message.message = object.message ?? "";
         return message;
     },
 };
 
-const baseErrorScreenMessage: object = { type: "" };
+function createBaseErrorScreenMessage(): ErrorScreenMessage {
+    return {
+        type: "",
+        code: undefined,
+        title: undefined,
+        subtitle: undefined,
+        details: undefined,
+        timeToRetry: undefined,
+        canRetryManual: undefined,
+        urlToRedirect: undefined,
+        buttonTitle: undefined,
+        image: undefined,
+    };
+}
 
 export const ErrorScreenMessage = {
     encode(message: ErrorScreenMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4436,7 +4410,7 @@ export const ErrorScreenMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ErrorScreenMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseErrorScreenMessage } as ErrorScreenMessage;
+        const message = createBaseErrorScreenMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4479,27 +4453,18 @@ export const ErrorScreenMessage = {
     },
 
     fromJSON(object: any): ErrorScreenMessage {
-        const message = { ...baseErrorScreenMessage } as ErrorScreenMessage;
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.code = object.code !== undefined && object.code !== null ? String(object.code) : undefined;
-        message.title = object.title !== undefined && object.title !== null ? String(object.title) : undefined;
-        message.subtitle =
-            object.subtitle !== undefined && object.subtitle !== null ? String(object.subtitle) : undefined;
-        message.details = object.details !== undefined && object.details !== null ? String(object.details) : undefined;
-        message.timeToRetry =
-            object.timeToRetry !== undefined && object.timeToRetry !== null ? Number(object.timeToRetry) : undefined;
-        message.canRetryManual =
-            object.canRetryManual !== undefined && object.canRetryManual !== null
-                ? Boolean(object.canRetryManual)
-                : undefined;
-        message.urlToRedirect =
-            object.urlToRedirect !== undefined && object.urlToRedirect !== null
-                ? String(object.urlToRedirect)
-                : undefined;
-        message.buttonTitle =
-            object.buttonTitle !== undefined && object.buttonTitle !== null ? String(object.buttonTitle) : undefined;
-        message.image = object.image !== undefined && object.image !== null ? String(object.image) : undefined;
-        return message;
+        return {
+            type: isSet(object.type) ? String(object.type) : "",
+            code: isSet(object.code) ? String(object.code) : undefined,
+            title: isSet(object.title) ? String(object.title) : undefined,
+            subtitle: isSet(object.subtitle) ? String(object.subtitle) : undefined,
+            details: isSet(object.details) ? String(object.details) : undefined,
+            timeToRetry: isSet(object.timeToRetry) ? Number(object.timeToRetry) : undefined,
+            canRetryManual: isSet(object.canRetryManual) ? Boolean(object.canRetryManual) : undefined,
+            urlToRedirect: isSet(object.urlToRedirect) ? String(object.urlToRedirect) : undefined,
+            buttonTitle: isSet(object.buttonTitle) ? String(object.buttonTitle) : undefined,
+            image: isSet(object.image) ? String(object.image) : undefined,
+        };
     },
 
     toJSON(message: ErrorScreenMessage): unknown {
@@ -4518,7 +4483,7 @@ export const ErrorScreenMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ErrorScreenMessage>, I>>(object: I): ErrorScreenMessage {
-        const message = { ...baseErrorScreenMessage } as ErrorScreenMessage;
+        const message = createBaseErrorScreenMessage();
         message.type = object.type ?? "";
         message.code = object.code ?? undefined;
         message.title = object.title ?? undefined;
@@ -4533,7 +4498,9 @@ export const ErrorScreenMessage = {
     },
 };
 
-const baseItemStateMessage: object = { itemId: 0, stateJson: "" };
+function createBaseItemStateMessage(): ItemStateMessage {
+    return { itemId: 0, stateJson: "" };
+}
 
 export const ItemStateMessage = {
     encode(message: ItemStateMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4549,7 +4516,7 @@ export const ItemStateMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ItemStateMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseItemStateMessage } as ItemStateMessage;
+        const message = createBaseItemStateMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4568,10 +4535,10 @@ export const ItemStateMessage = {
     },
 
     fromJSON(object: any): ItemStateMessage {
-        const message = { ...baseItemStateMessage } as ItemStateMessage;
-        message.itemId = object.itemId !== undefined && object.itemId !== null ? Number(object.itemId) : 0;
-        message.stateJson = object.stateJson !== undefined && object.stateJson !== null ? String(object.stateJson) : "";
-        return message;
+        return {
+            itemId: isSet(object.itemId) ? Number(object.itemId) : 0,
+            stateJson: isSet(object.stateJson) ? String(object.stateJson) : "",
+        };
     },
 
     toJSON(message: ItemStateMessage): unknown {
@@ -4582,14 +4549,16 @@ export const ItemStateMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ItemStateMessage>, I>>(object: I): ItemStateMessage {
-        const message = { ...baseItemStateMessage } as ItemStateMessage;
+        const message = createBaseItemStateMessage();
         message.itemId = object.itemId ?? 0;
         message.stateJson = object.stateJson ?? "";
         return message;
     },
 };
 
-const baseGroupUsersUpdateMessage: object = { groupId: 0, userIds: 0 };
+function createBaseGroupUsersUpdateMessage(): GroupUsersUpdateMessage {
+    return { groupId: 0, userIds: [] };
+}
 
 export const GroupUsersUpdateMessage = {
     encode(message: GroupUsersUpdateMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4607,8 +4576,7 @@ export const GroupUsersUpdateMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): GroupUsersUpdateMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseGroupUsersUpdateMessage } as GroupUsersUpdateMessage;
-        message.userIds = [];
+        const message = createBaseGroupUsersUpdateMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4634,10 +4602,10 @@ export const GroupUsersUpdateMessage = {
     },
 
     fromJSON(object: any): GroupUsersUpdateMessage {
-        const message = { ...baseGroupUsersUpdateMessage } as GroupUsersUpdateMessage;
-        message.groupId = object.groupId !== undefined && object.groupId !== null ? Number(object.groupId) : 0;
-        message.userIds = (object.userIds ?? []).map((e: any) => Number(e));
-        return message;
+        return {
+            groupId: isSet(object.groupId) ? Number(object.groupId) : 0,
+            userIds: Array.isArray(object?.userIds) ? object.userIds.map((e: any) => Number(e)) : [],
+        };
     },
 
     toJSON(message: GroupUsersUpdateMessage): unknown {
@@ -4652,14 +4620,25 @@ export const GroupUsersUpdateMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<GroupUsersUpdateMessage>, I>>(object: I): GroupUsersUpdateMessage {
-        const message = { ...baseGroupUsersUpdateMessage } as GroupUsersUpdateMessage;
+        const message = createBaseGroupUsersUpdateMessage();
         message.groupId = object.groupId ?? 0;
         message.userIds = object.userIds?.map((e) => e) || [];
         return message;
     },
 };
 
-const baseRoomJoinedMessage: object = { currentUserId: 0, tag: "", userRoomToken: "", activatedInviteUser: false };
+function createBaseRoomJoinedMessage(): RoomJoinedMessage {
+    return {
+        item: [],
+        currentUserId: 0,
+        tag: [],
+        variable: [],
+        userRoomToken: "",
+        characterLayer: [],
+        activatedInviteUser: false,
+        playerVariable: [],
+    };
+}
 
 export const RoomJoinedMessage = {
     encode(message: RoomJoinedMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4693,12 +4672,7 @@ export const RoomJoinedMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RoomJoinedMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRoomJoinedMessage } as RoomJoinedMessage;
-        message.item = [];
-        message.tag = [];
-        message.variable = [];
-        message.characterLayer = [];
-        message.playerVariable = [];
+        const message = createBaseRoomJoinedMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4735,21 +4709,22 @@ export const RoomJoinedMessage = {
     },
 
     fromJSON(object: any): RoomJoinedMessage {
-        const message = { ...baseRoomJoinedMessage } as RoomJoinedMessage;
-        message.item = (object.item ?? []).map((e: any) => ItemStateMessage.fromJSON(e));
-        message.currentUserId =
-            object.currentUserId !== undefined && object.currentUserId !== null ? Number(object.currentUserId) : 0;
-        message.tag = (object.tag ?? []).map((e: any) => String(e));
-        message.variable = (object.variable ?? []).map((e: any) => VariableMessage.fromJSON(e));
-        message.userRoomToken =
-            object.userRoomToken !== undefined && object.userRoomToken !== null ? String(object.userRoomToken) : "";
-        message.characterLayer = (object.characterLayer ?? []).map((e: any) => CharacterLayerMessage.fromJSON(e));
-        message.activatedInviteUser =
-            object.activatedInviteUser !== undefined && object.activatedInviteUser !== null
-                ? Boolean(object.activatedInviteUser)
-                : false;
-        message.playerVariable = (object.playerVariable ?? []).map((e: any) => VariableMessage.fromJSON(e));
-        return message;
+        return {
+            item: Array.isArray(object?.item) ? object.item.map((e: any) => ItemStateMessage.fromJSON(e)) : [],
+            currentUserId: isSet(object.currentUserId) ? Number(object.currentUserId) : 0,
+            tag: Array.isArray(object?.tag) ? object.tag.map((e: any) => String(e)) : [],
+            variable: Array.isArray(object?.variable)
+                ? object.variable.map((e: any) => VariableMessage.fromJSON(e))
+                : [],
+            userRoomToken: isSet(object.userRoomToken) ? String(object.userRoomToken) : "",
+            characterLayer: Array.isArray(object?.characterLayer)
+                ? object.characterLayer.map((e: any) => CharacterLayerMessage.fromJSON(e))
+                : [],
+            activatedInviteUser: isSet(object.activatedInviteUser) ? Boolean(object.activatedInviteUser) : false,
+            playerVariable: Array.isArray(object?.playerVariable)
+                ? object.playerVariable.map((e: any) => VariableMessage.fromJSON(e))
+                : [],
+        };
     },
 
     toJSON(message: RoomJoinedMessage): unknown {
@@ -4786,7 +4761,7 @@ export const RoomJoinedMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RoomJoinedMessage>, I>>(object: I): RoomJoinedMessage {
-        const message = { ...baseRoomJoinedMessage } as RoomJoinedMessage;
+        const message = createBaseRoomJoinedMessage();
         message.item = object.item?.map((e) => ItemStateMessage.fromPartial(e)) || [];
         message.currentUserId = object.currentUserId ?? 0;
         message.tag = object.tag?.map((e) => e) || [];
@@ -4799,7 +4774,9 @@ export const RoomJoinedMessage = {
     },
 };
 
-const baseWebRtcStartMessage: object = { userId: 0, initiator: false, webrtcUserName: "", webrtcPassword: "" };
+function createBaseWebRtcStartMessage(): WebRtcStartMessage {
+    return { userId: 0, initiator: false, webrtcUserName: "", webrtcPassword: "" };
+}
 
 export const WebRtcStartMessage = {
     encode(message: WebRtcStartMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4821,7 +4798,7 @@ export const WebRtcStartMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WebRtcStartMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWebRtcStartMessage } as WebRtcStartMessage;
+        const message = createBaseWebRtcStartMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4846,15 +4823,12 @@ export const WebRtcStartMessage = {
     },
 
     fromJSON(object: any): WebRtcStartMessage {
-        const message = { ...baseWebRtcStartMessage } as WebRtcStartMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.initiator =
-            object.initiator !== undefined && object.initiator !== null ? Boolean(object.initiator) : false;
-        message.webrtcUserName =
-            object.webrtcUserName !== undefined && object.webrtcUserName !== null ? String(object.webrtcUserName) : "";
-        message.webrtcPassword =
-            object.webrtcPassword !== undefined && object.webrtcPassword !== null ? String(object.webrtcPassword) : "";
-        return message;
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            initiator: isSet(object.initiator) ? Boolean(object.initiator) : false,
+            webrtcUserName: isSet(object.webrtcUserName) ? String(object.webrtcUserName) : "",
+            webrtcPassword: isSet(object.webrtcPassword) ? String(object.webrtcPassword) : "",
+        };
     },
 
     toJSON(message: WebRtcStartMessage): unknown {
@@ -4867,7 +4841,7 @@ export const WebRtcStartMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WebRtcStartMessage>, I>>(object: I): WebRtcStartMessage {
-        const message = { ...baseWebRtcStartMessage } as WebRtcStartMessage;
+        const message = createBaseWebRtcStartMessage();
         message.userId = object.userId ?? 0;
         message.initiator = object.initiator ?? false;
         message.webrtcUserName = object.webrtcUserName ?? "";
@@ -4876,7 +4850,9 @@ export const WebRtcStartMessage = {
     },
 };
 
-const baseWebRtcDisconnectMessage: object = { userId: 0 };
+function createBaseWebRtcDisconnectMessage(): WebRtcDisconnectMessage {
+    return { userId: 0 };
+}
 
 export const WebRtcDisconnectMessage = {
     encode(message: WebRtcDisconnectMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4889,7 +4865,7 @@ export const WebRtcDisconnectMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WebRtcDisconnectMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWebRtcDisconnectMessage } as WebRtcDisconnectMessage;
+        const message = createBaseWebRtcDisconnectMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4905,9 +4881,7 @@ export const WebRtcDisconnectMessage = {
     },
 
     fromJSON(object: any): WebRtcDisconnectMessage {
-        const message = { ...baseWebRtcDisconnectMessage } as WebRtcDisconnectMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        return message;
+        return { userId: isSet(object.userId) ? Number(object.userId) : 0 };
     },
 
     toJSON(message: WebRtcDisconnectMessage): unknown {
@@ -4917,13 +4891,15 @@ export const WebRtcDisconnectMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WebRtcDisconnectMessage>, I>>(object: I): WebRtcDisconnectMessage {
-        const message = { ...baseWebRtcDisconnectMessage } as WebRtcDisconnectMessage;
+        const message = createBaseWebRtcDisconnectMessage();
         message.userId = object.userId ?? 0;
         return message;
     },
 };
 
-const baseWebRtcSignalToClientMessage: object = { userId: 0, signal: "", webrtcUserName: "", webrtcPassword: "" };
+function createBaseWebRtcSignalToClientMessage(): WebRtcSignalToClientMessage {
+    return { userId: 0, signal: "", webrtcUserName: "", webrtcPassword: "" };
+}
 
 export const WebRtcSignalToClientMessage = {
     encode(message: WebRtcSignalToClientMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -4945,7 +4921,7 @@ export const WebRtcSignalToClientMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WebRtcSignalToClientMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWebRtcSignalToClientMessage } as WebRtcSignalToClientMessage;
+        const message = createBaseWebRtcSignalToClientMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -4970,14 +4946,12 @@ export const WebRtcSignalToClientMessage = {
     },
 
     fromJSON(object: any): WebRtcSignalToClientMessage {
-        const message = { ...baseWebRtcSignalToClientMessage } as WebRtcSignalToClientMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.signal = object.signal !== undefined && object.signal !== null ? String(object.signal) : "";
-        message.webrtcUserName =
-            object.webrtcUserName !== undefined && object.webrtcUserName !== null ? String(object.webrtcUserName) : "";
-        message.webrtcPassword =
-            object.webrtcPassword !== undefined && object.webrtcPassword !== null ? String(object.webrtcPassword) : "";
-        return message;
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            signal: isSet(object.signal) ? String(object.signal) : "",
+            webrtcUserName: isSet(object.webrtcUserName) ? String(object.webrtcUserName) : "",
+            webrtcPassword: isSet(object.webrtcPassword) ? String(object.webrtcPassword) : "",
+        };
     },
 
     toJSON(message: WebRtcSignalToClientMessage): unknown {
@@ -4990,7 +4964,7 @@ export const WebRtcSignalToClientMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WebRtcSignalToClientMessage>, I>>(object: I): WebRtcSignalToClientMessage {
-        const message = { ...baseWebRtcSignalToClientMessage } as WebRtcSignalToClientMessage;
+        const message = createBaseWebRtcSignalToClientMessage();
         message.userId = object.userId ?? 0;
         message.signal = object.signal ?? "";
         message.webrtcUserName = object.webrtcUserName ?? "";
@@ -4999,7 +4973,9 @@ export const WebRtcSignalToClientMessage = {
     },
 };
 
-const baseTeleportMessageMessage: object = { map: "" };
+function createBaseTeleportMessageMessage(): TeleportMessageMessage {
+    return { map: "" };
+}
 
 export const TeleportMessageMessage = {
     encode(message: TeleportMessageMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5012,7 +4988,7 @@ export const TeleportMessageMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): TeleportMessageMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseTeleportMessageMessage } as TeleportMessageMessage;
+        const message = createBaseTeleportMessageMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5028,9 +5004,7 @@ export const TeleportMessageMessage = {
     },
 
     fromJSON(object: any): TeleportMessageMessage {
-        const message = { ...baseTeleportMessageMessage } as TeleportMessageMessage;
-        message.map = object.map !== undefined && object.map !== null ? String(object.map) : "";
-        return message;
+        return { map: isSet(object.map) ? String(object.map) : "" };
     },
 
     toJSON(message: TeleportMessageMessage): unknown {
@@ -5040,13 +5014,15 @@ export const TeleportMessageMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<TeleportMessageMessage>, I>>(object: I): TeleportMessageMessage {
-        const message = { ...baseTeleportMessageMessage } as TeleportMessageMessage;
+        const message = createBaseTeleportMessageMessage();
         message.map = object.map ?? "";
         return message;
     },
 };
 
-const baseSendUserMessage: object = { type: "", message: "" };
+function createBaseSendUserMessage(): SendUserMessage {
+    return { type: "", message: "" };
+}
 
 export const SendUserMessage = {
     encode(message: SendUserMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5062,7 +5038,7 @@ export const SendUserMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SendUserMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSendUserMessage } as SendUserMessage;
+        const message = createBaseSendUserMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5081,10 +5057,10 @@ export const SendUserMessage = {
     },
 
     fromJSON(object: any): SendUserMessage {
-        const message = { ...baseSendUserMessage } as SendUserMessage;
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return {
+            type: isSet(object.type) ? String(object.type) : "",
+            message: isSet(object.message) ? String(object.message) : "",
+        };
     },
 
     toJSON(message: SendUserMessage): unknown {
@@ -5095,14 +5071,16 @@ export const SendUserMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SendUserMessage>, I>>(object: I): SendUserMessage {
-        const message = { ...baseSendUserMessage } as SendUserMessage;
+        const message = createBaseSendUserMessage();
         message.type = object.type ?? "";
         message.message = object.message ?? "";
         return message;
     },
 };
 
-const baseWorldFullWarningMessage: object = {};
+function createBaseWorldFullWarningMessage(): WorldFullWarningMessage {
+    return {};
+}
 
 export const WorldFullWarningMessage = {
     encode(_: WorldFullWarningMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5112,7 +5090,7 @@ export const WorldFullWarningMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WorldFullWarningMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWorldFullWarningMessage } as WorldFullWarningMessage;
+        const message = createBaseWorldFullWarningMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5125,8 +5103,7 @@ export const WorldFullWarningMessage = {
     },
 
     fromJSON(_: any): WorldFullWarningMessage {
-        const message = { ...baseWorldFullWarningMessage } as WorldFullWarningMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: WorldFullWarningMessage): unknown {
@@ -5135,12 +5112,14 @@ export const WorldFullWarningMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WorldFullWarningMessage>, I>>(_: I): WorldFullWarningMessage {
-        const message = { ...baseWorldFullWarningMessage } as WorldFullWarningMessage;
+        const message = createBaseWorldFullWarningMessage();
         return message;
     },
 };
 
-const baseWorldFullWarningToRoomMessage: object = { roomId: "" };
+function createBaseWorldFullWarningToRoomMessage(): WorldFullWarningToRoomMessage {
+    return { roomId: "" };
+}
 
 export const WorldFullWarningToRoomMessage = {
     encode(message: WorldFullWarningToRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5153,7 +5132,7 @@ export const WorldFullWarningToRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WorldFullWarningToRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWorldFullWarningToRoomMessage } as WorldFullWarningToRoomMessage;
+        const message = createBaseWorldFullWarningToRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5169,9 +5148,7 @@ export const WorldFullWarningToRoomMessage = {
     },
 
     fromJSON(object: any): WorldFullWarningToRoomMessage {
-        const message = { ...baseWorldFullWarningToRoomMessage } as WorldFullWarningToRoomMessage;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        return message;
+        return { roomId: isSet(object.roomId) ? String(object.roomId) : "" };
     },
 
     toJSON(message: WorldFullWarningToRoomMessage): unknown {
@@ -5183,13 +5160,15 @@ export const WorldFullWarningToRoomMessage = {
     fromPartial<I extends Exact<DeepPartial<WorldFullWarningToRoomMessage>, I>>(
         object: I
     ): WorldFullWarningToRoomMessage {
-        const message = { ...baseWorldFullWarningToRoomMessage } as WorldFullWarningToRoomMessage;
+        const message = createBaseWorldFullWarningToRoomMessage();
         message.roomId = object.roomId ?? "";
         return message;
     },
 };
 
-const baseRefreshRoomPromptMessage: object = { roomId: "" };
+function createBaseRefreshRoomPromptMessage(): RefreshRoomPromptMessage {
+    return { roomId: "" };
+}
 
 export const RefreshRoomPromptMessage = {
     encode(message: RefreshRoomPromptMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5202,7 +5181,7 @@ export const RefreshRoomPromptMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RefreshRoomPromptMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRefreshRoomPromptMessage } as RefreshRoomPromptMessage;
+        const message = createBaseRefreshRoomPromptMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5218,9 +5197,7 @@ export const RefreshRoomPromptMessage = {
     },
 
     fromJSON(object: any): RefreshRoomPromptMessage {
-        const message = { ...baseRefreshRoomPromptMessage } as RefreshRoomPromptMessage;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        return message;
+        return { roomId: isSet(object.roomId) ? String(object.roomId) : "" };
     },
 
     toJSON(message: RefreshRoomPromptMessage): unknown {
@@ -5230,13 +5207,15 @@ export const RefreshRoomPromptMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RefreshRoomPromptMessage>, I>>(object: I): RefreshRoomPromptMessage {
-        const message = { ...baseRefreshRoomPromptMessage } as RefreshRoomPromptMessage;
+        const message = createBaseRefreshRoomPromptMessage();
         message.roomId = object.roomId ?? "";
         return message;
     },
 };
 
-const baseRefreshRoomMessage: object = { roomId: "", versionNumber: 0 };
+function createBaseRefreshRoomMessage(): RefreshRoomMessage {
+    return { roomId: "", versionNumber: 0 };
+}
 
 export const RefreshRoomMessage = {
     encode(message: RefreshRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5252,7 +5231,7 @@ export const RefreshRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RefreshRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRefreshRoomMessage } as RefreshRoomMessage;
+        const message = createBaseRefreshRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5271,11 +5250,10 @@ export const RefreshRoomMessage = {
     },
 
     fromJSON(object: any): RefreshRoomMessage {
-        const message = { ...baseRefreshRoomMessage } as RefreshRoomMessage;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.versionNumber =
-            object.versionNumber !== undefined && object.versionNumber !== null ? Number(object.versionNumber) : 0;
-        return message;
+        return {
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            versionNumber: isSet(object.versionNumber) ? Number(object.versionNumber) : 0,
+        };
     },
 
     toJSON(message: RefreshRoomMessage): unknown {
@@ -5286,14 +5264,16 @@ export const RefreshRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RefreshRoomMessage>, I>>(object: I): RefreshRoomMessage {
-        const message = { ...baseRefreshRoomMessage } as RefreshRoomMessage;
+        const message = createBaseRefreshRoomMessage();
         message.roomId = object.roomId ?? "";
         message.versionNumber = object.versionNumber ?? 0;
         return message;
     },
 };
 
-const baseWorldFullMessage: object = {};
+function createBaseWorldFullMessage(): WorldFullMessage {
+    return {};
+}
 
 export const WorldFullMessage = {
     encode(_: WorldFullMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5303,7 +5283,7 @@ export const WorldFullMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WorldFullMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWorldFullMessage } as WorldFullMessage;
+        const message = createBaseWorldFullMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5316,8 +5296,7 @@ export const WorldFullMessage = {
     },
 
     fromJSON(_: any): WorldFullMessage {
-        const message = { ...baseWorldFullMessage } as WorldFullMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: WorldFullMessage): unknown {
@@ -5326,12 +5305,14 @@ export const WorldFullMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WorldFullMessage>, I>>(_: I): WorldFullMessage {
-        const message = { ...baseWorldFullMessage } as WorldFullMessage;
+        const message = createBaseWorldFullMessage();
         return message;
     },
 };
 
-const baseTokenExpiredMessage: object = {};
+function createBaseTokenExpiredMessage(): TokenExpiredMessage {
+    return {};
+}
 
 export const TokenExpiredMessage = {
     encode(_: TokenExpiredMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5341,7 +5322,7 @@ export const TokenExpiredMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): TokenExpiredMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseTokenExpiredMessage } as TokenExpiredMessage;
+        const message = createBaseTokenExpiredMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5354,8 +5335,7 @@ export const TokenExpiredMessage = {
     },
 
     fromJSON(_: any): TokenExpiredMessage {
-        const message = { ...baseTokenExpiredMessage } as TokenExpiredMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: TokenExpiredMessage): unknown {
@@ -5364,12 +5344,14 @@ export const TokenExpiredMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<TokenExpiredMessage>, I>>(_: I): TokenExpiredMessage {
-        const message = { ...baseTokenExpiredMessage } as TokenExpiredMessage;
+        const message = createBaseTokenExpiredMessage();
         return message;
     },
 };
 
-const baseInvalidTextureMessage: object = {};
+function createBaseInvalidTextureMessage(): InvalidTextureMessage {
+    return {};
+}
 
 export const InvalidTextureMessage = {
     encode(_: InvalidTextureMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5379,7 +5361,7 @@ export const InvalidTextureMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): InvalidTextureMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseInvalidTextureMessage } as InvalidTextureMessage;
+        const message = createBaseInvalidTextureMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5392,8 +5374,7 @@ export const InvalidTextureMessage = {
     },
 
     fromJSON(_: any): InvalidTextureMessage {
-        const message = { ...baseInvalidTextureMessage } as InvalidTextureMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: InvalidTextureMessage): unknown {
@@ -5402,12 +5383,14 @@ export const InvalidTextureMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<InvalidTextureMessage>, I>>(_: I): InvalidTextureMessage {
-        const message = { ...baseInvalidTextureMessage } as InvalidTextureMessage;
+        const message = createBaseInvalidTextureMessage();
         return message;
     },
 };
 
-const baseWorldConnexionMessage: object = { message: "" };
+function createBaseWorldConnexionMessage(): WorldConnexionMessage {
+    return { message: "" };
+}
 
 export const WorldConnexionMessage = {
     encode(message: WorldConnexionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5420,7 +5403,7 @@ export const WorldConnexionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): WorldConnexionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseWorldConnexionMessage } as WorldConnexionMessage;
+        const message = createBaseWorldConnexionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5436,9 +5419,7 @@ export const WorldConnexionMessage = {
     },
 
     fromJSON(object: any): WorldConnexionMessage {
-        const message = { ...baseWorldConnexionMessage } as WorldConnexionMessage;
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return { message: isSet(object.message) ? String(object.message) : "" };
     },
 
     toJSON(message: WorldConnexionMessage): unknown {
@@ -5448,13 +5429,15 @@ export const WorldConnexionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<WorldConnexionMessage>, I>>(object: I): WorldConnexionMessage {
-        const message = { ...baseWorldConnexionMessage } as WorldConnexionMessage;
+        const message = createBaseWorldConnexionMessage();
         message.message = object.message ?? "";
         return message;
     },
 };
 
-const baseBanUserMessage: object = { type: "", message: "" };
+function createBaseBanUserMessage(): BanUserMessage {
+    return { type: "", message: "" };
+}
 
 export const BanUserMessage = {
     encode(message: BanUserMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5470,7 +5453,7 @@ export const BanUserMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BanUserMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBanUserMessage } as BanUserMessage;
+        const message = createBaseBanUserMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5489,10 +5472,10 @@ export const BanUserMessage = {
     },
 
     fromJSON(object: any): BanUserMessage {
-        const message = { ...baseBanUserMessage } as BanUserMessage;
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return {
+            type: isSet(object.type) ? String(object.type) : "",
+            message: isSet(object.message) ? String(object.message) : "",
+        };
     },
 
     toJSON(message: BanUserMessage): unknown {
@@ -5503,14 +5486,16 @@ export const BanUserMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BanUserMessage>, I>>(object: I): BanUserMessage {
-        const message = { ...baseBanUserMessage } as BanUserMessage;
+        const message = createBaseBanUserMessage();
         message.type = object.type ?? "";
         message.message = object.message ?? "";
         return message;
     },
 };
 
-const baseAskPositionMessage: object = { userIdentifier: "", playUri: "" };
+function createBaseAskPositionMessage(): AskPositionMessage {
+    return { userIdentifier: "", playUri: "" };
+}
 
 export const AskPositionMessage = {
     encode(message: AskPositionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5526,7 +5511,7 @@ export const AskPositionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AskPositionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAskPositionMessage } as AskPositionMessage;
+        const message = createBaseAskPositionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5545,11 +5530,10 @@ export const AskPositionMessage = {
     },
 
     fromJSON(object: any): AskPositionMessage {
-        const message = { ...baseAskPositionMessage } as AskPositionMessage;
-        message.userIdentifier =
-            object.userIdentifier !== undefined && object.userIdentifier !== null ? String(object.userIdentifier) : "";
-        message.playUri = object.playUri !== undefined && object.playUri !== null ? String(object.playUri) : "";
-        return message;
+        return {
+            userIdentifier: isSet(object.userIdentifier) ? String(object.userIdentifier) : "",
+            playUri: isSet(object.playUri) ? String(object.playUri) : "",
+        };
     },
 
     toJSON(message: AskPositionMessage): unknown {
@@ -5560,14 +5544,16 @@ export const AskPositionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AskPositionMessage>, I>>(object: I): AskPositionMessage {
-        const message = { ...baseAskPositionMessage } as AskPositionMessage;
+        const message = createBaseAskPositionMessage();
         message.userIdentifier = object.userIdentifier ?? "";
         message.playUri = object.playUri ?? "";
         return message;
     },
 };
 
-const baseServerToClientMessage: object = {};
+function createBaseServerToClientMessage(): ServerToClientMessage {
+    return { message: undefined };
+}
 
 export const ServerToClientMessage = {
     encode(message: ServerToClientMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -5655,7 +5641,7 @@ export const ServerToClientMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ServerToClientMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseServerToClientMessage } as ServerToClientMessage;
+        const message = createBaseServerToClientMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -5809,142 +5795,110 @@ export const ServerToClientMessage = {
     },
 
     fromJSON(object: any): ServerToClientMessage {
-        const message = { ...baseServerToClientMessage } as ServerToClientMessage;
-        if (object.batchMessage !== undefined && object.batchMessage !== null) {
-            message.message = { $case: "batchMessage", batchMessage: BatchMessage.fromJSON(object.batchMessage) };
-        }
-        if (object.errorMessage !== undefined && object.errorMessage !== null) {
-            message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
-        }
-        if (object.roomJoinedMessage !== undefined && object.roomJoinedMessage !== null) {
-            message.message = {
-                $case: "roomJoinedMessage",
-                roomJoinedMessage: RoomJoinedMessage.fromJSON(object.roomJoinedMessage),
-            };
-        }
-        if (object.webRtcStartMessage !== undefined && object.webRtcStartMessage !== null) {
-            message.message = {
-                $case: "webRtcStartMessage",
-                webRtcStartMessage: WebRtcStartMessage.fromJSON(object.webRtcStartMessage),
-            };
-        }
-        if (object.webRtcSignalToClientMessage !== undefined && object.webRtcSignalToClientMessage !== null) {
-            message.message = {
-                $case: "webRtcSignalToClientMessage",
-                webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromJSON(object.webRtcSignalToClientMessage),
-            };
-        }
-        if (
-            object.webRtcScreenSharingSignalToClientMessage !== undefined &&
-            object.webRtcScreenSharingSignalToClientMessage !== null
-        ) {
-            message.message = {
-                $case: "webRtcScreenSharingSignalToClientMessage",
-                webRtcScreenSharingSignalToClientMessage: WebRtcSignalToClientMessage.fromJSON(
-                    object.webRtcScreenSharingSignalToClientMessage
-                ),
-            };
-        }
-        if (object.webRtcDisconnectMessage !== undefined && object.webRtcDisconnectMessage !== null) {
-            message.message = {
-                $case: "webRtcDisconnectMessage",
-                webRtcDisconnectMessage: WebRtcDisconnectMessage.fromJSON(object.webRtcDisconnectMessage),
-            };
-        }
-        if (object.teleportMessageMessage !== undefined && object.teleportMessageMessage !== null) {
-            message.message = {
-                $case: "teleportMessageMessage",
-                teleportMessageMessage: TeleportMessageMessage.fromJSON(object.teleportMessageMessage),
-            };
-        }
-        if (object.sendUserMessage !== undefined && object.sendUserMessage !== null) {
-            message.message = {
-                $case: "sendUserMessage",
-                sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage),
-            };
-        }
-        if (object.banUserMessage !== undefined && object.banUserMessage !== null) {
-            message.message = {
-                $case: "banUserMessage",
-                banUserMessage: BanUserMessage.fromJSON(object.banUserMessage),
-            };
-        }
-        if (object.worldFullWarningMessage !== undefined && object.worldFullWarningMessage !== null) {
-            message.message = {
-                $case: "worldFullWarningMessage",
-                worldFullWarningMessage: WorldFullWarningMessage.fromJSON(object.worldFullWarningMessage),
-            };
-        }
-        if (object.worldFullMessage !== undefined && object.worldFullMessage !== null) {
-            message.message = {
-                $case: "worldFullMessage",
-                worldFullMessage: WorldFullMessage.fromJSON(object.worldFullMessage),
-            };
-        }
-        if (object.refreshRoomMessage !== undefined && object.refreshRoomMessage !== null) {
-            message.message = {
-                $case: "refreshRoomMessage",
-                refreshRoomMessage: RefreshRoomMessage.fromJSON(object.refreshRoomMessage),
-            };
-        }
-        if (object.worldConnexionMessage !== undefined && object.worldConnexionMessage !== null) {
-            message.message = {
-                $case: "worldConnexionMessage",
-                worldConnexionMessage: WorldConnexionMessage.fromJSON(object.worldConnexionMessage),
-            };
-        }
-        if (object.tokenExpiredMessage !== undefined && object.tokenExpiredMessage !== null) {
-            message.message = {
-                $case: "tokenExpiredMessage",
-                tokenExpiredMessage: TokenExpiredMessage.fromJSON(object.tokenExpiredMessage),
-            };
-        }
-        if (object.followRequestMessage !== undefined && object.followRequestMessage !== null) {
-            message.message = {
-                $case: "followRequestMessage",
-                followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
-            };
-        }
-        if (object.followConfirmationMessage !== undefined && object.followConfirmationMessage !== null) {
-            message.message = {
-                $case: "followConfirmationMessage",
-                followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
-            };
-        }
-        if (object.followAbortMessage !== undefined && object.followAbortMessage !== null) {
-            message.message = {
-                $case: "followAbortMessage",
-                followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
-            };
-        }
-        if (object.invalidTextureMessage !== undefined && object.invalidTextureMessage !== null) {
-            message.message = {
-                $case: "invalidTextureMessage",
-                invalidTextureMessage: InvalidTextureMessage.fromJSON(object.invalidTextureMessage),
-            };
-        }
-        if (object.groupUsersUpdateMessage !== undefined && object.groupUsersUpdateMessage !== null) {
-            message.message = {
-                $case: "groupUsersUpdateMessage",
-                groupUsersUpdateMessage: GroupUsersUpdateMessage.fromJSON(object.groupUsersUpdateMessage),
-            };
-        }
-        if (object.errorScreenMessage !== undefined && object.errorScreenMessage !== null) {
-            message.message = {
-                $case: "errorScreenMessage",
-                errorScreenMessage: ErrorScreenMessage.fromJSON(object.errorScreenMessage),
-            };
-        }
-        if (object.answerMessage !== undefined && object.answerMessage !== null) {
-            message.message = { $case: "answerMessage", answerMessage: AnswerMessage.fromJSON(object.answerMessage) };
-        }
-        if (object.moveToPositionMessage !== undefined && object.moveToPositionMessage !== null) {
-            message.message = {
-                $case: "moveToPositionMessage",
-                moveToPositionMessage: MoveToPositionMessage.fromJSON(object.moveToPositionMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.batchMessage)
+                ? { $case: "batchMessage", batchMessage: BatchMessage.fromJSON(object.batchMessage) }
+                : isSet(object.errorMessage)
+                ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
+                : isSet(object.roomJoinedMessage)
+                ? {
+                      $case: "roomJoinedMessage",
+                      roomJoinedMessage: RoomJoinedMessage.fromJSON(object.roomJoinedMessage),
+                  }
+                : isSet(object.webRtcStartMessage)
+                ? {
+                      $case: "webRtcStartMessage",
+                      webRtcStartMessage: WebRtcStartMessage.fromJSON(object.webRtcStartMessage),
+                  }
+                : isSet(object.webRtcSignalToClientMessage)
+                ? {
+                      $case: "webRtcSignalToClientMessage",
+                      webRtcSignalToClientMessage: WebRtcSignalToClientMessage.fromJSON(
+                          object.webRtcSignalToClientMessage
+                      ),
+                  }
+                : isSet(object.webRtcScreenSharingSignalToClientMessage)
+                ? {
+                      $case: "webRtcScreenSharingSignalToClientMessage",
+                      webRtcScreenSharingSignalToClientMessage: WebRtcSignalToClientMessage.fromJSON(
+                          object.webRtcScreenSharingSignalToClientMessage
+                      ),
+                  }
+                : isSet(object.webRtcDisconnectMessage)
+                ? {
+                      $case: "webRtcDisconnectMessage",
+                      webRtcDisconnectMessage: WebRtcDisconnectMessage.fromJSON(object.webRtcDisconnectMessage),
+                  }
+                : isSet(object.teleportMessageMessage)
+                ? {
+                      $case: "teleportMessageMessage",
+                      teleportMessageMessage: TeleportMessageMessage.fromJSON(object.teleportMessageMessage),
+                  }
+                : isSet(object.sendUserMessage)
+                ? { $case: "sendUserMessage", sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage) }
+                : isSet(object.banUserMessage)
+                ? { $case: "banUserMessage", banUserMessage: BanUserMessage.fromJSON(object.banUserMessage) }
+                : isSet(object.worldFullWarningMessage)
+                ? {
+                      $case: "worldFullWarningMessage",
+                      worldFullWarningMessage: WorldFullWarningMessage.fromJSON(object.worldFullWarningMessage),
+                  }
+                : isSet(object.worldFullMessage)
+                ? { $case: "worldFullMessage", worldFullMessage: WorldFullMessage.fromJSON(object.worldFullMessage) }
+                : isSet(object.refreshRoomMessage)
+                ? {
+                      $case: "refreshRoomMessage",
+                      refreshRoomMessage: RefreshRoomMessage.fromJSON(object.refreshRoomMessage),
+                  }
+                : isSet(object.worldConnexionMessage)
+                ? {
+                      $case: "worldConnexionMessage",
+                      worldConnexionMessage: WorldConnexionMessage.fromJSON(object.worldConnexionMessage),
+                  }
+                : isSet(object.tokenExpiredMessage)
+                ? {
+                      $case: "tokenExpiredMessage",
+                      tokenExpiredMessage: TokenExpiredMessage.fromJSON(object.tokenExpiredMessage),
+                  }
+                : isSet(object.followRequestMessage)
+                ? {
+                      $case: "followRequestMessage",
+                      followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
+                  }
+                : isSet(object.followConfirmationMessage)
+                ? {
+                      $case: "followConfirmationMessage",
+                      followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
+                  }
+                : isSet(object.followAbortMessage)
+                ? {
+                      $case: "followAbortMessage",
+                      followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
+                  }
+                : isSet(object.invalidTextureMessage)
+                ? {
+                      $case: "invalidTextureMessage",
+                      invalidTextureMessage: InvalidTextureMessage.fromJSON(object.invalidTextureMessage),
+                  }
+                : isSet(object.groupUsersUpdateMessage)
+                ? {
+                      $case: "groupUsersUpdateMessage",
+                      groupUsersUpdateMessage: GroupUsersUpdateMessage.fromJSON(object.groupUsersUpdateMessage),
+                  }
+                : isSet(object.errorScreenMessage)
+                ? {
+                      $case: "errorScreenMessage",
+                      errorScreenMessage: ErrorScreenMessage.fromJSON(object.errorScreenMessage),
+                  }
+                : isSet(object.answerMessage)
+                ? { $case: "answerMessage", answerMessage: AnswerMessage.fromJSON(object.answerMessage) }
+                : isSet(object.moveToPositionMessage)
+                ? {
+                      $case: "moveToPositionMessage",
+                      moveToPositionMessage: MoveToPositionMessage.fromJSON(object.moveToPositionMessage),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: ServerToClientMessage): unknown {
@@ -6045,7 +5999,7 @@ export const ServerToClientMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ServerToClientMessage>, I>>(object: I): ServerToClientMessage {
-        const message = { ...baseServerToClientMessage } as ServerToClientMessage;
+        const message = createBaseServerToClientMessage();
         if (
             object.message?.$case === "batchMessage" &&
             object.message?.batchMessage !== undefined &&
@@ -6286,18 +6240,23 @@ export const ServerToClientMessage = {
     },
 };
 
-const baseJoinRoomMessage: object = {
-    name: "",
-    userUuid: "",
-    roomId: "",
-    tag: "",
-    IPAddress: "",
-    visitCardUrl: "",
-    userRoomToken: "",
-    availabilityStatus: 0,
-    activatedInviteUser: false,
-    isLogged: false,
-};
+function createBaseJoinRoomMessage(): JoinRoomMessage {
+    return {
+        positionMessage: undefined,
+        name: "",
+        characterLayer: [],
+        userUuid: "",
+        roomId: "",
+        tag: [],
+        IPAddress: "",
+        companion: undefined,
+        visitCardUrl: "",
+        userRoomToken: "",
+        availabilityStatus: 0,
+        activatedInviteUser: false,
+        isLogged: false,
+    };
+}
 
 export const JoinRoomMessage = {
     encode(message: JoinRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6346,9 +6305,7 @@ export const JoinRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): JoinRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseJoinRoomMessage } as JoinRoomMessage;
-        message.characterLayer = [];
-        message.tag = [];
+        const message = createBaseJoinRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6400,35 +6357,27 @@ export const JoinRoomMessage = {
     },
 
     fromJSON(object: any): JoinRoomMessage {
-        const message = { ...baseJoinRoomMessage } as JoinRoomMessage;
-        message.positionMessage =
-            object.positionMessage !== undefined && object.positionMessage !== null
+        return {
+            positionMessage: isSet(object.positionMessage)
                 ? PositionMessage.fromJSON(object.positionMessage)
-                : undefined;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.characterLayer = (object.characterLayer ?? []).map((e: any) => CharacterLayerMessage.fromJSON(e));
-        message.userUuid = object.userUuid !== undefined && object.userUuid !== null ? String(object.userUuid) : "";
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.tag = (object.tag ?? []).map((e: any) => String(e));
-        message.IPAddress = object.IPAddress !== undefined && object.IPAddress !== null ? String(object.IPAddress) : "";
-        message.companion =
-            object.companion !== undefined && object.companion !== null
-                ? CompanionMessage.fromJSON(object.companion)
-                : undefined;
-        message.visitCardUrl =
-            object.visitCardUrl !== undefined && object.visitCardUrl !== null ? String(object.visitCardUrl) : "";
-        message.userRoomToken =
-            object.userRoomToken !== undefined && object.userRoomToken !== null ? String(object.userRoomToken) : "";
-        message.availabilityStatus =
-            object.availabilityStatus !== undefined && object.availabilityStatus !== null
+                : undefined,
+            name: isSet(object.name) ? String(object.name) : "",
+            characterLayer: Array.isArray(object?.characterLayer)
+                ? object.characterLayer.map((e: any) => CharacterLayerMessage.fromJSON(e))
+                : [],
+            userUuid: isSet(object.userUuid) ? String(object.userUuid) : "",
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            tag: Array.isArray(object?.tag) ? object.tag.map((e: any) => String(e)) : [],
+            IPAddress: isSet(object.IPAddress) ? String(object.IPAddress) : "",
+            companion: isSet(object.companion) ? CompanionMessage.fromJSON(object.companion) : undefined,
+            visitCardUrl: isSet(object.visitCardUrl) ? String(object.visitCardUrl) : "",
+            userRoomToken: isSet(object.userRoomToken) ? String(object.userRoomToken) : "",
+            availabilityStatus: isSet(object.availabilityStatus)
                 ? availabilityStatusFromJSON(object.availabilityStatus)
-                : 0;
-        message.activatedInviteUser =
-            object.activatedInviteUser !== undefined && object.activatedInviteUser !== null
-                ? Boolean(object.activatedInviteUser)
-                : false;
-        message.isLogged = object.isLogged !== undefined && object.isLogged !== null ? Boolean(object.isLogged) : false;
-        return message;
+                : 0,
+            activatedInviteUser: isSet(object.activatedInviteUser) ? Boolean(object.activatedInviteUser) : false,
+            isLogged: isSet(object.isLogged) ? Boolean(object.isLogged) : false,
+        };
     },
 
     toJSON(message: JoinRoomMessage): unknown {
@@ -6463,7 +6412,7 @@ export const JoinRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<JoinRoomMessage>, I>>(object: I): JoinRoomMessage {
-        const message = { ...baseJoinRoomMessage } as JoinRoomMessage;
+        const message = createBaseJoinRoomMessage();
         message.positionMessage =
             object.positionMessage !== undefined && object.positionMessage !== null
                 ? PositionMessage.fromPartial(object.positionMessage)
@@ -6487,15 +6436,22 @@ export const JoinRoomMessage = {
     },
 };
 
-const baseUserJoinedZoneMessage: object = {
-    userId: 0,
-    name: "",
-    visitCardUrl: "",
-    userUuid: "",
-    outlineColor: 0,
-    hasOutline: false,
-    availabilityStatus: 0,
-};
+function createBaseUserJoinedZoneMessage(): UserJoinedZoneMessage {
+    return {
+        userId: 0,
+        name: "",
+        characterLayers: [],
+        position: undefined,
+        fromZone: undefined,
+        companion: undefined,
+        visitCardUrl: "",
+        userUuid: "",
+        outlineColor: 0,
+        hasOutline: false,
+        availabilityStatus: 0,
+        variables: {},
+    };
+}
 
 export const UserJoinedZoneMessage = {
     encode(message: UserJoinedZoneMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6541,9 +6497,7 @@ export const UserJoinedZoneMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserJoinedZoneMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserJoinedZoneMessage } as UserJoinedZoneMessage;
-        message.characterLayers = [];
-        message.variables = {};
+        const message = createBaseUserJoinedZoneMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6595,39 +6549,29 @@ export const UserJoinedZoneMessage = {
     },
 
     fromJSON(object: any): UserJoinedZoneMessage {
-        const message = { ...baseUserJoinedZoneMessage } as UserJoinedZoneMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.characterLayers = (object.characterLayers ?? []).map((e: any) => CharacterLayerMessage.fromJSON(e));
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PositionMessage.fromJSON(object.position)
-                : undefined;
-        message.fromZone =
-            object.fromZone !== undefined && object.fromZone !== null ? Zone.fromJSON(object.fromZone) : undefined;
-        message.companion =
-            object.companion !== undefined && object.companion !== null
-                ? CompanionMessage.fromJSON(object.companion)
-                : undefined;
-        message.visitCardUrl =
-            object.visitCardUrl !== undefined && object.visitCardUrl !== null ? String(object.visitCardUrl) : "";
-        message.userUuid = object.userUuid !== undefined && object.userUuid !== null ? String(object.userUuid) : "";
-        message.outlineColor =
-            object.outlineColor !== undefined && object.outlineColor !== null ? Number(object.outlineColor) : 0;
-        message.hasOutline =
-            object.hasOutline !== undefined && object.hasOutline !== null ? Boolean(object.hasOutline) : false;
-        message.availabilityStatus =
-            object.availabilityStatus !== undefined && object.availabilityStatus !== null
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            name: isSet(object.name) ? String(object.name) : "",
+            characterLayers: Array.isArray(object?.characterLayers)
+                ? object.characterLayers.map((e: any) => CharacterLayerMessage.fromJSON(e))
+                : [],
+            position: isSet(object.position) ? PositionMessage.fromJSON(object.position) : undefined,
+            fromZone: isSet(object.fromZone) ? Zone.fromJSON(object.fromZone) : undefined,
+            companion: isSet(object.companion) ? CompanionMessage.fromJSON(object.companion) : undefined,
+            visitCardUrl: isSet(object.visitCardUrl) ? String(object.visitCardUrl) : "",
+            userUuid: isSet(object.userUuid) ? String(object.userUuid) : "",
+            outlineColor: isSet(object.outlineColor) ? Number(object.outlineColor) : 0,
+            hasOutline: isSet(object.hasOutline) ? Boolean(object.hasOutline) : false,
+            availabilityStatus: isSet(object.availabilityStatus)
                 ? availabilityStatusFromJSON(object.availabilityStatus)
-                : 0;
-        message.variables = Object.entries(object.variables ?? {}).reduce<{ [key: string]: string }>(
-            (acc, [key, value]) => {
-                acc[key] = String(value);
-                return acc;
-            },
-            {}
-        );
-        return message;
+                : 0,
+            variables: isObject(object.variables)
+                ? Object.entries(object.variables).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+                      acc[key] = String(value);
+                      return acc;
+                  }, {})
+                : {},
+        };
     },
 
     toJSON(message: UserJoinedZoneMessage): unknown {
@@ -6660,7 +6604,7 @@ export const UserJoinedZoneMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserJoinedZoneMessage>, I>>(object: I): UserJoinedZoneMessage {
-        const message = { ...baseUserJoinedZoneMessage } as UserJoinedZoneMessage;
+        const message = createBaseUserJoinedZoneMessage();
         message.userId = object.userId ?? 0;
         message.name = object.name ?? "";
         message.characterLayers = object.characterLayers?.map((e) => CharacterLayerMessage.fromPartial(e)) || [];
@@ -6692,7 +6636,9 @@ export const UserJoinedZoneMessage = {
     },
 };
 
-const baseUserJoinedZoneMessage_VariablesEntry: object = { key: "", value: "" };
+function createBaseUserJoinedZoneMessage_VariablesEntry(): UserJoinedZoneMessage_VariablesEntry {
+    return { key: "", value: "" };
+}
 
 export const UserJoinedZoneMessage_VariablesEntry = {
     encode(message: UserJoinedZoneMessage_VariablesEntry, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6708,7 +6654,7 @@ export const UserJoinedZoneMessage_VariablesEntry = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserJoinedZoneMessage_VariablesEntry {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserJoinedZoneMessage_VariablesEntry } as UserJoinedZoneMessage_VariablesEntry;
+        const message = createBaseUserJoinedZoneMessage_VariablesEntry();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6727,10 +6673,10 @@ export const UserJoinedZoneMessage_VariablesEntry = {
     },
 
     fromJSON(object: any): UserJoinedZoneMessage_VariablesEntry {
-        const message = { ...baseUserJoinedZoneMessage_VariablesEntry } as UserJoinedZoneMessage_VariablesEntry;
-        message.key = object.key !== undefined && object.key !== null ? String(object.key) : "";
-        message.value = object.value !== undefined && object.value !== null ? String(object.value) : "";
-        return message;
+        return {
+            key: isSet(object.key) ? String(object.key) : "",
+            value: isSet(object.value) ? String(object.value) : "",
+        };
     },
 
     toJSON(message: UserJoinedZoneMessage_VariablesEntry): unknown {
@@ -6743,14 +6689,16 @@ export const UserJoinedZoneMessage_VariablesEntry = {
     fromPartial<I extends Exact<DeepPartial<UserJoinedZoneMessage_VariablesEntry>, I>>(
         object: I
     ): UserJoinedZoneMessage_VariablesEntry {
-        const message = { ...baseUserJoinedZoneMessage_VariablesEntry } as UserJoinedZoneMessage_VariablesEntry;
+        const message = createBaseUserJoinedZoneMessage_VariablesEntry();
         message.key = object.key ?? "";
         message.value = object.value ?? "";
         return message;
     },
 };
 
-const baseUserLeftZoneMessage: object = { userId: 0 };
+function createBaseUserLeftZoneMessage(): UserLeftZoneMessage {
+    return { userId: 0, toZone: undefined };
+}
 
 export const UserLeftZoneMessage = {
     encode(message: UserLeftZoneMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6766,7 +6714,7 @@ export const UserLeftZoneMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserLeftZoneMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserLeftZoneMessage } as UserLeftZoneMessage;
+        const message = createBaseUserLeftZoneMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6785,11 +6733,10 @@ export const UserLeftZoneMessage = {
     },
 
     fromJSON(object: any): UserLeftZoneMessage {
-        const message = { ...baseUserLeftZoneMessage } as UserLeftZoneMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.toZone =
-            object.toZone !== undefined && object.toZone !== null ? Zone.fromJSON(object.toZone) : undefined;
-        return message;
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            toZone: isSet(object.toZone) ? Zone.fromJSON(object.toZone) : undefined,
+        };
     },
 
     toJSON(message: UserLeftZoneMessage): unknown {
@@ -6800,7 +6747,7 @@ export const UserLeftZoneMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserLeftZoneMessage>, I>>(object: I): UserLeftZoneMessage {
-        const message = { ...baseUserLeftZoneMessage } as UserLeftZoneMessage;
+        const message = createBaseUserLeftZoneMessage();
         message.userId = object.userId ?? 0;
         message.toZone =
             object.toZone !== undefined && object.toZone !== null ? Zone.fromPartial(object.toZone) : undefined;
@@ -6808,7 +6755,9 @@ export const UserLeftZoneMessage = {
     },
 };
 
-const baseGroupUpdateZoneMessage: object = { groupId: 0, groupSize: 0, locked: false };
+function createBaseGroupUpdateZoneMessage(): GroupUpdateZoneMessage {
+    return { groupId: 0, position: undefined, groupSize: 0, fromZone: undefined, locked: false };
+}
 
 export const GroupUpdateZoneMessage = {
     encode(message: GroupUpdateZoneMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6833,7 +6782,7 @@ export const GroupUpdateZoneMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): GroupUpdateZoneMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseGroupUpdateZoneMessage } as GroupUpdateZoneMessage;
+        const message = createBaseGroupUpdateZoneMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6861,17 +6810,13 @@ export const GroupUpdateZoneMessage = {
     },
 
     fromJSON(object: any): GroupUpdateZoneMessage {
-        const message = { ...baseGroupUpdateZoneMessage } as GroupUpdateZoneMessage;
-        message.groupId = object.groupId !== undefined && object.groupId !== null ? Number(object.groupId) : 0;
-        message.position =
-            object.position !== undefined && object.position !== null
-                ? PointMessage.fromJSON(object.position)
-                : undefined;
-        message.groupSize = object.groupSize !== undefined && object.groupSize !== null ? Number(object.groupSize) : 0;
-        message.fromZone =
-            object.fromZone !== undefined && object.fromZone !== null ? Zone.fromJSON(object.fromZone) : undefined;
-        message.locked = object.locked !== undefined && object.locked !== null ? Boolean(object.locked) : false;
-        return message;
+        return {
+            groupId: isSet(object.groupId) ? Number(object.groupId) : 0,
+            position: isSet(object.position) ? PointMessage.fromJSON(object.position) : undefined,
+            groupSize: isSet(object.groupSize) ? Number(object.groupSize) : 0,
+            fromZone: isSet(object.fromZone) ? Zone.fromJSON(object.fromZone) : undefined,
+            locked: isSet(object.locked) ? Boolean(object.locked) : false,
+        };
     },
 
     toJSON(message: GroupUpdateZoneMessage): unknown {
@@ -6886,7 +6831,7 @@ export const GroupUpdateZoneMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<GroupUpdateZoneMessage>, I>>(object: I): GroupUpdateZoneMessage {
-        const message = { ...baseGroupUpdateZoneMessage } as GroupUpdateZoneMessage;
+        const message = createBaseGroupUpdateZoneMessage();
         message.groupId = object.groupId ?? 0;
         message.position =
             object.position !== undefined && object.position !== null
@@ -6900,7 +6845,9 @@ export const GroupUpdateZoneMessage = {
     },
 };
 
-const baseGroupLeftZoneMessage: object = { groupId: 0 };
+function createBaseGroupLeftZoneMessage(): GroupLeftZoneMessage {
+    return { groupId: 0, toZone: undefined };
+}
 
 export const GroupLeftZoneMessage = {
     encode(message: GroupLeftZoneMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6916,7 +6863,7 @@ export const GroupLeftZoneMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): GroupLeftZoneMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseGroupLeftZoneMessage } as GroupLeftZoneMessage;
+        const message = createBaseGroupLeftZoneMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6935,11 +6882,10 @@ export const GroupLeftZoneMessage = {
     },
 
     fromJSON(object: any): GroupLeftZoneMessage {
-        const message = { ...baseGroupLeftZoneMessage } as GroupLeftZoneMessage;
-        message.groupId = object.groupId !== undefined && object.groupId !== null ? Number(object.groupId) : 0;
-        message.toZone =
-            object.toZone !== undefined && object.toZone !== null ? Zone.fromJSON(object.toZone) : undefined;
-        return message;
+        return {
+            groupId: isSet(object.groupId) ? Number(object.groupId) : 0,
+            toZone: isSet(object.toZone) ? Zone.fromJSON(object.toZone) : undefined,
+        };
     },
 
     toJSON(message: GroupLeftZoneMessage): unknown {
@@ -6950,7 +6896,7 @@ export const GroupLeftZoneMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<GroupLeftZoneMessage>, I>>(object: I): GroupLeftZoneMessage {
-        const message = { ...baseGroupLeftZoneMessage } as GroupLeftZoneMessage;
+        const message = createBaseGroupLeftZoneMessage();
         message.groupId = object.groupId ?? 0;
         message.toZone =
             object.toZone !== undefined && object.toZone !== null ? Zone.fromPartial(object.toZone) : undefined;
@@ -6958,7 +6904,9 @@ export const GroupLeftZoneMessage = {
     },
 };
 
-const basePlayerDetailsUpdatedMessage: object = { userId: 0 };
+function createBasePlayerDetailsUpdatedMessage(): PlayerDetailsUpdatedMessage {
+    return { userId: 0, details: undefined };
+}
 
 export const PlayerDetailsUpdatedMessage = {
     encode(message: PlayerDetailsUpdatedMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -6974,7 +6922,7 @@ export const PlayerDetailsUpdatedMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PlayerDetailsUpdatedMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePlayerDetailsUpdatedMessage } as PlayerDetailsUpdatedMessage;
+        const message = createBasePlayerDetailsUpdatedMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -6993,13 +6941,10 @@ export const PlayerDetailsUpdatedMessage = {
     },
 
     fromJSON(object: any): PlayerDetailsUpdatedMessage {
-        const message = { ...basePlayerDetailsUpdatedMessage } as PlayerDetailsUpdatedMessage;
-        message.userId = object.userId !== undefined && object.userId !== null ? Number(object.userId) : 0;
-        message.details =
-            object.details !== undefined && object.details !== null
-                ? SetPlayerDetailsMessage.fromJSON(object.details)
-                : undefined;
-        return message;
+        return {
+            userId: isSet(object.userId) ? Number(object.userId) : 0,
+            details: isSet(object.details) ? SetPlayerDetailsMessage.fromJSON(object.details) : undefined,
+        };
     },
 
     toJSON(message: PlayerDetailsUpdatedMessage): unknown {
@@ -7011,7 +6956,7 @@ export const PlayerDetailsUpdatedMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PlayerDetailsUpdatedMessage>, I>>(object: I): PlayerDetailsUpdatedMessage {
-        const message = { ...basePlayerDetailsUpdatedMessage } as PlayerDetailsUpdatedMessage;
+        const message = createBasePlayerDetailsUpdatedMessage();
         message.userId = object.userId ?? 0;
         message.details =
             object.details !== undefined && object.details !== null
@@ -7021,7 +6966,9 @@ export const PlayerDetailsUpdatedMessage = {
     },
 };
 
-const baseZone: object = { x: 0, y: 0 };
+function createBaseZone(): Zone {
+    return { x: 0, y: 0 };
+}
 
 export const Zone = {
     encode(message: Zone, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7037,7 +6984,7 @@ export const Zone = {
     decode(input: _m0.Reader | Uint8Array, length?: number): Zone {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseZone } as Zone;
+        const message = createBaseZone();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7056,10 +7003,7 @@ export const Zone = {
     },
 
     fromJSON(object: any): Zone {
-        const message = { ...baseZone } as Zone;
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
-        return message;
+        return { x: isSet(object.x) ? Number(object.x) : 0, y: isSet(object.y) ? Number(object.y) : 0 };
     },
 
     toJSON(message: Zone): unknown {
@@ -7070,14 +7014,16 @@ export const Zone = {
     },
 
     fromPartial<I extends Exact<DeepPartial<Zone>, I>>(object: I): Zone {
-        const message = { ...baseZone } as Zone;
+        const message = createBaseZone();
         message.x = object.x ?? 0;
         message.y = object.y ?? 0;
         return message;
     },
 };
 
-const baseZoneMessage: object = { roomId: "", x: 0, y: 0 };
+function createBaseZoneMessage(): ZoneMessage {
+    return { roomId: "", x: 0, y: 0 };
+}
 
 export const ZoneMessage = {
     encode(message: ZoneMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7096,7 +7042,7 @@ export const ZoneMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ZoneMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseZoneMessage } as ZoneMessage;
+        const message = createBaseZoneMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7118,11 +7064,11 @@ export const ZoneMessage = {
     },
 
     fromJSON(object: any): ZoneMessage {
-        const message = { ...baseZoneMessage } as ZoneMessage;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.x = object.x !== undefined && object.x !== null ? Number(object.x) : 0;
-        message.y = object.y !== undefined && object.y !== null ? Number(object.y) : 0;
-        return message;
+        return {
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            x: isSet(object.x) ? Number(object.x) : 0,
+            y: isSet(object.y) ? Number(object.y) : 0,
+        };
     },
 
     toJSON(message: ZoneMessage): unknown {
@@ -7134,7 +7080,7 @@ export const ZoneMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ZoneMessage>, I>>(object: I): ZoneMessage {
-        const message = { ...baseZoneMessage } as ZoneMessage;
+        const message = createBaseZoneMessage();
         message.roomId = object.roomId ?? "";
         message.x = object.x ?? 0;
         message.y = object.y ?? 0;
@@ -7142,7 +7088,9 @@ export const ZoneMessage = {
     },
 };
 
-const baseRoomMessage: object = { roomId: "" };
+function createBaseRoomMessage(): RoomMessage {
+    return { roomId: "" };
+}
 
 export const RoomMessage = {
     encode(message: RoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7155,7 +7103,7 @@ export const RoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRoomMessage } as RoomMessage;
+        const message = createBaseRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7171,9 +7119,7 @@ export const RoomMessage = {
     },
 
     fromJSON(object: any): RoomMessage {
-        const message = { ...baseRoomMessage } as RoomMessage;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        return message;
+        return { roomId: isSet(object.roomId) ? String(object.roomId) : "" };
     },
 
     toJSON(message: RoomMessage): unknown {
@@ -7183,13 +7129,15 @@ export const RoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RoomMessage>, I>>(object: I): RoomMessage {
-        const message = { ...baseRoomMessage } as RoomMessage;
+        const message = createBaseRoomMessage();
         message.roomId = object.roomId ?? "";
         return message;
     },
 };
 
-const basePusherToBackMessage: object = {};
+function createBasePusherToBackMessage(): PusherToBackMessage {
+    return { message: undefined };
+}
 
 export const PusherToBackMessage = {
     encode(message: PusherToBackMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7262,7 +7210,7 @@ export const PusherToBackMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PusherToBackMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePusherToBackMessage } as PusherToBackMessage;
+        const message = createBasePusherToBackMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7386,118 +7334,82 @@ export const PusherToBackMessage = {
     },
 
     fromJSON(object: any): PusherToBackMessage {
-        const message = { ...basePusherToBackMessage } as PusherToBackMessage;
-        if (object.joinRoomMessage !== undefined && object.joinRoomMessage !== null) {
-            message.message = {
-                $case: "joinRoomMessage",
-                joinRoomMessage: JoinRoomMessage.fromJSON(object.joinRoomMessage),
-            };
-        }
-        if (object.userMovesMessage !== undefined && object.userMovesMessage !== null) {
-            message.message = {
-                $case: "userMovesMessage",
-                userMovesMessage: UserMovesMessage.fromJSON(object.userMovesMessage),
-            };
-        }
-        if (object.itemEventMessage !== undefined && object.itemEventMessage !== null) {
-            message.message = {
-                $case: "itemEventMessage",
-                itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage),
-            };
-        }
-        if (object.setPlayerDetailsMessage !== undefined && object.setPlayerDetailsMessage !== null) {
-            message.message = {
-                $case: "setPlayerDetailsMessage",
-                setPlayerDetailsMessage: SetPlayerDetailsMessage.fromJSON(object.setPlayerDetailsMessage),
-            };
-        }
-        if (object.webRtcSignalToServerMessage !== undefined && object.webRtcSignalToServerMessage !== null) {
-            message.message = {
-                $case: "webRtcSignalToServerMessage",
-                webRtcSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(object.webRtcSignalToServerMessage),
-            };
-        }
-        if (
-            object.webRtcScreenSharingSignalToServerMessage !== undefined &&
-            object.webRtcScreenSharingSignalToServerMessage !== null
-        ) {
-            message.message = {
-                $case: "webRtcScreenSharingSignalToServerMessage",
-                webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
-                    object.webRtcScreenSharingSignalToServerMessage
-                ),
-            };
-        }
-        if (object.reportPlayerMessage !== undefined && object.reportPlayerMessage !== null) {
-            message.message = {
-                $case: "reportPlayerMessage",
-                reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
-            };
-        }
-        if (object.sendUserMessage !== undefined && object.sendUserMessage !== null) {
-            message.message = {
-                $case: "sendUserMessage",
-                sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage),
-            };
-        }
-        if (object.banUserMessage !== undefined && object.banUserMessage !== null) {
-            message.message = {
-                $case: "banUserMessage",
-                banUserMessage: BanUserMessage.fromJSON(object.banUserMessage),
-            };
-        }
-        if (object.emotePromptMessage !== undefined && object.emotePromptMessage !== null) {
-            message.message = {
-                $case: "emotePromptMessage",
-                emotePromptMessage: EmotePromptMessage.fromJSON(object.emotePromptMessage),
-            };
-        }
-        if (object.variableMessage !== undefined && object.variableMessage !== null) {
-            message.message = {
-                $case: "variableMessage",
-                variableMessage: VariableMessage.fromJSON(object.variableMessage),
-            };
-        }
-        if (object.followRequestMessage !== undefined && object.followRequestMessage !== null) {
-            message.message = {
-                $case: "followRequestMessage",
-                followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
-            };
-        }
-        if (object.followConfirmationMessage !== undefined && object.followConfirmationMessage !== null) {
-            message.message = {
-                $case: "followConfirmationMessage",
-                followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
-            };
-        }
-        if (object.followAbortMessage !== undefined && object.followAbortMessage !== null) {
-            message.message = {
-                $case: "followAbortMessage",
-                followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
-            };
-        }
-        if (object.lockGroupPromptMessage !== undefined && object.lockGroupPromptMessage !== null) {
-            message.message = {
-                $case: "lockGroupPromptMessage",
-                lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
-            };
-        }
-        if (object.queryMessage !== undefined && object.queryMessage !== null) {
-            message.message = { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) };
-        }
-        if (object.askPositionMessage !== undefined && object.askPositionMessage !== null) {
-            message.message = {
-                $case: "askPositionMessage",
-                askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
-            };
-        }
-        if (object.editMapWithKeyMessage !== undefined && object.editMapWithKeyMessage !== null) {
-            message.message = {
-                $case: "editMapWithKeyMessage",
-                editMapWithKeyMessage: EditMapWithKeyMessage.fromJSON(object.editMapWithKeyMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.joinRoomMessage)
+                ? { $case: "joinRoomMessage", joinRoomMessage: JoinRoomMessage.fromJSON(object.joinRoomMessage) }
+                : isSet(object.userMovesMessage)
+                ? { $case: "userMovesMessage", userMovesMessage: UserMovesMessage.fromJSON(object.userMovesMessage) }
+                : isSet(object.itemEventMessage)
+                ? { $case: "itemEventMessage", itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage) }
+                : isSet(object.setPlayerDetailsMessage)
+                ? {
+                      $case: "setPlayerDetailsMessage",
+                      setPlayerDetailsMessage: SetPlayerDetailsMessage.fromJSON(object.setPlayerDetailsMessage),
+                  }
+                : isSet(object.webRtcSignalToServerMessage)
+                ? {
+                      $case: "webRtcSignalToServerMessage",
+                      webRtcSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
+                          object.webRtcSignalToServerMessage
+                      ),
+                  }
+                : isSet(object.webRtcScreenSharingSignalToServerMessage)
+                ? {
+                      $case: "webRtcScreenSharingSignalToServerMessage",
+                      webRtcScreenSharingSignalToServerMessage: WebRtcSignalToServerMessage.fromJSON(
+                          object.webRtcScreenSharingSignalToServerMessage
+                      ),
+                  }
+                : isSet(object.reportPlayerMessage)
+                ? {
+                      $case: "reportPlayerMessage",
+                      reportPlayerMessage: ReportPlayerMessage.fromJSON(object.reportPlayerMessage),
+                  }
+                : isSet(object.sendUserMessage)
+                ? { $case: "sendUserMessage", sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage) }
+                : isSet(object.banUserMessage)
+                ? { $case: "banUserMessage", banUserMessage: BanUserMessage.fromJSON(object.banUserMessage) }
+                : isSet(object.emotePromptMessage)
+                ? {
+                      $case: "emotePromptMessage",
+                      emotePromptMessage: EmotePromptMessage.fromJSON(object.emotePromptMessage),
+                  }
+                : isSet(object.variableMessage)
+                ? { $case: "variableMessage", variableMessage: VariableMessage.fromJSON(object.variableMessage) }
+                : isSet(object.followRequestMessage)
+                ? {
+                      $case: "followRequestMessage",
+                      followRequestMessage: FollowRequestMessage.fromJSON(object.followRequestMessage),
+                  }
+                : isSet(object.followConfirmationMessage)
+                ? {
+                      $case: "followConfirmationMessage",
+                      followConfirmationMessage: FollowConfirmationMessage.fromJSON(object.followConfirmationMessage),
+                  }
+                : isSet(object.followAbortMessage)
+                ? {
+                      $case: "followAbortMessage",
+                      followAbortMessage: FollowAbortMessage.fromJSON(object.followAbortMessage),
+                  }
+                : isSet(object.lockGroupPromptMessage)
+                ? {
+                      $case: "lockGroupPromptMessage",
+                      lockGroupPromptMessage: LockGroupPromptMessage.fromJSON(object.lockGroupPromptMessage),
+                  }
+                : isSet(object.queryMessage)
+                ? { $case: "queryMessage", queryMessage: QueryMessage.fromJSON(object.queryMessage) }
+                : isSet(object.askPositionMessage)
+                ? {
+                      $case: "askPositionMessage",
+                      askPositionMessage: AskPositionMessage.fromJSON(object.askPositionMessage),
+                  }
+                : isSet(object.editMapWithKeyMessage)
+                ? {
+                      $case: "editMapWithKeyMessage",
+                      editMapWithKeyMessage: EditMapWithKeyMessage.fromJSON(object.editMapWithKeyMessage),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: PusherToBackMessage): unknown {
@@ -7578,7 +7490,7 @@ export const PusherToBackMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PusherToBackMessage>, I>>(object: I): PusherToBackMessage {
-        const message = { ...basePusherToBackMessage } as PusherToBackMessage;
+        const message = createBasePusherToBackMessage();
         if (
             object.message?.$case === "joinRoomMessage" &&
             object.message?.joinRoomMessage !== undefined &&
@@ -7769,7 +7681,9 @@ export const PusherToBackMessage = {
     },
 };
 
-const baseBatchToPusherMessage: object = {};
+function createBaseBatchToPusherMessage(): BatchToPusherMessage {
+    return { payload: [] };
+}
 
 export const BatchToPusherMessage = {
     encode(message: BatchToPusherMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7782,8 +7696,7 @@ export const BatchToPusherMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BatchToPusherMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBatchToPusherMessage } as BatchToPusherMessage;
-        message.payload = [];
+        const message = createBaseBatchToPusherMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7799,9 +7712,11 @@ export const BatchToPusherMessage = {
     },
 
     fromJSON(object: any): BatchToPusherMessage {
-        const message = { ...baseBatchToPusherMessage } as BatchToPusherMessage;
-        message.payload = (object.payload ?? []).map((e: any) => SubToPusherMessage.fromJSON(e));
-        return message;
+        return {
+            payload: Array.isArray(object?.payload)
+                ? object.payload.map((e: any) => SubToPusherMessage.fromJSON(e))
+                : [],
+        };
     },
 
     toJSON(message: BatchToPusherMessage): unknown {
@@ -7815,13 +7730,15 @@ export const BatchToPusherMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BatchToPusherMessage>, I>>(object: I): BatchToPusherMessage {
-        const message = { ...baseBatchToPusherMessage } as BatchToPusherMessage;
+        const message = createBaseBatchToPusherMessage();
         message.payload = object.payload?.map((e) => SubToPusherMessage.fromPartial(e)) || [];
         return message;
     },
 };
 
-const baseSubToPusherMessage: object = {};
+function createBaseSubToPusherMessage(): SubToPusherMessage {
+    return { message: undefined };
+}
 
 export const SubToPusherMessage = {
     encode(message: SubToPusherMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -7867,7 +7784,7 @@ export const SubToPusherMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SubToPusherMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSubToPusherMessage } as SubToPusherMessage;
+        const message = createBaseSubToPusherMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -7946,71 +7863,51 @@ export const SubToPusherMessage = {
     },
 
     fromJSON(object: any): SubToPusherMessage {
-        const message = { ...baseSubToPusherMessage } as SubToPusherMessage;
-        if (object.userJoinedZoneMessage !== undefined && object.userJoinedZoneMessage !== null) {
-            message.message = {
-                $case: "userJoinedZoneMessage",
-                userJoinedZoneMessage: UserJoinedZoneMessage.fromJSON(object.userJoinedZoneMessage),
-            };
-        }
-        if (object.groupUpdateZoneMessage !== undefined && object.groupUpdateZoneMessage !== null) {
-            message.message = {
-                $case: "groupUpdateZoneMessage",
-                groupUpdateZoneMessage: GroupUpdateZoneMessage.fromJSON(object.groupUpdateZoneMessage),
-            };
-        }
-        if (object.userMovedMessage !== undefined && object.userMovedMessage !== null) {
-            message.message = {
-                $case: "userMovedMessage",
-                userMovedMessage: UserMovedMessage.fromJSON(object.userMovedMessage),
-            };
-        }
-        if (object.groupLeftZoneMessage !== undefined && object.groupLeftZoneMessage !== null) {
-            message.message = {
-                $case: "groupLeftZoneMessage",
-                groupLeftZoneMessage: GroupLeftZoneMessage.fromJSON(object.groupLeftZoneMessage),
-            };
-        }
-        if (object.userLeftZoneMessage !== undefined && object.userLeftZoneMessage !== null) {
-            message.message = {
-                $case: "userLeftZoneMessage",
-                userLeftZoneMessage: UserLeftZoneMessage.fromJSON(object.userLeftZoneMessage),
-            };
-        }
-        if (object.itemEventMessage !== undefined && object.itemEventMessage !== null) {
-            message.message = {
-                $case: "itemEventMessage",
-                itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage),
-            };
-        }
-        if (object.sendUserMessage !== undefined && object.sendUserMessage !== null) {
-            message.message = {
-                $case: "sendUserMessage",
-                sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage),
-            };
-        }
-        if (object.banUserMessage !== undefined && object.banUserMessage !== null) {
-            message.message = {
-                $case: "banUserMessage",
-                banUserMessage: BanUserMessage.fromJSON(object.banUserMessage),
-            };
-        }
-        if (object.emoteEventMessage !== undefined && object.emoteEventMessage !== null) {
-            message.message = {
-                $case: "emoteEventMessage",
-                emoteEventMessage: EmoteEventMessage.fromJSON(object.emoteEventMessage),
-            };
-        }
-        if (object.errorMessage !== undefined && object.errorMessage !== null) {
-            message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
-        }
-        if (object.playerDetailsUpdatedMessage !== undefined && object.playerDetailsUpdatedMessage !== null) {
-            message.message = {
-                $case: "playerDetailsUpdatedMessage",
-                playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(object.playerDetailsUpdatedMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.userJoinedZoneMessage)
+                ? {
+                      $case: "userJoinedZoneMessage",
+                      userJoinedZoneMessage: UserJoinedZoneMessage.fromJSON(object.userJoinedZoneMessage),
+                  }
+                : isSet(object.groupUpdateZoneMessage)
+                ? {
+                      $case: "groupUpdateZoneMessage",
+                      groupUpdateZoneMessage: GroupUpdateZoneMessage.fromJSON(object.groupUpdateZoneMessage),
+                  }
+                : isSet(object.userMovedMessage)
+                ? { $case: "userMovedMessage", userMovedMessage: UserMovedMessage.fromJSON(object.userMovedMessage) }
+                : isSet(object.groupLeftZoneMessage)
+                ? {
+                      $case: "groupLeftZoneMessage",
+                      groupLeftZoneMessage: GroupLeftZoneMessage.fromJSON(object.groupLeftZoneMessage),
+                  }
+                : isSet(object.userLeftZoneMessage)
+                ? {
+                      $case: "userLeftZoneMessage",
+                      userLeftZoneMessage: UserLeftZoneMessage.fromJSON(object.userLeftZoneMessage),
+                  }
+                : isSet(object.itemEventMessage)
+                ? { $case: "itemEventMessage", itemEventMessage: ItemEventMessage.fromJSON(object.itemEventMessage) }
+                : isSet(object.sendUserMessage)
+                ? { $case: "sendUserMessage", sendUserMessage: SendUserMessage.fromJSON(object.sendUserMessage) }
+                : isSet(object.banUserMessage)
+                ? { $case: "banUserMessage", banUserMessage: BanUserMessage.fromJSON(object.banUserMessage) }
+                : isSet(object.emoteEventMessage)
+                ? {
+                      $case: "emoteEventMessage",
+                      emoteEventMessage: EmoteEventMessage.fromJSON(object.emoteEventMessage),
+                  }
+                : isSet(object.errorMessage)
+                ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
+                : isSet(object.playerDetailsUpdatedMessage)
+                ? {
+                      $case: "playerDetailsUpdatedMessage",
+                      playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage.fromJSON(
+                          object.playerDetailsUpdatedMessage
+                      ),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: SubToPusherMessage): unknown {
@@ -8063,7 +7960,7 @@ export const SubToPusherMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SubToPusherMessage>, I>>(object: I): SubToPusherMessage {
-        const message = { ...baseSubToPusherMessage } as SubToPusherMessage;
+        const message = createBaseSubToPusherMessage();
         if (
             object.message?.$case === "userJoinedZoneMessage" &&
             object.message?.userJoinedZoneMessage !== undefined &&
@@ -8180,7 +8077,9 @@ export const SubToPusherMessage = {
     },
 };
 
-const baseBatchToPusherRoomMessage: object = {};
+function createBaseBatchToPusherRoomMessage(): BatchToPusherRoomMessage {
+    return { payload: [] };
+}
 
 export const BatchToPusherRoomMessage = {
     encode(message: BatchToPusherRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8193,8 +8092,7 @@ export const BatchToPusherRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BatchToPusherRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBatchToPusherRoomMessage } as BatchToPusherRoomMessage;
-        message.payload = [];
+        const message = createBaseBatchToPusherRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8210,9 +8108,11 @@ export const BatchToPusherRoomMessage = {
     },
 
     fromJSON(object: any): BatchToPusherRoomMessage {
-        const message = { ...baseBatchToPusherRoomMessage } as BatchToPusherRoomMessage;
-        message.payload = (object.payload ?? []).map((e: any) => SubToPusherRoomMessage.fromJSON(e));
-        return message;
+        return {
+            payload: Array.isArray(object?.payload)
+                ? object.payload.map((e: any) => SubToPusherRoomMessage.fromJSON(e))
+                : [],
+        };
     },
 
     toJSON(message: BatchToPusherRoomMessage): unknown {
@@ -8226,13 +8126,15 @@ export const BatchToPusherRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BatchToPusherRoomMessage>, I>>(object: I): BatchToPusherRoomMessage {
-        const message = { ...baseBatchToPusherRoomMessage } as BatchToPusherRoomMessage;
+        const message = createBaseBatchToPusherRoomMessage();
         message.payload = object.payload?.map((e) => SubToPusherRoomMessage.fromPartial(e)) || [];
         return message;
     },
 };
 
-const baseSubToPusherRoomMessage: object = {};
+function createBaseSubToPusherRoomMessage(): SubToPusherRoomMessage {
+    return { message: undefined };
+}
 
 export const SubToPusherRoomMessage = {
     encode(message: SubToPusherRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8251,7 +8153,7 @@ export const SubToPusherRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): SubToPusherRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseSubToPusherRoomMessage } as SubToPusherRoomMessage;
+        const message = createBaseSubToPusherRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8282,23 +8184,15 @@ export const SubToPusherRoomMessage = {
     },
 
     fromJSON(object: any): SubToPusherRoomMessage {
-        const message = { ...baseSubToPusherRoomMessage } as SubToPusherRoomMessage;
-        if (object.variableMessage !== undefined && object.variableMessage !== null) {
-            message.message = {
-                $case: "variableMessage",
-                variableMessage: VariableWithTagMessage.fromJSON(object.variableMessage),
-            };
-        }
-        if (object.errorMessage !== undefined && object.errorMessage !== null) {
-            message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
-        }
-        if (object.editMapMessage !== undefined && object.editMapMessage !== null) {
-            message.message = {
-                $case: "editMapMessage",
-                editMapMessage: EditMapMessage.fromJSON(object.editMapMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.variableMessage)
+                ? { $case: "variableMessage", variableMessage: VariableWithTagMessage.fromJSON(object.variableMessage) }
+                : isSet(object.errorMessage)
+                ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
+                : isSet(object.editMapMessage)
+                ? { $case: "editMapMessage", editMapMessage: EditMapMessage.fromJSON(object.editMapMessage) }
+                : undefined,
+        };
     },
 
     toJSON(message: SubToPusherRoomMessage): unknown {
@@ -8319,7 +8213,7 @@ export const SubToPusherRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<SubToPusherRoomMessage>, I>>(object: I): SubToPusherRoomMessage {
-        const message = { ...baseSubToPusherRoomMessage } as SubToPusherRoomMessage;
+        const message = createBaseSubToPusherRoomMessage();
         if (
             object.message?.$case === "variableMessage" &&
             object.message?.variableMessage !== undefined &&
@@ -8354,7 +8248,9 @@ export const SubToPusherRoomMessage = {
     },
 };
 
-const baseEditMapMessage: object = {};
+function createBaseEditMapMessage(): EditMapMessage {
+    return { message: undefined };
+}
 
 export const EditMapMessage = {
     encode(message: EditMapMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8367,7 +8263,7 @@ export const EditMapMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): EditMapMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseEditMapMessage } as EditMapMessage;
+        const message = createBaseEditMapMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8386,14 +8282,14 @@ export const EditMapMessage = {
     },
 
     fromJSON(object: any): EditMapMessage {
-        const message = { ...baseEditMapMessage } as EditMapMessage;
-        if (object.modifyAreaMessage !== undefined && object.modifyAreaMessage !== null) {
-            message.message = {
-                $case: "modifyAreaMessage",
-                modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.modifyAreaMessage)
+                ? {
+                      $case: "modifyAreaMessage",
+                      modifyAreaMessage: ModifyAreaMessage.fromJSON(object.modifyAreaMessage),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: EditMapMessage): unknown {
@@ -8406,7 +8302,7 @@ export const EditMapMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<EditMapMessage>, I>>(object: I): EditMapMessage {
-        const message = { ...baseEditMapMessage } as EditMapMessage;
+        const message = createBaseEditMapMessage();
         if (
             object.message?.$case === "modifyAreaMessage" &&
             object.message?.modifyAreaMessage !== undefined &&
@@ -8421,7 +8317,9 @@ export const EditMapMessage = {
     },
 };
 
-const baseEditMapWithKeyMessage: object = { mapKey: "" };
+function createBaseEditMapWithKeyMessage(): EditMapWithKeyMessage {
+    return { mapKey: "", editMapMessage: undefined };
+}
 
 export const EditMapWithKeyMessage = {
     encode(message: EditMapWithKeyMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8437,7 +8335,7 @@ export const EditMapWithKeyMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): EditMapWithKeyMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseEditMapWithKeyMessage } as EditMapWithKeyMessage;
+        const message = createBaseEditMapWithKeyMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8456,13 +8354,10 @@ export const EditMapWithKeyMessage = {
     },
 
     fromJSON(object: any): EditMapWithKeyMessage {
-        const message = { ...baseEditMapWithKeyMessage } as EditMapWithKeyMessage;
-        message.mapKey = object.mapKey !== undefined && object.mapKey !== null ? String(object.mapKey) : "";
-        message.editMapMessage =
-            object.editMapMessage !== undefined && object.editMapMessage !== null
-                ? EditMapMessage.fromJSON(object.editMapMessage)
-                : undefined;
-        return message;
+        return {
+            mapKey: isSet(object.mapKey) ? String(object.mapKey) : "",
+            editMapMessage: isSet(object.editMapMessage) ? EditMapMessage.fromJSON(object.editMapMessage) : undefined,
+        };
     },
 
     toJSON(message: EditMapWithKeyMessage): unknown {
@@ -8474,7 +8369,7 @@ export const EditMapWithKeyMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<EditMapWithKeyMessage>, I>>(object: I): EditMapWithKeyMessage {
-        const message = { ...baseEditMapWithKeyMessage } as EditMapWithKeyMessage;
+        const message = createBaseEditMapWithKeyMessage();
         message.mapKey = object.mapKey ?? "";
         message.editMapMessage =
             object.editMapMessage !== undefined && object.editMapMessage !== null
@@ -8484,7 +8379,9 @@ export const EditMapWithKeyMessage = {
     },
 };
 
-const baseUserJoinedRoomMessage: object = { uuid: "", ipAddress: "", name: "" };
+function createBaseUserJoinedRoomMessage(): UserJoinedRoomMessage {
+    return { uuid: "", ipAddress: "", name: "" };
+}
 
 export const UserJoinedRoomMessage = {
     encode(message: UserJoinedRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8503,7 +8400,7 @@ export const UserJoinedRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserJoinedRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserJoinedRoomMessage } as UserJoinedRoomMessage;
+        const message = createBaseUserJoinedRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8525,11 +8422,11 @@ export const UserJoinedRoomMessage = {
     },
 
     fromJSON(object: any): UserJoinedRoomMessage {
-        const message = { ...baseUserJoinedRoomMessage } as UserJoinedRoomMessage;
-        message.uuid = object.uuid !== undefined && object.uuid !== null ? String(object.uuid) : "";
-        message.ipAddress = object.ipAddress !== undefined && object.ipAddress !== null ? String(object.ipAddress) : "";
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        return message;
+        return {
+            uuid: isSet(object.uuid) ? String(object.uuid) : "",
+            ipAddress: isSet(object.ipAddress) ? String(object.ipAddress) : "",
+            name: isSet(object.name) ? String(object.name) : "",
+        };
     },
 
     toJSON(message: UserJoinedRoomMessage): unknown {
@@ -8541,7 +8438,7 @@ export const UserJoinedRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserJoinedRoomMessage>, I>>(object: I): UserJoinedRoomMessage {
-        const message = { ...baseUserJoinedRoomMessage } as UserJoinedRoomMessage;
+        const message = createBaseUserJoinedRoomMessage();
         message.uuid = object.uuid ?? "";
         message.ipAddress = object.ipAddress ?? "";
         message.name = object.name ?? "";
@@ -8549,7 +8446,9 @@ export const UserJoinedRoomMessage = {
     },
 };
 
-const baseUserLeftRoomMessage: object = { uuid: "" };
+function createBaseUserLeftRoomMessage(): UserLeftRoomMessage {
+    return { uuid: "" };
+}
 
 export const UserLeftRoomMessage = {
     encode(message: UserLeftRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8562,7 +8461,7 @@ export const UserLeftRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): UserLeftRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseUserLeftRoomMessage } as UserLeftRoomMessage;
+        const message = createBaseUserLeftRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8578,9 +8477,7 @@ export const UserLeftRoomMessage = {
     },
 
     fromJSON(object: any): UserLeftRoomMessage {
-        const message = { ...baseUserLeftRoomMessage } as UserLeftRoomMessage;
-        message.uuid = object.uuid !== undefined && object.uuid !== null ? String(object.uuid) : "";
-        return message;
+        return { uuid: isSet(object.uuid) ? String(object.uuid) : "" };
     },
 
     toJSON(message: UserLeftRoomMessage): unknown {
@@ -8590,13 +8487,15 @@ export const UserLeftRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<UserLeftRoomMessage>, I>>(object: I): UserLeftRoomMessage {
-        const message = { ...baseUserLeftRoomMessage } as UserLeftRoomMessage;
+        const message = createBaseUserLeftRoomMessage();
         message.uuid = object.uuid ?? "";
         return message;
     },
 };
 
-const baseServerToAdminClientMessage: object = {};
+function createBaseServerToAdminClientMessage(): ServerToAdminClientMessage {
+    return { message: undefined };
+}
 
 export const ServerToAdminClientMessage = {
     encode(message: ServerToAdminClientMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8615,7 +8514,7 @@ export const ServerToAdminClientMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): ServerToAdminClientMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseServerToAdminClientMessage } as ServerToAdminClientMessage;
+        const message = createBaseServerToAdminClientMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8646,23 +8545,15 @@ export const ServerToAdminClientMessage = {
     },
 
     fromJSON(object: any): ServerToAdminClientMessage {
-        const message = { ...baseServerToAdminClientMessage } as ServerToAdminClientMessage;
-        if (object.userJoinedRoom !== undefined && object.userJoinedRoom !== null) {
-            message.message = {
-                $case: "userJoinedRoom",
-                userJoinedRoom: UserJoinedRoomMessage.fromJSON(object.userJoinedRoom),
-            };
-        }
-        if (object.userLeftRoom !== undefined && object.userLeftRoom !== null) {
-            message.message = {
-                $case: "userLeftRoom",
-                userLeftRoom: UserLeftRoomMessage.fromJSON(object.userLeftRoom),
-            };
-        }
-        if (object.errorMessage !== undefined && object.errorMessage !== null) {
-            message.message = { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) };
-        }
-        return message;
+        return {
+            message: isSet(object.userJoinedRoom)
+                ? { $case: "userJoinedRoom", userJoinedRoom: UserJoinedRoomMessage.fromJSON(object.userJoinedRoom) }
+                : isSet(object.userLeftRoom)
+                ? { $case: "userLeftRoom", userLeftRoom: UserLeftRoomMessage.fromJSON(object.userLeftRoom) }
+                : isSet(object.errorMessage)
+                ? { $case: "errorMessage", errorMessage: ErrorMessage.fromJSON(object.errorMessage) }
+                : undefined,
+        };
     },
 
     toJSON(message: ServerToAdminClientMessage): unknown {
@@ -8683,7 +8574,7 @@ export const ServerToAdminClientMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<ServerToAdminClientMessage>, I>>(object: I): ServerToAdminClientMessage {
-        const message = { ...baseServerToAdminClientMessage } as ServerToAdminClientMessage;
+        const message = createBaseServerToAdminClientMessage();
         if (
             object.message?.$case === "userJoinedRoom" &&
             object.message?.userJoinedRoom !== undefined &&
@@ -8718,7 +8609,9 @@ export const ServerToAdminClientMessage = {
     },
 };
 
-const baseAdminPusherToBackMessage: object = {};
+function createBaseAdminPusherToBackMessage(): AdminPusherToBackMessage {
+    return { message: undefined };
+}
 
 export const AdminPusherToBackMessage = {
     encode(message: AdminPusherToBackMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8731,7 +8624,7 @@ export const AdminPusherToBackMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AdminPusherToBackMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAdminPusherToBackMessage } as AdminPusherToBackMessage;
+        const message = createBaseAdminPusherToBackMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8747,11 +8640,11 @@ export const AdminPusherToBackMessage = {
     },
 
     fromJSON(object: any): AdminPusherToBackMessage {
-        const message = { ...baseAdminPusherToBackMessage } as AdminPusherToBackMessage;
-        if (object.subscribeToRoom !== undefined && object.subscribeToRoom !== null) {
-            message.message = { $case: "subscribeToRoom", subscribeToRoom: String(object.subscribeToRoom) };
-        }
-        return message;
+        return {
+            message: isSet(object.subscribeToRoom)
+                ? { $case: "subscribeToRoom", subscribeToRoom: String(object.subscribeToRoom) }
+                : undefined,
+        };
     },
 
     toJSON(message: AdminPusherToBackMessage): unknown {
@@ -8761,7 +8654,7 @@ export const AdminPusherToBackMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AdminPusherToBackMessage>, I>>(object: I): AdminPusherToBackMessage {
-        const message = { ...baseAdminPusherToBackMessage } as AdminPusherToBackMessage;
+        const message = createBaseAdminPusherToBackMessage();
         if (
             object.message?.$case === "subscribeToRoom" &&
             object.message?.subscribeToRoom !== undefined &&
@@ -8773,7 +8666,9 @@ export const AdminPusherToBackMessage = {
     },
 };
 
-const baseAdminMessage: object = { message: "", recipientUuid: "", roomId: "", type: "" };
+function createBaseAdminMessage(): AdminMessage {
+    return { message: "", recipientUuid: "", roomId: "", type: "" };
+}
 
 export const AdminMessage = {
     encode(message: AdminMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8795,7 +8690,7 @@ export const AdminMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AdminMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAdminMessage } as AdminMessage;
+        const message = createBaseAdminMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8820,13 +8715,12 @@ export const AdminMessage = {
     },
 
     fromJSON(object: any): AdminMessage {
-        const message = { ...baseAdminMessage } as AdminMessage;
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        message.recipientUuid =
-            object.recipientUuid !== undefined && object.recipientUuid !== null ? String(object.recipientUuid) : "";
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        return message;
+        return {
+            message: isSet(object.message) ? String(object.message) : "",
+            recipientUuid: isSet(object.recipientUuid) ? String(object.recipientUuid) : "",
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            type: isSet(object.type) ? String(object.type) : "",
+        };
     },
 
     toJSON(message: AdminMessage): unknown {
@@ -8839,7 +8733,7 @@ export const AdminMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AdminMessage>, I>>(object: I): AdminMessage {
-        const message = { ...baseAdminMessage } as AdminMessage;
+        const message = createBaseAdminMessage();
         message.message = object.message ?? "";
         message.recipientUuid = object.recipientUuid ?? "";
         message.roomId = object.roomId ?? "";
@@ -8848,7 +8742,9 @@ export const AdminMessage = {
     },
 };
 
-const baseAdminRoomMessage: object = { message: "", roomId: "", type: "" };
+function createBaseAdminRoomMessage(): AdminRoomMessage {
+    return { message: "", roomId: "", type: "" };
+}
 
 export const AdminRoomMessage = {
     encode(message: AdminRoomMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8867,7 +8763,7 @@ export const AdminRoomMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AdminRoomMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAdminRoomMessage } as AdminRoomMessage;
+        const message = createBaseAdminRoomMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8889,11 +8785,11 @@ export const AdminRoomMessage = {
     },
 
     fromJSON(object: any): AdminRoomMessage {
-        const message = { ...baseAdminRoomMessage } as AdminRoomMessage;
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        return message;
+        return {
+            message: isSet(object.message) ? String(object.message) : "",
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            type: isSet(object.type) ? String(object.type) : "",
+        };
     },
 
     toJSON(message: AdminRoomMessage): unknown {
@@ -8905,7 +8801,7 @@ export const AdminRoomMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AdminRoomMessage>, I>>(object: I): AdminRoomMessage {
-        const message = { ...baseAdminRoomMessage } as AdminRoomMessage;
+        const message = createBaseAdminRoomMessage();
         message.message = object.message ?? "";
         message.roomId = object.roomId ?? "";
         message.type = object.type ?? "";
@@ -8913,7 +8809,9 @@ export const AdminRoomMessage = {
     },
 };
 
-const baseAdminGlobalMessage: object = { message: "" };
+function createBaseAdminGlobalMessage(): AdminGlobalMessage {
+    return { message: "" };
+}
 
 export const AdminGlobalMessage = {
     encode(message: AdminGlobalMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8926,7 +8824,7 @@ export const AdminGlobalMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): AdminGlobalMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseAdminGlobalMessage } as AdminGlobalMessage;
+        const message = createBaseAdminGlobalMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -8942,9 +8840,7 @@ export const AdminGlobalMessage = {
     },
 
     fromJSON(object: any): AdminGlobalMessage {
-        const message = { ...baseAdminGlobalMessage } as AdminGlobalMessage;
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return { message: isSet(object.message) ? String(object.message) : "" };
     },
 
     toJSON(message: AdminGlobalMessage): unknown {
@@ -8954,13 +8850,15 @@ export const AdminGlobalMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<AdminGlobalMessage>, I>>(object: I): AdminGlobalMessage {
-        const message = { ...baseAdminGlobalMessage } as AdminGlobalMessage;
+        const message = createBaseAdminGlobalMessage();
         message.message = object.message ?? "";
         return message;
     },
 };
 
-const baseBanMessage: object = { recipientUuid: "", roomId: "", type: "", message: "" };
+function createBaseBanMessage(): BanMessage {
+    return { recipientUuid: "", roomId: "", type: "", message: "" };
+}
 
 export const BanMessage = {
     encode(message: BanMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -8982,7 +8880,7 @@ export const BanMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BanMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBanMessage } as BanMessage;
+        const message = createBaseBanMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9007,13 +8905,12 @@ export const BanMessage = {
     },
 
     fromJSON(object: any): BanMessage {
-        const message = { ...baseBanMessage } as BanMessage;
-        message.recipientUuid =
-            object.recipientUuid !== undefined && object.recipientUuid !== null ? String(object.recipientUuid) : "";
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        return message;
+        return {
+            recipientUuid: isSet(object.recipientUuid) ? String(object.recipientUuid) : "",
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            type: isSet(object.type) ? String(object.type) : "",
+            message: isSet(object.message) ? String(object.message) : "",
+        };
     },
 
     toJSON(message: BanMessage): unknown {
@@ -9026,7 +8923,7 @@ export const BanMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BanMessage>, I>>(object: I): BanMessage {
-        const message = { ...baseBanMessage } as BanMessage;
+        const message = createBaseBanMessage();
         message.recipientUuid = object.recipientUuid ?? "";
         message.roomId = object.roomId ?? "";
         message.type = object.type ?? "";
@@ -9035,7 +8932,9 @@ export const BanMessage = {
     },
 };
 
-const baseRoomDescription: object = { roomId: "", nbUsers: 0 };
+function createBaseRoomDescription(): RoomDescription {
+    return { roomId: "", nbUsers: 0 };
+}
 
 export const RoomDescription = {
     encode(message: RoomDescription, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9051,7 +8950,7 @@ export const RoomDescription = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RoomDescription {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRoomDescription } as RoomDescription;
+        const message = createBaseRoomDescription();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9070,10 +8969,10 @@ export const RoomDescription = {
     },
 
     fromJSON(object: any): RoomDescription {
-        const message = { ...baseRoomDescription } as RoomDescription;
-        message.roomId = object.roomId !== undefined && object.roomId !== null ? String(object.roomId) : "";
-        message.nbUsers = object.nbUsers !== undefined && object.nbUsers !== null ? Number(object.nbUsers) : 0;
-        return message;
+        return {
+            roomId: isSet(object.roomId) ? String(object.roomId) : "",
+            nbUsers: isSet(object.nbUsers) ? Number(object.nbUsers) : 0,
+        };
     },
 
     toJSON(message: RoomDescription): unknown {
@@ -9084,14 +8983,16 @@ export const RoomDescription = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RoomDescription>, I>>(object: I): RoomDescription {
-        const message = { ...baseRoomDescription } as RoomDescription;
+        const message = createBaseRoomDescription();
         message.roomId = object.roomId ?? "";
         message.nbUsers = object.nbUsers ?? 0;
         return message;
     },
 };
 
-const baseRoomsList: object = {};
+function createBaseRoomsList(): RoomsList {
+    return { roomDescription: [] };
+}
 
 export const RoomsList = {
     encode(message: RoomsList, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9104,8 +9005,7 @@ export const RoomsList = {
     decode(input: _m0.Reader | Uint8Array, length?: number): RoomsList {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseRoomsList } as RoomsList;
-        message.roomDescription = [];
+        const message = createBaseRoomsList();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9121,9 +9021,11 @@ export const RoomsList = {
     },
 
     fromJSON(object: any): RoomsList {
-        const message = { ...baseRoomsList } as RoomsList;
-        message.roomDescription = (object.roomDescription ?? []).map((e: any) => RoomDescription.fromJSON(e));
-        return message;
+        return {
+            roomDescription: Array.isArray(object?.roomDescription)
+                ? object.roomDescription.map((e: any) => RoomDescription.fromJSON(e))
+                : [],
+        };
     },
 
     toJSON(message: RoomsList): unknown {
@@ -9137,13 +9039,15 @@ export const RoomsList = {
     },
 
     fromPartial<I extends Exact<DeepPartial<RoomsList>, I>>(object: I): RoomsList {
-        const message = { ...baseRoomsList } as RoomsList;
+        const message = createBaseRoomsList();
         message.roomDescription = object.roomDescription?.map((e) => RoomDescription.fromPartial(e)) || [];
         return message;
     },
 };
 
-const baseEmptyMessage: object = {};
+function createBaseEmptyMessage(): EmptyMessage {
+    return {};
+}
 
 export const EmptyMessage = {
     encode(_: EmptyMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9153,7 +9057,7 @@ export const EmptyMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): EmptyMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseEmptyMessage } as EmptyMessage;
+        const message = createBaseEmptyMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9166,8 +9070,7 @@ export const EmptyMessage = {
     },
 
     fromJSON(_: any): EmptyMessage {
-        const message = { ...baseEmptyMessage } as EmptyMessage;
-        return message;
+        return {};
     },
 
     toJSON(_: EmptyMessage): unknown {
@@ -9176,12 +9079,14 @@ export const EmptyMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<EmptyMessage>, I>>(_: I): EmptyMessage {
-        const message = { ...baseEmptyMessage } as EmptyMessage;
+        const message = createBaseEmptyMessage();
         return message;
     },
 };
 
-const baseIframeToPusherMessage: object = {};
+function createBaseIframeToPusherMessage(): IframeToPusherMessage {
+    return { message: undefined };
+}
 
 export const IframeToPusherMessage = {
     encode(message: IframeToPusherMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9197,7 +9102,7 @@ export const IframeToPusherMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): IframeToPusherMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        const message = createBaseIframeToPusherMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9222,17 +9127,16 @@ export const IframeToPusherMessage = {
     },
 
     fromJSON(object: any): IframeToPusherMessage {
-        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
-        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
-            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
-        }
-        if (object.banUserByUuidMessage !== undefined && object.banUserByUuidMessage !== null) {
-            message.message = {
-                $case: "banUserByUuidMessage",
-                banUserByUuidMessage: BanUserByUuidMessage.fromJSON(object.banUserByUuidMessage),
-            };
-        }
-        return message;
+        return {
+            message: isSet(object.xmppMessage)
+                ? { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) }
+                : isSet(object.banUserByUuidMessage)
+                ? {
+                      $case: "banUserByUuidMessage",
+                      banUserByUuidMessage: BanUserByUuidMessage.fromJSON(object.banUserByUuidMessage),
+                  }
+                : undefined,
+        };
     },
 
     toJSON(message: IframeToPusherMessage): unknown {
@@ -9249,7 +9153,7 @@ export const IframeToPusherMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<IframeToPusherMessage>, I>>(object: I): IframeToPusherMessage {
-        const message = { ...baseIframeToPusherMessage } as IframeToPusherMessage;
+        const message = createBaseIframeToPusherMessage();
         if (
             object.message?.$case === "xmppMessage" &&
             object.message?.xmppMessage !== undefined &&
@@ -9274,7 +9178,9 @@ export const IframeToPusherMessage = {
     },
 };
 
-const basePusherToIframeMessage: object = {};
+function createBasePusherToIframeMessage(): PusherToIframeMessage {
+    return { message: undefined };
+}
 
 export const PusherToIframeMessage = {
     encode(message: PusherToIframeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9296,7 +9202,7 @@ export const PusherToIframeMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): PusherToIframeMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
+        const message = createBasePusherToIframeMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9330,28 +9236,23 @@ export const PusherToIframeMessage = {
     },
 
     fromJSON(object: any): PusherToIframeMessage {
-        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
-        if (object.xmppSettingsMessage !== undefined && object.xmppSettingsMessage !== null) {
-            message.message = {
-                $case: "xmppSettingsMessage",
-                xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
-            };
-        }
-        if (
-            object.xmppConnectionStatusChangeMessage !== undefined &&
-            object.xmppConnectionStatusChangeMessage !== null
-        ) {
-            message.message = {
-                $case: "xmppConnectionStatusChangeMessage",
-                xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromJSON(
-                    object.xmppConnectionStatusChangeMessage
-                ),
-            };
-        }
-        if (object.xmppMessage !== undefined && object.xmppMessage !== null) {
-            message.message = { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) };
-        }
-        return message;
+        return {
+            message: isSet(object.xmppSettingsMessage)
+                ? {
+                      $case: "xmppSettingsMessage",
+                      xmppSettingsMessage: XmppSettingsMessage.fromJSON(object.xmppSettingsMessage),
+                  }
+                : isSet(object.xmppConnectionStatusChangeMessage)
+                ? {
+                      $case: "xmppConnectionStatusChangeMessage",
+                      xmppConnectionStatusChangeMessage: XmppConnectionStatusChangeMessage.fromJSON(
+                          object.xmppConnectionStatusChangeMessage
+                      ),
+                  }
+                : isSet(object.xmppMessage)
+                ? { $case: "xmppMessage", xmppMessage: XmppMessage.fromJSON(object.xmppMessage) }
+                : undefined,
+        };
     },
 
     toJSON(message: PusherToIframeMessage): unknown {
@@ -9372,7 +9273,7 @@ export const PusherToIframeMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<PusherToIframeMessage>, I>>(object: I): PusherToIframeMessage {
-        const message = { ...basePusherToIframeMessage } as PusherToIframeMessage;
+        const message = createBasePusherToIframeMessage();
         if (
             object.message?.$case === "xmppSettingsMessage" &&
             object.message?.xmppSettingsMessage !== undefined &&
@@ -9409,7 +9310,9 @@ export const PusherToIframeMessage = {
     },
 };
 
-const baseMucRoomDefinitionMessage: object = { url: "", name: "", type: "", subscribe: false };
+function createBaseMucRoomDefinitionMessage(): MucRoomDefinitionMessage {
+    return { url: "", name: "", type: "", subscribe: false };
+}
 
 export const MucRoomDefinitionMessage = {
     encode(message: MucRoomDefinitionMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9431,7 +9334,7 @@ export const MucRoomDefinitionMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): MucRoomDefinitionMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        const message = createBaseMucRoomDefinitionMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9456,13 +9359,12 @@ export const MucRoomDefinitionMessage = {
     },
 
     fromJSON(object: any): MucRoomDefinitionMessage {
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
-        message.url = object.url !== undefined && object.url !== null ? String(object.url) : "";
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.type = object.type !== undefined && object.type !== null ? String(object.type) : "";
-        message.subscribe =
-            object.subscribe !== undefined && object.subscribe !== null ? Boolean(object.subscribe) : false;
-        return message;
+        return {
+            url: isSet(object.url) ? String(object.url) : "",
+            name: isSet(object.name) ? String(object.name) : "",
+            type: isSet(object.type) ? String(object.type) : "",
+            subscribe: isSet(object.subscribe) ? Boolean(object.subscribe) : false,
+        };
     },
 
     toJSON(message: MucRoomDefinitionMessage): unknown {
@@ -9475,7 +9377,7 @@ export const MucRoomDefinitionMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<MucRoomDefinitionMessage>, I>>(object: I): MucRoomDefinitionMessage {
-        const message = { ...baseMucRoomDefinitionMessage } as MucRoomDefinitionMessage;
+        const message = createBaseMucRoomDefinitionMessage();
         message.url = object.url ?? "";
         message.name = object.name ?? "";
         message.type = object.type ?? "";
@@ -9484,7 +9386,9 @@ export const MucRoomDefinitionMessage = {
     },
 };
 
-const baseXmppSettingsMessage: object = { jid: "", conferenceDomain: "" };
+function createBaseXmppSettingsMessage(): XmppSettingsMessage {
+    return { jid: "", conferenceDomain: "", rooms: [] };
+}
 
 export const XmppSettingsMessage = {
     encode(message: XmppSettingsMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9503,8 +9407,7 @@ export const XmppSettingsMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): XmppSettingsMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
-        message.rooms = [];
+        const message = createBaseXmppSettingsMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9526,14 +9429,13 @@ export const XmppSettingsMessage = {
     },
 
     fromJSON(object: any): XmppSettingsMessage {
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
-        message.jid = object.jid !== undefined && object.jid !== null ? String(object.jid) : "";
-        message.conferenceDomain =
-            object.conferenceDomain !== undefined && object.conferenceDomain !== null
-                ? String(object.conferenceDomain)
-                : "";
-        message.rooms = (object.rooms ?? []).map((e: any) => MucRoomDefinitionMessage.fromJSON(e));
-        return message;
+        return {
+            jid: isSet(object.jid) ? String(object.jid) : "",
+            conferenceDomain: isSet(object.conferenceDomain) ? String(object.conferenceDomain) : "",
+            rooms: Array.isArray(object?.rooms)
+                ? object.rooms.map((e: any) => MucRoomDefinitionMessage.fromJSON(e))
+                : [],
+        };
     },
 
     toJSON(message: XmppSettingsMessage): unknown {
@@ -9549,7 +9451,7 @@ export const XmppSettingsMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<XmppSettingsMessage>, I>>(object: I): XmppSettingsMessage {
-        const message = { ...baseXmppSettingsMessage } as XmppSettingsMessage;
+        const message = createBaseXmppSettingsMessage();
         message.jid = object.jid ?? "";
         message.conferenceDomain = object.conferenceDomain ?? "";
         message.rooms = object.rooms?.map((e) => MucRoomDefinitionMessage.fromPartial(e)) || [];
@@ -9557,7 +9459,9 @@ export const XmppSettingsMessage = {
     },
 };
 
-const baseXmppConnectionStatusChangeMessage: object = { status: 0 };
+function createBaseXmppConnectionStatusChangeMessage(): XmppConnectionStatusChangeMessage {
+    return { status: 0 };
+}
 
 export const XmppConnectionStatusChangeMessage = {
     encode(message: XmppConnectionStatusChangeMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9570,7 +9474,7 @@ export const XmppConnectionStatusChangeMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): XmppConnectionStatusChangeMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        const message = createBaseXmppConnectionStatusChangeMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9586,12 +9490,7 @@ export const XmppConnectionStatusChangeMessage = {
     },
 
     fromJSON(object: any): XmppConnectionStatusChangeMessage {
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
-        message.status =
-            object.status !== undefined && object.status !== null
-                ? xmppConnectionStatusChangeMessage_StatusFromJSON(object.status)
-                : 0;
-        return message;
+        return { status: isSet(object.status) ? xmppConnectionStatusChangeMessage_StatusFromJSON(object.status) : 0 };
     },
 
     toJSON(message: XmppConnectionStatusChangeMessage): unknown {
@@ -9603,13 +9502,15 @@ export const XmppConnectionStatusChangeMessage = {
     fromPartial<I extends Exact<DeepPartial<XmppConnectionStatusChangeMessage>, I>>(
         object: I
     ): XmppConnectionStatusChangeMessage {
-        const message = { ...baseXmppConnectionStatusChangeMessage } as XmppConnectionStatusChangeMessage;
+        const message = createBaseXmppConnectionStatusChangeMessage();
         message.status = object.status ?? 0;
         return message;
     },
 };
 
-const baseBanUserByUuidMessage: object = { playUri: "", uuidToBan: "", name: "", message: "", byUserEmail: "" };
+function createBaseBanUserByUuidMessage(): BanUserByUuidMessage {
+    return { playUri: "", uuidToBan: "", name: "", message: "", byUserEmail: "" };
+}
 
 export const BanUserByUuidMessage = {
     encode(message: BanUserByUuidMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
@@ -9634,7 +9535,7 @@ export const BanUserByUuidMessage = {
     decode(input: _m0.Reader | Uint8Array, length?: number): BanUserByUuidMessage {
         const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
         let end = length === undefined ? reader.len : reader.pos + length;
-        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
+        const message = createBaseBanUserByUuidMessage();
         while (reader.pos < end) {
             const tag = reader.uint32();
             switch (tag >>> 3) {
@@ -9662,14 +9563,13 @@ export const BanUserByUuidMessage = {
     },
 
     fromJSON(object: any): BanUserByUuidMessage {
-        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
-        message.playUri = object.playUri !== undefined && object.playUri !== null ? String(object.playUri) : "";
-        message.uuidToBan = object.uuidToBan !== undefined && object.uuidToBan !== null ? String(object.uuidToBan) : "";
-        message.name = object.name !== undefined && object.name !== null ? String(object.name) : "";
-        message.message = object.message !== undefined && object.message !== null ? String(object.message) : "";
-        message.byUserEmail =
-            object.byUserEmail !== undefined && object.byUserEmail !== null ? String(object.byUserEmail) : "";
-        return message;
+        return {
+            playUri: isSet(object.playUri) ? String(object.playUri) : "",
+            uuidToBan: isSet(object.uuidToBan) ? String(object.uuidToBan) : "",
+            name: isSet(object.name) ? String(object.name) : "",
+            message: isSet(object.message) ? String(object.message) : "",
+            byUserEmail: isSet(object.byUserEmail) ? String(object.byUserEmail) : "",
+        };
     },
 
     toJSON(message: BanUserByUuidMessage): unknown {
@@ -9683,7 +9583,7 @@ export const BanUserByUuidMessage = {
     },
 
     fromPartial<I extends Exact<DeepPartial<BanUserByUuidMessage>, I>>(object: I): BanUserByUuidMessage {
-        const message = { ...baseBanUserByUuidMessage } as BanUserByUuidMessage;
+        const message = createBaseBanUserByUuidMessage();
         message.playUri = object.playUri ?? "";
         message.uuidToBan = object.uuidToBan ?? "";
         message.name = object.name ?? "";
@@ -9694,6 +9594,7 @@ export const BanUserByUuidMessage = {
 };
 
 /** Service handled by the "back". Pusher servers connect to this service. */
+export type RoomManagerService = typeof RoomManagerService;
 export const RoomManagerService = {
     /** Holds a connection between one given client and the back */
     joinRoom: {
@@ -9984,6 +9885,7 @@ export const RoomManagerClient = makeGenericClientConstructor(
 };
 
 /** Service handled by the "map-storage". Back servers connect to this service. */
+export type MapStorageService = typeof MapStorageService;
 export const MapStorageService = {
     ping: {
         path: "/workadventure.MapStorage/ping",
@@ -10065,9 +9967,12 @@ export type DeepPartial<T> = T extends Builtin
 type KeysOfUnion<T> = T extends T ? keyof T : never;
 export type Exact<P, I extends P> = P extends Builtin
     ? P
-    : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+    : P & { [K in keyof P]: Exact<P[K], I[K]> } & { [K in Exclude<keyof I, KeysOfUnion<P>>]: never };
 
-if (_m0.util.Long !== Long) {
-    _m0.util.Long = Long as any;
-    _m0.configure();
+function isObject(value: any): boolean {
+    return typeof value === "object" && value !== null;
+}
+
+function isSet(value: any): boolean {
+    return value !== null && value !== undefined;
 }

@@ -244,7 +244,7 @@ services:
       - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
   messages:
-    image: thecodingmachine/workadventure-back-base:latest
+    image: thecodingmachine/workadventure-back-base:v1-16
     environment:
       #STARTUP_COMMAND_0: sudo apt-get install -y inotify-tools
       STARTUP_COMMAND_1: yarn install

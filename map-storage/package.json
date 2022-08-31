@@ -40,7 +40,7 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.6.7",
     "@grpc/proto-loader": "^0.6.13",
-    "google-protobuf": "^3.13.0",
+    "google-protobuf": "^3.21.0",
     "@types/cors": "^2.8.12",
     "@workadventure/map-editor": "link:../libs/map-editor",
     "@workadventure/tiled-map-type-guard": "^1.0.3",

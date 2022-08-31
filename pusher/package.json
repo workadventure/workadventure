@@ -47,7 +47,7 @@
     "cancelable-promise": "^4.2.1",
     "circular-json": "^0.5.9",
     "debug": "^4.3.1",
-    "google-protobuf": "^3.13.0",
+    "google-protobuf": "^3.21.0",
     "@grpc/grpc-js": "^1.6.7",
     "hyper-express": "^5.8.1",
     "jsonwebtoken": "^8.5.1",
