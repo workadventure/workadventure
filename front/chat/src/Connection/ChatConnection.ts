@@ -75,7 +75,7 @@ export class ChatConnection implements ChatConnection {
                 interval = setInterval(() => this.socket?.send(pingMessage), manualPingDelay);
             };
 
-            this.socket.addEventListener("open", (event) => {
+            this.socket.addEventListener("open", () => {
                 this.xmppClient = new XmppClient(this);
 
                 //define connection connection Not Authorized status
