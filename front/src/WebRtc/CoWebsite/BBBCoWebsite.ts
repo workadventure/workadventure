@@ -17,13 +17,7 @@ export class BBBCoWebsite extends SimpleCoWebsite {
 
     load(): CancelablePromise<HTMLIFrameElement> {
         inExternalServiceStore.set(true);
-        const loadIframe = super.load();
-
-        if (this.iframe) {
-            this.iframe.allowFullscreen = true;
-        }
-
-        return loadIframe;
+        return super.load();
     }
 
     unload(): Promise<void> {
