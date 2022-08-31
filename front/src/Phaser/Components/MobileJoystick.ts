@@ -69,7 +69,7 @@ export class MobileJoystick extends VirtualJoystick {
     }
 
     public destroy() {
-        super.destroy();
         this.scene.scale.removeListener(Phaser.Scale.Events.RESIZE, this.resizeCallback);
+        super.destroy();
     }
 }
