@@ -1,9 +1,10 @@
 import { ITiledMapObject } from "@workadventure/tiled-map-type-guard";
+import { DeleteAreaCommandConfig } from './Commands/Area/DeleteArea';
 import { UpdateAreaCommandConfig } from './Commands/Area/UpdateAreaCommand';
 
 export type ITiledMapRectangleObject = ITiledMapObject & { width: number; height: number };
 
-export type CommandConfig = UpdateAreaCommandConfig;
+export type CommandConfig = UpdateAreaCommandConfig | DeleteAreaCommandConfig;
 
 export enum AreaType {
     Static = "Static",

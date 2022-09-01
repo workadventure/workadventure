@@ -1,5 +1,5 @@
 import { GameMap } from '../../GameMap/GameMap';
-import { AreaType, CommandConfig, ITiledMapRectangleObject } from '../../types';
+import { AreaType, ITiledMapRectangleObject } from '../../types';
 import { Command } from "../Command";
 
 export interface UpdateAreaCommandConfig {
@@ -11,7 +11,6 @@ export class UpdateAreaCommand extends Command {
     private oldConfig: ITiledMapRectangleObject;
     private newConfig: ITiledMapRectangleObject;
 
-    // TODO: Get GameMap as a Phaserless type from the lib
     private gameMap: GameMap;
     
     constructor(gameMap: GameMap, config: UpdateAreaCommandConfig) {

@@ -400,7 +400,7 @@ export class GameMapFrontWrapper {
     public updateAreaByName(name: string, type: AreaType, config: Partial<ITiledMapObject>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         const area = gameMapAreas.updateAreaByName(name, type, config);
-        if (area && gameMapAreas.isPlayerInsideAreaByName(name, type, this.position)) {
+        if (this.position && area && gameMapAreas.isPlayerInsideAreaByName(name, type, this.position)) {
             gameMapAreas.triggerSpecificAreaOnEnter(area);
         }
         this.areaUpdatedSubject.next(gameMapAreas.getAreaByName(name, AreaType.Static));
@@ -409,7 +409,7 @@ export class GameMapFrontWrapper {
     public updateAreaById(id: number, type: AreaType, config: Partial<ITiledMapRectangleObject>): void {
         const gameMapAreas = this.gameMap.getGameMapAreas();
         const area = gameMapAreas.updateAreaById(id, type, config);
-        if (area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
+        if (this.position && area && gameMapAreas.isPlayerInsideArea(id, type, this.position)) {
             this.triggerSpecificAreaOnEnter(area);
         }
         this.areaUpdatedSubject.next(gameMapAreas.getArea(id, AreaType.Static));
@@ -424,10 +424,16 @@ export class GameMapFrontWrapper {
     }
 
     public isPlayerInsideArea(id: number, type: AreaType): boolean {
+        if (!this.position) {
+            return false;
+        }
         return this.gameMap.getGameMapAreas().isPlayerInsideArea(id, type, this.position);
     }
 
     public isPlayerInsideAreaByName(name: string, type: AreaType): boolean {
+        if (!this.position) {
+            return false;
+        }
         return this.gameMap.getGameMapAreas().isPlayerInsideAreaByName(name, type, this.position);
     }
 
@@ -499,7 +505,9 @@ export class GameMapFrontWrapper {
     }
 
     private getProperties(key: number): Map<string, string | boolean | number> {
-        const properties = this.gameMap.getGameMapAreas().getProperties(this.position);
+        const properties = this.position
+            ? this.gameMap.getGameMapAreas().getProperties(this.position)
+            : new Map<string, string | boolean | number>();
 
         for (const layer of this.getFlatLayers()) {
             if (layer.type !== "tilelayer") {
