@@ -28,21 +28,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "登出",
     },
     settings: {
-        gameQuality: {
-            title: "游戏质量",
-            short: {
-                high: "高 (120 fps)",
-                medium: "中 (60 fps)",
-                small: "低 (40 fps)",
-                minimum: "最低 (20 fps)",
-            },
-            long: {
-                high: "高视频质量 (120 fps)",
-                medium: "中视频质量 (60 fps, 推荐)",
-                small: "低视频质量 (40 fps)",
-                minimum: "最低视频质量 (20 fps)",
-            },
-        },
         videoQuality: {
             title: "视频质量",
             short: {
