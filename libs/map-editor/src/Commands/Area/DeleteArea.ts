@@ -8,27 +8,27 @@ export interface DeleteAreaCommandConfig {
 }
 
 export class UpdateAreaCommand extends Command {
-    private oldConfig: ITiledMapRectangleObject;
+    private areaConfig: ITiledMapRectangleObject;
 
     private gameMap: GameMap;
     
     constructor(gameMap: GameMap, config: DeleteAreaCommandConfig) {
         super();
         this.gameMap = gameMap;
-        const oldConfig = gameMap.getGameMapAreas().getArea(config.id, AreaType.Static);
-        if (!oldConfig) {
+        const areaConfig = gameMap.getGameMapAreas().getArea(config.id, AreaType.Static);
+        if (!areaConfig) {
             throw new Error('Trying to delete a non existing Area!');
         }
-        this.oldConfig = { ...oldConfig };
+        this.areaConfig = { ...areaConfig };
     }
 
     public execute(): DeleteAreaCommandConfig {
-        this.gameMap.getGameMapAreas().deleteAreaById(this.oldConfig.id, AreaType.Static);
-        return { type: 'DeleteAreaCommand', id: this.oldConfig.id };
+        this.gameMap.getGameMapAreas().deleteAreaById(this.areaConfig.id, AreaType.Static);
+        return { type: 'DeleteAreaCommand', id: this.areaConfig.id };
     }
 
     public undo(): DeleteAreaCommandConfig {
-        this.gameMap.getGameMapAreas().addArea(this.oldConfig, AreaType.Static);
-        return { type: 'UpdateAreaCommand', areaObjectConfig: this.oldConfig };
+        this.gameMap.getGameMapAreas().addArea(this.areaConfig, AreaType.Static);
+        return { type: 'DeleteAreaCommand', id: this.areaConfig.id };
     }
 }
