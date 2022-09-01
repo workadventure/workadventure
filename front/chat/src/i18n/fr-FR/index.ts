@@ -4,7 +4,8 @@ const fr_FR: Translation = {
     users: "Utilisateurs",
     userList: {
         disconnected: "Non connecté",
-        isHere: "Sur cette map !",
+        isHere: "Sur cette map",
+        inAnotherMap: "Dans une autre map",
         in: "Dans ",
         teleport: "Se téléporter",
         search: "Il suffit de chercher !",
@@ -99,6 +100,8 @@ const fr_FR: Translation = {
     },
     needRefresh: "Votre connexion a expiré, vous devez actualiser la page pour vous reconnecter au chat.",
     refresh: "Rafraichir",
+    upgrade: "Passez premium",
+    upgradeToSeeMore: "Passez premium pour voir plus de messages",
 };
 
 export default fr_FR;

@@ -207,6 +207,15 @@ class IframeListener {
             "*"
         );
     }
+
+    sendRedirectPricing() {
+        window.parent.postMessage(
+            {
+                type: "redirectPricing",
+            },
+            "*"
+        );
+    }
 }
 
 export const iframeListener = new IframeListener();

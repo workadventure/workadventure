@@ -326,7 +326,7 @@ export class FileController extends BaseController {
                             this.addCorsHeaders(res);
                             res.writeHeader('Content-Type', 'application/json');
                             return res.end(JSON.stringify({
-                                message: err.response?.data.message,
+                                message: err.response?.data?.message,
                                 maxFileSize: err.response?.data.maxFileSize,
                             }));
                         }

@@ -33,6 +33,36 @@ class ConnectionManager {
 
     public start() {
         this.chatConnection = new ChatConnection(this.authToken ?? "", this.playUri, this.uuid);
+
+        this.chatConnection.xmppConnectionNotAuthorizedStream.subscribe((value) => {
+            if (this.setTimeout) {
+                clearTimeout(this.setTimeout);
+            }
+
+            //close connection before start
+            this.chatConnection?.close();
+            this.chatConnection = undefined;
+            return (this.setTimeout = setTimeout(() => {
+                if (this.chatConnection == undefined || this.chatConnection.isClose) {
+                    this.start();
+                }
+            }, 10000));
+        });
+
+        this.chatConnection.connectionErrorStream.subscribe((value) => {
+            if (this.setTimeout) {
+                clearTimeout(this.setTimeout);
+            }
+
+            //close connection before start
+            this.chatConnection?.close();
+            this.chatConnection = undefined;
+            return (this.setTimeout = setTimeout(() => {
+                if (this.chatConnection == undefined || this.chatConnection.isClose) {
+                    this.start();
+                }
+            }, 10000));
+        });
     }
 
     get isClose(): boolean {

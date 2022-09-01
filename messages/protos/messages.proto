@@ -134,9 +134,8 @@ message ClientToServerMessage {
     LockGroupPromptMessage lockGroupPromptMessage = 18;
     QueryMessage queryMessage = 20;
     PingMessage pingMessage = 21;
-    //XmppMessage xmppMessage = 22;
-    AskPositionMessage askPositionMessage = 23;
-    EditMapMessage editMapMessage = 24;
+    AskPositionMessage askPositionMessage = 22;
+    EditMapMessage editMapMessage = 23;
   }
 }
 
@@ -213,8 +212,9 @@ message JitsiJwtQuery {
 }
 
 message JoinBBBMeetingQuery {
-  string meetingId = 1;
-  string meetingName = 2;
+  string meetingId = 1; /* a hash of domain, instance and localMeetingId */
+  string localMeetingId = 2; /* bbbMeeting field from the map  */
+  string meetingName = 3;
   // Fix me Pusher linter fails because eslint-plugin version < 3.0
   // map<string, string> userdata = 3;
 }
@@ -261,8 +261,7 @@ message SubMessage {
     ErrorMessage errorMessage = 9;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 10;
     PingMessage pingMessage = 11;
-    //XmppMessage xmppMessage = 12;
-    EditMapMessage editMapMessage = 13;
+    EditMapMessage editMapMessage = 12;
   }
 }
 
@@ -691,7 +690,7 @@ message XmppSettingsMessage{
 }
 
 message XmppConnectionNotAuthorizedMessage{
-
+  string message = 1;
 }
 
 

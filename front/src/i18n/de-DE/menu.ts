@@ -28,21 +28,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         logout: "Ausloggen",
     },
     settings: {
-        gameQuality: {
-            title: "Spiel Qualität",
-            short: {
-                high: "Hoch (120 BpS)",
-                medium: "Mittel (60 BpS)",
-                small: "Gering (40 BpS)",
-                minimum: "Minimal (20 BpS)",
-            },
-            long: {
-                high: "Hohe Video Qualität (120 BpS)",
-                medium: "Mittlere Video Qualität (60 BpS, empfohlen)",
-                small: "Geringe Video Qualität (40 BpS)",
-                minimum: "Minimale Video Qualität (20 BpS)",
-            },
-        },
         videoQuality: {
             title: "Video Qualität",
             short: {

@@ -4,7 +4,8 @@ const en_US: BaseTranslation = {
     users: "Users",
     userList: {
         disconnected: "Disconnected",
-        isHere: "Is on this map !",
+        isHere: "Is on this map",
+        inAnotherMap: "In another map",
         in: "In ",
         teleport: "Teleport",
         search: "Just look it up!",
@@ -99,6 +100,8 @@ const en_US: BaseTranslation = {
     },
     needRefresh: "Your connection has expired, you need to refresh the page to reconnect to the chat.",
     refresh: "Refresh",
+    upgrade: "Upgrade",
+    upgradeToSeeMore: "Upgrade to see more messages",
 };
 
 export default en_US;

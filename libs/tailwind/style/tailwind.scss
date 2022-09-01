@@ -207,6 +207,11 @@
             display: none;
         }
 
+        .wa-messages-list{
+            padding-bottom: 10px;
+            min-height: calc(100vh - 2.8rem);
+        }
+
         p span.nice-a{
             @apply tw-whitespace-pre-line tw-break-words;
             max-width: 100%;

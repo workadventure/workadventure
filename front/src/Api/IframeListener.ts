@@ -417,6 +417,8 @@ class IframeListener {
                     } else if (iframeEvent.type == "login") {
                         analyticsClient.login();
                         window.location.href = "/login";
+                    } else if (iframeEvent.type == "redirectPricing") {
+                        window.location.href = "/pricing";
                     } else if (iframeEvent.type == "refresh") {
                         window.location.reload();
                     } else {

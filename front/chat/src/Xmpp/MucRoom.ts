@@ -156,6 +156,7 @@ export class MucRoom {
     private sendTimeOut: Timeout | undefined;
     private loadingStore: Writable<boolean>;
     public canLoadOlderMessages: boolean;
+    public showPremiumLoadOlderMessages: Writable<boolean>;
     private closed: boolean = false;
     private description: string = "";
 
@@ -177,6 +178,7 @@ export class MucRoom {
         this.countMessagesToSee = writable<number>(0);
         this.loadingStore = writable<boolean>(false);
         this.canLoadOlderMessages = true;
+        this.showPremiumLoadOlderMessages = writable<boolean>(false);
 
         //refrech react message
         this.messageReactStore.subscribe((reacts) => {
@@ -803,8 +805,14 @@ export class MucRoom {
             // Manage return of MAM response
             const fin = xml.getChild("fin", "urn:xmpp:mam:2");
             if (fin) {
-                const count = fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0";
-                if (parseInt(count) < 50) {
+                const complete = fin.getAttr("complete");
+                const count = parseInt(
+                    fin.getChild("set", "http://jabber.org/protocol/rsm")?.getChildText("count") ?? "0"
+                );
+                if (count < 50) {
+                    if (complete === "false") {
+                        this.showPremiumLoadOlderMessages.set(true);
+                    }
                     this.canLoadOlderMessages = false;
                 }
                 this.loadingStore.set(false);
