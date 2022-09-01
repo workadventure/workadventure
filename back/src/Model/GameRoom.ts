@@ -45,7 +45,6 @@ import { emitErrorOnRoomSocket } from "../Services/MessageHelpers";
 import { VariableError } from "../Services/VariableError";
 import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { MapBbbData, MapJitsiData } from "../Messages/JsonMessages/MapDetailsData";
-import { MapEditorMessagesHandler } from "./MapEditorMessagesHandler";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { MucManager } from "../Services/MucManager";
 import { BrothersFinder } from "./BrothersFinder";
@@ -68,7 +67,6 @@ export class GameRoom implements BrothersFinder {
     private nextUserId = 1;
 
     private roomListeners: Set<RoomSocket> = new Set<RoomSocket>();
-    private mapEditorMessagesHandler = new MapEditorMessagesHandler(this.roomListeners);
 
     private constructor(
         public readonly roomUrl: string,
@@ -150,6 +148,10 @@ export class GameRoom implements BrothersFinder {
 
     public getUsers(): Map<number, User> {
         return this.users;
+    }
+
+    public getRoomListeners(): Set<RoomSocket> {
+        return this.roomListeners;
     }
 
     public getUserByUuid(uuid: string): User | undefined {
@@ -847,10 +849,6 @@ export class GameRoom implements BrothersFinder {
             };
         }
         return undefined;
-    }
-
-    public getMapEditorMessagesHandler(): MapEditorMessagesHandler {
-        return this.mapEditorMessagesHandler;
     }
 
     /**

@@ -1,5 +1,5 @@
 import { Command, CommandConfig, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
-import { writeFile, writeFileSync } from "fs";
+import { writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
 class MapsManager {
@@ -29,6 +29,20 @@ class MapsManager {
                 return;
             }
         }
+    }
+
+    public getSaveMapInterval(key: string): NodeJS.Timer | undefined {
+        return this.saveMapIntervals.get(key);
+    }
+
+    public clearSaveMapInterval(key: string): boolean {
+        const interval = this.saveMapIntervals.get(key);
+        if (interval) {
+            clearInterval(interval);
+            this.saveMapIntervals.delete(key);
+            return true;
+        }
+        return false;
     }
 
     public getGameMap(key: string): GameMap | undefined {

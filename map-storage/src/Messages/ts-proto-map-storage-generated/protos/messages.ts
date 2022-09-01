@@ -704,6 +704,10 @@ export interface EditMapWithKeyMessage {
     editMapMessage: EditMapMessage | undefined;
 }
 
+export interface EmptyMapMessage {
+    mapKey: string;
+}
+
 export interface UserJoinedRoomMessage {
     uuid: string;
     ipAddress: string;
@@ -8379,6 +8383,53 @@ export const EditMapWithKeyMessage = {
     },
 };
 
+function createBaseEmptyMapMessage(): EmptyMapMessage {
+    return { mapKey: "" };
+}
+
+export const EmptyMapMessage = {
+    encode(message: EmptyMapMessage, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+        if (message.mapKey !== "") {
+            writer.uint32(10).string(message.mapKey);
+        }
+        return writer;
+    },
+
+    decode(input: _m0.Reader | Uint8Array, length?: number): EmptyMapMessage {
+        const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseEmptyMapMessage();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.mapKey = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+
+    fromJSON(object: any): EmptyMapMessage {
+        return { mapKey: isSet(object.mapKey) ? String(object.mapKey) : "" };
+    },
+
+    toJSON(message: EmptyMapMessage): unknown {
+        const obj: any = {};
+        message.mapKey !== undefined && (obj.mapKey = message.mapKey);
+        return obj;
+    },
+
+    fromPartial<I extends Exact<DeepPartial<EmptyMapMessage>, I>>(object: I): EmptyMapMessage {
+        const message = createBaseEmptyMapMessage();
+        message.mapKey = object.mapKey ?? "";
+        return message;
+    },
+};
+
 function createBaseUserJoinedRoomMessage(): UserJoinedRoomMessage {
     return { uuid: "", ipAddress: "", name: "" };
 }
@@ -9905,11 +9956,21 @@ export const MapStorageService = {
         responseSerialize: (value: EditMapMessage) => Buffer.from(EditMapMessage.encode(value).finish()),
         responseDeserialize: (value: Buffer) => EditMapMessage.decode(value),
     },
+    handleNoUsersOnTheMap: {
+        path: "/workadventure.MapStorage/handleNoUsersOnTheMap",
+        requestStream: false,
+        responseStream: false,
+        requestSerialize: (value: EmptyMapMessage) => Buffer.from(EmptyMapMessage.encode(value).finish()),
+        requestDeserialize: (value: Buffer) => EmptyMapMessage.decode(value),
+        responseSerialize: (value: EmptyMessage) => Buffer.from(EmptyMessage.encode(value).finish()),
+        responseDeserialize: (value: Buffer) => EmptyMessage.decode(value),
+    },
 } as const;
 
 export interface MapStorageServer extends UntypedServiceImplementation {
     ping: handleUnaryCall<PingMessage, PingMessage>;
     handleEditMapWithKeyMessage: handleUnaryCall<EditMapWithKeyMessage, EditMapMessage>;
+    handleNoUsersOnTheMap: handleUnaryCall<EmptyMapMessage, EmptyMessage>;
 }
 
 export interface MapStorageClient extends Client {
@@ -9939,6 +10000,21 @@ export interface MapStorageClient extends Client {
         metadata: Metadata,
         options: Partial<CallOptions>,
         callback: (error: ServiceError | null, response: EditMapMessage) => void
+    ): ClientUnaryCall;
+    handleNoUsersOnTheMap(
+        request: EmptyMapMessage,
+        callback: (error: ServiceError | null, response: EmptyMessage) => void
+    ): ClientUnaryCall;
+    handleNoUsersOnTheMap(
+        request: EmptyMapMessage,
+        metadata: Metadata,
+        callback: (error: ServiceError | null, response: EmptyMessage) => void
+    ): ClientUnaryCall;
+    handleNoUsersOnTheMap(
+        request: EmptyMapMessage,
+        metadata: Metadata,
+        options: Partial<CallOptions>,
+        callback: (error: ServiceError | null, response: EmptyMessage) => void
     ): ClientUnaryCall;
 }
 

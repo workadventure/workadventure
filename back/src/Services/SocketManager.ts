@@ -47,6 +47,7 @@ import {
     AskPositionMessage,
     MoveToPositionMessage,
     EditMapWithKeyMessage,
+    SubToPusherRoomMessage,
 } from "../Messages/generated/messages_pb";
 import { User, UserSocket } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1074,12 +1075,15 @@ export class SocketManager {
                 throw err;
             }
             console.log("RETURN MESSAGE FROM MAP-STORAGE");
-            console.log(editMapMessage);
-            if (editMapMessage && editMapMessage.hasModifyareamessage()) {
-                const msg = editMapMessage.getModifyareamessage();
-                if (msg) {
-                    room.getMapEditorMessagesHandler().handleModifyAreaMessage(msg);
-                }
+            const subMessage = new SubToPusherRoomMessage();
+            subMessage.setEditmapmessage(editMapMessage);
+
+            const batchMessage = new BatchToPusherRoomMessage();
+            batchMessage.addPayload(subMessage);
+
+            // Dispatch the message on the room listeners
+            for (const socket of room.getRoomListeners()) {
+                socket.write(batchMessage);
             }
         });
     }
