@@ -68,9 +68,6 @@ export class MapEditorModeManager {
         switch (commandConfig.type) {
             case "UpdateAreaCommand": {
                 command = new UpdateAreaCommand(this.scene.getGameMap(), commandConfig);
-                command.execute();
-                // this should not be called with every change. Use some sort of debounce
-                this.scene.connection?.emitMapEditorModifyArea(commandConfig.areaObjectConfig);
                 break;
             }
             default: {
@@ -78,7 +75,11 @@ export class MapEditorModeManager {
                 return;
             }
         }
-        this.emitMapEditorUpdate(commandConfig);
+        if (command) {
+            // We do an execution instantly so there will be no lag from user's perspective
+            command.execute();
+            this.emitMapEditorUpdate(commandConfig);
+        }
         // if we are not at the end of commands history and perform an action, get rid of commands later in history than our current point in time
         if (this.currentCommandIndex !== this.commandsHistory.length - 1) {
             this.commandsHistory.splice(this.currentCommandIndex + 1);

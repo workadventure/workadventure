@@ -74,6 +74,11 @@
     "tsconfig-paths": "4.0.0",
     "typescript": "^4.3.5"
   },
+  "nodemonConfig": {
+    "ignore": [
+      "public/*"
+    ]
+  },
   "jest": {
     "moduleFileExtensions": [
       "js",

@@ -1,11 +1,15 @@
 import { Command, CommandConfig, GameMap, UpdateAreaCommand } from "@workadventure/map-editor";
+import { writeFile, writeFileSync } from "fs";
 import { readFile } from "fs/promises";
 
 class MapsManager {
     private loadedMaps: Map<string, GameMap>;
 
+    private saveMapIntervals: Map<string, NodeJS.Timer>;
+
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
+        this.saveMapIntervals = new Map<string, NodeJS.Timer>();
     }
 
     public executeCommand(mapKey: string, commandConfig: CommandConfig): void {
@@ -39,6 +43,16 @@ class MapsManager {
         const file = await readFile(`./public${path}`, "utf-8");
         const map = JSON.parse(file);
         this.loadedMaps.set(path, new GameMap(map));
+        this.saveMapIntervals.set(
+            path,
+            setInterval(() => {
+                console.log(`saving map ${path}`);
+                const gameMap = this.loadedMaps.get(path);
+                if (gameMap) {
+                    writeFileSync(`./public${path}`, JSON.stringify(gameMap.getMap()));
+                }
+            }, 1 * 15 * 1000)
+        );
         return map;
     }
 }

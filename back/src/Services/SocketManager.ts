@@ -1073,6 +1073,8 @@ export class SocketManager {
             if (err) {
                 throw err;
             }
+            console.log("RETURN MESSAGE FROM MAP-STORAGE");
+            console.log(editMapMessage);
             if (editMapMessage && editMapMessage.hasModifyareamessage()) {
                 const msg = editMapMessage.getModifyareamessage();
                 if (msg) {
