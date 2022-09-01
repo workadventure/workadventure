@@ -6,16 +6,31 @@ class MapsManager {
     private loadedMaps: Map<string, GameMap>;
 
     private saveMapIntervals: Map<string, NodeJS.Timer>;
+    private mapLastChangeTimestamp: Map<string, number>;
+
+    /**
+     * Attempt to save the map from memory to file every time interval
+     */
+    private readonly AUTO_SAVE_INTERVAL_MS: number = 15 * 1000; // 15 seconds
+    /**
+     * Kill saving map interval after given time of no changes done to the map
+     */
+    private readonly NO_CHANGE_DETECTED_MS: number = 1 * 60 * 1000; // 1 minute
 
     constructor() {
         this.loadedMaps = new Map<string, GameMap>();
         this.saveMapIntervals = new Map<string, NodeJS.Timer>();
+        this.mapLastChangeTimestamp = new Map<string, number>();
     }
 
     public executeCommand(mapKey: string, commandConfig: CommandConfig): void {
         const gameMap = this.getGameMap(mapKey);
         if (!gameMap) {
             return;
+        }
+        this.mapLastChangeTimestamp.set(mapKey, +new Date());
+        if (!this.saveMapIntervals.has(mapKey)) {
+            this.startSavingMapInterval(mapKey, this.AUTO_SAVE_INTERVAL_MS);
         }
         let command: Command;
         switch (commandConfig.type) {
@@ -31,15 +46,12 @@ class MapsManager {
         }
     }
 
-    public getSaveMapInterval(key: string): NodeJS.Timer | undefined {
-        return this.saveMapIntervals.get(key);
-    }
-
     public clearSaveMapInterval(key: string): boolean {
         const interval = this.saveMapIntervals.get(key);
         if (interval) {
             clearInterval(interval);
             this.saveMapIntervals.delete(key);
+            this.mapLastChangeTimestamp.delete(key);
             return true;
         }
         return false;
@@ -57,17 +69,28 @@ class MapsManager {
         const file = await readFile(`./public${path}`, "utf-8");
         const map = JSON.parse(file);
         this.loadedMaps.set(path, new GameMap(map));
-        this.saveMapIntervals.set(
-            path,
-            setInterval(() => {
-                console.log(`saving map ${path}`);
-                const gameMap = this.loadedMaps.get(path);
-                if (gameMap) {
-                    writeFileSync(`./public${path}`, JSON.stringify(gameMap.getMap()));
-                }
-            }, 1 * 15 * 1000)
-        );
         return map;
+    }
+
+    private startSavingMapInterval(key: string, intervalMS: number): void {
+        this.saveMapIntervals.set(
+            key,
+            setInterval(() => {
+                console.log(`saving map ${key}`);
+                const gameMap = this.loadedMaps.get(key);
+                if (gameMap) {
+                    writeFileSync(`./public${key}`, JSON.stringify(gameMap.getMap()));
+                }
+                const lastChangeTimestamp = this.mapLastChangeTimestamp.get(key);
+                if (lastChangeTimestamp === undefined) {
+                    return;
+                }
+                if (lastChangeTimestamp + this.NO_CHANGE_DETECTED_MS < +new Date()) {
+                    console.log(`NO CHANGES ON THE MAP ${key} DETECTED. STOP AUTOSAVING`);
+                    this.clearSaveMapInterval(key);
+                }
+            }, intervalMS)
+        );
     }
 }
 

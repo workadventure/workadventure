@@ -4,7 +4,6 @@ import { mapsManager } from "./MapsManager";
 import {
     EditMapMessage,
     EditMapWithKeyMessage,
-    EmptyMapMessage,
     EmptyMessage,
     MapStorageServer,
     PingMessage,
@@ -14,16 +13,16 @@ const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, EmptyMessage>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
     },
-    handleNoUsersOnTheMap(
-        call: ServerUnaryCall<EmptyMapMessage, EmptyMessage>,
-        callback: sendUnaryData<EmptyMessage>
-    ): void {
-        const success = mapsManager.clearSaveMapInterval(call.request.mapKey);
-        if (success) {
-            console.log(`${call.request.mapKey} save map interval cleared!`);
-        }
-        callback(null, {});
-    },
+    // handleNoUsersOnTheMap(
+    //     call: ServerUnaryCall<EmptyMapMessage, EmptyMessage>,
+    //     callback: sendUnaryData<EmptyMessage>
+    // ): void {
+    //     const success = mapsManager.clearSaveMapInterval(call.request.mapKey);
+    //     if (success) {
+    //         console.log(`${call.request.mapKey} save map interval cleared!`);
+    //     }
+    //     callback(null, {});
+    // },
     handleEditMapWithKeyMessage(
         call: ServerUnaryCall<EditMapWithKeyMessage, EmptyMessage>,
         callback: sendUnaryData<EditMapMessage>

@@ -582,11 +582,6 @@ message EditMapWithKeyMessage {
 
 }
 
-message EmptyMapMessage {
-  string mapKey = 1;
-}
-
-
 /*message BatchToAdminPusherMessage {
   repeated SubToAdminPusherMessage payload = 2;
 }*/
@@ -754,5 +749,4 @@ service RoomManager {
 service MapStorage {
   rpc ping(PingMessage) returns (PingMessage);
   rpc handleEditMapWithKeyMessage(EditMapWithKeyMessage) returns (EditMapMessage);
-  rpc handleNoUsersOnTheMap(EmptyMapMessage) returns (EmptyMessage);
 }
