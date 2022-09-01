@@ -212,8 +212,9 @@ message JitsiJwtQuery {
 }
 
 message JoinBBBMeetingQuery {
-  string meetingId = 1;
-  string meetingName = 2;
+  string meetingId = 1; /* a hash of domain, instance and localMeetingId */
+  string localMeetingId = 2; /* bbbMeeting field from the map  */
+  string meetingName = 3;
   // Fix me Pusher linter fails because eslint-plugin version < 3.0
   // map<string, string> userdata = 3;
 }
