@@ -47,8 +47,6 @@ export default defineConfig({
                 "ENABLE_OPENID",
                 "OPID_PROFILE_SCREEN_PROVIDER",
                 "FALLBACK_LOCALE",
-                "PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS",
-                "PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS",
                 "CHAT_URL",
                 "PEER_VIDEO_MAX_BANDWIDTH_KBITS_PS",
                 "PEER_SCREENSHARE_MAX_BANDWIDTH_KBITS_PS",
