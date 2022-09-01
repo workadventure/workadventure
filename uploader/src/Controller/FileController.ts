@@ -7,7 +7,8 @@ import {Readable} from 'stream'
 import { uploaderService } from "../Service/UploaderService";
 import { mimeTypeManager } from "../Service/MimeType";
 import { ByteLenghtBufferException } from "../Exception/ByteLenghtBufferException";
-import Axios from "axios";
+import Axios, {AxiosError} from "axios";
+import {ADMIN_API_URL, UPLOAD_MAX_FILESIZE} from "../Enum/EnvironmentVariable";
 
 interface UploadedFileBuffer {
     buffer: Buffer,
@@ -241,7 +242,6 @@ export class FileController extends BaseController {
                 });
 
                 let userRoomToken = null;
-                let isPremium = '0';
 
                 try {
                     const chunksByFile: Map<string, Buffer> = new Map<string, Buffer>();
@@ -266,12 +266,9 @@ export class FileController extends BaseController {
                         }
                     });
 
-                    if(!userRoomToken){
+                    if(!userRoomToken && ADMIN_API_URL){
                         throw new Error('No user room token');
                     }
-
-                    isPremium = process.env.ADMIN_API_URL? await Axios.get(`${process.env.ADMIN_API_URL}/api/is_premium`, {headers: {userRoomToken}} ).then(response => response.data).catch(() => '1') : '1';
-                    const maxSizeFile = isPremium? 1_073_741_824 : 5_242_880;
 
                     if(params == undefined || chunksByFile.size === 0){
                         throw new Error('no file name');
@@ -279,8 +276,12 @@ export class FileController extends BaseController {
 
                     const uploadedFile: {name: string, id: string, location: string, size: number, lastModified: Date, type?: string}[] = [];
                     for(const [fileName, buffer] of chunksByFile){
-                        if(buffer.byteLength > maxSizeFile){
-                            throw new ByteLenghtBufferException(`file-too-big`);
+                        if(ADMIN_API_URL && userRoomToken) {
+                            await Axios.get(`${ADMIN_API_URL}/api/limit/fileSize`, {headers: {userRoomToken}, params: {fileSize: buffer.byteLength}});
+                        } else {
+                            if (buffer.byteLength > UPLOAD_MAX_FILESIZE) {
+                                throw new ByteLenghtBufferException(`file-too-big`);
+                            }
                         }
                         const mimeType = params[fileName] ? params[fileName].mimetype : undefined;
                         const {Location, Key} = await uploaderService.uploadFile(
@@ -306,16 +307,31 @@ export class FileController extends BaseController {
                     this.addCorsHeaders(res);
                     return res.end(JSON.stringify(uploadedFile));
                 }catch(err){
-                    console.error("An error happened", err);
-                    if( err instanceof ByteLenghtBufferException){
+                    if(err instanceof ByteLenghtBufferException){
                         res.writeStatus("413 Request Entity Too Large");
                         this.addCorsHeaders(res);
                         res.writeHeader('Content-Type', 'application/json');
                         return res.end(JSON.stringify({
                             message: err.message,
-                            isPremium
+                            maxFileSize: UPLOAD_MAX_FILESIZE
                         }));
+                    } else if(err instanceof AxiosError){
+                        const status = err.response?.status;
+                        if(status) {
+                            if (status == 413) {
+                                res.writeStatus("413 Request Entity Too Large");
+                            } else if (status == 423) {
+                                res.writeStatus("423 Locked");
+                            }
+                            this.addCorsHeaders(res);
+                            res.writeHeader('Content-Type', 'application/json');
+                            return res.end(JSON.stringify({
+                                message: err.response?.data.message,
+                                maxFileSize: err.response?.data.maxFileSize,
+                            }));
+                        }
                     }
+                    console.error("An error happened", err);
                     res.writeStatus("500 Internal Server Error");
                     this.addCorsHeaders(res);
                     return res.end('An error happened');

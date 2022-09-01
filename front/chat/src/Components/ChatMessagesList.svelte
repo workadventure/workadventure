@@ -368,47 +368,55 @@
                                         {/each}
                                     {/if}
 
-                                    <!-- Action bar -->
-                                    <div
-                                        class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
-                                    >
-                                        <div class="action reply" on:click={() => selectMessage(message)}>
-                                            <CornerDownLeftIcon size="17" />
-                                        </div>
-                                        <div class="action react" on:click={() => reactMessage(message)}>
-                                            <SmileIcon size="17" />
-                                        </div>
-                                        <div class="action more-option">
-                                            <MoreHorizontalIcon size="17" />
+                                    {#if !message.error}
+                                        <!-- Action bar -->
+                                        <div
+                                            class="actions tw-rounded-lg tw-bg-dark tw-text-xs tw-px-3 tw-py-2 tw-text-left"
+                                        >
+                                            <div class="action reply" on:click={() => selectMessage(message)}>
+                                                <CornerDownLeftIcon size="17" />
+                                            </div>
+                                            <div class="action react" on:click={() => reactMessage(message)}>
+                                                <SmileIcon size="17" />
+                                            </div>
+                                            <div class="action more-option">
+                                                <MoreHorizontalIcon size="17" />
 
-                                            <div class="wa-dropdown-menu tw-invisible">
-                                                <span class="wa-dropdown-item" on:click={() => selectMessage(message)}>
-                                                    <CornerDownLeftIcon size="13" class="tw-mr-1" />
-                                                    {$LL.reply()}
-                                                </span>
-                                                <span class="wa-dropdown-item" on:click={() => reactMessage(message)}>
-                                                    <SmileIcon size="13" class="tw-mr-1" />
-                                                    {$LL.react()}
-                                                </span>
-                                                <span
-                                                    class="wa-dropdown-item"
-                                                    on:click={(e) => copyMessage(e, message)}
-                                                >
-                                                    <CopyIcon size="13" class="tw-mr-1" />
-                                                    {$LL.copy()}
-                                                </span>
-                                                {#if $meStore.isAdmin || isMe(message.jid)}
+                                                <div class="wa-dropdown-menu tw-invisible">
                                                     <span
-                                                        class="wa-dropdown-item tw-text-pop-red"
-                                                        on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                        class="wa-dropdown-item"
+                                                        on:click={() => selectMessage(message)}
                                                     >
-                                                        <Trash2Icon size="13" class="tw-mr-1" />
-                                                        {$LL.delete()}
+                                                        <CornerDownLeftIcon size="13" class="tw-mr-1" />
+                                                        {$LL.reply()}
                                                     </span>
-                                                {/if}
+                                                    <span
+                                                        class="wa-dropdown-item"
+                                                        on:click={() => reactMessage(message)}
+                                                    >
+                                                        <SmileIcon size="13" class="tw-mr-1" />
+                                                        {$LL.react()}
+                                                    </span>
+                                                    <span
+                                                        class="wa-dropdown-item"
+                                                        on:click={(e) => copyMessage(e, message)}
+                                                    >
+                                                        <CopyIcon size="13" class="tw-mr-1" />
+                                                        {$LL.copy()}
+                                                    </span>
+                                                    {#if $meStore.isAdmin || isMe(message.jid)}
+                                                        <span
+                                                            class="wa-dropdown-item tw-text-pop-red"
+                                                            on:click={() => mucRoom.sendRemoveMessage(message.id)}
+                                                        >
+                                                            <Trash2Icon size="13" class="tw-mr-1" />
+                                                            {$LL.delete()}
+                                                        </span>
+                                                    {/if}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    {/if}
                                 </div>
 
                                 <!-- React associated -->

@@ -22,7 +22,8 @@ export interface UploadedFileInterface {
 export class UploadedFile implements FileExt, UploadedFileInterface {
     public uploadState: uploadingState;
     public errorMessage?: string;
-    public isPremium = "0";
+    public errorStatus?: number;
+    public maxFileSize?: string;
     constructor(
         public name: string,
         public id: string,
@@ -77,7 +78,8 @@ export class UploadedFile implements FileExt, UploadedFileInterface {
 export interface FileExt extends File {
     uploadState: uploadingState;
     errorMessage?: string;
-    isPremium?: string;
+    errorStatus?: number;
+    maxFileSize?: string;
 }
 
 export class FileMessageManager {
@@ -117,8 +119,11 @@ export class FileMessageManager {
             filesUploadStore.update((list) => {
                 for (const [, file] of list) {
                     file.uploadState = uploadingState.error;
-                    file.errorMessage = err.response?.data?.message;
-                    file.isPremium = err.response?.data?.isPremium;
+                    file.errorMessage = err.response?.data.message;
+                    file.errorStatus = err.response?.status;
+                    if (err.response?.data.maxFileSize) {
+                        file.maxFileSize = `(< ${err.response?.data.maxFileSize / 1_048_576}Mo)`;
+                    }
                     list.set(file.name, file);
                 }
                 return list;

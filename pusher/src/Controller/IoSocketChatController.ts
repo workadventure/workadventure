@@ -12,6 +12,7 @@ import { FetchMemberDataByUuidResponse } from "../Services/AdminApi";
 import { socketManager } from "../Services/SocketManager";
 import { emitInBatch } from "../Services/IoSocketHelpers";
 import {
+    ADMIN_API_URL,
     DISABLE_ANONYMOUS,
     EJABBERD_DOMAIN,
     EJABBERD_JWT_SECRET,
@@ -50,8 +51,7 @@ interface UpgradeFailedInvalidData {
 import Jwt from "jsonwebtoken";
 import { MucRoomDefinitionInterface } from "../Messages/JsonMessages/MucRoomDefinitionInterface";
 import { XmppClient } from "../Services/XmppClient";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { jid } = require("@xmpp/client");
+import jid from "@xmpp/jid";
 
 interface UpgradeFailedErrorData {
     rejected: true;
@@ -63,6 +63,7 @@ type UpgradeFailedData = UpgradeFailedErrorData | UpgradeFailedInvalidData;
 
 export class IoSocketChatController {
     private nextUserId = 1;
+    private isPremium: string = "1";
 
     constructor(private readonly app: HyperExpress.compressors.TemplatedApp) {
         this.ioConnection();
@@ -217,12 +218,21 @@ export class IoSocketChatController {
                             userData.jabberId = jid(userIdentifier, EJABBERD_DOMAIN).toString();
                             if (EJABBERD_JWT_SECRET) {
                                 userData.jabberPassword = Jwt.sign({ jid: userData.jabberId }, EJABBERD_JWT_SECRET, {
-                                    expiresIn: "1d",
+                                    expiresIn: "30d",
                                     algorithm: "HS256",
                                 });
                             } else {
                                 userData.jabberPassword = "no_password_set";
                             }
+                        }
+
+                        if (userData.userRoomToken && ADMIN_API_URL) {
+                            console.log("isPremium");
+                            this.isPremium = await Axios.get(`${ADMIN_API_URL}/api/is_premium`, {
+                                headers: { userRoomToken: userData.userRoomToken },
+                            })
+                                .then((response) => response.data)
+                                .catch(() => "1");
                         }
 
                         // Generate characterLayers objects from characterLayers string[]
@@ -338,6 +348,7 @@ export class IoSocketChatController {
 
     //eslint-disable-next-line @typescript-eslint/no-explicit-any
     private initClient(ws: any): ExSocketInterface {
+        console.log("init client");
         const client: ExSocketInterface = ws;
         client.userId = this.nextUserId;
         this.nextUserId++;

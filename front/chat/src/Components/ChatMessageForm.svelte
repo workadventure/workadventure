@@ -63,7 +63,7 @@
             return;
         }
         if (isMessageTooLong) {
-            return;
+            //return;
         }
         if ($hasErrorUploadingFile) {
             showErrorMessages();
@@ -260,14 +260,7 @@
     function getFileError(fileUploaded) {
         switch (fileUploaded.errorMessage) {
             case "file-too-big": {
-                if (fileUploaded.isPremium === "1") {
-                    return $LL.file.tooBigPremium({ fileName: fileUploaded.name });
-                } else {
-                    if (mucRoom.getMe().isAdmin) {
-                        return $LL.file.tooBigNeedPremium({ fileName: fileUploaded.name });
-                    }
-                    return $LL.file.tooBig({ fileName: fileUploaded.name });
-                }
+                return $LL.file.tooBig({ fileName: fileUploaded.name });
             }
             default: {
                 return fileUploaded.errorMessage;
@@ -349,13 +342,20 @@
                     {#if fileUploaded.errorMessage !== undefined}
                         <div
                             class={`error-hover tw-flex tw-flex-wrap tw-bg-dark-blue/95 tw-rounded-3xl tw-text-xxs tw-justify-between tw-items-center tw-px-4 tw-py-2 ${
-                                fileUploaded.isPremium === "0" && mucRoom.getMe().isAdmin
+                                fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin
                                     ? "tw-text-orange"
                                     : "tw-text-pop-red"
                             } tw-absolute tw-w-full`}
                         >
-                            <p class="tw-m-0">{@html getFileError(fileUploaded)}</p>
-                            {#if fileUploaded.isPremium === "1" && mucRoom.getMe().isAdmin}<button
+                            <p class="tw-m-0">
+                                {#if fileUploaded.errorMessage === "file-too-big"}
+                                    {$LL.file.tooBig({
+                                        fileName: fileUploaded.name,
+                                        maxFileSize: fileUploaded.maxFileSize,
+                                    })}
+                                {/if}
+                            </p>
+                            {#if fileUploaded.errorCode === 423 && mucRoom.getMe().isAdmin}<button
                                     class="tw-text-orange tw-font-bold tw-underline tw-m-auto"
                                     ><img src={crown} class="tw-mr-1" /> Passez premium</button
                                 >{/if}
@@ -370,16 +370,7 @@
                         {:else if fileUploaded.uploadState === uploadingState.error}
                             <div
                                 class="alert-upload tw-cursor-pointer"
-                                on:click|preventDefault|stopPropagation={() => {
-                                    if (
-                                        fileUploaded.errorMessage !== undefined &&
-                                        fileUploaded.errorMessage === "file-too-big"
-                                    ) {
-                                        showErrorMessages();
-                                    } else {
-                                        resend();
-                                    }
-                                }}
+                                on:click|preventDefault|stopPropagation={() => resend()}
                             >
                                 <AlertCircleIcon size="14" />
                             </div>
